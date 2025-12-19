@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Contact;
+use App\Services\ContactService;
+use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
+use App\Helpers\FilterHelper;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ContactController extends Controller
+{
+    public function __construct(
+        private ContactService $contactService
+    ) {}
+
+    /**
+     * Get contacts list
+     */
+    public function getContacts(Request $request): JsonResponse
+    {
+        $query = Contact::query();
+
+        // Apply search
+        $search = $request->input('search');
+        $searchableFields = [
+            'name', 'phone', 'email', 'company_name', 'contact_person', 'address', 'remarks'
+        ];
+        FilterHelper::applySearch($query, $search, $searchableFields);
+
+        // Apply filters
+        $filters = json_decode($request->input('filters', '[]'), true);
+        $joinOperator = $request->input('joinOperator', 'or');
+        FilterHelper::applyFilters($query, $filters, $joinOperator);
+
+        // Apply sorting
+        $sort = json_decode($request->input('sort', '[]'), true);
+        FilterHelper::applySorting($query, $sort);
+
+        // Paginate
+        $perPage = $request->input('perPage', 10);
+        $contacts = $query->withCount(['purchases', 'sales'])->paginate($perPage);
+
+        return $this->paginatedResponse($contacts);
+    }
+
+    /**
+     * Get contact by serial number
+     */
+    public function getContactBySerial(int $serialNo): JsonResponse
+    {
+        $contact = Contact::where('serial_no', $serialNo)
+            ->withCount(['purchases', 'sales'])
+            ->firstOrFail();
+
+        return response()->json($contact);
+    }
+
+    /**
+     * Create contact
+     */
+    public function store(StoreContactRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        // Handle file uploads
+        if ($request->hasFile('images')) {
+            $data['images'] = $request->file('images');
+        }
+
+        $contact = $this->contactService->createContact($data);
+
+        return response()->json($contact, 201);
+    }
+
+    /**
+     * Update contact
+     */
+    public function update(UpdateContactRequest $request, Contact $contact): JsonResponse
+    {
+        $data = $request->validated();
+
+        // Handle file uploads
+        if ($request->hasFile('images')) {
+            $data['images'] = $request->file('images');
+        }
+
+        $contact = $this->contactService->updateContact($contact, $data);
+
+        return response()->json($contact);
+    }
+
+    /**
+     * Delete contact
+     */
+    public function destroy(Contact $contact): JsonResponse
+    {
+        $this->contactService->deleteContact($contact);
+
+        return response()->json(['message' => 'Contact deleted successfully']);
+    }
+
+    /**
+     * Format paginated response
+     */
+    private function paginatedResponse($paginator): JsonResponse
+    {
+        return response()->json([
+            'docs' => $paginator->items(),
+            'totalDocs' => $paginator->total(),
+            'limit' => $paginator->perPage(),
+            'page' => $paginator->currentPage(),
+            'totalPages' => $paginator->lastPage(),
+            'hasPrevPage' => $paginator->currentPage() > 1,
+            'hasNextPage' => $paginator->hasMorePages(),
+            'prevPage' => $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
+            'nextPage' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+        ]);
+    }
+}
+
