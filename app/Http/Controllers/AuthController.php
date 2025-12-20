@@ -15,9 +15,12 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 class AuthController extends Controller
 {
     /**
-     * Register a new user
+     * Register a new user with JWT authentication
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function signUp(Request $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
         // Match frontend validation: name (2-100), email (max 255), password (8-128 with complexity)
         $validator = Validator::make($request->all(), [
@@ -42,6 +45,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
             ], 422);
@@ -58,77 +62,44 @@ class AuthController extends Controller
             'email_verified' => false,
         ]);
 
-        // Create a token for the user
-        $token = $user->createToken('auth-token')->plainTextToken;
+        // Generate JWT access token
+        $token = auth('api')->login($user);
 
-        // Match frontend expected response format
+        // Generate refresh token with custom claim
+        $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
+
+        // Set refresh token as HttpOnly cookie
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            20160, // 14 days in minutes
+            null,
+            null,
+            true, // secure
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        );
+
+        // Match JWT login response format
         return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'emailVerified' => $user->email_verified,
+            'status' => 'success',
+            'message' => 'Registration successful',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'emailVerified' => $user->email_verified,
+                ],
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
             ],
-        ], 201);
+        ], 201)->cookie($cookie);
     }
 
-    /**
-     * Sign in user
-     */
-    public function signIn(Request $request): JsonResponse
-    {
-        // Match frontend validation: email (max 255), password (max 128)
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string|max:128',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        // Find user by email (normalize to lowercase)
-        $user = User::where('email', strtolower($request->email))->first();
-
-        // Check credentials using standard Laravel password verification
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401);
-        }
-
-        // Check if user is banned
-        if ($user->banned) {
-            return response()->json([
-                'message' => 'Account is banned',
-                'ban_reason' => $user->ban_reason,
-                'ban_expires' => $user->ban_expires,
-            ], 403);
-        }
-
-        // Delete existing tokens (optional - for single device login)
-        // $user->tokens()->delete();
-
-        // Create a new token
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        // Match frontend expected response format
-        return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'emailVerified' => $user->email_verified,
-            ],
-        ]);
-    }
 
     /**
      * Sign out user

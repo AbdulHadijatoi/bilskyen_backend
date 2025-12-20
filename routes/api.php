@@ -36,25 +36,26 @@ Route::get('/version.json', [VersionController::class, 'getVersion']);
 // Featured vehicles (public)
 Route::get('/vehicles/get-featured-vehicles', [VehicleController::class, 'getFeaturedVehicles']);
 
-// Authentication routes (Better-Auth compatible)
+// Authentication routes
 Route::prefix('auth')->group(function () {
-    // Public auth routes
-    Route::post('/sign-up/email', [AuthController::class, 'signUp']);
-    Route::post('/sign-in/email', [AuthController::class, 'signIn']);
+    // JWT Authentication routes (public)
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
     
-    // Protected auth routes
+    // JWT Protected routes
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me', [AuthController::class, 'me']);
+    });
+    
+    // Legacy Sanctum routes (for backward compatibility)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sign-out', [AuthController::class, 'signOut']);
         Route::get('/get-session', [AuthController::class, 'getSession']);
         Route::post('/update-user', [AuthController::class, 'updateUser']);
         Route::post('/revoke-session', [AuthController::class, 'revokeSession']);
     });
-    
-    // JWT Authentication routes
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
-    Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
     
     // TODO: Implement remaining endpoints
     Route::post('/sign-in/magic-link', function () {
