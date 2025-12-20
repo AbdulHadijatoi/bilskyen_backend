@@ -149,6 +149,73 @@
             white-space: nowrap;
             border-width: 0;
         }
+        
+        /* Remove all focus outlines and add subtle background change instead */
+        input:focus,
+        input:focus-visible,
+        textarea:focus,
+        textarea:focus-visible,
+        select:focus,
+        select:focus-visible,
+        button:focus,
+        button:focus-visible,
+        *:focus,
+        *:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+            --tw-ring-shadow: none !important;
+        }
+        
+        /* Remove ring utilities on focus */
+        .focus\:ring-0:focus,
+        .focus\:ring-1:focus,
+        .focus\:ring-2:focus,
+        .focus\:ring-4:focus,
+        .focus-visible\:ring-0:focus-visible,
+        .focus-visible\:ring-1:focus-visible,
+        .focus-visible\:ring-2:focus-visible,
+        .focus-visible\:ring-4:focus-visible {
+            --tw-ring-shadow: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Input focus background change - light mode (slightly lighter than default input) */
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="tel"]:focus,
+        input[type="url"]:focus,
+        input[type="search"]:focus,
+        input[type="date"]:focus,
+        input[type="datetime-local"]:focus,
+        input[type="month"]:focus,
+        input[type="time"]:focus,
+        input[type="week"]:focus,
+        textarea:focus,
+        select:focus {
+            background-color: oklch(0.95 0 0);
+            transition: background-color 0.15s ease-in-out;
+        }
+        
+        /* Input focus background change - dark mode (slightly more opaque) */
+        .dark input[type="text"]:focus,
+        .dark input[type="email"]:focus,
+        .dark input[type="password"]:focus,
+        .dark input[type="number"]:focus,
+        .dark input[type="tel"]:focus,
+        .dark input[type="url"]:focus,
+        .dark input[type="search"]:focus,
+        .dark input[type="date"]:focus,
+        .dark input[type="datetime-local"]:focus,
+        .dark input[type="month"]:focus,
+        .dark input[type="time"]:focus,
+        .dark input[type="week"]:focus,
+        .dark textarea:focus,
+        .dark select:focus {
+            background-color: oklch(1 0 0 / 0.2);
+            transition: background-color 0.15s ease-in-out;
+        }
     </style>
     @stack('styles')
 </head>
@@ -162,6 +229,7 @@
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
         @include('components.footer')
     @endif
+    @stack('scripts')
 </body>
 </html>
 

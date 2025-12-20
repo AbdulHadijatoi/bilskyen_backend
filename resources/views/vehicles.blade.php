@@ -150,7 +150,11 @@ function formatCurrency($amount) {
             </button>
         </form>
         <!-- Filter Button -->
-        <button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+        <button 
+            type="button" 
+            id="filter-button"
+            class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+        >
             <span class="mr-2">Filter</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
@@ -296,5 +300,342 @@ function formatCurrency($amount) {
         </button>
     </div>
 </div>
+
+<!-- Filter Drawer -->
+<div id="filter-drawer" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div 
+        id="filter-backdrop"
+        class="absolute inset-0 bg-black/50 transition-opacity duration-300 opacity-0"
+        aria-hidden="true"
+    ></div>
+    
+    <!-- Drawer Panel -->
+    <div 
+        id="filter-panel"
+        class="absolute right-0 top-0 h-full w-full max-w-lg bg-background shadow-xl flex flex-col transform transition-transform duration-300 translate-x-full"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="filter-drawer-title"
+    >
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-border px-6 py-4">
+            <h2 id="filter-drawer-title" class="text-xl font-semibold">Filters</h2>
+            <button
+                id="filter-close-button"
+                type="button"
+                class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                aria-label="Close filters"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+            <!-- Make Filter -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Make</label>
+                <select 
+                    name="make" 
+                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                    <option value="">All Makes</option>
+                    @foreach(\App\Constants\Vehicles::MAKES as $make)
+                        <option value="{{ $make }}">{{ $make }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Vehicle Type Filter -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Vehicle Type</label>
+                <div class="space-y-2">
+                    @foreach(['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Convertible', 'Truck', 'Crossover', 'MPV'] as $type)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="vehicle_type[]" 
+                                value="{{ $type }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            >
+                            <span class="text-sm">{{ $type }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Price Range -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Price Range</label>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="price-from" class="sr-only">Price From</label>
+                        <input 
+                            type="number" 
+                            id="price-from"
+                            name="price_from" 
+                            placeholder="Min"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                    <span class="text-muted-foreground">-</span>
+                    <div class="flex-1">
+                        <label for="price-to" class="sr-only">Price To</label>
+                        <input 
+                            type="number" 
+                            id="price-to"
+                            name="price_to" 
+                            placeholder="Max"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Year Range -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Model Year</label>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="year-from" class="sr-only">Year From</label>
+                        <input 
+                            type="number" 
+                            id="year-from"
+                            name="year_from" 
+                            placeholder="From"
+                            min="1975"
+                            max="{{ date('Y') }}"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                    <span class="text-muted-foreground">-</span>
+                    <div class="flex-1">
+                        <label for="year-to" class="sr-only">Year To</label>
+                        <input 
+                            type="number" 
+                            id="year-to"
+                            name="year_to" 
+                            placeholder="To"
+                            min="1975"
+                            max="{{ date('Y') + 1 }}"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transmission Type -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Transmission Type</label>
+                <div class="space-y-2">
+                    @foreach(['Manual', 'Automatic', 'CVT', 'AMT', 'DCT'] as $transmission)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="transmission[]" 
+                                value="{{ $transmission }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            >
+                            <span class="text-sm">{{ $transmission }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Fuel Type -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Fuel Type</label>
+                <div class="space-y-2">
+                    @foreach(['Petrol', 'Diesel', 'Electric Vehicle (EV)', 'Hybrid Electric Vehicle (HEV)', 'Plug-in Hybrid Electric Vehicle (PHEV)', 'CNG', 'LPG'] as $fuel)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="fuel_type[]" 
+                                value="{{ $fuel }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            >
+                            <span class="text-sm">{{ $fuel }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Odometer Range -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Odometer (km)</label>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="odometer-from" class="sr-only">Odometer From</label>
+                        <input 
+                            type="number" 
+                            id="odometer-from"
+                            name="odometer_from" 
+                            placeholder="Min"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                    <span class="text-muted-foreground">-</span>
+                    <div class="flex-1">
+                        <label for="odometer-to" class="sr-only">Odometer To</label>
+                        <input 
+                            type="number" 
+                            id="odometer-to"
+                            name="odometer_to" 
+                            placeholder="Max"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Condition -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Condition</label>
+                <div class="space-y-2">
+                    @foreach(\App\Constants\Vehicles::CONDITIONS as $condition)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="condition[]" 
+                                value="{{ $condition }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            >
+                            <span class="text-sm">{{ $condition }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label class="text-sm font-medium mb-2 block">Status</label>
+                <div class="space-y-2">
+                    @foreach(['Available', 'Reserved', 'Sold', 'In Service'] as $status)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="status[]" 
+                                value="{{ $status }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            >
+                            <span class="text-sm">{{ $status }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="border-t border-border px-6 py-4 flex items-center justify-between gap-4">
+            <button
+                id="filter-reset-button"
+                type="button"
+                class="text-sm font-medium text-primary underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md px-2 py-1"
+            >
+                Reset
+            </button>
+            <div class="flex gap-3">
+                <button
+                    id="filter-apply-button"
+                    type="button"
+                    class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    (function() {
+        const filterDrawer = document.getElementById('filter-drawer');
+        const filterPanel = document.getElementById('filter-panel');
+        const filterBackdrop = document.getElementById('filter-backdrop');
+        const filterButton = document.getElementById('filter-button');
+        const filterCloseButton = document.getElementById('filter-close-button');
+        const filterResetButton = document.getElementById('filter-reset-button');
+        const filterApplyButton = document.getElementById('filter-apply-button');
+
+        function openDrawer() {
+            filterDrawer.classList.remove('hidden');
+            // Force reflow to ensure hidden class is removed before animation
+            filterDrawer.offsetHeight;
+            // Trigger animation
+            requestAnimationFrame(() => {
+                filterPanel.classList.remove('translate-x-full');
+                filterBackdrop.style.opacity = '1';
+            });
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            filterPanel.classList.add('translate-x-full');
+            filterBackdrop.style.opacity = '0';
+            // Wait for animation to complete before hiding
+            setTimeout(() => {
+                filterDrawer.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        // Open drawer
+        filterButton.addEventListener('click', openDrawer);
+
+        // Close drawer
+        filterCloseButton.addEventListener('click', closeDrawer);
+        filterBackdrop.addEventListener('click', closeDrawer);
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !filterDrawer.classList.contains('hidden')) {
+                closeDrawer();
+            }
+        });
+
+        // Reset filters
+        filterResetButton.addEventListener('click', () => {
+            const form = filterDrawer.querySelector('form') || filterDrawer;
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
+                }
+            });
+        });
+
+        // Apply filters (you can customize this to submit the form or update the page)
+        filterApplyButton.addEventListener('click', () => {
+            // Collect filter values
+            const filters = {
+                make: filterDrawer.querySelector('[name="make"]')?.value || '',
+                vehicle_type: Array.from(filterDrawer.querySelectorAll('[name="vehicle_type[]"]:checked')).map(cb => cb.value),
+                price_from: filterDrawer.querySelector('[name="price_from"]')?.value || '',
+                price_to: filterDrawer.querySelector('[name="price_to"]')?.value || '',
+                year_from: filterDrawer.querySelector('[name="year_from"]')?.value || '',
+                year_to: filterDrawer.querySelector('[name="year_to"]')?.value || '',
+                transmission: Array.from(filterDrawer.querySelectorAll('[name="transmission[]"]:checked')).map(cb => cb.value),
+                fuel_type: Array.from(filterDrawer.querySelectorAll('[name="fuel_type[]"]:checked')).map(cb => cb.value),
+                odometer_from: filterDrawer.querySelector('[name="odometer_from"]')?.value || '',
+                odometer_to: filterDrawer.querySelector('[name="odometer_to"]')?.value || '',
+                condition: Array.from(filterDrawer.querySelectorAll('[name="condition[]"]:checked')).map(cb => cb.value),
+                status: Array.from(filterDrawer.querySelectorAll('[name="status[]"]:checked')).map(cb => cb.value),
+            };
+            
+            console.log('Applied filters:', filters);
+            // TODO: Implement actual filtering logic here
+            // For now, just close the drawer
+            closeDrawer();
+        });
+    })();
+</script>
+@endpush
 @endsection
 

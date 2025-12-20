@@ -65,47 +65,111 @@
             <div class="relative flex w-full min-w-0 flex-col p-2 sidebar-section sidebar-group">
                 <p class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 sidebar-section-title">Core Operations</p>
                 <ul class="flex w-full min-w-0 flex-col gap-1 mt-0 sidebar-menu">
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/vehicles" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/vehicles') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.7 5c-.3-.9-1.2-1.5-2.2-1.5h-3c-.6 0-1 .4-1 1s.4 1 1 1h3c.2 0 .4.2.4.4l1.2 3.6c-.1 0-.2-.1-.3-.1H5c-.2 0-.4.1-.5.2L3.4 5c-.1-.2-.3-.4-.5-.4H2"></path>
-                            <path d="M3 17h14"></path>
-                            <path d="M5 17V9h14v8"></path>
-                        </svg>
+                    <!-- Vehicles (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="vehicles">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/vehicles') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="vehicles">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.7 5c-.3-.9-1.2-1.5-2.2-1.5h-3c-.6 0-1 .4-1 1s.4 1 1 1h3c.2 0 .4.2.4.4l1.2 3.6c-.1 0-.2-.1-.3-.1H5c-.2 0-.4.1-.5.2L3.4 5c-.1-.2-.3-.4-.5-.4H2"></path>
+                                <path d="M3 17h14"></path>
+                                <path d="M5 17V9h14v8"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Vehicles</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="vehicles">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="vehicles">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/vehicles/overview" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/vehicles/overview') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Overview</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/vehicles/add-vehicle" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/vehicles/add-vehicle') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Vehicle</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/purchases" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/purchases') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <circle cx="8" cy="21" r="1"></circle>
-                            <circle cx="19" cy="21" r="1"></circle>
-                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-                        </svg>
+                    <!-- Purchases (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="purchases">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/purchases') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="purchases">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <circle cx="8" cy="21" r="1"></circle>
+                                <circle cx="19" cy="21" r="1"></circle>
+                                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Purchases</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="purchases">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="purchases">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/purchases" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/purchases') && !$isActive('dealer/purchases/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Overview</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/purchases/add-purchase" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/purchases/add-purchase') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Purchase</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/sales" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/sales') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                            <path d="M4 22h16"></path>
-                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                        </svg>
+                    <!-- Sales (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="sales">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/sales') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="sales">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                                <path d="M4 22h16"></path>
+                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Sales</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="sales">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="sales">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/sales" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/sales') && !$isActive('dealer/sales/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Overview</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/sales/add-sale" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/sales/add-sale') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Sale</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/expenses" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/expenses') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <path d="M22 6l-10 7L2 6"></path>
-                        </svg>
+                    <!-- Expenses (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="expenses">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/expenses') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="expenses">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <path d="M22 6l-10 7L2 6"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Expenses</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="expenses">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="expenses">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/expenses" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/expenses') && !$isActive('dealer/expenses/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Overview</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/expenses/add-expense" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/expenses/add-expense') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Expense</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -114,24 +178,56 @@
             <div class="relative flex w-full min-w-0 flex-col p-2 sidebar-section sidebar-group">
                 <p class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 sidebar-section-title">Contact Management</p>
                 <ul class="flex w-full min-w-0 flex-col gap-1 mt-0 sidebar-menu">
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/contacts" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/contacts') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
+                    <!-- Contacts (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="contacts">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/contacts') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="contacts">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Contacts</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="contacts">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="contacts">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/contacts" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/contacts') && !$isActive('dealer/contacts/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Directory</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/contacts/add-contact" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/contacts/add-contact') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Contact</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/enquiries" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/enquiries') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                    <!-- Enquiries (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="enquiries">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/enquiries') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="enquiries">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Enquiries</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="enquiries">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="enquiries">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/enquiries" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/enquiries') && !$isActive('dealer/enquiries/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Overview</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/enquiries/add-enquiry" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/enquiries/add-enquiry') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Enquiry</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -140,28 +236,61 @@
             <div class="relative flex w-full min-w-0 flex-col p-2 sidebar-section sidebar-group">
                 <p class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 sidebar-section-title">Accounting & Finance</p>
                 <ul class="flex w-full min-w-0 flex-col gap-1 mt-0 sidebar-menu">
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/accounting/transactions" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/accounting/transactions') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <line x1="12" x2="12" y1="2" y2="22"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
+                    <!-- Transactions (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="transactions">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/accounting/transactions') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="transactions">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <line x1="12" x2="12" y1="2" y2="22"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Transactions</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="transactions">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="transactions">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/accounting/transactions" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/accounting/transactions') && !$isActive('dealer/accounting/add-transaction') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">General Ledger Entries</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/accounting/add-transaction" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/accounting/add-transaction') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Transaction</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/accounting/financial-accounts" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/accounting/financial-accounts') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
-                        </svg>
+                    <!-- Financial Accounts (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="financial-accounts">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/accounting/financial-accounts') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="financial-accounts">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Financial Accounts</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="financial-accounts">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="financial-accounts">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/accounting/financial-accounts" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/accounting/financial-accounts') && !$isActive('dealer/accounting/financial-accounts/add-financial-account') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Chart of Accounts</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/accounting/financial-accounts/add-financial-account" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/accounting/financial-accounts/add-financial-account') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Add Financial Account</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
+                    <!-- Financial Reports (no children) -->
                     <li class="group/menu-item relative sidebar-menu-item">
                         <a href="/dealer/accounting/financial-reports" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/accounting/financial-reports') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
-                        </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Financial Reports</span>
                         </a>
                     </li>
@@ -172,14 +301,40 @@
             <div class="relative flex w-full min-w-0 flex-col p-2 sidebar-section sidebar-group">
                 <p class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 sidebar-section-title">Settings</p>
                 <ul class="flex w-full min-w-0 flex-col gap-1 mt-0 sidebar-menu">
-                    <li class="group/menu-item relative sidebar-menu-item">
-                        <a href="/dealer/settings" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/settings') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
-                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                    <!-- Settings (with children) -->
+                    <li class="group/menu-item relative sidebar-menu-item group/collapsible" data-collapsible="settings">
+                        <button type="button" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 sidebar-nav-item {{ $isActive('dealer/settings') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}" data-collapsible-trigger="settings">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 sidebar-icon">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
                             <span class="truncate sidebar-nav-text">Settings</span>
-                        </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 sidebar-chevron" data-chevron="settings">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                        <ul class="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5 sidebar-menu-sub hidden overflow-hidden" data-collapsible-content="settings">
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/settings" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/settings') && !$isActive('dealer/settings/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">General</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/settings/profile" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/settings/profile') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Profile</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/settings/sessions" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/settings/sessions') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Sessions</span>
+                                </a>
+                            </li>
+                            <li class="group/menu-sub-item relative">
+                                <a href="/dealer/settings/change-password" class="text-sm text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 {{ $isActive('dealer/settings/change-password') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : '' }}">
+                                    <span class="truncate">Change Password</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -232,47 +387,124 @@
         </div>
     </div>
     
-    @if(!$isMobile)
     <script>
         (function() {
-            const userMenuToggle = document.getElementById('user-profile-menu-toggle');
-            const userMenu = document.getElementById('user-profile-menu');
-            
-            if (userMenuToggle && userMenu) {
-                userMenuToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    userMenu.classList.toggle('hidden');
-                });
+            function initializeSidebar() {
+                const sidebarId = '{{ $sidebarId }}';
+                const sidebar = document.getElementById(sidebarId);
                 
-                document.addEventListener('click', (e) => {
-                    if (!userMenuToggle.contains(e.target) && !userMenu.contains(e.target)) {
-                        userMenu.classList.add('hidden');
+                if (!sidebar) {
+                    // Retry after a short delay if sidebar not found
+                    setTimeout(initializeSidebar, 100);
+                    return;
+                }
+                
+                // Collapsible menu functionality
+                const currentPath = window.location.pathname;
+                const collapsibleItems = sidebar.querySelectorAll('[data-collapsible]');
+                
+                collapsibleItems.forEach(item => {
+                    const collapsibleId = item.getAttribute('data-collapsible');
+                    const trigger = item.querySelector(`[data-collapsible-trigger="${collapsibleId}"]`);
+                    const content = item.querySelector(`[data-collapsible-content="${collapsibleId}"]`);
+                    const chevron = item.querySelector(`[data-chevron="${collapsibleId}"]`);
+                    
+                    if (!trigger || !content) {
+                        return;
+                    }
+                    
+                    // Check if current path matches to auto-expand
+                    const shouldBeOpen = currentPath.includes(`/dealer/${collapsibleId}`) || 
+                                       currentPath.includes(`/dealer/accounting/${collapsibleId}`) ||
+                                       (collapsibleId === 'settings' && currentPath.includes(`/dealer/settings`));
+                    
+                if (shouldBeOpen) {
+                    content.classList.remove('hidden');
+                    content.setAttribute('data-state', 'open');
+                    item.setAttribute('data-state', 'open');
+                    if (chevron) {
+                        chevron.style.transform = 'rotate(90deg)';
+                    }
+                } else {
+                    content.setAttribute('data-state', 'closed');
+                }
+                
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const isOpen = content.getAttribute('data-state') === 'open';
+                    
+                    if (isOpen) {
+                        content.setAttribute('data-state', 'closed');
+                        item.setAttribute('data-state', 'closed');
+                        // Use setTimeout to allow animation to complete before hiding
+                        setTimeout(() => {
+                            content.classList.add('hidden');
+                        }, 200);
+                        if (chevron) {
+                            chevron.style.transform = 'rotate(0deg)';
+                        }
+                    } else {
+                        content.classList.remove('hidden');
+                        // Use requestAnimationFrame to ensure the element is visible before animation
+                        requestAnimationFrame(() => {
+                            content.setAttribute('data-state', 'open');
+                            item.setAttribute('data-state', 'open');
+                        });
+                        if (chevron) {
+                            chevron.style.transform = 'rotate(90deg)';
+                        }
                     }
                 });
+                });
+                
+                // User menu toggle (desktop)
+                @if(!$isMobile)
+                const userMenuToggle = document.getElementById('user-profile-menu-toggle');
+                const userMenu = document.getElementById('user-profile-menu');
+                
+                if (userMenuToggle && userMenu) {
+                    userMenuToggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        userMenu.classList.toggle('hidden');
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        if (!userMenuToggle.contains(e.target) && !userMenu.contains(e.target)) {
+                            userMenu.classList.add('hidden');
+                        }
+                    });
+                }
+                @else
+                // User menu toggle (mobile)
+                const userMenuToggle = document.getElementById('mobile-user-profile-menu-toggle');
+                const userMenu = document.getElementById('mobile-user-profile-menu');
+                
+                if (userMenuToggle && userMenu) {
+                    userMenuToggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        userMenu.classList.toggle('hidden');
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        if (!userMenuToggle.contains(e.target) && !userMenu.contains(e.target)) {
+                            userMenu.classList.add('hidden');
+                        }
+                    });
+                }
+                @endif
+            }
+            
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeSidebar);
+            } else {
+                // DOM is already ready
+                initializeSidebar();
             }
         })();
     </script>
-    @else
-    <script>
-        (function() {
-            const userMenuToggle = document.getElementById('mobile-user-profile-menu-toggle');
-            const userMenu = document.getElementById('mobile-user-profile-menu');
-            
-            if (userMenuToggle && userMenu) {
-                userMenuToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    userMenu.classList.toggle('hidden');
-                });
-                
-                document.addEventListener('click', (e) => {
-                    if (!userMenuToggle.contains(e.target) && !userMenu.contains(e.target)) {
-                        userMenu.classList.add('hidden');
-                    }
-                });
-            }
-        })();
-    </script>
-    @endif
 </aside>
 
 <style>
@@ -352,6 +584,44 @@
         flex-direction: column;
         height: 100%;
         width: 100%;
+    }
+    
+    /* Collapsible menu styles */
+    .sidebar-chevron {
+        transition: transform 0.2s ease;
+    }
+    
+    [data-state="open"] .sidebar-chevron {
+        transform: rotate(90deg);
+    }
+    
+    /* Collapsible animation */
+    .sidebar-menu-sub {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.2s ease-out, opacity 0.2s ease-out;
+    }
+    
+    .sidebar-menu-sub[data-state="open"] {
+        max-height: 500px;
+        opacity: 1;
+    }
+    
+    .sidebar-menu-sub[data-state="closed"],
+    .sidebar-menu-sub.hidden {
+        max-height: 0;
+        opacity: 0;
+    }
+    
+    /* Hide submenu when sidebar is collapsed */
+    #sidebar.collapsed .sidebar-menu-sub {
+        display: none !important;
+    }
+    
+    /* Hide chevron when sidebar is collapsed */
+    #sidebar.collapsed .sidebar-chevron {
+        display: none !important;
     }
     
     /* Mobile responsive */
