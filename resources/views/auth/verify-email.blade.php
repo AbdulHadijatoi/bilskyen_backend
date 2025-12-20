@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Verify Email - RevoLot')
+@section('title', 'Verify Email - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-start gap-4">

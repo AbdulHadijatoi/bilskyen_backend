@@ -3,7 +3,7 @@
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-2">
                 <a href="/" class="flex items-center space-x-2">
-                    <p class="text-[27px] font-bold">RevoLot</p>
+                    <p class="text-[27px] font-bold">Bilskyen</p>
                 </a>
             </div>
             <div class="flex items-center gap-4">

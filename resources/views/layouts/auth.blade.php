@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Revolutionizing Dealership Management with quality vehicles and exceptional customer service.">
-    <title>@yield('title', 'RevoLot | Revolutionizing Dealership Management')</title>
+    <title>@yield('title', 'Bilskyen | Revolutionizing Dealership Management')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -154,7 +154,7 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center gap-2">
                     <a href="/" class="flex items-center space-x-2">
-                        <p class="text-[27px] font-bold">RevoLot</p>
+                        <p class="text-[27px] font-bold">Bilskyen</p>
                     </a>
                 </div>
                 <div class="flex items-center gap-4">
@@ -178,7 +178,7 @@
             <div class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">
                     <p class="text-foreground text-lg">
-                        &ldquo;RevoLot has revolutionized the way we manage our dealership operations, making everything simple and efficient.&rdquo;
+                        &ldquo;Bilskyen has revolutionized the way we manage our dealership operations, making everything simple and efficient.&rdquo;
                     </p>
                     <footer class="text-foreground text-sm">
                         Rahif

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vehicle Details | RevoLot')
+@section('title', 'Vehicle Details | Bilskyen')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
@@ -68,7 +68,7 @@ $vehicle = [
 ];
 
 function formatCurrency($amount) {
-    return '₹' . number_format($amount, 0, '.', ',');
+    return number_format($amount, 0, '.', '.') . ' kr.';
 }
 
 function getDateWithRelative($date) {

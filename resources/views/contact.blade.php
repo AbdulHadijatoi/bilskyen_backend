@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Contact | RevoLot')
+@section('title', 'Contact | Bilskyen')
 
 @section('content')
 <div class="flex min-h-screen flex-col">
@@ -146,7 +146,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Email</h3>
                                 <p class="text-muted-foreground">
-                                    info@revolot.com
+                                    info@bilskyen.dk
                                 </p>
                             </div>
                         </div>

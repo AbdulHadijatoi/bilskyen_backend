@@ -33,7 +33,7 @@
                         <span class="text-sm font-bold">R</span>
                     </div>
                     <div class="grid flex-1 text-left text-sm leading-tight sidebar-header-text">
-                        <span class="truncate font-medium text-sidebar-foreground">RevoLot</span>
+                        <span class="truncate font-medium text-sidebar-foreground">Bilskyen</span>
                         <span class="truncate text-xs text-sidebar-foreground">Dealer Panel</span>
                     </div>
                 </a>

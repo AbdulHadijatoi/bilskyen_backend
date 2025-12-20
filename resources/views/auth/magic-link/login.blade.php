@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Magic Link Login - RevoLot')
+@section('title', 'Magic Link Login - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vehicles | RevoLot')
+@section('title', 'Vehicles | Bilskyen')
 
 @php
 // Placeholder vehicle data - in production, this would come from a database
@@ -123,7 +123,7 @@ $vehicles = [
 
 // Format currency helper
 function formatCurrency($amount) {
-    return '₹' . number_format($amount, 0, '.', ',');
+    return number_format($amount, 0, '.', '.') . ' kr.';
 }
 @endphp
 

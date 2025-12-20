@@ -10,7 +10,7 @@ class Accountings
         'Cheque',
         'Financing',
         'Credit',
-        'UPI / Digital Wallet',
+        'MobilePay / Digital Wallet',
     ];
 
     public const ENTRY_TYPES = [

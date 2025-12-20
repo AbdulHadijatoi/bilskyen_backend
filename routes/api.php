@@ -50,6 +50,12 @@ Route::prefix('auth')->group(function () {
         Route::post('/revoke-session', [AuthController::class, 'revokeSession']);
     });
     
+    // JWT Authentication routes
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
+    Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
+    
     // TODO: Implement remaining endpoints
     Route::post('/sign-in/magic-link', function () {
         return response()->json(['message' => 'Magic link endpoint - to be implemented'], 501);

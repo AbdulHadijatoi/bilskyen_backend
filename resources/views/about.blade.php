@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'About RevoLot | RevoLot')
+@section('title', 'About Bilskyen | Bilskyen')
 
 @section('content')
 <div class="flex min-h-screen flex-col">
@@ -8,7 +8,7 @@
     <section class="bg-muted py-20 text-center">
         <div class="container mx-auto px-4 md:px-6">
             <h1 class="text-4xl font-bold tracking-tight md:text-5xl">
-                About RevoLot
+                About Bilskyen
             </h1>
             <p class="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
                 We are dedicated to revolutionizing the dealership industry with
@@ -37,7 +37,7 @@
                         Empowering Dealerships Through Innovation
                     </h3>
                     <p class="text-muted-foreground">
-                        RevoLot was born from a simple idea: to create a dealership
+                        Bilskyen was born from a simple idea: to create a dealership
                         management system that is powerful, intuitive, and affordable.
                         We saw the challenges dealerships faced with outdated, complex
                         software and knew there was a better way.
@@ -136,7 +136,7 @@
             <div class="mb-12 text-center">
                 <h2 class="text-3xl font-bold tracking-tight">Meet the Team</h2>
                 <p class="text-muted-foreground mx-auto mt-2 max-w-2xl">
-                    The passionate individuals driving RevoLot forward.
+                    The passionate individuals driving Bilskyen forward.
                 </p>
             </div>
             <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -152,7 +152,7 @@
                     </div>
                     <div class="p-4">
                         <p class="text-muted-foreground">
-                            With a passion for technology and the automotive industry, Muhammed founded RevoLot to bring modern, efficient solutions to dealerships.
+                            With a passion for technology and the automotive industry, Muhammed founded Bilskyen to bring modern, efficient solutions to dealerships.
                         </p>
                     </div>
                 </div>
@@ -184,7 +184,7 @@
                     </div>
                     <div class="p-4">
                         <p class="text-muted-foreground">
-                            John connects with our clients, understanding their needs and helping them leverage RevoLot for maximum growth.
+                            John connects with our clients, understanding their needs and helping them leverage Bilskyen for maximum growth.
                         </p>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
         <div class="container mx-auto px-4 md:px-6 text-center">
             <h2 class="text-3xl font-bold">Join the Revolution</h2>
             <p class="text-primary-foreground/90 mx-auto mt-4 max-w-2xl text-lg">
-                Ready to see how RevoLot can transform your dealership? Explore our
+                Ready to see how Bilskyen can transform your dealership? Explore our
                 features or get in touch with our team today.
             </p>
             <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">

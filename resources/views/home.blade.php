@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'RevoLot | Home')
+@section('title', 'Bilskyen | Home')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
@@ -13,7 +13,7 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="max-w-4xl space-y-8">
                 <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">
-                    Find Your Perfect Vehicle at RevoLot
+                    Find Your Perfect Vehicle at Bilskyen
                 </h1>
                 <p class="text-xl text-muted-foreground">
                     Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.
@@ -341,7 +341,7 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    Why Choose RevoLot
+                    Why Choose Bilskyen
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
                     We're committed to providing exceptional service and quality vehicles to our customers.
@@ -480,7 +480,7 @@
                         [
                             'name' => 'John Davis',
                             'location' => 'Mumbai, India',
-                            'quote' => 'The team at RevoLot made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
+                            'quote' => 'The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
                             'rating' => 5
                         ],
                         [

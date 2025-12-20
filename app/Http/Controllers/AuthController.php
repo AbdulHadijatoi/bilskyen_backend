@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -26,10 +28,10 @@ class AuthController extends Controller
                 'string',
                 'min:8',
                 'max:128',
-                'regex:/[A-Z]/',      // At least one uppercase letter
-                'regex:/[a-z]/',      // At least one lowercase letter
-                'regex:/[0-9]/',      // At least one number
-                'regex:/[@$!%*?&#]/', // At least one special character
+                // 'regex:/[A-Z]/',      // At least one uppercase letter
+                // 'regex:/[a-z]/',      // At least one lowercase letter
+                // 'regex:/[0-9]/',      // At least one number
+                // 'regex:/[@$!%*?&#]/', // At least one special character
             ],
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string',
@@ -266,6 +268,231 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Password changed successfully',
         ]);
+    }
+
+    /**
+     * JWT Login - Authenticate user and receive tokens
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $credentials = $request->validate([
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|max:128',
+        ]);
+
+        // Normalize email to lowercase
+        $credentials['email'] = strtolower($credentials['email']);
+
+        // Attempt authentication
+        if (!$token = auth('api')->attempt($credentials)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid credentials',
+                'errors' => [
+                    'email' => ['These credentials do not match our records.'],
+                ],
+            ], 401);
+        }
+
+        $user = auth('api')->user();
+
+        // Check if user is banned
+        if ($user->banned) {
+            auth('api')->logout();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Account is banned',
+                'ban_reason' => $user->ban_reason,
+                'ban_expires' => $user->ban_expires,
+            ], 403);
+        }
+
+        // Generate refresh token with custom claim
+        $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
+
+        // Set refresh token as HttpOnly cookie
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            20160, // 14 days in minutes
+            null,
+            null,
+            true, // secure
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'emailVerified' => $user->email_verified,
+                ],
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
+            ],
+        ])->cookie($cookie);
+    }
+
+    /**
+     * JWT Refresh - Refresh access token using refresh token
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        try {
+            $refreshToken = $request->cookie('refresh_token');
+            
+            if (!$refreshToken) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Refresh token not found',
+                ], 401);
+            }
+
+            // Authenticate using refresh token
+            $user = JWTAuth::setToken($refreshToken)->authenticate();
+            
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not found',
+                ], 404);
+            }
+
+            // Check if user is banned
+            if ($user->banned) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Account is banned',
+                ], 403);
+            }
+
+            // Generate new access token
+            $newAccessToken = auth('api')->login($user);
+
+            // Optional: Rotate refresh token (recommended for security)
+            $newRefreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
+            
+            $cookie = cookie(
+                'refresh_token',
+                $newRefreshToken,
+                20160, // 14 days
+                null,
+                null,
+                true, // secure
+                true, // httpOnly
+                false, // raw
+                'Strict' // sameSite
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'access_token' => $newAccessToken,
+                    'token_type' => 'bearer',
+                    'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
+                ],
+            ])->cookie($cookie);
+        } catch (JWTException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Refresh token expired or invalid',
+            ], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to refresh token',
+            ], 500);
+        }
+    }
+
+    /**
+     * JWT Logout - Logout user and invalidate tokens
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        try {
+            // Invalidate current access token
+            JWTAuth::parseToken()->invalidate();
+
+            // Clear refresh token cookie
+            $cookie = cookie()->forget('refresh_token');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Logged out successfully',
+            ])->cookie($cookie);
+        } catch (JWTException $e) {
+            // Token might already be invalid, but we still want to clear the cookie
+            $cookie = cookie()->forget('refresh_token');
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Logged out successfully',
+            ])->cookie($cookie);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to logout',
+            ], 500);
+        }
+    }
+
+    /**
+     * JWT Me - Get current authenticated user information
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function me(Request $request): JsonResponse
+    {
+        try {
+            $user = auth('api')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'emailVerified' => $user->email_verified,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'image' => $user->image,
+                    'banned' => $user->banned,
+                    'created_at' => $user->created_at,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
     }
 }
 

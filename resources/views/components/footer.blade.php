@@ -3,10 +3,10 @@
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div class="space-y-4">
                 <a href="/" class="flex items-center space-x-2">
-                    <p class="text-[27px] font-bold">RevoLot</p>
+                    <p class="text-[27px] font-bold">Bilskyen</p>
                 </a>
                 <p class="text-sm text-muted-foreground">
-                    RevoLot - Driving trust and value with quality pre-owned vehicles for every journey.
+                    Bilskyen - Driving trust and value with quality pre-owned vehicles for every journey.
                 </p>
                 <span class="block text-xs text-muted-foreground">
                     Version 1.0.0
@@ -70,7 +70,7 @@
             <div>
                 <h3 class="mb-4 text-sm font-medium">Contact Us</h3>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="mailto:info@revolot.com" class="text-muted-foreground transition hover:text-foreground">info@revolot.com</a></li>
+                    <li><a href="mailto:info@bilskyen.dk" class="text-muted-foreground transition hover:text-foreground">info@bilskyen.dk</a></li>
                     <li><a href="tel:+911234567890" class="text-muted-foreground transition hover:text-foreground">+91-123-456-7890</a></li>
                     <li class="text-muted-foreground">Address: 123 Dealership Lane, Kerala, India</li>
                 </ul>
@@ -78,7 +78,7 @@
         </div>
         <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 md:flex-row">
             <p class="text-xs text-muted-foreground">
-                © {{ date('Y') }} RevoLot. All rights reserved.
+                © {{ date('Y') }} Bilskyen. All rights reserved.
             </p>
             <div class="flex items-center space-x-4">
                 <a href="/privacy" class="text-xs text-muted-foreground transition hover:text-foreground">Privacy Policy</a>
