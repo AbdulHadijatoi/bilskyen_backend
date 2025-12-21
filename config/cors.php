@@ -19,18 +19,28 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    'allowed_origins' => array_filter([
         env('FRONTEND_URL', 'http://localhost:5173'),
         env('ADMIN_PANEL_URL', 'http://localhost:5174'),
-    ],
+        'https://panel.bilskyen.dk',
+        'https://bilskyen.dk',
+        // Allow any subdomain of bilskyen.dk
+    ]),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://.*\.bilskyen\.dk$#',
+    ],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'Authorization',
+        'X-Requested-With',
+        'Content-Type',
+        'Accept',
+    ],
 
-    'max_age' => 0,
+    'max_age' => 86400, // 24 hours - cache preflight requests
 
     'supports_credentials' => true,
 
