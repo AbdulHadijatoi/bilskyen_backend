@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Services\RolePermissionService;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -14,6 +15,14 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
+        // lets truncate first and then add records to avoid duplicates
+        // truncate roles and permissions tables
+        // disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        Role::truncate();
+        Permission::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+
         $rolePermissionService = app(RolePermissionService::class);
         
         // Clear cache first
@@ -122,23 +131,23 @@ class RolesAndPermissionsSeeder extends Seeder
         }
         $this->command->info('✓ Permissions created');
 
-        // Create roles
+        // Create roles (using lowercase names to match codebase expectations)
         $this->command->info('Creating roles...');
         
-        // Buyer role (minimal permissions)
-        $buyerRole = $rolePermissionService->createRole('Buyer');
-        $buyerPermissions = [
+        // User role (minimal permissions, previously called Buyer)
+        $userRole = $rolePermissionService->createRole('user');
+        $userPermissions = [
             'dashboard.view',
             'vehicle.list',
             'vehicle.view',
             'contact.view',
             'enquiry.create',
         ];
-        $rolePermissionService->syncRolePermissions($buyerRole, $buyerPermissions);
-        $this->command->info('✓ Buyer role created with permissions');
+        $rolePermissionService->syncRolePermissions($userRole, $userPermissions);
+        $this->command->info('✓ User role created with permissions');
 
         // Dealer role (most permissions for managing dealership)
-        $dealerRole = $rolePermissionService->createRole('Dealer');
+        $dealerRole = $rolePermissionService->createRole('dealer');
         $dealerPermissions = [
             'dashboard.view',
             'vehicle.list',
@@ -192,7 +201,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->command->info('✓ Dealer role created with permissions');
 
         // Admin role (all permissions)
-        $adminRole = $rolePermissionService->createRole('Admin');
+        $adminRole = $rolePermissionService->createRole('admin');
         $rolePermissionService->syncRolePermissions($adminRole, $permissions);
         $this->command->info('✓ Admin role created with all permissions');
 

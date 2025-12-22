@@ -33,7 +33,7 @@ if (!function_exists('permission_middleware')) {
 }
 
 // Dealer routes (requires authentication)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt.auth')->group(function () {
     
     // File upload routes
     Route::post('/file-upload', [FileUploadController::class, 'upload'])

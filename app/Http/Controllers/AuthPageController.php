@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,8 @@ use Carbon\Carbon;
 class AuthPageController extends Controller
 {
     public function __construct(
-        private AuthService $authService
+        private AuthService $authService,
+        private RolePermissionService $rolePermissionService
     ) {}
 
     /**
@@ -190,6 +192,7 @@ class AuthPageController extends Controller
         }
 
         $user = auth('api')->user();
+        $user->load('roles');
 
         // Check if user is banned
         if ($user->banned) {
@@ -226,11 +229,12 @@ class AuthPageController extends Controller
             'Strict' // sameSite
         );
 
-        // Redirect based on user role
+        // Redirect based on user roles (prioritize admin > dealer > user)
         $redirectPath = '/';
-        if ($user->role === 'admin') {
+        $roleNames = $user->roles->pluck('name')->map('strtolower')->toArray();
+        if (in_array('admin', $roleNames)) {
             $redirectPath = '/admin';
-        } elseif ($user->role === 'dealer') {
+        } elseif (in_array('dealer', $roleNames)) {
             $redirectPath = '/dealer';
         }
 
@@ -266,9 +270,12 @@ class AuthPageController extends Controller
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => $request->password,
-            'role' => $request->role ?? 'user',
             'email_verified' => false,
         ]);
+
+        // Assign default role
+        $roles = $request->input('roles', ['user']);
+        $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         // Generate JWT tokens
         $token = auth('api')->login($user);
@@ -546,9 +553,12 @@ class AuthPageController extends Controller
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => Str::random(32), // Temporary random password
-            'role' => $request->role ?? 'user',
             'email_verified' => false,
         ]);
+
+        // Assign default role
+        $roles = $request->input('roles', ['user']);
+        $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         // Generate magic link token
         $token = Str::random(64);
@@ -666,16 +676,20 @@ class AuthPageController extends Controller
     }
 
     /**
-     * Redirect user based on their role
+     * Redirect user based on their roles
      *
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
      */
     protected function redirectBasedOnRole($user)
     {
-        if ($user->role === 'admin') {
+        $user->load('roles');
+        $roleNames = $user->roles->pluck('name')->map('strtolower')->toArray();
+        
+        // Prioritize admin > dealer > user
+        if (in_array('admin', $roleNames)) {
             return redirect('/admin');
-        } elseif ($user->role === 'dealer') {
+        } elseif (in_array('dealer', $roleNames)) {
             return redirect('/dealer');
         } else {
             return redirect('/');

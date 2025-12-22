@@ -35,8 +35,8 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
     });
     
-    // Legacy Sanctum routes (for backward compatibility)
-    Route::middleware('auth:sanctum')->group(function () {
+    // User session management routes (JWT authenticated)
+    Route::middleware('jwt.auth')->group(function () {
         Route::post('/sign-out', [AuthController::class, 'signOut']);
         Route::get('/get-session', [AuthController::class, 'getSession']);
         Route::post('/update-user', [AuthController::class, 'updateUser']);
@@ -60,7 +60,7 @@ Route::prefix('auth')->group(function () {
         return response()->json(['message' => 'Reset password endpoint - to be implemented'], 501);
     });
     
-    Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
+    Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('jwt.auth');
     
     Route::get('/verify-email', function () {
         return response()->json(['message' => 'Verify email endpoint - to be implemented'], 501);
@@ -68,6 +68,6 @@ Route::prefix('auth')->group(function () {
     
     Route::post('/change-email', function () {
         return response()->json(['message' => 'Change email endpoint - to be implemented'], 501);
-    })->middleware('auth:sanctum');
+    })->middleware('jwt.auth');
 });
 

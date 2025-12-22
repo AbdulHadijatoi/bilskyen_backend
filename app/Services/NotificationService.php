@@ -106,11 +106,18 @@ class NotificationService
     {
         $query = Notification::query();
 
-        // Filter by user role
-        $userRole = $user->role;
-        $query->where(function ($q) use ($userRole) {
-            $q->whereJsonContains('target_roles', $userRole)
-              ->orWhereJsonLength('target_roles', 0); // Empty array means all users
+        // Filter by user roles
+        $user->load('roles');
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $query->where(function ($q) use ($userRoleNames) {
+            if (count($userRoleNames) > 0) {
+                $q->where(function ($subQ) use ($userRoleNames) {
+                    foreach ($userRoleNames as $roleName) {
+                        $subQ->orWhereJsonContains('target_roles', $roleName);
+                    }
+                });
+            }
+            $q->orWhereJsonLength('target_roles', 0); // Empty array means all users
         });
 
         // Apply filters
@@ -143,11 +150,18 @@ class NotificationService
     {
         $readNotificationIds = $user->readNotifications()->pluck('notifications.id');
 
+        $user->load('roles');
+        $userRoleNames = $user->roles->pluck('name')->toArray();
         $query = Notification::whereNotIn('id', $readNotificationIds)
-            ->where(function ($q) use ($user) {
-                $userRole = $user->role;
-                $q->whereJsonContains('target_roles', $userRole)
-                  ->orWhereJsonLength('target_roles', 0);
+            ->where(function ($q) use ($userRoleNames) {
+                if (count($userRoleNames) > 0) {
+                    $q->where(function ($subQ) use ($userRoleNames) {
+                        foreach ($userRoleNames as $roleName) {
+                            $subQ->orWhereJsonContains('target_roles', $roleName);
+                        }
+                    });
+                }
+                $q->orWhereJsonLength('target_roles', 0);
             });
 
         if ($since) {
@@ -410,7 +424,10 @@ class NotificationService
                 ->pluck('id')
                 ->toArray();
         } elseif (count($targetRoles) > 0) {
-            $audienceUserIds = User::whereIn('role', $targetRoles)
+            // Get users who have any of the target roles
+            $audienceUserIds = User::whereHas('roles', function ($query) use ($targetRoles) {
+                $query->whereIn('name', $targetRoles);
+            })
                 ->where('banned', false)
                 ->pluck('id')
                 ->toArray();

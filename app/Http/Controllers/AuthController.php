@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,10 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private RolePermissionService $rolePermissionService
+    ) {}
+
     /**
      * Register a new user with JWT authentication
      * 
@@ -38,7 +43,8 @@ class AuthController extends Controller
             ],
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string',
-            'role' => 'nullable|string|in:user,dealer,admin',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|in:user,dealer,admin',
         ], [
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).',
         ]);
@@ -58,9 +64,15 @@ class AuthController extends Controller
             'password' => $request->password, // Will be automatically hashed by the model cast
             'phone' => $request->phone,
             'address' => $request->address,
-            'role' => $request->role ?? 'user',
             'email_verified' => false,
         ]);
+
+        // Assign default role if no roles provided
+        $roles = $request->input('roles', ['user']);
+        $this->rolePermissionService->assignRoleToUser($user, $roles);
+
+        // Load roles for response
+        $user->load('roles');
 
         // Generate JWT access token
         $token = auth('api')->login($user);
@@ -90,7 +102,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'roles' => $user->roles->pluck('name')->toArray(),
                     'emailVerified' => $user->email_verified,
                 ],
                 'access_token' => $token,
@@ -102,12 +114,18 @@ class AuthController extends Controller
 
 
     /**
-     * Sign out user
+     * Sign out user (JWT)
+     * Note: JWT tokens are stateless. Client should discard the token.
+     * Optionally invalidate token if blacklist is enabled.
      */
     public function signOut(Request $request): JsonResponse
     {
-        // Delete the current token
-        $request->user()->currentAccessToken()->delete();
+        try {
+            // Invalidate current JWT token if blacklist is enabled
+            JWTAuth::parseToken()->invalidate();
+        } catch (JWTException $e) {
+            // Token might already be invalid, continue anyway
+        }
 
         return response()->json([
             'message' => 'Signed out successfully',
@@ -120,6 +138,7 @@ class AuthController extends Controller
     public function getSession(Request $request): JsonResponse
     {
         $user = $request->user();
+        $user->load('roles');
 
         // Match frontend expected response format (camelCase)
         return response()->json([
@@ -127,7 +146,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->role,
+                'roles' => $user->roles->pluck('name')->toArray(),
                 'emailVerified' => $user->email_verified,
                 'phone' => $user->phone,
                 'address' => $user->address,
@@ -138,11 +157,17 @@ class AuthController extends Controller
     }
 
     /**
-     * Revoke current session
+     * Revoke current session (JWT)
+     * Note: JWT tokens are stateless. Client should discard the token.
      */
     public function revokeSession(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        try {
+            // Invalidate current JWT token if blacklist is enabled
+            JWTAuth::parseToken()->invalidate();
+        } catch (JWTException $e) {
+            // Token might already be invalid, continue anyway
+        }
 
         return response()->json([
             'message' => 'Session revoked successfully',
@@ -171,6 +196,7 @@ class AuthController extends Controller
         }
 
         $user->update($validator->validated());
+        $user->load('roles');
 
         // Match frontend expected response format (camelCase)
         return response()->json([
@@ -178,7 +204,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->role,
+                'roles' => $user->roles->pluck('name')->toArray(),
                 'emailVerified' => $user->email_verified,
                 'phone' => $user->phone,
                 'address' => $user->address,
@@ -230,11 +256,10 @@ class AuthController extends Controller
         $user->password = $request->newPassword;
         $user->save();
 
-        // Revoke other sessions if requested
-        if ($request->boolean('revokeOtherSessions', true)) {
-            $currentToken = $request->user()->currentAccessToken();
-            $user->tokens()->where('id', '!=', $currentToken->id)->delete();
-        }
+        // Note: With JWT, we cannot revoke other sessions without a token blacklist.
+        // The revokeOtherSessions parameter is kept for API compatibility but doesn't
+        // have effect unless JWT blacklist is configured.
+        // Client should re-authenticate after password change for security.
 
         return response()->json([
             'message' => 'Password changed successfully',
@@ -269,6 +294,7 @@ class AuthController extends Controller
         }
 
         $user = auth('api')->user();
+        $user->load('roles');
 
         // Check if user is banned
         if ($user->banned) {
@@ -305,7 +331,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'roles' => $user->roles->pluck('name')->toArray(),
                     'emailVerified' => $user->email_verified,
                 ],
                 'access_token' => $token,
@@ -443,13 +469,15 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            $user->load('roles');
+
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'roles' => $user->roles->pluck('name')->toArray(),
                     'emailVerified' => $user->email_verified,
                     'phone' => $user->phone,
                     'address' => $user->address,

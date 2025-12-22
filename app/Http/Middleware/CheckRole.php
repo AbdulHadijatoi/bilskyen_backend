@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\AuthService;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class CheckRole
 {
@@ -23,7 +25,19 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
+        // Get authenticated user via JWT
+        // Try JWT from cookie (via AuthService) first
         $user = $this->authService->getAuthenticatedUser($request);
+        
+        // Try JWT from Authorization header if cookie method failed
+        if (!$user) {
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+            } catch (JWTException $e) {
+                // Token invalid or not provided, continue to unauthorized response
+                $user = null;
+            }
+        }
 
         if (!$user) {
             return $this->unauthorizedResponse();

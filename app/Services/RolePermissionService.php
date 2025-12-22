@@ -159,14 +159,17 @@ class RolePermissionService
     }
 
     /**
-     * Get all permissions for a user (direct + via roles)
+     * Get direct permissions assigned to a user (not from roles)
+     * Returns only permissions from model_has_permissions table
      *
      * @param User $user User instance
      * @return \Illuminate\Support\Collection
      */
     public function getUserPermissions(User $user)
     {
-        return $user->getAllPermissions();
+        // Get only direct permissions (from model_has_permissions table)
+        // Not permissions inherited from roles
+        return $user->permissions;
     }
 
     /**

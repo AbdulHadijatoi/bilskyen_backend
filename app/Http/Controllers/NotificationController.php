@@ -54,10 +54,14 @@ class NotificationController extends Controller
         if ($unread) {
             $count = $this->notificationService->getUnreadCount($user, $since);
         } else {
-            $count = Notification::where(function ($q) use ($user) {
-                $userRole = $user->role;
-                $q->whereJsonContains('target_roles', $userRole)
-                  ->orWhereJsonLength('target_roles', 0);
+            $user->load('roles');
+            $userRoleNames = $user->roles->pluck('name')->toArray();
+            $count = Notification::where(function ($q) use ($userRoleNames) {
+                $q->where(function ($subQ) use ($userRoleNames) {
+                    foreach ($userRoleNames as $roleName) {
+                        $subQ->orWhereJsonContains('target_roles', $roleName);
+                    }
+                })->orWhereJsonLength('target_roles', 0);
             })->count();
         }
 

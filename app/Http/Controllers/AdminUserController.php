@@ -25,14 +25,20 @@ class AdminUserController extends Controller
         $sort = json_decode($request->input('sort', '[]'), true);
         FilterHelper::applySorting($query, $sort);
 
-        // Paginate
+        // Paginate with roles loaded
         $perPage = $request->input('perPage', 10);
-        $users = $query->paginate($perPage);
+        $users = $query->with('roles')->paginate($perPage);
 
-        // Add computed status field
+        // Add computed status field and transform roles
         $users->getCollection()->transform(function ($user) {
+            $userArray = $user->toArray();
+            // Replace role field with roles array if it exists
+            if (isset($userArray['role'])) {
+                unset($userArray['role']);
+            }
             return [
-                ...$user->toArray(),
+                ...$userArray,
+                'roles' => $user->roles->pluck('name')->toArray(),
                 'status' => $user->status,
             ];
         });

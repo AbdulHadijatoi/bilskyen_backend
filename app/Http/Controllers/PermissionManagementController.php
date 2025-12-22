@@ -164,11 +164,11 @@ class PermissionManagementController extends Controller
             } else {
                 $model = User::findOrFail($modelId);
                 
-                // Check if already assigned
-                if ($model->hasPermissionTo($permission)) {
+                // Check if already directly assigned (not from roles)
+                if ($model->hasDirectPermission($permission->name)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Permission is already assigned to this user'
+                        'message' => 'Permission is already directly assigned to this user'
                     ], 400);
                 }
                 
@@ -215,7 +215,15 @@ class PermissionManagementController extends Controller
                 $this->rolePermissionService->removePermissionFromRole($model, $permission->name);
             } else {
                 $model = User::findOrFail($modelId);
-                $this->rolePermissionService->removePermissionFromUser($model, $permission->name);
+                // Only revoke if directly assigned (not from roles)
+                if ($model->hasDirectPermission($permission->name)) {
+                    $this->rolePermissionService->removePermissionFromUser($model, $permission->name);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Permission is not directly assigned to this user (it may be inherited from a role)'
+                    ], 400);
+                }
             }
 
             // Clear cache
