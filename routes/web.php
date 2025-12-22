@@ -1,156 +1,73 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthPageController;
+use App\Http\Controllers\HomeController;
 
 // Home Page
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Auth Routes
 Route::prefix('auth')->group(function () {
     // Login
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
+    Route::get('/login', [AuthPageController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthPageController::class, 'handleLogin'])->name('login.post');
     
     // Signup
-    Route::get('/signup', function () {
-        return view('auth.signup');
-    })->name('signup');
+    Route::get('/signup', [AuthPageController::class, 'showSignup'])->name('signup');
+    Route::post('/signup', [AuthPageController::class, 'handleSignup'])->name('signup.post');
     
     // Forgot Password
-    Route::get('/forgot-password', function () {
-        return view('auth.forgot-password');
-    })->name('password.request');
+    Route::get('/forgot-password', [AuthPageController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthPageController::class, 'handleForgotPassword'])->name('password.email');
     
     // Reset Password
-    Route::get('/reset-password', function () {
-        $token = request()->query('token');
-        $error = request()->query('error');
-        return view('auth.reset-password', [
-            'token' => $token,
-            'error' => $error
-        ]);
-    })->name('password.reset');
+    Route::get('/reset-password', [AuthPageController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthPageController::class, 'handleResetPassword'])->name('password.update');
     
     // Verify Email
-    Route::get('/verify-email', function () {
-        return view('auth.verify-email');
-    })->name('verification.notice');
+    Route::get('/verify-email', [AuthPageController::class, 'showVerifyEmail'])->name('verification.notice');
+    Route::post('/verify-email/resend', [AuthPageController::class, 'resendVerificationEmail'])->name('verification.send');
+    Route::get('/verify-email/{id}/{hash}', [AuthPageController::class, 'verifyEmail'])->name('verification.verify');
     
     // Magic Link Routes
     Route::prefix('magic-link')->group(function () {
-        Route::get('/login', function () {
-            return view('auth.magic-link.login');
-        })->name('magic-link.login');
+        Route::get('/login', [AuthPageController::class, 'showMagicLinkLogin'])->name('magic-link.login');
+        Route::post('/login', [AuthPageController::class, 'handleMagicLinkLogin'])->name('magic-link.login.post');
         
-        Route::get('/signup', function () {
-            return view('auth.magic-link.signup');
-        })->name('magic-link.signup');
+        Route::get('/signup', [AuthPageController::class, 'showMagicLinkSignup'])->name('magic-link.signup');
+        Route::post('/signup', [AuthPageController::class, 'handleMagicLinkSignup'])->name('magic-link.signup.post');
         
-        Route::get('/verify', function () {
-            $token = request()->query('token');
-            $callbackURL = request()->query('callbackURL', '/');
-            return view('auth.magic-link.verify', [
-                'token' => $token,
-                'callbackURL' => $callbackURL
-            ]);
-        })->name('magic-link.verify');
+        Route::get('/verify', [AuthPageController::class, 'showMagicLinkVerify'])->name('magic-link.verify');
+        Route::post('/verify', [AuthPageController::class, 'handleMagicLinkVerify'])->name('magic-link.verify.post');
     });
 });
+
+// Logout Route
+Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout');
+Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
 // Profile Route
-Route::get('/profile', function () {
-    return view('profile');
-})->name('profile');
+Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
 
 // About Page
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
+Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
 
 // Contact Page
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
 
 // Vehicles Page
-Route::get('/vehicles', function () {
-    return view('vehicles');
-})->name('vehicles');
+Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 
 // Vehicle Details Page
-Route::get('/vehicles/{serialNo}', function ($serialNo) {
-    return view('vehicle-detail', ['serialNo' => $serialNo]);
-})->name('vehicle.detail');
+Route::get('/vehicles/{serialNo}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
-// Dealer Routes
-Route::prefix('dealer')->group(function () {
-    Route::get('/', function () {
-        return view('dealer.index');
-    })->name('dealer.dashboard');
-    
-    // Vehicles
-    Route::get('/vehicles', function () {
-        return redirect('/dealer/vehicles/overview');
-    })->name('dealer.vehicles');
-    
-    Route::get('/vehicles/overview', function () {
-        return view('dealer.vehicles.overview');
-    })->name('dealer.vehicles.overview');
-    
-    Route::get('/vehicles/add-vehicle', function () {
-        return view('dealer.vehicles.add-vehicle');
-    })->name('dealer.vehicles.add');
-    
-    // Purchases
-    Route::get('/purchases', function () {
-        return view('dealer.purchases');
-    })->name('dealer.purchases');
-    
-    // Sales
-    Route::get('/sales', function () {
-        return view('dealer.sales');
-    })->name('dealer.sales');
-    
-    // Expenses
-    Route::get('/expenses', function () {
-        return view('dealer.expenses');
-    })->name('dealer.expenses');
-    
-    // Contacts
-    Route::get('/contacts', function () {
-        return view('dealer.contacts');
-    })->name('dealer.contacts');
-    
-    // Enquiries
-    Route::get('/enquiries', function () {
-        return view('dealer.enquiries');
-    })->name('dealer.enquiries');
-    
-    // Accounting
-    Route::prefix('accounting')->group(function () {
-        Route::get('/transactions', function () {
-            return view('dealer.accounting.transactions');
-        })->name('dealer.accounting.transactions');
-        
-        Route::get('/financial-accounts', function () {
-            return view('dealer.accounting.financial-accounts');
-        })->name('dealer.accounting.financial-accounts');
-        
-        Route::get('/financial-reports', function () {
-            return view('dealer.accounting.financial-reports');
-        })->name('dealer.accounting.financial-reports');
-    });
-    
-    // Settings
-    Route::get('/settings', function () {
-        return view('dealer.settings');
-    })->name('dealer.settings');
-    
-    // Notifications
-    Route::get('/notifications', function () {
-        return view('dealer.index'); // Placeholder
-    })->name('dealer.notifications');
-});
+
+// Route::get('/test-mail', function () {
+//     Mail::raw('Hello from Laravel + Gmail SMTP', function ($msg) {
+//         $msg->to('abdulhadixt@gmail.com')
+//             ->subject('Test Gmail SMTP');
+//     });
+
+//     return 'Mail sent';
+// });

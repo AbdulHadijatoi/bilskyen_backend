@@ -13,22 +13,28 @@
         </p>
     </div>
 
-    <!-- Error Alert -->
-    <div id="error-alert" class="hidden w-full rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-        <div class="flex">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" x2="12" y1="8" y2="12"></line>
-                <line x1="12" x2="12.01" y1="16" y2="16"></line>
-            </svg>
-            <div>
-                <h3 class="font-semibold">Login Error</h3>
-                <p id="error-message" class="text-sm"></p>
+    @if ($errors->any())
+        <div class="w-full rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+            <div class="flex">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                </svg>
+                <div>
+                    <h3 class="font-semibold">Login Error</h3>
+                    <ul class="mt-1 text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
-    <form id="login-form" class="grid w-full gap-3.5" onsubmit="event.preventDefault(); handleLogin();">
+    <form method="POST" action="{{ route('login.post') }}" class="grid w-full gap-3.5">
+        @csrf
         <div class="grid gap-2">
             <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email</label>
             <input id="email" name="email" type="email" placeholder="johndoe@mail.com" autocomplete="email" tabindex="1" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
@@ -60,12 +66,8 @@
             <p id="password-error" class="hidden text-sm text-destructive"></p>
         </div>
 
-        <button type="submit" id="login-button" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            <span id="login-button-text">Login</span>
-            <svg id="login-spinner" class="hidden ml-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+        <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+            Login
         </button>
     </form>
 
@@ -83,8 +85,6 @@
 </div>
 
 <script>
-const API_URL = '{{ url("/api") }}';
-
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const eye = document.getElementById(inputId + '-eye');
@@ -98,129 +98,6 @@ function togglePassword(inputId) {
         input.type = 'password';
         eye.classList.remove('hidden');
         eyeOff.classList.add('hidden');
-    }
-}
-
-function showError(message) {
-    const errorAlert = document.getElementById('error-alert');
-    const errorMessage = document.getElementById('error-message');
-    errorMessage.textContent = message;
-    errorAlert.classList.remove('hidden');
-}
-
-function hideError() {
-    const errorAlert = document.getElementById('error-alert');
-    errorAlert.classList.add('hidden');
-}
-
-function clearFieldErrors() {
-    document.getElementById('email-error').classList.add('hidden');
-    document.getElementById('password-error').classList.add('hidden');
-    document.getElementById('email').classList.remove('border-destructive');
-    document.getElementById('password').classList.remove('border-destructive');
-}
-
-function setFieldError(field, message) {
-    const errorElement = document.getElementById(field + '-error');
-    const inputElement = document.getElementById(field);
-    errorElement.textContent = message;
-    errorElement.classList.remove('hidden');
-    inputElement.classList.add('border-destructive');
-}
-
-function setLoading(isLoading) {
-    const button = document.getElementById('login-button');
-    const buttonText = document.getElementById('login-button-text');
-    const spinner = document.getElementById('login-spinner');
-    
-    if (isLoading) {
-        button.disabled = true;
-        buttonText.textContent = 'Logging in...';
-        spinner.classList.remove('hidden');
-    } else {
-        button.disabled = false;
-        buttonText.textContent = 'Login';
-        spinner.classList.add('hidden');
-    }
-}
-
-async function handleLogin() {
-    hideError();
-    clearFieldErrors();
-    
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    
-    // Basic client-side validation
-    if (!email) {
-        setFieldError('email', 'Email is required');
-        return;
-    }
-    
-    if (!password) {
-        setFieldError('password', 'Password is required');
-        return;
-    }
-    
-    setLoading(true);
-    
-    try {
-        const response = await fetch(`${API_URL}/auth/sign-in/email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-            }),
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            // Handle validation errors
-            if (response.status === 422 && data.errors) {
-                if (data.errors.email) {
-                    setFieldError('email', Array.isArray(data.errors.email) ? data.errors.email[0] : data.errors.email);
-                }
-                if (data.errors.password) {
-                    setFieldError('password', Array.isArray(data.errors.password) ? data.errors.password[0] : data.errors.password);
-                }
-                showError(data.message || 'Validation failed');
-            } else {
-                // Handle other errors
-                showError(data.message || 'Login failed. Please check your credentials.');
-            }
-            setLoading(false);
-            return;
-        }
-        
-        // Success - set cookie and redirect
-        if (data.token) {
-            // Set cookie (30 days expiry)
-            const expiryDate = new Date();
-            expiryDate.setTime(expiryDate.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = `auth_token=${data.token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
-            
-            // Redirect based on user role
-            const userRole = data.user?.role;
-            if (userRole === 'admin') {
-                window.location.href = '/admin';
-            } else if (userRole === 'dealer') {
-                window.location.href = '/dealer';
-            } else {
-                window.location.href = '/';
-            }
-        } else {
-            showError('Login successful but no token received');
-            setLoading(false);
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        showError('Network error. Please check if the backend is running.');
-        setLoading(false);
     }
 }
 </script>

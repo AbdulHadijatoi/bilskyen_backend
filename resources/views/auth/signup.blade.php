@@ -13,7 +13,8 @@
         </p>
     </div>
 
-    <form class="grid w-full gap-4" onsubmit="event.preventDefault(); alert('Signup functionality will be implemented');">
+    <form method="POST" action="{{ route('signup.post') }}" class="grid w-full gap-4">
+        @csrf
         <div class="grid gap-2">
             <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Full Name</label>
             <input id="name" name="name" type="text" placeholder="John Doe" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
@@ -61,6 +62,26 @@
                 </button>
             </div>
         </div>
+
+        @if ($errors->any())
+            <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+                <div class="flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" x2="12" y1="8" y2="12"></line>
+                        <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold">Validation Error</h3>
+                        <ul class="mt-1 text-sm list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
             Sign Up

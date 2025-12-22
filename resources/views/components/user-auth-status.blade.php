@@ -1,18 +1,43 @@
 @php
-    // Mock session check - replace with actual auth check later
-    // For now, show user menu on profile page, login/signup buttons elsewhere
-    $showUserMenu = request()->is('profile');
-    $userName = 'Abdul Hadi';
-    $userEmail = 'abdulhadijatoi@gmail.com';
+    use App\Models\User;
+    use Tymon\JWTAuth\Facades\JWTAuth;
+    use Tymon\JWTAuth\Exceptions\JWTException;
+    
+    // Get authenticated user from JWT token in cookie
+    $user = null;
+    try {
+        $token = request()->cookie('access_token');
+        if ($token) {
+            $user = JWTAuth::setToken($token)->authenticate();
+        }
+    } catch (JWTException $e) {
+        $user = null;
+    } catch (\Exception $e) {
+        $user = null;
+    }
+    
+    $showUserMenu = $user !== null;
+    $userName = $user ? $user->name : '';
+    $userEmail = $user ? $user->email : '';
     
     // Generate initials from name (first letter of first name + first letter of last name)
-    $initials = 'AH';
-    if ($userName) {
-        $names = explode(' ', trim($userName));
+    $initials = 'U';
+    if ($userName && trim($userName) !== '') {
+        $names = array_values(array_filter(array_map('trim', explode(' ', trim($userName))), function($n) {
+            return $n !== '';
+        }));
+        
         if (count($names) >= 2) {
-            $initials = strtoupper(substr($names[0], 0, 1) . substr($names[count($names) - 1], 0, 1));
-        } else {
-            $initials = strtoupper(substr($userName, 0, 2));
+            $firstInitial = substr($names[0], 0, 1);
+            $lastInitial = substr($names[count($names) - 1], 0, 1);
+            $initials = strtoupper($firstInitial . $lastInitial);
+        } else if (count($names) === 1 && strlen($names[0]) > 0) {
+            $name = $names[0];
+            if (strlen($name) >= 2) {
+                $initials = strtoupper(substr($name, 0, 2));
+            } else {
+                $initials = strtoupper($name . $name); // Repeat single char
+            }
         }
     }
 @endphp
@@ -68,6 +93,18 @@
                 </svg>
                 Profile
             </a>
+            <div class="my-1 h-px bg-border"></div>
+            <form method="POST" action="{{ route('logout') }}" class="w-full">
+                @csrf
+                <button type="submit" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" x2="9" y1="12" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
     

@@ -13,7 +13,7 @@
         </p>
     </div>
 
-    @if(isset($error))
+    @if(session('error'))
     <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
         <div class="flex">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
@@ -23,13 +23,13 @@
             </svg>
             <div>
                 <h3 class="font-semibold">Error</h3>
-                <p class="text-sm">{{ $error }}</p>
+                <p class="text-sm">{{ session('error') }}</p>
             </div>
         </div>
     </div>
     @endif
 
-    @if(!isset($token))
+    @if(!$token)
     <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
         <div class="flex">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
@@ -44,8 +44,10 @@
         </div>
     </div>
     @else
-    <form class="grid w-full gap-3.5" onsubmit="event.preventDefault(); alert('Password reset functionality will be implemented'); window.location.href='/auth/login';">
-        <input type="hidden" name="token" value="{{ $token ?? '' }}">
+    <form method="POST" action="{{ route('password.update') }}" class="grid w-full gap-3.5">
+        @csrf
+        <input type="hidden" name="token" value="{{ $token }}">
+        <input type="hidden" name="email" value="{{ $email ?? '' }}">
 
         <div class="grid gap-2">
             <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">New Password</label>
@@ -91,6 +93,26 @@
             Reset Password
         </button>
     </form>
+    @endif
+
+    @if ($errors->any())
+        <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+            <div class="flex">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                </svg>
+                <div>
+                    <h3 class="font-semibold">Validation Error</h3>
+                    <ul class="mt-1 text-sm list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
     @endif
 </div>
 
