@@ -1,21 +1,16 @@
 @php
-    $currentRoute = request()->path();
-    $isActive = function($route) use ($currentRoute) {
-        return str_starts_with($currentRoute, $route);
-    };
+    use App\Helpers\ViewHelper;
     
-    // User data (placeholder)
-    $userName = 'Abdul Hadi';
-    $userEmail = 'abdulhadijatoi@gmail.com';
-    $initials = 'AH';
-    if ($userName) {
-        $names = explode(' ', trim($userName));
-        if (count($names) >= 2) {
-            $initials = strtoupper(substr($names[0], 0, 1) . substr($names[count($names) - 1], 0, 1));
-        } else {
-            $initials = strtoupper(substr($userName, 0, 2));
-        }
-    }
+    // Variables are provided by ViewServiceProvider view composer:
+    // $user, $currentRoute
+    $userName = $user?->name ?? '';
+    $userEmail = $user?->email ?? '';
+    $initials = $user?->initials ?? 'U';
+    
+    // Create isActive function using ViewHelper
+    $isActive = function($route) use ($currentRoute) {
+        return ViewHelper::routeIsActive($route);
+    };
     
     $isMobile = isset($isMobile) && $isMobile;
     $sidebarId = $isMobile ? 'mobile-sidebar-content' : 'sidebar';

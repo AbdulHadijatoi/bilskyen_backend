@@ -1,45 +1,8 @@
 @php
-    use App\Models\User;
-    use Tymon\JWTAuth\Facades\JWTAuth;
-    use Tymon\JWTAuth\Exceptions\JWTException;
-    
-    // Get authenticated user from JWT token in cookie
-    $user = null;
-    try {
-        $token = request()->cookie('access_token');
-        if ($token) {
-            $user = JWTAuth::setToken($token)->authenticate();
-        }
-    } catch (JWTException $e) {
-        $user = null;
-    } catch (\Exception $e) {
-        $user = null;
-    }
-    
-    $showUserMenu = $user !== null;
-    $userName = $user ? $user->name : '';
-    $userEmail = $user ? $user->email : '';
-    
-    // Generate initials from name (first letter of first name + first letter of last name)
-    $initials = 'U';
-    if ($userName && trim($userName) !== '') {
-        $names = array_values(array_filter(array_map('trim', explode(' ', trim($userName))), function($n) {
-            return $n !== '';
-        }));
-        
-        if (count($names) >= 2) {
-            $firstInitial = substr($names[0], 0, 1);
-            $lastInitial = substr($names[count($names) - 1], 0, 1);
-            $initials = strtoupper($firstInitial . $lastInitial);
-        } else if (count($names) === 1 && strlen($names[0]) > 0) {
-            $name = $names[0];
-            if (strlen($name) >= 2) {
-                $initials = strtoupper(substr($name, 0, 2));
-            } else {
-                $initials = strtoupper($name . $name); // Repeat single char
-            }
-        }
-    }
+    // Variables are provided by ViewServiceProvider view composer:
+    // $user, $initials, $showUserMenu
+    $userName = $user?->name ?? '';
+    $userEmail = $user?->email ?? '';
 @endphp
 
 @if(!$showUserMenu)

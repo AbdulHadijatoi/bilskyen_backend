@@ -28,7 +28,7 @@
                     name="name"
                     type="text"
                     placeholder="John Doe"
-                    value="Abdul Hadi"
+                    value="{{ $user?->name ?? '' }}"
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p class="text-muted-foreground text-sm">
@@ -47,7 +47,7 @@
                     name="email"
                     type="email"
                     placeholder="email@mail.com"
-                    value="abdulhadijatoi@gmail.com"
+                    value="{{ $user?->email ?? '' }}"
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p class="text-muted-foreground text-sm">
@@ -65,8 +65,8 @@
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="+91 98765 43210"
-                    value="+91 98765 43210"
+                    placeholder="+45 12 34 56 78"
+                    value="{{ $user?->phone ?? '' }}"
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p class="text-muted-foreground text-sm">
@@ -85,7 +85,7 @@
                     placeholder="Address"
                     rows="3"
                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                >Address</textarea>
+                >{{ $user?->address ?? '' }}</textarea>
                 <p class="text-muted-foreground text-sm">
                     Enter your current residential or business address.
                 </p>

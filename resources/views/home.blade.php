@@ -80,9 +80,9 @@
                             <label for="min-price" class="text-sm font-medium leading-none">Min Price</label>
                             <select id="min-price" name="minPrice" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                 <option value="any">No Min</option>
-                                <option value="500000">₹5,00,000</option>
-                                <option value="1000000">₹10,00,000</option>
-                                <option value="2000000">₹20,00,000</option>
+                                <option value="50000">50.000 kr.</option>
+                                <option value="100000">100.000 kr.</option>
+                                <option value="200000">200.000 kr.</option>
                             </select>
                         </div>
 
@@ -90,9 +90,9 @@
                             <label for="max-price" class="text-sm font-medium leading-none">Max Price</label>
                             <select id="max-price" name="maxPrice" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                 <option value="any">No Max</option>
-                                <option value="2000000">₹20,00,000</option>
-                                <option value="5000000">₹50,00,000</option>
-                                <option value="10000000">₹1,00,00,000</option>
+                                <option value="200000">200.000 kr.</option>
+                                <option value="500000">500.000 kr.</option>
+                                <option value="1000000">1.000.000 kr.</option>
                             </select>
                         </div>
 
@@ -232,7 +232,7 @@
                                             {{ $vehicle['variant'] }}
                                         </p>
                                         <p class="text-2xl font-medium text-primary">
-                                            ₹{{ number_format($vehicle['listingPrice'], 0, '.', ',') }}
+                                            {{ number_format($vehicle['listingPrice'], 0, ',', '.') }} kr.
                                         </p>
                                     </div>
 
@@ -479,19 +479,19 @@
                     $testimonials = [
                         [
                             'name' => 'John Davis',
-                            'location' => 'Mumbai, India',
+                            'location' => 'Copenhagen, Denmark',
                             'quote' => 'The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
                             'rating' => 5
                         ],
                         [
                             'name' => 'Priya Sharma',
-                            'location' => 'Delhi, India',
+                            'location' => 'Aarhus, Denmark',
                             'quote' => 'I was impressed with their knowledge and no-pressure approach. I got a great deal on my new car and would definitely recommend them.',
                             'rating' => 5
                         ],
                         [
                             'name' => 'Ahmed Khan',
-                            'location' => 'Bangalore, India',
+                            'location' => 'Odense, Denmark',
                             'quote' => 'The financing options they provided were better than I expected. The entire process was smooth and I drove away very happy.',
                             'rating' => 4
                         ],

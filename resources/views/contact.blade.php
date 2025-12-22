@@ -113,7 +113,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Our Address</h3>
                                 <p class="text-muted-foreground">
-                                    123 Dealership Lane, Kerala, India
+                                    123 Dealership Lane, Copenhagen, Denmark
                                 </p>
                                 <a
                                     href="#"
@@ -132,7 +132,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Phone</h3>
                                 <p class="text-muted-foreground">
-                                    +91-123-456-7890
+                                    +45 12 34 56 78
                                 </p>
                             </div>
                         </div>
@@ -185,7 +185,7 @@
             <div class="absolute inset-0 bg-black/50"></div>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
                 <h2 class="text-3xl font-bold">Visit Our Showroom</h2>
-                <p class="mt-2 max-w-md">123 Dealership Lane, Kerala, India</p>
+                <p class="mt-2 max-w-md">123 Dealership Lane, Copenhagen, Denmark</p>
             </div>
         </div>
     </section>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,10 @@ use Carbon\Carbon;
 
 class AuthPageController extends Controller
 {
+    public function __construct(
+        private AuthService $authService
+    ) {}
+
     /**
      * Get authenticated user from JWT token in cookie
      *
@@ -25,19 +30,7 @@ class AuthPageController extends Controller
      */
     protected function getAuthenticatedUser(Request $request)
     {
-        try {
-            $token = $request->cookie('access_token');
-            if (!$token) {
-                return null;
-            }
-
-            $user = JWTAuth::setToken($token)->authenticate();
-            return $user;
-        } catch (JWTException $e) {
-            return null;
-        } catch (\Exception $e) {
-            return null;
-        }
+        return $this->authService->getAuthenticatedUser($request);
     }
 
     /**

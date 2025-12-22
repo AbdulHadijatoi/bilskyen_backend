@@ -96,6 +96,38 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Get initials attribute - Generate initials from user name
+     * First letter of first name + first letter of last name (if 2+ words)
+     * Or first 2 characters if single word
+     */
+    public function getInitialsAttribute(): string
+    {
+        $userName = $this->name ?? '';
+        if (empty(trim($userName))) {
+            return 'U';
+        }
+
+        $names = array_values(array_filter(array_map('trim', explode(' ', trim($userName))), function($n) {
+            return $n !== '';
+        }));
+
+        if (count($names) >= 2) {
+            $firstInitial = substr($names[0], 0, 1);
+            $lastInitial = substr($names[count($names) - 1], 0, 1);
+            return strtoupper($firstInitial . $lastInitial);
+        } else if (count($names) === 1 && strlen($names[0]) > 0) {
+            $name = $names[0];
+            if (strlen($name) >= 2) {
+                return strtoupper(substr($name, 0, 2));
+            } else {
+                return strtoupper($name . $name); // Repeat single char
+            }
+        }
+
+        return 'U';
+    }
+
+    /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed

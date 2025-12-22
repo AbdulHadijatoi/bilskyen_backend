@@ -2,8 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
+use App\Services\AuthService;
+use Illuminate\Http\Request;
+
 class HomeController extends Controller
 {
+    public function __construct(
+        private AuthService $authService
+    ) {}
+
     /**
      * Show the home page
      *
@@ -17,11 +25,16 @@ class HomeController extends Controller
     /**
      * Show the profile page
      *
+     * @param Request $request
      * @return \Illuminate\View\View
      */
-    public function showProfile()
+    public function showProfile(Request $request)
     {
-        return view('profile');
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        return view('profile', [
+            'user' => $user,
+        ]);
     }
 
     /**
@@ -51,7 +64,15 @@ class HomeController extends Controller
      */
     public function showVehicles()
     {
-        return view('vehicles');
+        // Fetch available vehicles
+        $vehicles = Vehicle::where('status', 'Available')
+            ->orderBy('created_at', 'desc')
+            ->limit(50) // Limit for initial load
+            ->get();
+
+        return view('vehicles', [
+            'vehicles' => $vehicles,
+        ]);
     }
 
     /**
@@ -62,7 +83,12 @@ class HomeController extends Controller
      */
     public function showVehicleDetail($serialNo)
     {
-        return view('vehicle-detail', ['serialNo' => $serialNo]);
+        $vehicle = Vehicle::where('serial_no', $serialNo)->firstOrFail();
+
+        return view('vehicle-detail', [
+            'serialNo' => $serialNo,
+            'vehicle' => $vehicle,
+        ]);
     }
 }
 

@@ -3,128 +3,8 @@
 @section('title', 'Vehicles | Bilskyen')
 
 @php
-// Placeholder vehicle data - in production, this would come from a database
-$vehicles = [
-    [
-        'id' => 1,
-        'serialNo' => 1,
-        'make' => 'Toyota',
-        'model' => 'Camry',
-        'variant' => 'XLE',
-        'year' => 2022,
-        'listingPrice' => 2500000,
-        'transmissionType' => 'Automatic',
-        'color' => 'Silver',
-        'vehicleType' => 'Sedan',
-        'odometer' => 15000,
-        'fuelType' => 'Petrol',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Excellent',
-        'registrationNumber' => 'KL-01-AB-1234',
-        'images' => ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&h=600&fit=crop'],
-    ],
-    [
-        'id' => 2,
-        'serialNo' => 2,
-        'make' => 'Honda',
-        'model' => 'Civic',
-        'variant' => 'VX',
-        'year' => 2021,
-        'listingPrice' => 1800000,
-        'transmissionType' => 'Manual',
-        'color' => 'White',
-        'vehicleType' => 'Sedan',
-        'odometer' => 25000,
-        'fuelType' => 'Petrol',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Good',
-        'registrationNumber' => 'KL-02-CD-5678',
-        'images' => ['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop'],
-    ],
-    [
-        'id' => 3,
-        'serialNo' => 3,
-        'make' => 'Maruti',
-        'model' => 'Swift',
-        'variant' => 'ZXI',
-        'year' => 2023,
-        'listingPrice' => 850000,
-        'transmissionType' => 'Automatic',
-        'color' => 'Red',
-        'vehicleType' => 'Hatchback',
-        'odometer' => 8000,
-        'fuelType' => 'Petrol',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Excellent',
-        'registrationNumber' => 'KL-03-EF-9012',
-        'images' => ['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop'],
-    ],
-    [
-        'id' => 4,
-        'serialNo' => 4,
-        'make' => 'Hyundai',
-        'model' => 'Creta',
-        'variant' => 'SX',
-        'year' => 2022,
-        'listingPrice' => 1650000,
-        'transmissionType' => 'Automatic',
-        'color' => 'Black',
-        'vehicleType' => 'SUV',
-        'odometer' => 20000,
-        'fuelType' => 'Diesel',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Excellent',
-        'registrationNumber' => 'KL-04-GH-3456',
-        'images' => ['https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'],
-    ],
-    [
-        'id' => 5,
-        'serialNo' => 5,
-        'make' => 'Mahindra',
-        'model' => 'XUV700',
-        'variant' => 'AX7',
-        'year' => 2023,
-        'listingPrice' => 2200000,
-        'transmissionType' => 'Automatic',
-        'color' => 'Blue',
-        'vehicleType' => 'SUV',
-        'odometer' => 12000,
-        'fuelType' => 'Diesel',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Excellent',
-        'registrationNumber' => 'KL-05-IJ-7890',
-        'images' => ['https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'],
-    ],
-    [
-        'id' => 6,
-        'serialNo' => 6,
-        'make' => 'Tata',
-        'model' => 'Nexon',
-        'variant' => 'XZ+',
-        'year' => 2022,
-        'listingPrice' => 1400000,
-        'transmissionType' => 'Manual',
-        'color' => 'Orange',
-        'vehicleType' => 'SUV',
-        'odometer' => 18000,
-        'fuelType' => 'Electric',
-        'ownershipCount' => 1,
-        'status' => 'Available',
-        'condition' => 'Good',
-        'registrationNumber' => 'KL-06-KL-1357',
-        'images' => ['https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'],
-    ],
-];
-
-// Format currency helper
-function formatCurrency($amount) {
-    return number_format($amount, 0, '.', '.') . ' kr.';
-}
+    use App\Helpers\FormatHelper;
+    // $vehicles is provided by HomeController
 @endphp
 
 @section('content')
@@ -169,12 +49,12 @@ function formatCurrency($amount) {
             <!-- Vehicle Image -->
             <div class="relative aspect-video overflow-hidden">
                 <img
-                    src="{{ $vehicle['images'][0] }}"
-                    alt="{{ $vehicle['make'] }} {{ $vehicle['model'] }}"
+                    src="{{ !empty($vehicle->images) && is_array($vehicle->images) ? ($vehicle->images[0] ?? '/placeholder-vehicle.jpg') : '/placeholder-vehicle.jpg' }}"
+                    alt="{{ $vehicle->make }} {{ $vehicle->model }}"
                     class="h-full w-full object-cover transition-transform hover:scale-105"
                 />
                 <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                    {{ $vehicle['registrationNumber'] }}
+                    {{ $vehicle->registration_number }}
                 </span>
             </div>
             
@@ -182,20 +62,20 @@ function formatCurrency($amount) {
             <div class="px-4 py-4 space-y-4">
                 <div class="flex flex-col gap-1">
                     <h3 class="flex items-center gap-2 text-xl font-bold">
-                        {{ $vehicle['make'] }} {{ $vehicle['model'] }}
+                        {{ $vehicle->make }} {{ $vehicle->model }}
                     </h3>
                     <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                        {{ $vehicle['variant'] }}
+                        {{ $vehicle->variant }}
                     </p>
                     <p class="text-primary text-2xl font-medium">
-                        {{ formatCurrency($vehicle['listingPrice']) }}
+                        {{ FormatHelper::formatCurrency($vehicle->listing_price) }}
                     </p>
                 </div>
 
                 <div class="-mt-2 flex flex-wrap gap-2 text-xs">
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['transmissionType'] }}</span>
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['color'] }}</span>
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['vehicleType'] }}</span>
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->transmission_type }}</span>
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->color }}</span>
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->vehicle_type }}</span>
                 </div>
 
                 <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
@@ -206,13 +86,13 @@ function formatCurrency($amount) {
                             <line x1="8" x2="8" y1="2" y2="6"></line>
                             <line x1="3" x2="21" y1="10" y2="10"></line>
                         </svg>
-                        <span>{{ $vehicle['year'] }}</span>
+                        <span>{{ $vehicle->year }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
-                        <span>{{ number_format($vehicle['odometer']) }} km</span>
+                        <span>{{ number_format($vehicle->odometer) }} km</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -221,7 +101,7 @@ function formatCurrency($amount) {
                             <line x1="18" x2="18" y1="6" y2="22"></line>
                             <line x1="2" x2="22" y1="22" y2="22"></line>
                         </svg>
-                        <span>{{ $vehicle['fuelType'] }}</span>
+                        <span>{{ $vehicle->fuel_type }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -229,14 +109,14 @@ function formatCurrency($amount) {
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                         <span>
-                            {{ $vehicle['ownershipCount'] }} Owner{{ $vehicle['ownershipCount'] > 1 ? 's' : '' }}
+                            {{ $vehicle->ownership_count }} Owner{{ $vehicle->ownership_count > 1 ? 's' : '' }}
                         </span>
                     </div>
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>{{ $vehicle['status'] }}</span>
+                        <span>{{ $vehicle->status }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -246,7 +126,7 @@ function formatCurrency($amount) {
                             <path d="M2 2l20 20"></path>
                             <path d="M22 8A10 10 0 0 0 9.04 4.32"></path>
                         </svg>
-                        <span>{{ $vehicle['condition'] }}</span>
+                        <span>{{ $vehicle->condition }}</span>
                     </div>
                 </div>
             </div>
@@ -254,7 +134,7 @@ function formatCurrency($amount) {
             <!-- Vehicle Actions -->
             <div class="mt-auto p-4 pt-2">
                 <div class="flex w-full flex-col gap-2 sm:flex-row">
-                    <a href="/vehicles/{{ $vehicle['serialNo'] }}" class="flex-1">
+                    <a href="/vehicles/{{ $vehicle->serial_no }}" class="flex-1">
                         <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                             View Details
                         </button>

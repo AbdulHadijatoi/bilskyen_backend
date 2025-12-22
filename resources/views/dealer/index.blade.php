@@ -49,7 +49,7 @@
                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold">₹600,000</h3>
+                    <h3 class="text-2xl font-bold">600.000 kr.</h3>
                     <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
@@ -68,7 +68,7 @@
                             <path d="M22 6l-10 7L2 6"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold">₹3,060</h3>
+                    <h3 class="text-2xl font-bold">3.060 kr.</h3>
                     <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
@@ -86,7 +86,7 @@
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold">₹596,940</h3>
+                    <h3 class="text-2xl font-bold">596.940 kr.</h3>
                     <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
@@ -223,7 +223,7 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-muted-foreground text-sm font-medium">Total Revenue</p>
-                                <p class="text-lg font-semibold">₹600,000</p>
+                                <p class="text-lg font-semibold">600.000 kr.</p>
                             </div>
                         </div>
                         <div class="bg-card flex items-center justify-center gap-3 rounded-lg border border-border p-4">
@@ -234,7 +234,7 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-muted-foreground text-sm font-medium">Average Sale Value</p>
-                                <p class="text-lg font-semibold">₹150,000</p>
+                                <p class="text-lg font-semibold">150.000 kr.</p>
                             </div>
                         </div>
                         <div class="bg-card flex items-center justify-center gap-3 rounded-lg border border-border p-4">

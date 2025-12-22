@@ -252,7 +252,7 @@
             <div class="space-y-2">
                 <label for="listingPrice" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Listing Price</label>
                 <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">kr.</span>
                     <input type="number" id="listingPrice" name="listingPrice" placeholder="e.g., 1075000" min="0" step="1000" class="flex h-10 w-full rounded-md border border-input bg-background pl-8 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" required>
                 </div>
                 <p class="text-sm text-muted-foreground">Enter the price at which the vehicle is listed for sale.</p>

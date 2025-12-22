@@ -78,7 +78,7 @@
                                 <td class="p-4 align-middle">Toyota</td>
                                 <td class="p-4 align-middle">Camry</td>
                                 <td class="p-4 align-middle">2022</td>
-                                <td class="p-4 align-middle">₹25,00,000</td>
+                                <td class="p-4 align-middle">250.000 kr.</td>
                                 <td class="p-4 align-middle">
                                     <button class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -98,7 +98,7 @@
                                 <td class="p-4 align-middle">Honda</td>
                                 <td class="p-4 align-middle">Civic</td>
                                 <td class="p-4 align-middle">2021</td>
-                                <td class="p-4 align-middle">₹18,50,000</td>
+                                <td class="p-4 align-middle">185.000 kr.</td>
                                 <td class="p-4 align-middle">
                                     <button class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">

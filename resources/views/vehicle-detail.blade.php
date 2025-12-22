@@ -8,68 +8,9 @@
 @endpush
 
 @php
-// Placeholder vehicle data - in production, this would come from a database
-$serialNo = request()->route('serialNo') ?? request()->segment(2);
-$vehicle = [
-    'id' => 1,
-    'serialNo' => $serialNo,
-    'make' => 'Toyota',
-    'model' => 'Camry',
-    'variant' => 'XLE',
-    'year' => 2022,
-    'listingPrice' => 2500000,
-    'transmissionType' => 'Automatic',
-    'color' => 'Silver',
-    'vehicleType' => 'Sedan',
-    'odometer' => 15000,
-    'fuelType' => 'Petrol',
-    'ownershipCount' => 1,
-    'status' => 'Available',
-    'condition' => 'Excellent',
-    'registrationNumber' => 'KL-01-AB-1234',
-    'vin' => 'JT2BF28K0X0123456',
-    'engineNumber' => 'ENG123456789',
-    'accidentHistory' => false,
-    'blacklistFlags' => [],
-    'features' => [
-        'Sunroof',
-        'Leather Seats',
-        'ABS',
-        'Dual Airbags',
-        'Air Conditioning',
-        'Power Steering',
-        'Touchscreen Infotainment',
-        'Android Auto',
-        'Apple CarPlay',
-        'Rear Parking Sensors',
-        'Cruise Control',
-        'Push Button Start',
-        'Keyless Entry',
-        'Automatic Climate Control',
-        'Power Windows',
-        'LED Headlamps',
-        'Alloy Wheels',
-    ],
-    'description' => 'This well-maintained Toyota Camry XLE is in excellent condition with low mileage. It comes with all the modern features you expect from a premium sedan. The vehicle has been regularly serviced and is ready for immediate delivery.',
-    'images' => [
-        'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop',
-    ],
-    'inventoryDate' => '2024-01-15',
-    'pendingWorks' => [
-        'Documents pending',
-        'Name transfer',
-        'Registration certificate transfer',
-        'Insurance transfer',
-    ],
-    'remarks' => 'Vehicle is in excellent condition. All service records are available.',
-];
-
-function formatCurrency($amount) {
-    return number_format($amount, 0, '.', '.') . ' kr.';
-}
+    use App\Helpers\FormatHelper;
+    // $vehicle and $serialNo are provided by HomeController
+    $serialNo = $serialNo ?? request()->route('serialNo') ?? request()->segment(2);
 
 function getDateWithRelative($date) {
     $dateObj = new DateTime($date);
@@ -162,7 +103,7 @@ $isAdminOrDealer = false;
             </div>
             <div class="flex flex-col items-start gap-3 lg:items-end">
                 <p class="text-3xl font-bold text-green-600 dark:text-green-400">
-                    {{ formatCurrency($vehicle['listingPrice']) }}
+                    {{ FormatHelper::formatCurrency($vehicle->listing_price) }}
                 </p>
                 <span class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-sm font-semibold text-secondary-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                     {{ $vehicle['status'] }}
@@ -402,7 +343,7 @@ $isAdminOrDealer = false;
                 </div>
                 <div class="space-y-2">
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400">
-                        {{ formatCurrency($vehicle['listingPrice']) }}
+                        {{ FormatHelper::formatCurrency($vehicle->listing_price) }}
                     </p>
                     <p class="text-sm text-green-700 dark:text-green-300">
                         Listed Price

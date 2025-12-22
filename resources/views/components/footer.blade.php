@@ -71,8 +71,8 @@
                 <h3 class="mb-4 text-sm font-medium">Contact Us</h3>
                 <ul class="space-y-2 text-sm">
                     <li><a href="mailto:info@bilskyen.dk" class="text-muted-foreground transition hover:text-foreground">info@bilskyen.dk</a></li>
-                    <li><a href="tel:+911234567890" class="text-muted-foreground transition hover:text-foreground">+91-123-456-7890</a></li>
-                    <li class="text-muted-foreground">Address: 123 Dealership Lane, Kerala, India</li>
+                    <li><a href="tel:+4512345678" class="text-muted-foreground transition hover:text-foreground">+45 12 34 56 78</a></li>
+                    <li class="text-muted-foreground">Address: 123 Dealership Lane, Copenhagen, Denmark</li>
                 </ul>
             </div>
         </div>
