@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\PermissionManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,22 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/get-users', [AdminUserController::class, 'getUsers'])
         ->middleware(permission_middleware('user', 'list'));
     
-    // Add more admin routes here
+    // Permission management routes
+    Route::prefix('permissions')->group(function () {
+        Route::post('/get-all-items', [PermissionManagementController::class, 'getAllItems'])
+            ->middleware(permission_middleware('permission', 'list'));
+        
+        Route::post('/get-models', [PermissionManagementController::class, 'getModels'])
+            ->middleware(permission_middleware('permission', 'list'));
+        
+        Route::post('/model-items', [PermissionManagementController::class, 'modelItems'])
+            ->middleware(permission_middleware('permission', 'view'));
+        
+        Route::post('/assign', [PermissionManagementController::class, 'assign'])
+            ->middleware(permission_middleware('permission', 'assign'));
+        
+        Route::post('/revoke', [PermissionManagementController::class, 'revoke'])
+            ->middleware(permission_middleware('permission', 'assign'));
+    });
 });
 
