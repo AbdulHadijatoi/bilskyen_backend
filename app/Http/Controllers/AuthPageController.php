@@ -229,16 +229,8 @@ class AuthPageController extends Controller
             'Strict' // sameSite
         );
 
-        // Redirect based on user roles (prioritize admin > dealer > user)
-        $redirectPath = '/';
-        $roleNames = $user->roles->pluck('name')->map('strtolower')->toArray();
-        if (in_array('admin', $roleNames)) {
-            $redirectPath = '/admin';
-        } elseif (in_array('dealer', $roleNames)) {
-            $redirectPath = '/dealer';
-        }
-
-        return redirect($redirectPath)->withCookies([$refreshCookie, $accessCookie]);
+        // Redirect all users to home page after login
+        return redirect('/')->withCookies([$refreshCookie, $accessCookie]);
     }
 
     /**
@@ -489,6 +481,7 @@ class AuthPageController extends Controller
         // Delete verification token
         DB::table('verifications')->where('identifier', $identifier)->delete();
 
+        // Redirect all users to home page
         return redirect('/')->with('status', 'Email verified successfully!');
     }
 
@@ -670,30 +663,22 @@ class AuthPageController extends Controller
             'Strict'
         );
 
-        // Redirect to callback URL or home
+        // Redirect all users to callback URL or home
         return redirect($callbackURL)->withCookies([$refreshCookie, $accessCookie])
             ->with('status', 'Magic link verified successfully!');
     }
 
     /**
      * Redirect user based on their roles
+     * All users are redirected to home page
      *
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
      */
     protected function redirectBasedOnRole($user)
     {
-        $user->load('roles');
-        $roleNames = $user->roles->pluck('name')->map('strtolower')->toArray();
-        
-        // Prioritize admin > dealer > user
-        if (in_array('admin', $roleNames)) {
-            return redirect('/admin');
-        } elseif (in_array('dealer', $roleNames)) {
-            return redirect('/dealer');
-        } else {
-            return redirect('/');
-        }
+        // Redirect all users to home page
+        return redirect('/');
     }
 
     /**

@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\RequirePermission::class,
             'cron.auth' => \App\Http\Middleware\CronAuth::class,
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
+            'auth.web' => \App\Http\Middleware\AuthenticateWeb::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

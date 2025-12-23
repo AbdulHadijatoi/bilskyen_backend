@@ -3,6 +3,13 @@
     // $user, $initials, $showUserMenu
     $userName = $user?->name ?? '';
     $userEmail = $user?->email ?? '';
+    $panelUrl = env('VUE_PANEL_URL', 'http://localhost:5173');
+    
+    // Check user roles using Spatie Permission
+    $hasAdminRole = $user?->hasRole('admin') ?? false;
+    $hasDealerRole = $user?->hasRole('dealer') ?? false;
+    $showPanelButton = $hasAdminRole || $hasDealerRole;
+    $panelButtonText = $hasAdminRole ? 'Admin Panel' : 'Dealer Panel';
 @endphp
 
 @if(!$showUserMenu)
@@ -56,6 +63,15 @@
                 </svg>
                 Profile
             </a>
+            @if($showPanelButton)
+            <a href="{{ $panelUrl }}" target="_blank" rel="noopener noreferrer" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                    <path d="M8 21V8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v13"></path>
+                </svg>
+                {{ $panelButtonText }}
+            </a>
+            @endif
             <div class="my-1 h-px bg-border"></div>
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf

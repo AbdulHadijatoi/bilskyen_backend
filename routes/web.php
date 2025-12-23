@@ -47,8 +47,12 @@ Route::prefix('auth')->group(function () {
 Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout');
 Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
-// Profile Route
-Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
+// Authenticated Routes - Require login
+Route::middleware('auth.web')->group(function () {
+    // Profile Routes
+    Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
+    Route::post('/profile', [HomeController::class, 'updateProfile'])->name('profile.update');
+});
 
 // About Page
 Route::get('/about', [HomeController::class, 'showAbout'])->name('about');

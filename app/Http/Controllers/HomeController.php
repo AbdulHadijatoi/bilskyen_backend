@@ -38,6 +38,34 @@ class HomeController extends Controller
     }
 
     /**
+     * Update user profile
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:100',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        // Update user profile
+        $user->name = $validated['name'];
+        $user->email = strtolower($validated['email']);
+        $user->phone = $validated['phone'] ?? null;
+        $user->address = $validated['address'] ?? null;
+        $user->save();
+
+        return redirect('/profile')->with('status', 'Profile updated successfully!');
+    }
+
+    /**
      * Show the about page
      *
      * @return \Illuminate\View\View
