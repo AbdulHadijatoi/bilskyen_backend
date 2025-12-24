@@ -2,105 +2,137 @@
 
 namespace App\Models;
 
-use App\Traits\HasSerialNumber;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    use HasFactory, HasSerialNumber;
+    use HasFactory;
 
     protected $fillable = [
-        'serial_no',
-        'registration_number',
-        'make',
-        'model',
-        'variant',
-        'year',
-        'vehicle_type',
-        'vin',
-        'engine_number',
-        'odometer',
-        'status',
-        'ownership_count',
-        'transmission_type',
-        'fuel_type',
-        'color',
-        'condition',
-        'accident_history',
-        'blacklist_flags',
-        'inventory_date',
-        'features',
-        'pending_works',
-        'listing_price',
-        'images',
+        'dealer_id',
+        'user_id',
+        'location_id',
+        'title',
         'description',
-        'remarks',
+        'price',
+        'mileage',
+        'year',
+        'fuel_type_id',
+        'transmission_id',
+        'body_type',
+        'has_carplay',
+        'has_adaptive_cruise',
+        'is_electric',
+        'specs',
+        'equipment',
+        'vehicle_list_status_id',
+        'published_at',
+        'views_count',
     ];
 
     protected $casts = [
-        'serial_no' => 'integer',
+        'price' => 'integer',
+        'mileage' => 'integer',
         'year' => 'integer',
-        'odometer' => 'integer',
-        'ownership_count' => 'integer',
-        'accident_history' => 'boolean',
-        'blacklist_flags' => 'array',
-        'inventory_date' => 'date',
-        'features' => 'array',
-        'pending_works' => 'array',
-        'listing_price' => 'integer',
-        'images' => 'array',
+        'has_carplay' => 'boolean',
+        'has_adaptive_cruise' => 'boolean',
+        'is_electric' => 'boolean',
+        'specs' => 'array',
+        'equipment' => 'array',
+        'published_at' => 'datetime',
+        'views_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     /**
-     * Get purchases for this vehicle
+     * Get dealer for this vehicle
      */
-    public function purchases(): HasMany
+    public function dealer(): BelongsTo
     {
-        return $this->hasMany(Purchase::class);
+        return $this->belongsTo(Dealer::class);
     }
 
     /**
-     * Get sales for this vehicle
+     * Get user (creator) for this vehicle
      */
-    public function sales(): HasMany
+    public function user(): BelongsTo
     {
-        return $this->hasMany(Sale::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
-     * Get expenses for this vehicle
+     * Get location for this vehicle
      */
-    public function expenses(): HasMany
+    public function location(): BelongsTo
     {
-        return $this->hasMany(Expense::class);
+        return $this->belongsTo(Location::class);
     }
 
     /**
-     * Get enquiries for this vehicle
+     * Get fuel type for this vehicle
      */
-    public function enquiries(): HasMany
+    public function fuelType(): BelongsTo
     {
-        return $this->hasMany(Enquiry::class);
+        return $this->belongsTo(FuelType::class);
     }
 
     /**
-     * Get purchases count attribute
+     * Get transmission for this vehicle
      */
-    public function getPurchasesCountAttribute(): int
+    public function transmission(): BelongsTo
     {
-        return $this->purchases()->count();
+        return $this->belongsTo(Transmission::class);
     }
 
     /**
-     * Get sales count attribute
+     * Get vehicle list status for this vehicle
      */
-    public function getSalesCountAttribute(): int
+    public function vehicleListStatus(): BelongsTo
     {
-        return $this->sales()->count();
+        return $this->belongsTo(VehicleListStatus::class);
+    }
+
+    /**
+     * Get images for this vehicle
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(VehicleImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Get favorites for this vehicle
+     */
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    /**
+     * Get leads for this vehicle
+     */
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class);
+    }
+
+    /**
+     * Get price history for this vehicle
+     */
+    public function priceHistory(): HasMany
+    {
+        return $this->hasMany(PriceHistory::class);
+    }
+
+    /**
+     * Get view logs for this vehicle
+     */
+    public function viewLogs(): HasMany
+    {
+        return $this->hasMany(ListingViewsLog::class);
     }
 }
-

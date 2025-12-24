@@ -14,31 +14,18 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('name', 150);
+            $table->string('email', 150)->unique();
+            $table->string('phone', 30)->nullable();
+            $table->string('password', 255);
+            $table->unsignedInteger('status_id')->nullable()->comment('FK to user_statuses.id - will be constrained in later migration');
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
             $table->rememberToken();
-            $table->boolean('email_verified')->default(false);
-            $table->string('phone')->nullable()->comment('Custom field');
-            $table->text('address')->nullable()->comment('Custom field');
-            $table->string('role', 50)->default('user')->comment('Enum: user, dealer, admin');
-            $table->string('image', 500)->nullable()->comment('Profile image URL');
-            $table->boolean('banned')->default(false);
-            $table->text('ban_reason')->nullable();
-            $table->timestamp('ban_expires')->nullable();
             $table->timestamps();
 
-            $table->index('created_at');
-            $table->index('role');
-            $table->index('banned');
-            $table->fullText(['name', 'email']);
+            $table->index('email');
+            $table->index('status_id');
         });
-
-        // Add CHECK constraint using raw SQL (not supported in SQLite)
-        if (DB::getDriverName() !== 'sqlite') {
-            DB::statement('ALTER TABLE users ADD CONSTRAINT chk_users_role CHECK (role IN (\'user\', \'dealer\', \'admin\'))');
-        }
     }
 
     /**

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -17,14 +18,9 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
-        'password',
-        'email_verified',
         'phone',
-        'address',
-        'image',
-        'banned',
-        'ban_reason',
-        'ban_expires',
+        'password',
+        'status_id',
     ];
 
     protected $hidden = [
@@ -36,61 +32,106 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
-            'email_verified' => 'boolean',
-            'banned' => 'boolean',
-            'ban_expires' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
     /**
-     * Get enquiries for this user
+     * Get user status for this user
      */
-    public function enquiries(): HasMany
+    public function userStatus(): BelongsTo
     {
-        return $this->hasMany(Enquiry::class);
+        return $this->belongsTo(UserStatus::class, 'status_id');
     }
 
     /**
-     * Get notifications read by this user
+     * Get dealer users (dealer memberships) for this user
      */
-    public function readNotifications(): BelongsToMany
+    public function dealerUsers(): HasMany
     {
-        return $this->belongsToMany(Notification::class, 'notification_reads')
-            ->withPivot('read_at')
-            ->withTimestamps();
+        return $this->hasMany(DealerUser::class);
     }
 
     /**
-     * Get push notification subscriptions for this user
+     * Get dealers this user belongs to
      */
-    public function pushSubscriptions(): HasMany
+    public function dealers(): BelongsToMany
     {
-        return $this->hasMany(PushNotificationSubscription::class);
+        return $this->belongsToMany(Dealer::class, 'dealer_users')
+            ->withPivot('role_id')
+            ->withTimestamps('created_at');
     }
 
     /**
-     * Get sessions for this user
+     * Get vehicles created by this user
      */
-    public function sessions(): HasMany
+    public function vehicles(): HasMany
     {
-        return $this->hasMany(Session::class);
+        return $this->hasMany(Vehicle::class);
     }
 
     /**
-     * Get accounts (OAuth/password) for this user
+     * Get favorites for this user
      */
-    public function accounts(): HasMany
+    public function favorites(): HasMany
     {
-        return $this->hasMany(Account::class);
+        return $this->hasMany(Favorite::class);
     }
 
     /**
-     * Get status attribute (active or banned)
+     * Get saved searches for this user
      */
-    public function getStatusAttribute(): string
+    public function savedSearches(): HasMany
     {
-        return $this->banned ? 'banned' : 'active';
+        return $this->hasMany(SavedSearch::class);
+    }
+
+    /**
+     * Get leads where this user is the buyer
+     */
+    public function buyerLeads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'buyer_user_id');
+    }
+
+    /**
+     * Get leads assigned to this user
+     */
+    public function assignedLeads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'assigned_user_id');
+    }
+
+    /**
+     * Get chat messages sent by this user
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id');
+    }
+
+    /**
+     * Get price history records changed by this user
+     */
+    public function priceHistoryChanges(): HasMany
+    {
+        return $this->hasMany(PriceHistory::class, 'changed_by_user_id');
+    }
+
+    /**
+     * Get view logs for this user
+     */
+    public function viewLogs(): HasMany
+    {
+        return $this->hasMany(ListingViewsLog::class);
+    }
+
+    /**
+     * Get user plan overrides for this user
+     */
+    public function planOverrides(): HasMany
+    {
+        return $this->hasMany(UserPlanOverride::class);
     }
 
     /**
