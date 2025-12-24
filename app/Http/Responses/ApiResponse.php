@@ -14,10 +14,11 @@ trait ApiResponse
 {
     /**
      * Return successful response with data
+     * All success responses are wrapped in a data object for consistency
      */
     protected function success($data = null, int $statusCode = ApiStatusCode::OK): JsonResponse
     {
-        return response()->json($data, $statusCode);
+        return response()->json(['data' => $data], $statusCode);
     }
 
     /**
@@ -42,6 +43,7 @@ trait ApiResponse
 
     /**
      * Return paginated response
+     * All paginated responses are wrapped in a data object for consistency
      * totalDocs is optional for performance (can be skipped for complex queries)
      */
     protected function paginated(
@@ -64,15 +66,16 @@ trait ApiResponse
             $response['totalPages'] = $paginator->lastPage();
         }
 
-        return response()->json($response, $statusCode);
+        return response()->json(['data' => $response], $statusCode);
     }
 
     /**
      * Return created response (201)
+     * All success responses are wrapped in a data object for consistency
      */
     protected function created($data = null): JsonResponse
     {
-        return response()->json($data, ApiStatusCode::CREATED);
+        return response()->json(['data' => $data], ApiStatusCode::CREATED);
     }
 
     /**
@@ -118,6 +121,7 @@ trait ApiResponse
     /**
      * Return data with metadata
      * Useful for feature flags, limits, or app configuration data
+     * Already follows architecture format with data and meta
      */
     protected function withMeta($data, array $meta): JsonResponse
     {

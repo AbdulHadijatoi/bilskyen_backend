@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VersionController;
 use App\Http\Controllers\NummerpladeController;
+use App\Http\Controllers\LookupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,20 +28,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     
     // Lookup routes
-    Route::get('/locations', function () {
-        // TODO: Implement location lookup
-        return response()->json(['message' => 'Location lookup endpoint - to be implemented'], 501);
-    });
-    
-    Route::get('/fuel-types', function () {
-        // TODO: Implement fuel types lookup
-        return response()->json(['message' => 'Fuel types lookup endpoint - to be implemented'], 501);
-    });
-    
-    Route::get('/transmissions', function () {
-        // TODO: Implement transmissions lookup
-        return response()->json(['message' => 'Transmissions lookup endpoint - to be implemented'], 501);
-    });
+    Route::get('/locations', [LookupController::class, 'locations']);
+    Route::get('/fuel-types', [LookupController::class, 'fuelTypes']);
+    Route::get('/transmissions', [LookupController::class, 'transmissions']);
     
     // Authentication routes
     Route::prefix('auth')->group(function () {

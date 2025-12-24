@@ -43,7 +43,7 @@ class ContactController extends Controller
         $perPage = $request->input('perPage', 10);
         $contacts = $query->withCount(['purchases', 'sales'])->paginate($perPage);
 
-        return $this->paginatedResponse($contacts);
+        return $this->paginated($contacts);
     }
 
     /**
@@ -55,7 +55,7 @@ class ContactController extends Controller
             ->withCount(['purchases', 'sales'])
             ->firstOrFail();
 
-        return response()->json($contact);
+        return $this->success($contact);
     }
 
     /**
@@ -72,7 +72,7 @@ class ContactController extends Controller
 
         $contact = $this->contactService->createContact($data);
 
-        return response()->json($contact, 201);
+        return $this->created($contact);
     }
 
     /**
@@ -89,7 +89,7 @@ class ContactController extends Controller
 
         $contact = $this->contactService->updateContact($contact, $data);
 
-        return response()->json($contact);
+        return $this->success($contact);
     }
 
     /**
@@ -99,25 +99,8 @@ class ContactController extends Controller
     {
         $this->contactService->deleteContact($contact);
 
-        return response()->json(['message' => 'Contact deleted successfully']);
+        return $this->noContent();
     }
 
-    /**
-     * Format paginated response
-     */
-    private function paginatedResponse($paginator): JsonResponse
-    {
-        return response()->json([
-            'docs' => $paginator->items(),
-            'totalDocs' => $paginator->total(),
-            'limit' => $paginator->perPage(),
-            'page' => $paginator->currentPage(),
-            'totalPages' => $paginator->lastPage(),
-            'hasPrevPage' => $paginator->currentPage() > 1,
-            'hasNextPage' => $paginator->hasMorePages(),
-            'prevPage' => $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
-            'nextPage' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
-        ]);
-    }
 }
 

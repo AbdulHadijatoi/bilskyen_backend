@@ -32,10 +32,16 @@ class VehicleController extends Controller
 
     /**
      * Get vehicles list (public or dealer)
+     * Excludes deleted records by default unless with_deleted=true is passed
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Vehicle::with(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']);
+        // Include deleted records only if explicitly requested
+        if ($request->boolean('with_deleted')) {
+            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']);
+        } else {
+            $query = Vehicle::with(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']);
+        }
 
         // For dealer routes, filter by dealer_id
         if ($request->user() && $request->user()->dealers()->exists()) {
@@ -134,7 +140,7 @@ class VehicleController extends Controller
         $newArrivals7Days = Vehicle::where('created_at', '>=', now()->subDays(7))->count();
         $recentlyUpdated24h = Vehicle::where('updated_at', '>=', now()->subDay())->count();
 
-        return response()->json([
+        return $this->success([
             'totalVehicles' => $totalVehicles,
             'availableVehicles' => $availableVehicles,
             'pendingVehicles' => $pendingVehicles,
