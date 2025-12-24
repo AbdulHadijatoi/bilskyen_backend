@@ -266,7 +266,7 @@ class AuthPageController extends Controller
         ]);
 
         // Assign default role
-        $roles = $request->input('roles', ['user']);
+        $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         // Generate JWT tokens
@@ -550,7 +550,7 @@ class AuthPageController extends Controller
         ]);
 
         // Assign default role
-        $roles = $request->input('roles', ['user']);
+        $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         // Generate magic link token

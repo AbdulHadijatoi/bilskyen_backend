@@ -24,7 +24,7 @@ class LeadSeeder extends Seeder
             
             $vehicles = Vehicle::where('vehicle_list_status_id', \App\Models\VehicleListStatus::PUBLISHED)->get();
             $buyers = User::whereHas('roles', function ($query) {
-                $query->where('name', 'user');
+                $query->where('name', 'seller');
             })->get();
             $dealers = Dealer::all();
             $dealerStaff = User::whereHas('dealers')->get();

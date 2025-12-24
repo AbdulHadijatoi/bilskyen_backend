@@ -39,7 +39,7 @@ class AuthRegisterController extends Controller
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string',
             'roles' => 'nullable|array',
-            'roles.*' => 'string|in:user,dealer,admin',
+            'roles.*' => 'string|in:seller,dealer,admin',
         ]);
 
         if ($validator->fails()) {
@@ -56,7 +56,7 @@ class AuthRegisterController extends Controller
         ]);
 
         // Assign default role if no roles provided
-        $roles = $request->input('roles', ['user']);
+        $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         // Load roles for response

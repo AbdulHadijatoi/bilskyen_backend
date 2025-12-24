@@ -18,7 +18,7 @@ class PlanAvailabilitySeeder extends Seeder
         DB::transaction(function () {
             $plans = Plan::all();
             $dealerRole = Role::where('name', 'dealer')->first();
-            $userRole = Role::where('name', 'user')->first();
+            $sellerRole = Role::where('name', 'seller')->first();
             
             if ($plans->isEmpty() || !$dealerRole) {
                 return;
@@ -37,12 +37,12 @@ class PlanAvailabilitySeeder extends Seeder
                     ]
                 );
                 
-                // Trial plan also available to regular users
-                if ($plan->slug === 'trial' && $userRole) {
+                // Trial plan also available to sellers
+                if ($plan->slug === 'trial' && $sellerRole) {
                     PlanAvailability::firstOrCreate(
                         [
                             'plan_id' => $plan->id,
-                            'allowed_role_id' => $userRole->id,
+                            'allowed_role_id' => $sellerRole->id,
                         ],
                         [
                             'is_enabled' => true,

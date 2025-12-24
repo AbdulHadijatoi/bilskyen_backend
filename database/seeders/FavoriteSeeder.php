@@ -20,7 +20,7 @@ class FavoriteSeeder extends Seeder
             $faker = Faker::create();
             
             $users = User::whereHas('roles', function ($query) {
-                $query->where('name', 'user');
+                $query->where('name', 'seller');
             })->get();
             
             $vehicles = Vehicle::where('vehicle_list_status_id', \App\Models\VehicleListStatus::PUBLISHED)->get();

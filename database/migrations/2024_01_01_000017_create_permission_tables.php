@@ -29,7 +29,7 @@ return new class extends Migration
 
         Schema::create($tableNames['roles'], function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('name', 255)->unique()->comment('user, dealer, admin');
+            $table->string('name', 255)->unique()->comment('seller, dealer, admin');
             $table->string('guard_name', 255)->default('web');
             $table->timestamps();
 

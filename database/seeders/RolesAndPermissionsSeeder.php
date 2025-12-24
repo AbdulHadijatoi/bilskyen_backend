@@ -134,17 +134,17 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create roles (using lowercase names to match codebase expectations)
         $this->command->info('Creating roles...');
         
-        // User role (minimal permissions, previously called Buyer)
-        $userRole = $rolePermissionService->createRole('user');
-        $userPermissions = [
+        // Seller role (minimal permissions, previously called Buyer/User)
+        $sellerRole = $rolePermissionService->createRole('seller');
+        $sellerPermissions = [
             'dashboard.view',
             'vehicle.list',
             'vehicle.view',
             'contact.view',
             'enquiry.create',
         ];
-        $rolePermissionService->syncRolePermissions($userRole, $userPermissions);
-        $this->command->info('✓ User role created with permissions');
+        $rolePermissionService->syncRolePermissions($sellerRole, $sellerPermissions);
+        $this->command->info('✓ Seller role created with permissions');
 
         // Dealer role (most permissions for managing dealership)
         $dealerRole = $rolePermissionService->createRole('dealer');

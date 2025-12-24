@@ -19,7 +19,7 @@ class SavedSearchSeeder extends Seeder
             $faker = Faker::create();
             
             $users = User::whereHas('roles', function ($query) {
-                $query->where('name', 'user');
+                $query->where('name', 'seller');
             })->get();
             
             if ($users->isEmpty()) {

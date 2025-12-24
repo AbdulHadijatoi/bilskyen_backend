@@ -22,9 +22,9 @@ class DealerUserSeeder extends Seeder
             
             // Get roles
             $dealerRole = Role::where('name', 'dealer')->first();
-            $userRole = Role::where('name', 'user')->first();
+            $sellerRole = Role::where('name', 'seller')->first();
             
-            if (!$dealerRole || !$userRole) {
+            if (!$dealerRole || !$sellerRole) {
                 $this->command->warn('Roles not found. Please run RolesAndPermissionsSeeder first.');
                 return;
             }
@@ -63,11 +63,11 @@ class DealerUserSeeder extends Seeder
                 }
             }
             
-            // Assign user role to remaining users (buyers)
+            // Assign seller role to remaining users (buyers)
             $remainingUsers = $users->skip($userIndex);
             foreach ($remainingUsers as $user) {
-                if (!$user->hasRole('user')) {
-                    $user->assignRole('user');
+                if (!$user->hasRole('seller')) {
+                    $user->assignRole('seller');
                 }
             }
         });
