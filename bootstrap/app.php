@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,12 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
+            // All API routes are prefixed with /api/v1 for versioning
             Route::middleware('api')
-                ->prefix('api')
+                ->prefix('api/v1')
                 ->group(base_path('routes/admin-apis.php'));
             
             Route::middleware('api')
-                ->prefix('api')
+                ->prefix('api/v1')
                 ->group(base_path('routes/dealer-apis.php'));
         },
     )
@@ -27,7 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'cron.auth' => \App\Http\Middleware\CronAuth::class,
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'auth.web' => \App\Http\Middleware\AuthenticateWeb::class,
+            'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
         ]);
+        
+        // Global rate limiting baseline: 60 requests per minute per IP
+        $middleware->throttleApi('60,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
