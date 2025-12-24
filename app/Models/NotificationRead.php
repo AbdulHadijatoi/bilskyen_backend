@@ -39,3 +39,4 @@ class NotificationRead extends Model
     }
 }
 
+

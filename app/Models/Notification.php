@@ -55,3 +55,4 @@ class Notification extends Model
     }
 }
 
+

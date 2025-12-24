@@ -38,3 +38,4 @@ class PushNotificationSubscription extends Model
     }
 }
 
+

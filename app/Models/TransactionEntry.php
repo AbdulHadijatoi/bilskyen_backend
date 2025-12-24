@@ -40,3 +40,4 @@ class TransactionEntry extends Model
     }
 }
 
+
