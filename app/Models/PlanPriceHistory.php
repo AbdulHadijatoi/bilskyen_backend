@@ -10,6 +10,8 @@ class PlanPriceHistory extends Model
 {
     use HasFactory;
 
+    protected $table = 'plan_price_history';
+
     public $timestamps = false;
 
     protected $fillable = [

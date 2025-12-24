@@ -40,7 +40,7 @@ class Dealer extends Model
     {
         return $this->belongsToMany(User::class, 'dealer_users')
             ->withPivot('role_id')
-            ->withTimestamps('created_at');
+            ->withPivot('created_at');
     }
 
     /**

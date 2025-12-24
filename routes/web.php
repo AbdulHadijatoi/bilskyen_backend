@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthPageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DmrTestController;
 
 // Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -75,3 +76,11 @@ Route::get('/vehicles/{serialNo}', [HomeController::class, 'showVehicleDetail'])
 
 //     return 'Mail sent';
 // });
+
+
+Route::prefix('test/dmr')->group(function () {
+    Route::get('/webservice', [DmrTestController::class, 'dmrWebservice']);
+    Route::get('/dataset', [DmrTestController::class, 'motorRegisterData']);
+    Route::get('/scraper', [DmrTestController::class, 'jsDkCarScraper']);
+    Route::get('/xmlstream', [DmrTestController::class, 'motorregisterXmlStream']);
+});

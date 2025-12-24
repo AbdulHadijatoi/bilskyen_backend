@@ -10,6 +10,8 @@ class VehicleImage extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'vehicle_id',
         'image_path',
