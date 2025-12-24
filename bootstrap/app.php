@@ -13,12 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             // All API routes are prefixed with /api/v1 for versioning
+            // Admin routes are prefixed with /api/v1/admin
             Route::middleware('api')
-                ->prefix('api/v1')
+                ->prefix('api/v1/admin')
                 ->group(base_path('routes/admin-apis.php'));
             
+            // Dealer routes are prefixed with /api/v1/dealer
             Route::middleware('api')
-                ->prefix('api/v1')
+                ->prefix('api/v1/dealer')
                 ->group(base_path('routes/dealer-apis.php'));
         },
     )

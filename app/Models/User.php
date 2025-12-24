@@ -16,6 +16,12 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
+    /**
+     * Default guard name for roles and permissions
+     * This ensures roles are checked using 'web' guard regardless of auth guard used
+     */
+    protected $guard_name = 'web';
+
     protected $fillable = [
         'name',
         'email',
