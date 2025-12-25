@@ -12,7 +12,7 @@ return [
 
     'base_url' => env('NUMMERPLADE_BASE_URL', 'https://api.nrpla.de'),
     
-    'api_token' => env('NUMMERPLADE_API_TOKEN', 'TLWRq0elvsxmrCv0eUj1oiPdUlV8wkuRFvYHSQ5d4MGgfND14a1XThqqOs7sz4Oj'),
+    'api_token' => env('NUMMERPLADE_API_TOKEN'),
     
     'timeout' => env('NUMMERPLADE_TIMEOUT', 30), // seconds
     
