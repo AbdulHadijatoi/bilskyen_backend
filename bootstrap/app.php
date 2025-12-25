@@ -34,8 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
         ]);
         
-        // Global rate limiting baseline: 60 requests per minute per IP
-        $middleware->throttleApi('60,1');
+        // Global rate limiting baseline: 120 requests per minute per IP
+        $middleware->throttleApi('120,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

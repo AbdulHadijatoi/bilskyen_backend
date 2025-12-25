@@ -38,7 +38,7 @@ Route::middleware('auth:api')->group(function () {
             ->middleware(permission_middleware('vehicle', 'view'));
         
         Route::post('/', [VehicleController::class, 'store'])
-            ->middleware(['throttle:10,1', 'idempotency', permission_middleware('vehicle', 'create')]);
+            ->middleware(['throttle:20,1', 'idempotency', permission_middleware('vehicle', 'create')]);
         
         Route::put('/{id}', [VehicleController::class, 'update'])
             ->middleware(permission_middleware('vehicle', 'update'));
@@ -60,7 +60,7 @@ Route::middleware('auth:api')->group(function () {
             ->middleware(permission_middleware('vehicle', 'update'));
         
         Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
-            ->middleware(['throttle:20,1', permission_middleware('vehicle', 'create')]);
+            ->middleware(['throttle:40,1', permission_middleware('vehicle', 'create')]);
     });
     
     // Lead Management

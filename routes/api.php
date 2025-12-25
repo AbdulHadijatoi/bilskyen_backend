@@ -36,13 +36,13 @@ Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         // Public auth routes with rate limiting
         Route::post('/register', [AuthController::class, 'register'])
-            ->middleware(['throttle:3,1', 'idempotency']); // 3 requests per minute, idempotency
+            ->middleware(['throttle:6,1', 'idempotency']); // 6 requests per minute, idempotency
         
         Route::post('/login', [AuthController::class, 'login'])
-            ->middleware('throttle:5,1'); // 5 requests per minute
+            ->middleware('throttle:10,1'); // 10 requests per minute
         
         Route::post('/refresh', [AuthController::class, 'refresh'])
-            ->middleware('throttle:10,1'); // 10 requests per minute
+            ->middleware('throttle:20,1'); // 20 requests per minute
         
         // Protected routes (use auth:api middleware - standardized)
         Route::middleware('auth:api')->group(function () {
@@ -85,10 +85,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('nummerplade')->group(function () {
         // Vehicle lookup endpoints (rate limited)
         Route::post('/vehicle-by-registration', [NummerpladeController::class, 'getVehicleByRegistration'])
-            ->middleware('throttle:20,1'); // 20 requests per minute per IP
+            ->middleware('throttle:40,1'); // 40 requests per minute per IP
         
         Route::post('/vehicle-by-vin', [NummerpladeController::class, 'getVehicleByVin'])
-            ->middleware('throttle:20,1'); // 20 requests per minute per IP
+            ->middleware('throttle:40,1'); // 40 requests per minute per IP
         
         // Reference data (cached, less restrictive)
         Route::get('/reference/body-types', [NummerpladeController::class, 'getBodyTypes']);
@@ -98,21 +98,21 @@ Route::prefix('v1')->group(function () {
         
         // Additional data endpoints (rate limited)
         Route::get('/inspections/{vehicleId}', [NummerpladeController::class, 'getInspections'])
-            ->middleware('throttle:10,1'); // 10 requests per minute per IP
+            ->middleware('throttle:20,1'); // 20 requests per minute per IP
         
         Route::get('/dmr/{vehicleId}', [NummerpladeController::class, 'getDmrData'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:20,1');
         
         Route::get('/debt/{vehicleId}', [NummerpladeController::class, 'getDebt'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:20,1');
         
         Route::get('/tinglysning/{vin}', [NummerpladeController::class, 'getTinglysning'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:20,1');
         
         Route::get('/emissions/{input}', [NummerpladeController::class, 'getEmissions'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:20,1');
         
         Route::get('/evaluations/{input}', [NummerpladeController::class, 'getEvaluations'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:20,1');
     });
 });

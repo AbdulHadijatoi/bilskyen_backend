@@ -204,7 +204,7 @@ Nummerplade API errors follow a standardized structure:
 
 ### Global Baseline
 
-**60 requests per minute per IP** - Applied to all API routes by default.
+**120 requests per minute per IP** - Applied to all API routes by default.
 
 ### Stricter Overrides
 
@@ -212,12 +212,12 @@ Specific endpoints have stricter rate limits:
 
 | Endpoint | Rate Limit |
 |----------|------------|
-| `POST /api/v1/auth/login` | 5 requests/minute |
-| `POST /api/v1/auth/register` | 3 requests/minute |
-| `POST /api/v1/auth/refresh` | 10 requests/minute |
-| `POST /api/v1/dealer/vehicles` | 10 requests/minute per user |
-| `POST /api/v1/nummerplade/vehicle-by-*` | 20 requests/minute per IP |
-| `GET /api/v1/nummerplade/inspections/*` | 10 requests/minute per IP |
+| `POST /api/v1/auth/login` | 10 requests/minute |
+| `POST /api/v1/auth/register` | 6 requests/minute |
+| `POST /api/v1/auth/refresh` | 20 requests/minute |
+| `POST /api/v1/dealer/vehicles` | 20 requests/minute per user |
+| `POST /api/v1/nummerplade/vehicle-by-*` | 40 requests/minute per IP |
+| `GET /api/v1/nummerplade/inspections/*` | 20 requests/minute per IP |
 
 ### Rate Limit Headers
 
@@ -225,7 +225,7 @@ When rate limited, the API returns:
 
 ```
 HTTP/1.1 429 Too Many Requests
-X-RateLimit-Limit: 60
+X-RateLimit-Limit: 120
 X-RateLimit-Remaining: 0
 Retry-After: 60
 ```
@@ -281,18 +281,18 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 
 | Method | Endpoint | Description | Rate Limit |
 |--------|----------|-------------|------------|
-| POST | `/api/v1/nummerplade/vehicle-by-registration` | Get vehicle by registration | 20/min |
-| POST | `/api/v1/nummerplade/vehicle-by-vin` | Get vehicle by VIN | 20/min |
+| POST | `/api/v1/nummerplade/vehicle-by-registration` | Get vehicle by registration | 40/min |
+| POST | `/api/v1/nummerplade/vehicle-by-vin` | Get vehicle by VIN | 40/min |
 | GET | `/api/v1/nummerplade/reference/body-types` | Get body types (cached) | - |
 | GET | `/api/v1/nummerplade/reference/colors` | Get colors (cached) | - |
 | GET | `/api/v1/nummerplade/reference/fuel-types` | Get fuel types (cached) | - |
 | GET | `/api/v1/nummerplade/reference/equipment` | Get equipment (cached) | - |
-| GET | `/api/v1/nummerplade/inspections/{vehicleId}` | Get inspections | 10/min |
-| GET | `/api/v1/nummerplade/dmr/{vehicleId}` | Get DMR data | 10/min |
-| GET | `/api/v1/nummerplade/debt/{vehicleId}` | Get debt data | 10/min |
-| GET | `/api/v1/nummerplade/tinglysning/{vin}` | Get tinglysning data | 10/min |
-| GET | `/api/v1/nummerplade/emissions/{input}` | Get emissions | 10/min |
-| GET | `/api/v1/nummerplade/evaluations/{input}` | Get evaluations | 10/min |
+| GET | `/api/v1/nummerplade/inspections/{vehicleId}` | Get inspections | 20/min |
+| GET | `/api/v1/nummerplade/dmr/{vehicleId}` | Get DMR data | 20/min |
+| GET | `/api/v1/nummerplade/debt/{vehicleId}` | Get debt data | 20/min |
+| GET | `/api/v1/nummerplade/tinglysning/{vin}` | Get tinglysning data | 20/min |
+| GET | `/api/v1/nummerplade/emissions/{input}` | Get emissions | 20/min |
+| GET | `/api/v1/nummerplade/evaluations/{input}` | Get evaluations | 20/min |
 
 ## Endpoints
 
