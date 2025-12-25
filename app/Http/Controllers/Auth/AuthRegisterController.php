@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Dealer;
+use App\Models\DealerUser;
 use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 /**
@@ -58,6 +61,29 @@ class AuthRegisterController extends Controller
         // Assign default role if no roles provided
         $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
+
+        // If user registered as dealer, create dealer record and associate user
+        if (in_array('dealer', $roles)) {
+            DB::transaction(function () use ($user, $request) {
+                // Create dealer with placeholder CVR (can be updated later)
+                // Using user ID to ensure uniqueness
+                $dealer = Dealer::create([
+                    'cvr' => 'PENDING-' . $user->id,
+                    'address' => $request->input('address', ''),
+                    'city' => $request->input('city', ''),
+                    'postcode' => $request->input('postcode', ''),
+                    'country_code' => $request->input('country_code', 'DK'),
+                ]);
+
+                // Associate user with dealer as owner
+                DealerUser::create([
+                    'dealer_id' => $dealer->id,
+                    'user_id' => $user->id,
+                    'role_id' => DealerUser::ROLE_OWNER,
+                    'created_at' => now(),
+                ]);
+            });
+        }
 
         // Load roles for response
         $user->load('roles');

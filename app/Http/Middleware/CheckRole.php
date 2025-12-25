@@ -6,8 +6,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\AuthService;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
 
 class CheckRole
 {
@@ -25,18 +23,12 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // Get authenticated user via JWT
-        // Try JWT from cookie (via AuthService) first
-        $user = $this->authService->getAuthenticatedUser($request);
-        
-        // Try JWT from Authorization header if cookie method failed
-        if (!$user) {
-            try {
-                $user = JWTAuth::parseToken()->authenticate();
-            } catch (JWTException $e) {
-                // Token invalid or not provided, continue to unauthorized response
-                $user = null;
-            }
+        // For API requests, use auth('api')->user() since auth:api middleware already authenticated
+        // For web requests, fall back to AuthService which checks cookies
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $user = auth('api')->user();
+        } else {
+            $user = $this->authService->getAuthenticatedUser($request);
         }
 
         if (!$user) {
@@ -58,11 +50,9 @@ class CheckRole
     {
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
-                'error' => 'Unauthenticated',
-                'name' => 'Unauthorized',
+                'status' => 'error',
                 'message' => 'You must be signed in to access this resource.',
-                'status' => 401,
-                'statusText' => 'Unauthorized',
+                'error_code' => 'UNAUTHORIZED',
             ], 401);
         }
 
@@ -78,11 +68,9 @@ class CheckRole
         
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
-                'error' => 'Forbidden',
-                'name' => 'Forbidden',
+                'status' => 'error',
                 'message' => "You do not have the required role(s): {$rolesString}. Please contact your administrator if you believe this is an error.",
-                'status' => 403,
-                'statusText' => 'Forbidden',
+                'error_code' => 'FORBIDDEN',
             ], 403);
         }
 

@@ -23,7 +23,13 @@ class RequirePermission
      */
     public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
-        $user = $this->authService->getAuthenticatedUser($request);
+        // For API requests, use auth('api')->user() since auth:api middleware already authenticated
+        // For web requests, fall back to AuthService which checks cookies
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $user = auth('api')->user();
+        } else {
+            $user = $this->authService->getAuthenticatedUser($request);
+        }
 
         if (!$user) {
             return $this->unauthorizedResponse();
@@ -44,11 +50,9 @@ class RequirePermission
     {
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
-                'error' => 'Unauthenticated',
-                'name' => 'Unauthorized',
+                'status' => 'error',
                 'message' => 'You must be signed in to access this resource.',
-                'status' => 401,
-                'statusText' => 'Unauthorized',
+                'error_code' => 'UNAUTHORIZED',
             ], 401);
         }
 
@@ -64,11 +68,9 @@ class RequirePermission
         
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
-                'error' => 'Forbidden',
-                'name' => 'Forbidden',
+                'status' => 'error',
                 'message' => "You do not have the required permission(s): {$permissionsString}. Please contact your administrator if you believe this is an error.",
-                'status' => 403,
-                'statusText' => 'Forbidden',
+                'error_code' => 'FORBIDDEN',
             ], 403);
         }
 

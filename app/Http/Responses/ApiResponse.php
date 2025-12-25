@@ -27,7 +27,8 @@ trait ApiResponse
     protected function error(
         string $message,
         $errors = null,
-        int $statusCode = ApiStatusCode::BAD_REQUEST
+        int $statusCode = ApiStatusCode::BAD_REQUEST,
+        string $errorCode = null
     ): JsonResponse {
         $response = [
             'status' => 'error',
@@ -36,6 +37,10 @@ trait ApiResponse
 
         if ($errors !== null) {
             $response['errors'] = $errors;
+        }
+
+        if ($errorCode !== null) {
+            $response['error_code'] = $errorCode;
         }
 
         return response()->json($response, $statusCode);
@@ -89,17 +94,17 @@ trait ApiResponse
     /**
      * Return unauthorized response (401)
      */
-    protected function unauthorized(string $message = 'Unauthorized'): JsonResponse
+    protected function unauthorized(string $message = 'Unauthorized', string $errorCode = 'UNAUTHORIZED'): JsonResponse
     {
-        return $this->error($message, null, ApiStatusCode::UNAUTHORIZED);
+        return $this->error($message, null, ApiStatusCode::UNAUTHORIZED, $errorCode);
     }
 
     /**
      * Return forbidden response (403)
      */
-    protected function forbidden(string $message = 'Forbidden'): JsonResponse
+    protected function forbidden(string $message = 'Forbidden', string $errorCode = 'FORBIDDEN'): JsonResponse
     {
-        return $this->error($message, null, ApiStatusCode::FORBIDDEN);
+        return $this->error($message, null, ApiStatusCode::FORBIDDEN, $errorCode);
     }
 
     /**

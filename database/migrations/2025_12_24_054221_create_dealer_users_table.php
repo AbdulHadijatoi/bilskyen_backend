@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
 
             $table->unique(['dealer_id', 'user_id']);
         });

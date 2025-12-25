@@ -15,27 +15,36 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission, string $action = null): Response
     {
-        $user = $request->user();
+        // For API requests, use auth('api')->user() since auth:api middleware already authenticated
+        // For web requests, use $request->user()
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $user = auth('api')->user();
+        } else {
+            $user = $request->user();
+        }
 
         if (!$user) {
-            return response()->json([
-                'error' => 'Unauthenticated',
-                'name' => 'Unauthorized',
-                'message' => 'You must be signed in to access this resource.',
-                'status' => 401,
-                'statusText' => 'Unauthorized',
-            ], 401);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You must be signed in to access this resource.',
+                    'error_code' => 'UNAUTHORIZED',
+                ], 401);
+            }
+            return redirect()->route('login')->with('error', 'You must be signed in to access this resource.');
         }
 
         $permissionString = $action ? "{$permission}.{$action}" : $permission;
         if (!$user->can($permissionString)) {
-            return response()->json([
-                'error' => "You do not have permission to {$action} {$permission}s. Please contact your administrator if you believe this is an error.",
-                'name' => 'Forbidden',
-                'message' => "You do not have permission to {$action} {$permission}s. Please contact your administrator if you believe this is an error.",
-                'status' => 403,
-                'statusText' => 'Forbidden',
-            ], 403);
+            $actionText = $action ? "{$action} {$permission}s" : "access {$permission}s";
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "You do not have permission to {$actionText}. Please contact your administrator if you believe this is an error.",
+                    'error_code' => 'FORBIDDEN',
+                ], 403);
+            }
+            abort(403, "You do not have permission to {$actionText}");
         }
 
         return $next($request);
