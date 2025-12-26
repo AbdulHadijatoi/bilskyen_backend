@@ -13,6 +13,7 @@ use App\Models\BodyType;
 use App\Models\Color;
 use App\Models\Type;
 use App\Models\VehicleUse;
+use App\Constants\VehicleListStatus;
 use App\Services\FileService;
 use App\Services\NotificationService;
 use App\Services\NummerpladeApiService;
@@ -70,7 +71,7 @@ class VehicleService
             $detailsFields = [
                 'description', 'views_count', 'vin_location', 'type_id', 'version', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
-                'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
+                'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
                 'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
@@ -303,7 +304,7 @@ class VehicleService
             $detailsFields = [
                 'description', 'views_count', 'vin_location', 'type_id', 'version', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
-                'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
+                'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
                 'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
@@ -427,6 +428,324 @@ class VehicleService
             // Delete vehicle (soft delete)
             $vehicle->delete();
         });
+    }
+
+    /**
+     * Get public vehicles with basic filters (vehicles table only)
+     * 
+     * @param array $filters
+     * @param int $perPage
+     * @param int $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getPublicVehicles(array $filters = [], int $perPage = 15, int $page = 1)
+    {
+        $query = Vehicle::query()
+            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->with(['images' => function ($query) {
+                $query->orderBy('sort_order');
+            }, 'details']);
+
+        // Search filter
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('registration', 'like', "%{$search}%")
+                  ->orWhere('vin', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        // Brand filter
+        if (!empty($filters['brand_id'])) {
+            $query->where('brand_id', $filters['brand_id']);
+        }
+
+        // Model filter
+        if (!empty($filters['model_id'])) {
+            $query->where('model_id', $filters['model_id']);
+        }
+
+        // Model Year filter
+        if (!empty($filters['model_year_id'])) {
+            $query->where('model_year_id', $filters['model_year_id']);
+        }
+
+        // Fuel Type filter (supports array for multiple values)
+        if (!empty($filters['fuel_type_id'])) {
+            if (is_array($filters['fuel_type_id'])) {
+                $query->whereIn('fuel_type_id', $filters['fuel_type_id']);
+            } else {
+                $query->where('fuel_type_id', $filters['fuel_type_id']);
+            }
+        }
+
+        // Kilometers Driven filter
+        if (!empty($filters['km_driven'])) {
+            $query->where('km_driven', $filters['km_driven']);
+        }
+
+        // Price range filter
+        if (!empty($filters['price_from'])) {
+            $query->where('price', '>=', $filters['price_from']);
+        }
+        if (!empty($filters['price_to'])) {
+            $query->where('price', '<=', $filters['price_to']);
+        }
+
+        // Listing Type filter
+        if (!empty($filters['listing_type_id'])) {
+            $query->where('listing_type_id', $filters['listing_type_id']);
+        }
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Get public vehicles with advanced filters (vehicles and vehicle_details tables)
+     * 
+     * @param array $basicFilters
+     * @param array $advancedFilters
+     * @param int $perPage
+     * @param int $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getPublicVehiclesWithAdvancedFilters(array $basicFilters = [], array $advancedFilters = [], int $perPage = 15, int $page = 1)
+    {
+        // Start with base query
+        $query = Vehicle::query()
+            ->where('vehicles.vehicle_list_status_id', VehicleListStatus::PUBLISHED);
+
+        // Apply basic filters first
+        if (!empty($basicFilters['search'])) {
+            $search = $basicFilters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('vehicles.title', 'like', "%{$search}%")
+                  ->orWhere('vehicles.registration', 'like', "%{$search}%")
+                  ->orWhere('vehicles.vin', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($basicFilters['category_id'])) {
+            $query->where('vehicles.category_id', $basicFilters['category_id']);
+        }
+
+        if (!empty($basicFilters['brand_id'])) {
+            $query->where('vehicles.brand_id', $basicFilters['brand_id']);
+        }
+
+        if (!empty($basicFilters['model_id'])) {
+            $query->where('vehicles.model_id', $basicFilters['model_id']);
+        }
+
+        if (!empty($basicFilters['model_year_id'])) {
+            $query->where('vehicles.model_year_id', $basicFilters['model_year_id']);
+        }
+
+        if (!empty($basicFilters['fuel_type_id'])) {
+            if (is_array($basicFilters['fuel_type_id'])) {
+                $query->whereIn('vehicles.fuel_type_id', $basicFilters['fuel_type_id']);
+            } else {
+                $query->where('vehicles.fuel_type_id', $basicFilters['fuel_type_id']);
+            }
+        }
+
+        if (!empty($basicFilters['km_driven'])) {
+            $query->where('vehicles.km_driven', $basicFilters['km_driven']);
+        }
+
+        if (!empty($basicFilters['price_from'])) {
+            $query->where('vehicles.price', '>=', $basicFilters['price_from']);
+        }
+        if (!empty($basicFilters['price_to'])) {
+            $query->where('vehicles.price', '<=', $basicFilters['price_to']);
+        }
+
+        if (!empty($basicFilters['listing_type_id'])) {
+            $query->where('vehicles.listing_type_id', $basicFilters['listing_type_id']);
+        }
+
+        // Join with vehicle_details for advanced filters
+        $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
+
+        // Apply advanced filters
+        // Make (brand name lookup)
+        if (!empty($advancedFilters['make']) && empty($basicFilters['brand_id'])) {
+            $brand = Brand::where('name', 'like', "%{$advancedFilters['make']}%")->first();
+            if ($brand) {
+                $query->where('vehicles.brand_id', $brand->id);
+            }
+        }
+
+        // Mileage range
+        if (!empty($advancedFilters['mileage_from'])) {
+            $query->where('vehicles.mileage', '>=', $advancedFilters['mileage_from']);
+        }
+        if (!empty($advancedFilters['mileage_to'])) {
+            $query->where('vehicles.mileage', '<=', $advancedFilters['mileage_to']);
+        }
+        if (!empty($advancedFilters['odometer_from'])) {
+            $query->where('vehicles.mileage', '>=', $advancedFilters['odometer_from']);
+        }
+        if (!empty($advancedFilters['odometer_to'])) {
+            $query->where('vehicles.mileage', '<=', $advancedFilters['odometer_to']);
+        }
+
+        // Listing Status
+        if (!empty($advancedFilters['vehicle_list_status_id'])) {
+            $query->where('vehicles.vehicle_list_status_id', $advancedFilters['vehicle_list_status_id']);
+        }
+
+        // Vehicle Body Type
+        if (!empty($advancedFilters['body_type_id'])) {
+            $query->where('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
+        }
+
+        // Drive Wheels
+        if (!empty($advancedFilters['drive_axles'])) {
+            $query->where('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
+        }
+
+        // First Registration Year
+        if (!empty($advancedFilters['first_registration_year_from'])) {
+            $query->whereYear('vehicles.first_registration_date', '>=', $advancedFilters['first_registration_year_from']);
+        }
+        if (!empty($advancedFilters['first_registration_year_to'])) {
+            $query->whereYear('vehicles.first_registration_date', '<=', $advancedFilters['first_registration_year_to']);
+        }
+
+        // Seller Type / Dealer
+        if (!empty($advancedFilters['dealer_id'])) {
+            $query->where('vehicles.dealer_id', $advancedFilters['dealer_id']);
+        }
+
+        // Price Type
+        if (!empty($advancedFilters['price_type_id'])) {
+            $query->where('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
+        }
+
+        // Condition
+        if (!empty($advancedFilters['condition_id'])) {
+            $query->where('vehicle_details.condition_id', $advancedFilters['condition_id']);
+        }
+
+        // Gear Type
+        if (!empty($advancedFilters['gear_type_id'])) {
+            $query->where('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+        }
+
+        // Sales Type
+        if (!empty($advancedFilters['sales_type_id'])) {
+            $query->where('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
+        }
+
+        // Performance - Top Speed
+        if (!empty($advancedFilters['top_speed_from'])) {
+            $query->where('vehicle_details.top_speed', '>=', $advancedFilters['top_speed_from']);
+        }
+        if (!empty($advancedFilters['top_speed_to'])) {
+            $query->where('vehicle_details.top_speed', '<=', $advancedFilters['top_speed_to']);
+        }
+
+        // Performance - Engine Power
+        if (!empty($advancedFilters['engine_power_from'])) {
+            $query->where('vehicles.engine_power', '>=', $advancedFilters['engine_power_from']);
+        }
+        if (!empty($advancedFilters['engine_power_to'])) {
+            $query->where('vehicles.engine_power', '<=', $advancedFilters['engine_power_to']);
+        }
+
+        // Battery & Charging (EV)
+        if (!empty($advancedFilters['battery_capacity_from'])) {
+            $query->where('vehicles.battery_capacity', '>=', $advancedFilters['battery_capacity_from']);
+        }
+        if (!empty($advancedFilters['battery_capacity_to'])) {
+            $query->where('vehicles.battery_capacity', '<=', $advancedFilters['battery_capacity_to']);
+        }
+
+        // Economy & Environment
+        if (!empty($advancedFilters['fuel_efficiency_from'])) {
+            $query->where('vehicle_details.fuel_efficiency', '>=', $advancedFilters['fuel_efficiency_from']);
+        }
+        if (!empty($advancedFilters['fuel_efficiency_to'])) {
+            $query->where('vehicle_details.fuel_efficiency', '<=', $advancedFilters['fuel_efficiency_to']);
+        }
+        if (!empty($advancedFilters['euronorm'])) {
+            $query->where('vehicle_details.euronorm', $advancedFilters['euronorm']);
+        }
+
+        // Physical Details
+        if (!empty($advancedFilters['color_id'])) {
+            $query->where('vehicle_details.color_id', $advancedFilters['color_id']);
+        }
+        if (!empty($advancedFilters['doors'])) {
+            $query->where('vehicle_details.doors', $advancedFilters['doors']);
+        }
+        if (!empty($advancedFilters['seats_min'])) {
+            $query->where('vehicle_details.minimum_seats', '>=', $advancedFilters['seats_min']);
+        }
+        if (!empty($advancedFilters['seats_max'])) {
+            $query->where('vehicle_details.maximum_seats', '<=', $advancedFilters['seats_max']);
+        }
+        if (!empty($advancedFilters['weight_from'])) {
+            $query->where(function ($q) use ($advancedFilters) {
+                $q->where('vehicle_details.vehicle_weight', '>=', $advancedFilters['weight_from'])
+                  ->orWhere('vehicle_details.total_weight', '>=', $advancedFilters['weight_from']);
+            });
+        }
+        if (!empty($advancedFilters['weight_to'])) {
+            $query->where(function ($q) use ($advancedFilters) {
+                $q->where('vehicle_details.vehicle_weight', '<=', $advancedFilters['weight_to'])
+                  ->orWhere('vehicle_details.total_weight', '<=', $advancedFilters['weight_to']);
+            });
+        }
+        if (!empty($advancedFilters['wheels'])) {
+            $query->where('vehicle_details.wheels', $advancedFilters['wheels']);
+        }
+        if (!empty($advancedFilters['axles'])) {
+            $query->where('vehicle_details.axles', $advancedFilters['axles']);
+        }
+        if (!empty($advancedFilters['engine_cylinders'])) {
+            $query->where('vehicle_details.engine_cylinders', $advancedFilters['engine_cylinders']);
+        }
+        if (!empty($advancedFilters['engine_displacement_from'])) {
+            $query->where('vehicle_details.engine_displacement', '>=', $advancedFilters['engine_displacement_from']);
+        }
+        if (!empty($advancedFilters['engine_displacement_to'])) {
+            $query->where('vehicle_details.engine_displacement', '<=', $advancedFilters['engine_displacement_to']);
+        }
+        if (!empty($advancedFilters['airbags'])) {
+            $query->where('vehicle_details.airbags', $advancedFilters['airbags']);
+        }
+        if (isset($advancedFilters['ncap_five'])) {
+            $query->where('vehicle_details.ncap_five', (bool) $advancedFilters['ncap_five']);
+        }
+
+        // Equipment (many-to-many)
+        if (!empty($advancedFilters['equipment_ids']) || !empty($advancedFilters['equipment_id'])) {
+            $equipmentIds = $advancedFilters['equipment_ids'] ?? [$advancedFilters['equipment_id']];
+            if (is_array($equipmentIds) && !empty($equipmentIds)) {
+                $query->whereHas('equipment', function ($q) use ($equipmentIds) {
+                    $q->whereIn('equipments.id', $equipmentIds);
+                });
+            }
+        }
+
+        // Select distinct vehicles to avoid duplicates from joins
+        $query->select('vehicles.*')
+              ->distinct();
+
+        // Eager load relationships
+        $query->with(['images' => function ($query) {
+            $query->orderBy('sort_order');
+        }, 'details']);
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 }
 

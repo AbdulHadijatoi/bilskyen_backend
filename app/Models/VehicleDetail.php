@@ -25,7 +25,6 @@ class VehicleDetail extends Model
         'registration_status_updated_date',
         'expire_date',
         'status_updated_date',
-        'model_year',
         'total_weight',
         'vehicle_weight',
         'technical_total_weight',
@@ -63,6 +62,10 @@ class VehicleDetail extends Model
         'integrated_child_seats',
         'seat_belt_alarms',
         'euronorm',
+        'price_type_id',
+        'condition_id',
+        'gear_type_id',
+        'sales_type_id',
     ];
 
     protected $casts = [
@@ -106,6 +109,10 @@ class VehicleDetail extends Model
         'use_name',
         'color_name',
         'body_type_name',
+        'price_type_name',
+        'condition_name',
+        'gear_type_name',
+        'sales_type_name',
     ];
 
     /**
@@ -132,6 +139,10 @@ class VehicleDetail extends Model
                 'uses' => \App\Models\VehicleUse::find($id),
                 'colors' => Color::find($id),
                 'body_types' => BodyType::find($id),
+                'price_types' => PriceType::find($id),
+                'conditions' => Condition::find($id),
+                'gear_types' => GearType::find($id),
+                'sales_types' => SalesType::find($id),
                 default => null,
             };
 
@@ -176,6 +187,70 @@ class VehicleDetail extends Model
     public function getBodyTypeNameAttribute(): ?string
     {
         return self::getCachedLookup('body_types', $this->body_type_id);
+    }
+
+    /**
+     * Get price type name attribute (cached)
+     */
+    public function getPriceTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('price_types', $this->price_type_id);
+    }
+
+    /**
+     * Get condition name attribute (cached)
+     */
+    public function getConditionNameAttribute(): ?string
+    {
+        return self::getCachedLookup('conditions', $this->condition_id);
+    }
+
+    /**
+     * Get gear type name attribute (cached)
+     */
+    public function getGearTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('gear_types', $this->gear_type_id);
+    }
+
+    /**
+     * Get sales type name attribute (cached)
+     */
+    public function getSalesTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('sales_types', $this->sales_type_id);
+    }
+
+    /**
+     * Get price type for this detail
+     */
+    public function priceType(): BelongsTo
+    {
+        return $this->belongsTo(PriceType::class);
+    }
+
+    /**
+     * Get condition for this detail
+     */
+    public function condition(): BelongsTo
+    {
+        return $this->belongsTo(Condition::class);
+    }
+
+    /**
+     * Get gear type for this detail
+     */
+    public function gearType(): BelongsTo
+    {
+        return $this->belongsTo(GearType::class);
+    }
+
+    /**
+     * Get sales type for this detail
+     */
+    public function salesType(): BelongsTo
+    {
+        return $this->belongsTo(SalesType::class);
     }
 
     /**

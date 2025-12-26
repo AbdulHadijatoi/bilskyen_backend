@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: 7b8152f5fe35658174f8f8f197c3a4a09dec36046fd48b322cc18932102f7b0d
+API Architecture Checksum: ca7057ceadfca30e2f6aca96045a50d4b9c585d4d092308814aec6dc1f82033b
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -111,17 +111,21 @@ Route::middleware('auth:api')->group(function () {
     "category_name": "SUV",
     "brand_id": 2,
     "brand_name": "Toyota",
+    "model_id": 5,
+    "model_name": "Camry",
     "model_year_id": 3,
     "model_year_name": "2023",
     "fuel_type_id": 1,
-    "fuel_type_name": "Petrol"
+    "fuel_type_name": "Petrol",
+    "listing_type_id": 1,
+    "listing_type_name": "Purchase"
   }
 }
 ```
 
-**Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_year_name, fuel_type_name, vehicle_list_status_name) via model accessors. These are cached and do not require eager-loading relationships.
+**Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_name, model_year_name, fuel_type_name, vehicle_list_status_name, listing_type_name) via model accessors. These are cached and do not require eager-loading relationships.
 
-Vehicle details (when included) also automatically include resolved names for lookup fields (type_name_resolved, use_name, color_name, body_type_name) via VehicleDetail model accessors with the same caching approach.
+Vehicle details (when included) also automatically include resolved names for lookup fields (type_name_resolved, use_name, color_name, body_type_name, price_type_name, condition_name, gear_type_name, sales_type_name) via VehicleDetail model accessors with the same caching approach.
 
 Equipment is returned as a relationship array (many-to-many) when vehicles are loaded with the `equipment` relationship. Use `equipment_ids` array in create/update requests to associate equipment with vehicles.
 
@@ -334,7 +338,13 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 | GET | `/api/v1/transmissions` | Get transmission types |
 | GET | `/api/v1/categories` | Get vehicle categories |
 | GET | `/api/v1/brands` | Get vehicle brands |
+| GET | `/api/v1/models` | Get vehicle models (filtered by brand_id) |
 | GET | `/api/v1/model-years` | Get model years |
+| GET | `/api/v1/listing-types` | Get listing types (Purchase/Leasing) |
+| GET | `/api/v1/price-types` | Get price types |
+| GET | `/api/v1/conditions` | Get conditions |
+| GET | `/api/v1/gear-types` | Get gear types |
+| GET | `/api/v1/sales-types` | Get sales types |
 
 ### Dealer Endpoints
 
@@ -359,13 +369,47 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `search` - Search in title, registration, VIN
 - `category_id` - Filter by category
 - `brand_id` - Filter by brand
+- `model_id` - Filter by model
 - `model_year_id` - Filter by model year
-- `fuel_type_id` - Filter by fuel type
-- `min_price` - Minimum price filter
-- `max_price` - Maximum price filter
+- `fuel_type_id` - Filter by fuel type (supports array for multiple values)
+- `km_driven` - Filter by kilometers driven
+- `price_from` / `price_to` - Price range filter (alternative to min_price/max_price)
+- `min_price` - Minimum price filter (legacy, use price_from)
+- `max_price` - Maximum price filter (legacy, use price_to)
+- `listing_type_id` - Filter by listing type (Purchase/Leasing)
 - `limit` - Results per page (default: 15)
 - `page` - Page number
 - `with_deleted` - Include soft-deleted records (default: false)
+
+**Advanced Filter Parameters (triggers advanced filtering with vehicle_details join):**
+- `make` - Filter by brand name (text search)
+- `mileage_from` / `mileage_to` - Odometer/mileage range
+- `odometer_from` / `odometer_to` - Alternative odometer range
+- `vehicle_list_status_id` - Filter by listing status
+- `price_type_id` - Filter by price type (from vehicle_details)
+- `condition_id` - Filter by condition (from vehicle_details)
+- `body_type_id` - Filter by body type (from vehicle_details)
+- `gear_type_id` - Filter by gear type (from vehicle_details)
+- `drive_axles` - Filter by drive axles (from vehicle_details)
+- `first_registration_year_from` / `first_registration_year_to` - First registration year range
+- `dealer_id` - Filter by dealer/seller
+- `sales_type_id` - Filter by sales type (from vehicle_details)
+- `top_speed_from` / `top_speed_to` - Top speed range
+- `engine_power_from` / `engine_power_to` - Engine power range
+- `battery_capacity_from` / `battery_capacity_to` - Battery capacity range (EV)
+- `fuel_efficiency_from` / `fuel_efficiency_to` - Fuel efficiency range
+- `euronorm` - Filter by Euro norm
+- `color_id` - Filter by color
+- `doors` - Filter by number of doors
+- `seats_min` / `seats_max` - Seat count range
+- `weight_from` / `weight_to` - Vehicle weight range
+- `wheels` - Filter by number of wheels
+- `axles` - Filter by number of axles
+- `engine_cylinders` - Filter by number of engine cylinders
+- `engine_displacement_from` / `engine_displacement_to` - Engine displacement range
+- `airbags` - Filter by number of airbags
+- `ncap_five` - Filter by NCAP 5-star rating (boolean)
+- `equipment_ids[]` - Filter by equipment (array of equipment IDs)
 
 **Vehicle Creation/Update Fields:**
 - `title` (required) - Vehicle title
@@ -374,6 +418,7 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `category_id` (optional) - Category ID
 - `location_id` (required) - Location ID
 - `brand_id` (optional) - Brand ID
+- `model_id` (optional) - Model ID (child of brand)
 - `model_year_id` (optional) - Model year ID
 - `km_driven` (optional) - Kilometers driven
 - `fuel_type_id` (required) - Fuel type ID
@@ -385,9 +430,15 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `ownership_tax` (optional) - Ownership tax
 - `first_registration_date` (optional) - First registration date
 - `vehicle_list_status_id` (required) - Vehicle status ID
+- `listing_type_id` (optional) - Listing type ID (Purchase/Leasing)
 - `published_at` (optional) - Publication timestamp
 - `description` (optional) - Vehicle description (stored in vehicle_details)
-- Additional vehicle_details fields can be included in the same request
+- Additional vehicle_details fields can be included in the same request:
+  - `price_type_id` (optional) - Price type ID
+  - `condition_id` (optional) - Condition ID
+  - `gear_type_id` (optional) - Gear type ID
+  - `sales_type_id` (optional) - Sales type ID
+  - Other existing vehicle_details fields (body_type_id, color_id, etc.)
 
 #### Leads
 
@@ -729,17 +780,36 @@ GET /api/v1/vehicles?limit=15&page=1
 Use query parameters for filtering:
 
 ```
-GET /api/v1/vehicles?category_id=1&brand_id=2&model_year_id=3&fuel_type_id=1&min_price=50000&max_price=100000
+GET /api/v1/vehicles?category_id=1&brand_id=2&model_id=5&model_year_id=3&fuel_type_id=1&price_from=50000&price_to=100000&listing_type_id=1
 ```
 
-**Available Filters:**
+**Basic Filters (vehicles table - fast, no joins):**
+- `search` - Text search in title, registration, VIN
 - `category_id` - Filter by vehicle category
 - `brand_id` - Filter by vehicle brand
+- `model_id` - Filter by vehicle model
 - `model_year_id` - Filter by model year
-- `fuel_type_id` - Filter by fuel type
-- `min_price` - Minimum price
-- `max_price` - Maximum price
-- `search` - Text search in title, registration, VIN
+- `fuel_type_id` - Filter by fuel type (supports array for multiple values)
+- `km_driven` - Filter by kilometers driven
+- `price_from` / `price_to` - Price range filter
+- `listing_type_id` - Filter by listing type (Purchase/Leasing)
+
+**Advanced Filters (vehicle_details table - requires joins, use when needed):**
+- `make` - Filter by brand name (text search)
+- `mileage_from` / `mileage_to` - Odometer/mileage range
+- `price_type_id` - Filter by price type
+- `condition_id` - Filter by condition
+- `body_type_id` - Filter by body type
+- `gear_type_id` - Filter by gear type
+- `drive_axles` - Filter by drive axles
+- `first_registration_year_from` / `first_registration_year_to` - First registration year range
+- `sales_type_id` - Filter by sales type
+- Performance, Battery & Charging, Economy & Environment, Physical Details, Equipment filters (see full list above)
+
+**Note:** The API automatically uses a two-tier filtering system:
+- **Basic filters** (vehicles table only) are used when only basic filter parameters are provided - these are fast and don't require joins
+- **Advanced filters** (vehicle_details table) are automatically used when any advanced filter parameter is detected - these require joins but provide more detailed filtering options
+- The system automatically selects the appropriate filtering method based on the provided parameters
 
 ### Sorting
 
@@ -774,7 +844,7 @@ PUT /api/v1/dealer/vehicles/{id}/status
 
 ### Vehicle Data Caching
 
-Vehicle lookup data (categories, brands, model_years, fuel_types, vehicle_list_statuses) is cached using a two-tier approach:
+Vehicle lookup data (categories, brands, models, model_years, fuel_types, vehicle_list_statuses, listing_types) is cached using a two-tier approach:
 
 1. **Static Property Cache**: In-memory cache for the current request
 2. **Laravel Cache Facade**: Persistent cache with 24-hour TTL (falls back to database if cache miss)
@@ -795,10 +865,14 @@ Vehicle lookup data (categories, brands, model_years, fuel_types, vehicle_list_s
     "category_name": "Sedan",
     "brand_id": 2,
     "brand_name": "Toyota",
+    "model_id": 5,
+    "model_name": "Camry",
     "model_year_id": 3,
     "model_year_name": "2023",
     "fuel_type_id": 1,
-    "fuel_type_name": "Petrol"
+    "fuel_type_name": "Petrol",
+    "listing_type_id": 1,
+    "listing_type_name": "Purchase"
   }
 }
 ```

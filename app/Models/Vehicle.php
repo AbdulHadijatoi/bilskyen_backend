@@ -33,6 +33,7 @@ class Vehicle extends Model
         'category_id',
         'location_id',
         'brand_id',
+        'model_id',
         'model_year_id',
         'km_driven',
         'fuel_type_id',
@@ -44,6 +45,7 @@ class Vehicle extends Model
         'ownership_tax',
         'first_registration_date',
         'vehicle_list_status_id',
+        'listing_type_id',
         'published_at',
     ];
 
@@ -70,9 +72,11 @@ class Vehicle extends Model
     protected $appends = [
         'category_name',
         'brand_name',
+        'model_name',
         'model_year_name',
         'fuel_type_name',
         'vehicle_list_status_name',
+        'listing_type_name',
     ];
 
     /**
@@ -110,9 +114,11 @@ class Vehicle extends Model
             $model = match ($table) {
                 'categories' => Category::find($id),
                 'brands' => Brand::find($id),
+                'models' => VehicleModel::find($id),
                 'model_years' => ModelYear::find($id),
                 'fuel_types' => FuelType::find($id),
                 'vehicle_list_statuses' => VehicleListStatus::find($id),
+                'listing_types' => ListingType::find($id),
                 default => null,
             };
 
@@ -144,6 +150,14 @@ class Vehicle extends Model
     }
 
     /**
+     * Get model name attribute (cached)
+     */
+    public function getModelNameAttribute(): ?string
+    {
+        return self::getCachedLookup('models', $this->model_id);
+    }
+
+    /**
      * Get model year name attribute (cached)
      */
     public function getModelYearNameAttribute(): ?string
@@ -165,6 +179,14 @@ class Vehicle extends Model
     public function getVehicleListStatusNameAttribute(): ?string
     {
         return self::getCachedLookup('vehicle_list_statuses', $this->vehicle_list_status_id);
+    }
+
+    /**
+     * Get listing type name attribute (cached)
+     */
+    public function getListingTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('listing_types', $this->listing_type_id);
     }
 
     /**
@@ -246,5 +268,21 @@ class Vehicle extends Model
     {
         return $this->belongsToMany(Equipment::class, 'vehicle_equipment')
             ->withTimestamps();
+    }
+
+    /**
+     * Get model for this vehicle
+     */
+    public function model(): BelongsTo
+    {
+        return $this->belongsTo(VehicleModel::class, 'model_id');
+    }
+
+    /**
+     * Get listing type for this vehicle
+     */
+    public function listingType(): BelongsTo
+    {
+        return $this->belongsTo(ListingType::class);
     }
 }

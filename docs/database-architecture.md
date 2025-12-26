@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: 2d7f9d415f7dc5b2916766fae86b8ea8217f119c1a01ab10452faf7c3c550221
+Schema Checksum: 67b945a0b11342e7b722c0b49183ee34938695ea303a338cbfe8f55b7a9ea89f
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -173,6 +173,7 @@ Vehicle listings with searchable attributes.
 | category_id | INT (FK, NULL) | Foreign key to `categories.id` |
 | location_id | BIGINT (FK) | Foreign key to `locations.id` |
 | brand_id | INT (FK, NULL) | Foreign key to `brands.id` |
+| model_id | INT (FK, NULL) | Foreign key to `models.id` |
 | model_year_id | INT (FK, NULL) | Foreign key to `model_years.id` |
 | km_driven | INT (NULL) | Kilometers driven |
 | fuel_type_id | INT (FK) | Foreign key to `fuel_types.id` |
@@ -184,6 +185,7 @@ Vehicle listings with searchable attributes.
 | ownership_tax | INT (NULL) | Ownership tax amount |
 | first_registration_date | DATE (NULL) | First registration date |
 | vehicle_list_status_id | INT (FK) | Foreign key to `vehicle_list_statuses.id` |
+| listing_type_id | INT (FK, NULL) | Foreign key to `listing_types.id` (Purchase/Leasing) |
 | published_at | DATETIME (NULL) | Publication timestamp |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
@@ -198,17 +200,19 @@ Vehicle listings with searchable attributes.
 - `(location_id, price)` - For location-based search
 - `category_id` - For category filtering
 - `brand_id` - For brand filtering
+- `model_id` - For model filtering
 - `model_year_id` - For model year filtering
+- `listing_type_id` - For listing type filtering
 
 **Relationships:**
-- `belongsTo` Dealer, User, Location
+- `belongsTo` Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType
 - `hasOne` VehicleDetail
 - `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
 - `belongsToMany` Equipment (via vehicle_equipment)
 
 **Model Features:**
-- **Caching**: Lookup data (categories, brands, model_years, fuel_types, vehicle_list_statuses) is cached using static property + Laravel Cache facade (24-hour TTL)
-- **Accessors**: Automatically appends resolved names (`category_name`, `brand_name`, `model_year_name`, `fuel_type_name`, `vehicle_list_status_name`) to API responses
+- **Caching**: Lookup data (categories, brands, models, model_years, fuel_types, vehicle_list_statuses, listing_types) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: Automatically appends resolved names (`category_name`, `brand_name`, `model_name`, `model_year_name`, `fuel_type_name`, `vehicle_list_status_name`, `listing_type_name`) to API responses
 - **Default Ordering**: Global scope applies `ORDER BY id DESC` by default (can be overridden with explicit `orderBy`)
 - **Soft Deletes**: Enabled for data retention
 
@@ -229,7 +233,6 @@ Extended vehicle information and specifications.
 | registration_status_updated_date | DATE (NULL) | Registration status update date |
 | expire_date | DATE (NULL) | Registration expiration date |
 | status_updated_date | DATE (NULL) | Status update date |
-| model_year | VARCHAR(50) (NULL) | Model year (string) |
 | total_weight | INT (NULL) | Total weight |
 | vehicle_weight | INT (NULL) | Vehicle weight |
 | technical_total_weight | INT (NULL) | Technical total weight |
@@ -267,6 +270,10 @@ Extended vehicle information and specifications.
 | integrated_child_seats | INT (NULL) | Number of integrated child seats |
 | seat_belt_alarms | INT (NULL) | Number of seat belt alarms |
 | euronorm | VARCHAR(50) (NULL) | Euro norm standard |
+| price_type_id | INT (FK, NULL) | Foreign key to `price_types.id` |
+| condition_id | INT (FK, NULL) | Foreign key to `conditions.id` |
+| gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` |
+| sales_type_id | INT (FK, NULL) | Foreign key to `sales_types.id` |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
 
@@ -276,20 +283,28 @@ Extended vehicle information and specifications.
 - `use_id`
 - `color_id`
 - `body_type_id`
+- `price_type_id`
+- `condition_id`
+- `gear_type_id`
+- `sales_type_id`
 
 **Foreign Keys:**
 - `type_id` references `types.id` (nullOnDelete)
 - `use_id` references `uses.id` (nullOnDelete)
 - `color_id` references `colors.id` (nullOnDelete)
 - `body_type_id` references `body_types.id` (nullOnDelete)
+- `price_type_id` references `price_types.id` (nullOnDelete)
+- `condition_id` references `conditions.id` (nullOnDelete)
+- `gear_type_id` references `gear_types.id` (nullOnDelete)
+- `sales_type_id` references `sales_types.id` (nullOnDelete)
 
 **Model Features:**
-- **Caching**: Lookup data (types, uses, colors, body_types) is cached using static property + Laravel Cache facade (24-hour TTL)
-- **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`) to API responses
+- **Caching**: Lookup data (types, uses, colors, body_types, price_types, conditions, gear_types, sales_types) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`, `price_type_name`, `condition_name`, `gear_type_name`, `sales_type_name`) to API responses
 - No eager-loading of constant relations required
 
 **Relationships:**
-- `belongsTo` Vehicle
+- `belongsTo` Vehicle, PriceType, Condition, GearType, SalesType
 
 #### `categories`
 Vehicle category lookup table.
@@ -310,6 +325,9 @@ Vehicle brand/manufacturer lookup table.
 | name | VARCHAR(100) | Brand name |
 
 **Note:** No timestamps. Used for caching in Vehicle model.
+
+**Relationships:**
+- `hasMany` VehicleModel (models)
 
 #### `model_years`
 Vehicle model year lookup table.
@@ -389,13 +407,76 @@ Vehicle fuel type lookup.
 | id | INT (PK) | Primary key |
 | name | VARCHAR(50) | Fuel type name (Petrol, Diesel, Electric, etc.) |
 
-#### `transmissions`
-Vehicle transmission type lookup.
+#### `models`
+Vehicle model lookup table (child of brands).
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | INT (PK) | Primary key |
-| name | VARCHAR(50) | Transmission type (Manual, Automatic, CVT, etc.) |
+| brand_id | INT (FK) | Foreign key to `brands.id` |
+| name | VARCHAR(100) | Model name |
+
+**Note:** No timestamps. Used for caching in Vehicle model.
+
+**Indexes:**
+- `brand_id`
+
+**Foreign Keys:**
+- `brand_id` references `brands.id` (nullOnDelete)
+
+**Relationships:**
+- `belongsTo` Brand
+- `hasMany` Vehicle
+
+#### `price_types`
+Price type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Price type name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `conditions`
+Condition lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Condition name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `gear_types`
+Gear/transmission type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Gear type name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `sales_types`
+Sales type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Sales type name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `listing_types`
+Listing type lookup table (Purchase/Leasing).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Listing type name (Purchase, Leasing) |
+
+**Note:** No timestamps. Used for caching in Vehicle model.
 
 #### `vehicle_list_statuses`
 Vehicle listing status lookup.
@@ -875,7 +956,7 @@ Dealers
   └── hasMany DealerPlanOverrides
 
 Vehicles
-  ├── belongsTo Dealer, User, Location
+  ├── belongsTo Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType
   ├── hasOne VehicleDetail
   ├── hasMany VehicleImages
   ├── hasMany Favorites
@@ -885,13 +966,24 @@ Vehicles
   └── belongsToMany Equipment (via vehicle_equipment)
 
 VehicleDetails
-  └── belongsTo Vehicle
+  ├── belongsTo Vehicle
+  ├── belongsTo PriceType, Condition, GearType, SalesType
+
+Brands
+  └── hasMany VehicleModel (models)
+
+VehicleModel (models)
+  ├── belongsTo Brand
+  └── hasMany Vehicle
 
 Equipment
   └── belongsToMany Vehicle (via vehicle_equipment)
 
-BodyTypes, Colors, Permits, Types, Uses
-  └── Lookup tables (no relationships, used for caching in VehicleDetail model)
+BodyTypes, Colors, Permits, Types, Uses, PriceTypes, Conditions, GearTypes, SalesTypes
+  └── Lookup tables (used for caching in VehicleDetail model)
+
+ListingTypes
+  └── Lookup table (used for caching in Vehicle model)
 
 Leads
   ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
