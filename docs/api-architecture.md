@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: 99589beb78ee172a703342891cbe77eae796fa6b183ad9fdb13a356de58e358d
+API Architecture Checksum: 9de8182014ce68a3001932b104bb4d3f31ca016c99a7c5f860b6c4bc90a4834b
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 

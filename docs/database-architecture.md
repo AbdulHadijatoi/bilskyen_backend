@@ -1,9 +1,9 @@
 <!--
-Schema Checksum: 5c980aa695e4c3ea70eaa31fe64269bb43a6b734f8afa7193ae4a03f0714eebf
-Source: denmark_marketplace_schema.txt
+Schema Checksum: 0985cc92e69241f635d273d1d9bcdfe9e462c938ac101a2226deb8b78484fa60
+Source: database-architecture.md
 Algorithm: SHA-256
 
-IMPORTANT: If this checksum changes, the source schema has been modified.
+IMPORTANT: If this checksum changes, the database architecture has been modified.
 Re-evaluate the entire database architecture and update this documentation accordingly.
 Treat this architecture as immutable unless the checksum changes.
 -->
