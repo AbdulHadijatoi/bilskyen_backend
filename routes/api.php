@@ -95,6 +95,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/reference/colors', [NummerpladeController::class, 'getColors']);
         Route::get('/reference/fuel-types', [NummerpladeController::class, 'getFuelTypes']);
         Route::get('/reference/equipment', [NummerpladeController::class, 'getEquipment']);
+        Route::get('/reference/permits', [NummerpladeController::class, 'getPermits']);
+        Route::get('/reference/types', [NummerpladeController::class, 'getTypes']);
+        Route::get('/reference/uses', [NummerpladeController::class, 'getUses']);
         
         // Additional data endpoints (rate limited)
         Route::get('/inspections/{vehicleId}', [NummerpladeController::class, 'getInspections'])

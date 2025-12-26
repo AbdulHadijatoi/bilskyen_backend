@@ -297,6 +297,9 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 | GET | `/api/v1/nummerplade/reference/colors` | Get colors (cached) | - |
 | GET | `/api/v1/nummerplade/reference/fuel-types` | Get fuel types (cached) | - |
 | GET | `/api/v1/nummerplade/reference/equipment` | Get equipment (cached) | - |
+| GET | `/api/v1/nummerplade/reference/permits` | Get permits (cached) | - |
+| GET | `/api/v1/nummerplade/reference/types` | Get types (cached) | - |
+| GET | `/api/v1/nummerplade/reference/uses` | Get vehicle uses (cached) | - |
 | GET | `/api/v1/nummerplade/inspections/{vehicleId}` | Get inspections | 20/min |
 | GET | `/api/v1/nummerplade/dmr/{vehicleId}` | Get DMR data | 20/min |
 | GET | `/api/v1/nummerplade/debt/{vehicleId}` | Get debt data | 20/min |

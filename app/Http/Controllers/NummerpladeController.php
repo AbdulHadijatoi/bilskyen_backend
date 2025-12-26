@@ -138,6 +138,57 @@ class NummerpladeController extends Controller
     }
 
     /**
+     * Get permits reference data
+     */
+    public function getPermits(): JsonResponse
+    {
+        try {
+            $data = $this->nummerpladeService->getPermits();
+            return $this->success($data);
+        } catch (NummerpladeApiException $e) {
+            return $this->error(
+                $e->getMessage(),
+                $e->toArray(),
+                $e->isRetryable() ? 503 : 400
+            );
+        }
+    }
+
+    /**
+     * Get types reference data
+     */
+    public function getTypes(): JsonResponse
+    {
+        try {
+            $data = $this->nummerpladeService->getTypes();
+            return $this->success($data);
+        } catch (NummerpladeApiException $e) {
+            return $this->error(
+                $e->getMessage(),
+                $e->toArray(),
+                $e->isRetryable() ? 503 : 400
+            );
+        }
+    }
+
+    /**
+     * Get vehicle uses reference data
+     */
+    public function getUses(): JsonResponse
+    {
+        try {
+            $data = $this->nummerpladeService->getUses();
+            return $this->success($data);
+        } catch (NummerpladeApiException $e) {
+            return $this->error(
+                $e->getMessage(),
+                $e->toArray(),
+                $e->isRetryable() ? 503 : 400
+            );
+        }
+    }
+
+    /**
      * Get vehicle inspections
      */
     public function getInspections(int $vehicleId): JsonResponse

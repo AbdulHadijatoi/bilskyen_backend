@@ -194,6 +194,84 @@ class NummerpladeApiService
     }
 
     /**
+     * Get permits reference data
+     */
+    public function getPermits(): array
+    {
+        $cacheKey = 'nummerplade:reference:permits';
+
+        return Cache::remember($cacheKey, $this->referenceCacheTtl, function () {
+            try {
+                $url = "{$this->baseUrl}/permits";
+                
+                $response = Http::timeout($this->timeout)
+                    ->withHeaders($this->getHeaders())
+                    ->get($url);
+
+                return $this->handleResponse($response, 'getPermits');
+            } catch (\Exception $e) {
+                Log::error('Nummerplade API error', [
+                    'method' => 'getPermits',
+                    'error' => $e->getMessage(),
+                ]);
+                throw NummerpladeApiException::unknown($e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * Get types reference data
+     */
+    public function getTypes(): array
+    {
+        $cacheKey = 'nummerplade:reference:types';
+
+        return Cache::remember($cacheKey, $this->referenceCacheTtl, function () {
+            try {
+                $url = "{$this->baseUrl}/types";
+                
+                $response = Http::timeout($this->timeout)
+                    ->withHeaders($this->getHeaders())
+                    ->get($url);
+
+                return $this->handleResponse($response, 'getTypes');
+            } catch (\Exception $e) {
+                Log::error('Nummerplade API error', [
+                    'method' => 'getTypes',
+                    'error' => $e->getMessage(),
+                ]);
+                throw NummerpladeApiException::unknown($e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * Get vehicle uses reference data
+     */
+    public function getUses(): array
+    {
+        $cacheKey = 'nummerplade:reference:uses';
+
+        return Cache::remember($cacheKey, $this->referenceCacheTtl, function () {
+            try {
+                $url = "{$this->baseUrl}/uses";
+                
+                $response = Http::timeout($this->timeout)
+                    ->withHeaders($this->getHeaders())
+                    ->get($url);
+
+                return $this->handleResponse($response, 'getUses');
+            } catch (\Exception $e) {
+                Log::error('Nummerplade API error', [
+                    'method' => 'getUses',
+                    'error' => $e->getMessage(),
+                ]);
+                throw NummerpladeApiException::unknown($e->getMessage());
+            }
+        });
+    }
+
+    /**
      * Get vehicle inspections
      */
     public function getInspections(int $vehicleId): array
