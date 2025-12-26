@@ -200,7 +200,7 @@
     >
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-border px-6 py-4">
-            <h2 id="filter-drawer-title" class="text-xl font-semibold">Filters</h2>
+            <h2 id="filter-drawer-title" class="text-xl font-semibold">Advanced Filters</h2>
             <button
                 id="filter-close-button"
                 type="button"
@@ -215,193 +215,621 @@
 
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-            <!-- Make Filter -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Make</label>
-                <select 
-                    name="make" 
-                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                    <option value="">All Makes</option>
-                    @foreach(\App\Constants\Vehicles::MAKES as $make)
-                        <option value="{{ $make }}">{{ $make }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Vehicle Type Filter -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Vehicle Type</label>
-                <div class="space-y-2">
-                    @foreach(['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Convertible', 'Truck', 'Crossover', 'MPV'] as $type)
+            <!-- Basic Filters -->
+            <div class="space-y-4">
+                <h3 class="text-base font-semibold">Basic Filters</h3>
+                
+                <!-- Listing Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Listing Type</label>
+                    <div class="space-y-2">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input 
-                                type="checkbox" 
-                                name="vehicle_type[]" 
-                                value="{{ $type }}"
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                type="radio" 
+                                name="listing_type_id" 
+                                value=""
+                                class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                checked
                             >
-                            <span class="text-sm">{{ $type }}</span>
+                            <span class="text-sm">All</span>
                         </label>
-                    @endforeach
+                        @foreach($filterOptions['listingTypes'] as $listingType)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="listing_type_id" 
+                                    value="{{ $listingType->id }}"
+                                    class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['listing_type_id']) && $currentFilters['listing_type_id'] == $listingType->id) checked @endif
+                                >
+                                <span class="text-sm">{{ $listingType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Category</label>
+                    <select 
+                        name="category_id" 
+                        class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All Categories</option>
+                        @foreach($filterOptions['categories'] as $category)
+                            <option value="{{ $category->id }}" @if(isset($currentFilters['category_id']) && $currentFilters['category_id'] == $category->id) selected @endif>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Make (Popular vs All Brands) -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Make</label>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="brand_filter_type" 
+                                    value="popular"
+                                    class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                    checked
+                                    id="brand-popular"
+                                >
+                                <span class="text-sm">Popular brands</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="brand_filter_type" 
+                                    value="all"
+                                    class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                    id="brand-all"
+                                >
+                                <span class="text-sm">All brands</span>
+                            </label>
+                        </div>
+                        <select 
+                            name="brand_id" 
+                            id="brand-select"
+                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <option value="">All Makes</option>
+                            @foreach($filterOptions['popularBrands'] as $brand)
+                                <option value="{{ $brand->id }}" class="brand-option brand-popular" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
+                            @endforeach
+                            @foreach($filterOptions['brands'] as $brand)
+                                <option value="{{ $brand->id }}" class="brand-option brand-all" style="display: none;" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <!-- Price Range -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Price Range</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="price-from" class="sr-only">Price From</label>
-                        <input 
-                            type="number" 
-                            id="price-from"
-                            name="price_from" 
-                            placeholder="Min"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
+            <!-- Price & Year -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Price & Year</h3>
+                
+                <!-- Price Range -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Price Range</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="price-from" class="sr-only">Price From</label>
+                            <input 
+                                type="number" 
+                                id="price-from"
+                                name="price_from" 
+                                placeholder="Min"
+                                value="{{ $currentFilters['price_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="price-to" class="sr-only">Price To</label>
+                            <input 
+                                type="number" 
+                                id="price-to"
+                                name="price_to" 
+                                placeholder="Max"
+                                value="{{ $currentFilters['price_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
                     </div>
-                    <span class="text-muted-foreground">-</span>
-                    <div class="flex-1">
-                        <label for="price-to" class="sr-only">Price To</label>
-                        <input 
-                            type="number" 
-                            id="price-to"
-                            name="price_to" 
-                            placeholder="Max"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
+                </div>
+
+                <!-- Model Year Range -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Model Year</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="year-from" class="sr-only">Year From</label>
+                            <input 
+                                type="number" 
+                                id="year-from"
+                                name="year_from" 
+                                placeholder="From"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                value="{{ $currentFilters['year_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="year-to" class="sr-only">Year To</label>
+                            <input 
+                                type="number" 
+                                id="year-to"
+                                name="year_to" 
+                                placeholder="To"
+                                min="1975"
+                                max="{{ date('Y') + 1 }}"
+                                value="{{ $currentFilters['year_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Year Range -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Model Year</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="year-from" class="sr-only">Year From</label>
-                        <input 
-                            type="number" 
-                            id="year-from"
-                            name="year_from" 
-                            placeholder="From"
-                            min="1975"
-                            max="{{ date('Y') }}"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                    </div>
-                    <span class="text-muted-foreground">-</span>
-                    <div class="flex-1">
-                        <label for="year-to" class="sr-only">Year To</label>
-                        <input 
-                            type="number" 
-                            id="year-to"
-                            name="year_to" 
-                            placeholder="To"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
+            <!-- Vehicle Details -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Vehicle Details</h3>
+                
+                <!-- Mileage Range -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Mileage (km)</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="mileage-from" class="sr-only">Mileage From</label>
+                            <input 
+                                type="number" 
+                                id="mileage-from"
+                                name="mileage_from" 
+                                placeholder="Min"
+                                value="{{ $currentFilters['mileage_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="mileage-to" class="sr-only">Mileage To</label>
+                            <input 
+                                type="number" 
+                                id="mileage-to"
+                                name="mileage_to" 
+                                placeholder="Max"
+                                value="{{ $currentFilters['mileage_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Transmission Type -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Transmission Type</label>
-                <div class="space-y-2">
-                    @foreach(['Manual', 'Automatic', 'CVT', 'AMT', 'DCT'] as $transmission)
+                <!-- Price Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Price Type</label>
+                    <div class="space-y-2">
+                        @foreach($filterOptions['priceTypes'] as $priceType)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    name="price_type_id[]" 
+                                    value="{{ $priceType->id }}"
+                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
+                                >
+                                <span class="text-sm">{{ $priceType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Condition -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Condition</label>
+                    <div class="space-y-2">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input 
-                                type="checkbox" 
-                                name="transmission[]" 
-                                value="{{ $transmission }}"
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                type="radio" 
+                                name="condition_id" 
+                                value=""
+                                class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                checked
                             >
-                            <span class="text-sm">{{ $transmission }}</span>
+                            <span class="text-sm">All</span>
                         </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Fuel Type -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Fuel Type</label>
-                <div class="space-y-2">
-                    @foreach(['Petrol', 'Diesel', 'Electric Vehicle (EV)', 'Hybrid Electric Vehicle (HEV)', 'Plug-in Hybrid Electric Vehicle (PHEV)', 'CNG', 'LPG'] as $fuel)
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                name="fuel_type[]" 
-                                value="{{ $fuel }}"
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
-                            >
-                            <span class="text-sm">{{ $fuel }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Odometer Range -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Odometer (km)</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="odometer-from" class="sr-only">Odometer From</label>
-                        <input 
-                            type="number" 
-                            id="odometer-from"
-                            name="odometer_from" 
-                            placeholder="Min"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                    </div>
-                    <span class="text-muted-foreground">-</span>
-                    <div class="flex-1">
-                        <label for="odometer-to" class="sr-only">Odometer To</label>
-                        <input 
-                            type="number" 
-                            id="odometer-to"
-                            name="odometer_to" 
-                            placeholder="Max"
-                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
+                        @foreach($filterOptions['conditions'] as $condition)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="condition_id" 
+                                    value="{{ $condition->id }}"
+                                    class="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
+                                >
+                                <span class="text-sm">{{ $condition->name }}</span>
+                            </label>
+                        @endforeach
                     </div>
                 </div>
-            </div>
 
-            <!-- Condition -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Condition</label>
-                <div class="space-y-2">
-                    @foreach(\App\Constants\Vehicles::CONDITIONS as $condition)
+                <!-- Vehicle Body Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Vehicle Body Type</label>
+                    <div class="space-y-2">
+                        @php
+                            $bodyTypeMap = [
+                                'micro' => 'micro',
+                                'stationcar' => 'stationcar',
+                                'suv' => 'suv',
+                                'cuv' => 'cuv',
+                                'mpv' => 'mpv',
+                                'sedan' => 'sedan',
+                                'hatchback' => 'hatchback',
+                                'cabriolet' => 'cabriolet',
+                                'coupe' => 'coupe'
+                            ];
+                        @endphp
+                        @foreach($filterOptions['bodyTypes'] as $bodyType)
+                            @php
+                                $bodyTypeNameLower = strtolower($bodyType->name);
+                                $isRelevant = false;
+                                foreach($bodyTypeMap as $key => $value) {
+                                    if(str_contains($bodyTypeNameLower, $value) || str_contains($value, $bodyTypeNameLower)) {
+                                        $isRelevant = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            @if($isRelevant || in_array($bodyTypeNameLower, $bodyTypeMap))
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        name="body_type_id[]" 
+                                        value="{{ $bodyType->id }}"
+                                        class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                        @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) checked @endif
+                                    >
+                                    <span class="text-sm">{{ $bodyType->name }}</span>
+                                </label>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Fuel Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Fuel Type</label>
+                    <div class="space-y-2">
+                        @php
+                            $fuelTypeMap = [
+                                'electric' => ['electric', 'ev'],
+                                'petrol' => ['petrol', 'gasoline'],
+                                'diesel' => ['diesel'],
+                                'hybrid_petrol' => ['hybrid', 'hev'],
+                                'hybrid_diesel' => ['hybrid diesel'],
+                                'plugin_petrol' => ['plugin', 'phev', 'plug-in'],
+                                'plugin_diesel' => ['plugin diesel']
+                            ];
+                        @endphp
+                        @foreach($filterOptions['fuelTypes'] as $fuelType)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    name="fuel_type_id[]" 
+                                    value="{{ $fuelType->id }}"
+                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) checked @endif
+                                >
+                                <span class="text-sm">{{ $fuelType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Gear Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Gear Type</label>
+                    <div class="space-y-2">
+                        @foreach($filterOptions['gearTypes'] as $gearType)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    name="gear_type_id[]" 
+                                    value="{{ $gearType->id }}"
+                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) checked @endif
+                                >
+                                <span class="text-sm">{{ $gearType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Drive Wheels -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Drive Wheels</label>
+                    <div class="space-y-2">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input 
                                 type="checkbox" 
-                                name="condition[]" 
-                                value="{{ $condition }}"
+                                name="drive_axles[]" 
+                                value="fwd"
                                 class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
                             >
-                            <span class="text-sm">{{ $condition }}</span>
+                            <span class="text-sm">FWD (Front Wheel Drive)</span>
                         </label>
-                    @endforeach
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="drive_axles[]" 
+                                value="rwd"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
+                            >
+                            <span class="text-sm">RWD (Rear Wheel Drive)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="drive_axles[]" 
+                                value="awd"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
+                            >
+                            <span class="text-sm">AWD (All Wheel Drive)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Status -->
-            <div>
-                <label class="text-sm font-medium mb-2 block">Status</label>
-                <div class="space-y-2">
-                    @foreach(['Available', 'Reserved', 'Sold', 'In Service'] as $status)
+            <!-- Registration & Seller -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Registration & Seller</h3>
+                
+                <!-- First Registration Year Range -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">First Registration Year</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="first-reg-year-from" class="sr-only">Year From</label>
+                            <input 
+                                type="number" 
+                                id="first-reg-year-from"
+                                name="first_registration_year_from" 
+                                placeholder="From"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                value="{{ $currentFilters['first_registration_year_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="first-reg-year-to" class="sr-only">Year To</label>
+                            <input 
+                                type="number" 
+                                id="first-reg-year-to"
+                                name="first_registration_year_to" 
+                                placeholder="To"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                value="{{ $currentFilters['first_registration_year_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Seller Type</label>
+                    <div class="space-y-2">
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input 
                                 type="checkbox" 
-                                name="status[]" 
-                                value="{{ $status }}"
+                                name="seller_type[]" 
+                                value="dealer"
                                 class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
                             >
-                            <span class="text-sm">{{ $status }}</span>
+                            <span class="text-sm">Dealer</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="seller_type[]" 
+                                value="private"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
+                            >
+                            <span class="text-sm">Private</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sales Type -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Sales Type</label>
+                    <div class="space-y-2">
+                        @foreach($filterOptions['salesTypes'] as $salesType)
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    name="sales_type_id[]" 
+                                    value="{{ $salesType->id }}"
+                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                    @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) checked @endif
+                                >
+                                <span class="text-sm">{{ $salesType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Seller Distance -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Seller Distance (km)</label>
+                    <input 
+                        type="number" 
+                        name="seller_distance" 
+                        placeholder="Distance in km"
+                        min="0"
+                        value="{{ $currentFilters['seller_distance'] ?? '' }}"
+                        class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Performance</h3>
+                
+                <!-- Horsepower Range -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Horsepower (HP)</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="horsepower-min" class="sr-only">Horsepower Min</label>
+                            <input 
+                                type="number" 
+                                id="horsepower-min"
+                                name="engine_power_from" 
+                                placeholder="Min"
+                                min="0"
+                                value="{{ $currentFilters['engine_power_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="horsepower-max" class="sr-only">Horsepower Max</label>
+                            <input 
+                                type="number" 
+                                id="horsepower-max"
+                                name="engine_power_to" 
+                                placeholder="Max"
+                                min="0"
+                                value="{{ $currentFilters['engine_power_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battery & Charging (EV) -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Battery & Charging (EV)</h3>
+                
+                <!-- Battery Capacity -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Battery Capacity (kWh)</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="battery-capacity-min" class="sr-only">Battery Capacity Min</label>
+                            <input 
+                                type="number" 
+                                id="battery-capacity-min"
+                                name="battery_capacity_from" 
+                                placeholder="Min"
+                                min="0"
+                                value="{{ $currentFilters['battery_capacity_from'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                        <span class="text-muted-foreground">-</span>
+                        <div class="flex-1">
+                            <label for="battery-capacity-max" class="sr-only">Battery Capacity Max</label>
+                            <input 
+                                type="number" 
+                                id="battery-capacity-max"
+                                name="battery_capacity_to" 
+                                placeholder="Max"
+                                min="0"
+                                value="{{ $currentFilters['battery_capacity_to'] ?? '' }}"
+                                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Economy & Environment -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Economy & Environment</h3>
+                
+                <!-- Euro Norm -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Euro Norm</label>
+                    <select 
+                        name="euronorm" 
+                        class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <option value="">All</option>
+                        <option value="Euro 1" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 1') selected @endif>Euro 1</option>
+                        <option value="Euro 2" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 2') selected @endif>Euro 2</option>
+                        <option value="Euro 3" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 3') selected @endif>Euro 3</option>
+                        <option value="Euro 4" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 4') selected @endif>Euro 4</option>
+                        <option value="Euro 5" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 5') selected @endif>Euro 5</option>
+                        <option value="Euro 6" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 6') selected @endif>Euro 6</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Physical Details -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Physical Details</h3>
+                
+                <!-- Doors Min -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Doors (Min)</label>
+                    <input 
+                        type="number" 
+                        name="doors" 
+                        placeholder="Minimum doors"
+                        min="2"
+                        max="6"
+                        value="{{ $currentFilters['doors'] ?? '' }}"
+                        class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                </div>
+
+                <!-- Seats Min -->
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Seats (Min)</label>
+                    <input 
+                        type="number" 
+                        name="seats_min" 
+                        placeholder="Minimum seats"
+                        min="2"
+                        max="9"
+                        value="{{ $currentFilters['seats_min'] ?? '' }}"
+                        class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="space-y-4 border-t border-border pt-4">
+                <h3 class="text-base font-semibold">Equipment</h3>
+                
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    @foreach($filterOptions['equipment'] as $equipment)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="equipment_ids[]" 
+                                value="{{ $equipment->id }}"
+                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                                @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) checked @endif
+                            >
+                            <span class="text-sm">{{ $equipment->name }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -440,6 +868,7 @@
         const filterCloseButton = document.getElementById('filter-close-button');
         const filterResetButton = document.getElementById('filter-reset-button');
         const filterApplyButton = document.getElementById('filter-apply-button');
+        const vehicleGrid = document.querySelector('.grid.w-full');
 
         function openDrawer() {
             filterDrawer.classList.remove('hidden');
@@ -464,6 +893,33 @@
             }, 300);
         }
 
+        // Popular brands toggle functionality
+        const brandFilterTypeRadios = document.querySelectorAll('[name="brand_filter_type"]');
+        const brandSelect = document.getElementById('brand-select');
+        
+        function updateBrandOptions() {
+            const selectedType = document.querySelector('[name="brand_filter_type"]:checked')?.value || 'popular';
+            const allOptions = brandSelect.querySelectorAll('.brand-option');
+            
+            allOptions.forEach(option => {
+                if (selectedType === 'popular') {
+                    option.style.display = option.classList.contains('brand-popular') ? '' : 'none';
+                } else {
+                    option.style.display = '';
+                }
+            });
+            
+            // Reset selection if current selection is hidden
+            const selectedOption = brandSelect.options[brandSelect.selectedIndex];
+            if (selectedOption && selectedOption.style.display === 'none') {
+                brandSelect.value = '';
+            }
+        }
+        
+        brandFilterTypeRadios.forEach(radio => {
+            radio.addEventListener('change', updateBrandOptions);
+        });
+
         // Open drawer
         filterButton.addEventListener('click', openDrawer);
 
@@ -480,39 +936,201 @@
 
         // Reset filters
         filterResetButton.addEventListener('click', () => {
-            const form = filterDrawer.querySelector('form') || filterDrawer;
-            const inputs = form.querySelectorAll('input, select');
+            const inputs = filterDrawer.querySelectorAll('input, select');
             inputs.forEach(input => {
-                if (input.type === 'checkbox') {
+                if (input.type === 'checkbox' || input.type === 'radio') {
                     input.checked = false;
                 } else {
                     input.value = '';
                 }
             });
+            // Reset brand filter to popular
+            document.getElementById('brand-popular').checked = true;
+            updateBrandOptions();
         });
 
-        // Apply filters (you can customize this to submit the form or update the page)
-        filterApplyButton.addEventListener('click', () => {
-            // Collect filter values
-            const filters = {
-                make: filterDrawer.querySelector('[name="make"]')?.value || '',
-                vehicle_type: Array.from(filterDrawer.querySelectorAll('[name="vehicle_type[]"]:checked')).map(cb => cb.value),
-                price_from: filterDrawer.querySelector('[name="price_from"]')?.value || '',
-                price_to: filterDrawer.querySelector('[name="price_to"]')?.value || '',
-                year_from: filterDrawer.querySelector('[name="year_from"]')?.value || '',
-                year_to: filterDrawer.querySelector('[name="year_to"]')?.value || '',
-                transmission: Array.from(filterDrawer.querySelectorAll('[name="transmission[]"]:checked')).map(cb => cb.value),
-                fuel_type: Array.from(filterDrawer.querySelectorAll('[name="fuel_type[]"]:checked')).map(cb => cb.value),
-                odometer_from: filterDrawer.querySelector('[name="odometer_from"]')?.value || '',
-                odometer_to: filterDrawer.querySelector('[name="odometer_to"]')?.value || '',
-                condition: Array.from(filterDrawer.querySelectorAll('[name="condition[]"]:checked')).map(cb => cb.value),
-                status: Array.from(filterDrawer.querySelectorAll('[name="status[]"]:checked')).map(cb => cb.value),
-            };
+        // Collect all filter values
+        function collectFilters() {
+            const filters = {};
             
-            console.log('Applied filters:', filters);
-            // TODO: Implement actual filtering logic here
-            // For now, just close the drawer
-            closeDrawer();
+            // Preserve search parameter from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('search');
+            if (search) filters.search = search;
+            
+            // Basic filters
+            const listingTypeId = document.querySelector('[name="listing_type_id"]:checked')?.value;
+            if (listingTypeId) filters.listing_type_id = listingTypeId;
+            
+            const categoryId = document.querySelector('[name="category_id"]')?.value;
+            if (categoryId) filters.category_id = categoryId;
+            
+            const brandId = document.querySelector('[name="brand_id"]')?.value;
+            if (brandId) filters.brand_id = brandId;
+            
+            // Price range
+            const priceFrom = document.querySelector('[name="price_from"]')?.value;
+            if (priceFrom) filters.price_from = priceFrom;
+            
+            const priceTo = document.querySelector('[name="price_to"]')?.value;
+            if (priceTo) filters.price_to = priceTo;
+            
+            // Year range
+            const yearFrom = document.querySelector('[name="year_from"]')?.value;
+            if (yearFrom) filters.year_from = yearFrom;
+            
+            const yearTo = document.querySelector('[name="year_to"]')?.value;
+            if (yearTo) filters.year_to = yearTo;
+            
+            // Mileage range
+            const mileageFrom = document.querySelector('[name="mileage_from"]')?.value;
+            if (mileageFrom) filters.mileage_from = mileageFrom;
+            
+            const mileageTo = document.querySelector('[name="mileage_to"]')?.value;
+            if (mileageTo) filters.mileage_to = mileageTo;
+            
+            // Arrays (checkboxes)
+            const priceTypeIds = Array.from(document.querySelectorAll('[name="price_type_id[]"]:checked')).map(cb => cb.value);
+            if (priceTypeIds.length > 0) filters.price_type_id = priceTypeIds;
+            
+            const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
+            if (conditionId) filters.condition_id = conditionId;
+            
+            const bodyTypeIds = Array.from(document.querySelectorAll('[name="body_type_id[]"]:checked')).map(cb => cb.value);
+            if (bodyTypeIds.length > 0) filters.body_type_id = bodyTypeIds;
+            
+            const fuelTypeIds = Array.from(document.querySelectorAll('[name="fuel_type_id[]"]:checked')).map(cb => cb.value);
+            if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
+            
+            const gearTypeIds = Array.from(document.querySelectorAll('[name="gear_type_id[]"]:checked')).map(cb => cb.value);
+            if (gearTypeIds.length > 0) filters.gear_type_id = gearTypeIds;
+            
+            const driveAxles = Array.from(document.querySelectorAll('[name="drive_axles[]"]:checked')).map(cb => cb.value);
+            if (driveAxles.length > 0) filters.drive_axles = driveAxles;
+            
+            // First registration year
+            const firstRegYearFrom = document.querySelector('[name="first_registration_year_from"]')?.value;
+            if (firstRegYearFrom) filters.first_registration_year_from = firstRegYearFrom;
+            
+            const firstRegYearTo = document.querySelector('[name="first_registration_year_to"]')?.value;
+            if (firstRegYearTo) filters.first_registration_year_to = firstRegYearTo;
+            
+            // Seller type
+            const sellerTypes = Array.from(document.querySelectorAll('[name="seller_type[]"]:checked')).map(cb => cb.value);
+            if (sellerTypes.length > 0) filters.seller_type = sellerTypes;
+            
+            // Sales type
+            const salesTypeIds = Array.from(document.querySelectorAll('[name="sales_type_id[]"]:checked')).map(cb => cb.value);
+            if (salesTypeIds.length > 0) filters.sales_type_id = salesTypeIds;
+            
+            // Seller distance
+            const sellerDistance = document.querySelector('[name="seller_distance"]')?.value;
+            if (sellerDistance) filters.seller_distance = sellerDistance;
+            
+            // Performance
+            const enginePowerFrom = document.querySelector('[name="engine_power_from"]')?.value;
+            if (enginePowerFrom) filters.engine_power_from = enginePowerFrom;
+            
+            const enginePowerTo = document.querySelector('[name="engine_power_to"]')?.value;
+            if (enginePowerTo) filters.engine_power_to = enginePowerTo;
+            
+            // Battery & Charging
+            const batteryCapacityFrom = document.querySelector('[name="battery_capacity_from"]')?.value;
+            if (batteryCapacityFrom) filters.battery_capacity_from = batteryCapacityFrom;
+            
+            const batteryCapacityTo = document.querySelector('[name="battery_capacity_to"]')?.value;
+            if (batteryCapacityTo) filters.battery_capacity_to = batteryCapacityTo;
+            
+            // Economy & Environment
+            const euronorm = document.querySelector('[name="euronorm"]')?.value;
+            if (euronorm) filters.euronorm = euronorm;
+            
+            // Physical Details
+            const doors = document.querySelector('[name="doors"]')?.value;
+            if (doors) filters.doors = doors;
+            
+            const seatsMin = document.querySelector('[name="seats_min"]')?.value;
+            if (seatsMin) filters.seats_min = seatsMin;
+            
+            // Equipment
+            const equipmentIds = Array.from(document.querySelectorAll('[name="equipment_ids[]"]:checked')).map(cb => cb.value);
+            if (equipmentIds.length > 0) filters.equipment_ids = equipmentIds;
+            
+            return filters;
+        }
+
+        // Build query string from filters
+        function buildQueryString(filters) {
+            const params = new URLSearchParams();
+            
+            Object.keys(filters).forEach(key => {
+                const value = filters[key];
+                if (Array.isArray(value)) {
+                    value.forEach(v => params.append(key + '[]', v));
+                } else {
+                    params.append(key, value);
+                }
+            });
+            
+            return params.toString();
+        }
+
+        // Apply filters via AJAX
+        filterApplyButton.addEventListener('click', async () => {
+            const filters = collectFilters();
+            const queryString = buildQueryString(filters);
+            const url = '/vehicles' + (queryString ? '?' + queryString : '');
+            
+            // Show loading state
+            filterApplyButton.disabled = true;
+            filterApplyButton.textContent = 'Loading...';
+            
+            try {
+                // Make AJAX request
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch vehicles');
+                }
+                
+                const html = await response.text();
+                
+                // Parse the response HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update vehicle grid
+                const newGrid = doc.querySelector('.grid.w-full');
+                if (newGrid && vehicleGrid) {
+                    vehicleGrid.innerHTML = newGrid.innerHTML;
+                }
+                
+                // Update pagination if present
+                const pagination = document.querySelector('.mt-8.flex.items-center.justify-center');
+                const newPagination = doc.querySelector('.mt-8.flex.items-center.justify-center');
+                if (newPagination && pagination) {
+                    pagination.innerHTML = newPagination.innerHTML;
+                }
+                
+                // Update URL without page reload
+                window.history.pushState({}, '', url);
+                
+                // Close drawer
+                closeDrawer();
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                alert('Failed to apply filters. Please try again.');
+            } finally {
+                // Reset button state
+                filterApplyButton.disabled = false;
+                filterApplyButton.textContent = 'Apply Filters';
+            }
         });
     })();
 </script>

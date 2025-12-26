@@ -601,14 +601,22 @@ class VehicleService
             $query->where('vehicles.vehicle_list_status_id', $advancedFilters['vehicle_list_status_id']);
         }
 
-        // Vehicle Body Type
+        // Vehicle Body Type (supports array for multiple values)
         if (!empty($advancedFilters['body_type_id'])) {
-            $query->where('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
+            if (is_array($advancedFilters['body_type_id'])) {
+                $query->whereIn('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
+            } else {
+                $query->where('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
+            }
         }
 
-        // Drive Wheels
+        // Drive Wheels (supports array for multiple values)
         if (!empty($advancedFilters['drive_axles'])) {
-            $query->where('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
+            if (is_array($advancedFilters['drive_axles'])) {
+                $query->whereIn('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
+            } else {
+                $query->where('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
+            }
         }
 
         // First Registration Year
@@ -624,9 +632,13 @@ class VehicleService
             $query->where('vehicles.dealer_id', $advancedFilters['dealer_id']);
         }
 
-        // Price Type
+        // Price Type (supports array for multiple values)
         if (!empty($advancedFilters['price_type_id'])) {
-            $query->where('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
+            if (is_array($advancedFilters['price_type_id'])) {
+                $query->whereIn('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
+            } else {
+                $query->where('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
+            }
         }
 
         // Condition
@@ -634,14 +646,22 @@ class VehicleService
             $query->where('vehicle_details.condition_id', $advancedFilters['condition_id']);
         }
 
-        // Gear Type
+        // Gear Type (supports array for multiple values)
         if (!empty($advancedFilters['gear_type_id'])) {
-            $query->where('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+            if (is_array($advancedFilters['gear_type_id'])) {
+                $query->whereIn('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+            } else {
+                $query->where('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+            }
         }
 
-        // Sales Type
+        // Sales Type (supports array for multiple values)
         if (!empty($advancedFilters['sales_type_id'])) {
-            $query->where('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
+            if (is_array($advancedFilters['sales_type_id'])) {
+                $query->whereIn('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
+            } else {
+                $query->where('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
+            }
         }
 
         // Performance - Top Speed

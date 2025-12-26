@@ -11,10 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vehicle_images', function (Blueprint $table) {
-            $table->string('thumbnail_path', 255)->nullable()->after('image_path');
-            $table->index('vehicle_id');
-        });
+        if (!Schema::hasColumn('vehicle_images', 'thumbnail_path')) {
+            Schema::table('vehicle_images', function (Blueprint $table) {
+                $table->string('thumbnail_path', 255)->nullable()->after('image_path');
+            });
+        }
+        
+        // Try to add index, ignore if it already exists
+        try {
+            Schema::table('vehicle_images', function (Blueprint $table) {
+                $table->index('vehicle_id');
+            });
+        } catch (\Exception $e) {
+            // Index might already exist, ignore
+        }
     }
 
     /**

@@ -15,7 +15,7 @@ return new class extends Migration
         
         Schema::create('models', function (Blueprint $table) {
             $table->integerIncrements('id');
-            $table->unsignedInteger('brand_id');
+            $table->unsignedInteger('brand_id')->nullable();
             $table->string('name', 100);
             
             $table->foreign('brand_id')->references('id')->on('brands')->nullOnDelete();
