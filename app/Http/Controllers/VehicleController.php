@@ -38,9 +38,9 @@ class VehicleController extends Controller
     {
         // Include deleted records only if explicitly requested
         if ($request->boolean('with_deleted')) {
-            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']);
+            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'images', 'details']);
         } else {
-            $query = Vehicle::with(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']);
+            $query = Vehicle::with(['dealer', 'location', 'images', 'details']);
         }
 
         // For dealer routes, filter by dealer_id
@@ -57,7 +57,6 @@ class VehicleController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
                   ->orWhere('registration', 'like', "%{$search}%")
                   ->orWhere('vin', 'like', "%{$search}%");
             });
@@ -68,8 +67,16 @@ class VehicleController extends Controller
             $query->where('fuel_type_id', $request->fuel_type_id);
         }
 
-        if ($request->has('transmission_id')) {
-            $query->where('transmission_id', $request->transmission_id);
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->has('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        if ($request->has('model_year_id')) {
+            $query->where('model_year_id', $request->model_year_id);
         }
 
         if ($request->has('min_price')) {
@@ -96,10 +103,8 @@ class VehicleController extends Controller
             'dealer',
             'user',
             'location',
-            'fuelType',
-            'transmission',
-            'vehicleListStatus',
-            'images'
+            'images',
+            'details'
         ])->findOrFail($id);
 
         return $this->success($vehicle);
@@ -188,7 +193,7 @@ class VehicleController extends Controller
 
         $vehicle = $this->vehicleService->createVehicle($data);
 
-        return $this->created($vehicle->load(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']));
+        return $this->created($vehicle->load(['dealer', 'location', 'images', 'details']));
     }
 
     /**
@@ -205,7 +210,7 @@ class VehicleController extends Controller
 
         $vehicle = $this->vehicleService->updateVehicle($vehicle, $data);
 
-        return $this->success($vehicle->load(['dealer', 'location', 'fuelType', 'transmission', 'vehicleListStatus']));
+        return $this->success($vehicle->load(['dealer', 'location', 'images', 'details']));
     }
 
     /**

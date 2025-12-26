@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vehicles', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::dropIfExists('model_years');
+        
+        Schema::create('model_years', function (Blueprint $table) {
+            $table->integerIncrements('id');
+            $table->string('name', 100);
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('vehicles', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        Schema::dropIfExists('model_years');
     }
 };

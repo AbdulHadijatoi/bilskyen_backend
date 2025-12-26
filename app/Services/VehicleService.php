@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use App\Models\Vehicle;
-use App\Models\Purchase;
-use App\Models\Sale;
-use App\Models\Contact;
+use App\Models\VehicleImage;
+use App\Models\VehicleDetail;
 use App\Models\FuelType;
-use App\Models\Transmission;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\ModelYear;
 use App\Services\FileService;
 use App\Services\NotificationService;
 use App\Services\NummerpladeApiService;
@@ -49,23 +50,64 @@ class VehicleService
                 }
             }
 
+            // Separate vehicle details if present
+            $vehicleDetailsData = [];
+            $detailsFields = [
+                'description', 'views_count', 'vin_location', 'type', 'version', 'type_name',
+                'registration_status', 'registration_status_updated_date', 'expire_date',
+                'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
+                'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
+                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
+                'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
+                'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
+                'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
+                'leasing_period_end', 'use', 'color', 'body_type', 'dispensations',
+                'permits', 'equipment', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'euronorm'
+            ];
+
+            foreach ($detailsFields as $field) {
+                if (isset($vehicleData[$field])) {
+                    $vehicleDetailsData[$field] = $vehicleData[$field];
+                    unset($vehicleData[$field]);
+                }
+            }
+
+            // Create vehicle
+            $vehicle = Vehicle::create($vehicleData);
+
+            // Create vehicle details if provided
+            if (!empty($vehicleDetailsData)) {
+                $vehicleDetailsData['vehicle_id'] = $vehicle->id;
+                VehicleDetail::create($vehicleDetailsData);
+            }
+
             // Handle file uploads if present
             if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
-                $uploadedFiles = [];
+                $sortOrder = 0;
                 foreach ($vehicleData['images'] as $file) {
                     if (is_string($file)) {
-                        // Already a URL
-                        $uploadedFiles[] = $file;
+                        // Already a path/URL
+                        VehicleImage::create([
+                            'vehicle_id' => $vehicle->id,
+                            'image_path' => $file,
+                            'sort_order' => $sortOrder++,
+                        ]);
                     } else {
                         // Upload file
                         $this->fileService->validateFile($file);
-                        $uploadedFiles[] = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        $uploadedPath = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        VehicleImage::create([
+                            'vehicle_id' => $vehicle->id,
+                            'image_path' => $uploadedPath,
+                            'sort_order' => $sortOrder++,
+                        ]);
                     }
                 }
-                $vehicleData['images'] = $uploadedFiles;
             }
 
-            return Vehicle::create($vehicleData);
+            return $vehicle->fresh(['images', 'details']);
         });
     }
 
@@ -97,56 +139,80 @@ class VehicleService
         // Note: Field mapping depends on actual Nummerplade API response structure
         // This is a template - adjust based on actual API response
 
-        if (isset($apiData['make'])) {
-            // Store make in appropriate field (may need to create make/model tables)
-            $transformed['make'] = $apiData['make'];
+        // Lookup brand_id from brands table
+        if (isset($apiData['make']) || isset($apiData['brand'])) {
+            $brandName = $apiData['make'] ?? $apiData['brand'];
+            $brand = Brand::where('name', $brandName)->first();
+            if ($brand) {
+                $transformed['brand_id'] = $brand->id;
+            }
         }
 
-        if (isset($apiData['model'])) {
-            $transformed['model'] = $apiData['model'];
+        // Lookup model_year_id from model_years table
+        if (isset($apiData['year']) || isset($apiData['modelYear'])) {
+            $year = $apiData['year'] ?? $apiData['modelYear'];
+            $modelYear = ModelYear::where('name', (string) $year)->first();
+            if ($modelYear) {
+                $transformed['model_year_id'] = $modelYear->id;
+            }
         }
 
-        if (isset($apiData['year'])) {
-            $transformed['year'] = $apiData['year'];
+        // Lookup category_id from categories table
+        if (isset($apiData['category']) || isset($apiData['vehicleType'])) {
+            $categoryName = $apiData['category'] ?? $apiData['vehicleType'];
+            $category = Category::where('name', $categoryName)->first();
+            if ($category) {
+                $transformed['category_id'] = $category->id;
+            }
         }
 
+        // Lookup fuel_type_id from fuel_types table
         if (isset($apiData['fuelType'])) {
-            // Lookup fuel_type_id from fuel_types table
             $fuelType = FuelType::where('name', $apiData['fuelType'])->first();
             if ($fuelType) {
                 $transformed['fuel_type_id'] = $fuelType->id;
             }
         }
 
-        if (isset($apiData['transmission'])) {
-            // Lookup transmission_id from transmissions table
-            $transmission = Transmission::where('name', $apiData['transmission'])->first();
-            if ($transmission) {
-                $transformed['transmission_id'] = $transmission->id;
+        // Map mileage/km_driven
+        if (isset($apiData['mileage'])) {
+            $transformed['mileage'] = $apiData['mileage'];
+            $transformed['km_driven'] = $apiData['mileage'];
+        }
+
+        if (isset($apiData['kmDriven'])) {
+            $transformed['km_driven'] = $apiData['kmDriven'];
+            if (!isset($transformed['mileage'])) {
+                $transformed['mileage'] = $apiData['kmDriven'];
             }
         }
 
-        if (isset($apiData['bodyType'])) {
-            $transformed['body_type'] = $apiData['bodyType'];
+        // Map other vehicle specifications
+        if (isset($apiData['batteryCapacity'])) {
+            $transformed['battery_capacity'] = $apiData['batteryCapacity'];
         }
 
-        if (isset($apiData['mileage'])) {
-            $transformed['mileage'] = $apiData['mileage'];
+        if (isset($apiData['enginePower'])) {
+            $transformed['engine_power'] = $apiData['enginePower'];
         }
 
-        if (isset($apiData['equipment'])) {
-            $transformed['equipment'] = is_array($apiData['equipment']) 
-                ? $apiData['equipment'] 
-                : json_decode($apiData['equipment'], true);
+        if (isset($apiData['towingWeight'])) {
+            $transformed['towing_weight'] = $apiData['towingWeight'];
         }
 
-        if (isset($apiData['specs'])) {
-            $transformed['specs'] = is_array($apiData['specs']) 
-                ? $apiData['specs'] 
-                : json_decode($apiData['specs'], true);
+        if (isset($apiData['ownershipTax'])) {
+            $transformed['ownership_tax'] = $apiData['ownershipTax'];
         }
 
-        // Store registration and VIN for future reference
+        if (isset($apiData['firstRegistrationDate'])) {
+            $transformed['first_registration_date'] = $apiData['firstRegistrationDate'];
+        }
+
+        if (isset($apiData['price'])) {
+            $transformed['price'] = $apiData['price'];
+        }
+
+        // Store registration and VIN
         if (isset($apiData['registration'])) {
             $transformed['registration'] = $apiData['registration'];
         }
@@ -155,17 +221,12 @@ class VehicleService
             $transformed['vin'] = $apiData['vin'];
         }
 
-        // Extract flags if available
-        if (isset($apiData['hasCarplay'])) {
-            $transformed['has_carplay'] = (bool) $apiData['hasCarplay'];
-        }
-
-        if (isset($apiData['hasAdaptiveCruise'])) {
-            $transformed['has_adaptive_cruise'] = (bool) $apiData['hasAdaptiveCruise'];
-        }
-
-        if (isset($apiData['isElectric'])) {
-            $transformed['is_electric'] = (bool) $apiData['isElectric'];
+        // Store title if available
+        if (isset($apiData['title'])) {
+            $transformed['title'] = $apiData['title'];
+        } elseif (isset($apiData['make']) && isset($apiData['model'])) {
+            // Generate title from make and model
+            $transformed['title'] = ($apiData['make'] ?? '') . ' ' . ($apiData['model'] ?? '');
         }
 
         return $transformed;
@@ -177,81 +238,78 @@ class VehicleService
     public function updateVehicle(Vehicle $vehicle, array $vehicleData): Vehicle
     {
         return DB::transaction(function () use ($vehicle, $vehicleData) {
-            // Delete old images if new ones are provided
+            // Separate vehicle details if present
+            $vehicleDetailsData = [];
+            $detailsFields = [
+                'description', 'views_count', 'vin_location', 'type', 'version', 'type_name',
+                'registration_status', 'registration_status_updated_date', 'expire_date',
+                'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
+                'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
+                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
+                'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
+                'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
+                'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
+                'leasing_period_end', 'use', 'color', 'body_type', 'dispensations',
+                'permits', 'equipment', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'euronorm'
+            ];
+
+            foreach ($detailsFields as $field) {
+                if (isset($vehicleData[$field])) {
+                    $vehicleDetailsData[$field] = $vehicleData[$field];
+                    unset($vehicleData[$field]);
+                }
+            }
+
+            // Update vehicle details if provided
+            if (!empty($vehicleDetailsData)) {
+                $details = $vehicle->details;
+                if ($details) {
+                    $details->update($vehicleDetailsData);
+                } else {
+                    $vehicleDetailsData['vehicle_id'] = $vehicle->id;
+                    VehicleDetail::create($vehicleDetailsData);
+                }
+            }
+
+            // Handle image updates if provided
             if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
-                $oldImages = $vehicle->images ?? [];
-                if (!empty($oldImages)) {
-                    $this->fileService->deleteFiles($oldImages);
+                // Delete old images
+                $oldImages = $vehicle->images;
+                foreach ($oldImages as $oldImage) {
+                    $this->fileService->deleteFiles([$oldImage->image_path]);
+                    $oldImage->delete();
                 }
 
-                // Handle new file uploads
-                $uploadedFiles = [];
+                // Upload and create new images
+                $sortOrder = 0;
                 foreach ($vehicleData['images'] as $file) {
                     if (is_string($file)) {
-                        // Already a URL
-                        $uploadedFiles[] = $file;
+                        // Already a path/URL
+                        VehicleImage::create([
+                            'vehicle_id' => $vehicle->id,
+                            'image_path' => $file,
+                            'sort_order' => $sortOrder++,
+                        ]);
                     } else {
                         // Upload file
                         $this->fileService->validateFile($file);
-                        $uploadedFiles[] = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        $uploadedPath = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        VehicleImage::create([
+                            'vehicle_id' => $vehicle->id,
+                            'image_path' => $uploadedPath,
+                            'sort_order' => $sortOrder++,
+                        ]);
                     }
                 }
-                $vehicleData['images'] = $uploadedFiles;
+                unset($vehicleData['images']);
             }
 
             // Update vehicle
             $vehicle->update($vehicleData);
 
-            // Check if notifications need to be created
-            $purchasesCount = $vehicle->purchases()->count();
-            $salesCount = $vehicle->sales()->count();
-
-            if ($purchasesCount === 0 && $salesCount === 0) {
-                return $vehicle;
-            }
-
-            $isLastWasPurchase = $purchasesCount > 0 && $purchasesCount > $salesCount;
-            $isLastWasSale = $salesCount > 0 && $salesCount >= $purchasesCount;
-
-            if ($isLastWasPurchase) {
-                $purchase = Purchase::where('vehicle_id', $vehicle->id)
-                    ->orderBy('purchase_date', 'desc')
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if ($purchase) {
-                    $contact = $purchase->contact;
-                    if ($contact) {
-                        $this->notificationService->createPurchaseNotifications(
-                            $purchase,
-                            $vehicle,
-                            $contact,
-                            true // clear existing notifications
-                        );
-                    }
-                }
-            }
-
-            if ($isLastWasSale) {
-                $sale = Sale::where('vehicle_id', $vehicle->id)
-                    ->orderBy('sale_date', 'desc')
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if ($sale) {
-                    $contact = $sale->contact;
-                    if ($contact) {
-                        $this->notificationService->createSaleNotifications(
-                            $sale,
-                            $vehicle,
-                            $contact,
-                            true // clear existing notifications
-                        );
-                    }
-                }
-            }
-
-            return $vehicle->fresh();
+            return $vehicle->fresh(['images', 'details']);
         });
     }
 
@@ -262,12 +320,12 @@ class VehicleService
     {
         DB::transaction(function () use ($vehicle) {
             // Delete vehicle images
-            $images = $vehicle->images ?? [];
-            if (!empty($images)) {
-                $this->fileService->deleteFiles($images);
+            $images = $vehicle->images;
+            foreach ($images as $image) {
+                $this->fileService->deleteFiles([$image->image_path]);
             }
 
-            // Delete vehicle
+            // Delete vehicle (soft delete)
             $vehicle->delete();
         });
     }

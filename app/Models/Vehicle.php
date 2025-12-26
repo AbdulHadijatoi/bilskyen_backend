@@ -6,50 +6,165 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 class Vehicle extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Static cache for lookup data (in-memory cache)
+     */
+    private static array $lookupCache = [];
+
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
-        'dealer_id',
-        'user_id',
-        'location_id',
+        'title',
         'registration',
         'vin',
-        'title',
-        'description',
+        'dealer_id',
+        'user_id',
+        'category_id',
+        'location_id',
+        'brand_id',
+        'model_year_id',
+        'km_driven',
+        'fuel_type_id',
         'price',
         'mileage',
-        'year',
-        'fuel_type_id',
-        'transmission_id',
-        'body_type',
-        'has_carplay',
-        'has_adaptive_cruise',
-        'is_electric',
-        'specs',
-        'equipment',
+        'battery_capacity',
+        'engine_power',
+        'towing_weight',
+        'ownership_tax',
+        'first_registration_date',
         'vehicle_list_status_id',
         'published_at',
-        'views_count',
     ];
 
+    /**
+     * The attributes that should be cast.
+     */
     protected $casts = [
         'price' => 'integer',
         'mileage' => 'integer',
-        'year' => 'integer',
-        'has_carplay' => 'boolean',
-        'has_adaptive_cruise' => 'boolean',
-        'is_electric' => 'boolean',
-        'specs' => 'array',
-        'equipment' => 'array',
+        'km_driven' => 'integer',
+        'battery_capacity' => 'integer',
+        'engine_power' => 'integer',
+        'towing_weight' => 'integer',
+        'ownership_tax' => 'integer',
+        'first_registration_date' => 'date',
         'published_at' => 'datetime',
-        'views_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = [
+        'category_name',
+        'brand_name',
+        'model_year_name',
+        'fuel_type_name',
+        'vehicle_list_status_name',
+    ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('defaultOrder', function (Builder $query) {
+            // Only apply default ordering if no explicit orderBy is set
+            if (empty($query->getQuery()->orders)) {
+                $query->orderBy('id', 'desc');
+            }
+        });
+    }
+
+    /**
+     * Get cached lookup value
+     * Checks static cache first, then Laravel cache, then database
+     */
+    public static function getCachedLookup(string $table, ?int $id): ?string
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        $cacheKey = "{$table}_{$id}";
+
+        // Check static cache first
+        if (isset(self::$lookupCache[$cacheKey])) {
+            return self::$lookupCache[$cacheKey];
+        }
+
+        // Check Laravel cache (24 hour TTL)
+        $cached = Cache::remember("vehicle_lookup_{$cacheKey}", 86400, function () use ($table, $id) {
+            $model = match ($table) {
+                'categories' => Category::find($id),
+                'brands' => Brand::find($id),
+                'model_years' => ModelYear::find($id),
+                'fuel_types' => FuelType::find($id),
+                'vehicle_list_statuses' => VehicleListStatus::find($id),
+                default => null,
+            };
+
+            return $model?->name;
+        });
+
+        // Store in static cache for this request
+        if ($cached !== null) {
+            self::$lookupCache[$cacheKey] = $cached;
+        }
+
+        return $cached;
+    }
+
+    /**
+     * Get category name attribute (cached)
+     */
+    public function getCategoryNameAttribute(): ?string
+    {
+        return self::getCachedLookup('categories', $this->category_id);
+    }
+
+    /**
+     * Get brand name attribute (cached)
+     */
+    public function getBrandNameAttribute(): ?string
+    {
+        return self::getCachedLookup('brands', $this->brand_id);
+    }
+
+    /**
+     * Get model year name attribute (cached)
+     */
+    public function getModelYearNameAttribute(): ?string
+    {
+        return self::getCachedLookup('model_years', $this->model_year_id);
+    }
+
+    /**
+     * Get fuel type name attribute (cached)
+     */
+    public function getFuelTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('fuel_types', $this->fuel_type_id);
+    }
+
+    /**
+     * Get vehicle list status name attribute (cached)
+     */
+    public function getVehicleListStatusNameAttribute(): ?string
+    {
+        return self::getCachedLookup('vehicle_list_statuses', $this->vehicle_list_status_id);
+    }
 
     /**
      * Get dealer for this vehicle
@@ -76,27 +191,11 @@ class Vehicle extends Model
     }
 
     /**
-     * Get fuel type for this vehicle
+     * Get vehicle details for this vehicle
      */
-    public function fuelType(): BelongsTo
+    public function details(): HasOne
     {
-        return $this->belongsTo(FuelType::class);
-    }
-
-    /**
-     * Get transmission for this vehicle
-     */
-    public function transmission(): BelongsTo
-    {
-        return $this->belongsTo(Transmission::class);
-    }
-
-    /**
-     * Get vehicle list status for this vehicle
-     */
-    public function vehicleListStatus(): BelongsTo
-    {
-        return $this->belongsTo(VehicleListStatus::class);
+        return $this->hasOne(VehicleDetail::class);
     }
 
     /**
