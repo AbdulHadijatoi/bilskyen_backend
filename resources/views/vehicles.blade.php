@@ -1465,6 +1465,41 @@
                 config.maxSlider.addEventListener('input', updateSlider);
                 config.minInput.addEventListener('input', () => updateFromInput(config.minInput, config.minSlider));
                 config.maxInput.addEventListener('input', () => updateFromInput(config.maxInput, config.maxSlider));
+                
+                // Handle drag events for visual handles
+                let isDragging = false;
+                let activeHandle = null;
+                
+                [config.minHandle, config.maxHandle].forEach((handle, index) => {
+                    handle.addEventListener('mousedown', (e) => {
+                        isDragging = true;
+                        activeHandle = index === 0 ? config.minSlider : config.maxSlider;
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging || !activeHandle) return;
+                    
+                    const sliderContainer = activeHandle.closest('.relative');
+                    if (!sliderContainer) return;
+                    
+                    const rect = sliderContainer.getBoundingClientRect();
+                    const percent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                    const value = config.min + (percent / 100) * (config.max - config.min);
+                    const step = parseFloat(activeHandle.step) || 1;
+                    const steppedValue = Math.round(value / step) * step;
+                    const clampedValue = Math.max(config.min, Math.min(config.max, steppedValue));
+                    
+                    activeHandle.value = clampedValue;
+                    updateSlider();
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    activeHandle = null;
+                });
             });
         }
         
