@@ -105,11 +105,21 @@ Route::middleware('auth:api')->group(function () {
 {
   "data": {
     "id": 1,
-    "name": "Vehicle Name",
-    "price": 100000
+    "title": "Vehicle Name",
+    "price": 100000,
+    "category_id": 1,
+    "category_name": "SUV",
+    "brand_id": 2,
+    "brand_name": "Toyota",
+    "model_year_id": 3,
+    "model_year_name": "2023",
+    "fuel_type_id": 1,
+    "fuel_type_name": "Petrol"
   }
 }
 ```
+
+**Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_year_name, fuel_type_name, vehicle_list_status_name) via model accessors. These are cached and do not require eager-loading relationships.
 
 ### Paginated Response
 
@@ -312,6 +322,9 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 | GET | `/api/v1/locations` | Get locations |
 | GET | `/api/v1/fuel-types` | Get fuel types |
 | GET | `/api/v1/transmissions` | Get transmission types |
+| GET | `/api/v1/categories` | Get vehicle categories |
+| GET | `/api/v1/brands` | Get vehicle brands |
+| GET | `/api/v1/model-years` | Get model years |
 
 ### Dealer Endpoints
 
@@ -331,6 +344,40 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 | PUT | `/api/v1/dealer/vehicles/{id}/status` | Update vehicle status |
 | PUT | `/api/v1/dealer/vehicles/{id}/price` | Update price (creates history) |
 | POST | `/api/v1/dealer/vehicles/fetch-from-nummerplade` | Fetch from Nummerplade API |
+
+**Query Parameters for `/api/v1/dealer/vehicles`:**
+- `search` - Search in title, registration, VIN
+- `category_id` - Filter by category
+- `brand_id` - Filter by brand
+- `model_year_id` - Filter by model year
+- `fuel_type_id` - Filter by fuel type
+- `min_price` - Minimum price filter
+- `max_price` - Maximum price filter
+- `limit` - Results per page (default: 15)
+- `page` - Page number
+- `with_deleted` - Include soft-deleted records (default: false)
+
+**Vehicle Creation/Update Fields:**
+- `title` (required) - Vehicle title
+- `registration` (optional) - License plate
+- `vin` (optional) - Vehicle Identification Number
+- `category_id` (optional) - Category ID
+- `location_id` (required) - Location ID
+- `brand_id` (optional) - Brand ID
+- `model_year_id` (optional) - Model year ID
+- `km_driven` (optional) - Kilometers driven
+- `fuel_type_id` (required) - Fuel type ID
+- `price` (required) - Price in DKK
+- `mileage` (optional) - Odometer reading
+- `battery_capacity` (optional) - Battery capacity
+- `engine_power` (optional) - Engine power
+- `towing_weight` (optional) - Towing weight
+- `ownership_tax` (optional) - Ownership tax
+- `first_registration_date` (optional) - First registration date
+- `vehicle_list_status_id` (required) - Vehicle status ID
+- `published_at` (optional) - Publication timestamp
+- `description` (optional) - Vehicle description (stored in vehicle_details)
+- Additional vehicle_details fields can be included in the same request
 
 #### Leads
 
@@ -672,8 +719,17 @@ GET /api/v1/vehicles?limit=15&page=1
 Use query parameters for filtering:
 
 ```
-GET /api/v1/vehicles?fuel_type_id=1&min_price=50000&max_price=100000
+GET /api/v1/vehicles?category_id=1&brand_id=2&model_year_id=3&fuel_type_id=1&min_price=50000&max_price=100000
 ```
+
+**Available Filters:**
+- `category_id` - Filter by vehicle category
+- `brand_id` - Filter by vehicle brand
+- `model_year_id` - Filter by model year
+- `fuel_type_id` - Filter by fuel type
+- `min_price` - Minimum price
+- `max_price` - Maximum price
+- `search` - Text search in title, registration, VIN
 
 ### Sorting
 
@@ -705,6 +761,41 @@ PUT /api/v1/dealer/vehicles/{id}/status
   "status": "published" | "unpublished" | "archived" | "draft"
 }
 ```
+
+### Vehicle Data Caching
+
+Vehicle lookup data (categories, brands, model_years, fuel_types, vehicle_list_statuses) is cached using a two-tier approach:
+
+1. **Static Property Cache**: In-memory cache for the current request
+2. **Laravel Cache Facade**: Persistent cache with 24-hour TTL (falls back to database if cache miss)
+
+**Benefits:**
+- Reduced database queries for constant/reference data
+- Automatic resolution of lookup names via model accessors
+- No need to eager-load constant relations in controllers
+- Resolved names automatically appended to API responses
+
+**Example Response:**
+```json
+{
+  "data": {
+    "id": 1,
+    "title": "2023 Toyota Camry",
+    "category_id": 1,
+    "category_name": "Sedan",
+    "brand_id": 2,
+    "brand_name": "Toyota",
+    "model_year_id": 3,
+    "model_year_name": "2023",
+    "fuel_type_id": 1,
+    "fuel_type_name": "Petrol"
+  }
+}
+```
+
+### Default Ordering
+
+All Vehicle queries default to `ORDER BY id DESC` via a global scope. This can be overridden by explicitly calling `orderBy()` in the query.
 
 ### Enum Validation
 

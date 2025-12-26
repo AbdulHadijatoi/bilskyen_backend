@@ -165,38 +165,146 @@ Vehicle listings with searchable attributes.
 | Column | Type | Description |
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
+| title | VARCHAR(255) | Listing title |
+| registration | VARCHAR(20) | License plate number |
+| vin | VARCHAR(17) | Vehicle Identification Number |
 | dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
 | user_id | BIGINT (FK) | Foreign key to `users.id` (creator) |
+| category_id | INT (FK, NULL) | Foreign key to `categories.id` |
 | location_id | BIGINT (FK) | Foreign key to `locations.id` |
-| title | VARCHAR(255) | Listing title |
-| description | TEXT | Full description |
-| price | INT | Price in DKK |
-| mileage | INT | Odometer reading |
-| year | SMALLINT | Manufacturing year |
+| brand_id | INT (FK, NULL) | Foreign key to `brands.id` |
+| model_year_id | INT (FK, NULL) | Foreign key to `model_years.id` |
+| km_driven | INT (NULL) | Kilometers driven |
 | fuel_type_id | INT (FK) | Foreign key to `fuel_types.id` |
-| transmission_id | INT (FK) | Foreign key to `transmissions.id` |
-| body_type | VARCHAR(50) | Body type (Sedan, SUV, etc.) |
-| has_carplay | BOOLEAN | Has Apple CarPlay |
-| has_adaptive_cruise | BOOLEAN | Has adaptive cruise control |
-| is_electric | BOOLEAN | Is electric vehicle |
-| specs | JSON | Additional specifications |
-| equipment | JSON | Equipment list |
+| price | INT | Price in DKK |
+| mileage | INT (NULL) | Odometer reading |
+| battery_capacity | INT (NULL) | Battery capacity (for electric vehicles) |
+| engine_power | INT (NULL) | Engine power |
+| towing_weight | INT (NULL) | Towing weight capacity |
+| ownership_tax | INT (NULL) | Ownership tax amount |
+| first_registration_date | DATE (NULL) | First registration date |
 | vehicle_list_status_id | INT (FK) | Foreign key to `vehicle_list_statuses.id` |
-| published_at | DATETIME | Publication timestamp |
-| views_count | INT | View counter |
+| published_at | DATETIME (NULL) | Publication timestamp |
+| created_at | DATETIME | Creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
+| deleted_at | DATETIME (NULL) | Soft delete timestamp |
+
+**Indexes:**
+- `registration` - For Nummerplade API lookups
+- `vin` - For Nummerplade API lookups
+- `(vehicle_list_status_id, published_at)` - For active listings
+- `(vehicle_list_status_id, price)` - For price sorting
+- `(vehicle_list_status_id, mileage)` - For mileage filtering
+- `(location_id, price)` - For location-based search
+- `category_id` - For category filtering
+- `brand_id` - For brand filtering
+- `model_year_id` - For model year filtering
+
+**Relationships:**
+- `belongsTo` Dealer, User, Location
+- `hasOne` VehicleDetail
+- `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+
+**Model Features:**
+- **Caching**: Lookup data (categories, brands, model_years, fuel_types, vehicle_list_statuses) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: Automatically appends resolved names (`category_name`, `brand_name`, `model_year_name`, `fuel_type_name`, `vehicle_list_status_name`) to API responses
+- **Default Ordering**: Global scope applies `ORDER BY id DESC` by default (can be overridden with explicit `orderBy`)
+- **Soft Deletes**: Enabled for data retention
+
+#### `vehicle_details`
+Extended vehicle information and specifications.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT (PK) | Primary key |
+| vehicle_id | BIGINT (FK, UNIQUE) | Foreign key to `vehicles.id` |
+| description | TEXT (NULL) | Full vehicle description |
+| views_count | INT | View counter (default: 0) |
+| vin_location | VARCHAR(255) (NULL) | VIN location |
+| type | VARCHAR(100) (NULL) | Vehicle type |
+| version | VARCHAR(100) (NULL) | Vehicle version |
+| type_name | VARCHAR(255) (NULL) | Type name |
+| registration_status | VARCHAR(100) (NULL) | Registration status |
+| registration_status_updated_date | DATE (NULL) | Registration status update date |
+| expire_date | DATE (NULL) | Registration expiration date |
+| status_updated_date | DATE (NULL) | Status update date |
+| model_year | VARCHAR(50) (NULL) | Model year (string) |
+| total_weight | INT (NULL) | Total weight |
+| vehicle_weight | INT (NULL) | Vehicle weight |
+| technical_total_weight | INT (NULL) | Technical total weight |
+| coupling | INT (NULL) | Coupling weight |
+| towing_weight_brakes | INT (NULL) | Towing weight with brakes |
+| minimum_weight | INT (NULL) | Minimum weight |
+| gross_combination_weight | INT (NULL) | Gross combination weight |
+| fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency |
+| engine_displacement | INT (NULL) | Engine displacement |
+| engine_cylinders | INT (NULL) | Number of engine cylinders |
+| engine_code | VARCHAR(100) (NULL) | Engine code |
+| category | VARCHAR(100) (NULL) | Category |
+| last_inspection_date | DATE (NULL) | Last inspection date |
+| last_inspection_result | VARCHAR(100) (NULL) | Last inspection result |
+| last_inspection_odometer | INT (NULL) | Odometer reading at last inspection |
+| type_approval_code | VARCHAR(100) (NULL) | Type approval code |
+| top_speed | INT (NULL) | Top speed |
+| doors | INT (NULL) | Number of doors |
+| minimum_seats | INT (NULL) | Minimum seats |
+| maximum_seats | INT (NULL) | Maximum seats |
+| wheels | INT (NULL) | Number of wheels |
+| extra_equipment | TEXT (NULL) | Extra equipment details |
+| axles | INT (NULL) | Number of axles |
+| drive_axles | INT (NULL) | Number of drive axles |
+| wheelbase | INT (NULL) | Wheelbase measurement |
+| leasing_period_start | DATE (NULL) | Leasing period start |
+| leasing_period_end | DATE (NULL) | Leasing period end |
+| use | VARCHAR(100) (NULL) | Vehicle use |
+| color | VARCHAR(50) (NULL) | Vehicle color |
+| body_type | VARCHAR(100) (NULL) | Body type |
+| dispensations | TEXT (NULL) | Dispensations |
+| permits | TEXT (NULL) | Permits |
+| equipment | JSON (NULL) | Equipment list |
+| ncap_five | BOOLEAN (NULL) | NCAP 5-star rating |
+| airbags | INT (NULL) | Number of airbags |
+| integrated_child_seats | INT (NULL) | Number of integrated child seats |
+| seat_belt_alarms | INT (NULL) | Number of seat belt alarms |
+| euronorm | VARCHAR(50) (NULL) | Euro norm standard |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
 
 **Indexes:**
-- `(vehicle_list_status_id, published_at)` - For active listings
-- `(vehicle_list_status_id, price)` - For price sorting
-- `(vehicle_list_status_id, mileage)` - For mileage filtering
-- `(vehicle_list_status_id, year)` - For year filtering
-- `(location_id, price)` - For location-based search
+- `vehicle_id` (unique)
 
 **Relationships:**
-- `belongsTo` Dealer, User, Location, FuelType, Transmission, VehicleListStatus
-- `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+- `belongsTo` Vehicle
+
+#### `categories`
+Vehicle category lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Category name |
+
+**Note:** No timestamps. Used for caching in Vehicle model.
+
+#### `brands`
+Vehicle brand/manufacturer lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Brand name |
+
+**Note:** No timestamps. Used for caching in Vehicle model.
+
+#### `model_years`
+Vehicle model year lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Model year name |
+
+**Note:** No timestamps. Used for caching in Vehicle model.
 
 #### `fuel_types`
 Vehicle fuel type lookup.
@@ -236,10 +344,12 @@ Vehicle image gallery.
 | id | BIGINT (PK) | Primary key |
 | vehicle_id | BIGINT (FK) | Foreign key to `vehicles.id` |
 | image_path | VARCHAR(255) | Image file path |
-| sort_order | INT | Display order |
+| sort_order | INT | Display order (default: 0) |
 
 **Indexes:**
 - `vehicle_id`
+
+**Note:** No timestamps. Images are ordered by `sort_order`.
 
 **Accessors (Model):**
 - `image_url` - Full URL to image
@@ -684,12 +794,16 @@ Dealers
   └── hasMany DealerPlanOverrides
 
 Vehicles
-  ├── belongsTo Dealer, User, Location, FuelType, Transmission, VehicleListStatus
+  ├── belongsTo Dealer, User, Location
+  ├── hasOne VehicleDetail
   ├── hasMany VehicleImages
   ├── hasMany Favorites
   ├── hasMany Leads
   ├── hasMany PriceHistory
   └── hasMany ListingViewsLog
+
+VehicleDetails
+  └── belongsTo Vehicle
 
 Leads
   ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
