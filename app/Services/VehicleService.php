@@ -9,6 +9,10 @@ use App\Models\FuelType;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ModelYear;
+use App\Models\BodyType;
+use App\Models\Color;
+use App\Models\Type;
+use App\Models\VehicleUse;
 use App\Services\FileService;
 use App\Services\NotificationService;
 use App\Services\NummerpladeApiService;
@@ -50,10 +54,21 @@ class VehicleService
                 }
             }
 
+            // Separate equipment IDs if present
+            $equipmentIds = null;
+            if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
+                $equipmentIds = $vehicleData['equipment_ids'];
+                unset($vehicleData['equipment_ids']);
+            } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
+                // Support legacy 'equipment' key for backward compatibility
+                $equipmentIds = $vehicleData['equipment'];
+                unset($vehicleData['equipment']);
+            }
+
             // Separate vehicle details if present
             $vehicleDetailsData = [];
             $detailsFields = [
-                'description', 'views_count', 'vin_location', 'type', 'version', 'type_name',
+                'description', 'views_count', 'vin_location', 'type_id', 'version', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
@@ -62,8 +77,8 @@ class VehicleService
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use', 'color', 'body_type', 'dispensations',
-                'permits', 'equipment', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
+                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronorm'
             ];
 
@@ -77,6 +92,11 @@ class VehicleService
             // Create vehicle
             $vehicle = Vehicle::create($vehicleData);
 
+            // Sync equipment if provided
+            if ($equipmentIds !== null) {
+                $vehicle->equipment()->sync($equipmentIds);
+            }
+
             // Create vehicle details if provided
             if (!empty($vehicleDetailsData)) {
                 $vehicleDetailsData['vehicle_id'] = $vehicle->id;
@@ -88,26 +108,55 @@ class VehicleService
                 $sortOrder = 0;
                 foreach ($vehicleData['images'] as $file) {
                     if (is_string($file)) {
-                        // Already a path/URL
+                        // Already a path/URL - try to generate thumbnail if it doesn't exist
+                        $thumbnailPath = null;
+                        try {
+                            $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
+                            // Extract path from URL
+                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                        } catch (\Exception $e) {
+                            // Thumbnail generation failed, continue without thumbnail
+                        }
+                        
                         VehicleImage::create([
                             'vehicle_id' => $vehicle->id,
                             'image_path' => $file,
+                            'thumbnail_path' => $thumbnailPath,
                             'sort_order' => $sortOrder++,
                         ]);
                     } else {
-                        // Upload file
+                        // Upload file with thumbnail generation
                         $this->fileService->validateFile($file);
-                        $uploadedPath = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        $uploadedPath = $this->fileService->uploadFiles(
+                            [$file], 
+                            'public', 
+                            'vehicles',
+                            true, // createThumbnails
+                            false, // optimizeImages
+                            300, // thumbnailWidth
+                            300  // thumbnailHeight
+                        )[0];
+                        
+                        // Extract thumbnail path from URL
+                        $thumbnailPath = null;
+                        try {
+                            $thumbnailUrl = $this->fileService->createThumbnail($uploadedPath, 300, 300, 'public');
+                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                        } catch (\Exception $e) {
+                            // Thumbnail generation failed, continue without thumbnail
+                        }
+                        
                         VehicleImage::create([
                             'vehicle_id' => $vehicle->id,
                             'image_path' => $uploadedPath,
+                            'thumbnail_path' => $thumbnailPath,
                             'sort_order' => $sortOrder++,
                         ]);
                     }
                 }
             }
 
-            return $vehicle->fresh(['images', 'details']);
+            return $vehicle->fresh(['images', 'details', 'equipment']);
         });
     }
 
@@ -238,10 +287,21 @@ class VehicleService
     public function updateVehicle(Vehicle $vehicle, array $vehicleData): Vehicle
     {
         return DB::transaction(function () use ($vehicle, $vehicleData) {
+            // Separate equipment IDs if present
+            $equipmentIds = null;
+            if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
+                $equipmentIds = $vehicleData['equipment_ids'];
+                unset($vehicleData['equipment_ids']);
+            } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
+                // Support legacy 'equipment' key for backward compatibility
+                $equipmentIds = $vehicleData['equipment'];
+                unset($vehicleData['equipment']);
+            }
+
             // Separate vehicle details if present
             $vehicleDetailsData = [];
             $detailsFields = [
-                'description', 'views_count', 'vin_location', 'type', 'version', 'type_name',
+                'description', 'views_count', 'vin_location', 'type_id', 'version', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'model_year', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
@@ -250,8 +310,8 @@ class VehicleService
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use', 'color', 'body_type', 'dispensations',
-                'permits', 'equipment', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
+                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronorm'
             ];
 
@@ -260,6 +320,11 @@ class VehicleService
                     $vehicleDetailsData[$field] = $vehicleData[$field];
                     unset($vehicleData[$field]);
                 }
+            }
+
+            // Sync equipment if provided
+            if ($equipmentIds !== null) {
+                $vehicle->equipment()->sync($equipmentIds);
             }
 
             // Update vehicle details if provided
@@ -275,10 +340,13 @@ class VehicleService
 
             // Handle image updates if provided
             if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
-                // Delete old images
+                // Delete old images and thumbnails
                 $oldImages = $vehicle->images;
                 foreach ($oldImages as $oldImage) {
                     $this->fileService->deleteFiles([$oldImage->image_path]);
+                    if ($oldImage->thumbnail_path) {
+                        $this->fileService->deleteFiles([$oldImage->thumbnail_path]);
+                    }
                     $oldImage->delete();
                 }
 
@@ -286,19 +354,47 @@ class VehicleService
                 $sortOrder = 0;
                 foreach ($vehicleData['images'] as $file) {
                     if (is_string($file)) {
-                        // Already a path/URL
+                        // Already a path/URL - try to generate thumbnail if it doesn't exist
+                        $thumbnailPath = null;
+                        try {
+                            $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
+                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                        } catch (\Exception $e) {
+                            // Thumbnail generation failed, continue without thumbnail
+                        }
+                        
                         VehicleImage::create([
                             'vehicle_id' => $vehicle->id,
                             'image_path' => $file,
+                            'thumbnail_path' => $thumbnailPath,
                             'sort_order' => $sortOrder++,
                         ]);
                     } else {
-                        // Upload file
+                        // Upload file with thumbnail generation
                         $this->fileService->validateFile($file);
-                        $uploadedPath = $this->fileService->uploadFiles([$file], 'public', 'vehicles')[0];
+                        $uploadedPath = $this->fileService->uploadFiles(
+                            [$file], 
+                            'public', 
+                            'vehicles',
+                            true, // createThumbnails
+                            false, // optimizeImages
+                            300, // thumbnailWidth
+                            300  // thumbnailHeight
+                        )[0];
+                        
+                        // Extract thumbnail path from URL
+                        $thumbnailPath = null;
+                        try {
+                            $thumbnailUrl = $this->fileService->createThumbnail($uploadedPath, 300, 300, 'public');
+                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                        } catch (\Exception $e) {
+                            // Thumbnail generation failed, continue without thumbnail
+                        }
+                        
                         VehicleImage::create([
                             'vehicle_id' => $vehicle->id,
                             'image_path' => $uploadedPath,
+                            'thumbnail_path' => $thumbnailPath,
                             'sort_order' => $sortOrder++,
                         ]);
                     }
@@ -309,7 +405,7 @@ class VehicleService
             // Update vehicle
             $vehicle->update($vehicleData);
 
-            return $vehicle->fresh(['images', 'details']);
+            return $vehicle->fresh(['images', 'details', 'equipment']);
         });
     }
 
@@ -319,10 +415,13 @@ class VehicleService
     public function deleteVehicle(Vehicle $vehicle): void
     {
         DB::transaction(function () use ($vehicle) {
-            // Delete vehicle images
+            // Delete vehicle images and thumbnails
             $images = $vehicle->images;
             foreach ($images as $image) {
                 $this->fileService->deleteFiles([$image->image_path]);
+                if ($image->thumbnail_path) {
+                    $this->fileService->deleteFiles([$image->thumbnail_path]);
+                }
             }
 
             // Delete vehicle (soft delete)

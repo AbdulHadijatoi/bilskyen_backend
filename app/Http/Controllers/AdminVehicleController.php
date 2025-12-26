@@ -16,7 +16,7 @@ class AdminVehicleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Vehicle::with(['dealer', 'user', 'location', 'images', 'details']);
+        $query = Vehicle::with(['dealer', 'user', 'location', 'images', 'details', 'equipment']);
 
         // Apply filters
         if ($request->has('dealer_id')) {
@@ -43,6 +43,7 @@ class AdminVehicleController extends Controller
             'location',
             'images',
             'details',
+            'equipment',
             'priceHistory'
         ])->findOrFail($id);
 

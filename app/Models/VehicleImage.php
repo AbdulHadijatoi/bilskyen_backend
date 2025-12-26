@@ -15,6 +15,7 @@ class VehicleImage extends Model
     protected $fillable = [
         'vehicle_id',
         'image_path',
+        'thumbnail_path',
         'sort_order',
     ];
 
@@ -27,6 +28,19 @@ class VehicleImage extends Model
      */
     public function getImageUrlAttribute(): ?string
     {
+        return $this->image_path ? asset('storage/' . $this->image_path) : null;
+    }
+
+    /**
+     * Get thumbnail URL attribute
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if ($this->thumbnail_path) {
+            return asset('storage/' . $this->thumbnail_path);
+        }
+        
+        // Fallback to full image if thumbnail doesn't exist
         return $this->image_path ? asset('storage/' . $this->image_path) : null;
     }
 

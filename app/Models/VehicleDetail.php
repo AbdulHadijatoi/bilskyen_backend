@@ -4,15 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class VehicleDetail extends Model
 {
+    /**
+     * Static cache for lookup data (in-memory cache)
+     */
+    private static array $lookupCache = [];
+
     protected $fillable = [
         'vehicle_id',
         'description',
         'views_count',
         'vin_location',
-        'type',
+        'type_id',
         'version',
         'type_name',
         'registration_status',
@@ -47,12 +53,11 @@ class VehicleDetail extends Model
         'wheelbase',
         'leasing_period_start',
         'leasing_period_end',
-        'use',
-        'color',
-        'body_type',
+        'use_id',
+        'color_id',
+        'body_type_id',
         'dispensations',
         'permits',
-        'equipment',
         'ncap_five',
         'airbags',
         'integrated_child_seats',
@@ -81,7 +86,6 @@ class VehicleDetail extends Model
         'axles' => 'integer',
         'drive_axles' => 'integer',
         'wheelbase' => 'integer',
-        'equipment' => 'array',
         'ncap_five' => 'boolean',
         'airbags' => 'integer',
         'integrated_child_seats' => 'integer',
@@ -93,6 +97,86 @@ class VehicleDetail extends Model
         'leasing_period_start' => 'date',
         'leasing_period_end' => 'date',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = [
+        'type_name_resolved',
+        'use_name',
+        'color_name',
+        'body_type_name',
+    ];
+
+    /**
+     * Get cached lookup value
+     * Checks static cache first, then Laravel cache, then database
+     */
+    public static function getCachedLookup(string $table, ?int $id): ?string
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        $cacheKey = "{$table}_{$id}";
+
+        // Check static cache first
+        if (isset(self::$lookupCache[$cacheKey])) {
+            return self::$lookupCache[$cacheKey];
+        }
+
+        // Check Laravel cache (24 hour TTL)
+        $cached = Cache::remember("vehicle_detail_lookup_{$cacheKey}", 86400, function () use ($table, $id) {
+            $model = match ($table) {
+                'types' => Type::find($id),
+                'uses' => \App\Models\VehicleUse::find($id),
+                'colors' => Color::find($id),
+                'body_types' => BodyType::find($id),
+                default => null,
+            };
+
+            return $model?->name;
+        });
+
+        // Store in static cache for this request
+        if ($cached !== null) {
+            self::$lookupCache[$cacheKey] = $cached;
+        }
+
+        return $cached;
+    }
+
+    /**
+     * Get type name attribute (cached)
+     */
+    public function getTypeNameResolvedAttribute(): ?string
+    {
+        return self::getCachedLookup('types', $this->type_id);
+    }
+
+    /**
+     * Get use name attribute (cached)
+     */
+    public function getUseNameAttribute(): ?string
+    {
+        return self::getCachedLookup('uses', $this->use_id);
+    }
+
+    /**
+     * Get color name attribute (cached)
+     */
+    public function getColorNameAttribute(): ?string
+    {
+        return self::getCachedLookup('colors', $this->color_id);
+    }
+
+    /**
+     * Get body type name attribute (cached)
+     */
+    public function getBodyTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('body_types', $this->body_type_id);
+    }
 
     /**
      * Get vehicle for this detail

@@ -23,7 +23,7 @@ return new class extends Migration
             
             // Registration and identification
             $table->string('vin_location', 255)->nullable();
-            $table->string('type', 100)->nullable();
+            $table->unsignedInteger('type_id')->nullable();
             $table->string('version', 100)->nullable();
             $table->string('type_name', 255)->nullable();
             $table->string('registration_status', 100)->nullable();
@@ -62,12 +62,11 @@ return new class extends Migration
             $table->date('leasing_period_end')->nullable();
             
             // Additional details
-            $table->string('use', 100)->nullable();
-            $table->string('color', 50)->nullable();
-            $table->string('body_type', 100)->nullable();
+            $table->unsignedInteger('use_id')->nullable();
+            $table->unsignedInteger('color_id')->nullable();
+            $table->unsignedInteger('body_type_id')->nullable();
             $table->text('dispensations')->nullable();
             $table->text('permits')->nullable();
-            $table->json('equipment')->nullable();
             $table->boolean('ncap_five')->nullable();
             $table->integer('airbags')->nullable();
             $table->integer('integrated_child_seats')->nullable();
@@ -76,8 +75,18 @@ return new class extends Migration
             
             $table->timestamps();
             
-            // Index
+            // Foreign key constraints
+            $table->foreign('type_id')->references('id')->on('types')->nullOnDelete();
+            $table->foreign('use_id')->references('id')->on('uses')->nullOnDelete();
+            $table->foreign('color_id')->references('id')->on('colors')->nullOnDelete();
+            $table->foreign('body_type_id')->references('id')->on('body_types')->nullOnDelete();
+            
+            // Indexes
             $table->index('vehicle_id');
+            $table->index('type_id');
+            $table->index('use_id');
+            $table->index('color_id');
+            $table->index('body_type_id');
         });
     }
 

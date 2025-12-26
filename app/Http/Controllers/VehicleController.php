@@ -38,9 +38,9 @@ class VehicleController extends Controller
     {
         // Include deleted records only if explicitly requested
         if ($request->boolean('with_deleted')) {
-            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'images', 'details']);
+            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'images', 'details', 'equipment']);
         } else {
-            $query = Vehicle::with(['dealer', 'location', 'images', 'details']);
+            $query = Vehicle::with(['dealer', 'location', 'images', 'details', 'equipment']);
         }
 
         // For dealer routes, filter by dealer_id
@@ -104,7 +104,8 @@ class VehicleController extends Controller
             'user',
             'location',
             'images',
-            'details'
+            'details',
+            'equipment'
         ])->findOrFail($id);
 
         return $this->success($vehicle);

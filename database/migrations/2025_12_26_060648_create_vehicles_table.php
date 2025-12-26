@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('title', 255);
             $table->string('registration', 20)->nullable();
             $table->string('vin', 17)->nullable();
-            
+
             // Foreign keys
             $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();

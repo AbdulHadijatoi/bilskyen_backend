@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: 9de8182014ce68a3001932b104bb4d3f31ca016c99a7c5f860b6c4bc90a4834b
+API Architecture Checksum: 7b8152f5fe35658174f8f8f197c3a4a09dec36046fd48b322cc18932102f7b0d
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -120,6 +120,13 @@ Route::middleware('auth:api')->group(function () {
 ```
 
 **Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_year_name, fuel_type_name, vehicle_list_status_name) via model accessors. These are cached and do not require eager-loading relationships.
+
+Vehicle details (when included) also automatically include resolved names for lookup fields (type_name_resolved, use_name, color_name, body_type_name) via VehicleDetail model accessors with the same caching approach.
+
+Equipment is returned as a relationship array (many-to-many) when vehicles are loaded with the `equipment` relationship. Use `equipment_ids` array in create/update requests to associate equipment with vehicles.
+
+**Image Thumbnails:**
+Vehicle images include both `image_path` and `thumbnail_path` fields. The `thumbnail_url` accessor provides a ready-to-use thumbnail URL (300x300px) for faster loading in vehicle listings. If a thumbnail doesn't exist, it falls back to the full image URL.
 
 ### Paginated Response
 

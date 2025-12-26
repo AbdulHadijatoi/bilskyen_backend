@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -236,5 +237,14 @@ class Vehicle extends Model
     public function viewLogs(): HasMany
     {
         return $this->hasMany(ListingViewsLog::class);
+    }
+
+    /**
+     * Get equipment for this vehicle (many-to-many)
+     */
+    public function equipment(): BelongsToMany
+    {
+        return $this->belongsToMany(Equipment::class, 'vehicle_equipment')
+            ->withTimestamps();
     }
 }

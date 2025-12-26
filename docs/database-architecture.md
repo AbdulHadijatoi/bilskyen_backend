@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: 0985cc92e69241f635d273d1d9bcdfe9e462c938ac101a2226deb8b78484fa60
+Schema Checksum: 2d7f9d415f7dc5b2916766fae86b8ea8217f119c1a01ab10452faf7c3c550221
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -204,6 +204,7 @@ Vehicle listings with searchable attributes.
 - `belongsTo` Dealer, User, Location
 - `hasOne` VehicleDetail
 - `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+- `belongsToMany` Equipment (via vehicle_equipment)
 
 **Model Features:**
 - **Caching**: Lookup data (categories, brands, model_years, fuel_types, vehicle_list_statuses) is cached using static property + Laravel Cache facade (24-hour TTL)
@@ -221,7 +222,7 @@ Extended vehicle information and specifications.
 | description | TEXT (NULL) | Full vehicle description |
 | views_count | INT | View counter (default: 0) |
 | vin_location | VARCHAR(255) (NULL) | VIN location |
-| type | VARCHAR(100) (NULL) | Vehicle type |
+| type_id | INT (FK, NULL) | Foreign key to `types.id` |
 | version | VARCHAR(100) (NULL) | Vehicle version |
 | type_name | VARCHAR(255) (NULL) | Type name |
 | registration_status | VARCHAR(100) (NULL) | Registration status |
@@ -256,12 +257,11 @@ Extended vehicle information and specifications.
 | wheelbase | INT (NULL) | Wheelbase measurement |
 | leasing_period_start | DATE (NULL) | Leasing period start |
 | leasing_period_end | DATE (NULL) | Leasing period end |
-| use | VARCHAR(100) (NULL) | Vehicle use |
-| color | VARCHAR(50) (NULL) | Vehicle color |
-| body_type | VARCHAR(100) (NULL) | Body type |
+| use_id | INT (FK, NULL) | Foreign key to `uses.id` |
+| color_id | INT (FK, NULL) | Foreign key to `colors.id` |
+| body_type_id | INT (FK, NULL) | Foreign key to `body_types.id` |
 | dispensations | TEXT (NULL) | Dispensations |
 | permits | TEXT (NULL) | Permits |
-| equipment | JSON (NULL) | Equipment list |
 | ncap_five | BOOLEAN (NULL) | NCAP 5-star rating |
 | airbags | INT (NULL) | Number of airbags |
 | integrated_child_seats | INT (NULL) | Number of integrated child seats |
@@ -272,6 +272,21 @@ Extended vehicle information and specifications.
 
 **Indexes:**
 - `vehicle_id` (unique)
+- `type_id`
+- `use_id`
+- `color_id`
+- `body_type_id`
+
+**Foreign Keys:**
+- `type_id` references `types.id` (nullOnDelete)
+- `use_id` references `uses.id` (nullOnDelete)
+- `color_id` references `colors.id` (nullOnDelete)
+- `body_type_id` references `body_types.id` (nullOnDelete)
+
+**Model Features:**
+- **Caching**: Lookup data (types, uses, colors, body_types) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`) to API responses
+- No eager-loading of constant relations required
 
 **Relationships:**
 - `belongsTo` Vehicle
@@ -305,6 +320,66 @@ Vehicle model year lookup table.
 | name | VARCHAR(100) | Model year name |
 
 **Note:** No timestamps. Used for caching in Vehicle model.
+
+#### `body_types`
+Vehicle body type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Body type name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `colors`
+Vehicle color lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Color name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `equipments`
+Vehicle equipment lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Equipment name |
+
+**Note:** No timestamps. Reference data for equipment options.
+
+#### `permits`
+Vehicle permit lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Permit name |
+
+**Note:** No timestamps. Reference data for permit types.
+
+#### `types`
+Vehicle type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Type name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
+
+#### `uses`
+Vehicle use lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Use name |
+
+**Note:** No timestamps. Used for caching in VehicleDetail model.
 
 #### `fuel_types`
 Vehicle fuel type lookup.
@@ -344,10 +419,16 @@ Vehicle image gallery.
 | id | BIGINT (PK) | Primary key |
 | vehicle_id | BIGINT (FK) | Foreign key to `vehicles.id` |
 | image_path | VARCHAR(255) | Image file path |
+| thumbnail_path | VARCHAR(255) (NULL) | Thumbnail file path (300x300px) |
 | sort_order | INT | Display order (default: 0) |
 
 **Indexes:**
 - `vehicle_id`
+
+**Model Features:**
+- **Accessors**: `image_url` and `thumbnail_url` automatically generate full URLs
+- **Thumbnail Fallback**: If thumbnail doesn't exist, `thumbnail_url` falls back to full image URL
+- Thumbnails are automatically generated when images are uploaded (300x300px, maintaining aspect ratio)
 
 **Note:** No timestamps. Images are ordered by `sort_order`.
 
@@ -800,10 +881,17 @@ Vehicles
   ├── hasMany Favorites
   ├── hasMany Leads
   ├── hasMany PriceHistory
-  └── hasMany ListingViewsLog
+  ├── hasMany ListingViewsLog
+  └── belongsToMany Equipment (via vehicle_equipment)
 
 VehicleDetails
   └── belongsTo Vehicle
+
+Equipment
+  └── belongsToMany Vehicle (via vehicle_equipment)
+
+BodyTypes, Colors, Permits, Types, Uses
+  └── Lookup tables (no relationships, used for caching in VehicleDetail model)
 
 Leads
   ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
