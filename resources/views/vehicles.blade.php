@@ -9,37 +9,210 @@
 
 @section('content')
 <div class="container mx-auto flex flex-col gap-6 py-8">
-    <!-- Search Bar -->
-    <div class="flex items-center gap-4">
-        <!-- Search Input -->
-        <form class="flex w-full items-center" method="GET" action="/vehicles">
-            <input
-                type="text"
-                name="search"
-                value="{{ request()->query('search', '') }}"
-                placeholder="Search vehicles..."
-                class="flex h-10 w-full rounded-l-md rounded-r-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                autocomplete="off"
-            />
-            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-l-none rounded-r-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </svg>
-                Search
+    <!-- Filter Dropdowns -->
+    <div class="flex flex-col gap-4">
+        <!-- First Row: 4 Dropdown Fields (equal width) -->
+        <div class="flex items-center gap-3">
+            <!-- Category Dropdown -->
+            <div class="relative flex-1" data-dropdown="category">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Category</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                    <div class="p-2 border-b border-border">
+                        <input type="text" placeholder="Search category..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                    </div>
+                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Categories</button>
+                        @foreach($filterOptions['categories'] as $category)
+                            <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $category->id }}" data-text="{{ $category->name }}">{{ $category->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <input type="hidden" name="category_id" value="{{ request()->query('category_id', '') }}" class="dropdown-input">
+            </div>
+
+            <!-- Brand Dropdown -->
+            <div class="relative flex-1" data-dropdown="brand">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Brand</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                    <div class="p-2 border-b border-border">
+                        <input type="text" placeholder="Search brand..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                    </div>
+                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Brands</button>
+                        @foreach($filterOptions['brands'] as $brand)
+                            <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}">{{ $brand->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <input type="hidden" name="brand_id" value="{{ request()->query('brand_id', '') }}" class="dropdown-input">
+            </div>
+
+            <!-- Model Dropdown -->
+            <div class="relative flex-1" data-dropdown="model">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Model</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                    <div class="p-2 border-b border-border">
+                        <input type="text" placeholder="Search model..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                    </div>
+                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Models</button>
+                        @foreach($filterOptions['models'] as $model)
+                            <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}">{{ $model->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <input type="hidden" name="model_id" value="{{ request()->query('model_id', '') }}" class="dropdown-input">
+            </div>
+
+            <!-- Model Year Dropdown -->
+            <div class="relative flex-1" data-dropdown="model_year">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Model Year</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                    <div class="p-2 border-b border-border">
+                        <input type="text" placeholder="Search year..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                    </div>
+                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Years</button>
+                        @foreach($filterOptions['modelYears'] as $modelYear)
+                            <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}">{{ $modelYear->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <input type="hidden" name="model_year_id" value="{{ request()->query('model_year_id', '') }}" class="dropdown-input">
+            </div>
+        </div>
+
+        <!-- Second Row: 3 Dropdown Fields + Search Button (equal width) -->
+        <div class="flex items-center gap-3">
+            <!-- Fuel Type Dropdown -->
+            <div class="relative flex-1" data-dropdown="fuel_type">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Fuel Type</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                    <div class="p-2 border-b border-border">
+                        <input type="text" placeholder="Search fuel type..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                    </div>
+                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Fuel Types</button>
+                        @foreach($filterOptions['fuelTypes'] as $fuelType)
+                            <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}">{{ $fuelType->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <input type="hidden" name="fuel_type_id" value="{{ request()->query('fuel_type_id', '') }}" class="dropdown-input">
+            </div>
+
+            <!-- KM Driven Dropdown (with range slider) -->
+            <div class="relative flex-1" data-dropdown="km_driven">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">KM Driven</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[300px] rounded-md border border-border bg-background shadow-lg p-4">
+                    <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">KM Driven Range</label>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="flex-1">
+                            <input type="number" id="km-driven-from" name="km_driven_from" placeholder="Min" min="0" max="500000" value="{{ request()->query('km_driven_from', '') }}" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                        </div>
+                        <span class="text-muted-foreground/60 text-sm">–</span>
+                        <div class="flex-1">
+                            <input type="number" id="km-driven-to" name="km_driven_to" placeholder="Max" min="0" max="500000" value="{{ request()->query('km_driven_to', '') }}" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                        </div>
+                    </div>
+                    <div class="relative px-1">
+                        <div class="relative h-0.5 bg-muted rounded-full">
+                            <div id="km-driven-range-track" class="absolute h-0.5 bg-primary rounded-full"></div>
+                            <input type="range" id="km-driven-slider-min" min="0" max="500000" step="1000" value="{{ request()->query('km_driven_from', 0) }}" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="km-driven-slider-max" min="0" max="500000" step="1000" value="{{ request()->query('km_driven_to', 500000) }}" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                            <div id="km-driven-handle-min" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                            <div id="km-driven-handle-max" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Dropdown (with range slider) -->
+            <div class="relative flex-1" data-dropdown="price">
+                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="dropdown-selected">Price</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[300px] rounded-md border border-border bg-background shadow-lg p-4">
+                    <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">Price Range</label>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="flex-1">
+                            <input type="number" id="price-from-dropdown" name="price_from" placeholder="Min" min="0" max="1000000" value="{{ request()->query('price_from', '') }}" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                        </div>
+                        <span class="text-muted-foreground/60 text-sm">–</span>
+                        <div class="flex-1">
+                            <input type="number" id="price-to-dropdown" name="price_to" placeholder="Max" min="0" max="1000000" value="{{ request()->query('price_to', '') }}" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                        </div>
+                    </div>
+                    <div class="relative px-1">
+                        <div class="relative h-0.5 bg-muted rounded-full">
+                            <div id="price-range-track-dropdown" class="absolute h-0.5 bg-primary rounded-full"></div>
+                            <input type="range" id="price-slider-min-dropdown" min="0" max="1000000" step="1000" value="{{ request()->query('price_from', 0) }}" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-max-dropdown" min="0" max="1000000" step="1000" value="{{ request()->query('price_to', 1000000) }}" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                            <div id="price-handle-min-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                            <div id="price-handle-max-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Button -->
+            <form method="GET" action="/vehicles" id="filter-form" class="flex-1">
+                <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                    Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Third Row: Links (right-aligned below search button) -->
+        <div class="flex justify-end gap-4">
+            <a href="/vehicles" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline">
+                Reset Filters
+            </a>
+            <button 
+                type="button" 
+                id="filter-button"
+                class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer"
+            >
+                Advanced Filters
             </button>
-        </form>
-        <!-- Filter Button -->
-        <button 
-            type="button" 
-            id="filter-button"
-            class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-        >
-            <span class="mr-2">Filter</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-        </button>
+        </div>
     </div>
 
     <!-- Vehicle Grid -->
@@ -200,7 +373,7 @@
     >
         <!-- Header -->
         <div class="flex items-center justify-between px-5 py-4 bg-background/95 backdrop-blur-sm sticky top-0 z-10">
-            <h2 id="filter-drawer-title" class="text-lg font-semibold text-foreground">Filters</h2>
+            <h2 id="filter-drawer-title" class="text-lg font-semibold text-foreground">Advanced Filters</h2>
             <button
                 id="filter-close-button"
                 type="button"
@@ -1016,6 +1189,354 @@
 @push('scripts')
 <script>
     (function() {
+        // Searchable Dropdowns Functionality
+        function initSearchableDropdowns() {
+            const dropdowns = document.querySelectorAll('[data-dropdown]');
+            
+            dropdowns.forEach(dropdown => {
+                const button = dropdown.querySelector('button');
+                const menu = dropdown.querySelector('.dropdown-menu');
+                const searchInput = dropdown.querySelector('.dropdown-search');
+                const options = dropdown.querySelectorAll('.dropdown-option');
+                const hiddenInput = dropdown.querySelector('.dropdown-input');
+                const selectedText = dropdown.querySelector('.dropdown-selected');
+                const dropdownType = dropdown.getAttribute('data-dropdown');
+                
+                // Toggle menu
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Close all other dropdowns
+                    dropdowns.forEach(d => {
+                        if (d !== dropdown) {
+                            d.querySelector('.dropdown-menu').classList.add('hidden');
+                        }
+                    });
+                    menu.classList.toggle('hidden');
+                    if (!menu.classList.contains('hidden') && searchInput) {
+                        setTimeout(() => searchInput.focus(), 50);
+                    }
+                });
+                
+                // Search functionality
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        options.forEach(option => {
+                            const text = option.textContent.toLowerCase();
+                            if (text.includes(searchTerm)) {
+                                option.style.display = '';
+                            } else {
+                                option.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+                
+                // Option selection (only for regular dropdowns, not range sliders)
+                if (dropdownType !== 'price' && dropdownType !== 'km_driven') {
+                    options.forEach(option => {
+                        option.addEventListener('click', () => {
+                            const value = option.getAttribute('data-value');
+                            const text = option.getAttribute('data-text') || option.textContent.trim();
+                            
+                            if (hiddenInput) {
+                                hiddenInput.value = value;
+                            }
+                            
+                            if (value === '') {
+                                // Reset to default text
+                                const defaultTexts = {
+                                    'category': 'Category',
+                                    'brand': 'Brand',
+                                    'model': 'Model',
+                                    'model_year': 'Model Year',
+                                    'fuel_type': 'Fuel Type'
+                                };
+                                selectedText.textContent = defaultTexts[dropdownType] || 'Select';
+                            } else {
+                                selectedText.textContent = text;
+                            }
+                            
+                            // Filter models based on selected brand
+                            if (dropdownType === 'brand') {
+                                filterModelsByBrand(value);
+                            }
+                            
+                            menu.classList.add('hidden');
+                        });
+                    });
+                }
+                
+                // Update selected text for price and km_driven when range changes
+                if (dropdownType === 'price') {
+                    const priceFromInput = document.getElementById('price-from-dropdown');
+                    const priceToInput = document.getElementById('price-to-dropdown');
+                    
+                    const updatePriceText = () => {
+                        const from = priceFromInput?.value;
+                        const to = priceToInput?.value;
+                        if (from || to) {
+                            const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                            const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                            selectedText.textContent = `${fromText} - ${toText}`;
+                        } else {
+                            selectedText.textContent = 'Price';
+                        }
+                    };
+                    
+                    if (priceFromInput) priceFromInput.addEventListener('input', updatePriceText);
+                    if (priceToInput) priceToInput.addEventListener('input', updatePriceText);
+                    updatePriceText();
+                }
+                
+                if (dropdownType === 'km_driven') {
+                    const kmFromInput = document.getElementById('km-driven-from');
+                    const kmToInput = document.getElementById('km-driven-to');
+                    
+                    const updateKmText = () => {
+                        const from = kmFromInput?.value;
+                        const to = kmToInput?.value;
+                        if (from || to) {
+                            const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                            const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                            selectedText.textContent = `${fromText} - ${toText} km`;
+                        } else {
+                            selectedText.textContent = 'KM Driven';
+                        }
+                    };
+                    
+                    if (kmFromInput) kmFromInput.addEventListener('input', updateKmText);
+                    if (kmToInput) kmToInput.addEventListener('input', updateKmText);
+                    updateKmText();
+                }
+                
+                // Close on outside click
+                document.addEventListener('click', (e) => {
+                    if (!dropdown.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            });
+        }
+        
+        // Filter models by brand
+        function filterModelsByBrand(brandId) {
+            const modelDropdown = document.querySelector('[data-dropdown="model"]');
+            if (!modelDropdown) return;
+            
+            const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
+            const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
+            
+            if (brandId === '') {
+                // Show all models
+                modelOptions.forEach(option => {
+                    option.style.display = '';
+                });
+            } else {
+                // Show only models for selected brand
+                modelOptions.forEach(option => {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    if (optionBrandId === brandId) {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                
+                // Reset model selection if current selection doesn't match brand
+                const modelInput = modelDropdown.querySelector('.dropdown-input');
+                const selectedModelOption = Array.from(modelOptions).find(opt => 
+                    opt.getAttribute('data-value') === modelInput?.value
+                );
+                if (selectedModelOption && selectedModelOption.style.display === 'none') {
+                    if (modelInput) modelInput.value = '';
+                    const selectedText = modelDropdown.querySelector('.dropdown-selected');
+                    if (selectedText) selectedText.textContent = 'Model';
+                }
+            }
+        }
+        
+        // Initialize dropdowns with current values
+        function initializeDropdownValues() {
+            const dropdowns = document.querySelectorAll('[data-dropdown]');
+            dropdowns.forEach(dropdown => {
+                const hiddenInput = dropdown.querySelector('.dropdown-input');
+                const selectedText = dropdown.querySelector('.dropdown-selected');
+                const dropdownType = dropdown.getAttribute('data-dropdown');
+                
+                if (hiddenInput && hiddenInput.value) {
+                    const selectedOption = dropdown.querySelector(`.dropdown-option[data-value="${hiddenInput.value}"]`);
+                    if (selectedOption) {
+                        const text = selectedOption.getAttribute('data-text') || selectedOption.textContent.trim();
+                        selectedText.textContent = text;
+                    }
+                }
+            });
+        }
+        
+        // Range Slider for Price and KM Driven dropdowns
+        function initDropdownRangeSliders() {
+            // Price range slider
+            const priceConfig = {
+                minSlider: document.getElementById('price-slider-min-dropdown'),
+                maxSlider: document.getElementById('price-slider-max-dropdown'),
+                minInput: document.getElementById('price-from-dropdown'),
+                maxInput: document.getElementById('price-to-dropdown'),
+                minHandle: document.getElementById('price-handle-min-dropdown'),
+                maxHandle: document.getElementById('price-handle-max-dropdown'),
+                track: document.getElementById('price-range-track-dropdown'),
+                selectedText: document.querySelector('[data-dropdown="price"] .dropdown-selected'),
+                min: 0,
+                max: 1000000
+            };
+            
+            // KM Driven range slider
+            const kmDrivenConfig = {
+                minSlider: document.getElementById('km-driven-slider-min'),
+                maxSlider: document.getElementById('km-driven-slider-max'),
+                minInput: document.getElementById('km-driven-from'),
+                maxInput: document.getElementById('km-driven-to'),
+                minHandle: document.getElementById('km-driven-handle-min'),
+                maxHandle: document.getElementById('km-driven-handle-max'),
+                track: document.getElementById('km-driven-range-track'),
+                selectedText: document.querySelector('[data-dropdown="km_driven"] .dropdown-selected'),
+                min: 0,
+                max: 500000
+            };
+            
+            [priceConfig, kmDrivenConfig].forEach(config => {
+                if (!config.minSlider || !config.maxSlider) return;
+                
+                function updateSlider() {
+                    const minVal = parseFloat(config.minSlider.value) || config.min;
+                    const maxVal = parseFloat(config.maxSlider.value) || config.max;
+                    
+                    if (minVal > maxVal) {
+                        config.minSlider.value = maxVal;
+                        config.maxSlider.value = minVal;
+                    }
+                    
+                    const finalMin = Math.min(minVal, maxVal);
+                    const finalMax = Math.max(minVal, maxVal);
+                    
+                    config.minInput.value = finalMin === config.min ? '' : finalMin;
+                    config.maxInput.value = finalMax === config.max ? '' : finalMax;
+                    
+                    const minPercent = ((finalMin - config.min) / (config.max - config.min)) * 100;
+                    const maxPercent = ((finalMax - config.min) / (config.max - config.min)) * 100;
+                    
+                    config.minHandle.style.left = `calc(${minPercent}% - 12px)`;
+                    config.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                    
+                    config.track.style.left = `${minPercent}%`;
+                    config.track.style.width = `${maxPercent - minPercent}%`;
+                    
+                    // Update selected text
+                    if (config.selectedText) {
+                        const from = config.minInput.value;
+                        const to = config.maxInput.value;
+                        if (from || to) {
+                            const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                            const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                            if (config === priceConfig) {
+                                config.selectedText.textContent = `${fromText} - ${toText}`;
+                            } else {
+                                config.selectedText.textContent = `${fromText} - ${toText} km`;
+                            }
+                        } else {
+                            config.selectedText.textContent = config === priceConfig ? 'Price' : 'KM Driven';
+                        }
+                    }
+                }
+                
+                function updateFromInput(input, slider) {
+                    const value = parseFloat(input.value);
+                    if (!isNaN(value)) {
+                        const clampedValue = Math.max(config.min, Math.min(config.max, value));
+                        slider.value = clampedValue;
+                        input.value = clampedValue === config.min ? '' : clampedValue;
+                        updateSlider();
+                    }
+                }
+                
+                updateSlider();
+                
+                config.minSlider.addEventListener('input', updateSlider);
+                config.maxSlider.addEventListener('input', updateSlider);
+                config.minInput.addEventListener('input', () => updateFromInput(config.minInput, config.minSlider));
+                config.maxInput.addEventListener('input', () => updateFromInput(config.maxInput, config.maxSlider));
+            });
+        }
+        
+        // Form submission handler
+        function initFilterForm() {
+            const filterForm = document.getElementById('filter-form');
+            if (!filterForm) return;
+            
+            filterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                
+                // Collect all dropdown values
+                document.querySelectorAll('.dropdown-input').forEach(input => {
+                    if (input.value) {
+                        formData.append(input.name, input.value);
+                    }
+                });
+                
+                // Collect price range
+                const priceFrom = document.getElementById('price-from-dropdown')?.value;
+                const priceTo = document.getElementById('price-to-dropdown')?.value;
+                if (priceFrom) formData.append('price_from', priceFrom);
+                if (priceTo) formData.append('price_to', priceTo);
+                
+                // Collect KM driven range
+                const kmFrom = document.getElementById('km-driven-from')?.value;
+                const kmTo = document.getElementById('km-driven-to')?.value;
+                if (kmFrom) formData.append('km_driven_from', kmFrom);
+                if (kmTo) formData.append('km_driven_to', kmTo);
+                
+                // Build query string
+                const params = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    params.append(key, value);
+                }
+                
+                const queryString = params.toString();
+                const url = '/vehicles' + (queryString ? '?' + queryString : '');
+                
+                window.location.href = url;
+            });
+        }
+        
+        // Initialize everything
+        initSearchableDropdowns();
+        initializeDropdownValues();
+        initDropdownRangeSliders();
+        initFilterForm();
+        
+        // Initialize price and km_driven text on page load
+        setTimeout(() => {
+            const priceFrom = document.getElementById('price-from-dropdown')?.value;
+            const priceTo = document.getElementById('price-to-dropdown')?.value;
+            const priceSelectedText = document.querySelector('[data-dropdown="price"] .dropdown-selected');
+            if (priceSelectedText && (priceFrom || priceTo)) {
+                const fromText = priceFrom ? new Intl.NumberFormat().format(priceFrom) : '0';
+                const toText = priceTo ? new Intl.NumberFormat().format(priceTo) : '∞';
+                priceSelectedText.textContent = `${fromText} - ${toText}`;
+            }
+            
+            const kmFrom = document.getElementById('km-driven-from')?.value;
+            const kmTo = document.getElementById('km-driven-to')?.value;
+            const kmSelectedText = document.querySelector('[data-dropdown="km_driven"] .dropdown-selected');
+            if (kmSelectedText && (kmFrom || kmTo)) {
+                const fromText = kmFrom ? new Intl.NumberFormat().format(kmFrom) : '0';
+                const toText = kmTo ? new Intl.NumberFormat().format(kmTo) : '∞';
+                kmSelectedText.textContent = `${fromText} - ${toText} km`;
+            }
+        }, 100);
+        
         const filterDrawer = document.getElementById('filter-drawer');
         const filterPanel = document.getElementById('filter-panel');
         const filterBackdrop = document.getElementById('filter-backdrop');

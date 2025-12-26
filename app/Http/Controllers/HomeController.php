@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Category;
 use App\Models\Brand;
+use App\Models\VehicleModel;
+use App\Models\ModelYear;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
@@ -172,6 +174,8 @@ class HomeController extends Controller
             'fuelTypes' => FuelType::orderBy('name')->get(),
             'equipment' => Equipment::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
+            'models' => VehicleModel::orderBy('name')->get(),
+            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
             'conditions' => Condition::orderBy('name')->get(),
             'salesTypes' => SalesType::orderBy('name')->get(),
         ];

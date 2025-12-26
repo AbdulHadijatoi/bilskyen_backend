@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class VehicleModel extends Model
 {
     public $timestamps = false;
-
+    protected $table = 'models';
+    
     protected $fillable = [
         'brand_id',
         'name',
