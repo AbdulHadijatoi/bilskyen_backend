@@ -26,13 +26,12 @@
                 </button>
             </a>
         @endif
-        @if(!request()->is('auth/signup'))
-            <a href="/auth/signup">
-                <button class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                    Signup
-                </button>
-            </a>
-        @endif
+
+        <a href="/sell-your-car">
+            <button class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                Sell Your Car
+            </button>
+        </a>
     </div>
 @else
     <!-- User dropdown menu -->

@@ -10,18 +10,19 @@
 @section('content')
 <div class="container mx-auto flex flex-col gap-6 py-8">
     <!-- Filter Dropdowns -->
-    <div class="flex flex-col gap-4">
+    <div class="rounded-lg bg-card p-4 sm:p-6 shadow-sm">
+        <div class="flex flex-col gap-4">
         <!-- First Row: 4 Dropdown Fields (equal width) -->
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <!-- Category Dropdown -->
             <div class="relative flex-1" data-dropdown="category">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Category</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                     <div class="p-2 border-b border-border">
                         <input type="text" placeholder="Search category..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                     </div>
@@ -37,13 +38,13 @@
 
             <!-- Brand Dropdown -->
             <div class="relative flex-1" data-dropdown="brand">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Brand</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                     <div class="p-2 border-b border-border">
                         <input type="text" placeholder="Search brand..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                     </div>
@@ -59,13 +60,13 @@
 
             <!-- Model Dropdown -->
             <div class="relative flex-1" data-dropdown="model">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Model</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                     <div class="p-2 border-b border-border">
                         <input type="text" placeholder="Search model..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                     </div>
@@ -81,13 +82,13 @@
 
             <!-- Model Year Dropdown -->
             <div class="relative flex-1" data-dropdown="model_year">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Model Year</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                     <div class="p-2 border-b border-border">
                         <input type="text" placeholder="Search year..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                     </div>
@@ -103,16 +104,16 @@
         </div>
 
         <!-- Second Row: 3 Dropdown Fields + Search Button (equal width) -->
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <!-- Fuel Type Dropdown -->
             <div class="relative flex-1" data-dropdown="fuel_type">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Fuel Type</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                     <div class="p-2 border-b border-border">
                         <input type="text" placeholder="Search fuel type..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                     </div>
@@ -128,13 +129,13 @@
 
             <!-- KM Driven Dropdown (with range slider) -->
             <div class="relative flex-1" data-dropdown="km_driven">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">KM Driven</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[300px] rounded-md border border-border bg-background shadow-lg p-4">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
                     <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">KM Driven Range</label>
                     <div class="flex items-center gap-2 mb-3">
                         <div class="flex-1">
@@ -159,13 +160,13 @@
 
             <!-- Price Dropdown (with range slider) -->
             <div class="relative flex-1" data-dropdown="price">
-                <button type="button" class="inline-flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span class="dropdown-selected">Price</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </button>
-                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full min-w-[300px] rounded-md border border-border bg-background shadow-lg p-4">
+                <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
                     <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">Price Range</label>
                     <div class="flex items-center gap-2 mb-3">
                         <div class="flex-1">
@@ -190,7 +191,7 @@
 
             <!-- Search Button -->
             <form method="GET" action="/vehicles" id="filter-form" class="flex-1">
-                <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="submit" class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.3-4.3"></path>
@@ -201,7 +202,7 @@
         </div>
 
         <!-- Third Row: Links (right-aligned below search button) -->
-        <div class="flex justify-end gap-4">
+        <div class="flex flex-col sm:flex-row justify-start sm:justify-end gap-3 sm:gap-4">
             <a href="/vehicles" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline">
                 Reset Filters
             </a>
@@ -212,6 +213,7 @@
             >
                 Advanced Filters
             </button>
+        </div>
         </div>
     </div>
 
