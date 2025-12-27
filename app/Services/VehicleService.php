@@ -37,8 +37,22 @@ class VehicleService
     public function createVehicle(array $vehicleData): Vehicle
     {
         return DB::transaction(function () use ($vehicleData) {
+            // Handle Brand creation if brand name is provided but brand_id is not
+            if (isset($vehicleData['brand_name']) && !isset($vehicleData['brand_id'])) {
+                $brand = Brand::firstOrCreate(
+                    ['name' => $vehicleData['brand_name']]
+                );
+                $vehicleData['brand_id'] = $brand->id;
+                unset($vehicleData['brand_name']);
+            }
+
             // Handle VehicleModel creation if model name is provided but model_id is not
-            if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id']) && isset($vehicleData['brand_id'])) {
+            if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id'])) {
+                // brand_id is required for model creation
+                if (!isset($vehicleData['brand_id'])) {
+                    throw new \InvalidArgumentException('brand_id is required when creating a model');
+                }
+                
                 $model = VehicleModel::firstOrCreate(
                     [
                         'brand_id' => $vehicleData['brand_id'],

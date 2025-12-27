@@ -124,9 +124,22 @@ class SellYourCarController extends Controller
                 'model_year_id', 'fuel_type_id', 'mileage', 'km_driven',
                 'battery_capacity', 'engine_power', 'towing_weight',
                 'ownership_tax', 'first_registration_date',
-                'vehicle_list_status_id', 'published_at',
-                'model_name', 'model_year_name', 'model_year'
+                'vehicle_list_status_id', 'published_at'
             ]);
+
+            // Add brand_name, model_name, and model_year_name if provided (for auto-creation)
+            if ($request->has('brand_name')) {
+                $vehicleData['brand_name'] = $request->input('brand_name');
+            }
+            if ($request->has('model_name')) {
+                $vehicleData['model_name'] = $request->input('model_name');
+            }
+            if ($request->has('model_year_name')) {
+                $vehicleData['model_year_name'] = $request->input('model_year_name');
+            }
+            if ($request->has('model_year')) {
+                $vehicleData['model_year'] = $request->input('model_year');
+            }
 
             // Set user_id and dealer_id
             $vehicleData['user_id'] = $user->id;

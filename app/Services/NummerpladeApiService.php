@@ -24,7 +24,7 @@ class NummerpladeApiService
     {
         $this->baseUrl = config('nummerplade.base_url');
         $this->apiToken = config('nummerplade.api_token');
-        $this->timeout = config('nummerplade.timeout', 30);
+        $this->timeout = config('nummerplade.timeout', 60); // Increased default to 60 seconds
         $this->cacheTtl = config('nummerplade.cache.ttl', 86400);
         $this->referenceCacheTtl = config('nummerplade.cache.reference_data_ttl', 86400);
     }
@@ -37,16 +37,26 @@ class NummerpladeApiService
         $cacheKey = "nummerplade:vehicle:registration:{$registration}:advanced:" . ($advanced ? '1' : '0');
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($registration, $advanced) {
+            // Use longer timeout for vehicle lookups (they can be slow)
+            $vehicleLookupTimeout = config('nummerplade.vehicle_lookup_timeout', 60);
+            
             try {
                 $url = "{$this->baseUrl}/{$registration}";
                 
-                $response = Http::timeout($this->timeout)
+                $response = Http::timeout($vehicleLookupTimeout)
+                    ->connectTimeout(15) // Connection timeout separate from request timeout (increased to 15s)
                     ->withHeaders($this->getHeaders())
                     ->when($advanced, fn($request) => $request->withQueryParameters(['advanced' => '1']))
                     ->get($url);
 
                 return $this->handleResponse($response, 'getVehicleByRegistration');
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                Log::warning('Nummerplade API connection timeout', [
+                    'method' => 'getVehicleByRegistration',
+                    'registration' => $registration,
+                    'timeout' => $vehicleLookupTimeout,
+                    'error' => $e->getMessage(),
+                ]);
                 throw NummerpladeApiException::timeout($e->getMessage());
             } catch (\Exception $e) {
                 Log::error('Nummerplade API error', [
@@ -67,16 +77,26 @@ class NummerpladeApiService
         $cacheKey = "nummerplade:vehicle:vin:{$vin}:advanced:" . ($advanced ? '1' : '0');
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($vin, $advanced) {
+            // Use longer timeout for vehicle lookups (they can be slow)
+            $vehicleLookupTimeout = config('nummerplade.vehicle_lookup_timeout', 60);
+            
             try {
                 $url = "{$this->baseUrl}/vin/{$vin}";
                 
-                $response = Http::timeout($this->timeout)
+                $response = Http::timeout($vehicleLookupTimeout)
+                    ->connectTimeout(15) // Connection timeout separate from request timeout (increased to 15s)
                     ->withHeaders($this->getHeaders())
                     ->when($advanced, fn($request) => $request->withQueryParameters(['advanced' => '1']))
                     ->get($url);
 
                 return $this->handleResponse($response, 'getVehicleByVin');
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                Log::warning('Nummerplade API connection timeout', [
+                    'method' => 'getVehicleByVin',
+                    'vin' => $vin,
+                    'timeout' => $vehicleLookupTimeout,
+                    'error' => $e->getMessage(),
+                ]);
                 throw NummerpladeApiException::timeout($e->getMessage());
             } catch (\Exception $e) {
                 Log::error('Nummerplade API error', [

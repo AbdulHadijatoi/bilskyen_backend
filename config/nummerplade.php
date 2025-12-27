@@ -14,7 +14,9 @@ return [
     
     'api_token' => env('NUMMERPLADE_API_TOKEN'),
     
-    'timeout' => env('NUMMERPLADE_TIMEOUT', 30), // seconds
+    'timeout' => env('NUMMERPLADE_TIMEOUT', 60), // seconds (default timeout for reference data)
+    
+    'vehicle_lookup_timeout' => env('NUMMERPLADE_VEHICLE_LOOKUP_TIMEOUT', 60), // seconds (timeout for vehicle lookups, can be slower)
     
     'cache' => [
         'ttl' => env('NUMMERPLADE_CACHE_TTL', 86400), // 24 hours in seconds

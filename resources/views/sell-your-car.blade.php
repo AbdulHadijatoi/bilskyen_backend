@@ -652,21 +652,61 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
             },
-            body: JSON.stringify({ registration: registration })
+            body: JSON.stringify({ 
+                registration: registration,
+                advanced: true // Request advanced data for more complete information
+            })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
         .then(data => {
             lookupLoading.classList.add('hidden');
             lookupBtn.disabled = false;
 
+            console.log('API Response:', data); // Debug log
+
             if (data.status === 'error' || !data.data) {
-                lookupError.textContent = data.message || 'Failed to fetch vehicle information';
+                let errorMessage = data.message || 'Failed to fetch vehicle information';
+                
+                // Check if it's a timeout error
+                if (data.errors && data.errors.code === 'TIMEOUT') {
+                    errorMessage = 'The vehicle lookup is taking longer than expected. Please try again in a moment, or you can fill in the form manually.';
+                } else if (data.errors && data.errors.retryable) {
+                    errorMessage = 'The vehicle lookup service is temporarily unavailable. Please try again in a moment, or you can fill in the form manually.';
+                }
+                
+                lookupError.textContent = errorMessage;
                 lookupError.classList.add('text-red-600');
+                
+                // Show the form even on error so user can fill manually
+                vehicleForm.classList.remove('hidden');
                 return;
             }
 
             // Prefill form with API data
-            prefillForm(data.data);
+            // Handle different response formats
+            let vehicleData = data.data;
+            if (!vehicleData && data.vehicle) {
+                vehicleData = data.vehicle;
+            }
+            if (!vehicleData && Array.isArray(data.data) && data.data.length > 0) {
+                vehicleData = data.data[0];
+            }
+            
+            console.log('Prefilling form with data:', vehicleData); // Debug log
+            
+            if (!vehicleData) {
+                lookupError.textContent = 'No vehicle data found in API response';
+                lookupError.classList.add('text-red-600');
+                vehicleForm.classList.remove('hidden');
+                return;
+            }
+            
+            prefillForm(vehicleData);
             
             // Show form
             vehicleForm.classList.remove('hidden');
@@ -693,21 +733,40 @@
 
     // Prefill form with API data
     function prefillForm(apiData) {
+        console.log('PrefillForm called with:', apiData); // Debug log
+        
+        // Helper function to safely set field value
+        function setFieldValue(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (field && value !== null && value !== undefined && value !== '') {
+                field.value = value;
+                return true;
+            }
+            return false;
+        }
+        
         // Basic fields
-        if (apiData.registration) document.getElementById('registration').value = apiData.registration;
-        if (apiData.vin) document.getElementById('vin').value = apiData.vin;
+        setFieldValue('registration', apiData.registration);
+        setFieldValue('vin', apiData.vin);
+        
+        // Title
         if (apiData.title || (apiData.make && apiData.model)) {
-            document.getElementById('title').value = apiData.title || `${apiData.make || ''} ${apiData.model || ''}`.trim();
+            const title = apiData.title || `${apiData.make || ''} ${apiData.model || ''}`.trim();
+            setFieldValue('title', title);
         }
 
         // Map brand
         if (apiData.make || apiData.brand) {
             const brandName = apiData.make || apiData.brand;
             const brandSelect = document.getElementById('brand_id');
+            let brandFound = false;
+            
+            // Try to find brand in dropdown
             for (let option of brandSelect.options) {
-                if (option.text.trim().toLowerCase() === brandName.toLowerCase()) {
+                if (option.value && option.text.trim().toLowerCase() === brandName.toLowerCase()) {
                     brandSelect.value = option.value;
                     brandSelect.dispatchEvent(new Event('change'));
+                    brandFound = true;
                     
                     // Wait for models to load, then select the model
                     setTimeout(() => {
@@ -718,17 +777,15 @@
                             // First try to find existing option
                             let found = false;
                             for (let modelOption of modelSelect.options) {
-                                if (modelOption.text.trim().toLowerCase() === modelName.toLowerCase()) {
+                                if (modelOption.value && modelOption.text.trim().toLowerCase() === modelName.toLowerCase()) {
                                     modelSelect.value = modelOption.value;
                                     found = true;
                                     break;
                                 }
                             }
                             
-                            // If not found, we'll need to create it on the backend
-                            // Store model_name for backend to handle
+                            // If not found, store model_name for backend to handle
                             if (!found && modelName) {
-                                // Create a hidden input to pass model_name to backend
                                 let hiddenInput = document.getElementById('model_name_hidden');
                                 if (!hiddenInput) {
                                     hiddenInput = document.createElement('input');
@@ -742,6 +799,34 @@
                         }
                     }, 500);
                     break;
+                }
+            }
+            
+            // If brand not found in dropdown, store brand_name for backend to create it
+            if (!brandFound && brandName) {
+                // Create hidden input for brand_name
+                let brandHiddenInput = document.getElementById('brand_name_hidden');
+                if (!brandHiddenInput) {
+                    brandHiddenInput = document.createElement('input');
+                    brandHiddenInput.type = 'hidden';
+                    brandHiddenInput.id = 'brand_name_hidden';
+                    brandHiddenInput.name = 'brand_name';
+                    document.getElementById('vehicle-form').appendChild(brandHiddenInput);
+                }
+                brandHiddenInput.value = brandName;
+                
+                // Also store model_name if provided (will be created after brand is created)
+                if (apiData.model || apiData.modelName) {
+                    const modelName = apiData.model || apiData.modelName;
+                    let hiddenInput = document.getElementById('model_name_hidden');
+                    if (!hiddenInput) {
+                        hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'model_name_hidden';
+                        hiddenInput.name = 'model_name';
+                        document.getElementById('vehicle-form').appendChild(hiddenInput);
+                    }
+                    hiddenInput.value = modelName;
                 }
             }
         }
@@ -799,18 +884,24 @@
         }
 
         // Numeric fields
-        if (apiData.price) document.getElementById('price').value = apiData.price;
+        setFieldValue('price', apiData.price);
         if (apiData.mileage) {
-            document.getElementById('mileage').value = apiData.mileage;
-            document.getElementById('km_driven').value = apiData.mileage;
+            setFieldValue('mileage', apiData.mileage);
+            setFieldValue('km_driven', apiData.mileage);
         }
-        if (apiData.batteryCapacity) document.getElementById('battery_capacity').value = apiData.batteryCapacity;
-        if (apiData.enginePower) document.getElementById('engine_power').value = apiData.enginePower;
-        if (apiData.towingWeight) document.getElementById('towing_weight').value = apiData.towingWeight;
-        if (apiData.ownershipTax) document.getElementById('ownership_tax').value = apiData.ownershipTax;
+        setFieldValue('battery_capacity', apiData.batteryCapacity);
+        setFieldValue('engine_power', apiData.enginePower);
+        setFieldValue('towing_weight', apiData.towingWeight);
+        setFieldValue('ownership_tax', apiData.ownershipTax);
         if (apiData.firstRegistrationDate) {
-            const date = new Date(apiData.firstRegistrationDate);
-            document.getElementById('first_registration_date').value = date.toISOString().split('T')[0];
+            try {
+                const date = new Date(apiData.firstRegistrationDate);
+                if (!isNaN(date.getTime())) {
+                    setFieldValue('first_registration_date', date.toISOString().split('T')[0]);
+                }
+            } catch (e) {
+                console.warn('Invalid date format:', apiData.firstRegistrationDate);
+            }
         }
 
         // Map body type
@@ -836,20 +927,22 @@
         }
 
         // Additional detailed fields from API
-        if (apiData.description) document.getElementById('description').value = apiData.description;
-        if (apiData.engineDisplacement) document.getElementById('engine_displacement').value = apiData.engineDisplacement;
-        if (apiData.engineCylinders) document.getElementById('engine_cylinders').value = apiData.engineCylinders;
-        if (apiData.doors) document.getElementById('doors').value = apiData.doors;
+        setFieldValue('description', apiData.description);
+        setFieldValue('engine_displacement', apiData.engineDisplacement);
+        setFieldValue('engine_cylinders', apiData.engineCylinders);
+        setFieldValue('doors', apiData.doors);
         if (apiData.seats) {
-            document.getElementById('minimum_seats').value = apiData.seats;
-            document.getElementById('maximum_seats').value = apiData.seats;
+            setFieldValue('minimum_seats', apiData.seats);
+            setFieldValue('maximum_seats', apiData.seats);
         }
-        if (apiData.topSpeed) document.getElementById('top_speed').value = apiData.topSpeed;
-        if (apiData.fuelEfficiency) document.getElementById('fuel_efficiency').value = apiData.fuelEfficiency;
-        if (apiData.airbags) document.getElementById('airbags').value = apiData.airbags;
+        setFieldValue('top_speed', apiData.topSpeed);
+        setFieldValue('fuel_efficiency', apiData.fuelEfficiency);
+        setFieldValue('airbags', apiData.airbags);
         if (apiData.ncapFive !== undefined) {
-            document.getElementById('ncap_five').value = apiData.ncapFive ? '1' : '0';
+            setFieldValue('ncap_five', apiData.ncapFive ? '1' : '0');
         }
+        
+        console.log('Form prefilling completed'); // Debug log
     }
 </script>
 @endpush
