@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
+use App\Models\Dealer;
+use App\Models\DealerUser;
 use App\Services\VehicleService;
 use App\Http\Requests\StoreVehicleRequest;
+use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Helpers\FilterHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class VehicleController extends Controller
 {
@@ -332,6 +336,118 @@ class VehicleController extends Controller
         // This should remove the image from vehicle_images table and delete file
 
         return $this->noContent();
+    }
+
+    /**
+     * Sell Your Car API endpoint
+     * Allows authenticated users (sellers) to create a vehicle listing
+     * Automatically creates dealer if user doesn't have one
+     * Supports auto-creation of brands, models, and model years
+     */
+    public function sellYourCar(SellYourCarRequest $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // Prepare vehicle data
+            $vehicleData = $request->only([
+                'title', 'registration', 'vin', 'price', 'location_id',
+                'listing_type_id', 'category_id', 'brand_id', 'model_id',
+                'model_year_id', 'fuel_type_id', 'mileage', 'km_driven',
+                'battery_capacity', 'engine_power', 'towing_weight',
+                'ownership_tax', 'first_registration_date',
+                'vehicle_list_status_id', 'published_at'
+            ]);
+
+            // Add brand_name, model_name, and model_year_name if provided (for auto-creation)
+            if ($request->has('brand_name')) {
+                $vehicleData['brand_name'] = $request->input('brand_name');
+            }
+            if ($request->has('model_name')) {
+                $vehicleData['model_name'] = $request->input('model_name');
+            }
+            if ($request->has('model_year_name')) {
+                $vehicleData['model_year_name'] = $request->input('model_year_name');
+            }
+            if ($request->has('model_year')) {
+                $vehicleData['model_year'] = $request->input('model_year');
+            }
+
+            // Set user_id
+            $vehicleData['user_id'] = $user->id;
+            
+            // Get or create dealer for the user
+            $dealer = $user->dealers()->first();
+            
+            if (!$dealer) {
+                $dealer = DB::transaction(function () use ($user) {
+                    // Create a default dealer for individual sellers
+                    $dealer = Dealer::create([
+                        'cvr' => 'INDIVIDUAL-' . $user->id . '-' . time(),
+                        'address' => $user->address ?? '',
+                        'city' => $user->city ?? '',
+                        'postcode' => $user->postcode ?? '',
+                        'country_code' => 'DK',
+                    ]);
+
+                    // Associate user with dealer
+                    DealerUser::create([
+                        'dealer_id' => $dealer->id,
+                        'user_id' => $user->id,
+                        'role_id' => 1, // ROLE_OWNER
+                        'created_at' => now(),
+                    ]);
+
+                    return $dealer;
+                });
+            }
+            
+            $vehicleData['dealer_id'] = $dealer->id;
+
+            // Add equipment IDs if provided
+            if ($request->has('equipment_ids')) {
+                $vehicleData['equipment_ids'] = $request->input('equipment_ids');
+            }
+
+            // Add vehicle details if provided
+            $detailsFields = [
+                'description', 'vin_location', 'type_id', 'version', 'type_name',
+                'registration_status', 'registration_status_updated_date', 'expire_date',
+                'status_updated_date', 'total_weight', 'vehicle_weight',
+                'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
+                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
+                'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
+                'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
+                'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
+                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
+                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'euronorm', 'price_type_id', 'condition_id',
+                'gear_type_id', 'sales_type_id'
+            ];
+
+            foreach ($detailsFields as $field) {
+                if ($request->has($field)) {
+                    $vehicleData[$field] = $request->input($field);
+                }
+            }
+
+            // Handle image uploads
+            if ($request->hasFile('images')) {
+                $vehicleData['images'] = $request->file('images');
+            }
+
+            // Create vehicle using the service
+            $vehicle = $this->vehicleService->createVehicle($vehicleData);
+
+            return $this->created($vehicle->load(['dealer', 'location', 'images', 'details', 'equipment']));
+        } catch (\Exception $e) {
+            return $this->error(
+                'Failed to create vehicle listing: ' . $e->getMessage(),
+                ['error' => $e->getMessage()],
+                500
+            );
+        }
     }
 }
 

@@ -27,6 +27,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     
+    // Sell Your Car API (authenticated users can create vehicle listings)
+    Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
+        ->middleware('auth:api')
+        ->name('api.sell-your-car');
+    
     // Lookup routes
     Route::get('/locations', [LookupController::class, 'locations']);
     Route::get('/fuel-types', [LookupController::class, 'fuelTypes']);
