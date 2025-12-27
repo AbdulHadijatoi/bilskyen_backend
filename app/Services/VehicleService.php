@@ -9,6 +9,7 @@ use App\Models\FuelType;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ModelYear;
+use App\Models\VehicleModel;
 use App\Models\BodyType;
 use App\Models\Color;
 use App\Models\Type;
@@ -36,23 +37,34 @@ class VehicleService
     public function createVehicle(array $vehicleData): Vehicle
     {
         return DB::transaction(function () use ($vehicleData) {
-            // Fetch from Nummerplade API if registration or VIN is provided
-            $registration = $vehicleData['registration'] ?? null;
-            $vin = $vehicleData['vin'] ?? null;
+            // Handle VehicleModel creation if model name is provided but model_id is not
+            if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id']) && isset($vehicleData['brand_id'])) {
+                $model = VehicleModel::firstOrCreate(
+                    [
+                        'brand_id' => $vehicleData['brand_id'],
+                        'name' => $vehicleData['model_name']
+                    ]
+                );
+                $vehicleData['model_id'] = $model->id;
+                unset($vehicleData['model_name']);
+            }
 
-            if ($registration || $vin) {
-                try {
-                    $nummerpladeData = $this->fetchVehicleDataFromNummerplade($registration, $vin);
-                    $vehicleData = $this->transformNummerpladeData($nummerpladeData, $vehicleData);
-                } catch (NummerpladeApiException $e) {
-                    // Log error but don't fail - allow user to create vehicle manually
-                    Log::warning('Failed to fetch vehicle data from Nummerplade API', [
-                        'registration' => $registration,
-                        'vin' => $vin,
-                        'error' => $e->getMessage(),
-                    ]);
-                    // Continue with manual data entry
-                }
+            // Handle ModelYear creation if model year name is provided but model_year_id is not
+            if (isset($vehicleData['model_year_name']) && !isset($vehicleData['model_year_id'])) {
+                $modelYear = ModelYear::firstOrCreate(
+                    ['name' => (string) $vehicleData['model_year_name']]
+                );
+                $vehicleData['model_year_id'] = $modelYear->id;
+                unset($vehicleData['model_year_name']);
+            }
+
+            // Also handle if model_year is provided as a number
+            if (isset($vehicleData['model_year']) && !isset($vehicleData['model_year_id'])) {
+                $modelYear = ModelYear::firstOrCreate(
+                    ['name' => (string) $vehicleData['model_year']]
+                );
+                $vehicleData['model_year_id'] = $modelYear->id;
+                unset($vehicleData['model_year']);
             }
 
             // Separate equipment IDs if present

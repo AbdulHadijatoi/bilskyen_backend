@@ -53,6 +53,10 @@ Route::middleware('auth.web')->group(function () {
     // Profile Routes
     Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
     Route::post('/profile', [HomeController::class, 'updateProfile'])->name('profile.update');
+    
+    // Sell Your Car Routes
+    Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+    Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
 });
 
 // About Page

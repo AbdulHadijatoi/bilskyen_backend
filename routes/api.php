@@ -31,6 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/locations', [LookupController::class, 'locations']);
     Route::get('/fuel-types', [LookupController::class, 'fuelTypes']);
     Route::get('/transmissions', [LookupController::class, 'transmissions']);
+    Route::get('/models', [LookupController::class, 'models']);
     
     // Authentication routes
     Route::prefix('auth')->group(function () {
