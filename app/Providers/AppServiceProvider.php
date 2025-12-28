@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,5 +38,23 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
         }
+
+        // Configure named rate limiters for isolated endpoint rate limiting
+        // This prevents one endpoint's rate limit from affecting others
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        RateLimiter::for('auth.login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('auth.refresh', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
+
+        RateLimiter::for('auth.register', function (Request $request) {
+            return Limit::perMinute(6)->by($request->ip());
+        });
     }
 }

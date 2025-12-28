@@ -40,15 +40,15 @@ Route::prefix('v1')->group(function () {
     
     // Authentication routes
     Route::prefix('auth')->group(function () {
-        // Public auth routes with rate limiting
+        // Public auth routes with isolated rate limiting (named limiters prevent cross-endpoint interference)
         Route::post('/register', [AuthController::class, 'register'])
-            ->middleware(['throttle:6,1', 'idempotency']); // 6 requests per minute, idempotency
+            ->middleware(['throttle:auth.register', 'idempotency']); // 6 requests per minute, idempotency
         
         Route::post('/login', [AuthController::class, 'login'])
-            ->middleware('throttle:10,1'); // 10 requests per minute
+            ->middleware('throttle:auth.login'); // 10 requests per minute
         
         Route::post('/refresh', [AuthController::class, 'refresh'])
-            ->middleware('throttle:20,1'); // 20 requests per minute
+            ->middleware('throttle:auth.refresh'); // 20 requests per minute
         
         // Protected routes (use auth:api middleware - standardized)
         Route::middleware('auth:api')->group(function () {
