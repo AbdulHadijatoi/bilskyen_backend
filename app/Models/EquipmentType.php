@@ -6,7 +6,7 @@ use App\Traits\CachedLookup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Brand extends Model
+class EquipmentType extends Model
 {
     use CachedLookup;
 
@@ -17,10 +17,10 @@ class Brand extends Model
     ];
 
     /**
-     * Get models for this brand
+     * Get equipments for this equipment type
      */
-    public function models(): HasMany
+    public function equipments(): HasMany
     {
-        return $this->hasMany(VehicleModel::class, 'brand_id');
+        return $this->hasMany(Equipment::class);
     }
 }

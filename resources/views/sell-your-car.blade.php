@@ -109,7 +109,7 @@
     </div>
 
     <!-- Vehicle Form -->
-    <form id="vehicle-form" method="POST" action="{{ route('sell-your-car.store') }}" enctype="multipart/form-data">
+    <form id="vehicle-form" method="POST" action="{{ route('sell-your-car.store') }}" enctype="multipart/form-data" class="hidden">
         @csrf
 
         <!-- Basic Information Section -->

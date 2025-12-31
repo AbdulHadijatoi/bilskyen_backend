@@ -8,9 +8,7 @@
                 <p class="text-sm text-muted-foreground">
                     Bilskyen - Driving trust and value with quality pre-owned vehicles for every journey.
                 </p>
-                <span class="block text-xs text-muted-foreground">
-                    Version 1.0.0
-                </span>
+
                 <ul class="flex items-center space-x-6 text-muted-foreground">
                     <li class="font-medium duration-300 hover:text-primary">
                         <a href="#" aria-label="Instagram">

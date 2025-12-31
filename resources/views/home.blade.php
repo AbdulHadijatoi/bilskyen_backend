@@ -8,13 +8,225 @@
 
 @section('content')
 <div class="flex min-h-screen flex-col pt-0">
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-b from-muted/60 to-muted py-20 md:py-32">
+    <!-- Search Section -->
+    <section class="relative bg-gradient-to-b from-muted/60 to-muted py-12 md:py-16">
+    
         <div class="container mx-auto px-4 md:px-6">
-            <div class="max-w-4xl space-y-8">
+            <div class="mb-6">
                 <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">
                     Find Your Perfect Vehicle at Bilskyen
                 </h1>
+            </div>
+            <div class="rounded-lg bg-card p-4 md:p-6 shadow-lg">
+                <p class="text-muted-foreground text-base md:text-lg mb-4">
+                    Search our inventory to find the perfect match for your needs.
+                </p>
+
+                <div class="flex flex-col gap-4">
+                <!-- First Row: 4 Dropdown Fields (equal width) -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <!-- Brand Dropdown -->
+                    <div class="relative flex-1" data-dropdown="brand">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Brand</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                            <div class="p-2 border-b border-border">
+                                <input type="text" placeholder="Search brand..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Brands</button>
+                                @foreach($filterOptions['brands'] as $brand)
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}">{{ $brand->name }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="brand_id" value="" class="dropdown-input">
+                        </div>
+
+                    <!-- Model Dropdown -->
+                    <div class="relative flex-1" data-dropdown="model">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Model</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                            <div class="p-2 border-b border-border">
+                                <input type="text" placeholder="Search model..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Models</button>
+                                @foreach($filterOptions['models'] as $model)
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}">{{ $model->name }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="model_id" value="" class="dropdown-input">
+                        </div>
+
+                    <!-- Model Year Dropdown -->
+                    <div class="relative flex-1" data-dropdown="model_year">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Model Year</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                            <div class="p-2 border-b border-border">
+                                <input type="text" placeholder="Search year..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Years</button>
+                                @foreach($filterOptions['modelYears'] as $modelYear)
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}">{{ $modelYear->name }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="model_year_id" value="" class="dropdown-input">
+                        </div>
+
+                    <!-- Fuel Type Dropdown -->
+                    <div class="relative flex-1" data-dropdown="fuel_type">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Fuel Type</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                            <div class="p-2 border-b border-border">
+                                <input type="text" placeholder="Search fuel type..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Fuel Types</button>
+                                @foreach($filterOptions['fuelTypes'] as $fuelType)
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}">{{ $fuelType->name }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="fuel_type_id" value="" class="dropdown-input">
+                    </div>
+                        </div>
+
+                <!-- Second Row: 3 Dropdown Fields + Search Button (equal width) -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <!-- Category Dropdown -->
+                    <div class="relative flex-1" data-dropdown="category">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Category</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
+                            <div class="p-2 border-b border-border">
+                                <input type="text" placeholder="Search category..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                            </div>
+                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Categories</button>
+                                @foreach($filterOptions['categories'] as $category)
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $category->id }}" data-text="{{ $category->name }}">{{ $category->name }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <input type="hidden" name="category_id" value="" class="dropdown-input">
+                        </div>
+
+                    <!-- Price Dropdown (with range slider) -->
+                    <div class="relative flex-1" data-dropdown="price">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">Price</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
+                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">Price Range</label>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="flex-1">
+                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="Min" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                </div>
+                                <span class="text-muted-foreground/60 text-sm">–</span>
+                                <div class="flex-1">
+                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="Max" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                </div>
+                            </div>
+                            <div class="relative px-1">
+                                <div class="relative h-0.5 bg-muted rounded-full">
+                                    <div id="price-range-track-dropdown" class="absolute h-0.5 bg-primary rounded-full"></div>
+                                    <input type="range" id="price-slider-min-dropdown" min="0" max="1000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                                    <input type="range" id="price-slider-max-dropdown" min="0" max="1000000" step="1000" value="1000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                                    <div id="price-handle-min-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                                    <div id="price-handle-max-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+
+                    <!-- KM Driven Dropdown (with range slider) -->
+                    <div class="relative flex-1" data-dropdown="km_driven">
+                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <span class="dropdown-selected">KM Driven</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
+                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">KM Driven Range</label>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="flex-1">
+                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="Min" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                </div>
+                                <span class="text-muted-foreground/60 text-sm">–</span>
+                                <div class="flex-1">
+                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="Max" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                </div>
+                            </div>
+                            <div class="relative px-1">
+                                <div class="relative h-0.5 bg-muted rounded-full">
+                                    <div id="km-driven-range-track" class="absolute h-0.5 bg-primary rounded-full"></div>
+                                    <input type="range" id="km-driven-slider-min" min="0" max="500000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                                    <input type="range" id="km-driven-slider-max" min="0" max="500000" step="1000" value="500000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                                    <div id="km-driven-handle-min" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                                    <div id="km-driven-handle-max" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <form method="GET" action="/vehicles" id="filter-form" class="flex-1">
+                        <button type="submit" class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.3-4.3"></path>
+                                </svg>
+                                Search
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Third Row: Reset Filters Link -->
+                <div class="flex flex-col sm:flex-row justify-start sm:justify-end gap-3 sm:gap-4">
+                    <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
+                        Reset Filters
+                            </button>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hero Section -->
+    <section class="relative bg-card py-16 md:py-20">
+        <div class="container mx-auto px-4 md:px-6">
+            <div class="max-w-4xl space-y-8">
                 <p class="text-xl text-muted-foreground">
                     Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.
                 </p>
@@ -26,111 +238,6 @@
                         Contact Us
                     </a>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Search Section -->
-    <section class="relative bg-card py-8">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="rounded-lg border border-border p-6 shadow-sm">
-                <div class="mb-6">
-                    <h2 class="flex items-center gap-2 text-2xl font-bold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.3-4.3"></path>
-                        </svg>
-                        Find Your Vehicle
-                    </h2>
-                    <p class="text-muted-foreground">
-                        Search our inventory to find the perfect match for your needs.
-                    </p>
-                </div>
-                <form class="space-y-6 overflow-auto" onsubmit="event.preventDefault(); window.location.href='/vehicles?' + new URLSearchParams(Object.fromEntries(new FormData(event.target))).toString();">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <div class="space-y-2">
-                            <label for="make" class="text-sm font-medium leading-none">Make</label>
-                            <select id="make" name="make" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">Any Make</option>
-                                <option value="Toyota">Toyota</option>
-                                <option value="Honda">Honda</option>
-                                <option value="Ford">Ford</option>
-                                <option value="BMW">BMW</option>
-                                <option value="Mercedes-Benz">Mercedes-Benz</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="model" class="text-sm font-medium leading-none">Model</label>
-                            <input id="model" name="model" type="text" placeholder="Any Model" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="vehicle-type" class="text-sm font-medium leading-none">Vehicle Type</label>
-                            <select id="vehicle-type" name="vehicleType" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">Any Type</option>
-                                <option value="Sedan">Sedan</option>
-                                <option value="SUV">SUV</option>
-                                <option value="Hatchback">Hatchback</option>
-                                <option value="Coupe">Coupe</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2 md:col-span-2 lg:col-span-1">
-                            <label for="min-price" class="text-sm font-medium leading-none">Min Price</label>
-                            <select id="min-price" name="minPrice" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">No Min</option>
-                                <option value="50000">50.000 kr.</option>
-                                <option value="100000">100.000 kr.</option>
-                                <option value="200000">200.000 kr.</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="max-price" class="text-sm font-medium leading-none">Max Price</label>
-                            <select id="max-price" name="maxPrice" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">No Max</option>
-                                <option value="200000">200.000 kr.</option>
-                                <option value="500000">500.000 kr.</option>
-                                <option value="1000000">1.000.000 kr.</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="min-year" class="text-sm font-medium leading-none">Min Year</label>
-                            <select id="min-year" name="minYear" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">No Min</option>
-                                <option value="2015">2015</option>
-                                <option value="2018">2018</option>
-                                <option value="2020">2020</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="max-year" class="text-sm font-medium leading-none">Max Year</label>
-                            <select id="max-year" name="maxYear" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="any">No Max</option>
-                                <option value="2020">2020</option>
-                                <option value="2022">2022</option>
-                                <option value="2024">2024</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="search" class="mr-2 text-sm font-medium whitespace-nowrap">Search</label>
-                        <div class="flex w-full items-center">
-                            <input id="search" name="search" type="text" placeholder="Search vehicles..." class="h-10 w-full rounded-r-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-l-none rounded-r-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.3-4.3"></path>
-                                </svg>
-                                Search
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
     </section>
@@ -607,6 +714,461 @@
         embla.on('reInit', updateButtonStates);
         updateButtonStates();
     });
+
+    // Searchable Dropdowns Functionality
+    function initSearchableDropdowns() {
+        const dropdowns = document.querySelectorAll('[data-dropdown]');
+        
+        dropdowns.forEach(dropdown => {
+            const button = dropdown.querySelector('button');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            const searchInput = dropdown.querySelector('.dropdown-search');
+            const options = dropdown.querySelectorAll('.dropdown-option');
+            const hiddenInput = dropdown.querySelector('.dropdown-input');
+            const selectedText = dropdown.querySelector('.dropdown-selected');
+            const dropdownType = dropdown.getAttribute('data-dropdown');
+            
+            // Toggle menu
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close all other dropdowns
+                dropdowns.forEach(d => {
+                    if (d !== dropdown) {
+                        d.querySelector('.dropdown-menu').classList.add('hidden');
+                    }
+                });
+                menu.classList.toggle('hidden');
+                if (!menu.classList.contains('hidden') && searchInput) {
+                    setTimeout(() => searchInput.focus(), 50);
+                }
+            });
+            
+            // Search functionality
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    options.forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            option.style.display = '';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Option selection (only for regular dropdowns, not range sliders)
+            if (dropdownType !== 'price' && dropdownType !== 'km_driven') {
+                options.forEach(option => {
+                    option.addEventListener('click', () => {
+                        const value = option.getAttribute('data-value');
+                        const text = option.getAttribute('data-text') || option.textContent.trim();
+                        
+                        if (hiddenInput) {
+                            hiddenInput.value = value;
+                        }
+                        
+                        if (value === '') {
+                            // Reset to default text
+                            const defaultTexts = {
+                                'category': 'Category',
+                                'brand': 'Brand',
+                                'model': 'Model',
+                                'model_year': 'Model Year',
+                                'fuel_type': 'Fuel Type'
+                            };
+                            selectedText.textContent = defaultTexts[dropdownType] || 'Select';
+                        } else {
+                            selectedText.textContent = text;
+                        }
+                        
+                        // Filter models based on selected brand
+                        if (dropdownType === 'brand') {
+                            filterModelsByBrand(value);
+                        }
+                        
+                        menu.classList.add('hidden');
+                    });
+                });
+            }
+            
+            // Update selected text for price and km_driven when range changes
+            if (dropdownType === 'price') {
+                const priceFromInput = document.getElementById('price-from-dropdown');
+                const priceToInput = document.getElementById('price-to-dropdown');
+                
+                const updatePriceText = () => {
+                    const from = priceFromInput?.value;
+                    const to = priceToInput?.value;
+                    if (from || to) {
+                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                        selectedText.textContent = `${fromText} - ${toText}`;
+                    } else {
+                        selectedText.textContent = 'Price';
+                    }
+                };
+                
+                if (priceFromInput) priceFromInput.addEventListener('input', updatePriceText);
+                if (priceToInput) priceToInput.addEventListener('input', updatePriceText);
+                updatePriceText();
+            }
+            
+            if (dropdownType === 'km_driven') {
+                const kmFromInput = document.getElementById('km-driven-from');
+                const kmToInput = document.getElementById('km-driven-to');
+                
+                const updateKmText = () => {
+                    const from = kmFromInput?.value;
+                    const to = kmToInput?.value;
+                    if (from || to) {
+                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                        selectedText.textContent = `${fromText} - ${toText} km`;
+                    } else {
+                        selectedText.textContent = 'KM Driven';
+                    }
+                };
+                
+                if (kmFromInput) kmFromInput.addEventListener('input', updateKmText);
+                if (kmToInput) kmToInput.addEventListener('input', updateKmText);
+                updateKmText();
+            }
+            
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    }
+    
+    // Filter models by brand
+    function filterModelsByBrand(brandId) {
+        const modelDropdown = document.querySelector('[data-dropdown="model"]');
+        if (!modelDropdown) return;
+        
+        const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
+        const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
+        
+        if (brandId === '') {
+            // Show all models
+            modelOptions.forEach(option => {
+                option.style.display = '';
+            });
+        } else {
+            // Show only models for selected brand
+            modelOptions.forEach(option => {
+                const optionBrandId = option.getAttribute('data-brand-id');
+                if (optionBrandId === brandId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Reset model selection if current selection doesn't match brand
+            const modelInput = modelDropdown.querySelector('.dropdown-input');
+            const selectedModelOption = Array.from(modelOptions).find(opt => 
+                opt.getAttribute('data-value') === modelInput?.value
+            );
+            if (selectedModelOption && selectedModelOption.style.display === 'none') {
+                if (modelInput) modelInput.value = '';
+                const selectedText = modelDropdown.querySelector('.dropdown-selected');
+                if (selectedText) selectedText.textContent = 'Model';
+            }
+        }
+    }
+    
+    // Range Slider for Price and KM Driven dropdowns
+    function initDropdownRangeSliders() {
+        // Price range slider
+        const priceConfig = {
+            minSlider: document.getElementById('price-slider-min-dropdown'),
+            maxSlider: document.getElementById('price-slider-max-dropdown'),
+            minInput: document.getElementById('price-from-dropdown'),
+            maxInput: document.getElementById('price-to-dropdown'),
+            minHandle: document.getElementById('price-handle-min-dropdown'),
+            maxHandle: document.getElementById('price-handle-max-dropdown'),
+            track: document.getElementById('price-range-track-dropdown'),
+            selectedText: document.querySelector('[data-dropdown="price"] .dropdown-selected'),
+            min: 0,
+            max: 1000000
+        };
+        
+        // KM Driven range slider
+        const kmDrivenConfig = {
+            minSlider: document.getElementById('km-driven-slider-min'),
+            maxSlider: document.getElementById('km-driven-slider-max'),
+            minInput: document.getElementById('km-driven-from'),
+            maxInput: document.getElementById('km-driven-to'),
+            minHandle: document.getElementById('km-driven-handle-min'),
+            maxHandle: document.getElementById('km-driven-handle-max'),
+            track: document.getElementById('km-driven-range-track'),
+            selectedText: document.querySelector('[data-dropdown="km_driven"] .dropdown-selected'),
+            min: 0,
+            max: 500000
+        };
+        
+        [priceConfig, kmDrivenConfig].forEach(config => {
+            if (!config.minSlider || !config.maxSlider) return;
+            
+            function updateSlider() {
+                const minVal = parseFloat(config.minSlider.value) || config.min;
+                const maxVal = parseFloat(config.maxSlider.value) || config.max;
+                
+                if (minVal > maxVal) {
+                    config.minSlider.value = maxVal;
+                    config.maxSlider.value = minVal;
+                }
+                
+                const finalMin = Math.min(minVal, maxVal);
+                const finalMax = Math.max(minVal, maxVal);
+                
+                config.minInput.value = finalMin === config.min ? '' : finalMin;
+                config.maxInput.value = finalMax === config.max ? '' : finalMax;
+                
+                const minPercent = ((finalMin - config.min) / (config.max - config.min)) * 100;
+                const maxPercent = ((finalMax - config.min) / (config.max - config.min)) * 100;
+                
+                config.minHandle.style.left = `calc(${minPercent}% - 12px)`;
+                config.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                
+                config.track.style.left = `${minPercent}%`;
+                config.track.style.width = `${maxPercent - minPercent}%`;
+                
+                // Update selected text
+                if (config.selectedText) {
+                    const from = config.minInput.value;
+                    const to = config.maxInput.value;
+                    if (from || to) {
+                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
+                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
+                        if (config === priceConfig) {
+                            config.selectedText.textContent = `${fromText} - ${toText}`;
+                        } else {
+                            config.selectedText.textContent = `${fromText} - ${toText} km`;
+                        }
+                    } else {
+                        config.selectedText.textContent = config === priceConfig ? 'Price' : 'KM Driven';
+                    }
+                }
+            }
+            
+            function updateFromInput(input, slider) {
+                const value = parseFloat(input.value);
+                if (!isNaN(value)) {
+                    const clampedValue = Math.max(config.min, Math.min(config.max, value));
+                    slider.value = clampedValue;
+                    input.value = clampedValue === config.min ? '' : clampedValue;
+                    updateSlider();
+                }
+            }
+            
+            updateSlider();
+            
+            config.minSlider.addEventListener('input', updateSlider);
+            config.maxSlider.addEventListener('input', updateSlider);
+            config.minInput.addEventListener('input', () => updateFromInput(config.minInput, config.minSlider));
+            config.maxInput.addEventListener('input', () => updateFromInput(config.maxInput, config.maxSlider));
+            
+            // Handle drag events for visual handles
+            let isDragging = false;
+            let activeHandle = null;
+            
+            [config.minHandle, config.maxHandle].forEach((handle, index) => {
+                handle.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    activeHandle = index === 0 ? config.minSlider : config.maxSlider;
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || !activeHandle) return;
+                
+                const sliderContainer = activeHandle.closest('.relative');
+                if (!sliderContainer) return;
+                
+                const rect = sliderContainer.getBoundingClientRect();
+                const percent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                const value = config.min + (percent / 100) * (config.max - config.min);
+                const step = parseFloat(activeHandle.step) || 1;
+                const steppedValue = Math.round(value / step) * step;
+                const clampedValue = Math.max(config.min, Math.min(config.max, steppedValue));
+                
+                activeHandle.value = clampedValue;
+                updateSlider();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                activeHandle = null;
+            });
+        });
+    }
+    
+    // Form submission handler
+    const filterForm = document.getElementById('filter-form');
+    if (filterForm) {
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Collect all filter values
+            const formData = new FormData();
+            
+            // Get all hidden inputs from dropdowns
+            document.querySelectorAll('.dropdown-input').forEach(input => {
+                if (input.value) {
+                    formData.append(input.name, input.value);
+                }
+            });
+            
+            // Get price and km_driven values
+            const priceFrom = document.getElementById('price-from-dropdown')?.value;
+            const priceTo = document.getElementById('price-to-dropdown')?.value;
+            const kmFrom = document.getElementById('km-driven-from')?.value;
+            const kmTo = document.getElementById('km-driven-to')?.value;
+            
+            if (priceFrom) formData.append('price_from', priceFrom);
+            if (priceTo) formData.append('price_to', priceTo);
+            if (kmFrom) formData.append('km_driven_from', kmFrom);
+            if (kmTo) formData.append('km_driven_to', kmTo);
+            
+            // Build query string
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+            
+            // Navigate to vehicles page with filters
+            window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
+        });
+    }
+    
+    // Reset filters function
+    function resetAllFilters() {
+        // Reset all dropdown hidden inputs
+        document.querySelectorAll('.dropdown-input').forEach(input => {
+            input.value = '';
+        });
+        
+        // Reset all dropdown selected text to default values
+        const defaultTexts = {
+            'category': 'Category',
+            'brand': 'Brand',
+            'model': 'Model',
+            'model_year': 'Model Year',
+            'fuel_type': 'Fuel Type'
+        };
+        
+        document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
+            const dropdownType = dropdown.getAttribute('data-dropdown');
+            const selectedText = dropdown.querySelector('.dropdown-selected');
+            if (selectedText && defaultTexts[dropdownType]) {
+                selectedText.textContent = defaultTexts[dropdownType];
+            }
+        });
+        
+        // Reset price range
+        const priceFromInput = document.getElementById('price-from-dropdown');
+        const priceToInput = document.getElementById('price-to-dropdown');
+        const priceMinSlider = document.getElementById('price-slider-min-dropdown');
+        const priceMaxSlider = document.getElementById('price-slider-max-dropdown');
+        const priceSelectedText = document.querySelector('[data-dropdown="price"] .dropdown-selected');
+        
+        if (priceFromInput) priceFromInput.value = '';
+        if (priceToInput) priceToInput.value = '';
+        if (priceMinSlider) priceMinSlider.value = '0';
+        if (priceMaxSlider) priceMaxSlider.value = '1000000';
+        if (priceSelectedText) priceSelectedText.textContent = 'Price';
+        
+        // Reset KM driven range
+        const kmFromInput = document.getElementById('km-driven-from');
+        const kmToInput = document.getElementById('km-driven-to');
+        const kmMinSlider = document.getElementById('km-driven-slider-min');
+        const kmMaxSlider = document.getElementById('km-driven-slider-max');
+        const kmSelectedText = document.querySelector('[data-dropdown="km_driven"] .dropdown-selected');
+        
+        if (kmFromInput) kmFromInput.value = '';
+        if (kmToInput) kmToInput.value = '';
+        if (kmMinSlider) kmMinSlider.value = '0';
+        if (kmMaxSlider) kmMaxSlider.value = '500000';
+        if (kmSelectedText) kmSelectedText.textContent = 'KM Driven';
+        
+        // Update range slider visuals
+        if (priceMinSlider && priceMaxSlider) {
+            const priceConfig = {
+                minSlider: priceMinSlider,
+                maxSlider: priceMaxSlider,
+                minInput: priceFromInput,
+                maxInput: priceToInput,
+                minHandle: document.getElementById('price-handle-min-dropdown'),
+                maxHandle: document.getElementById('price-handle-max-dropdown'),
+                track: document.getElementById('price-range-track-dropdown'),
+                min: 0,
+                max: 1000000
+            };
+            
+            const updatePriceSlider = () => {
+                const minPercent = 0;
+                const maxPercent = 100;
+                if (priceConfig.minHandle) priceConfig.minHandle.style.left = `calc(${minPercent}% - 12px)`;
+                if (priceConfig.maxHandle) priceConfig.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                if (priceConfig.track) {
+                    priceConfig.track.style.left = `${minPercent}%`;
+                    priceConfig.track.style.width = `${maxPercent - minPercent}%`;
+                }
+            };
+            updatePriceSlider();
+        }
+        
+        if (kmMinSlider && kmMaxSlider) {
+            const kmConfig = {
+                minSlider: kmMinSlider,
+                maxSlider: kmMaxSlider,
+                minHandle: document.getElementById('km-driven-handle-min'),
+                maxHandle: document.getElementById('km-driven-handle-max'),
+                track: document.getElementById('km-driven-range-track'),
+                min: 0,
+                max: 500000
+            };
+            
+            const updateKmSlider = () => {
+                const minPercent = 0;
+                const maxPercent = 100;
+                if (kmConfig.minHandle) kmConfig.minHandle.style.left = `calc(${minPercent}% - 12px)`;
+                if (kmConfig.maxHandle) kmConfig.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                if (kmConfig.track) {
+                    kmConfig.track.style.left = `${minPercent}%`;
+                    kmConfig.track.style.width = `${maxPercent - minPercent}%`;
+                }
+            };
+            updateKmSlider();
+        }
+        
+        // Reset model dropdown options visibility (show all models)
+        const modelDropdown = document.querySelector('[data-dropdown="model"]');
+        if (modelDropdown) {
+            const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
+            modelOptions.forEach(option => {
+                option.style.display = '';
+            });
+        }
+    }
+    
+    // Reset filters button handler
+    const resetFiltersButton = document.getElementById('reset-filters-button');
+    if (resetFiltersButton) {
+        resetFiltersButton.addEventListener('click', resetAllFilters);
+    }
+    
+    // Initialize everything
+    initSearchableDropdowns();
+    initDropdownRangeSliders();
 </script>
 @endsection
 

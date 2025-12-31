@@ -33,7 +33,29 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        // Fetch filter options for the view
+        $filterOptions = [
+            'categories' => Category::orderBy('name')->get(),
+            'listingTypes' => ListingType::orderBy('name')->get(),
+            'priceTypes' => PriceType::orderBy('name')->get(),
+            'bodyTypes' => BodyType::orderBy('name')->get(),
+            'gearTypes' => GearType::orderBy('name')->get(),
+            'fuelTypes' => FuelType::orderBy('name')->get(),
+            'equipment' => Equipment::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name')->get(),
+            'models' => VehicleModel::orderBy('name')->get(),
+            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
+            'conditions' => Condition::orderBy('name')->get(),
+            'salesTypes' => SalesType::orderBy('name')->get(),
+        ];
+
+        // Popular brands (most common brands - can be customized)
+        $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
+        $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
+
+        return view('home', [
+            'filterOptions' => $filterOptions,
+        ]);
     }
 
     /**

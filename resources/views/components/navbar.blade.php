@@ -1,4 +1,4 @@
-<header class="bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-40 w-full border-b border-border backdrop-blur" id="navbar">
+<header class="bg-background/95 supports-[backdrop-filter]:bg-background/60 w-full border-b border-border backdrop-blur" id="navbar">
     <div class="container mx-auto px-4 md:px-6">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-2">
@@ -20,15 +20,4 @@
         </div>
     </div>
 </header>
-
-<script>
-// Set navbar height CSS variable
-document.addEventListener('DOMContentLoaded', function() {
-    const navbar = document.getElementById('navbar');
-    if (navbar) {
-        const height = navbar.offsetHeight;
-        document.documentElement.style.setProperty('--navbar-height', height + 'px');
-    }
-});
-</script>
 

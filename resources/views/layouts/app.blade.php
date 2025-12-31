@@ -118,7 +118,6 @@
         }
         
         main {
-            padding-top: var(--navbar-height, 64px);
         }
         
         .container {
