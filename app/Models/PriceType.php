@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PriceType extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
 

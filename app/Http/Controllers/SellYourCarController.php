@@ -10,6 +10,7 @@ use App\Models\FuelType;
 use App\Models\Location;
 use App\Models\ListingType;
 use App\Models\VehicleListStatus;
+use App\Constants\VehicleListStatus as VehicleListStatusConstant;
 use App\Models\BodyType;
 use App\Models\Color;
 use App\Models\Type;
@@ -47,6 +48,7 @@ class SellYourCarController extends Controller
 
         // Load all lookup data for dropdowns
         $lookupData = [
+            'models' => VehicleModel::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
             'categories' => Category::orderBy('name')->get(),
             'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
@@ -64,6 +66,7 @@ class SellYourCarController extends Controller
             'salesTypes' => SalesType::orderBy('name')->get(),
             'equipment' => Equipment::orderBy('name')->get(),
         ];
+
 
         return view('sell-your-car', [
             'user' => $user,
@@ -102,7 +105,7 @@ class SellYourCarController extends Controller
             'towing_weight' => 'nullable|integer|min:0',
             'ownership_tax' => 'nullable|integer|min:0',
             'first_registration_date' => 'nullable|date',
-            'vehicle_list_status_id' => 'required|exists:vehicle_list_statuses,id',
+            'vehicle_list_status_id' => 'nullable|exists:vehicle_list_statuses,id',
             'published_at' => 'nullable|date',
             'equipment_ids' => 'nullable|array',
             'equipment_ids.*' => 'exists:equipments,id',
@@ -111,6 +114,15 @@ class SellYourCarController extends Controller
         ]);
 
         if ($validator->fails()) {
+            // Handle AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return back()
                 ->withErrors($validator)
                 ->withInput();
@@ -143,33 +155,29 @@ class SellYourCarController extends Controller
 
             // Set user_id and dealer_id
             $vehicleData['user_id'] = $user->id;
-            $dealer = $user->dealers()->first();
-            
-            // If user doesn't have a dealer, create a default "Individual Seller" dealer
-            if (!$dealer) {
-                $dealer = DB::transaction(function () use ($user) {
-                    // Create a default dealer for individual sellers
-                    $dealer = Dealer::create([
-                        'cvr' => 'INDIVIDUAL-' . $user->id . '-' . time(),
-                        'address' => '',
-                        'city' => '',
-                        'postcode' => '',
-                        'country_code' => 'DK',
-                    ]);
 
-                    // Associate user with dealer
-                    DealerUser::create([
-                        'dealer_id' => $dealer->id,
-                        'user_id' => $user->id,
-                        'role_id' => 1, // ROLE_OWNER
-                        'created_at' => now(),
-                    ]);
-
-                    return $dealer;
-                });
+            // Set default listing_type_id to "Purchase" if not provided
+            if (!isset($vehicleData['listing_type_id']) || empty($vehicleData['listing_type_id'])) {
+                $purchaseType = \App\Models\ListingType::where('name', 'Purchase')->first();
+                if ($purchaseType) {
+                    $vehicleData['listing_type_id'] = $purchaseType->id;
+                }
             }
-            
-            $vehicleData['dealer_id'] = $dealer->id;
+
+            // Set default vehicle_list_status_id to PUBLISHED if not provided
+            if (!isset($vehicleData['vehicle_list_status_id']) || empty($vehicleData['vehicle_list_status_id'])) {
+                $vehicleData['vehicle_list_status_id'] = VehicleListStatusConstant::PUBLISHED; // 2
+            }
+
+            // Set published_at based on status (current time if published, null otherwise)
+            if (!isset($vehicleData['published_at']) || empty($vehicleData['published_at'])) {
+                if (isset($vehicleData['vehicle_list_status_id']) && 
+                    $vehicleData['vehicle_list_status_id'] == VehicleListStatusConstant::PUBLISHED) {
+                    $vehicleData['published_at'] = now();
+                } else {
+                    $vehicleData['published_at'] = null;
+                }
+            }
 
             // Add equipment IDs if provided
             if ($request->has('equipment_ids')) {
@@ -178,7 +186,7 @@ class SellYourCarController extends Controller
 
             // Add vehicle details if provided
             $detailsFields = [
-                'description', 'vin_location', 'type_id', 'version', 'type_name',
+                'description', 'vin_location', 'vehicle_external_id', 'type_id', 'version', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
@@ -207,9 +215,28 @@ class SellYourCarController extends Controller
             // Create vehicle
             $vehicle = $this->vehicleService->createVehicle($vehicleData);
 
+            // Handle AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Vehicle listed successfully!',
+                    'vehicle_id' => $vehicle->id,
+                    'redirect_url' => route('vehicle.detail', ['serialNo' => $vehicle->id])
+                ]);
+            }
+
             return redirect()->route('vehicle.detail', ['serialNo' => $vehicle->id])
                 ->with('success', 'Vehicle listed successfully!');
         } catch (\Exception $e) {
+            // Handle AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to create vehicle: ' . $e->getMessage(),
+                    'errors' => ['error' => [$e->getMessage()]]
+                ], 500);
+            }
+            
             return back()
                 ->withErrors(['error' => 'Failed to create vehicle: ' . $e->getMessage()])
                 ->withInput();

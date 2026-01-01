@@ -85,7 +85,7 @@
                         {{ $vehicle->variant }}
                     </p>
                     <p class="text-primary text-2xl font-medium">
-                        {{ FormatHelper::formatCurrency($vehicle->listing_price) }}
+                        {{ FormatHelper::formatCurrency($vehicle->listing_price ?? null) }}
                     </p>
                 </div>
 
@@ -151,7 +151,7 @@
             <!-- Vehicle Actions -->
             <div class="mt-auto p-4 pt-2">
                 <div class="flex w-full flex-col gap-2 sm:flex-row">
-                    <a href="/vehicles/{{ $vehicle->serial_no }}" class="flex-1">
+                    <a href="/vehicles/{{ $vehicle->id }}" class="flex-1">
                         <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                             View Details
                         </button>

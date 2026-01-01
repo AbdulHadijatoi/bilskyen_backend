@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class VehicleUse extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
 

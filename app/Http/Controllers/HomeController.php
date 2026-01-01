@@ -216,15 +216,20 @@ class HomeController extends Controller
     /**
      * Show the vehicle detail page
      *
-     * @param string $serialNo
+     * @param int $serialNo
      * @return \Illuminate\View\View
      */
     public function showVehicleDetail($serialNo)
     {
-        $vehicle = Vehicle::where('serial_no', $serialNo)->firstOrFail();
+        $vehicle = Vehicle::with([
+            'details',
+            'equipment',
+            'location',
+            'listingType',
+            'images'
+        ])->findOrFail($serialNo);
 
         return view('vehicle-detail', [
-            'serialNo' => $serialNo,
             'vehicle' => $vehicle,
         ]);
     }

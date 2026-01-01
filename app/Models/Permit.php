@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Permit extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
 

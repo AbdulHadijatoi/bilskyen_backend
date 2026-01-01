@@ -69,7 +69,7 @@ Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 
 // Vehicle Details Page
-Route::get('/vehicles/{serialNo}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
+Route::get('/vehicles/{id}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
 
 // Route::get('/test-mail', function () {

@@ -15,6 +15,8 @@ use App\Models\Condition;
 use App\Models\Permit;
 use App\Models\SalesType;
 use App\Models\VehicleListStatus;
+use App\Models\ListingType;
+use App\Models\PriceType;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -119,6 +121,21 @@ class SyncNummerpladeReferenceData extends Command
                 'Sold',
                 'Archived'
             ], 'vehicle list statuses');
+
+            // Sync Listing Types (hardcoded values)
+            $this->info('Syncing listing types...');
+            $this->syncHardcodedLookupTable(ListingType::class, [
+                'Purchase',
+                'Leasing'
+            ], 'listing types');
+
+            // Sync Price Types (hardcoded values)
+            $this->info('Syncing price types...');
+            $this->syncHardcodedLookupTable(PriceType::class, [
+                'Retail',
+                'Without Tax',
+                'Wholesale'
+            ], 'price types');
 
             DB::commit();
             $this->info('Reference data sync completed successfully!');

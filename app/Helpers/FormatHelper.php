@@ -9,12 +9,17 @@ class FormatHelper
     /**
      * Format currency value
      *
-     * @param float $amount
+     * @param float|null $amount
      * @param string|null $currency Currency code (default: DKK)
      * @return string
      */
-    public static function formatCurrency(float $amount, ?string $currency = 'DKK'): string
+    public static function formatCurrency(?float $amount, ?string $currency = 'DKK'): string
     {
+        // Handle null amount
+        if ($amount === null) {
+            return 'N/A';
+        }
+
         if ($currency === 'DKK') {
             // Format Danish Krone with dot as thousands separator and comma as decimal separator
             return number_format($amount, 0, ',', '.') . ' kr.';

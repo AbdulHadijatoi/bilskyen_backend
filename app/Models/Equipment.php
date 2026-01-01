@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Equipment extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
 
@@ -33,7 +33,6 @@ class Equipment extends Model
      */
     public function vehicles(): BelongsToMany
     {
-        return $this->belongsToMany(Vehicle::class, 'vehicle_equipment')
-            ->withTimestamps();
+        return $this->belongsToMany(Vehicle::class, 'vehicle_equipment');
     }
 }

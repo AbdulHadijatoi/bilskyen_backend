@@ -15,6 +15,7 @@ class VehicleDetail extends Model
 
     protected $fillable = [
         'vehicle_id',
+        'vehicle_external_id',
         'description',
         'views_count',
         'vin_location',
@@ -73,7 +74,7 @@ class VehicleDetail extends Model
         'total_weight' => 'integer',
         'vehicle_weight' => 'integer',
         'technical_total_weight' => 'integer',
-        'coupling' => 'integer',
+        'coupling' => 'boolean',
         'towing_weight_brakes' => 'integer',
         'minimum_weight' => 'integer',
         'gross_combination_weight' => 'integer',

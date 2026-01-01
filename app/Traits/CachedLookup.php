@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Builder;
 
 trait CachedLookup
@@ -80,16 +81,26 @@ trait CachedLookup
              */
             public function get($columns = ['*'])
             {
-                // Only cache simple queries
-                if (!$this->isCacheableQuery()) {
+                // Don't cache if this is part of a write operation (firstOrCreate, update, etc.)
+                // Check if we're in a transaction or if this is a write operation
+                if ($this->getQuery()->useWritePdo || !$this->isCacheableQuery()) {
                     return parent::get($columns);
                 }
 
-                $cacheKey = $this->getCacheKey($columns);
-                
-                return Cache::remember($cacheKey, $this->cacheTtl, function () use ($columns) {
+                try {
+                    $cacheKey = $this->getCacheKey($columns);
+                    
+                    return Cache::remember($cacheKey, $this->cacheTtl, function () use ($columns) {
+                        return parent::get($columns);
+                    });
+                } catch (\Exception $e) {
+                    // If caching fails (e.g., serialization error), just execute the query
+                    Log::warning('CachedLookup: Failed to cache query', [
+                        'error' => $e->getMessage(),
+                        'table' => $this->getQuery()->from ?? 'unknown',
+                    ]);
                     return parent::get($columns);
-                });
+                }
             }
 
             /**
@@ -123,16 +134,40 @@ trait CachedLookup
             {
                 $query = $this->getQuery();
                 
-                $key = md5(serialize([
+                // Build cache key without serializing PDO connections
+                $keyData = [
                     'table' => $query->from,
-                    'wheres' => $query->wheres ?? [],
+                    'wheres' => $this->sanitizeWheres($query->wheres ?? []),
                     'orders' => $query->orders ?? [],
                     'columns' => $columns,
                     'limit' => $query->limit,
                     'offset' => $query->offset,
-                ]));
+                    'bindings' => $query->bindings ?? [],
+                ];
+
+                $key = md5(json_encode($keyData));
 
                 return "{$this->cachePrefix}_query_{$key}";
+            }
+
+            /**
+             * Sanitize where clauses to remove non-serializable elements
+             */
+            protected function sanitizeWheres(array $wheres): array
+            {
+                $sanitized = [];
+                foreach ($wheres as $where) {
+                    $sanitizedWhere = [];
+                    foreach ($where as $key => $value) {
+                        // Skip PDO connections and other non-serializable objects
+                        if (is_object($value) && !($value instanceof \Closure)) {
+                            continue;
+                        }
+                        $sanitizedWhere[$key] = $value;
+                    }
+                    $sanitized[] = $sanitizedWhere;
+                }
+                return $sanitized;
             }
         };
     }

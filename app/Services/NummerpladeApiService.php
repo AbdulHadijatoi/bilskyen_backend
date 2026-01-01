@@ -3,6 +3,24 @@
 namespace App\Services;
 
 use App\Exceptions\NummerpladeApiException;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\FuelType;
+use App\Models\ModelYear;
+use App\Models\VehicleModel;
+use App\Models\BodyType;
+use App\Models\Color;
+use App\Models\Condition;
+use App\Models\GearType;
+use App\Models\ListingType;
+use App\Models\PriceType;
+use App\Models\SalesType;
+use App\Models\Type;
+use App\Models\VehicleUse;
+use App\Models\Equipment;
+use App\Models\EquipmentType;
+use App\Models\Permit;
+use App\Models\Transmission;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -36,7 +54,7 @@ class NummerpladeApiService
     {
         $cacheKey = "nummerplade:vehicle:registration:{$registration}:advanced:" . ($advanced ? '1' : '0');
 
-        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($registration, $advanced) {
+        $data = Cache::remember($cacheKey, $this->cacheTtl, function () use ($registration, $advanced) {
             // Use longer timeout for vehicle lookups (they can be slow)
             $vehicleLookupTimeout = config('nummerplade.vehicle_lookup_timeout', 60);
             
@@ -67,6 +85,9 @@ class NummerpladeApiService
                 throw NummerpladeApiException::unknown($e->getMessage());
             }
         });
+
+        // Process the data to replace lookup values with IDs
+        return $this->processLookupData($data);
     }
 
     /**
@@ -427,6 +448,327 @@ class NummerpladeApiService
             ]);
             throw NummerpladeApiException::unknown($e->getMessage());
         }
+    }
+
+    /**
+     * Process lookup data - replace names with IDs from database
+     * Creates records if they don't exist
+     */
+    protected function processLookupData(array $data): array
+    {
+        // Process nested arrays recursively
+        foreach ($data as $key => $value) {
+            if (is_array($value) && !$this->isNumericArray($value)) {
+                // Recursively process nested associative arrays
+                $data[$key] = $this->processLookupData($value);
+            }
+        }
+
+        // Process brand first (model depends on it)
+        $brandId = null;
+        if (isset($data['brand'])) {
+            if (is_string($data['brand'])) {
+                $brandId = $this->getOrCreateBrand($data['brand']);
+                $data['brand'] = $brandId;
+            } elseif (is_array($data['brand']) && isset($data['brand']['name'])) {
+                $brandId = $this->getOrCreateBrand($data['brand']['name']);
+                $data['brand'] = $brandId;
+            }
+        } elseif (isset($data['make'])) {
+            if (is_string($data['make'])) {
+                $brandId = $this->getOrCreateBrand($data['make']);
+                $data['make'] = $brandId;
+            } elseif (is_array($data['make']) && isset($data['make']['name'])) {
+                $brandId = $this->getOrCreateBrand($data['make']['name']);
+                $data['make'] = $brandId;
+            }
+        }
+
+        // Process model (needs brand_id, so process brand first)
+        if (isset($data['model'])) {
+            $modelName = null;
+            if (is_string($data['model'])) {
+                $modelName = $data['model'];
+            } elseif (is_array($data['model']) && isset($data['model']['name'])) {
+                $modelName = $data['model']['name'];
+            }
+
+            if ($modelName) {
+                // Use the brandId we just got, or check if it's already an ID
+                if ($brandId) {
+                    $modelId = $this->getOrCreateModel($modelName, $brandId);
+                    $data['model'] = $modelId;
+                } elseif (isset($data['brand']) && is_int($data['brand'])) {
+                    // Brand was already converted to ID
+                    $modelId = $this->getOrCreateModel($modelName, $data['brand']);
+                    $data['model'] = $modelId;
+                } elseif (isset($data['make']) && is_int($data['make'])) {
+                    // Make was already converted to ID
+                    $modelId = $this->getOrCreateModel($modelName, $data['make']);
+                    $data['model'] = $modelId;
+                }
+            }
+        }
+
+        // Process model_year
+        if (isset($data['model_year']) && is_string($data['model_year'])) {
+            $yearId = $this->getOrCreateModelYear($data['model_year']);
+            $data['model_year'] = $yearId;
+        } elseif (isset($data['year']) && is_string($data['year'])) {
+            $yearId = $this->getOrCreateModelYear($data['year']);
+            $data['year'] = $yearId;
+        }
+
+        // Process category
+        if (isset($data['category']) && is_string($data['category'])) {
+            $categoryId = $this->getOrCreateCategory($data['category']);
+            $data['category'] = $categoryId;
+        } elseif (isset($data['vehicleType']) && is_string($data['vehicleType'])) {
+            $categoryId = $this->getOrCreateCategory($data['vehicleType']);
+            $data['vehicleType'] = $categoryId;
+        }
+
+        // Process fuel_type
+        if (isset($data['fuel_type']) && is_string($data['fuel_type'])) {
+            $fuelTypeId = $this->getOrCreateFuelType($data['fuel_type']);
+            $data['fuel_type'] = $fuelTypeId;
+        } elseif (isset($data['fuelType']) && is_string($data['fuelType'])) {
+            $fuelTypeId = $this->getOrCreateFuelType($data['fuelType']);
+            $data['fuelType'] = $fuelTypeId;
+        }
+
+        // Process body_type
+        if (isset($data['body_type']) && is_string($data['body_type'])) {
+            $bodyTypeId = $this->getOrCreateBodyType($data['body_type']);
+            $data['body_type'] = $bodyTypeId;
+        } elseif (isset($data['bodyType']) && is_string($data['bodyType'])) {
+            $bodyTypeId = $this->getOrCreateBodyType($data['bodyType']);
+            $data['bodyType'] = $bodyTypeId;
+        }
+
+        // Process color
+        if (isset($data['color']) && is_string($data['color'])) {
+            $colorId = $this->getOrCreateColor($data['color']);
+            $data['color'] = $colorId;
+        }
+
+        // Process condition
+        if (isset($data['condition']) && is_string($data['condition'])) {
+            $conditionId = $this->getOrCreateCondition($data['condition']);
+            $data['condition'] = $conditionId;
+        }
+
+        // Process gear_type
+        if (isset($data['gear_type']) && is_string($data['gear_type'])) {
+            $gearTypeId = $this->getOrCreateGearType($data['gear_type']);
+            $data['gear_type'] = $gearTypeId;
+        } elseif (isset($data['gearType']) && is_string($data['gearType'])) {
+            $gearTypeId = $this->getOrCreateGearType($data['gearType']);
+            $data['gearType'] = $gearTypeId;
+        }
+
+        // Process transmission
+        if (isset($data['transmission']) && is_string($data['transmission'])) {
+            $transmissionId = $this->getOrCreateTransmission($data['transmission']);
+            $data['transmission'] = $transmissionId;
+        }
+
+        // Process type
+        if (isset($data['type']) && is_string($data['type'])) {
+            $typeId = $this->getOrCreateType($data['type']);
+            $data['type'] = $typeId;
+        }
+
+        // Process use
+        if (isset($data['use']) && is_string($data['use'])) {
+            $useId = $this->getOrCreateUse($data['use']);
+            $data['use'] = $useId;
+        }
+
+        // Process equipment (if it's an array)
+        if (isset($data['equipment']) && is_array($data['equipment'])) {
+            $equipmentIds = [];
+            foreach ($data['equipment'] as $equipment) {
+                if (is_string($equipment)) {
+                    $equipmentId = $this->getOrCreateEquipment($equipment);
+                    $equipmentIds[] = $equipmentId;
+                } elseif (is_array($equipment) && isset($equipment['name'])) {
+                    $equipmentId = $this->getOrCreateEquipment($equipment['name']);
+                    $equipmentIds[] = $equipmentId;
+                }
+            }
+            $data['equipment'] = $equipmentIds;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get or create brand
+     */
+    protected function getOrCreateBrand(string $name): int
+    {
+        $brand = Brand::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $brand->id;
+    }
+
+    /**
+     * Get or create model
+     */
+    protected function getOrCreateModel(string $name, int $brandId): int
+    {
+        $model = VehicleModel::firstOrCreate(
+            ['name' => trim($name), 'brand_id' => $brandId],
+            ['name' => trim($name), 'brand_id' => $brandId]
+        );
+        return $model->id;
+    }
+
+    /**
+     * Get or create model year
+     */
+    protected function getOrCreateModelYear(string $year): int
+    {
+        $yearStr = trim((string) $year);
+        $modelYear = ModelYear::firstOrCreate(
+            ['name' => $yearStr],
+            ['name' => $yearStr]
+        );
+        return $modelYear->id;
+    }
+
+    /**
+     * Get or create category
+     */
+    protected function getOrCreateCategory(string $name): int
+    {
+        $category = Category::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $category->id;
+    }
+
+    /**
+     * Get or create fuel type
+     */
+    protected function getOrCreateFuelType(string $name): int
+    {
+        $fuelType = FuelType::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $fuelType->id;
+    }
+
+    /**
+     * Get or create body type
+     */
+    protected function getOrCreateBodyType(string $name): int
+    {
+        $bodyType = BodyType::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $bodyType->id;
+    }
+
+    /**
+     * Get or create color
+     */
+    protected function getOrCreateColor(string $name): int
+    {
+        $color = Color::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $color->id;
+    }
+
+    /**
+     * Get or create condition
+     */
+    protected function getOrCreateCondition(string $name): int
+    {
+        $condition = Condition::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $condition->id;
+    }
+
+    /**
+     * Get or create gear type
+     */
+    protected function getOrCreateGearType(string $name): int
+    {
+        $gearType = GearType::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $gearType->id;
+    }
+
+    /**
+     * Get or create transmission
+     */
+    protected function getOrCreateTransmission(string $name): int
+    {
+        $transmission = Transmission::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $transmission->id;
+    }
+
+    /**
+     * Get or create type
+     */
+    protected function getOrCreateType(string $name): int
+    {
+        $type = Type::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $type->id;
+    }
+
+    /**
+     * Get or create use
+     */
+    protected function getOrCreateUse(string $name): int
+    {
+        $use = VehicleUse::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $use->id;
+    }
+
+    /**
+     * Get or create equipment
+     */
+    protected function getOrCreateEquipment(string $name): int
+    {
+        $equipment = Equipment::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+        return $equipment->id;
+    }
+
+    /**
+     * Check if array is numeric (list) vs associative
+     */
+    protected function isNumericArray(array $array): bool
+    {
+        if (empty($array)) {
+            return true;
+        }
+        return array_keys($array) === range(0, count($array) - 1);
     }
 
     /**

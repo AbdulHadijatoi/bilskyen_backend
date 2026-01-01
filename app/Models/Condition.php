@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Condition extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
 

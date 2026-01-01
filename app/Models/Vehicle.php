@@ -111,14 +111,15 @@ class Vehicle extends Model
 
         // Check Laravel cache (24 hour TTL)
         $cached = Cache::remember("vehicle_lookup_{$cacheKey}", 86400, function () use ($table, $id) {
+            // Use direct database queries to avoid recursive loops with relationships
             $model = match ($table) {
-                'categories' => Category::find($id),
-                'brands' => Brand::find($id),
-                'models' => VehicleModel::find($id),
-                'model_years' => ModelYear::find($id),
-                'fuel_types' => FuelType::find($id),
-                'vehicle_list_statuses' => VehicleListStatus::find($id),
-                'listing_types' => ListingType::find($id),
+                'categories' => Category::withoutGlobalScopes()->find($id),
+                'brands' => Brand::withoutGlobalScopes()->find($id),
+                'models' => VehicleModel::withoutGlobalScopes()->find($id),
+                'model_years' => ModelYear::withoutGlobalScopes()->find($id),
+                'fuel_types' => FuelType::withoutGlobalScopes()->find($id),
+                'vehicle_list_statuses' => VehicleListStatus::withoutGlobalScopes()->select('id', 'name')->find($id),
+                'listing_types' => ListingType::withoutGlobalScopes()->find($id),
                 default => null,
             };
 
@@ -266,8 +267,7 @@ class Vehicle extends Model
      */
     public function equipment(): BelongsToMany
     {
-        return $this->belongsToMany(Equipment::class, 'vehicle_equipment')
-            ->withTimestamps();
+        return $this->belongsToMany(Equipment::class, 'vehicle_equipment');
     }
 
     /**

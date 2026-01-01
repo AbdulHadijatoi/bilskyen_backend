@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VehicleModel extends Model
 {
-    use CachedLookup;
+    // use CachedLookup;
 
     public $timestamps = false;
     protected $table = 'models';
