@@ -708,12 +708,29 @@ class VehicleService
             $query->where('vehicles.engine_power', '<=', $advancedFilters['engine_power_to']);
         }
 
+        // Owner Tax range filter
+        if (!empty($advancedFilters['ownership_tax_from'])) {
+            $query->where('vehicles.ownership_tax', '>=', $advancedFilters['ownership_tax_from']);
+        }
+        if (!empty($advancedFilters['ownership_tax_to'])) {
+            $query->where('vehicles.ownership_tax', '<=', $advancedFilters['ownership_tax_to']);
+        }
+
         // Battery & Charging (EV)
         if (!empty($advancedFilters['battery_capacity_from'])) {
             $query->where('vehicles.battery_capacity', '>=', $advancedFilters['battery_capacity_from']);
         }
         if (!empty($advancedFilters['battery_capacity_to'])) {
             $query->where('vehicles.battery_capacity', '<=', $advancedFilters['battery_capacity_to']);
+        }
+        if (!empty($advancedFilters['range_km_from'])) {
+            $query->where('vehicles.range_km', '>=', $advancedFilters['range_km_from']);
+        }
+        if (!empty($advancedFilters['range_km_to'])) {
+            $query->where('vehicles.range_km', '<=', $advancedFilters['range_km_to']);
+        }
+        if (!empty($advancedFilters['charging_type'])) {
+            $query->where('vehicles.charging_type', $advancedFilters['charging_type']);
         }
 
         // Economy & Environment

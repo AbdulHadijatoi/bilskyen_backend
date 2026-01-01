@@ -13,6 +13,7 @@ use App\Models\BodyType;
 use App\Models\GearType;
 use App\Models\FuelType;
 use App\Models\Equipment;
+use App\Models\EquipmentType;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Services\AuthService;
@@ -143,8 +144,10 @@ class HomeController extends Controller
             'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
             // Performance
             'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
+            // Owner Tax
+            'ownership_tax_from', 'ownership_tax_to',
             // Battery & Charging (EV)
-            'battery_capacity_from', 'battery_capacity_to',
+            'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
             // Economy & Environment
             'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm',
             // Physical Details
@@ -194,9 +197,7 @@ class HomeController extends Controller
             'bodyTypes' => BodyType::orderBy('name')->get(),
             'gearTypes' => GearType::orderBy('name')->get(),
             'fuelTypes' => FuelType::orderBy('name')->get(),
-            'equipment' => Equipment::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
-            'models' => VehicleModel::orderBy('name')->get(),
             'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
             'conditions' => Condition::orderBy('name')->get(),
             'salesTypes' => SalesType::orderBy('name')->get(),
@@ -205,6 +206,21 @@ class HomeController extends Controller
         // Popular brands (most common brands - can be customized)
         $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
         $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
+
+        // Filter models by selected brand if provided
+        $selectedBrandId = $request->input('brand_id');
+        if ($selectedBrandId) {
+            $filterOptions['models'] = VehicleModel::where('brand_id', $selectedBrandId)->orderBy('name')->get();
+        } else {
+            $filterOptions['models'] = VehicleModel::orderBy('name')->get();
+        }
+
+        // Group equipment by equipment type
+        $equipmentTypes = EquipmentType::with(['equipments' => function ($query) {
+            $query->orderBy('name');
+        }])->orderBy('name')->get();
+        
+        $filterOptions['equipmentTypes'] = $equipmentTypes;
 
         return view('vehicles', [
             'vehicles' => $vehicles,
