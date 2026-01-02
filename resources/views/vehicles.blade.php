@@ -14,7 +14,7 @@
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <!-- Search Input -->
             <form class="flex w-full sm:flex-1" method="GET" action="/vehicles" id="search-form">
-                <!-- Preserve existing query parameters -->
+                <!-- Preserve existing query parameters (including sort) -->
                 @foreach(request()->except('search') as $key => $value)
                     @if(is_array($value))
                         @foreach($value as $v)
@@ -41,6 +41,157 @@
                 </div>
             </form>
             
+            <!-- Sort Dropdown -->
+            <div class="relative">
+                <button 
+                    type="button" 
+                    id="sort-button"
+                    class="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                        <path d="M3 6h18"></path>
+                        <path d="M7 12h10"></path>
+                        <path d="M10 18h4"></path>
+                    </svg>
+                    <span id="sort-button-text">
+                        @php
+                            $sortLabels = [
+                                'standard' => 'Standard',
+                                'price_asc' => 'Price: (lowest first)',
+                                'price_desc' => 'Price: (Highest first)',
+                                'date_desc' => 'Date: (Newest first)',
+                                'date_asc' => 'Date: (Oldest first)',
+                                'year_desc' => 'Model Year: (Newest first)',
+                                'year_asc' => 'Model Year: (Oldest First)',
+                                'mileage_desc' => 'Mileage: (Highest first)',
+                                'mileage_asc' => 'Mileage: (Lowest first)',
+                                'fuel_efficiency_desc' => 'Km/l: (Highest first)',
+                                'fuel_efficiency_asc' => 'Km/l: (Lowest first)',
+                                'range_desc' => 'Range: (Highest first)',
+                                'range_asc' => 'Range: (Lowest first)',
+                                'battery_desc' => 'Battery capacity: (Highest first)',
+                                'battery_asc' => 'Battery capacity: (Lowest first)',
+                                'brand_asc' => 'Brand: (Alphabetical)',
+                                'brand_desc' => 'Brand: (Reverse alphabetical)',
+                                'engine_power_desc' => 'HK: (Highest first)',
+                                'engine_power_asc' => 'HK: (Lowest first)',
+                                'towing_weight_desc' => 'Trailer weight: (Heaviest first)',
+                                'towing_weight_asc' => 'Trailer weight: (Lowest first)',
+                                'top_speed_desc' => '0-100 km/h: (Highest first)',
+                                'top_speed_asc' => '0-100 km/h: (Lowest first)',
+                                'ownership_tax_desc' => 'Owner tax: (Highest first)',
+                                'ownership_tax_asc' => 'Owner tax: (Lowest first)',
+                                'first_reg_desc' => '1st reg: (Newest first)',
+                                'first_reg_asc' => '1st reg: (Eldest first)',
+                                'distance_asc' => 'Distance to seller: (Shortest distance)',
+                                'distance_desc' => 'Distance to seller: (Longest distance)'
+                            ];
+                            $currentSort = request()->query('sort', 'standard');
+                        @endphp
+                        {{ $sortLabels[$currentSort] ?? 'Standard' }}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
+                        <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                </button>
+                
+                <!-- Sort Dropdown Menu -->
+                <div 
+                    id="sort-dropdown"
+                    class="absolute right-0 top-full mt-2 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
+                >
+                    <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
+                            Standard
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
+                            Price: (lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
+                            Price: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
+                            Date: (Newest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
+                            Date: (Oldest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
+                            Model Year: (Newest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
+                            Model Year: (Oldest First)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
+                            Mileage: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
+                            Mileage: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
+                            Km/l: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
+                            Km/l: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
+                            Range: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
+                            Range: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
+                            Battery capacity: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
+                            Battery capacity: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
+                            Brand: (Alphabetical)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
+                            Brand: (Reverse alphabetical)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
+                            HK: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
+                            HK: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
+                            Trailer weight: (Heaviest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
+                            Trailer weight: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
+                            0-100 km/h: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
+                            0-100 km/h: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
+                            Owner tax: (Highest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
+                            Owner tax: (Lowest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
+                            1st reg: (Newest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
+                            1st reg: (Eldest first)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
+                            Distance to seller: (Shortest distance)
+                        </button>
+                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
+                            Distance to seller: (Longest distance)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Advanced Filters Button -->
             <button 
                 type="button" 
@@ -66,12 +217,12 @@
             <!-- Vehicle Image -->
             <div class="relative aspect-video overflow-hidden">
                 <img
-                    src="{{ !empty($vehicle->images) && is_array($vehicle->images) ? ($vehicle->images[0] ?? '/placeholder-vehicle.jpg') : '/placeholder-vehicle.jpg' }}"
-                    alt="{{ $vehicle->make }} {{ $vehicle->model }}"
+                    src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
+                    alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                     class="h-full w-full object-cover transition-transform hover:scale-105"
                 />
                 <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                    {{ $vehicle->registration_number }}
+                    {{ $vehicle->registration }}
                 </span>
             </div>
             
@@ -79,23 +230,32 @@
             <div class="px-4 py-4 space-y-4">
                 <div class="flex flex-col gap-1">
                     <h3 class="flex items-center gap-2 text-xl font-bold">
-                        {{ $vehicle->make }} {{ $vehicle->model }}
+                        {{ $vehicle->brand_name }} {{ $vehicle->model_name }}
                     </h3>
+                    @if($vehicle->details?->version)
                     <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                        {{ $vehicle->variant }}
+                        {{ $vehicle->details->version }}
                     </p>
+                    @endif
                     <p class="text-primary text-2xl font-medium">
-                        {{ FormatHelper::formatCurrency($vehicle->listing_price ?? null) }}
+                        {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
                 </div>
 
                 <div class="-mt-2 flex flex-wrap gap-2 text-xs">
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->transmission_type }}</span>
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->color }}</span>
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->vehicle_type }}</span>
+                    @if($vehicle->details?->gear_type_name)
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->details->gear_type_name }}</span>
+                    @endif
+                    @if($vehicle->details?->color_name)
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->details->color_name }}</span>
+                    @endif
+                    @if($vehicle->category_name)
+                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->category_name }}</span>
+                    @endif
                 </div>
 
                 <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
+                    @if($vehicle->model_year_name)
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -103,14 +263,18 @@
                             <line x1="8" x2="8" y1="2" y2="6"></line>
                             <line x1="3" x2="21" y1="10" y2="10"></line>
                         </svg>
-                        <span>{{ $vehicle->year }}</span>
+                        <span>{{ $vehicle->model_year_name }}</span>
                     </div>
+                    @endif
+                    @if($vehicle->mileage || $vehicle->km_driven)
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
-                        <span>{{ number_format($vehicle->odometer) }} km</span>
+                        <span>{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
                     </div>
+                    @endif
+                    @if($vehicle->fuel_type_name)
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <line x1="2" x2="22" y1="2" y2="2"></line>
@@ -118,23 +282,18 @@
                             <line x1="18" x2="18" y1="6" y2="22"></line>
                             <line x1="2" x2="22" y1="22" y2="22"></line>
                         </svg>
-                        <span>{{ $vehicle->fuel_type }}</span>
+                        <span>{{ $vehicle->fuel_type_name }}</span>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <span>
-                            {{ $vehicle->ownership_count }} Owner{{ $vehicle->ownership_count > 1 ? 's' : '' }}
-                        </span>
-                    </div>
+                    @endif
+                    @if($vehicle->vehicle_list_status_name)
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>{{ $vehicle->status }}</span>
+                        <span>{{ $vehicle->vehicle_list_status_name }}</span>
                     </div>
+                    @endif
+                    @if($vehicle->details?->condition_name)
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -143,8 +302,9 @@
                             <path d="M2 2l20 20"></path>
                             <path d="M22 8A10 10 0 0 0 9.04 4.32"></path>
                         </svg>
-                        <span>{{ $vehicle->condition }}</span>
+                        <span>{{ $vehicle->details->condition_name }}</span>
                     </div>
+                    @endif
                 </div>
             </div>
             
@@ -1239,6 +1399,24 @@
     #filter-panel .overflow-y-auto::-webkit-scrollbar-thumb:hover {
         background-color: hsl(var(--muted-foreground) / 0.3);
     }
+    
+    /* Custom scrollbar styling for sort dropdown */
+    #sort-dropdown .overflow-y-auto::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted));
+        border-radius: 3px;
+    }
+    
+    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--muted-foreground) / 0.3);
+    }
 </style>
 @endpush
 
@@ -1255,6 +1433,90 @@
                     e.preventDefault();
                     searchForm.submit();
                 }
+            });
+        }
+        
+        // Sort dropdown functionality
+        const sortButton = document.getElementById('sort-button');
+        const sortDropdown = document.getElementById('sort-dropdown');
+        const sortButtonText = document.getElementById('sort-button-text');
+        const sortOptions = document.querySelectorAll('.sort-option');
+        
+        const sortLabels = {
+            'standard': 'Standard',
+            'price_asc': 'Price: (lowest first)',
+            'price_desc': 'Price: (Highest first)',
+            'date_desc': 'Date: (Newest first)',
+            'date_asc': 'Date: (Oldest first)',
+            'year_desc': 'Model Year: (Newest first)',
+            'year_asc': 'Model Year: (Oldest First)',
+            'mileage_desc': 'Mileage: (Highest first)',
+            'mileage_asc': 'Mileage: (Lowest first)',
+            'fuel_efficiency_desc': 'Km/l: (Highest first)',
+            'fuel_efficiency_asc': 'Km/l: (Lowest first)',
+            'range_desc': 'Range: (Highest first)',
+            'range_asc': 'Range: (Lowest first)',
+            'battery_desc': 'Battery capacity: (Highest first)',
+            'battery_asc': 'Battery capacity: (Lowest first)',
+            'brand_asc': 'Brand: (Alphabetical)',
+            'brand_desc': 'Brand: (Reverse alphabetical)',
+            'engine_power_desc': 'HK: (Highest first)',
+            'engine_power_asc': 'HK: (Lowest first)',
+            'towing_weight_desc': 'Trailer weight: (Heaviest first)',
+            'towing_weight_asc': 'Trailer weight: (Lowest first)',
+            'top_speed_desc': '0-100 km/h: (Highest first)',
+            'top_speed_asc': '0-100 km/h: (Lowest first)',
+            'ownership_tax_desc': 'Owner tax: (Highest first)',
+            'ownership_tax_asc': 'Owner tax: (Lowest first)',
+            'first_reg_desc': '1st reg: (Newest first)',
+            'first_reg_asc': '1st reg: (Eldest first)',
+            'distance_asc': 'Distance to seller: (Shortest distance)',
+            'distance_desc': 'Distance to seller: (Longest distance)'
+        };
+        
+        // Toggle dropdown
+        if (sortButton && sortDropdown) {
+            sortButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sortDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!sortButton.contains(e.target) && !sortDropdown.contains(e.target)) {
+                    sortDropdown.classList.add('hidden');
+                }
+            });
+            
+            // Handle sort option selection
+            sortOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const sortValue = option.getAttribute('data-sort');
+                    const sortLabel = sortLabels[sortValue] || 'Standard';
+                    
+                    // Update button text
+                    if (sortButtonText) {
+                        sortButtonText.textContent = sortLabel;
+                    }
+                    
+                    // Update active state
+                    sortOptions.forEach(opt => opt.classList.remove('bg-accent'));
+                    option.classList.add('bg-accent');
+                    
+                    // Close dropdown
+                    sortDropdown.classList.add('hidden');
+                    
+                    // Update URL with sort parameter
+                    const url = new URL(window.location.href);
+                    if (sortValue === 'standard') {
+                        url.searchParams.delete('sort');
+                    } else {
+                        url.searchParams.set('sort', sortValue);
+                    }
+                    
+                    // Reload page with new sort parameter
+                    window.location.href = url.toString();
+                });
             });
         }
         
@@ -1681,10 +1943,13 @@
         function collectFilters() {
             const filters = {};
             
-            // Preserve search parameter from URL
+            // Preserve search and sort parameters from URL
             const urlParams = new URLSearchParams(window.location.search);
             const search = urlParams.get('search');
             if (search) filters.search = search;
+            
+            const sort = urlParams.get('sort');
+            if (sort) filters.sort = sort;
             
             // Basic filters
             const listingTypeId = document.getElementById('listing-type-input')?.value;

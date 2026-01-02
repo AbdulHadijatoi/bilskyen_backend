@@ -164,7 +164,7 @@ class HomeController extends Controller
         // Basic filter keys (vehicles table attributes)
         $basicFilterKeys = [
             'search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 
-            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id'
+            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort'
         ];
         
         if ($hasAdvancedFilters) {

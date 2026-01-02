@@ -545,7 +545,182 @@ class VehicleService
             $query->where('listing_type_id', $filters['listing_type_id']);
         }
 
+        // Apply sorting
+        $this->applySorting($query, $filters['sort'] ?? 'standard');
+
         return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+    
+    /**
+     * Apply sorting to vehicle query
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $sort
+     * @return void
+     */
+    protected function applySorting($query, string $sort = 'standard'): void
+    {
+        // Check if query already has joins (for advanced filters)
+        $joins = $query->getQuery()->joins ?? [];
+        $hasJoins = !empty($joins);
+        $hasVehicleDetailsJoin = false;
+        $hasBrandsJoin = false;
+        $hasModelYearsJoin = false;
+        
+        foreach ($joins as $join) {
+            $table = $join->table ?? '';
+            if (str_contains($table, 'vehicle_details')) {
+                $hasVehicleDetailsJoin = true;
+            }
+            if (str_contains($table, 'brands')) {
+                $hasBrandsJoin = true;
+            }
+            if (str_contains($table, 'model_years')) {
+                $hasModelYearsJoin = true;
+            }
+        }
+        
+        $tablePrefix = $hasJoins ? 'vehicles.' : '';
+        
+        switch ($sort) {
+            case 'price_asc':
+                $query->orderBy($tablePrefix . 'price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy($tablePrefix . 'price', 'desc');
+                break;
+            case 'date_desc':
+                $query->orderBy($tablePrefix . 'created_at', 'desc');
+                break;
+            case 'date_asc':
+                $query->orderBy($tablePrefix . 'created_at', 'asc');
+                break;
+            case 'year_desc':
+                if (!$hasModelYearsJoin) {
+                    $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
+                }
+                $query->orderBy('model_years.name', 'desc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'year_asc':
+                if (!$hasModelYearsJoin) {
+                    $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
+                }
+                $query->orderBy('model_years.name', 'asc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'mileage_desc':
+                $query->orderByRaw('COALESCE(' . $tablePrefix . 'mileage, ' . $tablePrefix . 'km_driven, 0) DESC');
+                break;
+            case 'mileage_asc':
+                $query->orderByRaw('COALESCE(' . $tablePrefix . 'mileage, ' . $tablePrefix . 'km_driven, 0) ASC');
+                break;
+            case 'fuel_efficiency_desc':
+                if (!$hasVehicleDetailsJoin) {
+                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
+                }
+                $query->orderBy('vehicle_details.fuel_efficiency', 'desc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'fuel_efficiency_asc':
+                if (!$hasVehicleDetailsJoin) {
+                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
+                }
+                $query->orderBy('vehicle_details.fuel_efficiency', 'asc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'range_desc':
+                $query->orderBy($tablePrefix . 'range_km', 'desc');
+                break;
+            case 'range_asc':
+                $query->orderBy($tablePrefix . 'range_km', 'asc');
+                break;
+            case 'battery_desc':
+                $query->orderBy($tablePrefix . 'battery_capacity', 'desc');
+                break;
+            case 'battery_asc':
+                $query->orderBy($tablePrefix . 'battery_capacity', 'asc');
+                break;
+            case 'brand_asc':
+                if (!$hasBrandsJoin) {
+                    $query->leftJoin('brands', 'vehicles.brand_id', '=', 'brands.id');
+                }
+                $query->orderBy('brands.name', 'asc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'brand_desc':
+                if (!$hasBrandsJoin) {
+                    $query->leftJoin('brands', 'vehicles.brand_id', '=', 'brands.id');
+                }
+                $query->orderBy('brands.name', 'desc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'engine_power_desc':
+                $query->orderBy($tablePrefix . 'engine_power', 'desc');
+                break;
+            case 'engine_power_asc':
+                $query->orderBy($tablePrefix . 'engine_power', 'asc');
+                break;
+            case 'towing_weight_desc':
+                $query->orderBy($tablePrefix . 'towing_weight', 'desc');
+                break;
+            case 'towing_weight_asc':
+                $query->orderBy($tablePrefix . 'towing_weight', 'asc');
+                break;
+            case 'top_speed_desc':
+                if (!$hasVehicleDetailsJoin) {
+                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
+                }
+                $query->orderBy('vehicle_details.top_speed', 'desc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'top_speed_asc':
+                if (!$hasVehicleDetailsJoin) {
+                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
+                }
+                $query->orderBy('vehicle_details.top_speed', 'asc');
+                if (!$hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'ownership_tax_desc':
+                $query->orderBy($tablePrefix . 'ownership_tax', 'desc');
+                break;
+            case 'ownership_tax_asc':
+                $query->orderBy($tablePrefix . 'ownership_tax', 'asc');
+                break;
+            case 'first_reg_desc':
+                $query->orderBy($tablePrefix . 'first_registration_date', 'desc');
+                break;
+            case 'first_reg_asc':
+                $query->orderBy($tablePrefix . 'first_registration_date', 'asc');
+                break;
+            case 'distance_asc':
+            case 'distance_desc':
+                // Distance sorting requires location data - for now, sort by location_id
+                // This can be enhanced later with actual distance calculation
+                $query->orderBy($tablePrefix . 'location_id', $sort === 'distance_asc' ? 'asc' : 'desc');
+                break;
+            case 'standard':
+            default:
+                // Default: order by id desc (newest first)
+                $query->orderBy($tablePrefix . 'id', 'desc');
+                break;
+        }
     }
 
     /**
@@ -818,6 +993,10 @@ class VehicleService
         // Select distinct vehicles to avoid duplicates from joins
         $query->select('vehicles.*')
               ->distinct();
+
+        // Apply sorting (before pagination)
+        $sort = $basicFilters['sort'] ?? $advancedFilters['sort'] ?? 'standard';
+        $this->applySorting($query, $sort);
 
         // Eager load relationships
         $query->with(['images' => function ($query) {
