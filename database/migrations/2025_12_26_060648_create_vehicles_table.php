@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,26 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop all foreign key constraints that reference the vehicles table
+        $foreignKeys = DB::select(
+            "SELECT 
+                CONSTRAINT_NAME,
+                TABLE_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND REFERENCED_TABLE_NAME = 'vehicles'
+             AND REFERENCED_TABLE_SCHEMA = DATABASE()"
+        );
+        
+        foreach ($foreignKeys as $foreignKey) {
+            try {
+                DB::statement("ALTER TABLE `{$foreignKey->TABLE_NAME}` DROP FOREIGN KEY `{$foreignKey->CONSTRAINT_NAME}`");
+            } catch (\Exception $e) {
+                // Ignore if foreign key doesn't exist
+            }
+        }
+        
+        // Now safe to drop the vehicles table
         Schema::dropIfExists('vehicles');
         
         Schema::create('vehicles', function (Blueprint $table) {
