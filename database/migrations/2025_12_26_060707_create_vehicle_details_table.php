@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -75,12 +76,6 @@ return new class extends Migration
             
             $table->timestamps();
             
-            // Foreign key constraints
-            $table->foreign('type_id')->references('id')->on('types')->nullOnDelete();
-            $table->foreign('use_id')->references('id')->on('uses')->nullOnDelete();
-            $table->foreign('color_id')->references('id')->on('colors')->nullOnDelete();
-            $table->foreign('body_type_id')->references('id')->on('body_types')->nullOnDelete();
-            
             // Indexes
             $table->index('vehicle_id');
             $table->index('type_id');
@@ -88,6 +83,38 @@ return new class extends Migration
             $table->index('color_id');
             $table->index('body_type_id');
         });
+        
+        // Add foreign key constraints only if the referenced tables exist
+        $tablesToCheck = [
+            'type_id' => 'types',
+            'use_id' => 'uses',
+            'color_id' => 'colors',
+            'body_type_id' => 'body_types',
+        ];
+        
+        foreach ($tablesToCheck as $column => $referencedTable) {
+            if (Schema::hasTable($referencedTable)) {
+                Schema::table('vehicle_details', function (Blueprint $table) use ($column, $referencedTable) {
+                    // Check if foreign key already exists
+                    $foreignKeys = DB::select(
+                        "SELECT CONSTRAINT_NAME 
+                         FROM information_schema.KEY_COLUMN_USAGE 
+                         WHERE TABLE_SCHEMA = DATABASE() 
+                         AND TABLE_NAME = 'vehicle_details' 
+                         AND COLUMN_NAME = '{$column}' 
+                         AND CONSTRAINT_NAME LIKE '%_foreign'
+                         AND REFERENCED_TABLE_NAME = '{$referencedTable}'"
+                    );
+                    
+                    if (empty($foreignKeys)) {
+                        $table->foreign($column)
+                            ->references('id')
+                            ->on($referencedTable)
+                            ->nullOnDelete();
+                    }
+                });
+            }
+        }
     }
 
     /**
