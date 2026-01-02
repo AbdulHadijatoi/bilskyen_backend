@@ -422,172 +422,25 @@
         }
     }
     
-    /* Equipment Section Styles */
-    .equipment-categories {
-        margin-top: 0.75rem;
+    /* Equipment Section Styles - Matching vehicles.blade.php */
+    .equipment-type-group {
+        margin-bottom: 0.5rem;
     }
     
-    .equipment-category {
-        margin-bottom: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-    }
-    
-    .equipment-category:first-child {
-        padding-top: 0;
-        border-top: none;
-    }
-    
-    .equipment-category:last-child {
-        margin-bottom: 0;
-    }
-    
-    .equipment-category-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .equipment-category-icon {
-        width: 20px;
-        height: 20px;
-        color: var(--primary);
-        flex-shrink: 0;
-    }
-    
-    .equipment-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 0.375rem;
-    }
-    
-    @media (min-width: 640px) {
-        .equipment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        }
-    }
-    
-    @media (min-width: 1024px) {
-        .equipment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        }
-    }
-    
-    .equipment-item {
-        position: relative;
+    .equipment-type-toggle {
         cursor: pointer;
-        user-select: none;
     }
     
-    .equipment-checkbox {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
+    .equipment-type-icon {
+        transition: transform 0.2s ease;
     }
     
-    .equipment-item-content {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.5rem 0.625rem;
-        border: 1.5px solid var(--border);
-        border-radius: 0.375rem;
-        background: var(--card);
-        transition: all 0.2s ease;
-        min-height: 32px;
+    .equipment-type-icon.rotate-180 {
+        transform: rotate(180deg);
     }
     
-    .equipment-item:hover .equipment-item-content {
-        border-color: var(--primary);
-        background: var(--muted);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.05);
-    }
-    
-    .dark .equipment-item:hover .equipment-item-content {
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.2);
-    }
-    
-    .equipment-checkbox:checked + .equipment-item-content {
-        border-color: var(--primary);
-        background: var(--primary);
-        color: var(--primary-foreground);
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.1);
-    }
-    
-    .dark .equipment-checkbox:checked + .equipment-item-content {
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.3);
-    }
-    
-    .equipment-check-icon {
-        width: 12px;
-        height: 12px;
-        opacity: 0;
-        transform: scale(0);
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-    }
-    
-    .equipment-checkbox:checked + .equipment-item-content .equipment-check-icon {
-        opacity: 1;
-        transform: scale(1);
-    }
-    
-    .equipment-name {
-        font-size: 0.6875rem;
-        font-weight: 500;
-        color: var(--foreground);
-        transition: color 0.2s ease;
-    }
-    
-    .equipment-checkbox:checked + .equipment-item-content .equipment-name {
-        color: var(--primary-foreground);
-    }
-    
-    /* Selected Equipment Summary */
-    #selected-equipment-summary {
+    .equipment-type-content {
         transition: all 0.3s ease;
-    }
-    
-    .selected-equipment-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.5rem;
-        background: var(--primary);
-        color: var(--primary-foreground);
-        border-radius: 0.375rem;
-        font-size: 0.6875rem;
-        font-weight: 500;
-    }
-    
-    .selected-equipment-badge button {
-        background: transparent;
-        border: none;
-        color: var(--primary-foreground);
-        cursor: pointer;
-        padding: 0;
-        margin-left: 0.25rem;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-        display: flex;
-        align-items: center;
-    }
-    
-    .selected-equipment-badge button:hover {
-        opacity: 1;
-    }
-    
-    /* Selected items move to top */
-    .equipment-item.selected {
-        order: -1;
-    }
-    
-    .equipment-category.has-selected {
-        border-left: 3px solid var(--primary);
-        padding-left: 0.75rem;
     }
     
     /* Image Upload Styles */
@@ -1624,62 +1477,39 @@
             </div>
             <div class="section-content">
                 <div class="section-description">
-                    Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for. Selected items appear at the top.
-                </div>
-                
-                <!-- Selected Equipment Summary -->
-                <div id="selected-equipment-summary" class="mb-4 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-sm font-semibold text-foreground">Selected Equipment (<span id="selected-count">0</span>)</h4>
-                        <button type="button" onclick="clearAllEquipment()" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
-                    </div>
-                    <div id="selected-equipment-list" class="flex flex-wrap gap-2">
-                        <!-- Selected items will appear here -->
-                    </div>
+                    Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for.
                 </div>
                 
                 <!-- Equipment by Category -->
-                <div class="equipment-categories">
+                <div class="space-y-2">
                     @foreach($lookupData['equipmentTypes'] as $equipmentType)
                         @if($equipmentType->equipments->count() > 0)
-                            <div class="equipment-category" data-category-id="{{ $equipmentType->id }}">
-                                <div class="equipment-category-header">
-                                    @php
-                                        $iconMap = [
-                                            1 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg>',
-                                            2 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
-                                            3 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
-                                            4 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>',
-                                            5 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-                                            6 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"></path></svg>',
-                                            7 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v0Z"></path><path d="M6 16V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13"></path></svg>',
-                                            8 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path><path d="M12 15a5 5 0 0 1-5-5v-2a5 5 0 0 1 10 0v2a5 5 0 0 1-5 5Z"></path><path d="M9 12h6"></path></svg>',
-                                            9 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"></path><path d="M12 3v18"></path><path d="M18 12a6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6Z"></path></svg>',
-                                            10 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path><path d="M12 15a5 5 0 0 1-5-5v-2a5 5 0 0 1 10 0v2a5 5 0 0 1-5 5Z"></path><path d="M9 12h6"></path></svg>',
-                                        ];
-                                    @endphp
-                                    {!! $iconMap[$equipmentType->id] ?? '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>' !!}
-                                    <h3 class="text-sm font-semibold text-foreground">{{ $equipmentType->name }}</h3>
-                                    <span class="text-xs text-muted-foreground">({{ $equipmentType->equipments->count() }})</span>
-                                </div>
-                                <div class="equipment-grid">
-                                    @foreach($equipmentType->equipments as $equip)
-                                        <label class="equipment-item" data-equipment-id="{{ $equip->id }}">
-                                            <input 
-                                                type="checkbox" 
-                                                name="equipment_ids[]" 
-                                                value="{{ $equip->id }}"
-                                                class="equipment-checkbox"
-                                                onchange="handleEquipmentChange(this, {{ $equip->id }}, '{{ addslashes($equip->name) }}')"
-                                            >
-                                            <div class="equipment-item-content">
-                                                <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                                <span class="equipment-name">{{ $equip->name }}</span>
-                                            </div>
-                                        </label>
-                                    @endforeach
+                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
+                                <button 
+                                    type="button"
+                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                                    data-type-id="{{ $equipmentType->id }}"
+                                >
+                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
+                                        <path d="m6 9 6 6 6-6"></path>
+                                    </svg>
+                                </button>
+                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($equipmentType->equipments as $equipment)
+                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="equipment_ids[]" 
+                                                    value="{{ $equipment->id }}"
+                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                    onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
+                                                >
+                                                <span>{{ $equipment->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                         @endif
@@ -1692,32 +1522,32 @@
                         });
                     @endphp
                     @if($equipmentWithoutType->count() > 0)
-                        <div class="equipment-category" data-category-id="uncategorized">
-                            <div class="equipment-category-header">
-                                <svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path>
+                        <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
+                            <button 
+                                type="button"
+                                class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                                data-type-id="uncategorized"
+                            >
+                                <span class="uppercase tracking-wide">Other</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
+                                    <path d="m6 9 6 6 6-6"></path>
                                 </svg>
-                                <h3 class="text-sm font-semibold text-foreground">Other</h3>
-                                <span class="text-xs text-muted-foreground">({{ $equipmentWithoutType->count() }})</span>
-                            </div>
-                            <div class="equipment-grid">
-                                @foreach($equipmentWithoutType as $equip)
-                                    <label class="equipment-item" data-equipment-id="{{ $equip->id }}">
-                                        <input 
-                                            type="checkbox" 
-                                            name="equipment_ids[]" 
-                                            value="{{ $equip->id }}"
-                                            class="equipment-checkbox"
-                                            onchange="handleEquipmentChange(this, {{ $equip->id }}, '{{ addslashes($equip->name) }}')"
-                                        >
-                                        <div class="equipment-item-content">
-                                            <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                            <span class="equipment-name">{{ $equip->name }}</span>
-                                        </div>
-                                    </label>
-                                @endforeach
+                            </button>
+                            <div class="equipment-type-content hidden px-4 pb-3 pt-2">
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($equipmentWithoutType as $equipment)
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                            <input 
+                                                type="checkbox" 
+                                                name="equipment_ids[]" 
+                                                value="{{ $equipment->id }}"
+                                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
+                                            >
+                                            <span>{{ $equipment->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     @endif

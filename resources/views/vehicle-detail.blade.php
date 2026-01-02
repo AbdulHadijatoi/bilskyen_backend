@@ -117,8 +117,10 @@
     </div>
     @endif
 
-    <!-- Main Content -->
-    <div class="space-y-6">
+    <!-- Main Content Grid -->
+    <div class="grid gap-8 lg:grid-cols-3">
+        <!-- Vehicle Details - Left Column -->
+        <div class="space-y-6 lg:col-span-2">
         <!-- Basic Information Section -->
         <div class="detail-section">
             <h2 class="text-foreground text-xl font-semibold mb-4">Basic Information</h2>
@@ -596,29 +598,275 @@
             </div>
             @endif
 
-        <!-- Listing Details Section -->
-        <div class="detail-section">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Listing Details</h2>
-            <div class="detail-grid">
-                @if($vehicle->vehicle_list_status_name)
-                <div class="detail-item">
-                    <span class="detail-label">Listing Status</span>
-                    <span class="detail-value">{{ $vehicle->vehicle_list_status_name }}</span>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="space-y-6">
+            <!-- Seller Information -->
+            @if($vehicle->user || $vehicle->location)
+                <div class="bg-muted/50 rounded-lg p-6">
+                    <div class="mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-foreground">
+                            Seller Information
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        @if($vehicle->location)
+                            @if($vehicle->location->country_code)
+                                <div class="flex items-start gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                        <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-foreground">
+                                            {{ strtoupper($vehicle->location->country_code) }}
+                                        </p>
+                                        <p class="text-xs text-muted-foreground">Country</p>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($vehicle->location->city || $vehicle->location->postcode)
+                                <div class="flex items-start gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-foreground">
+                                            @if($vehicle->location->city && $vehicle->location->postcode)
+                                                {{ $vehicle->location->city }}, {{ $vehicle->location->postcode }}
+                                            @elseif($vehicle->location->city)
+                                                {{ $vehicle->location->city }}
+                                            @elseif($vehicle->location->postcode)
+                                                {{ $vehicle->location->postcode }}
+                                            @endif
+                                        </p>
+                                        <p class="text-xs text-muted-foreground">Location</p>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+
+                        @if($vehicle->user && $vehicle->user->phone)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <div id="phone-display" class="hidden">
+                                        <p class="text-sm font-medium text-foreground">
+                                            <a href="tel:{{ $vehicle->user->phone }}" class="hover:underline">
+                                                {{ $vehicle->user->phone }}
+                                            </a>
+                                        </p>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        id="show-phone-btn"
+                                        onclick="togglePhone()"
+                                        class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                                    >
+                                        Show Phone Number
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">Phone</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
                 @endif
-                @if($vehicle->published_at)
-                <div class="detail-item">
-                    <span class="detail-label">Published At</span>
-                    <span class="detail-value">{{ $vehicle->published_at->format('F j, Y g:i A') }}</span>
+
+            <!-- Pricing -->
+            <div class="rounded-lg bg-green-50 p-6 dark:bg-green-950/30">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-green-600 dark:text-green-400">
+                        <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold text-green-800 dark:text-green-300">
+                        Pricing
+                    </h2>
                 </div>
-                @endif
-                @if($vehicle->created_at)
-                <div class="detail-item">
-                    <span class="detail-label">Created At</span>
-                    <span class="detail-value">{{ $vehicle->created_at->format('F j, Y g:i A') }}</span>
+                <div class="space-y-2">
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
+                    </p>
+                    <p class="text-sm text-green-700 dark:text-green-300">
+                        Listed Price
+                    </p>
                 </div>
-                @endif
             </div>
+
+            @auth
+                @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
+                    <!-- Edit Action - Only for admin/dealer -->
+                    @php
+                        $editRoute = null;
+                        try {
+                            if (\Illuminate\Support\Facades\Route::has('dealer.vehicles.edit')) {
+                                $editRoute = route('dealer.vehicles.edit', $vehicle->serial_no);
+                            } elseif (\Illuminate\Support\Facades\Route::has('vehicles.edit')) {
+                                $editRoute = route('vehicles.edit', $vehicle->serial_no);
+                            }
+                        } catch (\Exception $e) {
+                            // Route doesn't exist
+                        }
+                    @endphp
+                    @if($editRoute)
+                        <div class="bg-muted/50 rounded-lg p-6">
+                            <h2 class="text-foreground mb-4 text-xl font-semibold">
+                                Actions
+                            </h2>
+                            <a href="{{ $editRoute }}" class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Edit Vehicle
+                            </a>
+                        </div>
+                    @endif
+                @endif
+            @endauth
+
+            <!-- Listing Information - For all users -->
+            <div class="rounded-lg bg-blue-50 p-6 dark:bg-blue-950/30">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-blue-600 dark:text-blue-400">
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <h2 class="text-xl font-semibold text-blue-800 dark:text-blue-300">
+                        @auth
+                            @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
+                                Inventory Information
+                            @else
+                                Listing Information
+                            @endif
+                        @else
+                            Listing Information
+                        @endauth
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                            @auth
+                                @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
+                                    Added to Inventory
+                                @else
+                                    Added to Listing
+                                @endif
+                            @else
+                                Added to Listing
+                            @endauth
+                        </label>
+                        @if($vehicle->published_at)
+                            <p class="text-sm text-blue-900 dark:text-blue-200">
+                                {{ $vehicle->published_at->format('F j, Y') }} ({{ $vehicle->published_at->diffForHumans() }})
+                            </p>
+                        @elseif($vehicle->created_at)
+                            <p class="text-sm text-blue-900 dark:text-blue-200">
+                                {{ $vehicle->created_at->format('F j, Y') }} ({{ $vehicle->created_at->diffForHumans() }})
+                            </p>
+                        @endif
+                    </div>
+                    @auth
+                        @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && $vehicle->published_at)
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                    Days in Inventory
+                                </label>
+                                <p class="font-semibold text-blue-900 dark:text-blue-200">
+                                    {{ $vehicle->published_at->diffInDays(now()) }} days
+                                </p>
+                            </div>
+                        @endif
+                    @endauth
+                </div>
+            </div>
+
+            @auth
+                @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
+                    @php
+                        $pendingWorks = [];
+                        if($vehicle->details && $vehicle->details->extra_equipment) {
+                            // You can parse pending works from extra_equipment or other fields
+                            // For now, we'll leave it empty or add logic based on your data structure
+                        }
+                    @endphp
+                    @if(!empty($pendingWorks))
+                        <!-- Pending Works - Only for admin/dealer -->
+                        <div class="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-950/30">
+                            <div class="mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-yellow-600 dark:text-yellow-400">
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                    <path d="M12 9v4"></path>
+                                    <path d="M12 17h.01"></path>
+                                </svg>
+                                <h2 class="text-xl font-semibold text-yellow-800 dark:text-yellow-300">
+                                    Pending Works
+                                </h2>
+                            </div>
+                            <p class="mb-4 text-sm text-yellow-700 dark:text-yellow-300">
+                                Items that require attention
+                            </p>
+                            <ul class="space-y-3">
+                                @foreach($pendingWorks as $work)
+                                    <li class="flex items-start gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-400">
+                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                            <path d="M12 9v4"></path>
+                                            <path d="M12 17h.01"></path>
+                                        </svg>
+                                        <span class="text-sm text-yellow-800 dark:text-yellow-200">
+                                            {{ $work }}
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if($vehicle->details && $vehicle->details->extra_equipment)
+                        <!-- Internal Remarks - Only for admin/dealer -->
+                        <div class="bg-muted/50 rounded-lg p-6">
+                            <h2 class="text-foreground mb-4 text-xl font-semibold">
+                                Internal Remarks
+                            </h2>
+                            <p class="text-foreground text-sm leading-relaxed">
+                                {{ $vehicle->details->extra_equipment }}
+                            </p>
+                        </div>
+                    @endif
+                @endif
+            @endauth
+
+            <!-- Public Contact Information - Only for non-authenticated users -->
+            @guest
+                <div class="bg-muted/50 rounded-lg p-6">
+                    <h2 class="text-foreground mb-4 text-xl font-semibold">
+                        Interested?
+                    </h2>
+                    <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
+                        Contact us for more information about this vehicle, including
+                        pricing, financing options, and scheduling a test drive.
+                    </p>
+                    <div class="text-muted-foreground text-sm">
+                        <p>• Request detailed vehicle history</p>
+                        <p>• Schedule inspection</p>
+                        <p>• Discuss financing options</p>
+                        <p>• Arrange test drive</p>
+                    </div>
+            </div>
+            @endguest
         </div>
     </div>
 </div>
@@ -680,6 +928,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Toggle phone number visibility
+    function togglePhone() {
+        const phoneDisplay = document.getElementById('phone-display');
+        const showPhoneBtn = document.getElementById('show-phone-btn');
+        
+        if (phoneDisplay && showPhoneBtn) {
+            if (phoneDisplay.classList.contains('hidden')) {
+                phoneDisplay.classList.remove('hidden');
+                showPhoneBtn.classList.add('hidden');
+            } else {
+                phoneDisplay.classList.add('hidden');
+                showPhoneBtn.classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Make togglePhone available globally
+    window.togglePhone = togglePhone;
 });
 </script>
 @endsection

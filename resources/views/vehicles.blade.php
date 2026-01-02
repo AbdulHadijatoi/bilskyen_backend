@@ -10,8 +10,8 @@
 @section('content')
 <div class="container mx-auto flex flex-col gap-6 py-8">
     <!-- Search Bar -->
-    <div id="search-bar-container" class="rounded-lg bg-card p-4 sm:p-6 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+    <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <!-- Search Input -->
             <form class="flex w-full sm:flex-1" method="GET" action="/vehicles" id="search-form">
                 <!-- Preserve existing query parameters (including sort) -->
@@ -25,7 +25,7 @@
                     @endif
                 @endforeach
                 <div class="relative w-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.3-4.3"></path>
                     </svg>
@@ -35,7 +35,7 @@
                         id="search-input"
                         value="{{ request()->query('search', '') }}"
                         placeholder="Search by make, model, registration number, or keywords..."
-                        class="flex h-12 w-full rounded-md border border-input bg-background pl-11 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex h-8 w-full rounded-md border border-input bg-background pl-9 pr-2.5 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         autocomplete="off"
                     />
                 </div>
@@ -46,9 +46,9 @@
                 <button 
                     type="button" 
                     id="sort-button"
-                    class="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
                         <path d="M3 6h18"></path>
                         <path d="M7 12h10"></path>
                         <path d="M10 18h4"></path>
@@ -90,7 +90,7 @@
                         @endphp
                         {{ $sortLabels[$currentSort] ?? 'Standard' }}
                     </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5 h-3 w-3">
                         <path d="m6 9 6 6 6-6"></path>
                     </svg>
                 </button>
@@ -98,94 +98,94 @@
                 <!-- Sort Dropdown Menu -->
                 <div 
                     id="sort-dropdown"
-                    class="absolute right-0 top-full mt-2 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
+                    class="absolute right-0 top-full mt-1 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
                 >
                     <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
                             Standard
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
                             Price: (lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
                             Price: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
                             Date: (Newest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
                             Date: (Oldest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
                             Model Year: (Newest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
                             Model Year: (Oldest First)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
                             Mileage: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
                             Mileage: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
                             Km/l: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
                             Km/l: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
                             Range: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
                             Range: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
                             Battery capacity: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
                             Battery capacity: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
                             Brand: (Alphabetical)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
                             Brand: (Reverse alphabetical)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
                             HK: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
                             HK: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
                             Trailer weight: (Heaviest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
                             Trailer weight: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
                             0-100 km/h: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
                             0-100 km/h: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
                             Owner tax: (Highest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
                             Owner tax: (Lowest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
                             1st reg: (Newest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
                             1st reg: (Eldest first)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
                             Distance to seller: (Shortest distance)
                         </button>
-                        <button type="button" class="sort-option w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
+                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
                             Distance to seller: (Longest distance)
                         </button>
                     </div>
@@ -196,9 +196,9 @@
             <button 
                 type="button" 
                 id="filter-button"
-                class="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
                     <line x1="4" x2="20" y1="21" y2="21"></line>
                     <line x1="4" x2="20" y1="7" y2="7"></line>
                     <line x1="4" x2="20" y1="3" y2="3"></line>
@@ -206,7 +206,15 @@
                     <line x1="4" x2="20" y1="15" y2="15"></line>
                 </svg>
                 More Filters
+                <span id="filter-count" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    ({{ number_format($vehicles->total()) }})
+                </span>
             </button>
+        </div>
+        
+        <!-- Applied Filters Chips -->
+        <div id="applied-filters-container" class="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border">
+            <!-- Filter chips will be rendered here via JavaScript -->
         </div>
     </div>
 
@@ -414,43 +422,40 @@
             <!-- Tabs: Purchase/Leasing -->
             <div class="space-y-3">
                 <label class="text-sm font-semibold text-foreground">Listing Type</label>
-                <div class="flex gap-2 rounded-lg bg-muted/50 p-1" role="tablist">
-                    <button
-                        type="button"
-                        role="tab"
-                        data-tab="all"
-                        class="tab-button flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all @if(!isset($currentFilters['listing_type_id']) || $currentFilters['listing_type_id'] == '') bg-background text-foreground shadow-sm @else text-muted-foreground hover:text-foreground @endif"
-                    >
-                        All
-                    </button>
+                <div class="flex gap-2" role="tablist">
                     @php
                         $purchaseType = $filterOptions['listingTypes']->firstWhere('name', 'Purchase');
                         $leasingType = $filterOptions['listingTypes']->firstWhere('name', 'Leasing');
+                        $defaultListingTypeId = $currentFilters['listing_type_id'] ?? ($purchaseType ? $purchaseType->id : '');
+                        $isPurchaseActive = !isset($currentFilters['listing_type_id']) || (isset($currentFilters['listing_type_id']) && $currentFilters['listing_type_id'] == ($purchaseType ? $purchaseType->id : ''));
+                        $isLeasingActive = isset($currentFilters['listing_type_id']) && $leasingType && $currentFilters['listing_type_id'] == $leasingType->id;
                     @endphp
                     @if($purchaseType)
-                        <button
-                            type="button"
-                            role="tab"
-                            data-tab="purchase"
-                            data-listing-type-id="{{ $purchaseType->id }}"
-                            class="tab-button flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all @if(isset($currentFilters['listing_type_id']) && $currentFilters['listing_type_id'] == $purchaseType->id) bg-background text-foreground shadow-sm @else text-muted-foreground hover:text-foreground @endif"
-                        >
-                            Purchase
-                        </button>
+                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isPurchaseActive) bg-accent border-primary @else border-input @endif" data-tab="purchase" data-listing-type-id="{{ $purchaseType->id }}">
+                            <input 
+                                type="radio" 
+                                name="listing_type_id_radio" 
+                                value="{{ $purchaseType->id }}"
+                                class="sr-only peer"
+                                @if($isPurchaseActive) checked @endif
+                            >
+                            <span class="peer-checked:font-semibold">Purchase</span>
+                        </label>
                     @endif
                     @if($leasingType)
-                        <button
-                            type="button"
-                            role="tab"
-                            data-tab="leasing"
-                            data-listing-type-id="{{ $leasingType->id }}"
-                            class="tab-button flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all @if(isset($currentFilters['listing_type_id']) && $currentFilters['listing_type_id'] == $leasingType->id) bg-background text-foreground shadow-sm @else text-muted-foreground hover:text-foreground @endif"
-                        >
-                            Leasing
-                        </button>
+                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isLeasingActive) bg-accent border-primary @else border-input @endif" data-tab="leasing" data-listing-type-id="{{ $leasingType->id }}">
+                            <input 
+                                type="radio" 
+                                name="listing_type_id_radio" 
+                                value="{{ $leasingType->id }}"
+                                class="sr-only peer"
+                                @if($isLeasingActive) checked @endif
+                            >
+                            <span class="peer-checked:font-semibold">Leasing</span>
+                        </label>
                     @endif
                 </div>
-                <input type="hidden" name="listing_type_id" id="listing-type-input" value="{{ $currentFilters['listing_type_id'] ?? '' }}">
+                <input type="hidden" name="listing_type_id" id="listing-type-input" value="{{ $defaultListingTypeId }}">
             </div>
 
             <!-- Price Range -->
@@ -522,47 +527,19 @@
 
             <!-- Brand & Model -->
             <div class="space-y-5">
-                <!-- Brand (Popular vs All Brands) -->
+                <!-- Brand -->
                 <div>
                     <label class="text-sm font-semibold text-foreground mb-3 block">Brand</label>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-4">
-                            <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input 
-                                    type="radio" 
-                                    name="brand_filter_type" 
-                                    value="popular"
-                                    class="h-4 w-4 text-primary border-input focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    checked
-                                    id="brand-popular"
-                                >
-                                <span class="text-sm font-medium group-hover:text-foreground transition-colors">Popular</span>
-                            </label>
-                            <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input 
-                                    type="radio" 
-                                    name="brand_filter_type" 
-                                    value="all"
-                                    class="h-4 w-4 text-primary border-input focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    id="brand-all"
-                                >
-                                <span class="text-sm font-medium group-hover:text-foreground transition-colors">All</span>
-                            </label>
-                        </div>
                         <select 
                             name="brand_id" 
                             id="brand-select"
                             class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                         >
                             <option value="">All Makes</option>
-                            @foreach($filterOptions['popularBrands'] as $brand)
-                                <option value="{{ $brand->id }}" class="brand-option brand-popular" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
-                            @endforeach
                             @foreach($filterOptions['brands'] as $brand)
-                                <option value="{{ $brand->id }}" class="brand-option brand-all" style="display: none;" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
+                            <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
                             @endforeach
                         </select>
-                    </div>
                 </div>
 
                 <!-- Model (filtered by brand) -->
@@ -783,40 +760,43 @@
                 <!-- Price Type -->
                 <div>
                     <label class="text-sm font-semibold text-foreground mb-3 block">Price Type</label>
-                    <select 
-                        name="price_type_id[]" 
-                        multiple
-                        class="w-full min-h-[40px] rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        style="height: auto;"
-                    >
+                    <div class="flex flex-wrap gap-2">
                         @foreach($filterOptions['priceTypes'] as $priceType)
-                            <option value="{{ $priceType->id }}" @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) selected @endif>{{ $priceType->name }}</option>
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-primary @endif">
+                                <input 
+                                    type="checkbox" 
+                        name="price_type_id[]" 
+                                    value="{{ $priceType->id }}"
+                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
+                                >
+                                <span>{{ $priceType->name }}</span>
+                            </label>
                         @endforeach
-                    </select>
-                    <p class="text-xs text-muted-foreground mt-2">Hold Ctrl/Cmd to select multiple</p>
+                    </div>
                 </div>
 
                 <!-- Condition -->
                 <div>
                     <label class="text-sm font-semibold text-foreground mb-3 block">Condition</label>
                     <div class="flex flex-wrap gap-2">
-                        <label class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-accent border-primary @endif">
+                        <label class="condition-radio-label inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-accent border-primary @else border-input @endif">
                             <input 
                                 type="radio" 
                                 name="condition_id" 
                                 value=""
-                                class="sr-only peer"
-                                checked
+                                class="sr-only peer condition-radio"
+                                @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
                             >
                             <span class="peer-checked:font-semibold">All</span>
                         </label>
                         @foreach($filterOptions['conditions'] as $condition)
-                            <label class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-accent border-primary @endif">
+                            <label class="condition-radio-label inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-accent border-primary @else border-input @endif">
                                 <input 
                                     type="radio" 
                                     name="condition_id" 
                                     value="{{ $condition->id }}"
-                                    class="sr-only peer"
+                                    class="sr-only peer condition-radio"
                                     @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
                                 >
                                 <span class="peer-checked:font-semibold">{{ $condition->name }}</span>
@@ -1332,10 +1312,20 @@
             <div class="space-y-5">
                 <div>
                     <label class="text-sm font-semibold text-foreground mb-3 block">Equipment</label>
-                    <div class="space-y-4 max-h-64 overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-                        @foreach($filterOptions['equipmentTypes'] as $equipmentType)
                             <div class="space-y-2">
-                                <h4 class="text-xs font-semibold text-foreground uppercase tracking-wide">{{ $equipmentType->name }}</h4>
+                        @foreach($filterOptions['equipmentTypes'] as $equipmentType)
+                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
+                                <button 
+                                    type="button"
+                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                                    data-type-id="{{ $equipmentType->id }}"
+                                >
+                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
+                                        <path d="m6 9 6 6 6-6"></path>
+                                    </svg>
+                                </button>
+                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($equipmentType->equipments as $equipment)
                                         <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-primary @endif">
@@ -1349,6 +1339,7 @@
                                             <span>{{ $equipment->name }}</span>
                                         </label>
                                     @endforeach
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -1357,11 +1348,8 @@
             </div>
         </div>
 
-            </div>
-        </div>
-
         <!-- Footer Actions -->
-        <div class="px-6 py-4 bg-background border-t border-border shrink-0 flex items-center justify-between gap-3 shadow-lg">
+        <div class="sticky bottom-0 px-6 py-4 bg-background border-t border-border shrink-0 flex items-center justify-between gap-3 shadow-lg z-10">
             <button
                 id="filter-reset-button"
                 type="button"
@@ -1375,6 +1363,9 @@
                 class="flex h-10 flex-1 items-center justify-center rounded-lg bg-primary text-primary-foreground px-6 text-sm font-semibold transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shadow-sm"
             >
                 Apply Filters
+                <span id="filter-apply-count" class="ml-2 rounded-full bg-primary-foreground/20 px-2 py-0.5 text-xs font-semibold">
+                    ({{ number_format($vehicles->total()) }})
+                </span>
             </button>
         </div>
     </div>
@@ -1423,24 +1414,21 @@
 @push('scripts')
 <script>
     (function() {
-        // Search form Enter key handler
+        // Constants
+        const vehicleGrid = document.querySelector('.grid.w-full');
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
-        
-        if (searchInput) {
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    searchForm.submit();
-                }
-            });
-        }
-        
-        // Sort dropdown functionality
         const sortButton = document.getElementById('sort-button');
         const sortDropdown = document.getElementById('sort-dropdown');
         const sortButtonText = document.getElementById('sort-button-text');
         const sortOptions = document.querySelectorAll('.sort-option');
+        const filterButton = document.getElementById('filter-button');
+        const filterDrawer = document.getElementById('filter-drawer');
+        const filterPanel = document.getElementById('filter-panel');
+        const filterCloseButton = document.getElementById('filter-close-button');
+        const filterBackdrop = document.getElementById('filter-backdrop');
+        const filterApplyButton = document.getElementById('filter-apply-button');
+        const filterResetButton = document.getElementById('filter-reset-button');
         
         const sortLabels = {
             'standard': 'Standard',
@@ -1474,7 +1462,750 @@
             'distance_desc': 'Distance to seller: (Longest distance)'
         };
         
-        // Toggle dropdown
+        let searchDebounceTimer = null;
+        let isLoading = false;
+        
+        // Format currency helper (matches PHP FormatHelper)
+        function formatCurrency(amount) {
+            if (amount === null || amount === undefined) {
+                return 'N/A';
+            }
+            return new Intl.NumberFormat('da-DK', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' kr.';
+        }
+        
+        // Render single vehicle card
+        function renderVehicleCard(vehicle) {
+            const details = vehicle.details || {};
+            const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
+            
+            return `
+                <div class="rounded-lg border border-border bg-card overflow-hidden p-0">
+                    <!-- Vehicle Image -->
+                    <div class="relative aspect-video overflow-hidden">
+                        <img
+                            src="${imageUrl}"
+                            alt="${vehicle.brand_name || ''} ${vehicle.model_name || ''}"
+                            class="h-full w-full object-cover transition-transform hover:scale-105"
+                        />
+                        <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                            ${vehicle.registration || ''}
+                        </span>
+                    </div>
+                    
+                    <!-- Vehicle Details -->
+                    <div class="px-4 py-4 space-y-4">
+                        <div class="flex flex-col gap-1">
+                            <h3 class="flex items-center gap-2 text-xl font-bold">
+                                ${vehicle.brand_name || ''} ${vehicle.model_name || ''}
+                            </h3>
+                            ${details.version ? `
+                            <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                                ${details.version}
+                            </p>
+                            ` : ''}
+                            <p class="text-primary text-2xl font-medium">
+                                ${formatCurrency(vehicle.price)}
+                            </p>
+                        </div>
+
+                        <div class="-mt-2 flex flex-wrap gap-2 text-xs">
+                            ${details.gear_type_name ? `
+                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${details.gear_type_name}</span>
+                            ` : ''}
+                            ${details.color_name ? `
+                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${details.color_name}</span>
+                            ` : ''}
+                            ${vehicle.category_name ? `
+                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.category_name}</span>
+                            ` : ''}
+                        </div>
+
+                        <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
+                            ${vehicle.model_year_name ? `
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                                    <line x1="16" x2="16" y1="2" y2="6"></line>
+                                    <line x1="8" x2="8" y1="2" y2="6"></line>
+                                    <line x1="3" x2="21" y1="10" y2="10"></line>
+                                </svg>
+                                <span>${vehicle.model_year_name}</span>
+                            </div>
+                            ` : ''}
+                            ${vehicle.mileage || vehicle.km_driven ? `
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                <span>${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                            </div>
+                            ` : ''}
+                            ${vehicle.fuel_type_name ? `
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <line x1="2" x2="22" y1="2" y2="2"></line>
+                                    <line x1="6" x2="6" y1="6" y2="22"></line>
+                                    <line x1="18" x2="18" y1="6" y2="22"></line>
+                                    <line x1="2" x2="22" y1="22" y2="22"></line>
+                                </svg>
+                                <span>${vehicle.fuel_type_name}</span>
+                            </div>
+                            ` : ''}
+                            ${vehicle.vehicle_list_status_name ? `
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>${vehicle.vehicle_list_status_name}</span>
+                            </div>
+                            ` : ''}
+                            ${details.condition_name ? `
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                    <path d="M18.63 13A17.888 17.888 0 0 1 18 8"></path>
+                                    <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9s14 0 17-5c.34-.94.56-1.92.73-2.92"></path>
+                                    <path d="M2 2l20 20"></path>
+                                    <path d="M22 8A10 10 0 0 0 9.04 4.32"></path>
+                                </svg>
+                                <span>${details.condition_name}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Vehicle Actions -->
+                    <div class="mt-auto p-4 pt-2">
+                        <div class="flex w-full flex-col gap-2 sm:flex-row">
+                            <a href="/vehicles/${vehicle.id}" class="flex-1">
+                                <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                    View Details
+                                </button>
+                            </a>
+                            <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                Enquire
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render vehicle grid
+        function renderVehicleGrid(vehicles) {
+            if (!vehicleGrid) return;
+            
+            if (vehicles.length === 0) {
+                vehicleGrid.innerHTML = `
+                    <div class="col-span-full flex items-center justify-center py-12">
+                        <div class="flex flex-col items-center justify-center text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold">No vehicles found</h3>
+                            <p class="text-muted-foreground mt-1">
+                                Try adjusting your search or filter criteria.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            vehicleGrid.innerHTML = vehicles.map(vehicle => renderVehicleCard(vehicle)).join('');
+        }
+        
+        // Render pagination
+        function renderPagination(pagination) {
+            const paginationContainer = document.querySelector('.mt-8.flex.items-center.justify-center.gap-2');
+            if (!paginationContainer) return;
+            
+            const { current_page, last_page, total } = pagination;
+            
+            if (last_page <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <button 
+                    ${current_page === 1 ? 'disabled' : ''}
+                    data-page="${current_page - 1}"
+                    class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                        <path d="m15 18-6-6 6-6"></path>
+                    </svg>
+                    Previous
+                </button>
+            `;
+            
+            // Page numbers
+            const maxPagesToShow = 7;
+            let startPage = Math.max(1, current_page - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(last_page, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            if (startPage > 1) {
+                paginationHTML += `
+                    <button data-page="1" class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        1
+                    </button>
+                `;
+                if (startPage > 2) {
+                    paginationHTML += `<span class="px-2 text-muted-foreground">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button 
+                        data-page="${i}"
+                        class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${i === current_page ? 'bg-accent' : ''}"
+                    >
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < last_page) {
+                if (endPage < last_page - 1) {
+                    paginationHTML += `<span class="px-2 text-muted-foreground">...</span>`;
+                }
+                paginationHTML += `
+                    <button data-page="${last_page}" class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        ${last_page}
+                    </button>
+                `;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <button 
+                    ${current_page === last_page ? 'disabled' : ''}
+                    data-page="${current_page + 1}"
+                    class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                >
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
+                        <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = paginationHTML;
+            
+            // Add click handlers to pagination buttons
+            paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = parseInt(btn.getAttribute('data-page'));
+                    if (page && !btn.disabled) {
+                        fetchVehicles({ page });
+                    }
+                });
+            });
+        }
+        
+        // Show loading state
+        function showLoading() {
+            if (!vehicleGrid) return;
+            isLoading = true;
+            vehicleGrid.innerHTML = `
+                <div class="col-span-full flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center justify-center text-center">
+                        <svg class="animate-spin h-8 w-8 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-muted-foreground">Loading vehicles...</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show error state
+        function showError(message) {
+            if (!vehicleGrid) return;
+            isLoading = false;
+            vehicleGrid.innerHTML = `
+                <div class="col-span-full flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center justify-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-destructive">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y2="12" y1="8"></line>
+                            <line x1="12" y1="16" x2="12" y2="16"></line>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Error loading vehicles</h3>
+                        <p class="text-muted-foreground mt-1">${message || 'Please try again later.'}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render filter chips
+        function renderFilterChips() {
+            const container = document.getElementById('applied-filters-container');
+            if (!container) return;
+            
+            const chips = [];
+            const filters = collectFilters();
+            
+            // Helper to get option text by value
+            function getOptionText(selectIdOrName, value) {
+                let select = document.getElementById(selectIdOrName);
+                if (!select) {
+                    select = document.querySelector(`select[name="${selectIdOrName}"]`);
+                }
+                if (!select) return null;
+                const option = Array.from(select.options).find(opt => opt.value == value);
+                return option ? option.textContent : null;
+            }
+            
+            // Helper to get label text for checkbox/radio
+            function getLabelText(name, value) {
+                const input = document.querySelector(`[name="${name}"][value="${value}"]`);
+                if (!input) return null;
+                const label = input.closest('label');
+                if (label) {
+                    const span = label.querySelector('span');
+                    return span ? span.textContent.trim() : label.textContent.trim();
+                }
+                return null;
+            }
+            
+            // Search
+            if (filters.search) {
+                chips.push({
+                    key: 'search',
+                    label: `Search: "${filters.search}"`,
+                    value: filters.search
+                });
+            }
+            
+            // Listing Type
+            if (filters.listing_type_id) {
+                const listingTypeName = getLabelText('listing_type_id_radio', filters.listing_type_id);
+                if (listingTypeName) {
+                    chips.push({
+                        key: 'listing_type_id',
+                        label: `Type: ${listingTypeName}`,
+                        value: filters.listing_type_id
+                    });
+                }
+            }
+            
+            // Brand
+            if (filters.brand_id) {
+                const brandName = getOptionText('brand_id', filters.brand_id);
+                if (brandName) {
+                    chips.push({
+                        key: 'brand_id',
+                        label: `Brand: ${brandName}`,
+                        value: filters.brand_id
+                    });
+                }
+            }
+            
+            // Model
+            if (filters.model_id) {
+                const modelName = getOptionText('model_id', filters.model_id);
+                if (modelName) {
+                    chips.push({
+                        key: 'model_id',
+                        label: `Model: ${modelName}`,
+                        value: filters.model_id
+                    });
+                }
+            }
+            
+            // Category
+            if (filters.category_id) {
+                const categoryName = getOptionText('category_id', filters.category_id);
+                if (categoryName) {
+                    chips.push({
+                        key: 'category_id',
+                        label: `Category: ${categoryName}`,
+                        value: filters.category_id
+                    });
+                }
+            }
+            
+            // Price range
+            if (filters.price_from || filters.price_to) {
+                const from = filters.price_from ? formatCurrency(filters.price_from).replace(' kr.', '') : '';
+                const to = filters.price_to ? formatCurrency(filters.price_to).replace(' kr.', '') : '';
+                if (from && to) {
+                    chips.push({
+                        key: 'price_range',
+                        label: `Price: ${from} - ${to} kr.`,
+                        value: { from: filters.price_from, to: filters.price_to }
+                    });
+                } else if (from) {
+                    chips.push({
+                        key: 'price_from',
+                        label: `Price: From ${from} kr.`,
+                        value: filters.price_from
+                    });
+                } else if (to) {
+                    chips.push({
+                        key: 'price_to',
+                        label: `Price: Up to ${to} kr.`,
+                        value: filters.price_to
+                    });
+                }
+            }
+            
+            // Year range
+            if (filters.year_from || filters.year_to) {
+                const from = filters.year_from || '';
+                const to = filters.year_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'year_range',
+                        label: `Year: ${from} - ${to}`,
+                        value: { from: filters.year_from, to: filters.year_to }
+                    });
+                } else if (from) {
+                    chips.push({
+                        key: 'year_from',
+                        label: `Year: From ${from}`,
+                        value: filters.year_from
+                    });
+                } else if (to) {
+                    chips.push({
+                        key: 'year_to',
+                        label: `Year: Up to ${to}`,
+                        value: filters.year_to
+                    });
+                }
+            }
+            
+            // Mileage range
+            if (filters.mileage_from || filters.mileage_to) {
+                const from = filters.mileage_from ? new Intl.NumberFormat('en-US').format(filters.mileage_from) : '';
+                const to = filters.mileage_to ? new Intl.NumberFormat('en-US').format(filters.mileage_to) : '';
+                if (from && to) {
+                    chips.push({
+                        key: 'mileage_range',
+                        label: `Mileage: ${from} - ${to} km`,
+                        value: { from: filters.mileage_from, to: filters.mileage_to }
+                    });
+                } else if (from) {
+                    chips.push({
+                        key: 'mileage_from',
+                        label: `Mileage: From ${from} km`,
+                        value: filters.mileage_from
+                    });
+                } else if (to) {
+                    chips.push({
+                        key: 'mileage_to',
+                        label: `Mileage: Up to ${to} km`,
+                        value: filters.mileage_to
+                    });
+                }
+            }
+            
+            // Condition
+            if (filters.condition_id) {
+                const conditionName = getLabelText('condition_id', filters.condition_id);
+                if (conditionName) {
+                    chips.push({
+                        key: 'condition_id',
+                        label: `Condition: ${conditionName}`,
+                        value: filters.condition_id
+                    });
+                }
+            }
+            
+            // Body types
+            if (filters.body_type_id && Array.isArray(filters.body_type_id)) {
+                filters.body_type_id.forEach(id => {
+                    const name = getLabelText('body_type_id[]', id);
+                    if (name) {
+                        chips.push({
+                            key: 'body_type_id',
+                            label: name,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
+            // Fuel types
+            if (filters.fuel_type_id && Array.isArray(filters.fuel_type_id)) {
+                filters.fuel_type_id.forEach(id => {
+                    const name = getLabelText('fuel_type_id[]', id);
+                    if (name) {
+                        chips.push({
+                            key: 'fuel_type_id',
+                            label: name,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
+            // Gear types
+            if (filters.gear_type_id && Array.isArray(filters.gear_type_id)) {
+                filters.gear_type_id.forEach(id => {
+                    const name = getLabelText('gear_type_id[]', id);
+                    if (name) {
+                        chips.push({
+                            key: 'gear_type_id',
+                            label: name,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
+            // Price types
+            if (filters.price_type_id && Array.isArray(filters.price_type_id)) {
+                filters.price_type_id.forEach(id => {
+                    const name = getLabelText('price_type_id[]', id);
+                    if (name) {
+                        chips.push({
+                            key: 'price_type_id',
+                            label: name,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
+            // Equipment
+            if (filters.equipment_ids && Array.isArray(filters.equipment_ids)) {
+                filters.equipment_ids.forEach(id => {
+                    const name = getLabelText('equipment_ids[]', id);
+                    if (name) {
+                        chips.push({
+                            key: 'equipment_ids',
+                            label: name,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
+            // Render chips
+            if (chips.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = chips.map(chip => `
+                <div class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary border border-primary/20">
+                    <span>${chip.label}</span>
+                    <button 
+                        type="button"
+                        class="filter-chip-remove ml-0.5 rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                        data-filter-key="${chip.key}"
+                        data-filter-value="${typeof chip.value === 'object' ? JSON.stringify(chip.value) : chip.value}"
+                        data-is-array="${chip.isArray || false}"
+                        aria-label="Remove filter"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            
+            // Add click handlers to remove chips
+            container.querySelectorAll('.filter-chip-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const key = btn.getAttribute('data-filter-key');
+                    const value = btn.getAttribute('data-filter-value');
+                    const isArray = btn.getAttribute('data-is-array') === 'true';
+                    
+                    // Remove filter from DOM
+                    if (isArray) {
+                        const checkbox = document.querySelector(`[name="${key}[]"][value="${value}"]`);
+                        if (checkbox) checkbox.checked = false;
+                    } else if (key === 'search') {
+                        if (searchInput) searchInput.value = '';
+                    } else if (key === 'listing_type_id') {
+                        // Reset to Purchase (default)
+                        const purchaseLabel = document.querySelector('label[data-tab="purchase"]');
+                        const listingTypeInput = document.getElementById('listing-type-input');
+                        if (purchaseLabel) {
+                            const purchaseRadio = purchaseLabel.querySelector('input[type="radio"]');
+                            if (purchaseRadio) {
+                                purchaseRadio.checked = true;
+                                const purchaseListingTypeId = purchaseLabel.getAttribute('data-listing-type-id');
+                                if (listingTypeInput && purchaseListingTypeId) {
+                                    listingTypeInput.value = purchaseListingTypeId;
+                                }
+                                if (typeof updateTabStyles === 'function') {
+                                    updateTabStyles();
+                                }
+                            }
+                        }
+                    } else if (key === 'price_range') {
+                        const priceFrom = document.querySelector('[name="price_from"]');
+                        const priceTo = document.querySelector('[name="price_to"]');
+                        if (priceFrom) priceFrom.value = '';
+                        if (priceTo) priceTo.value = '';
+                    } else if (key === 'year_range') {
+                        const yearFrom = document.querySelector('[name="year_from"]');
+                        const yearTo = document.querySelector('[name="year_to"]');
+                        if (yearFrom) yearFrom.value = '';
+                        if (yearTo) yearTo.value = '';
+                    } else if (key === 'mileage_range') {
+                        const mileageFrom = document.querySelector('[name="mileage_from"]');
+                        const mileageTo = document.querySelector('[name="mileage_to"]');
+                        if (mileageFrom) mileageFrom.value = '';
+                        if (mileageTo) mileageTo.value = '';
+                    } else {
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'radio' || input.type === 'checkbox') {
+                                input.checked = false;
+                            } else {
+                                input.value = '';
+                            }
+                        }
+                    }
+                    
+                    // Re-apply filters
+                    autoApplyFilters();
+                });
+            });
+        }
+        
+        // Centralized fetch vehicles function
+        async function fetchVehicles(params = {}) {
+            if (isLoading) return;
+            
+            // Get current URL parameters
+            const url = new URL(window.location.href);
+            const currentParams = new URLSearchParams(url.search);
+            
+            // Update with new parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] === null || params[key] === '' || params[key] === undefined) {
+                    currentParams.delete(key);
+                } else if (Array.isArray(params[key])) {
+                    currentParams.delete(key);
+                    params[key].forEach(val => currentParams.append(key + '[]', val));
+                } else {
+                    currentParams.set(key, params[key]);
+                }
+            });
+            
+            // Build query string
+            const queryString = currentParams.toString();
+            const requestUrl = '/vehicles' + (queryString ? '?' + queryString : '');
+            
+            // Show loading
+            showLoading();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            try {
+                const response = await fetch(requestUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Render vehicles and pagination
+                renderVehicleGrid(data.vehicles);
+                renderPagination(data.pagination);
+                
+                // Update count badges
+                const filterCount = document.getElementById('filter-count');
+                const filterApplyCount = document.getElementById('filter-apply-count');
+                const totalCount = data.pagination?.total || 0;
+                const formattedCount = new Intl.NumberFormat('en-US').format(totalCount);
+                
+                if (filterCount) {
+                    filterCount.textContent = formattedCount;
+                }
+                if (filterApplyCount) {
+                    filterApplyCount.textContent = formattedCount;
+                }
+                
+                // Update filter chips
+                renderFilterChips();
+                
+                // Update sort button text if sort changed
+                if (params.sort !== undefined) {
+                    const sortValue = params.sort || 'standard';
+                    if (sortButtonText) {
+                        sortButtonText.textContent = sortLabels[sortValue] || 'Standard';
+                    }
+                    // Update active sort option
+                    sortOptions.forEach(opt => {
+                        opt.classList.remove('bg-accent');
+                        if (opt.getAttribute('data-sort') === sortValue) {
+                            opt.classList.add('bg-accent');
+                        }
+                    });
+                }
+                
+                isLoading = false;
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+                showError('Failed to load vehicles. Please try again.');
+            }
+        }
+        
+        // Search form handler with debounce
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    const searchValue = e.target.value.trim();
+                    fetchVehicles({ search: searchValue || null, page: 1 });
+                }, 300);
+            });
+            
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(searchDebounceTimer);
+                    const searchValue = e.target.value.trim();
+                    fetchVehicles({ search: searchValue || null, page: 1 });
+                }
+            });
+        }
+        
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                clearTimeout(searchDebounceTimer);
+                const searchValue = searchInput?.value.trim();
+                fetchVehicles({ search: searchValue || null, page: 1 });
+            });
+        }
+        
+        // Sort dropdown functionality
         if (sortButton && sortDropdown) {
             sortButton.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1506,16 +2237,8 @@
                     // Close dropdown
                     sortDropdown.classList.add('hidden');
                     
-                    // Update URL with sort parameter
-                    const url = new URL(window.location.href);
-                    if (sortValue === 'standard') {
-                        url.searchParams.delete('sort');
-                    } else {
-                        url.searchParams.set('sort', sortValue);
-                    }
-                    
-                    // Reload page with new sort parameter
-                    window.location.href = url.toString();
+                    // Fetch vehicles with new sort parameter
+                    fetchVehicles({ sort: sortValue === 'standard' ? null : sortValue, page: 1 });
                 });
             });
         }
@@ -1578,16 +2301,37 @@
             }
         });
         
-        const filterDrawer = document.getElementById('filter-drawer');
-        const filterPanel = document.getElementById('filter-panel');
-        const filterBackdrop = document.getElementById('filter-backdrop');
-        const filterButton = document.getElementById('filter-button');
-        const filterCloseButton = document.getElementById('filter-close-button');
-        const filterResetButton = document.getElementById('filter-reset-button');
-        const filterApplyButton = document.getElementById('filter-apply-button');
-        const vehicleGrid = document.querySelector('.grid.w-full');
+        // Filter drawer handlers
+        if (filterButton) {
+            filterButton.addEventListener('click', () => {
+                openDrawer();
+                setTimeout(() => {
+                    sliderConfigs.forEach(config => initRangeSlider(config));
+                    setupAutoApplyFilters();
+                    setupEquipmentCollapsible();
+                    updateConditionStyles();
+                }, 50);
+            });
+        }
+
+        if (filterCloseButton) {
+            filterCloseButton.addEventListener('click', closeDrawer);
+        }
+
+        if (filterBackdrop) {
+            filterBackdrop.addEventListener('click', closeDrawer);
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && filterDrawer && !filterDrawer.classList.contains('hidden')) {
+                closeDrawer();
+            }
+        });
 
         function openDrawer() {
+            if (!filterDrawer || !filterPanel || !filterBackdrop) return;
+            
             filterDrawer.classList.remove('hidden');
             // Force reflow to ensure hidden class is removed before animation
             filterDrawer.offsetHeight;
@@ -1601,6 +2345,8 @@
         }
 
         function closeDrawer() {
+            if (!filterDrawer || !filterPanel || !filterBackdrop) return;
+            
             filterPanel.classList.add('translate-x-full');
             filterBackdrop.style.opacity = '0';
             // Wait for animation to complete before hiding
@@ -1610,58 +2356,51 @@
             }, 300);
         }
 
-        // Tab functionality for Purchase/Leasing
-        const tabButtons = document.querySelectorAll('.tab-button');
+        // Tab functionality for Purchase/Leasing (radio buttons)
+        const tabRadios = document.querySelectorAll('input[name="listing_type_id_radio"]');
         const listingTypeInput = document.getElementById('listing-type-input');
         
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Update active tab
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('bg-background', 'text-foreground', 'shadow-sm');
-                    btn.classList.add('text-muted-foreground');
-                });
-                button.classList.add('bg-background', 'text-foreground', 'shadow-sm');
-                button.classList.remove('text-muted-foreground');
-                
+        function updateTabStyles() {
+            tabRadios.forEach(radio => {
+                const label = radio.closest('label.tab-button');
+                if (label) {
+                    if (radio.checked) {
+                        label.classList.add('bg-accent', 'border-primary');
+                        label.classList.remove('border-input');
+                    } else {
+                        label.classList.remove('bg-accent', 'border-primary');
+                        label.classList.add('border-input');
+                    }
+                }
+            });
+        }
+        
+        tabRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
                 // Update hidden input
-                const listingTypeId = button.getAttribute('data-listing-type-id');
+                    const listingTypeId = radio.value;
                 if (listingTypeInput) {
                     listingTypeInput.value = listingTypeId || '';
+                    }
+                    // Update tab styles
+                    updateTabStyles();
+                    // Auto-apply filters
+                    autoApplyFilters();
                 }
             });
         });
 
-        // Popular brands toggle functionality
-        const brandFilterTypeRadios = document.querySelectorAll('[name="brand_filter_type"]');
+        // Initialize tab styles on page load
+        updateTabStyles();
+
+        // Brand-Model dependency: Filter models based on selected brand
         const brandSelect = document.getElementById('brand-select');
         const modelSelect = document.getElementById('model-select');
         
-        function updateBrandOptions() {
-            const selectedType = document.querySelector('[name="brand_filter_type"]:checked')?.value || 'popular';
-            const allOptions = brandSelect.querySelectorAll('.brand-option');
-            
-            allOptions.forEach(option => {
-                if (selectedType === 'popular') {
-                    option.style.display = option.classList.contains('brand-popular') ? '' : 'none';
-                } else {
-                    option.style.display = '';
-                }
-            });
-            
-            // Reset selection if current selection is hidden
-            const selectedOption = brandSelect.options[brandSelect.selectedIndex];
-            if (selectedOption && selectedOption.style.display === 'none') {
-                brandSelect.value = '';
-            }
-        }
-        
-        brandFilterTypeRadios.forEach(radio => {
-            radio.addEventListener('change', updateBrandOptions);
-        });
-
-        // Brand-Model dependency: Filter models based on selected brand
         function updateModelOptions() {
+            if (!brandSelect || !modelSelect) return;
+            
             const selectedBrandId = brandSelect.value;
             const modelOptions = modelSelect.querySelectorAll('option[data-brand-id]');
             
@@ -1680,10 +2419,64 @@
             }
         }
         
+        if (brandSelect) {
         brandSelect.addEventListener('change', updateModelOptions);
+        }
         
         // Initialize model options on page load
         updateModelOptions();
+        
+        // Condition radio button styling
+        function updateConditionStyles() {
+            const conditionRadios = document.querySelectorAll('input[name="condition_id"]');
+            conditionRadios.forEach(radio => {
+                const label = radio.closest('.condition-radio-label');
+                if (label) {
+                    if (radio.checked) {
+                        label.classList.add('bg-accent', 'border-primary');
+                        label.classList.remove('border-input');
+                    } else {
+                        label.classList.remove('bg-accent', 'border-primary');
+                        label.classList.add('border-input');
+                    }
+                }
+            });
+        }
+        
+        // Set up condition radio listeners
+        document.querySelectorAll('input[name="condition_id"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateConditionStyles();
+            });
+        });
+        
+        // Initialize condition styles
+        updateConditionStyles();
+        
+        // Equipment collapsible functionality
+        function setupEquipmentCollapsible() {
+            if (!filterDrawer) return;
+            
+            const equipmentToggles = filterDrawer.querySelectorAll('.equipment-type-toggle');
+            equipmentToggles.forEach(toggle => {
+                // Remove existing listeners by cloning
+                const newToggle = toggle.cloneNode(true);
+                toggle.parentNode.replaceChild(newToggle, toggle);
+                
+                newToggle.addEventListener('click', () => {
+                    const content = newToggle.nextElementSibling;
+                    const icon = newToggle.querySelector('.equipment-type-icon');
+                    
+                    if (content) {
+                        content.classList.toggle('hidden');
+                        if (icon) {
+                            icon.classList.toggle('rotate-180');
+                        }
+                    }
+                });
+            });
+        }
+        
 
         // Dual-handle range slider functionality
         function initRangeSlider(config) {
@@ -1866,14 +2659,6 @@
                 max: 1000
             }
         ];
-        
-        // Open drawer and initialize sliders
-        filterButton.addEventListener('click', () => {
-            openDrawer();
-            setTimeout(() => {
-                sliderConfigs.forEach(config => initRangeSlider(config));
-            }, 100);
-        });
 
         // Close drawer
         filterCloseButton.addEventListener('click', closeDrawer);
@@ -1887,6 +2672,7 @@
         });
 
         // Reset filters
+        if (filterResetButton) {
         filterResetButton.addEventListener('click', () => {
             const inputs = filterDrawer.querySelectorAll('input, select');
             inputs.forEach(input => {
@@ -1915,29 +2701,33 @@
                     input.value = '';
                 }
             });
-            // Reset tabs to "All"
-            const allTab = document.querySelector('[data-tab="all"]');
-            if (allTab) {
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('bg-background', 'text-foreground', 'shadow-sm');
-                    btn.classList.add('text-muted-foreground');
-                });
-                allTab.classList.add('bg-background', 'text-foreground', 'shadow-sm');
-                allTab.classList.remove('text-muted-foreground');
+            // Reset tabs to "Purchase" (default)
+            const purchaseLabel = document.querySelector('label[data-tab="purchase"]');
+            if (purchaseLabel) {
+                const purchaseRadio = purchaseLabel.querySelector('input[type="radio"]');
+                if (purchaseRadio) {
+                    purchaseRadio.checked = true;
+                    // Update hidden input
+                    const purchaseListingTypeId = purchaseLabel.getAttribute('data-listing-type-id');
+                    if (listingTypeInput && purchaseListingTypeId) {
+                        listingTypeInput.value = purchaseListingTypeId;
+                    }
+                    // Update tab styles
+                    if (typeof updateTabStyles === 'function') {
+                        updateTabStyles();
+                    }
+                }
             }
-            if (listingTypeInput) {
-                listingTypeInput.value = '';
-            }
-            // Reset brand filter to popular
-            document.getElementById('brand-popular').checked = true;
-            updateBrandOptions();
             // Reset model options
+            if (typeof updateModelOptions === 'function') {
             updateModelOptions();
+            }
             // Reinitialize sliders after reset
             setTimeout(() => {
                 sliderConfigs.forEach(config => initRangeSlider(config));
             }, 50);
         });
+        }
 
         // Collect all filter values
         function collectFilters() {
@@ -1992,12 +2782,9 @@
             const mileageTo = document.querySelector('[name="mileage_to"]')?.value;
             if (mileageTo) filters.mileage_to = mileageTo;
             
-            // Price Type (multi-select dropdown)
-            const priceTypeSelect = document.querySelector('[name="price_type_id[]"]');
-            if (priceTypeSelect) {
-                const priceTypeIds = Array.from(priceTypeSelect.selectedOptions).map(opt => opt.value);
+            // Price Type (checkboxes)
+            const priceTypeIds = Array.from(document.querySelectorAll('[name="price_type_id[]"]:checked')).map(cb => cb.value);
                 if (priceTypeIds.length > 0) filters.price_type_id = priceTypeIds;
-            }
             
             const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
             if (conditionId) filters.condition_id = conditionId;
@@ -2073,6 +2860,17 @@
             
             return filters;
         }
+        
+        // Auto-apply filters when any filter changes
+        let filterDebounceTimer = null;
+        
+        function autoApplyFilters() {
+            clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = setTimeout(() => {
+                const filters = collectFilters();
+                fetchVehicles({ ...filters, page: 1 });
+            }, 500); // 500ms debounce for better UX
+        }
 
         // Build query string from filters
         function buildQueryString(filters) {
@@ -2090,51 +2888,18 @@
             return params.toString();
         }
 
-        // Apply filters via AJAX
+        // Apply filters via AJAX (manual apply button - also closes drawer)
+        if (filterApplyButton) {
         filterApplyButton.addEventListener('click', async () => {
             const filters = collectFilters();
-            const queryString = buildQueryString(filters);
-            const url = '/vehicles' + (queryString ? '?' + queryString : '');
             
             // Show loading state
             filterApplyButton.disabled = true;
             filterApplyButton.textContent = 'Loading...';
             
             try {
-                // Make AJAX request
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html',
-                    },
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch vehicles');
-                }
-                
-                const html = await response.text();
-                
-                // Parse the response HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Update vehicle grid
-                const newGrid = doc.querySelector('.grid.w-full');
-                if (newGrid && vehicleGrid) {
-                    vehicleGrid.innerHTML = newGrid.innerHTML;
-                }
-                
-                // Update pagination if present
-                const pagination = document.querySelector('.mt-8.flex.items-center.justify-center');
-                const newPagination = doc.querySelector('.mt-8.flex.items-center.justify-center');
-                if (newPagination && pagination) {
-                    pagination.innerHTML = newPagination.innerHTML;
-                }
-                
-                // Update URL without page reload
-                window.history.pushState({}, '', url);
+                    // Use centralized fetchVehicles function
+                    await fetchVehicles({ ...filters, page: 1 });
                 
                 // Close drawer
             closeDrawer();
@@ -2147,6 +2912,51 @@
                 filterApplyButton.textContent = 'Apply Filters';
             }
         });
+        }
+        
+        // Set up auto-apply listeners for all filter inputs
+        function setupAutoApplyFilters() {
+            if (!filterDrawer) return;
+            
+            // Radio buttons (listing type, condition)
+            filterDrawer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', autoApplyFilters);
+            });
+            
+            // Checkboxes (body type, fuel type, gear type, equipment, etc.)
+            filterDrawer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', autoApplyFilters);
+            });
+            
+            // Select dropdowns
+            filterDrawer.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', autoApplyFilters);
+            });
+            
+            // Number inputs (with debounce)
+            filterDrawer.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(filterDebounceTimer);
+                    filterDebounceTimer = setTimeout(() => {
+                        autoApplyFilters();
+                    }, 800); // Longer debounce for number inputs
+                });
+            });
+            
+            // Range sliders (with debounce)
+            filterDrawer.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.addEventListener('input', () => {
+                    clearTimeout(filterDebounceTimer);
+                    filterDebounceTimer = setTimeout(() => {
+                        autoApplyFilters();
+                    }, 500);
+                });
+            });
+        }
+        
+        
+        // Initialize filter chips on page load
+        renderFilterChips();
     })();
 </script>
 @endpush

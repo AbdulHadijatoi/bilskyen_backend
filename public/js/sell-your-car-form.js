@@ -23,6 +23,12 @@
         
         // Initialize form submission
         initFormSubmission();
+        
+        // Initialize equipment collapsible
+        initEquipmentCollapsible();
+        
+        // Initialize image upload
+        initImageUpload();
     }
 
     // Expandable Sections
@@ -199,10 +205,20 @@
                     vehicleForm.classList.add('form-visible');
                 }
                 
+                // Ensure all sections are collapsed initially
+                document.querySelectorAll('.expandable-section').forEach(section => {
+                    const header = section.querySelector('.section-header');
+                    const content = section.querySelector('.section-content');
+                    if (header && content) {
+                        content.classList.remove('expanded');
+                        header.classList.remove('active');
+                    }
+                });
+                
                 // Prefill form and expand relevant sections
                 prefillForm(vehicleData);
                 
-                // Expand essential section by default
+                // Expand essential section by default after lookup
                 setTimeout(() => {
                     window.toggleSection('essential');
                 }, 100);
@@ -288,6 +304,24 @@
                 }
             }
         });
+        
+        // Validate images are required
+        const imageCount = imageUploadState && imageUploadState.fileMap ? imageUploadState.fileMap.size : 0;
+        if (imageCount === 0) {
+            isValid = false;
+            const photosSection = document.querySelector('[data-section="photos"]');
+            if (photosSection) {
+                const header = photosSection.querySelector('.section-header');
+                const content = photosSection.querySelector('.section-content');
+                if (header && content && !content.classList.contains('expanded')) {
+                    content.classList.add('expanded');
+                    header.classList.add('active');
+                }
+                photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            displayGeneralError('Please upload at least one image of your vehicle.');
+            return;
+        }
 
         if (!isValid) {
             if (firstInvalidField) {
@@ -745,7 +779,7 @@
                     if (checkbox) {
                         checkbox.checked = true;
                         // Trigger change handler to update UI
-                        const equipmentName = checkbox.closest('.equipment-item')?.querySelector('.equipment-name')?.textContent || '';
+                        const equipmentName = checkbox.nextElementSibling?.textContent || '';
                         if (window.handleEquipmentChange) {
                             window.handleEquipmentChange(checkbox, actualId, equipmentName);
                         }
@@ -754,147 +788,52 @@
             });
         }
         
-        // Auto-expand sections that have been filled
-        const sectionsToExpand = ['essential', 'details'];
-        if (apiData.enginePower || apiData.batteryCapacity) {
-            sectionsToExpand.push('technical');
-        }
-        if (apiData.color || apiData.bodyType) {
-            sectionsToExpand.push('additional');
-        }
-        if (apiData.equipment && apiData.equipment.length > 0) {
-            sectionsToExpand.push('equipment');
-        }
-        
-        sectionsToExpand.forEach(sectionId => {
-            window.toggleSection(sectionId);
-        });
+        // Only expand essential section after lookup, keep others collapsed
+        // User can manually expand other sections as needed
         
         console.log('Form prefilling completed');
+    }
+    
+    // Equipment collapsible functionality
+    function initEquipmentCollapsible() {
+        const equipmentToggles = document.querySelectorAll('.equipment-type-toggle');
+        equipmentToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const content = toggle.nextElementSibling;
+                const icon = toggle.querySelector('.equipment-type-icon');
+                
+                if (content) {
+                    content.classList.toggle('hidden');
+                    if (icon) {
+                        icon.classList.toggle('rotate-180');
+                    }
+                }
+            });
+        });
     }
     
     // Equipment selection handlers
     window.handleEquipmentChange = function(checkbox, equipmentId, equipmentName) {
         const isChecked = checkbox.checked;
-        const equipmentItem = checkbox.closest('.equipment-item');
-        const category = equipmentItem.closest('.equipment-category');
+        const label = checkbox.closest('label');
         
+        // Update label styling based on checked state
         if (isChecked) {
-            equipmentItem.classList.add('selected');
-            if (category) {
-                category.classList.add('has-selected');
-            }
-            // Move to top of category
-            if (category) {
-                const grid = category.querySelector('.equipment-grid');
-                if (grid && equipmentItem.parentElement === grid) {
-                    grid.insertBefore(equipmentItem, grid.firstChild);
-                }
-            }
+            label.classList.add('bg-accent', 'border-primary');
         } else {
-            equipmentItem.classList.remove('selected');
-            // Check if category has any selected items
-            if (category) {
-                const hasSelected = category.querySelector('.equipment-item.selected');
-                if (!hasSelected) {
-                    category.classList.remove('has-selected');
-                }
-            }
+            label.classList.remove('bg-accent', 'border-primary');
         }
-        
-        updateSelectedEquipmentSummary();
     };
     
     window.clearAllEquipment = function() {
-        const checkboxes = document.querySelectorAll('.equipment-checkbox:checked');
+        const checkboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
             const equipmentId = parseInt(checkbox.value);
-            const equipmentName = checkbox.closest('.equipment-item').querySelector('.equipment-name').textContent;
+            const equipmentName = checkbox.nextElementSibling?.textContent || '';
             handleEquipmentChange(checkbox, equipmentId, equipmentName);
         });
     };
-    
-    function updateSelectedEquipmentSummary() {
-        const selectedCheckboxes = document.querySelectorAll('.equipment-checkbox:checked');
-        const summaryContainer = document.getElementById('selected-equipment-summary');
-        const summaryList = document.getElementById('selected-equipment-list');
-        const countElement = document.getElementById('selected-count');
-        
-        if (!summaryContainer || !summaryList || !countElement) return;
-        
-        const count = selectedCheckboxes.length;
-        countElement.textContent = count;
-        
-        if (count === 0) {
-            summaryContainer.classList.add('hidden');
-            return;
-        }
-        
-        summaryContainer.classList.remove('hidden');
-        summaryList.innerHTML = '';
-        
-        selectedCheckboxes.forEach(checkbox => {
-            const equipmentItem = checkbox.closest('.equipment-item');
-            const equipmentName = equipmentItem.querySelector('.equipment-name').textContent;
-            const equipmentId = parseInt(checkbox.value);
-            
-            const badge = document.createElement('div');
-            badge.className = 'selected-equipment-badge';
-            badge.innerHTML = `
-                <span>${escapeHtml(equipmentName)}</span>
-                <button type="button" onclick="removeEquipment(${equipmentId})" aria-label="Remove ${escapeHtml(equipmentName)}">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            `;
-            summaryList.appendChild(badge);
-        });
-    }
-    
-    window.removeEquipment = function(equipmentId) {
-        const checkbox = document.querySelector(`.equipment-checkbox[value="${equipmentId}"]`);
-        if (checkbox) {
-            checkbox.checked = false;
-            const equipmentName = checkbox.closest('.equipment-item').querySelector('.equipment-name').textContent;
-            handleEquipmentChange(checkbox, equipmentId, equipmentName);
-        }
-    };
-    
-    // Initialize equipment summary on page load
-    function initEquipmentSummary() {
-        // Update summary for any pre-checked items (from form prefilling)
-        setTimeout(() => {
-            updateSelectedEquipmentSummary();
-            
-            // Move selected items to top
-            document.querySelectorAll('.equipment-checkbox:checked').forEach(checkbox => {
-                const equipmentItem = checkbox.closest('.equipment-item');
-                const category = equipmentItem.closest('.equipment-category');
-                if (equipmentItem && category) {
-                    equipmentItem.classList.add('selected');
-                    category.classList.add('has-selected');
-                    const grid = category.querySelector('.equipment-grid');
-                    if (grid && equipmentItem.parentElement === grid) {
-                        grid.insertBefore(equipmentItem, grid.firstChild);
-                    }
-                }
-            });
-        }, 100);
-    }
-    
-    // Call init on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            initEquipmentSummary();
-            initImageUpload();
-        });
-    } else {
-        initEquipmentSummary();
-        initImageUpload();
-    }
     
     // Image Upload Handlers - Rewritten with cleaner architecture
     // Single source of truth: fileMap stores File objects with unique IDs

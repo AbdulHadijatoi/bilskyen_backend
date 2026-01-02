@@ -126,7 +126,7 @@ class HomeController extends Controller
      * Show the vehicles listing page
      *
      * @param Request $request
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
      */
     public function showVehicles(Request $request)
     {
@@ -189,6 +189,55 @@ class HomeController extends Controller
             );
         }
 
+        // If AJAX request, return JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            // Format vehicles for JSON response
+            $formattedVehicles = $vehicles->map(function ($vehicle) {
+                // Get first image
+                $firstImage = $vehicle->images->first();
+                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->url ?? '/placeholder-vehicle.jpg';
+                
+                // Get details
+                $details = $vehicle->details;
+                
+                return [
+                    'id' => $vehicle->id,
+                    'title' => $vehicle->title,
+                    'registration' => $vehicle->registration,
+                    'vin' => $vehicle->vin,
+                    'price' => $vehicle->price,
+                    'mileage' => $vehicle->mileage,
+                    'km_driven' => $vehicle->km_driven,
+                    'brand_name' => $vehicle->brand_name,
+                    'model_name' => $vehicle->model_name,
+                    'category_name' => $vehicle->category_name,
+                    'fuel_type_name' => $vehicle->fuel_type_name,
+                    'model_year_name' => $vehicle->model_year_name,
+                    'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+                    'image_url' => $imageUrl,
+                    'details' => $details ? [
+                        'version' => $details->version ?? null,
+                        'gear_type_name' => $details->gear_type_name ?? null,
+                        'color_name' => $details->color_name ?? null,
+                        'condition_name' => $details->condition_name ?? null,
+                    ] : null,
+                ];
+            });
+
+            return response()->json([
+                'vehicles' => $formattedVehicles,
+                'pagination' => [
+                    'current_page' => $vehicles->currentPage(),
+                    'last_page' => $vehicles->lastPage(),
+                    'per_page' => $vehicles->perPage(),
+                    'total' => $vehicles->total(),
+                    'from' => $vehicles->firstItem(),
+                    'to' => $vehicles->lastItem(),
+                ],
+                'filters' => $request->all(),
+            ]);
+        }
+
         // Fetch filter options for the view
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
@@ -242,7 +291,8 @@ class HomeController extends Controller
             'equipment',
             'location',
             'listingType',
-            'images'
+            'images',
+            'user'
         ])->findOrFail($serialNo);
 
         return view('vehicle-detail', [
