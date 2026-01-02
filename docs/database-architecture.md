@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: 67b945a0b11342e7b722c0b49183ee34938695ea303a338cbfe8f55b7a9ea89f
+Schema Checksum: d0c95d907584f85612157b940495a107ec23ccf099b71ea32a3fec9502773bbe
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -180,6 +180,8 @@ Vehicle listings with searchable attributes.
 | price | INT | Price in DKK |
 | mileage | INT (NULL) | Odometer reading |
 | battery_capacity | INT (NULL) | Battery capacity (for electric vehicles) |
+| range_km | INT (NULL) | Electric range in kilometers (for electric vehicles) |
+| charging_type | VARCHAR(100) (NULL) | Charging type (AC, DC, AC/DC) |
 | engine_power | INT (NULL) | Engine power |
 | towing_weight | INT (NULL) | Towing weight capacity |
 | ownership_tax | INT (NULL) | Ownership tax amount |
@@ -223,6 +225,7 @@ Extended vehicle information and specifications.
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
 | vehicle_id | BIGINT (FK, UNIQUE) | Foreign key to `vehicles.id` |
+| vehicle_external_id | VARCHAR(255) (NULL) | External vehicle identifier (e.g., from Nummerplade API) |
 | description | TEXT (NULL) | Full vehicle description |
 | views_count | INT | View counter (default: 0) |
 | vin_location | VARCHAR(255) (NULL) | VIN location |

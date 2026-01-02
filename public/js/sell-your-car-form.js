@@ -311,6 +311,29 @@
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
         
+        // Manually append files from fileMap to ensure they're included
+        // This is necessary because files added via DataTransfer API might not be
+        // properly included when FormData is created from the form
+        if (imageUploadState && imageUploadState.fileMap && imageUploadState.fileMap.size > 0) {
+            // Remove any existing images[] entries from FormData to avoid duplicates
+            // Note: FormData.delete() removes all entries with the given key
+            formData.delete('images[]');
+            
+            // Append all files from fileMap
+            imageUploadState.fileMap.forEach((file) => {
+                formData.append('images[]', file, file.name);
+            });
+            
+            console.log(`Added ${imageUploadState.fileMap.size} image(s) to FormData:`, 
+                Array.from(imageUploadState.fileMap.keys()).map(id => {
+                    const file = imageUploadState.fileMap.get(id);
+                    return file ? file.name : 'unknown';
+                })
+            );
+        } else {
+            console.log('No images in fileMap to add to FormData');
+        }
+        
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         

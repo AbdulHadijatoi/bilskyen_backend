@@ -77,14 +77,23 @@ class FileService
     {
         foreach ($fileUrls as $url) {
             if (is_string($url)) {
-                // Extract path from URL
-                $path = parse_url($url, PHP_URL_PATH);
+                // Check if it's a URL or already a path
+                $parsedUrl = parse_url($url);
                 
-                // Remove /storage prefix if present
-                $path = str_replace('/storage/', '', $path);
+                if (isset($parsedUrl['scheme']) || isset($parsedUrl['host'])) {
+                    // It's a URL - extract path from URL
+                    $path = $parsedUrl['path'] ?? '';
+                    // Remove /storage prefix if present
+                    $path = str_replace('/storage/', '', $path);
+                } else {
+                    // It's already a path - use it directly
+                    $path = $url;
+                    // Remove /storage prefix if present (in case it was included)
+                    $path = str_replace('/storage/', '', $path);
+                }
                 
                 // Try to delete from public disk
-                if (Storage::disk('public')->exists($path)) {
+                if (!empty($path) && Storage::disk('public')->exists($path)) {
                     Storage::disk('public')->delete($path);
                 }
             }

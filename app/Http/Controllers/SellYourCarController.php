@@ -28,6 +28,7 @@ use App\Services\VehicleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SellYourCarController extends Controller
 {
@@ -89,6 +90,38 @@ class SellYourCarController extends Controller
             return redirect()->route('login')->with('return_url', '/sell-your-car');
         }
 
+        // Log all request data for debugging
+        $allRequestData = $request->all();
+        
+        // Separate files from other data for cleaner logging
+        $requestDataWithoutFiles = $allRequestData;
+        $fileInfo = [];
+        
+        if ($request->hasFile('images')) {
+            $images = $request->file('images');
+            $fileInfo = [
+                'has_images' => true,
+                'count' => is_array($images) ? count($images) : 1,
+                'file_names' => is_array($images) 
+                    ? array_map(fn($img) => $img->getClientOriginalName() . ' (' . $img->getSize() . ' bytes)', $images)
+                    : [$images->getClientOriginalName() . ' (' . $images->getSize() . ' bytes)']
+            ];
+            // Remove files from the main log data
+            unset($requestDataWithoutFiles['images']);
+        } else {
+            $fileInfo = ['has_images' => false];
+        }
+        
+        Log::info('SellYourCarController::store - Request received', [
+            'user_id' => $user->id,
+            'request_data' => $requestDataWithoutFiles,
+            'files' => $fileInfo,
+            'request_method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'is_ajax' => $request->ajax(),
+            'is_json' => $request->wantsJson(),
+        ]);
+
         // Validate the request
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -105,6 +138,8 @@ class SellYourCarController extends Controller
             'mileage' => 'nullable|integer|min:0',
             'km_driven' => 'nullable|integer|min:0',
             'battery_capacity' => 'nullable|integer|min:0',
+            'range_km' => 'nullable|integer|min:0',
+            'charging_type' => 'nullable|string|max:100',
             'engine_power' => 'nullable|integer|min:0',
             'towing_weight' => 'nullable|integer|min:0',
             'ownership_tax' => 'nullable|integer|min:0',
@@ -138,7 +173,7 @@ class SellYourCarController extends Controller
                 'title', 'registration', 'vin', 'price', 'location_id',
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'mileage', 'km_driven',
-                'battery_capacity', 'engine_power', 'towing_weight',
+                'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
                 'ownership_tax', 'first_registration_date',
                 'vehicle_list_status_id', 'published_at'
             ]);
@@ -213,7 +248,18 @@ class SellYourCarController extends Controller
 
             // Handle image uploads
             if ($request->hasFile('images')) {
-                $vehicleData['images'] = $request->file('images');
+                $images = $request->file('images');
+                $vehicleData['images'] = $images;
+                
+                // Log for debugging (can be removed in production)
+                Log::info('Images received in SellYourCarController', [
+                    'count' => is_array($images) ? count($images) : 1,
+                    'file_names' => is_array($images) 
+                        ? array_map(fn($img) => $img->getClientOriginalName(), $images)
+                        : [$images->getClientOriginalName()]
+                ]);
+            } else {
+                Log::info('No images found in request');
             }
 
             // Create vehicle
@@ -225,11 +271,11 @@ class SellYourCarController extends Controller
                     'status' => 'success',
                     'message' => 'Vehicle listed successfully!',
                     'vehicle_id' => $vehicle->id,
-                    'redirect_url' => route('vehicle.detail', ['serialNo' => $vehicle->id])
+                    'redirect_url' => route('vehicle.detail', ['id' => $vehicle->id])
                 ]);
             }
 
-            return redirect()->route('vehicle.detail', ['serialNo' => $vehicle->id])
+            return redirect()->route('vehicle.detail', ['id' => $vehicle->id])
                 ->with('success', 'Vehicle listed successfully!');
         } catch (\Exception $e) {
             // Handle AJAX requests

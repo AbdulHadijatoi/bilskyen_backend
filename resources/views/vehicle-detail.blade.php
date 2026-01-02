@@ -208,6 +208,18 @@
                     <span class="detail-value">{{ $vehicle->battery_capacity }} kWh</span>
                     </div>
                 @endif
+                @if($vehicle->range_km)
+                <div class="detail-item">
+                    <span class="detail-label">Range</span>
+                    <span class="detail-value">{{ number_format($vehicle->range_km) }} km</span>
+                </div>
+                @endif
+                @if($vehicle->charging_type)
+                <div class="detail-item">
+                    <span class="detail-label">Charging Type</span>
+                    <span class="detail-value">{{ $vehicle->charging_type }}</span>
+                </div>
+                @endif
                 @if($vehicle->engine_power)
                 <div class="detail-item">
                     <span class="detail-label">Engine Power</span>

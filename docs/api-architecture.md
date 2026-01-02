@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: ca7057ceadfca30e2f6aca96045a50d4b9c585d4d092308814aec6dc1f82033b
+API Architecture Checksum: ee87c6ea1afcf5d43af4885d865c2ed3dd5007eab679b7aa1b2ebdb78770cf6e
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -397,6 +397,8 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `top_speed_from` / `top_speed_to` - Top speed range
 - `engine_power_from` / `engine_power_to` - Engine power range
 - `battery_capacity_from` / `battery_capacity_to` - Battery capacity range (EV)
+- `range_km_from` / `range_km_to` - Electric range range (EV)
+- `charging_type` - Filter by charging type (EV)
 - `fuel_efficiency_from` / `fuel_efficiency_to` - Fuel efficiency range
 - `euronorm` - Filter by Euro norm
 - `color_id` - Filter by color
@@ -425,6 +427,8 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `price` (required) - Price in DKK
 - `mileage` (optional) - Odometer reading
 - `battery_capacity` (optional) - Battery capacity
+- `range_km` (optional) - Electric range in kilometers
+- `charging_type` (optional) - Charging type (AC, DC, AC/DC)
 - `engine_power` (optional) - Engine power
 - `towing_weight` (optional) - Towing weight
 - `ownership_tax` (optional) - Ownership tax

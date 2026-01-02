@@ -8,8 +8,8 @@
     .expandable-section {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        margin-bottom: 1.5rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
         overflow: hidden;
         transition: all 0.3s ease;
     }
@@ -24,7 +24,7 @@
     }
     
     .section-header {
-        padding: 1.25rem 1.5rem;
+        padding: 0.875rem 1rem;
         cursor: pointer;
         display: flex;
         justify-content: space-between;
@@ -46,13 +46,13 @@
     .section-title-group {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         flex: 1;
     }
     
     .section-number {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background: var(--background);
         color: var(--foreground);
@@ -60,7 +60,7 @@
         align-items: center;
         justify-content: center;
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         flex-shrink: 0;
     }
     
@@ -70,7 +70,7 @@
     }
     
     .section-title {
-        font-size: 1.125rem;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--foreground);
     }
@@ -80,7 +80,7 @@
     }
     
     .section-subtitle {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
         margin-top: 0.25rem;
     }
@@ -91,8 +91,8 @@
     }
     
     .section-icon {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
         transition: transform 0.3s ease;
         flex-shrink: 0;
     }
@@ -105,19 +105,19 @@
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.4s ease, padding 0.3s ease;
-        padding: 0 1.5rem;
+        padding: 0 1rem;
     }
     
     .section-content.expanded {
         max-height: 5000px;
-        padding: 1.5rem;
+        padding: 1rem;
     }
     
     .section-description {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
         border-bottom: 1px solid var(--border);
     }
     
@@ -138,7 +138,7 @@
     .form-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1.25rem;
+        gap: 0.875rem;
     }
     
     @media (min-width: 640px) {
@@ -147,12 +147,18 @@
         }
     }
     
+    @media (min-width: 1024px) {
+        .form-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
     /* License Plate Lookup Section */
     .lookup-section {
         background: linear-gradient(135deg, oklch(0.205 0 0) 0%, oklch(0.205 0 0) 100%);
-        border-radius: 0.75rem;
-        padding: 2rem;
-        margin-bottom: 2rem;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
         color: oklch(0.985 0 0);
     }
     
@@ -169,12 +175,12 @@
     .lookup-section p {
         color: oklch(0.985 0 0);
         opacity: 0.9;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .lookup-input-group {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
     }
     
@@ -195,7 +201,7 @@
     }
     
     .btn {
-        padding: 0.625rem 1.5rem;
+        padding: 0.5rem 1.25rem;
         border-radius: 0.5rem;
         font-weight: 500;
         transition: all 0.2s;
@@ -238,13 +244,13 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem;
         background: oklch(0.95 0.1 145);
         border: 1px solid oklch(0.8 0.15 145);
         border-radius: 0.5rem;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: oklch(0.4 0.2 145);
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
     
     .dark .success-badge {
@@ -273,8 +279,8 @@
     
     .loading-content {
         background: var(--card);
-        padding: 2rem;
-        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border-radius: 0.5rem;
         text-align: center;
         box-shadow: 0 10px 25px oklch(0 0 0 / 0.15);
     }
@@ -287,27 +293,27 @@
     .submit-section {
         background: var(--muted);
         border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 2rem;
-        margin-top: 2rem;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-top: 1.25rem;
         text-align: center;
     }
     
     .submit-section h3 {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
     .submit-section p {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .btn-submit {
-        padding: 0.875rem 2rem;
-        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
         background: var(--primary);
         color: var(--primary-foreground);
         border-radius: 0.5rem;
@@ -335,14 +341,14 @@
     .expand-controls {
         display: flex;
         justify-content: flex-end;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
         flex-wrap: wrap;
     }
     
     .expand-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
         background: var(--muted);
         color: var(--foreground);
         border: 1px solid var(--border);
@@ -358,7 +364,7 @@
     /* Mobile Responsive */
     @media (max-width: 640px) {
         .lookup-section {
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .lookup-input-group {
@@ -370,11 +376,11 @@
         }
         
         .section-header {
-            padding: 1rem;
+            padding: 0.75rem;
         }
         
         .section-content.expanded {
-            padding: 1rem;
+            padding: 0.75rem;
         }
         
         .form-grid {
@@ -418,32 +424,53 @@
     
     /* Equipment Section Styles */
     .equipment-categories {
-        margin-top: 1rem;
+        margin-top: 0.75rem;
     }
     
     .equipment-category {
         margin-bottom: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .equipment-category:first-child {
+        padding-top: 0;
+        border-top: none;
     }
     
     .equipment-category:last-child {
         margin-bottom: 0;
     }
     
+    .equipment-category-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .equipment-category-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+    
     .equipment-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.375rem;
     }
     
     @media (min-width: 640px) {
         .equipment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         }
     }
     
     @media (min-width: 1024px) {
         .equipment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         }
     }
     
@@ -463,13 +490,13 @@
     .equipment-item-content {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.875rem 1rem;
-        border: 2px solid var(--border);
-        border-radius: 0.5rem;
+        gap: 0.375rem;
+        padding: 0.5rem 0.625rem;
+        border: 1.5px solid var(--border);
+        border-radius: 0.375rem;
         background: var(--card);
         transition: all 0.2s ease;
-        min-height: 48px;
+        min-height: 32px;
     }
     
     .equipment-item:hover .equipment-item-content {
@@ -495,8 +522,8 @@
     }
     
     .equipment-check-icon {
-        width: 16px;
-        height: 16px;
+        width: 12px;
+        height: 12px;
         opacity: 0;
         transform: scale(0);
         transition: all 0.2s ease;
@@ -509,7 +536,7 @@
     }
     
     .equipment-name {
-        font-size: 0.875rem;
+        font-size: 0.6875rem;
         font-weight: 500;
         color: var(--foreground);
         transition: color 0.2s ease;
@@ -527,12 +554,12 @@
     .selected-equipment-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
+        gap: 0.375rem;
+        padding: 0.375rem 0.5rem;
         background: var(--primary);
         color: var(--primary-foreground);
         border-radius: 0.375rem;
-        font-size: 0.75rem;
+        font-size: 0.6875rem;
         font-weight: 500;
     }
     
@@ -560,31 +587,31 @@
     
     .equipment-category.has-selected {
         border-left: 3px solid var(--primary);
-        padding-left: 1rem;
+        padding-left: 0.75rem;
     }
     
     /* Image Upload Styles */
     .image-upload-area {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .image-upload-area.has-images .upload-dropzone {
-        padding: 1.5rem;
+        padding: 1rem;
         border-style: solid;
     }
     
     .image-upload-area.has-images .upload-content {
         flex-direction: row;
-        gap: 1rem;
+        gap: 0.75rem;
     }
     
     .image-upload-area.has-images .upload-icon {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
     }
     
     .image-upload-area.has-images .upload-text {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         margin: 0;
     }
     
@@ -602,8 +629,8 @@
     
     .upload-dropzone {
         border: 2px dashed var(--border);
-        border-radius: 0.75rem;
-        padding: 3rem 2rem;
+        border-radius: 0.5rem;
+        padding: 2rem 1.25rem;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -625,7 +652,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
     
     .upload-icon {
@@ -643,13 +670,13 @@
     }
     
     .upload-text {
-        font-size: 1rem;
+        font-size: 0.875rem;
         font-weight: 500;
         color: var(--foreground);
     }
     
     .upload-hint {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
     }
     
@@ -660,13 +687,13 @@
     
     /* Image Preview Container */
     .image-preview-container {
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
     
     .image-preview-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
+        gap: 0.75rem;
     }
     
     @media (min-width: 640px) {
@@ -732,8 +759,8 @@
         color: white;
         border: none;
         border-radius: 0.375rem;
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -807,9 +834,9 @@
 @endpush
 
 @section('content')
-<div class="container py-4 md:py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold tracking-tight mb-2">
+<div class="container py-3 md:py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight mb-2">
             Sell your car on Denmark's largest car market
         </h1>
         <p class="text-muted-foreground max-w-2xl">
@@ -818,11 +845,11 @@
     </div>
 
     @if(session('success'))
-        <div class="w-full rounded-md border p-4 mb-6" style="border-color: oklch(0.8 0.15 145); background: oklch(0.95 0.1 145); color: oklch(0.4 0.2 145);">
+        <div class="w-full rounded-md border p-3 mb-4" style="border-color: oklch(0.8 0.15 145); background: oklch(0.95 0.1 145); color: oklch(0.4 0.2 145);">
             <p class="text-sm font-medium">{{ session('success') }}</p>
         </div>
         <style>
-            .dark .w-full.rounded-md.border.p-4.mb-6 {
+            .dark .w-full.rounded-md.border.p-3.mb-4 {
                 border-color: oklch(0.5 0.15 145) !important;
                 background: oklch(0.3 0.1 145) !important;
                 color: oklch(0.7 0.2 145) !important;
@@ -831,7 +858,7 @@
     @endif
 
     @if($errors->any())
-        <div class="w-full rounded-md border p-4 mb-6" style="border-color: oklch(0.8 0.2 27); background: oklch(0.95 0.1 27); color: oklch(0.4 0.2 27);">
+        <div class="w-full rounded-md border p-3 mb-4" style="border-color: oklch(0.8 0.2 27); background: oklch(0.95 0.1 27); color: oklch(0.4 0.2 27);">
             <p class="text-sm font-medium mb-2">Please fix the following errors:</p>
             <ul class="list-disc list-inside text-sm">
                 @foreach($errors->all() as $error)
@@ -840,7 +867,7 @@
             </ul>
         </div>
         <style>
-            .dark .w-full.rounded-md.border.p-4.mb-6 {
+            .dark .w-full.rounded-md.border.p-3.mb-4 {
                 border-color: oklch(0.6 0.2 27) !important;
                 background: oklch(0.3 0.1 27) !important;
                 color: oklch(0.7 0.2 27) !important;
@@ -850,7 +877,7 @@
 
     <!-- License Plate Lookup Section -->
     <div class="lookup-section">
-        <h2 class="text-xl font-semibold">Find Your Vehicle</h2>
+        <h2 class="text-lg font-semibold">Find Your Vehicle</h2>
         <p>Enter your car's license plate number and press Enter. We'll automatically fill in the vehicle information for you.</p>
         
         <div class="lookup-input-group">
@@ -862,7 +889,7 @@
                     type="text"
                     id="registration-lookup"
                     placeholder="e.g., AB12345 (Press Enter to search)"
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
                 <p class="text-xs mt-1" id="lookup-error" style="color: oklch(0.985 0 0); opacity: 0.8;"></p>
             </div>
@@ -884,7 +911,7 @@
         @csrf
 
         <!-- Error Display Container -->
-        <div id="form-errors-top" class="hidden w-full rounded-md border p-4 mb-6 error-container"></div>
+        <div id="form-errors-top" class="hidden w-full rounded-md border p-3 mb-4 error-container"></div>
 
         <!-- Expand Controls -->
         <div class="expand-controls">
@@ -902,7 +929,7 @@
                         <div class="section-subtitle">Required fields to list your vehicle</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -914,7 +941,7 @@
                     <div class="space-y-2">
                         <label for="title" class="text-sm font-medium required-field">Title</label>
                         <input type="text" id="title" name="title" required
-                            class="flex h-10 w-full rounded-md border {{ $errors->has('title') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('title') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
                             placeholder="e.g., 2020 Tesla Model 3">
                         @error('title')
                             <p class="field-error">{{ $message }}</p>
@@ -924,7 +951,7 @@
                     <div class="space-y-2">
                         <label for="registration" class="text-sm font-medium required-field">Registration</label>
                         <input type="text" id="registration" name="registration" required
-                            class="flex h-10 w-full rounded-md border {{ $errors->has('registration') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('registration') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
                             placeholder="License plate number">
                         @error('registration')
                             <p class="field-error">{{ $message }}</p>
@@ -934,7 +961,7 @@
                     <div class="space-y-2">
                         <label for="price" class="text-sm font-medium required-field">Price (DKK)</label>
                         <input type="number" id="price" name="price" required min="0"
-                            class="flex h-10 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
@@ -944,7 +971,7 @@
                     <div class="space-y-2">
                         <label for="location_id" class="text-sm font-medium required-field">Location</label>
                         <select id="location_id" name="location_id" required
-                            class="flex h-10 w-full rounded-md border {{ $errors->has('location_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('location_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
                             <option value="">Select Location</option>
                             @foreach($lookupData['locations'] as $location)
                                 <option value="{{ $location->id }}">
@@ -960,7 +987,7 @@
                     <div class="space-y-2">
                         <label for="fuel_type_id" class="text-sm font-medium required-field">Fuel Type</label>
                         <select id="fuel_type_id" name="fuel_type_id" required
-                            class="flex h-10 w-full rounded-md border {{ $errors->has('fuel_type_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('fuel_type_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
                             <option value="">Select Fuel Type</option>
                             @foreach($lookupData['fuelTypes'] as $fuelType)
                                 <option value="{{ $fuelType->id }}">
@@ -976,7 +1003,7 @@
                     <div class="space-y-2">
                         <label for="listing_type_id" class="text-sm font-medium">Listing Type</label>
                         <select id="listing_type_id" name="listing_type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Type</option>
                             @foreach($lookupData['listingTypes'] as $type)
                                 <option value="{{ $type->id }}" {{ $type->name === 'Purchase' ? 'selected' : '' }}>
@@ -1003,7 +1030,7 @@
                         <div class="section-subtitle">Brand, model, year, and specifications</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -1015,7 +1042,7 @@
                     <div class="space-y-2">
                         <label for="brand_id" class="text-sm font-medium">Brand</label>
                         <select id="brand_id" name="brand_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Brand</option>
                             @foreach($lookupData['brands'] as $brand)
                                 <option value="{{ $brand->id }}">
@@ -1028,7 +1055,7 @@
                     <div class="space-y-2">
                         <label for="model_id" class="text-sm font-medium">Model</label>
                         <select id="model_id" name="model_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Model</option>
                         </select>
                     </div>
@@ -1036,7 +1063,7 @@
                     <div class="space-y-2">
                         <label for="model_year_id" class="text-sm font-medium">Model Year</label>
                         <select id="model_year_id" name="model_year_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Year</option>
                             @foreach($lookupData['modelYears'] as $year)
                                 <option value="{{ $year->id }}">
@@ -1049,7 +1076,7 @@
                     <div class="space-y-2">
                         <label for="category_id" class="text-sm font-medium">Category</label>
                         <select id="category_id" name="category_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Category</option>
                             @foreach($lookupData['categories'] as $category)
                                 <option value="{{ $category->id }}">
@@ -1062,34 +1089,62 @@
                     <div class="space-y-2">
                         <label for="mileage" class="text-sm font-medium">Mileage (km)</label>
                         <input type="number" id="mileage" name="mileage" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                     </div>
 
                     <div class="space-y-2">
                         <label for="km_driven" class="text-sm font-medium">Kilometers Driven</label>
                         <input type="number" id="km_driven" name="km_driven" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                     </div>
 
                     <div class="space-y-2">
                         <label for="vin" class="text-sm font-medium">VIN</label>
                         <input type="text" id="vin" name="vin"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="Vehicle identification number">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="vin_location" class="text-sm font-medium">VIN Location</label>
+                        <input type="text" id="vin_location" name="vin_location"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Where the VIN is located on the vehicle">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="version" class="text-sm font-medium">Version</label>
+                        <input type="text" id="version" name="version"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Vehicle version">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="type_name" class="text-sm font-medium">Type Name</label>
+                        <input type="text" id="type_name" name="type_name"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Type name">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="category" class="text-sm font-medium">Category (Text)</label>
+                        <input type="text" id="category" name="category"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Vehicle category">
                     </div>
 
                     <div class="space-y-2">
                         <label for="first_registration_date" class="text-sm font-medium">First Registration Date</label>
                         <input type="date" id="first_registration_date" name="first_registration_date"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     </div>
 
                     <div class="space-y-2 md:col-span-2">
                         <label for="description" class="text-sm font-medium">Description</label>
                         <textarea id="description" name="description" rows="4"
-                            class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="Tell potential buyers about your vehicle..."></textarea>
                     </div>
                 </div>
@@ -1106,7 +1161,7 @@
                         <div class="section-subtitle">Engine, power, battery, and performance</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -1118,25 +1173,71 @@
                     <div class="space-y-2">
                         <label for="engine_power" class="text-sm font-medium">Engine Power (HP)</label>
                         <input type="number" id="engine_power" name="engine_power" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     </div>
 
                     <div class="space-y-2">
                         <label for="battery_capacity" class="text-sm font-medium">Battery Capacity (kWh)</label>
                         <input type="number" id="battery_capacity" name="battery_capacity" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="range_km" class="text-sm font-medium">Range (km)</label>
+                        <input type="number" id="range_km" name="range_km" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Electric vehicle range">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="charging_type" class="text-sm font-medium">Charging Type</label>
+                        <input type="text" id="charging_type" name="charging_type"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="e.g., Type 2, CCS, CHAdeMO">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="fuel_efficiency" class="text-sm font-medium">Fuel Efficiency (L/100km or kWh/100km)</label>
+                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="0.01"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="0.00">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="engine_displacement" class="text-sm font-medium">Engine Displacement (cc)</label>
+                        <input type="number" id="engine_displacement" name="engine_displacement" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="engine_cylinders" class="text-sm font-medium">Engine Cylinders</label>
+                        <input type="number" id="engine_cylinders" name="engine_cylinders" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="engine_code" class="text-sm font-medium">Engine Code</label>
+                        <input type="text" id="engine_code" name="engine_code"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Engine identification code">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="top_speed" class="text-sm font-medium">Top Speed (km/h)</label>
+                        <input type="number" id="top_speed" name="top_speed" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     </div>
 
                     <div class="space-y-2">
                         <label for="towing_weight" class="text-sm font-medium">Towing Weight (kg)</label>
                         <input type="number" id="towing_weight" name="towing_weight" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     </div>
 
                     <div class="space-y-2">
                         <label for="ownership_tax" class="text-sm font-medium">Ownership Tax (DKK)</label>
                         <input type="number" id="ownership_tax" name="ownership_tax" min="0"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     </div>
                 </div>
             </div>
@@ -1152,7 +1253,7 @@
                         <div class="section-subtitle">Type, color, condition, and more</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -1164,7 +1265,7 @@
                     <div class="space-y-2">
                         <label for="type_id" class="text-sm font-medium">Type</label>
                         <select id="type_id" name="type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Type</option>
                             @foreach($lookupData['types'] as $type)
                                 <option value="{{ $type->id }}">
@@ -1177,7 +1278,7 @@
                     <div class="space-y-2">
                         <label for="use_id" class="text-sm font-medium">Use</label>
                         <select id="use_id" name="use_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Use</option>
                             @foreach($lookupData['uses'] as $use)
                                 <option value="{{ $use->id }}">
@@ -1190,7 +1291,7 @@
                     <div class="space-y-2">
                         <label for="color_id" class="text-sm font-medium">Color</label>
                         <select id="color_id" name="color_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Color</option>
                             @foreach($lookupData['colors'] as $color)
                                 <option value="{{ $color->id }}">
@@ -1203,7 +1304,7 @@
                     <div class="space-y-2">
                         <label for="body_type_id" class="text-sm font-medium">Body Type</label>
                         <select id="body_type_id" name="body_type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Body Type</option>
                             @foreach($lookupData['bodyTypes'] as $bodyType)
                                 <option value="{{ $bodyType->id }}">
@@ -1216,7 +1317,7 @@
                     <div class="space-y-2">
                         <label for="condition_id" class="text-sm font-medium">Condition</label>
                         <select id="condition_id" name="condition_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Condition</option>
                             @foreach($lookupData['conditions'] as $condition)
                                 <option value="{{ $condition->id }}">
@@ -1229,7 +1330,7 @@
                     <div class="space-y-2">
                         <label for="gear_type_id" class="text-sm font-medium">Gear Type</label>
                         <select id="gear_type_id" name="gear_type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Gear Type</option>
                             @foreach($lookupData['gearTypes'] as $gearType)
                                 <option value="{{ $gearType->id }}">
@@ -1242,7 +1343,7 @@
                     <div class="space-y-2">
                         <label for="price_type_id" class="text-sm font-medium">Price Type</label>
                         <select id="price_type_id" name="price_type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Price Type</option>
                             @foreach($lookupData['priceTypes'] as $priceType)
                                 <option value="{{ $priceType->id }}">
@@ -1255,7 +1356,7 @@
                     <div class="space-y-2">
                         <label for="sales_type_id" class="text-sm font-medium">Sales Type</label>
                         <select id="sales_type_id" name="sales_type_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Sales Type</option>
                             @foreach($lookupData['salesTypes'] as $salesType)
                                 <option value="{{ $salesType->id }}">
@@ -1268,17 +1369,256 @@
                     </div>
                     </div>
 
-        <!-- Section 5: Equipment & Features -->
+        <!-- Section 5: Advanced Vehicle Details -->
+        <div class="expandable-section" data-section="advanced">
+            <div class="section-header" onclick="toggleSection('advanced')">
+                <div class="section-title-group">
+                    <div class="section-number">5</div>
+                    <div>
+                        <div class="section-title">Advanced Vehicle Details</div>
+                        <div class="section-subtitle">Weight, dimensions, safety, and inspection details</div>
+                    </div>
+                </div>
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="section-content">
+                <div class="section-description">
+                    Advanced technical specifications and details about your vehicle. All fields are optional.
+                </div>
+                <div class="form-grid">
+                    <!-- Weight Specifications -->
+                    <div class="space-y-2">
+                        <label for="total_weight" class="text-sm font-medium">Total Weight (kg)</label>
+                        <input type="number" id="total_weight" name="total_weight" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="vehicle_weight" class="text-sm font-medium">Vehicle Weight (kg)</label>
+                        <input type="number" id="vehicle_weight" name="vehicle_weight" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="technical_total_weight" class="text-sm font-medium">Technical Total Weight (kg)</label>
+                        <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="towing_weight_brakes" class="text-sm font-medium">Towing Weight with Brakes (kg)</label>
+                        <input type="number" id="towing_weight_brakes" name="towing_weight_brakes" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="minimum_weight" class="text-sm font-medium">Minimum Weight (kg)</label>
+                        <input type="number" id="minimum_weight" name="minimum_weight" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="gross_combination_weight" class="text-sm font-medium">Gross Combination Weight (kg)</label>
+                        <input type="number" id="gross_combination_weight" name="gross_combination_weight" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <!-- Physical Specifications -->
+                    <div class="space-y-2">
+                        <label for="doors" class="text-sm font-medium">Number of Doors</label>
+                        <input type="number" id="doors" name="doors" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="minimum_seats" class="text-sm font-medium">Minimum Seats</label>
+                        <input type="number" id="minimum_seats" name="minimum_seats" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="maximum_seats" class="text-sm font-medium">Maximum Seats</label>
+                        <input type="number" id="maximum_seats" name="maximum_seats" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="wheels" class="text-sm font-medium">Number of Wheels</label>
+                        <input type="number" id="wheels" name="wheels" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="axles" class="text-sm font-medium">Number of Axles</label>
+                        <input type="number" id="axles" name="axles" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="drive_axles" class="text-sm font-medium">Drive Axles</label>
+                        <input type="number" id="drive_axles" name="drive_axles" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="wheelbase" class="text-sm font-medium">Wheelbase (mm)</label>
+                        <input type="number" id="wheelbase" name="wheelbase" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="coupling" class="text-sm font-medium">Coupling</label>
+                        <select id="coupling" name="coupling"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+
+                    <!-- Safety Features -->
+                    <div class="space-y-2">
+                        <label for="ncap_five" class="text-sm font-medium">5-Star NCAP Rating</label>
+                        <select id="ncap_five" name="ncap_five"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="airbags" class="text-sm font-medium">Number of Airbags</label>
+                        <input type="number" id="airbags" name="airbags" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="integrated_child_seats" class="text-sm font-medium">Integrated Child Seats</label>
+                        <input type="number" id="integrated_child_seats" name="integrated_child_seats" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="seat_belt_alarms" class="text-sm font-medium">Seat Belt Alarms</label>
+                        <input type="number" id="seat_belt_alarms" name="seat_belt_alarms" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <!-- Inspection Details -->
+                    <div class="space-y-2">
+                        <label for="last_inspection_date" class="text-sm font-medium">Last Inspection Date</label>
+                        <input type="date" id="last_inspection_date" name="last_inspection_date"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="last_inspection_result" class="text-sm font-medium">Last Inspection Result</label>
+                        <input type="text" id="last_inspection_result" name="last_inspection_result"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="e.g., Pass, Fail">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="last_inspection_odometer" class="text-sm font-medium">Last Inspection Odometer (km)</label>
+                        <input type="number" id="last_inspection_odometer" name="last_inspection_odometer" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="type_approval_code" class="text-sm font-medium">Type Approval Code</label>
+                        <input type="text" id="type_approval_code" name="type_approval_code"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Type approval code">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="euronorm" class="text-sm font-medium">Euro Emission Standard</label>
+                        <input type="text" id="euronorm" name="euronorm"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="e.g., Euro 6, Euro 5">
+                    </div>
+
+                    <!-- Registration Details -->
+                    <div class="space-y-2">
+                        <label for="registration_status" class="text-sm font-medium">Registration Status</label>
+                        <input type="text" id="registration_status" name="registration_status"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Current registration status">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="registration_status_updated_date" class="text-sm font-medium">Registration Status Updated Date</label>
+                        <input type="date" id="registration_status_updated_date" name="registration_status_updated_date"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="expire_date" class="text-sm font-medium">Expiration Date</label>
+                        <input type="date" id="expire_date" name="expire_date"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="status_updated_date" class="text-sm font-medium">Status Updated Date</label>
+                        <input type="date" id="status_updated_date" name="status_updated_date"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <!-- Leasing Information -->
+                    <div class="space-y-2">
+                        <label for="leasing_period_start" class="text-sm font-medium">Leasing Period Start</label>
+                        <input type="date" id="leasing_period_start" name="leasing_period_start"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="leasing_period_end" class="text-sm font-medium">Leasing Period End</label>
+                        <input type="date" id="leasing_period_end" name="leasing_period_end"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    </div>
+
+                    <!-- Other Details -->
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="extra_equipment" class="text-sm font-medium">Extra Equipment</label>
+                        <textarea id="extra_equipment" name="extra_equipment" rows="3"
+                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="List any extra equipment..."></textarea>
+                    </div>
+
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="dispensations" class="text-sm font-medium">Dispensations</label>
+                        <textarea id="dispensations" name="dispensations" rows="3"
+                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Any dispensations..."></textarea>
+                    </div>
+
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="permits" class="text-sm font-medium">Permits</label>
+                        <textarea id="permits" name="permits" rows="3"
+                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Any permits..."></textarea>
+                    </div>
+
+                    <!-- Hidden field for vehicle_external_id (may be auto-populated) -->
+                    <input type="hidden" id="vehicle_external_id" name="vehicle_external_id" value="">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Equipment & Features -->
         <div class="expandable-section" data-section="equipment">
             <div class="section-header" onclick="toggleSection('equipment')">
                 <div class="section-title-group">
-                    <div class="section-number">5</div>
+                    <div class="section-number">6</div>
                     <div>
                         <div class="section-title">Equipment & Features</div>
                         <div class="section-subtitle">Select the equipment your vehicle has</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -1288,8 +1628,8 @@
                 </div>
                 
                 <!-- Selected Equipment Summary -->
-                <div id="selected-equipment-summary" class="mb-6 p-4 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hidden">
-                    <div class="flex items-center justify-between mb-3">
+                <div id="selected-equipment-summary" class="mb-4 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hidden">
+                    <div class="flex items-center justify-between mb-2">
                         <h4 class="text-sm font-semibold text-foreground">Selected Equipment (<span id="selected-count">0</span>)</h4>
                         <button type="button" onclick="clearAllEquipment()" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
                     </div>
@@ -1299,12 +1639,27 @@
                 </div>
                 
                 <!-- Equipment by Category -->
-                <div class="equipment-categories space-y-6">
+                <div class="equipment-categories">
                     @foreach($lookupData['equipmentTypes'] as $equipmentType)
                         @if($equipmentType->equipments->count() > 0)
                             <div class="equipment-category" data-category-id="{{ $equipmentType->id }}">
-                                <div class="flex items-center gap-2 mb-4">
-                                    <h3 class="text-base font-semibold text-foreground">{{ $equipmentType->name }}</h3>
+                                <div class="equipment-category-header">
+                                    @php
+                                        $iconMap = [
+                                            1 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg>',
+                                            2 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
+                                            3 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+                                            4 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>',
+                                            5 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+                                            6 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"></path></svg>',
+                                            7 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v0Z"></path><path d="M6 16V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13"></path></svg>',
+                                            8 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path><path d="M12 15a5 5 0 0 1-5-5v-2a5 5 0 0 1 10 0v2a5 5 0 0 1-5 5Z"></path><path d="M9 12h6"></path></svg>',
+                                            9 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"></path><path d="M12 3v18"></path><path d="M18 12a6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6Z"></path></svg>',
+                                            10 => '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path><path d="M12 15a5 5 0 0 1-5-5v-2a5 5 0 0 1 10 0v2a5 5 0 0 1-5 5Z"></path><path d="M9 12h6"></path></svg>',
+                                        ];
+                                    @endphp
+                                    {!! $iconMap[$equipmentType->id] ?? '<svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>' !!}
+                                    <h3 class="text-sm font-semibold text-foreground">{{ $equipmentType->name }}</h3>
                                     <span class="text-xs text-muted-foreground">({{ $equipmentType->equipments->count() }})</span>
                                 </div>
                                 <div class="equipment-grid">
@@ -1318,7 +1673,7 @@
                                                 onchange="handleEquipmentChange(this, {{ $equip->id }}, '{{ addslashes($equip->name) }}')"
                                             >
                                             <div class="equipment-item-content">
-                                                <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                                     <polyline points="20 6 9 17 4 12"></polyline>
                                                 </svg>
                                                 <span class="equipment-name">{{ $equip->name }}</span>
@@ -1338,8 +1693,11 @@
                     @endphp
                     @if($equipmentWithoutType->count() > 0)
                         <div class="equipment-category" data-category-id="uncategorized">
-                            <div class="flex items-center gap-2 mb-4">
-                                <h3 class="text-base font-semibold text-foreground">Other</h3>
+                            <div class="equipment-category-header">
+                                <svg class="equipment-category-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path>
+                                </svg>
+                                <h3 class="text-sm font-semibold text-foreground">Other</h3>
                                 <span class="text-xs text-muted-foreground">({{ $equipmentWithoutType->count() }})</span>
                             </div>
                             <div class="equipment-grid">
@@ -1353,7 +1711,7 @@
                                             onchange="handleEquipmentChange(this, {{ $equip->id }}, '{{ addslashes($equip->name) }}')"
                                         >
                                         <div class="equipment-item-content">
-                                            <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg class="equipment-check-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
                                             </svg>
                                             <span class="equipment-name">{{ $equip->name }}</span>
@@ -1367,17 +1725,17 @@
             </div>
         </div>
 
-        <!-- Section 6: Photos -->
+        <!-- Section 7: Photos -->
         <div class="expandable-section" data-section="photos">
             <div class="section-header" onclick="toggleSection('photos')">
                 <div class="section-title-group">
-                    <div class="section-number">6</div>
+                    <div class="section-number">7</div>
                     <div>
                         <div class="section-title">Photos</div>
                         <div class="section-subtitle">Add photos of your vehicle</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
@@ -1398,7 +1756,7 @@
                     >
                     <div class="upload-dropzone" id="upload-dropzone">
                         <div class="upload-content">
-                            <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1411,7 +1769,7 @@
                 
                 <!-- Image Preview Grid -->
                 <div id="image-preview-container" class="image-preview-container hidden">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-semibold">
                             Selected Images (<span id="image-count">0</span>)
                         </h4>
