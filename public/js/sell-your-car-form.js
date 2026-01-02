@@ -1,5 +1,5 @@
 // Sell Your Car Form Handler
-// Handles form submission via AJAX, lookup, and form prefilling
+// Handles expandable sections, form submission via AJAX, lookup, and form prefilling
 
 (function() {
     'use strict';
@@ -12,8 +12,8 @@
     }
 
     function initSellYourCarForm() {
-        // Initialize collapsible sections
-        initCollapsibleSections();
+        // Initialize expandable sections
+        initExpandableSections();
         
         // Initialize brand/model loading
         initBrandModelLoading();
@@ -25,20 +25,56 @@
         initFormSubmission();
     }
 
-    // Collapsible sections
-    function initCollapsibleSections() {
-        // Make toggleSection available globally for onclick handlers
+    // Expandable Sections
+    function initExpandableSections() {
+        // Make toggleSection available globally
         window.toggleSection = function(sectionId) {
-            const content = document.getElementById(sectionId + '-content');
-            if (!content) return;
+            const section = document.querySelector(`[data-section="${sectionId}"]`);
+            if (!section) return;
             
-            const header = content.previousElementSibling;
-            const icon = header.querySelector('.section-icon');
+            const header = section.querySelector('.section-header');
+            const content = section.querySelector('.section-content');
             
-            content.classList.toggle('active');
-            if (icon) {
-                icon.classList.toggle('rotated');
+            if (!header || !content) return;
+            
+            const isExpanded = content.classList.contains('expanded');
+            
+            if (isExpanded) {
+                content.classList.remove('expanded');
+                header.classList.remove('active');
+            } else {
+                content.classList.add('expanded');
+                header.classList.add('active');
+                
+                // Smooth scroll to section
+                setTimeout(() => {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
             }
+        };
+        
+        // Expand all sections
+        window.expandAllSections = function() {
+            document.querySelectorAll('.expandable-section').forEach(section => {
+                const header = section.querySelector('.section-header');
+                const content = section.querySelector('.section-content');
+                if (header && content) {
+                    content.classList.add('expanded');
+                    header.classList.add('active');
+                }
+            });
+        };
+        
+        // Collapse all sections
+        window.collapseAllSections = function() {
+            document.querySelectorAll('.expandable-section').forEach(section => {
+                const header = section.querySelector('.section-header');
+                const content = section.querySelector('.section-content');
+                if (header && content) {
+                    content.classList.remove('expanded');
+                    header.classList.remove('active');
+                }
+            });
         };
     }
 
@@ -77,28 +113,26 @@
 
     // Registration lookup
     function initRegistrationLookup() {
-        const lookupBtn = document.getElementById('lookup-btn');
         const registrationInput = document.getElementById('registration-lookup');
-        const vehicleForm = document.getElementById('vehicle-form');
         const lookupError = document.getElementById('lookup-error');
         const lookupLoading = document.getElementById('lookup-loading');
+        const vehicleForm = document.getElementById('vehicle-form');
 
-        if (!lookupBtn || !registrationInput || !vehicleForm) return;
+        if (!registrationInput) return;
 
         function performLookup() {
             const registration = registrationInput.value.trim();
             
             if (!registration) {
                 lookupError.textContent = 'Please enter a license plate number';
-                lookupError.classList.add('text-red-600');
+                lookupError.style.color = 'var(--destructive)';
                 return;
             }
 
             lookupError.textContent = '';
-            lookupError.classList.remove('text-red-600');
+            lookupError.style.color = '';
             lookupLoading.classList.remove('hidden');
-            lookupBtn.disabled = true;
-            lookupBtn.textContent = 'Loading...';
+            registrationInput.disabled = true;
 
             fetch('/api/v1/nummerplade/vehicle-by-registration', {
                 method: 'POST',
@@ -119,23 +153,19 @@
             })
             .then(data => {
                 lookupLoading.classList.add('hidden');
-                lookupBtn.disabled = false;
-                lookupBtn.textContent = 'Sell Your Car';
-
-                console.log('API Response:', data);
+                registrationInput.disabled = false;
 
                 if (data.status === 'error' || !data.data) {
                     let errorMessage = data.message || 'Failed to fetch vehicle information';
                     
                     if (data.errors && data.errors.code === 'TIMEOUT') {
-                        errorMessage = 'The vehicle lookup is taking longer than expected. Please try again in a moment, or you can fill in the form manually.';
+                        errorMessage = 'The vehicle lookup is taking longer than expected. Please try again in a moment.';
                     } else if (data.errors && data.errors.retryable) {
-                        errorMessage = 'The vehicle lookup service is temporarily unavailable. Please try again in a moment, or you can fill in the form manually.';
+                        errorMessage = 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.';
                     }
                     
                     lookupError.textContent = errorMessage;
-                    lookupError.classList.add('text-red-600');
-                    vehicleForm.classList.remove('hidden');
+                    lookupError.style.color = 'var(--destructive)';
                     return;
                 }
 
@@ -157,33 +187,53 @@
                 }
                 
                 if (!vehicleData || typeof vehicleData !== 'object') {
-                    const errorMsg = 'No vehicle data found in API response. Response structure: ' + JSON.stringify(data).substring(0, 500);
+                    const errorMsg = 'No vehicle data found in API response. Please try again.';
                     lookupError.textContent = errorMsg;
-                    lookupError.classList.add('text-red-600');
-                    console.error('Failed to extract vehicle data:', data);
-                    vehicleForm.classList.remove('hidden');
+                    lookupError.style.color = 'var(--destructive)';
                     return;
                 }
                 
-                vehicleForm.classList.remove('hidden');
+                // Show the form
+                if (vehicleForm) {
+                    vehicleForm.classList.remove('form-hidden');
+                    vehicleForm.classList.add('form-visible');
+                }
                 
+                // Prefill form and expand relevant sections
+                prefillForm(vehicleData);
+                
+                // Expand essential section by default
                 setTimeout(() => {
-                    prefillForm(vehicleData);
-                    vehicleForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    window.toggleSection('essential');
                 }, 100);
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-badge';
+                successMsg.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>Vehicle information loaded successfully! Review and complete the form below.</span>
+                `;
+                if (vehicleForm) {
+                    vehicleForm.insertBefore(successMsg, vehicleForm.firstChild);
+                    setTimeout(() => {
+                        successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 100);
+                    setTimeout(() => successMsg.remove(), 8000);
+                }
             })
             .catch(error => {
                 lookupLoading.classList.add('hidden');
-                lookupBtn.disabled = false;
-                lookupBtn.textContent = 'Sell Your Car';
-                lookupError.textContent = 'An error occurred while fetching vehicle information';
-                lookupError.classList.add('text-red-600');
+                registrationInput.disabled = false;
+                lookupError.textContent = 'An error occurred while fetching vehicle information. Please try again.';
+                lookupError.style.color = 'var(--destructive)';
                 console.error('Lookup error:', error);
-                vehicleForm.classList.remove('hidden');
             });
         }
 
-        lookupBtn.addEventListener('click', performLookup);
+        // Trigger lookup on Enter key
         registrationInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -205,13 +255,60 @@
         
         const form = event.target;
         const submitBtn = form.querySelector('button[type="submit"]');
-        const formContainer = form.closest('.container') || document.querySelector('.container');
         
         // Clear previous errors
         clearErrors();
         
+        // Validate required fields
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        let firstInvalidField = null;
+
+        requiredFields.forEach(field => {
+            field.classList.remove('border-red-500');
+            field.classList.add('border-input');
+            
+            const errorMsg = field.parentElement.querySelector('.field-error');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+
+            if (!field.value || (field.type === 'number' && field.value < 0)) {
+                isValid = false;
+                field.classList.remove('border-input');
+                field.classList.add('border-red-500');
+                
+                const errorElement = document.createElement('p');
+                errorElement.className = 'field-error';
+                errorElement.textContent = 'This field is required';
+                field.parentElement.appendChild(errorElement);
+
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
+                }
+            }
+        });
+
+        if (!isValid) {
+            if (firstInvalidField) {
+                // Find and expand the section containing the invalid field
+                const section = firstInvalidField.closest('.expandable-section');
+                if (section) {
+                    const sectionId = section.getAttribute('data-section');
+                    const header = section.querySelector('.section-header');
+                    const content = section.querySelector('.section-content');
+                    if (header && content && !content.classList.contains('expanded')) {
+                        content.classList.add('expanded');
+                        header.classList.add('active');
+                    }
+                }
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+            }
+            return;
+        }
+        
         // Create FormData BEFORE disabling form fields
-        // Disabled fields are NOT included in FormData!
         const formData = new FormData(form);
         
         // Get CSRF token
@@ -235,19 +332,33 @@
             try {
                 data = await response.json();
             } catch (jsonError) {
-                // If response is not JSON, treat as error
                 hideLoadingState(submitBtn, form);
                 displayGeneralError('An unexpected error occurred. Please try again.');
                 return;
             }
 
-            // Hide loading state
             hideLoadingState(submitBtn, form);
 
             if (!response.ok || data.status === 'error') {
-                // Handle validation errors
                 if (data.errors) {
                     displayErrors(data.errors);
+                    // Expand section with first error
+                    const firstErrorField = Object.keys(data.errors)[0];
+                    const field = document.querySelector(`[name="${firstErrorField}"]`);
+                    if (field) {
+                        const section = field.closest('.expandable-section');
+                        if (section) {
+                            const sectionId = section.getAttribute('data-section');
+                            const header = section.querySelector('.section-header');
+                            const content = section.querySelector('.section-content');
+                            if (header && content && !content.classList.contains('expanded')) {
+                                content.classList.add('expanded');
+                                header.classList.add('active');
+                            }
+                        }
+                        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        field.focus();
+                    }
                 } else {
                     displayGeneralError(data.message || 'An error occurred while saving the vehicle.');
                 }
@@ -284,23 +395,12 @@
             `;
         }
 
-        // Disable form fields
-        if (form) {
-            const inputs = form.querySelectorAll('input, select, textarea, button');
-            inputs.forEach(input => {
-                if (input !== submitBtn) {
-                    input.disabled = true;
-                }
-            });
-        }
-
         // Add loading overlay
-        if (form && !form.querySelector('.form-loading-overlay')) {
+        if (!document.querySelector('.loading-overlay')) {
             const overlay = document.createElement('div');
-            overlay.className = 'form-loading-overlay';
-            overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+            overlay.className = 'loading-overlay';
             overlay.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg text-center">
+                <div class="loading-content">
                     <svg class="animate-spin h-8 w-8 mx-auto text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -321,16 +421,8 @@
             }
         }
 
-        // Enable form fields
-        if (form) {
-            const inputs = form.querySelectorAll('input, select, textarea, button');
-            inputs.forEach(input => {
-                input.disabled = false;
-            });
-        }
-
         // Remove loading overlay
-        const overlay = document.querySelector('.form-loading-overlay');
+        const overlay = document.querySelector('.loading-overlay');
         if (overlay) {
             overlay.remove();
         }
@@ -338,17 +430,14 @@
 
     // Error display functions
     function clearErrors() {
-        // Clear top-level errors
         const topErrorContainer = document.getElementById('form-errors-top');
         if (topErrorContainer) {
             topErrorContainer.innerHTML = '';
             topErrorContainer.classList.add('hidden');
         }
 
-        // Clear inline errors
         document.querySelectorAll('.field-error').forEach(el => el.remove());
         
-        // Remove error borders
         document.querySelectorAll('.border-red-500').forEach(el => {
             el.classList.remove('border-red-500');
             el.classList.add('border-input');
@@ -376,11 +465,9 @@
     function displayErrors(errors) {
         clearErrors();
         
-        // Display top-level errors
         if (typeof errors === 'object' && !Array.isArray(errors)) {
             const errorMessages = [];
             
-            // Handle Laravel validation errors format
             Object.keys(errors).forEach(field => {
                 const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
                 fieldErrors.forEach(error => {
@@ -412,19 +499,16 @@
             return;
         }
 
-        // Add error border
         field.classList.remove('border-input');
         field.classList.add('border-red-500');
 
-        // Remove existing error message
         const existingError = field.parentElement.querySelector('.field-error');
         if (existingError) {
             existingError.remove();
         }
 
-        // Add error message
         const errorElement = document.createElement('p');
-        errorElement.className = 'field-error text-sm text-red-600 mt-1';
+        errorElement.className = 'field-error';
         errorElement.textContent = message;
         
         const fieldContainer = field.closest('.space-y-2') || field.parentElement;
@@ -442,12 +526,6 @@
     // Prefill form with API data
     function prefillForm(apiData) {
         console.log('PrefillForm called with:', apiData);
-        console.log('All API data keys:', Object.keys(apiData));
-        
-        const vehicleForm = document.getElementById('vehicle-form');
-        if (vehicleForm) {
-            vehicleForm.classList.remove('hidden');
-        }
         
         // Helper function to safely set field value
         function setFieldValue(fieldId, value) {
@@ -473,7 +551,6 @@
             }
             if (value === null || value === undefined || value === '') return false;
             
-            // If value is a number (ID), set it directly
             if (typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value))) {
                 const idValue = String(value);
                 if (select.querySelector(`option[value="${idValue}"]`)) {
@@ -483,7 +560,6 @@
                 }
             }
             
-            // If value is an object with id property
             if (typeof value === 'object' && value !== null && value.id !== undefined) {
                 const idValue = String(value.id);
                 if (select.querySelector(`option[value="${idValue}"]`)) {
@@ -493,7 +569,6 @@
                 }
             }
             
-            // Otherwise, try to match by text (for backward compatibility)
             const text = String(value).toLowerCase().trim();
             for (let option of select.options) {
                 if (option.value && option.text.trim().toLowerCase() === text) {
@@ -509,12 +584,14 @@
         
         // Basic fields
         const registration = apiData.registration || apiData.registration_number || apiData.reg || apiData.plate || apiData.license_plate;
-        if (registration) setFieldValue('registration', registration);
+        if (registration) {
+            setFieldValue('registration', registration);
+            setFieldValue('registration-lookup', registration);
+        }
         
         const vin = apiData.vin || apiData.chassis_number || apiData.chassis || apiData.chassisNumber;
         if (vin) setFieldValue('vin', vin);
         
-        // Title - only use direct API values
         const title = apiData.title || apiData.name;
         if (title) setFieldValue('title', String(title).trim());
 
@@ -534,6 +611,7 @@
                     const modelValue = apiData.model || apiData.model_name || apiData.modelName;
                     if (modelValue !== null && modelValue !== undefined) {
                         if (!setSelectByIdOrText('model_id', modelValue)) {
+                            const vehicleForm = document.getElementById('vehicle-form');
                             let hiddenInput = document.getElementById('model_name_hidden');
                             if (!hiddenInput && vehicleForm) {
                                 hiddenInput = document.createElement('input');
@@ -550,16 +628,19 @@
                 }, 500);
             }
             
-            if (!brandFound && typeof brandValue === 'string' && vehicleForm) {
+            if (!brandFound && typeof brandValue === 'string') {
+                const vehicleForm = document.getElementById('vehicle-form');
                 let brandHiddenInput = document.getElementById('brand_name_hidden');
-                if (!brandHiddenInput) {
+                if (!brandHiddenInput && vehicleForm) {
                     brandHiddenInput = document.createElement('input');
                     brandHiddenInput.type = 'hidden';
                     brandHiddenInput.id = 'brand_name_hidden';
                     brandHiddenInput.name = 'brand_name';
                     vehicleForm.appendChild(brandHiddenInput);
                 }
-                brandHiddenInput.value = brandValue;
+                if (brandHiddenInput) {
+                    brandHiddenInput.value = brandValue;
+                }
             }
         }
 
@@ -629,168 +710,466 @@
         const type = apiData.type || apiData.type_id;
         if (type) setSelectByIdOrText('type_id', type);
 
-        // Additional detailed fields
+        // Additional fields
         setFieldValue('description', apiData.description || apiData.notes || apiData.comments);
-        setFieldValue('vin_location', apiData.vin_location || apiData.vinLocation);
-        setFieldValue('version', apiData.version);
-        setFieldValue('type_name', apiData.type_name || apiData.typeName);
-        setFieldValue('engine_displacement', apiData.engine_displacement || apiData.engineDisplacement || apiData.displacement || apiData.displacement_cc);
-        setFieldValue('engine_cylinders', apiData.engine_cylinders || apiData.engineCylinders || apiData.cylinders);
-        setFieldValue('engine_code', apiData.engine_code || apiData.engineCode);
-        setFieldValue('doors', apiData.doors || apiData.number_of_doors);
-        
-        const seats = apiData.seats || apiData.number_of_seats || apiData.seating_capacity || apiData.minimum_seats || apiData.maximum_seats;
-        if (seats) {
-            setFieldValue('minimum_seats', apiData.minimum_seats || seats);
-            setFieldValue('maximum_seats', apiData.maximum_seats || seats);
-        }
-        
-        setFieldValue('top_speed', apiData.top_speed || apiData.topSpeed || apiData.max_speed);
-        setFieldValue('fuel_efficiency', apiData.fuel_efficiency || apiData.fuelEfficiency || apiData.consumption || apiData.fuel_consumption);
-        setFieldValue('airbags', apiData.airbags || apiData.number_of_airbags);
-        setFieldValue('total_weight', apiData.total_weight || apiData.totalWeight);
-        setFieldValue('vehicle_weight', apiData.vehicle_weight || apiData.vehicleWeight);
-        setFieldValue('technical_total_weight', apiData.technical_total_weight || apiData.technicalTotalWeight);
-        setFieldValue('minimum_weight', apiData.minimum_weight || apiData.minimumWeight);
-        setFieldValue('gross_combination_weight', apiData.gross_combination_weight || apiData.grossCombinationWeight);
-        setFieldValue('towing_weight', apiData.towing_weight || apiData.towingWeight);
-        setFieldValue('towing_weight_brakes', apiData.towing_weight_brakes || apiData.towingWeightBrakes);
-        
-        // Handle coupling (boolean)
-        if (apiData.coupling !== undefined && apiData.coupling !== null) {
-            setFieldValue('coupling', apiData.coupling ? '1' : '0');
-        }
-        
-        setFieldValue('wheelbase', apiData.wheelbase);
-        setFieldValue('type_approval_code', apiData.type_approval_code || apiData.typeApprovalCode);
-        setFieldValue('category', apiData.category);
-        setFieldValue('wheels', apiData.wheels);
-        setFieldValue('axles', apiData.axles);
-        setFieldValue('drive_axles', apiData.drive_axles || apiData.driveAxles);
-        setFieldValue('extra_equipment', apiData.extra_equipment || apiData.extraEquipment);
-        setFieldValue('integrated_child_seats', apiData.integrated_child_seats || apiData.integratedChildSeats);
-        setFieldValue('seat_belt_alarms', apiData.seat_belt_alarms || apiData.seatBeltAlarms);
-        setFieldValue('euronorm', apiData.euronorm || apiData.euroNorm);
-        
-        // Registration status fields
-        setFieldValue('registration_status', apiData.registration_status || apiData.registrationStatus);
-        setFieldValue('vehicle_external_id', apiData.vehicle_external_id || apiData.vehicleExternalId || apiData.vehicle_id);
-        
-        // Registration status dates
-        if (apiData.registration_status_updated_date || apiData.registrationStatusUpdatedDate) {
-            try {
-                const date = new Date(apiData.registration_status_updated_date || apiData.registrationStatusUpdatedDate);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('registration_status_updated_date', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid registration_status_updated_date format:', apiData.registration_status_updated_date);
-            }
-        }
-        
-        if (apiData.expire_date || apiData.expireDate) {
-            try {
-                const date = new Date(apiData.expire_date || apiData.expireDate);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('expire_date', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid expire_date format:', apiData.expire_date);
-            }
-        }
-        
-        if (apiData.status_updated_date || apiData.statusUpdatedDate) {
-            try {
-                const date = new Date(apiData.status_updated_date || apiData.statusUpdatedDate);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('status_updated_date', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid status_updated_date format:', apiData.status_updated_date);
-            }
-        }
-        
-        // Inspection fields
-        if (apiData.last_inspection_date || apiData.lastInspectionDate) {
-            try {
-                const date = new Date(apiData.last_inspection_date || apiData.lastInspectionDate);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('last_inspection_date', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid last_inspection_date format:', apiData.last_inspection_date);
-            }
-        }
-        
-        setFieldValue('last_inspection_result', apiData.last_inspection_result || apiData.lastInspectionResult);
-        setFieldValue('last_inspection_odometer', apiData.last_inspection_odometer || apiData.lastInspectionOdometer);
-        
-        // Leasing fields
-        if (apiData.leasing_period_start || apiData.leasingPeriodStart) {
-            try {
-                const date = new Date(apiData.leasing_period_start || apiData.leasingPeriodStart);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('leasing_period_start', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid leasing_period_start format:', apiData.leasing_period_start);
-            }
-        }
-        
-        if (apiData.leasing_period_end || apiData.leasingPeriodEnd) {
-            try {
-                const date = new Date(apiData.leasing_period_end || apiData.leasingPeriodEnd);
-                if (!isNaN(date.getTime())) {
-                    setFieldValue('leasing_period_end', date.toISOString().split('T')[0]);
-                }
-            } catch (e) {
-                console.warn('Invalid leasing_period_end format:', apiData.leasing_period_end);
-            }
-        }
-        
-        // Handle dispensations and permits
-        if (apiData.dispensations) {
-            const dispensationsValue = Array.isArray(apiData.dispensations) 
-                ? apiData.dispensations.join(', ') 
-                : apiData.dispensations;
-            setFieldValue('dispensations', dispensationsValue);
-        }
-        
-        if (apiData.permits) {
-            const permitsValue = Array.isArray(apiData.permits) 
-                ? apiData.permits.join(', ') 
-                : apiData.permits;
-            setFieldValue('permits', permitsValue);
-        }
-        
-        // Handle ncap_five (boolean)
-        if (apiData.ncap_five !== undefined) {
-            setFieldValue('ncap_five', apiData.ncap_five ? '1' : '0');
-        } else if (apiData.ncapFive !== undefined) {
-            setFieldValue('ncap_five', apiData.ncapFive ? '1' : '0');
-        }
         
         // Handle equipment array
         if (apiData.equipment && Array.isArray(apiData.equipment)) {
             apiData.equipment.forEach(function(equipId) {
                 if (equipId) {
-                    const checkbox = document.querySelector(`input[name="equipment_ids[]"][value="${equipId}"]`);
+                    const actualId = typeof equipId === 'object' && equipId.id ? equipId.id : equipId;
+                    const checkbox = document.querySelector(`input[name="equipment_ids[]"][value="${actualId}"]`);
                     if (checkbox) {
                         checkbox.checked = true;
-                        console.log(`Checked equipment: ${equipId}`);
-                    } else {
-                        const actualId = typeof equipId === 'object' && equipId.id ? equipId.id : equipId;
-                        const checkboxAlt = document.querySelector(`input[name="equipment_ids[]"][value="${actualId}"]`);
-                        if (checkboxAlt) {
-                            checkboxAlt.checked = true;
-                            console.log(`Checked equipment: ${actualId}`);
+                        // Trigger change handler to update UI
+                        const equipmentName = checkbox.closest('.equipment-item')?.querySelector('.equipment-name')?.textContent || '';
+                        if (window.handleEquipmentChange) {
+                            window.handleEquipmentChange(checkbox, actualId, equipmentName);
                         }
                     }
                 }
             });
         }
         
+        // Auto-expand sections that have been filled
+        const sectionsToExpand = ['essential', 'details'];
+        if (apiData.enginePower || apiData.batteryCapacity) {
+            sectionsToExpand.push('technical');
+        }
+        if (apiData.color || apiData.bodyType) {
+            sectionsToExpand.push('additional');
+        }
+        if (apiData.equipment && apiData.equipment.length > 0) {
+            sectionsToExpand.push('equipment');
+        }
+        
+        sectionsToExpand.forEach(sectionId => {
+            window.toggleSection(sectionId);
+        });
+        
         console.log('Form prefilling completed');
     }
+    
+    // Equipment selection handlers
+    window.handleEquipmentChange = function(checkbox, equipmentId, equipmentName) {
+        const isChecked = checkbox.checked;
+        const equipmentItem = checkbox.closest('.equipment-item');
+        const category = equipmentItem.closest('.equipment-category');
+        
+        if (isChecked) {
+            equipmentItem.classList.add('selected');
+            if (category) {
+                category.classList.add('has-selected');
+            }
+            // Move to top of category
+            if (category) {
+                const grid = category.querySelector('.equipment-grid');
+                if (grid && equipmentItem.parentElement === grid) {
+                    grid.insertBefore(equipmentItem, grid.firstChild);
+                }
+            }
+        } else {
+            equipmentItem.classList.remove('selected');
+            // Check if category has any selected items
+            if (category) {
+                const hasSelected = category.querySelector('.equipment-item.selected');
+                if (!hasSelected) {
+                    category.classList.remove('has-selected');
+                }
+            }
+        }
+        
+        updateSelectedEquipmentSummary();
+    };
+    
+    window.clearAllEquipment = function() {
+        const checkboxes = document.querySelectorAll('.equipment-checkbox:checked');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            const equipmentId = parseInt(checkbox.value);
+            const equipmentName = checkbox.closest('.equipment-item').querySelector('.equipment-name').textContent;
+            handleEquipmentChange(checkbox, equipmentId, equipmentName);
+        });
+    };
+    
+    function updateSelectedEquipmentSummary() {
+        const selectedCheckboxes = document.querySelectorAll('.equipment-checkbox:checked');
+        const summaryContainer = document.getElementById('selected-equipment-summary');
+        const summaryList = document.getElementById('selected-equipment-list');
+        const countElement = document.getElementById('selected-count');
+        
+        if (!summaryContainer || !summaryList || !countElement) return;
+        
+        const count = selectedCheckboxes.length;
+        countElement.textContent = count;
+        
+        if (count === 0) {
+            summaryContainer.classList.add('hidden');
+            return;
+        }
+        
+        summaryContainer.classList.remove('hidden');
+        summaryList.innerHTML = '';
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const equipmentItem = checkbox.closest('.equipment-item');
+            const equipmentName = equipmentItem.querySelector('.equipment-name').textContent;
+            const equipmentId = parseInt(checkbox.value);
+            
+            const badge = document.createElement('div');
+            badge.className = 'selected-equipment-badge';
+            badge.innerHTML = `
+                <span>${escapeHtml(equipmentName)}</span>
+                <button type="button" onclick="removeEquipment(${equipmentId})" aria-label="Remove ${escapeHtml(equipmentName)}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+            summaryList.appendChild(badge);
+        });
+    }
+    
+    window.removeEquipment = function(equipmentId) {
+        const checkbox = document.querySelector(`.equipment-checkbox[value="${equipmentId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const equipmentName = checkbox.closest('.equipment-item').querySelector('.equipment-name').textContent;
+            handleEquipmentChange(checkbox, equipmentId, equipmentName);
+        }
+    };
+    
+    // Initialize equipment summary on page load
+    function initEquipmentSummary() {
+        // Update summary for any pre-checked items (from form prefilling)
+        setTimeout(() => {
+            updateSelectedEquipmentSummary();
+            
+            // Move selected items to top
+            document.querySelectorAll('.equipment-checkbox:checked').forEach(checkbox => {
+                const equipmentItem = checkbox.closest('.equipment-item');
+                const category = equipmentItem.closest('.equipment-category');
+                if (equipmentItem && category) {
+                    equipmentItem.classList.add('selected');
+                    category.classList.add('has-selected');
+                    const grid = category.querySelector('.equipment-grid');
+                    if (grid && equipmentItem.parentElement === grid) {
+                        grid.insertBefore(equipmentItem, grid.firstChild);
+                    }
+                }
+            });
+        }, 100);
+    }
+    
+    // Call init on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            initEquipmentSummary();
+            initImageUpload();
+        });
+    } else {
+        initEquipmentSummary();
+        initImageUpload();
+    }
+    
+    // Image Upload Handlers - Rewritten with cleaner architecture
+    // Single source of truth: fileMap stores File objects with unique IDs
+    const imageUploadState = {
+        fileMap: new Map(), // Map<fileId, File> - single source of truth
+        fileInput: null,
+        isUpdating: false, // Flag to prevent recursive updates
+        maxSize: 10 * 1024 * 1024, // 10MB
+        allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    };
+    
+    // Generate unique file ID using file properties (more robust than name_size)
+    function getFileId(file) {
+        // Use a combination that's unique: name, size, lastModified, and type
+        // This handles edge cases better than just name_size and avoids underscore issues
+        return `${file.name}|${file.size}|${file.lastModified}|${file.type}`;
+    }
+    
+    // Check if file is duplicate
+    function isDuplicateFile(file) {
+        const fileId = getFileId(file);
+        return imageUploadState.fileMap.has(fileId);
+    }
+    
+    // Validate a single file
+    function validateFile(file) {
+        if (isDuplicateFile(file)) {
+            return { valid: false, error: `File "${file.name}" is already selected.` };
+        }
+        
+        if (!imageUploadState.allowedTypes.includes(file.type)) {
+            return { valid: false, error: `File "${file.name}" is not a valid image format. Please use JPEG, PNG, or GIF.` };
+        }
+        
+        if (file.size > imageUploadState.maxSize) {
+            return { valid: false, error: `File "${file.name}" is too large. Maximum size is 10MB.` };
+        }
+        
+        return { valid: true };
+    }
+    
+    // Add files to the file map and update the input
+    function addFiles(files) {
+        if (imageUploadState.isUpdating) return;
+        
+        const validFiles = [];
+        const errors = [];
+        
+        // Validate all files first
+        Array.from(files).forEach(file => {
+            const validation = validateFile(file);
+            if (validation.valid) {
+                validFiles.push(file);
+            } else {
+                errors.push(validation.error);
+            }
+        });
+        
+        // Show errors if any
+        if (errors.length > 0) {
+            errors.forEach(error => displayImageError(error));
+        }
+        
+        // Add valid files to map
+        validFiles.forEach(file => {
+            const fileId = getFileId(file);
+            imageUploadState.fileMap.set(fileId, file);
+        });
+        
+        // Update file input and previews
+        if (validFiles.length > 0 || errors.length > 0) {
+            syncFileInput();
+            updateImagePreviews();
+        }
+    }
+    
+    // Remove a file by its ID
+    function removeFileById(fileId) {
+        if (imageUploadState.isUpdating) return;
+        
+        if (imageUploadState.fileMap.delete(fileId)) {
+            syncFileInput();
+            updateImagePreviews();
+        }
+    }
+    
+    // Sync the file input with the file map
+    function syncFileInput() {
+        if (!imageUploadState.fileInput) return;
+        
+        imageUploadState.isUpdating = true;
+        try {
+            const dataTransfer = new DataTransfer();
+            
+            // Add all files from map to DataTransfer
+            imageUploadState.fileMap.forEach(file => {
+                try {
+                    dataTransfer.items.add(file);
+                } catch (e) {
+                    console.error('Error adding file to DataTransfer:', e, file.name);
+                }
+            });
+            
+            // Update file input
+            imageUploadState.fileInput.files = dataTransfer.files;
+        } finally {
+            // Use setTimeout to ensure change event doesn't fire during update
+            setTimeout(() => {
+                imageUploadState.isUpdating = false;
+            }, 50);
+        }
+    }
+    
+    // Initialize image upload functionality
+    function initImageUpload() {
+        const dropzone = document.getElementById('upload-dropzone');
+        const fileInput = document.getElementById('images');
+        
+        if (!dropzone || !fileInput) return;
+        
+        imageUploadState.fileInput = fileInput;
+        
+        // Initialize file map from existing files in input
+        if (fileInput.files && fileInput.files.length > 0) {
+            Array.from(fileInput.files).forEach(file => {
+                const fileId = getFileId(file);
+                imageUploadState.fileMap.set(fileId, file);
+            });
+            updateImagePreviews();
+        }
+        
+        // Handle file input change (user selection via dialog)
+        fileInput.addEventListener('change', function(e) {
+            // Skip if we're programmatically updating
+            if (imageUploadState.isUpdating) {
+                e.target.value = '';
+                return;
+            }
+            
+            const newFiles = e.target.files;
+            if (newFiles && newFiles.length > 0) {
+                addFiles(newFiles);
+                // Clear the input value to allow selecting the same file again
+                e.target.value = '';
+            }
+        });
+        
+        // Drag and drop handlers
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+        
+        dropzone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+        });
+        
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                addFiles(files);
+            }
+        });
+        
+        // Click to upload
+        dropzone.addEventListener('click', function(e) {
+            if (e.target !== fileInput && !fileInput.contains(e.target)) {
+                fileInput.click();
+            }
+        });
+    }
+    
+    // Update previews based on current file map
+    function updateImagePreviews() {
+        const container = document.getElementById('image-preview-container');
+        const grid = document.getElementById('image-preview-grid');
+        const countElement = document.getElementById('image-count');
+        const uploadArea = document.getElementById('image-upload-area');
+        
+        if (!container || !grid) return;
+        
+        const fileCount = imageUploadState.fileMap.size;
+        
+        if (fileCount === 0) {
+            container.classList.add('hidden');
+            if (uploadArea) {
+                uploadArea.classList.remove('has-images');
+            }
+            return;
+        }
+        
+        container.classList.remove('hidden');
+        if (uploadArea) {
+            uploadArea.classList.add('has-images');
+        }
+        if (countElement) {
+            countElement.textContent = fileCount;
+        }
+        
+        // Clear existing previews
+        grid.innerHTML = '';
+        
+        // Create preview for each file in the map
+        imageUploadState.fileMap.forEach((file, fileId) => {
+            const previewItem = createImagePreview(file, fileId);
+            grid.appendChild(previewItem);
+        });
+    }
+    
+    // Create preview element for a file
+    function createImagePreview(file, fileId) {
+        const item = document.createElement('div');
+        item.className = 'image-preview-item';
+        item.dataset.fileId = fileId;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = file.name;
+            item.insertBefore(img, item.firstChild);
+        };
+        reader.readAsDataURL(file);
+        
+        // File info
+        const fileSize = formatFileSize(file.size);
+        const info = document.createElement('div');
+        info.className = 'image-preview-info';
+        info.textContent = `${file.name} (${fileSize})`;
+        item.appendChild(info);
+        
+        // Overlay with remove button
+        const overlay = document.createElement('div');
+        overlay.className = 'image-preview-overlay';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'image-remove-btn';
+        removeBtn.setAttribute('data-file-id', fileId);
+        removeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const targetFileId = this.getAttribute('data-file-id') || 
+                                this.closest('.image-preview-item')?.dataset.fileId;
+            if (targetFileId) {
+                removeFileById(targetFileId);
+            }
+        });
+        removeBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        `;
+        overlay.appendChild(removeBtn);
+        item.appendChild(overlay);
+        
+        return item;
+    }
+    
+    // Public function to remove image by fileId
+    window.removeImage = function(fileId) {
+        removeFileById(fileId);
+    };
+    
+    // Public function to clear all images
+    window.clearAllImages = function() {
+        if (imageUploadState.isUpdating) return;
+        
+        imageUploadState.fileMap.clear();
+        syncFileInput();
+        updateImagePreviews();
+    };
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    function displayImageError(message) {
+        // You can integrate this with your existing error display system
+        const errorContainer = document.getElementById('form-errors-top');
+        if (errorContainer) {
+            errorContainer.innerHTML = `<p class="text-sm font-medium">${escapeHtml(message)}</p>`;
+            errorContainer.classList.remove('hidden');
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => {
+                errorContainer.classList.add('hidden');
+            }, 5000);
+        } else {
+            alert(message);
+        }
+    }
 })();
-

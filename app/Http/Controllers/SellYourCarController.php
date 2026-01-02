@@ -20,6 +20,7 @@ use App\Models\Condition;
 use App\Models\GearType;
 use App\Models\SalesType;
 use App\Models\Equipment;
+use App\Models\EquipmentType;
 use App\Models\Dealer;
 use App\Models\DealerUser;
 use App\Services\AuthService;
@@ -64,7 +65,10 @@ class SellYourCarController extends Controller
             'conditions' => Condition::orderBy('name')->get(),
             'gearTypes' => GearType::orderBy('name')->get(),
             'salesTypes' => SalesType::orderBy('name')->get(),
-            'equipment' => Equipment::orderBy('name')->get(),
+            'equipmentTypes' => EquipmentType::with(['equipments' => function($query) {
+                $query->orderBy('name');
+            }])->orderBy('name')->get(),
+            'equipment' => Equipment::with('equipmentType')->orderBy('name')->get(), // Keep for backward compatibility
         ];
 
 
