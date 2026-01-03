@@ -35,168 +35,17 @@
                         id="search-input"
                         value="{{ request()->query('search', '') }}"
                         placeholder="Search by make, model, registration number, or keywords..."
-                        class="flex h-8 w-full rounded-md border border-input bg-background pl-9 pr-2.5 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-2.5 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         autocomplete="off"
                     />
                 </div>
             </form>
             
-            <!-- Sort Dropdown -->
-            <div class="relative">
-                <button 
-                    type="button" 
-                    id="sort-button"
-                    class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
-                        <path d="M3 6h18"></path>
-                        <path d="M7 12h10"></path>
-                        <path d="M10 18h4"></path>
-                    </svg>
-                    <span id="sort-button-text">
-                        @php
-                            $sortLabels = [
-                                'standard' => 'Standard',
-                                'price_asc' => 'Price: (lowest first)',
-                                'price_desc' => 'Price: (Highest first)',
-                                'date_desc' => 'Date: (Newest first)',
-                                'date_asc' => 'Date: (Oldest first)',
-                                'year_desc' => 'Model Year: (Newest first)',
-                                'year_asc' => 'Model Year: (Oldest First)',
-                                'mileage_desc' => 'Mileage: (Highest first)',
-                                'mileage_asc' => 'Mileage: (Lowest first)',
-                                'fuel_efficiency_desc' => 'Km/l: (Highest first)',
-                                'fuel_efficiency_asc' => 'Km/l: (Lowest first)',
-                                'range_desc' => 'Range: (Highest first)',
-                                'range_asc' => 'Range: (Lowest first)',
-                                'battery_desc' => 'Battery capacity: (Highest first)',
-                                'battery_asc' => 'Battery capacity: (Lowest first)',
-                                'brand_asc' => 'Brand: (Alphabetical)',
-                                'brand_desc' => 'Brand: (Reverse alphabetical)',
-                                'engine_power_desc' => 'HK: (Highest first)',
-                                'engine_power_asc' => 'HK: (Lowest first)',
-                                'towing_weight_desc' => 'Trailer weight: (Heaviest first)',
-                                'towing_weight_asc' => 'Trailer weight: (Lowest first)',
-                                'top_speed_desc' => '0-100 km/h: (Highest first)',
-                                'top_speed_asc' => '0-100 km/h: (Lowest first)',
-                                'ownership_tax_desc' => 'Owner tax: (Highest first)',
-                                'ownership_tax_asc' => 'Owner tax: (Lowest first)',
-                                'first_reg_desc' => '1st reg: (Newest first)',
-                                'first_reg_asc' => '1st reg: (Eldest first)',
-                                'distance_asc' => 'Distance to seller: (Shortest distance)',
-                                'distance_desc' => 'Distance to seller: (Longest distance)'
-                            ];
-                            $currentSort = request()->query('sort', 'standard');
-                        @endphp
-                        {{ $sortLabels[$currentSort] ?? 'Standard' }}
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5 h-3 w-3">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </button>
-                
-                <!-- Sort Dropdown Menu -->
-                <div 
-                    id="sort-dropdown"
-                    class="absolute right-0 top-full mt-1 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
-                >
-                    <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
-                            Standard
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
-                            Price: (lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
-                            Price: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
-                            Date: (Newest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
-                            Date: (Oldest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
-                            Model Year: (Newest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
-                            Model Year: (Oldest First)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
-                            Mileage: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
-                            Mileage: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
-                            Km/l: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
-                            Km/l: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
-                            Range: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
-                            Range: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
-                            Battery capacity: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
-                            Battery capacity: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
-                            Brand: (Alphabetical)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
-                            Brand: (Reverse alphabetical)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
-                            HK: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
-                            HK: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
-                            Trailer weight: (Heaviest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
-                            Trailer weight: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
-                            0-100 km/h: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
-                            0-100 km/h: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
-                            Owner tax: (Highest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
-                            Owner tax: (Lowest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
-                            1st reg: (Newest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
-                            1st reg: (Eldest first)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
-                            Distance to seller: (Shortest distance)
-                        </button>
-                        <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
-                            Distance to seller: (Longest distance)
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Advanced Filters Button -->
             <button 
                 type="button" 
                 id="filter-button"
-                class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
                     <line x1="4" x2="20" y1="21" y2="21"></line>
@@ -213,13 +62,192 @@
         </div>
         
         <!-- Applied Filters Chips -->
-        <div id="applied-filters-container" class="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border">
+        <div id="applied-filters-container" class="flex flex-wrap gap-2 mt-2 pt-2">
             <!-- Filter chips will be rendered here via JavaScript -->
         </div>
     </div>
 
-    <!-- Vehicle Grid -->
-    <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <!-- Sort and View Controls -->
+    <div class="flex items-center justify-end gap-2">
+        <!-- Sort Dropdown -->
+        <div class="relative">
+            <button 
+                type="button" 
+                id="sort-button"
+                class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
+                    <path d="M3 6h18"></path>
+                    <path d="M7 12h10"></path>
+                    <path d="M10 18h4"></path>
+                </svg>
+                <span id="sort-button-text">
+                    @php
+                        $sortLabels = [
+                            'standard' => 'Standard',
+                            'price_asc' => 'Price: (lowest first)',
+                            'price_desc' => 'Price: (Highest first)',
+                            'date_desc' => 'Date: (Newest first)',
+                            'date_asc' => 'Date: (Oldest first)',
+                            'year_desc' => 'Model Year: (Newest first)',
+                            'year_asc' => 'Model Year: (Oldest First)',
+                            'mileage_desc' => 'Mileage: (Highest first)',
+                            'mileage_asc' => 'Mileage: (Lowest first)',
+                            'fuel_efficiency_desc' => 'Km/l: (Highest first)',
+                            'fuel_efficiency_asc' => 'Km/l: (Lowest first)',
+                            'range_desc' => 'Range: (Highest first)',
+                            'range_asc' => 'Range: (Lowest first)',
+                            'battery_desc' => 'Battery capacity: (Highest first)',
+                            'battery_asc' => 'Battery capacity: (Lowest first)',
+                            'brand_asc' => 'Brand: (Alphabetical)',
+                            'brand_desc' => 'Brand: (Reverse alphabetical)',
+                            'engine_power_desc' => 'HK: (Highest first)',
+                            'engine_power_asc' => 'HK: (Lowest first)',
+                            'towing_weight_desc' => 'Trailer weight: (Heaviest first)',
+                            'towing_weight_asc' => 'Trailer weight: (Lowest first)',
+                            'top_speed_desc' => '0-100 km/h: (Highest first)',
+                            'top_speed_asc' => '0-100 km/h: (Lowest first)',
+                            'ownership_tax_desc' => 'Owner tax: (Highest first)',
+                            'ownership_tax_asc' => 'Owner tax: (Lowest first)',
+                            'first_reg_desc' => '1st reg: (Newest first)',
+                            'first_reg_asc' => '1st reg: (Eldest first)',
+                            'distance_asc' => 'Distance to seller: (Shortest distance)',
+                            'distance_desc' => 'Distance to seller: (Longest distance)'
+                        ];
+                        $currentSort = request()->query('sort', 'standard');
+                    @endphp
+                    {{ $sortLabels[$currentSort] ?? 'Standard' }}
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5 h-3 w-3">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </button>
+            
+            <!-- Sort Dropdown Menu -->
+            <div 
+                id="sort-dropdown"
+                class="absolute right-0 top-full mt-1 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
+            >
+                <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
+                        Standard
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
+                        Price: (lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
+                        Price: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
+                        Date: (Newest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
+                        Date: (Oldest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
+                        Model Year: (Newest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
+                        Model Year: (Oldest First)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
+                        Mileage: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
+                        Mileage: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
+                        Km/l: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
+                        Km/l: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
+                        Range: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
+                        Range: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
+                        Battery capacity: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
+                        Battery capacity: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
+                        Brand: (Alphabetical)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
+                        Brand: (Reverse alphabetical)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
+                        HK: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
+                        HK: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
+                        Trailer weight: (Heaviest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
+                        Trailer weight: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
+                        0-100 km/h: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
+                        0-100 km/h: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
+                        Owner tax: (Highest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
+                        Owner tax: (Lowest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
+                        1st reg: (Newest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
+                        1st reg: (Eldest first)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
+                        Distance to seller: (Shortest distance)
+                    </button>
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
+                        Distance to seller: (Longest distance)
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- View Toggle Button -->
+        <button 
+            type="button" 
+            id="view-toggle-button"
+            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Toggle view style"
+        >
+            <!-- Card View Icon (shown when in card view) -->
+            <svg id="view-card-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+            </svg>
+            <!-- List View Icon (shown when in list view) -->
+            <svg id="view-list-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 hidden">
+                <line x1="8" x2="21" y1="6" y2="6"></line>
+                <line x1="8" x2="21" y1="12" y2="12"></line>
+                <line x1="8" x2="21" y1="18" y2="18"></line>
+                <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                <line x1="3" x2="3.01" y1="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Vehicle Grid/List -->
+    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" data-view="card">
         @forelse($vehicles as $vehicle)
         <div class="rounded-lg border border-border bg-card overflow-hidden p-0">
             <!-- Vehicle Image -->
@@ -346,8 +374,8 @@
         @endforelse
     </div>
 
-    <!-- Pagination (Placeholder) -->
-    <div class="mt-8 flex items-center justify-center gap-2">
+    <!-- Pagination -->
+    <div id="pagination-container" class="mt-8 flex items-center justify-center gap-2">
         <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                 <path d="m15 18-6-6 6-6"></path>
@@ -1408,6 +1436,278 @@
     #sort-dropdown .overflow-y-auto::-webkit-scrollbar-thumb:hover {
         background-color: hsl(var(--muted-foreground) / 0.3);
     }
+    
+    /* List view styles - Fixed height compact design */
+    #vehicle-container[data-view="list"] {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.625rem;
+        border: 2px solid hsl(var(--border));
+        border-radius: 0.375rem;
+        background-color: hsl(var(--card));
+        overflow: hidden;
+        transition: all 0.2s ease;
+        padding: 0.5rem;
+        height: 70px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item:hover {
+        border-color: hsl(var(--primary) / 0.5);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container {
+        flex-shrink: 0;
+        width: 100px;
+        min-width: 100px;
+        height: 100%;
+        max-height: 70px;
+        overflow: hidden;
+        border-radius: 0.25rem;
+        background-color: hsl(var(--muted) / 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
+        gap: 0.75rem;
+        min-width: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-main-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.125rem;
+        overflow: hidden;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-title-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        overflow: hidden;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-title-section h3 {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1.2;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: hsl(var(--foreground));
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-title-section .text-muted-foreground {
+        font-size: 0.6875rem;
+        margin: 0;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-price {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.2;
+        color: hsl(var(--primary));
+        white-space: nowrap;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-badges span {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.625rem;
+        border-radius: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+        white-space: nowrap;
+        border: 1px solid hsl(var(--border));
+        background-color: hsl(var(--muted) / 0.5);
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-specs {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-specs > div {
+        font-size: 0.6875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        line-height: 1;
+        color: hsl(var(--muted-foreground));
+        white-space: nowrap;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-specs svg {
+        width: 0.75rem;
+        height: 0.75rem;
+        flex-shrink: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-actions-section {
+        flex-shrink: 0;
+        display: flex;
+        gap: 0.375rem;
+        align-items: center;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-actions-section button,
+    #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+        height: 1.625rem;
+        padding: 0 0.5rem;
+        font-size: 0.6875rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
+        top: 0.125rem;
+        right: 0.125rem;
+        padding: 0.125rem 0.25rem;
+        font-size: 0.5625rem;
+        border-radius: 0.125rem;
+        z-index: 10;
+        line-height: 1;
+    }
+    
+    /* Tablet and up */
+    @media (min-width: 768px) {
+        #vehicle-container[data-view="list"] .vehicle-item {
+            height: 80px;
+            gap: 0.75rem;
+            padding: 0.625rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 120px;
+            min-width: 120px;
+            max-height: 80px;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-title-section h3 {
+            font-size: 0.875rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-price {
+            font-size: 0.9375rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-specs {
+            gap: 1rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-specs > div {
+            font-size: 0.75rem;
+        }
+    }
+    
+    /* Large screens */
+    @media (min-width: 1024px) {
+        #vehicle-container[data-view="list"] .vehicle-item {
+            height: 85px;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 140px;
+            min-width: 140px;
+            max-height: 85px;
+        }
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        #vehicle-container[data-view="list"] {
+            gap: 0.375rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-item {
+            height: 65px;
+            gap: 0.5rem;
+            padding: 0.375rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 80px;
+            min-width: 80px;
+            max-height: 65px;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-content {
+            gap: 0.5rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-title-section h3 {
+            font-size: 0.75rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-price {
+            font-size: 0.8125rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-specs {
+            display: none;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-badges {
+            display: none;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-actions-section button,
+        #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+            height: 1.5rem;
+            padding: 0 0.375rem;
+            font-size: 0.625rem;
+        }
+    }
 </style>
 @endpush
 
@@ -1415,7 +1715,8 @@
 <script>
     (function() {
         // Constants
-        const vehicleGrid = document.querySelector('.grid.w-full');
+        const vehicleContainer = document.getElementById('vehicle-container');
+        const vehicleGrid = vehicleContainer; // Keep for backward compatibility
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const sortButton = document.getElementById('sort-button');
@@ -1429,6 +1730,12 @@
         const filterBackdrop = document.getElementById('filter-backdrop');
         const filterApplyButton = document.getElementById('filter-apply-button');
         const filterResetButton = document.getElementById('filter-reset-button');
+        const viewToggleButton = document.getElementById('view-toggle-button');
+        const viewCardIcon = document.getElementById('view-card-icon');
+        const viewListIcon = document.getElementById('view-list-icon');
+        
+        // View state
+        let currentView = localStorage.getItem('vehicleView') || 'card';
         
         const sortLabels = {
             'standard': 'Standard',
@@ -1594,12 +1901,119 @@
             `;
         }
         
-        // Render vehicle grid
+        // Render single vehicle list item - Fixed height compact design
+        function renderVehicleListItem(vehicle) {
+            const details = vehicle.details || {};
+            const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
+            
+            // Build badges
+            const badges = [];
+            if (details.gear_type_name) badges.push(details.gear_type_name);
+            if (details.color_name) badges.push(details.color_name);
+            if (vehicle.category_name) badges.push(vehicle.category_name);
+            
+            // Build specs
+            const specs = [];
+            if (vehicle.model_year_name) {
+                specs.push(`
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                            <line x1="16" x2="16" y1="2" y2="6"></line>
+                            <line x1="8" x2="8" y1="2" y2="6"></line>
+                            <line x1="3" x2="21" y1="10" y2="10"></line>
+                        </svg>
+                        <span>${vehicle.model_year_name}</span>
+                    </div>
+                `);
+            }
+            if (vehicle.mileage || vehicle.km_driven) {
+                specs.push(`
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                    </div>
+                `);
+            }
+            if (vehicle.fuel_type_name) {
+                specs.push(`
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="2" x2="22" y1="2" y2="2"></line>
+                            <line x1="6" x2="6" y1="6" y2="22"></line>
+                            <line x1="18" x2="18" y1="6" y2="22"></line>
+                            <line x1="2" x2="22" y1="22" y2="22"></line>
+                        </svg>
+                        <span>${vehicle.fuel_type_name}</span>
+                    </div>
+                `);
+            }
+            
+            return `
+                <div class="vehicle-item">
+                    <!-- Vehicle Image -->
+                    <div class="vehicle-image-container relative">
+                        <img
+                            src="${imageUrl}"
+                            alt="${vehicle.brand_name || ''} ${vehicle.model_name || ''}"
+                            class="h-full w-full object-cover"
+                        />
+                        <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                            ${vehicle.registration || ''}
+                        </span>
+                    </div>
+                    
+                    <!-- Vehicle Content -->
+                    <div class="vehicle-content">
+                        <!-- Main Info Section -->
+                        <div class="vehicle-main-info">
+                            <div class="vehicle-title-row">
+                                <div class="vehicle-title-section">
+                                    <h3>${vehicle.brand_name || ''} ${vehicle.model_name || ''}</h3>
+                                    ${details.version ? `<p class="text-muted-foreground">${details.version}</p>` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
+                                <p class="vehicle-price">${formatCurrency(vehicle.price)}</p>
+                                ${badges.length > 0 ? `
+                                <div class="vehicle-badges">
+                                    ${badges.map(badge => `<span>${badge}</span>`).join('')}
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Specs Section -->
+                        ${specs.length > 0 ? `
+                        <div class="vehicle-specs">
+                            ${specs.join('')}
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Actions Section -->
+                        <div class="vehicle-actions-section">
+                            <a href="/vehicles/${vehicle.id}">
+                                <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                    View
+                                </button>
+                            </a>
+                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                Enquire
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render vehicle grid or list
         function renderVehicleGrid(vehicles) {
-            if (!vehicleGrid) return;
+            if (!vehicleContainer) return;
             
             if (vehicles.length === 0) {
-                vehicleGrid.innerHTML = `
+                vehicleContainer.innerHTML = `
                     <div class="col-span-full flex items-center justify-center py-12">
                         <div class="flex flex-col items-center justify-center text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
@@ -1616,28 +2030,70 @@
                 return;
             }
             
-            vehicleGrid.innerHTML = vehicles.map(vehicle => renderVehicleCard(vehicle)).join('');
+            if (currentView === 'list') {
+                vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleListItem(vehicle)).join('');
+            } else {
+                vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleCard(vehicle)).join('');
+            }
         }
         
         // Render pagination
         function renderPagination(pagination) {
-            const paginationContainer = document.querySelector('.mt-8.flex.items-center.justify-center.gap-2');
-            if (!paginationContainer) return;
+            console.log('renderPagination called with:', pagination);
             
-            const { current_page, last_page, total } = pagination;
+            // Find pagination container by ID (more reliable)
+            let paginationContainer = document.getElementById('pagination-container');
             
-            if (last_page <= 1) {
+            // If container doesn't exist, create it after the vehicle container
+            if (!paginationContainer && vehicleContainer) {
+                paginationContainer = document.createElement('div');
+                paginationContainer.id = 'pagination-container';
+                paginationContainer.className = 'mt-8 flex items-center justify-center gap-2';
+                vehicleContainer.parentNode.insertBefore(paginationContainer, vehicleContainer.nextSibling);
+                console.log('Created pagination container');
+            }
+            
+            if (!paginationContainer) {
+                console.warn('Pagination container not found and could not be created');
+                return;
+            }
+            
+            // Handle missing or invalid pagination data
+            if (!pagination || typeof pagination !== 'object') {
+                console.warn('Invalid pagination data:', pagination);
                 paginationContainer.innerHTML = '';
                 return;
             }
+            
+            const { current_page, last_page, total } = pagination;
+            console.log('Pagination values:', { current_page, last_page, total });
+            
+            // Convert to numbers and validate pagination values
+            const currentPageNum = parseInt(current_page);
+            const lastPageNum = parseInt(last_page);
+            
+            if (isNaN(currentPageNum) || isNaN(lastPageNum) || currentPageNum < 1 || lastPageNum < 1) {
+                console.warn('Invalid pagination values:', { current_page, last_page, currentPageNum, lastPageNum });
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            // Only clear if there's truly only 1 page
+            if (lastPageNum <= 1) {
+                console.log('Only 1 page, clearing pagination');
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            console.log('Rendering pagination HTML');
             
             let paginationHTML = '';
             
             // Previous button
             paginationHTML += `
                 <button 
-                    ${current_page === 1 ? 'disabled' : ''}
-                    data-page="${current_page - 1}"
+                    ${currentPageNum === 1 ? 'disabled' : ''}
+                    data-page="${currentPageNum - 1}"
                     class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
@@ -1649,8 +2105,8 @@
             
             // Page numbers
             const maxPagesToShow = 7;
-            let startPage = Math.max(1, current_page - Math.floor(maxPagesToShow / 2));
-            let endPage = Math.min(last_page, startPage + maxPagesToShow - 1);
+            let startPage = Math.max(1, currentPageNum - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(lastPageNum, startPage + maxPagesToShow - 1);
             
             if (endPage - startPage < maxPagesToShow - 1) {
                 startPage = Math.max(1, endPage - maxPagesToShow + 1);
@@ -1671,20 +2127,20 @@
                 paginationHTML += `
                     <button 
                         data-page="${i}"
-                        class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${i === current_page ? 'bg-accent' : ''}"
+                        class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${i === currentPageNum ? 'bg-accent' : ''}"
                     >
                         ${i}
                     </button>
                 `;
             }
             
-            if (endPage < last_page) {
-                if (endPage < last_page - 1) {
+            if (endPage < lastPageNum) {
+                if (endPage < lastPageNum - 1) {
                     paginationHTML += `<span class="px-2 text-muted-foreground">...</span>`;
                 }
                 paginationHTML += `
-                    <button data-page="${last_page}" class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                        ${last_page}
+                    <button data-page="${lastPageNum}" class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        ${lastPageNum}
                     </button>
                 `;
             }
@@ -1692,8 +2148,8 @@
             // Next button
             paginationHTML += `
                 <button 
-                    ${current_page === last_page ? 'disabled' : ''}
-                    data-page="${current_page + 1}"
+                    ${currentPageNum === lastPageNum ? 'disabled' : ''}
+                    data-page="${currentPageNum + 1}"
                     class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 >
                     Next
@@ -2135,8 +2591,16 @@
                 const data = await response.json();
                 
                 // Render vehicles and pagination
-                renderVehicleGrid(data.vehicles);
-                renderPagination(data.pagination);
+                renderVehicleGrid(data.vehicles || []);
+                
+                // Always try to render pagination if it exists - let renderPagination handle validation
+                if (data.pagination) {
+                    console.log('Rendering pagination:', data.pagination);
+                    renderPagination(data.pagination);
+                } else {
+                    // If pagination is completely missing, log a warning but don't clear existing
+                    console.warn('Pagination data missing from API response', data);
+                }
                 
                 // Update count badges
                 const filterCount = document.getElementById('filter-count');
@@ -2954,6 +3418,136 @@
             });
         }
         
+        
+        // View toggle functionality
+        function setView(view) {
+            if (!vehicleContainer || (view !== 'card' && view !== 'list')) return;
+            
+            currentView = view;
+            localStorage.setItem('vehicleView', view);
+            
+            // Update container data attribute and classes
+            vehicleContainer.setAttribute('data-view', view);
+            if (view === 'list') {
+                vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+                vehicleContainer.classList.add('flex', 'flex-col');
+            } else {
+                vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+                vehicleContainer.classList.remove('flex', 'flex-col');
+            }
+            
+            // Update toggle button icon based on current view
+            if (viewCardIcon && viewListIcon) {
+                if (view === 'list') {
+                    // Show list icon (active state)
+                    viewCardIcon.classList.add('hidden');
+                    viewListIcon.classList.remove('hidden');
+                    viewToggleButton?.setAttribute('aria-label', 'Switch to card view');
+                } else {
+                    // Show card icon (default state)
+                    viewCardIcon.classList.remove('hidden');
+                    viewListIcon.classList.add('hidden');
+                    viewToggleButton?.setAttribute('aria-label', 'Switch to list view');
+                }
+            }
+        }
+        
+        // Convert existing card elements to list view (for initial page load)
+        function convertCardsToList() {
+            if (!vehicleContainer || currentView !== 'list') return;
+            
+            const cards = vehicleContainer.querySelectorAll('.rounded-lg.border');
+            cards.forEach(card => {
+                // Check if already converted
+                if (card.classList.contains('vehicle-item')) return;
+                
+                const imageDiv = card.querySelector('.relative.aspect-video');
+                const detailsDiv = card.querySelector('.px-4.py-4');
+                const actionsDiv = card.querySelector('.mt-auto.p-4');
+                
+                if (!imageDiv || !detailsDiv) return;
+                
+                // Extract data
+                const img = imageDiv.querySelector('img');
+                const registration = imageDiv.querySelector('span')?.textContent || '';
+                const title = detailsDiv.querySelector('h3')?.textContent || '';
+                const version = detailsDiv.querySelector('.text-muted-foreground.-mt-1\\.5')?.textContent || '';
+                const price = detailsDiv.querySelector('.text-primary.text-2xl')?.textContent || '';
+                const badges = Array.from(detailsDiv.querySelectorAll('.rounded-md.border')).map(b => b.textContent);
+                const specs = Array.from(detailsDiv.querySelectorAll('.grid.grid-cols-2 > div')).map(s => s.innerHTML);
+                const viewLink = actionsDiv?.querySelector('a[href^="/vehicles/"]')?.getAttribute('href') || '';
+                const vehicleId = viewLink.match(/\/vehicles\/(\d+)/)?.[1] || '';
+                
+                // Create list item structure - Fixed height compact design
+                const listItem = document.createElement('div');
+                listItem.className = 'vehicle-item';
+                listItem.innerHTML = `
+                    <div class="vehicle-image-container relative">
+                        ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
+                        ${registration ? `<span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-main-info">
+                            <div class="vehicle-title-row">
+                                <div class="vehicle-title-section">
+                                    <h3>${title}</h3>
+                                    ${version ? `<p class="text-muted-foreground">${version}</p>` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
+                                <p class="vehicle-price">${price}</p>
+                                ${badges.length > 0 ? `
+                                <div class="vehicle-badges">
+                                    ${badges.map(b => `<span>${b}</span>`).join('')}
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ${specs.length > 0 ? `
+                        <div class="vehicle-specs">
+                            ${specs.join('')}
+                        </div>
+                        ` : ''}
+                        <div class="vehicle-actions-section">
+                            ${vehicleId ? `<a href="/vehicles/${vehicleId}"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
+                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Enquire</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Replace card with list item
+                card.replaceWith(listItem);
+            });
+        }
+        
+        // View toggle button handler
+        if (viewToggleButton) {
+            viewToggleButton.addEventListener('click', () => {
+                // Toggle between card and list view
+                const newView = currentView === 'card' ? 'list' : 'card';
+                setView(newView);
+                // Preserve current page from URL to ensure pagination is maintained
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentPage = parseInt(urlParams.get('page')) || 1;
+                // Explicitly pass page parameter as number to ensure it's preserved
+                fetchVehicles({ page: currentPage });
+            });
+        }
+        
+        // Initialize view on page load
+        if (currentView) {
+            setView(currentView);
+            // If list view is saved, re-fetch to render in list format
+            if (currentView === 'list') {
+                // Get current URL params to preserve filters
+                const urlParams = new URLSearchParams(window.location.search);
+                const page = urlParams.get('page') || 1;
+                // Re-fetch to get proper list view rendering
+                setTimeout(() => {
+                    fetchVehicles({ page: parseInt(page) });
+                }, 50);
+            }
+        }
         
         // Initialize filter chips on page load
         renderFilterChips();
