@@ -11,7 +11,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -62,8 +61,7 @@
         }
     </script>
     <style>
-        :root,
-        .light {
+        :root {
             --radius: 0.5rem;
             --background: oklch(1 0 0);
             --foreground: oklch(0.145 0 0);
@@ -71,39 +69,18 @@
             --card-foreground: oklch(0.145 0 0);
             --popover: oklch(1 0 0);
             --popover-foreground: oklch(0.145 0 0);
-            --primary: oklch(0.205 0 0);
+            --primary: #004aad;
             --primary-foreground: oklch(0.985 0 0);
             --secondary: oklch(0.97 0 0);
-            --secondary-foreground: oklch(0.205 0 0);
+            --secondary-foreground: oklch(0.145 0 0);
             --muted: oklch(0.97 0 0);
             --muted-foreground: oklch(0.556 0 0);
             --accent: oklch(0.97 0 0);
-            --accent-foreground: oklch(0.205 0 0);
+            --accent-foreground: oklch(0.145 0 0);
             --destructive: oklch(0.577 0.245 27.325);
             --border: oklch(0.922 0 0);
             --input: oklch(0.922 0 0);
             --ring: oklch(0.708 0 0);
-        }
-        
-        .dark {
-            --background: oklch(0.145 0 0);
-            --foreground: oklch(0.985 0 0);
-            --card: oklch(0.205 0 0);
-            --card-foreground: oklch(0.985 0 0);
-            --popover: oklch(0.205 0 0);
-            --popover-foreground: oklch(0.985 0 0);
-            --primary: oklch(0.922 0 0);
-            --primary-foreground: oklch(0.205 0 0);
-            --secondary: oklch(0.269 0 0);
-            --secondary-foreground: oklch(0.985 0 0);
-            --muted: oklch(0.269 0 0);
-            --muted-foreground: oklch(0.708 0 0);
-            --accent: oklch(0.269 0 0);
-            --accent-foreground: oklch(0.985 0 0);
-            --destructive: oklch(0.704 0.191 22.216);
-            --border: oklch(1 0 0 / 10%);
-            --input: oklch(1 0 0 / 15%);
-            --ring: oklch(0.556 0 0);
         }
         
         * {
@@ -149,22 +126,21 @@
 </head>
 <body class="antialiased selection:bg-muted selection:text-muted-foreground">
     <!-- Header for Auth Pages -->
-    <header class="bg-background/95 supports-[backdrop-filter]:bg-background/60 absolute top-0 right-0 left-0 z-50 w-full border-b border-border backdrop-blur sm:absolute">
+    <header class="bg-primary absolute top-0 right-0 left-0 z-50 w-full border-b border-primary-foreground/20 sm:absolute">
         <div class="container mx-auto px-4 md:px-6">
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center gap-2">
                     <a href="/" class="flex items-center space-x-2">
-                        <p class="text-[27px] font-bold">Bilskyen</p>
+                        <img src="/images/logo.png" alt="Bilskyen" class="h-8">
                     </a>
                 </div>
                 <div class="flex items-center gap-4">
                     <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                        <a href="/vehicles" class="hover:text-foreground/80 transition-colors">Vehicles</a>
-                        <a href="/about" class="hover:text-foreground/80 transition-colors">About Us</a>
-                        <a href="/contact" class="hover:text-foreground/80 transition-colors">Contact</a>
+                        <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
+                        <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">About Us</a>
+                        <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Contact</a>
                     </nav>
                     <div class="flex items-center gap-2">
-                        @include('components.theme-toggle')
                         @include('components.user-auth-status')
                     </div>
                 </div>

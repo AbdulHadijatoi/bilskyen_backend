@@ -15,7 +15,7 @@
     </p>
 
     @if (session('status'))
-        <div class="w-full rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-green-600 dark:text-green-400">
+        <div class="w-full rounded-lg border border-primary/50 bg-primary/10 p-4 text-primary">
             <div class="flex">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>

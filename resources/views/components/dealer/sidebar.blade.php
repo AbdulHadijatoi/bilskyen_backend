@@ -24,8 +24,8 @@
         <ul class="flex w-full min-w-0 flex-col gap-1 sidebar-menu">
             <li class="group/menu-item relative sidebar-menu-item">
                 <a href="/dealer" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 h-12 sidebar-header-button">
-                    <div class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg shrink-0 sidebar-logo">
-                        <span class="text-sm font-bold">R</span>
+                    <div class="flex aspect-square size-8 items-center justify-center rounded-lg shrink-0 sidebar-logo">
+                        <img src="/images/logo.png" alt="Bilskyen" class="h-6 w-auto">
                     </div>
                     <div class="grid flex-1 text-left text-sm leading-tight sidebar-header-text">
                         <span class="truncate font-medium text-sidebar-foreground">Bilskyen</span>

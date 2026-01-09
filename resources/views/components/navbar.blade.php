@@ -1,20 +1,19 @@
-<header class="bg-background/95 supports-[backdrop-filter]:bg-background/60 w-full border-b border-border backdrop-blur" id="navbar">
+<header class="bg-primary w-full border-b border-border" id="navbar">
     <div class="container mx-auto px-4 md:px-6">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-2">
                 <a href="/" class="flex items-center space-x-2">
-                    <p class="text-[27px] font-bold">Bilskyen</p>
+                    <img src="/images/logo_white.png" alt="Bilskyen" class="h-8">
                 </a>
             </div>
             <div class="flex items-center gap-4">
                 <!-- Desktop Navigation -->
                 <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                    <a href="/vehicles" class="hover:text-foreground/80 transition-colors">Vehicles</a>
-                    <a href="/about" class="hover:text-foreground/80 transition-colors">About Us</a>
-                    <a href="/contact" class="hover:text-foreground/80 transition-colors">Contact</a>
+                    <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
+                    <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">About Us</a>
+                    <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Contact</a>
                 </nav>
                 <div class="flex items-center gap-2">
-                    @include('components.theme-toggle')
                     @include('components.user-auth-status')
                     <!-- Mobile Menu Button -->
                     <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-md hover:bg-muted transition-colors" aria-label="Toggle menu">
@@ -27,11 +26,11 @@
             </div>
         </div>
         <!-- Mobile Navigation Menu -->
-        <nav id="mobile-menu" class="hidden md:hidden border-t border-border py-4">
+        <nav id="mobile-menu" class="hidden md:hidden border-t border-primary-foreground/20 py-4">
             <div class="flex flex-col space-y-4">
-                <a href="/vehicles" class="text-sm font-medium hover:text-foreground/80 transition-colors py-2">Vehicles</a>
-                <a href="/about" class="text-sm font-medium hover:text-foreground/80 transition-colors py-2">About Us</a>
-                <a href="/contact" class="text-sm font-medium hover:text-foreground/80 transition-colors py-2">Contact</a>
+                <a href="/vehicles" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Vehicles</a>
+                <a href="/about" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">About Us</a>
+                <a href="/contact" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Contact</a>
             </div>
         </nav>
     </div>

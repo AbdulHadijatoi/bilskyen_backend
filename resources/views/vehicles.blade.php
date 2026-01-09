@@ -45,7 +45,7 @@
             <button 
                 type="button" 
                 id="filter-button"
-                class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
                     <line x1="4" x2="20" y1="21" y2="21"></line>
@@ -55,7 +55,7 @@
                     <line x1="4" x2="20" y1="15" y2="15"></line>
                 </svg>
                 More Filters
-                <span id="filter-count" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                <span id="filter-count" class="ml-2 rounded-full bg-primary-foreground/20 px-2 py-0.5 text-xs font-semibold text-primary-foreground">
                     ({{ number_format($vehicles->total()) }})
                 </span>
             </button>

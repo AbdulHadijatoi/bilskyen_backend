@@ -16,7 +16,7 @@
 
     <div class="flex h-full w-full flex-col items-center justify-center gap-4">
         @if(session('status'))
-            <div class="w-full rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
+            <div class="w-full rounded-md border border-primary/50 bg-primary/10 p-4 text-primary">
                 <p class="text-sm font-medium">{{ session('status') }}</p>
             </div>
         @endif

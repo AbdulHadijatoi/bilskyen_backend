@@ -50,7 +50,7 @@
                         </svg>
                     </div>
                     <h3 class="text-2xl font-bold">600.000 kr.</h3>
-                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
+                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 7 22 7 22 13"></polyline>
@@ -69,7 +69,7 @@
                         </svg>
                     </div>
                     <h3 class="text-2xl font-bold">3.060 kr.</h3>
-                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
+                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
                             <polyline points="16 17 22 17 22 11"></polyline>
@@ -87,7 +87,7 @@
                         </svg>
                     </div>
                     <h3 class="text-2xl font-bold">596.940 kr.</h3>
-                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
+                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 7 22 7 22 13"></polyline>
@@ -106,7 +106,7 @@
                         </svg>
                     </div>
                     <h3 class="text-2xl font-bold">99.5%</h3>
-                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-green-500">
+                    <p class="text-muted-foreground flex items-center gap-1.5 text-xs text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
                             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                             <polyline points="16 7 22 7 22 13"></polyline>

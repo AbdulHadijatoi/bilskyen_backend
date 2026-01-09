@@ -9,7 +9,7 @@
 @section('content')
 <div class="flex min-h-screen flex-col pt-0">
     <!-- Search Section -->
-    <section class="relative bg-gradient-to-b from-muted/60 to-muted py-12 md:py-16">
+    <section class="relative bg-gray-100 py-12 md:py-16">
     
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-6">
@@ -638,22 +638,22 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="bg-primary py-16 text-primary-foreground">
+    <section class="bg-gray-200 py-16">
         <div class="container mx-auto px-4 md:px-6">
             <div class="flex flex-col items-center justify-between gap-8 lg:flex-row">
                 <div class="max-w-xl space-y-4">
                     <h2 class="text-3xl font-bold tracking-tight">
                         Ready to Find Your Next Vehicle?
                     </h2>
-                    <p class="text-primary-foreground/90">
+                    <p class="">
                         Visit our showroom or browse our inventory online. Our team is ready to help you find the perfect vehicle that fits your needs and budget.
                     </p>
                 </div>
                 <div class="flex flex-col gap-4 sm:flex-row">
-                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-secondary-foreground shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-white shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         Browse Inventory
                     </a>
-                    <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md border border-primary-foreground bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-primary-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-secondary-foreground shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         Contact Us
                     </a>
                 </div>

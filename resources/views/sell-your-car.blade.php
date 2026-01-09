@@ -7,11 +7,12 @@
     /* Expandable Section Styles */
     .expandable-section {
         background: var(--card);
-        border: 1px solid var(--border);
+        /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
         margin-bottom: 1rem;
         overflow: hidden;
         transition: all 0.3s ease;
+        /* box-shadow: 0 2px 8px oklch(0 0 0 / 0.05); */
     }
     
     .expandable-section:hover {
@@ -39,8 +40,8 @@
     }
     
     .section-header.active {
-        background: var(--primary);
-        color: var(--primary-foreground);
+        background: var(--muted);
+        color: var(--foreground);
     }
     
     .section-title-group {
@@ -65,8 +66,8 @@
     }
     
     .section-header.active .section-number {
-        background: var(--primary-foreground);
-        color: var(--primary);
+        background: var(--background);
+        color: var(--foreground);
     }
     
     .section-title {
@@ -76,7 +77,7 @@
     }
     
     .section-header.active .section-title {
-        color: var(--primary-foreground);
+        color: var(--foreground);
     }
     
     .section-subtitle {
@@ -86,8 +87,8 @@
     }
     
     .section-header.active .section-subtitle {
-        color: var(--primary-foreground);
-        opacity: 0.9;
+        color: var(--muted-foreground);
+        opacity: 1;
     }
     
     .section-icon {
@@ -155,25 +156,22 @@
     
     /* License Plate Lookup Section */
     .lookup-section {
-        background: linear-gradient(135deg, oklch(0.205 0 0) 0%, oklch(0.205 0 0) 100%);
+        /* border: 1px solid var(--border); */
+        /* background: linear-gradient(135deg, #004aad 0%, #004aad 100%); */
         border-radius: 0.5rem;
         padding: 1.25rem;
         margin-bottom: 1.25rem;
-        color: oklch(0.985 0 0);
     }
     
     .dark .lookup-section {
-        background: linear-gradient(135deg, oklch(0.205 0 0) 0%, oklch(0.205 0 0) 100%);
-        color: oklch(0.985 0 0);
+        background: linear-gradient(135deg, #004aad 0%, #004aad 100%);
     }
     
     .lookup-section h2 {
-        color: oklch(0.985 0 0);
         margin-bottom: 0.5rem;
     }
     
     .lookup-section p {
-        color: oklch(0.985 0 0);
         opacity: 0.9;
         margin-bottom: 1rem;
     }
@@ -266,7 +264,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: oklch(0 0 0 / 0.3);
+        background: rgba(0, 74, 173, 0.3);
         z-index: 9999;
         display: flex;
         align-items: center;
@@ -274,7 +272,7 @@
     }
     
     .dark .loading-overlay {
-        background: oklch(0 0 0 / 0.5);
+        background: rgba(0, 74, 173, 0.5);
     }
     
     .loading-content {
@@ -292,7 +290,7 @@
     /* Submit Section */
     .submit-section {
         background: var(--muted);
-        border: 1px solid var(--border);
+        /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
         padding: 1.25rem;
         margin-top: 1.25rem;
@@ -594,7 +592,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(to bottom, transparent 0%, oklch(0 0 0 / 0.6) 100%);
+        background: linear-gradient(to bottom, transparent 0%, rgba(0, 74, 173, 0.6) 100%);
         opacity: 0;
         transition: opacity 0.2s ease;
         display: flex;
@@ -632,7 +630,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: oklch(0 0 0 / 0.7);
+        background: rgba(0, 74, 173, 0.7);
         color: white;
         padding: 0.5rem;
         font-size: 0.75rem;
@@ -729,13 +727,13 @@
     @endif
 
     <!-- License Plate Lookup Section -->
-    <div class="lookup-section">
+    <div class="lookup-section bg-gray-100">
         <h2 class="text-lg font-semibold">Find Your Vehicle</h2>
-        <p>Enter your car's license plate number and press Enter. We'll automatically fill in the vehicle information for you.</p>
+        <p class="text-muted-foreground">Enter your car's license plate number and press Enter. We'll automatically fill in the vehicle information for you.</p>
         
         <div class="lookup-input-group">
             <div class="lookup-input-wrapper">
-                <label for="registration-lookup" class="block text-sm font-medium mb-2" style="color: oklch(0.985 0 0);">
+                <label for="registration-lookup" class="block text-sm text-muted-foreground font-medium mb-2">
                     License Plate Number
                 </label>
                 <input
@@ -744,12 +742,12 @@
                     placeholder="e.g., AB12345 (Press Enter to search)"
                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
-                <p class="text-xs mt-1" id="lookup-error" style="color: oklch(0.985 0 0); opacity: 0.8;"></p>
+                <p class="text-xs mt-1" id="lookup-error" style="opacity: 0.8;"></p>
             </div>
-            </div>
+        </div>
         
         <div id="lookup-loading" class="hidden mt-4">
-            <div class="flex items-center gap-2 text-sm" style="color: oklch(0.985 0 0); opacity: 0.9;">
+            <div class="flex items-center gap-2 text-sm" style="opacity: 0.9;">
                 <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

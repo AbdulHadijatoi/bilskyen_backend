@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
 <style>
     .detail-section {
-        border: 1px solid var(--border);
+        /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
@@ -58,7 +58,7 @@
                 </p>
             </div>
             <div class="flex flex-col items-start gap-3 lg:items-end">
-                <p class="text-3xl font-bold text-green-600 dark:text-green-400">
+                <p class="text-3xl font-bold text-primary">
                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
                 <span class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-sm font-semibold text-secondary-foreground">
@@ -122,7 +122,7 @@
         <!-- Vehicle Details - Left Column -->
         <div class="space-y-6 lg:col-span-2">
         <!-- Basic Information Section -->
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Basic Information</h2>
             <div class="detail-grid">
                 <div class="detail-item">
@@ -141,7 +141,7 @@
                     @endif
                 <div class="detail-item">
                     <span class="detail-label">Price</span>
-                    <span class="detail-value text-green-600 dark:text-green-400">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
+                    <span class="detail-value text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
                     </div>
                 @if($vehicle->location)
                 <div class="detail-item">
@@ -159,7 +159,7 @@
             </div>
 
         <!-- Vehicle Specifications Section -->
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Vehicle Specifications</h2>
             <div class="detail-grid">
                 @if($vehicle->category_name)
@@ -251,7 +251,7 @@
 
         @if($details)
         <!-- Detailed Specifications Section -->
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Detailed Specifications</h2>
             <div class="detail-grid">
                 @if($details->description)
@@ -504,7 +504,7 @@
         </div>
 
         <!-- Registration & Status Section -->
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Registration & Status</h2>
             <div class="detail-grid">
                 @if($details->registration_status)
@@ -561,7 +561,7 @@
 
         <!-- Leasing Information Section -->
         @if($details->leasing_period_start || $details->leasing_period_end)
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Leasing Information</h2>
             <div class="detail-grid">
                 @if($details->leasing_period_start)
@@ -583,12 +583,12 @@
 
         <!-- Equipment & Features Section -->
         @if($vehicle->equipment && $vehicle->equipment->count() > 0)
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Equipment & Features</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 @foreach($vehicle->equipment as $equip)
                 <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-green-500 dark:text-green-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-primary">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                     <span class="text-foreground font-medium text-sm">{{ $equip->name }}</span>
@@ -604,7 +604,7 @@
         <div class="space-y-6">
             <!-- Seller Information -->
             @if($vehicle->user || $vehicle->location)
-                <div class="bg-muted/50 rounded-lg p-6">
+                <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -683,20 +683,20 @@
                 @endif
 
             <!-- Pricing -->
-            <div class="rounded-lg bg-green-50 p-6 dark:bg-green-950/30">
+            <div class="rounded-lg bg-primary p-6">
                 <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-green-600 dark:text-green-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-foreground">
                         <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                     </svg>
-                    <h2 class="text-xl font-semibold text-green-800 dark:text-green-300">
+                    <h2 class="text-xl font-semibold text-primary-foreground">
                         Pricing
                     </h2>
                 </div>
                 <div class="space-y-2">
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <p class="text-3xl font-bold text-primary-foreground">
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
-                    <p class="text-sm text-green-700 dark:text-green-300">
+                    <p class="text-sm text-primary-foreground">
                         Listed Price
                     </p>
                 </div>
@@ -735,15 +735,15 @@
             @endauth
 
             <!-- Listing Information - For all users -->
-            <div class="rounded-lg bg-blue-50 p-6 dark:bg-blue-950/30">
+            <div class="rounded-lg bg-gray-50 p-6">
                 <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-blue-600 dark:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
                         <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
                         <line x1="8" y1="2" x2="8" y2="6"></line>
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    <h2 class="text-xl font-semibold text-blue-800 dark:text-blue-300">
+                    <h2 class="text-xl font-semibold">
                         @auth
                             @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
                                 Inventory Information
@@ -757,7 +757,7 @@
                 </div>
                 <div class="space-y-4">
                     <div class="space-y-1">
-                        <label class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        <label class="text-sm font-medium">
                             @auth
                                 @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
                                     Added to Inventory
@@ -769,11 +769,11 @@
                             @endauth
                         </label>
                         @if($vehicle->published_at)
-                            <p class="text-sm text-blue-900 dark:text-blue-200">
+                            <p class="text-sm">
                                 {{ $vehicle->published_at->format('F j, Y') }} ({{ $vehicle->published_at->diffForHumans() }})
                             </p>
                         @elseif($vehicle->created_at)
-                            <p class="text-sm text-blue-900 dark:text-blue-200">
+                            <p class="text-sm">
                                 {{ $vehicle->created_at->format('F j, Y') }} ({{ $vehicle->created_at->diffForHumans() }})
                             </p>
                         @endif
@@ -781,10 +781,10 @@
                     @auth
                         @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && $vehicle->published_at)
                             <div class="space-y-1">
-                                <label class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                <label class="text-sm font-medium">
                                     Days in Inventory
                                 </label>
-                                <p class="font-semibold text-blue-900 dark:text-blue-200">
+                                <p class="font-semibold">
                                     {{ $vehicle->published_at->diffInDays(now()) }} days
                                 </p>
                             </div>
@@ -804,29 +804,29 @@
                     @endphp
                     @if(!empty($pendingWorks))
                         <!-- Pending Works - Only for admin/dealer -->
-                        <div class="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-950/30">
+                        <div class="rounded-lg bg-yellow-50 p-6">
                             <div class="mb-4 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-yellow-600 dark:text-yellow-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-yellow-600">
                                     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
                                     <path d="M12 9v4"></path>
                                     <path d="M12 17h.01"></path>
                                 </svg>
-                                <h2 class="text-xl font-semibold text-yellow-800 dark:text-yellow-300">
+                                <h2 class="text-xl font-semibold text-yellow-800">
                                     Pending Works
                                 </h2>
                             </div>
-                            <p class="mb-4 text-sm text-yellow-700 dark:text-yellow-300">
+                            <p class="mb-4 text-sm text-yellow-700">
                                 Items that require attention
                             </p>
                             <ul class="space-y-3">
                                 @foreach($pendingWorks as $work)
                                     <li class="flex items-start gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600">
                                             <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
                                             <path d="M12 9v4"></path>
                                             <path d="M12 17h.01"></path>
                                         </svg>
-                                        <span class="text-sm text-yellow-800 dark:text-yellow-200">
+                                        <span class="text-sm text-yellow-800">
                                             {{ $work }}
                                         </span>
                                     </li>
@@ -851,7 +851,7 @@
 
             <!-- Public Contact Information - Only for non-authenticated users -->
             @guest
-                <div class="bg-muted/50 rounded-lg p-6">
+                <div class="rounded-lg bg-gray-50 p-6">
                     <h2 class="text-foreground mb-4 text-xl font-semibold">
                         Interested?
                     </h2>

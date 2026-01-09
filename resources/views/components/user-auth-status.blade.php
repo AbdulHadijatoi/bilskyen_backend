@@ -12,11 +12,16 @@
     $panelButtonText = $hasAdminRole ? 'Admin Panel' : 'Dealer Panel';
 @endphp
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-3">
+        <a href="/sell-your-car">
+            <button class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+                Sell Your Car
+            </button>
+        </a>
     @if(!$showUserMenu)
         @if(!request()->is('auth/login'))
             <a href="/auth/login">
-                <button class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                <button class="inline-flex h-10 items-center justify-center rounded-md bg-[#002d6b] px-4 text-sm font-semibold text-white shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                         <polyline points="10 17 15 12 10 7"></polyline>
@@ -27,18 +32,13 @@
             </a>
         @endif
     @endif
-        <a href="/sell-your-car">
-            <button class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                Sell Your Car
-            </button>
-        </a>
     </div>
 @if($showUserMenu)
     <!-- User dropdown menu -->
     <div class="relative">
-        <button id="user-menu-toggle" class="relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="User menu">
-            <div class="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
-                <span class="text-sm font-medium">{{ $initials }}</span>
+        <button id="user-menu-toggle" class="relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="User menu">
+            <div class="flex h-9 w-9 items-center justify-center rounded-md bg-[#002d6b]">
+                <span class="text-sm font-medium text-white">{{ $initials }}</span>
             </div>
         </button>
         
