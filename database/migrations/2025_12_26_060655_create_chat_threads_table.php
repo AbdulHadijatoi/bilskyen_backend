@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chat_threads', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('chat_threads')) {
+            Schema::create('chat_threads', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
+                $table->timestamp('created_at');
+            
+            });
+        }
     }
 
     /**

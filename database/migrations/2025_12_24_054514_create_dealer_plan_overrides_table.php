@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dealer_plan_overrides', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
-            $table->foreignId('feature_id')->constrained('features')->cascadeOnDelete();
-            $table->string('override_value', 100);
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('dealer_plan_overrides')) {
+            Schema::create('dealer_plan_overrides', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
+                $table->foreignId('feature_id')->constrained('features')->cascadeOnDelete();
+                $table->string('override_value', 100);
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamp('created_at');
+        
+            });
+        }
     }
 
     /**
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dealer_plan_overrides');
+        Schema::dropIfExists(\'\');
     }
 };

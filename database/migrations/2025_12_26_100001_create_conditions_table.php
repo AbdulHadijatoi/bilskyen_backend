@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('conditions');
+        if (!Schema::hasTable('conditions')) {
+            Schema::create('conditions', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 100);
         
-        Schema::create('conditions', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 100);
-        });
+            });
+        }
     }
 
     /**
@@ -24,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('conditions');
+        Schema::dropIfExists(\'\');
     }
 };
 

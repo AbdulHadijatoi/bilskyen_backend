@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plan_availability', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
-            $table->foreignId('allowed_role_id')->nullable()->constrained('roles')->nullOnDelete();
-            $table->boolean('is_enabled')->default(true);
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('plan_availability')) {
+            Schema::create('plan_availability', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
+                $table->foreignId('allowed_role_id')->nullable()->constrained('roles')->nullOnDelete();
+                $table->boolean('is_enabled')->default(true);
+                $table->timestamp('created_at');
+        
+            });
+        }
     }
 
     /**
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plan_availability');
+        Schema::dropIfExists(\'\');
     }
 };

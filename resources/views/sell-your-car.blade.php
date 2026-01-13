@@ -103,15 +103,20 @@
     }
     
     .section-content {
-        max-height: 0;
+        max-height: 5000px;
         overflow: hidden;
         transition: max-height 0.4s ease, padding 0.3s ease;
-        padding: 0 1rem;
+        padding: 1rem;
     }
     
     .section-content.expanded {
         max-height: 5000px;
         padding: 1rem;
+    }
+    
+    .section-content.collapsed {
+        max-height: 0;
+        padding: 0 1rem;
     }
     
     .section-description {
@@ -681,6 +686,32 @@
     .dark .text-red-800 {
         color: oklch(0.7 0.2 27) !important;
     }
+    
+    /* Servicebog Radio Buttons Styled as Buttons */
+    .servicebog-radio {
+        transition: all 0.2s ease;
+    }
+    
+    .servicebog-radio:hover {
+        background: var(--accent);
+        border-color: var(--primary);
+    }
+    
+    .servicebog-radio input[type="radio"]:checked + span {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .servicebog-radio:has(input[type="radio"]:checked) {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
+    }
+    
+    .servicebog-radio:has(input[type="radio"]:checked) span {
+        color: var(--primary-foreground);
+        font-weight: 600;
+    }
 </style>
 @endpush
 
@@ -770,373 +801,44 @@
             <button type="button" class="expand-btn" onclick="collapseAllSections()">Collapse All</button>
         </div>
 
-        <!-- Section 1: Essential Information -->
-        <div class="expandable-section" data-section="essential">
-            <div class="section-header" onclick="toggleSection('essential')">
+        <!-- Section 1: Basic Vehicle Information -->
+        <div class="expandable-section" data-section="basic-info">
+            <div class="section-header active" onclick="toggleSection('basic-info')">
                 <div class="section-title-group">
                     <div class="section-number">1</div>
                     <div>
-                        <div class="section-title">Essential Information</div>
-                        <div class="section-subtitle">Required fields to list your vehicle</div>
+                        <div class="section-title">Basic Vehicle Information</div>
+                        <div class="section-subtitle">Title, variant, and color</div>
                     </div>
                 </div>
                 <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
-            <div class="section-content">
+            <div class="section-content expanded">
                 <div class="section-description">
-                    Please provide the basic details about your vehicle. Fields marked with * are required.
+                    Basic information about your vehicle.
                 </div>
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="title" class="text-sm font-medium required-field">Title</label>
-                        <input type="text" id="title" name="title" required
-                            class="flex h-9 w-full rounded-md border {{ $errors->has('title') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="e.g., 2020 Tesla Model 3">
-                        @error('title')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
+                        <label class="text-sm font-medium">Title</label>
+                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground">
+                            Auto-generated from vehicle details
+                    </div>
+                        <input type="hidden" id="title" name="title" value="">
+                        <p class="field-help">Auto-generated from brand + model + model year + fuel type</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="registration" class="text-sm font-medium required-field">Registration</label>
-                        <input type="text" id="registration" name="registration" required
-                            class="flex h-9 w-full rounded-md border {{ $errors->has('registration') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="License plate number">
-                        @error('registration')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="price" class="text-sm font-medium required-field">Price (DKK)</label>
-                        <input type="number" id="price" name="price" required min="0"
-                            class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="0">
-                        @error('price')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="location_id" class="text-sm font-medium required-field">Location</label>
-                        <select id="location_id" name="location_id" required
-                            class="flex h-9 w-full rounded-md border {{ $errors->has('location_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
-                            <option value="">Select Location</option>
-                            @foreach($lookupData['locations'] as $location)
-                                <option value="{{ $location->id }}">
-                                    {{ $location->city }}, {{ $location->postcode }}
-                                </option>
+                        <label for="variant_id" class="text-sm font-medium">Variant</label>
+                        <select id="variant_id" name="variant_id"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select Variant</option>
+                            @foreach($lookupData['variants'] as $variant)
+                                <option value="{{ $variant->id }}">{{ $variant->name }}</option>
                             @endforeach
                         </select>
-                        @error('location_id')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="fuel_type_id" class="text-sm font-medium required-field">Fuel Type</label>
-                        <select id="fuel_type_id" name="fuel_type_id" required
-                            class="flex h-9 w-full rounded-md border {{ $errors->has('fuel_type_id') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm">
-                            <option value="">Select Fuel Type</option>
-                            @foreach($lookupData['fuelTypes'] as $fuelType)
-                                <option value="{{ $fuelType->id }}">
-                                    {{ $fuelType->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('fuel_type_id')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="listing_type_id" class="text-sm font-medium">Listing Type</label>
-                        <select id="listing_type_id" name="listing_type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Type</option>
-                            @foreach($lookupData['listingTypes'] as $type)
-                                <option value="{{ $type->id }}" {{ $type->name === 'Purchase' ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="field-help">
-                            <strong>Purchase:</strong> You are selling the vehicle directly. 
-                            <strong>Leasing:</strong> You are offering the vehicle for lease/rental.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 2: Vehicle Details -->
-        <div class="expandable-section" data-section="details">
-            <div class="section-header" onclick="toggleSection('details')">
-                <div class="section-title-group">
-                    <div class="section-number">2</div>
-                    <div>
-                        <div class="section-title">Vehicle Details</div>
-                        <div class="section-subtitle">Brand, model, year, and specifications</div>
-                    </div>
-                </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-            <div class="section-content">
-                <div class="section-description">
-                    Help buyers learn more about your vehicle. All fields are optional but the more information you provide, the better.
-                    </div>
-                <div class="form-grid">
-                    <div class="space-y-2">
-                        <label for="brand_id" class="text-sm font-medium">Brand</label>
-                        <select id="brand_id" name="brand_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Brand</option>
-                            @foreach($lookupData['brands'] as $brand)
-                                <option value="{{ $brand->id }}">
-                                    {{ $brand->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="model_id" class="text-sm font-medium">Model</label>
-                        <select id="model_id" name="model_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Model</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="model_year_id" class="text-sm font-medium">Model Year</label>
-                        <select id="model_year_id" name="model_year_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Year</option>
-                            @foreach($lookupData['modelYears'] as $year)
-                                <option value="{{ $year->id }}">
-                                    {{ $year->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="category_id" class="text-sm font-medium">Category</label>
-                        <select id="category_id" name="category_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Category</option>
-                            @foreach($lookupData['categories'] as $category)
-                                <option value="{{ $category->id }}">
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="mileage" class="text-sm font-medium">Mileage (km)</label>
-                        <input type="number" id="mileage" name="mileage" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="km_driven" class="text-sm font-medium">Kilometers Driven</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="vin" class="text-sm font-medium">VIN</label>
-                        <input type="text" id="vin" name="vin"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Vehicle identification number">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="vin_location" class="text-sm font-medium">VIN Location</label>
-                        <input type="text" id="vin_location" name="vin_location"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Where the VIN is located on the vehicle">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="version" class="text-sm font-medium">Version</label>
-                        <input type="text" id="version" name="version"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Vehicle version">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="type_name" class="text-sm font-medium">Type Name</label>
-                        <input type="text" id="type_name" name="type_name"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Type name">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="category" class="text-sm font-medium">Category (Text)</label>
-                        <input type="text" id="category" name="category"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Vehicle category">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="first_registration_date" class="text-sm font-medium">First Registration Date</label>
-                        <input type="date" id="first_registration_date" name="first_registration_date"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2 md:col-span-2">
-                        <label for="description" class="text-sm font-medium">Description</label>
-                        <textarea id="description" name="description" rows="4"
-                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Tell potential buyers about your vehicle..."></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3: Technical Specifications -->
-        <div class="expandable-section" data-section="technical">
-            <div class="section-header" onclick="toggleSection('technical')">
-                <div class="section-title-group">
-                    <div class="section-number">3</div>
-                    <div>
-                        <div class="section-title">Technical Specifications</div>
-                        <div class="section-subtitle">Engine, power, battery, and performance</div>
-                    </div>
-                </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-            <div class="section-content">
-                <div class="section-description">
-                    Technical details about your vehicle's performance and specifications.
-                </div>
-                <div class="form-grid">
-                    <div class="space-y-2">
-                        <label for="engine_power" class="text-sm font-medium">Engine Power (HP)</label>
-                        <input type="number" id="engine_power" name="engine_power" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="battery_capacity" class="text-sm font-medium">Battery Capacity (kWh)</label>
-                        <input type="number" id="battery_capacity" name="battery_capacity" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="range_km" class="text-sm font-medium">Range (km)</label>
-                        <input type="number" id="range_km" name="range_km" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Electric vehicle range">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="charging_type" class="text-sm font-medium">Charging Type</label>
-                        <input type="text" id="charging_type" name="charging_type"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="e.g., Type 2, CCS, CHAdeMO">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="fuel_efficiency" class="text-sm font-medium">Fuel Efficiency (L/100km or kWh/100km)</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="0.01"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0.00">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="engine_displacement" class="text-sm font-medium">Engine Displacement (cc)</label>
-                        <input type="number" id="engine_displacement" name="engine_displacement" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="engine_cylinders" class="text-sm font-medium">Engine Cylinders</label>
-                        <input type="number" id="engine_cylinders" name="engine_cylinders" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="engine_code" class="text-sm font-medium">Engine Code</label>
-                        <input type="text" id="engine_code" name="engine_code"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Engine identification code">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="top_speed" class="text-sm font-medium">Top Speed (km/h)</label>
-                        <input type="number" id="top_speed" name="top_speed" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="towing_weight" class="text-sm font-medium">Towing Weight (kg)</label>
-                        <input type="number" id="towing_weight" name="towing_weight" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="ownership_tax" class="text-sm font-medium">Ownership Tax (DKK)</label>
-                        <input type="number" id="ownership_tax" name="ownership_tax" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4: Additional Information -->
-        <div class="expandable-section" data-section="additional">
-            <div class="section-header" onclick="toggleSection('additional')">
-                <div class="section-title-group">
-                    <div class="section-number">4</div>
-                    <div>
-                        <div class="section-title">Additional Information</div>
-                        <div class="section-subtitle">Type, color, condition, and more</div>
-                    </div>
-                </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-            <div class="section-content">
-                <div class="section-description">
-                    Provide additional details to make your listing stand out. All fields are optional.
-                    </div>
-                <div class="form-grid">
-                    <div class="space-y-2">
-                        <label for="type_id" class="text-sm font-medium">Type</label>
-                        <select id="type_id" name="type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Type</option>
-                            @foreach($lookupData['types'] as $type)
-                                <option value="{{ $type->id }}">
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="use_id" class="text-sm font-medium">Use</label>
-                        <select id="use_id" name="use_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Use</option>
-                            @foreach($lookupData['uses'] as $use)
-                                <option value="{{ $use->id }}">
-                                    {{ $use->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <p class="field-help">Vehicle variant/trim level</p>
                     </div>
 
                     <div class="space-y-2">
@@ -1145,325 +847,124 @@
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">Select Color</option>
                             @foreach($lookupData['colors'] as $color)
-                                <option value="{{ $color->id }}">
-                                    {{ $color->name }}
-                                </option>
+                                <option value="{{ $color->id }}">{{ $color->name }}</option>
                             @endforeach
                         </select>
+                        <p class="field-help">Vehicle exterior color</p>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="space-y-2">
-                        <label for="body_type_id" class="text-sm font-medium">Body Type</label>
-                        <select id="body_type_id" name="body_type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Body Type</option>
-                            @foreach($lookupData['bodyTypes'] as $bodyType)
-                                <option value="{{ $bodyType->id }}">
-                                    {{ $bodyType->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="condition_id" class="text-sm font-medium">Condition</label>
-                        <select id="condition_id" name="condition_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Condition</option>
-                            @foreach($lookupData['conditions'] as $condition)
-                                <option value="{{ $condition->id }}">
-                                    {{ $condition->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="gear_type_id" class="text-sm font-medium">Gear Type</label>
-                        <select id="gear_type_id" name="gear_type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Gear Type</option>
-                            @foreach($lookupData['gearTypes'] as $gearType)
-                                <option value="{{ $gearType->id }}">
-                                    {{ $gearType->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="price_type_id" class="text-sm font-medium">Price Type</label>
-                        <select id="price_type_id" name="price_type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Price Type</option>
-                            @foreach($lookupData['priceTypes'] as $priceType)
-                                <option value="{{ $priceType->id }}">
-                                    {{ $priceType->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="sales_type_id" class="text-sm font-medium">Sales Type</label>
-                        <select id="sales_type_id" name="sales_type_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Sales Type</option>
-                            @foreach($lookupData['salesTypes'] as $salesType)
-                                <option value="{{ $salesType->id }}">
-                                    {{ $salesType->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-
-        <!-- Section 5: Advanced Vehicle Details -->
-        <div class="expandable-section" data-section="advanced">
-            <div class="section-header" onclick="toggleSection('advanced')">
+        <!-- Section 2: Vehicle Specifications -->
+        <div class="expandable-section" data-section="specifications">
+            <div class="section-header active" onclick="toggleSection('specifications')">
                 <div class="section-title-group">
-                    <div class="section-number">5</div>
+                    <div class="section-number">2</div>
                     <div>
-                        <div class="section-title">Advanced Vehicle Details</div>
-                        <div class="section-subtitle">Weight, dimensions, safety, and inspection details</div>
+                        <div class="section-title">Vehicle Specifications</div>
+                        <div class="section-subtitle">Kilometer driven, registration, inspection, and technical details</div>
                     </div>
                 </div>
                 <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
-            <div class="section-content">
+            <div class="section-content expanded">
                 <div class="section-description">
-                    Advanced technical specifications and details about your vehicle. All fields are optional.
-                </div>
+                    Technical specifications and registration details.
+                    </div>
                 <div class="form-grid">
-                    <!-- Weight Specifications -->
                     <div class="space-y-2">
-                        <label for="total_weight" class="text-sm font-medium">Total Weight (kg)</label>
-                        <input type="number" id="total_weight" name="total_weight" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <label for="km_driven" class="text-sm font-medium">Kilometer Driven</label>
+                        <input type="number" id="km_driven" name="km_driven" min="0"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="0">
+                        <p class="field-help">How far car has driven</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="vehicle_weight" class="text-sm font-medium">Vehicle Weight (kg)</label>
-                        <input type="number" id="vehicle_weight" name="vehicle_weight" min="0"
+                        <label for="first_registration_month" class="text-sm font-medium">First Registration - Month</label>
+                        <select id="first_registration_month" name="first_registration_month"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select Month</option>
+                            @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                            @endfor
+                        </select>
+                        <p class="field-help">Month of first registration</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="first_registration_year" class="text-sm font-medium">First Registration - Year</label>
+                        <select id="first_registration_year" name="first_registration_year"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select Year</option>
+                            @for($i = date('Y'); $i >= 1900; $i--)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                        <p class="field-help">Year of first registration</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">Technical Total Weight (kg)</label>
+                        <label for="last_inspection_month" class="text-sm font-medium">Last Inspection - Month</label>
+                        <select id="last_inspection_month" name="last_inspection_month"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select Month</option>
+                            @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                            @endfor
+                        </select>
+                        <p class="field-help">Month of last inspection</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="last_inspection_year" class="text-sm font-medium">Last Inspection - Year</label>
+                        <select id="last_inspection_year" name="last_inspection_year"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">Select Year</option>
+                            @for($i = date('Y'); $i >= 1900; $i--)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                        <p class="field-help">Year of last inspection</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="fuel_efficiency" class="text-sm font-medium">KM/L</label>
+                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="0.01"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="0.00">
+                        <p class="field-help">Fuel efficiency in kilometers per liter</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="technical_total_weight" class="text-sm font-medium">Total Technical Weight (kg)</label>
                         <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="0">
+                        <p class="field-help">Total technical weight in kg</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="towing_weight_brakes" class="text-sm font-medium">Towing Weight with Brakes (kg)</label>
-                        <input type="number" id="towing_weight_brakes" name="towing_weight_brakes" min="0"
+                        <label for="euronom_id" class="text-sm font-medium">Euronom</label>
+                        <select id="euronom_id" name="euronom_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="minimum_weight" class="text-sm font-medium">Minimum Weight (kg)</label>
-                        <input type="number" id="minimum_weight" name="minimum_weight" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="gross_combination_weight" class="text-sm font-medium">Gross Combination Weight (kg)</label>
-                        <input type="number" id="gross_combination_weight" name="gross_combination_weight" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <!-- Physical Specifications -->
-                    <div class="space-y-2">
-                        <label for="doors" class="text-sm font-medium">Number of Doors</label>
-                        <input type="number" id="doors" name="doors" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="minimum_seats" class="text-sm font-medium">Minimum Seats</label>
-                        <input type="number" id="minimum_seats" name="minimum_seats" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="maximum_seats" class="text-sm font-medium">Maximum Seats</label>
-                        <input type="number" id="maximum_seats" name="maximum_seats" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="wheels" class="text-sm font-medium">Number of Wheels</label>
-                        <input type="number" id="wheels" name="wheels" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="axles" class="text-sm font-medium">Number of Axles</label>
-                        <input type="number" id="axles" name="axles" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="drive_axles" class="text-sm font-medium">Drive Axles</label>
-                        <input type="number" id="drive_axles" name="drive_axles" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="wheelbase" class="text-sm font-medium">Wheelbase (mm)</label>
-                        <input type="number" id="wheelbase" name="wheelbase" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="coupling" class="text-sm font-medium">Coupling</label>
-                        <select id="coupling" name="coupling"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select</option>
-                            <option value="1">Yes</option>
-                            <option value="0">No</option>
+                            <option value="">Select Euronom</option>
+                            @foreach($lookupData['euronorms'] as $euronom)
+                                <option value="{{ $euronom->id }}">{{ $euronom->name }}</option>
+                            @endforeach
                         </select>
+                        <p class="field-help">Euro emission standard</p>
+                    </div>
+                    </div>
+                    </div>
                     </div>
 
-                    <!-- Safety Features -->
-                    <div class="space-y-2">
-                        <label for="ncap_five" class="text-sm font-medium">5-Star NCAP Rating</label>
-                        <select id="ncap_five" name="ncap_five"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select</option>
-                            <option value="1">Yes</option>
-                            <option value="0">No</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="airbags" class="text-sm font-medium">Number of Airbags</label>
-                        <input type="number" id="airbags" name="airbags" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="integrated_child_seats" class="text-sm font-medium">Integrated Child Seats</label>
-                        <input type="number" id="integrated_child_seats" name="integrated_child_seats" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="seat_belt_alarms" class="text-sm font-medium">Seat Belt Alarms</label>
-                        <input type="number" id="seat_belt_alarms" name="seat_belt_alarms" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <!-- Inspection Details -->
-                    <div class="space-y-2">
-                        <label for="last_inspection_date" class="text-sm font-medium">Last Inspection Date</label>
-                        <input type="date" id="last_inspection_date" name="last_inspection_date"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="last_inspection_result" class="text-sm font-medium">Last Inspection Result</label>
-                        <input type="text" id="last_inspection_result" name="last_inspection_result"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="e.g., Pass, Fail">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="last_inspection_odometer" class="text-sm font-medium">Last Inspection Odometer (km)</label>
-                        <input type="number" id="last_inspection_odometer" name="last_inspection_odometer" min="0"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="type_approval_code" class="text-sm font-medium">Type Approval Code</label>
-                        <input type="text" id="type_approval_code" name="type_approval_code"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Type approval code">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="euronorm" class="text-sm font-medium">Euro Emission Standard</label>
-                        <input type="text" id="euronorm" name="euronorm"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="e.g., Euro 6, Euro 5">
-                    </div>
-
-                    <!-- Registration Details -->
-                    <div class="space-y-2">
-                        <label for="registration_status" class="text-sm font-medium">Registration Status</label>
-                        <input type="text" id="registration_status" name="registration_status"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Current registration status">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="registration_status_updated_date" class="text-sm font-medium">Registration Status Updated Date</label>
-                        <input type="date" id="registration_status_updated_date" name="registration_status_updated_date"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="expire_date" class="text-sm font-medium">Expiration Date</label>
-                        <input type="date" id="expire_date" name="expire_date"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="status_updated_date" class="text-sm font-medium">Status Updated Date</label>
-                        <input type="date" id="status_updated_date" name="status_updated_date"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <!-- Leasing Information -->
-                    <div class="space-y-2">
-                        <label for="leasing_period_start" class="text-sm font-medium">Leasing Period Start</label>
-                        <input type="date" id="leasing_period_start" name="leasing_period_start"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="leasing_period_end" class="text-sm font-medium">Leasing Period End</label>
-                        <input type="date" id="leasing_period_end" name="leasing_period_end"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    </div>
-
-                    <!-- Other Details -->
-                    <div class="space-y-2 md:col-span-2">
-                        <label for="extra_equipment" class="text-sm font-medium">Extra Equipment</label>
-                        <textarea id="extra_equipment" name="extra_equipment" rows="3"
-                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="List any extra equipment..."></textarea>
-                    </div>
-
-                    <div class="space-y-2 md:col-span-2">
-                        <label for="dispensations" class="text-sm font-medium">Dispensations</label>
-                        <textarea id="dispensations" name="dispensations" rows="3"
-                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Any dispensations..."></textarea>
-                    </div>
-
-                    <div class="space-y-2 md:col-span-2">
-                        <label for="permits" class="text-sm font-medium">Permits</label>
-                        <textarea id="permits" name="permits" rows="3"
-                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Any permits..."></textarea>
-                    </div>
-
-                    <!-- Hidden field for vehicle_external_id (may be auto-populated) -->
-                    <input type="hidden" id="vehicle_external_id" name="vehicle_external_id" value="">
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 6: Equipment & Features -->
+        <!-- Section 3: Equipment & Features -->
         <div class="expandable-section" data-section="equipment">
-            <div class="section-header" onclick="toggleSection('equipment')">
+            <div class="section-header active" onclick="toggleSection('equipment')">
                 <div class="section-title-group">
-                    <div class="section-number">6</div>
+                    <div class="section-number">3</div>
                     <div>
                         <div class="section-title">Equipment & Features</div>
                         <div class="section-subtitle">Select the equipment your vehicle has</div>
@@ -1473,7 +974,7 @@
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
-            <div class="section-content">
+            <div class="section-content expanded">
                 <div class="section-description">
                     Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for.
                 </div>
@@ -1553,11 +1054,89 @@
             </div>
         </div>
 
-        <!-- Section 7: Photos -->
-        <div class="expandable-section" data-section="photos">
-            <div class="section-header" onclick="toggleSection('photos')">
+                <div class="section-description">
+                    Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for.
+                </div>
+                
+                <!-- Servicebog -->
+                <div class="mb-4">
+                    <label class="text-sm font-medium mb-2 block">Servicebog</label>
+                    <div class="flex gap-3">
+                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="Yes" class="h-4 w-4 text-primary">
+                            <span>Yes</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="No" class="h-4 w-4 text-primary">
+                            <span>No</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="Default" checked class="h-4 w-4 text-primary">
+                            <span>Default</span>
+                        </label>
+                    </div>
+                    <p class="field-help mt-2">Does the vehicle have a service book?</p>
+                </div>
+
+        <!-- Section 4: Pricing & Tax -->
+        <div class="expandable-section" data-section="pricing">
+            <div class="section-header active" onclick="toggleSection('pricing')">
                 <div class="section-title-group">
-                    <div class="section-number">7</div>
+                    <div class="section-number">4</div>
+                    <div>
+                        <div class="section-title">Pricing & Tax</div>
+                        <div class="section-subtitle">Price and tax information</div>
+                    </div>
+                </div>
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="section-content expanded">
+                <div class="form-grid">
+                    <div class="space-y-2">
+                        <label for="price" class="text-sm font-medium required-field">Price (DKK)</label>
+                        <input type="number" id="price" name="price" required min="0"
+                            class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
+                            placeholder="0">
+                        @error('price')
+                            <p class="field-error">{{ $message }}</p>
+                        @enderror
+                        <p class="field-help">Selling price in DKK</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">Without Tax</label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="without_tax" name="without_tax" value="1"
+                                class="h-4 w-4 rounded border-input text-primary">
+                            <span class="text-sm">Without tax</span>
+                        </label>
+                        <p class="field-help">Price excludes tax</p>
+                    </div>
+                    </div>
+
+                <!-- Expandable Tax Information Section -->
+                <div class="mt-4 border border-input rounded-lg overflow-hidden">
+                    <button type="button" class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                        onclick="toggleTaxInfo()">
+                        <span>Tax Information Based on Mileage</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform" id="tax-info-icon">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div id="tax-info-content" class="equipment-type-content hidden px-4 pb-3 pt-2">
+                        <p class="text-sm text-muted-foreground">Tax information based on mileage - To be implemented after consulting with Berken.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Media -->
+        <div class="expandable-section" data-section="photos">
+            <div class="section-header active" onclick="toggleSection('photos')">
+                <div class="section-title-group">
+                    <div class="section-number">5</div>
                     <div>
                         <div class="section-title">Photos</div>
                         <div class="section-subtitle">Add photos of your vehicle</div>
@@ -1567,7 +1146,7 @@
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
-            <div class="section-content">
+            <div class="section-content expanded">
                 <div class="section-description">
                     Add photos of your vehicle. Good photos help your listing sell faster! You can select multiple images. Drag and drop or click to upload.
                 </div>
@@ -1612,7 +1191,149 @@
             </div>
         </div>
 
-        <!-- Hidden fields -->
+        <!-- Section 6: Description -->
+        <div class="expandable-section" data-section="description">
+            <div class="section-header active" onclick="toggleSection('description')">
+                <div class="section-title-group">
+                    <div class="section-number">6</div>
+                    <div>
+                        <div class="section-title">Description</div>
+                        <div class="section-subtitle">Auto-generated description (you can edit)</div>
+                    </div>
+                </div>
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="section-content expanded">
+                    <div class="space-y-2">
+                    <label for="description" class="text-sm font-medium">Description</label>
+                    <textarea id="description" name="description" rows="6"
+                        class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Description will be auto-generated from vehicle details..."></textarea>
+                    <p class="field-help">Auto-generated description (you can edit)</p>
+                </div>
+            </div>
+                    </div>
+
+        <!-- Section 7: Seller Information -->
+        <div class="expandable-section" data-section="seller-info">
+            <div class="section-header active" onclick="toggleSection('seller-info')">
+                <div class="section-title-group">
+                    <div class="section-number">7</div>
+                    <div>
+                        <div class="section-title">Seller Information</div>
+                        <div class="section-subtitle">Your contact details</div>
+                    </div>
+                </div>
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="section-content expanded">
+                <div class="form-grid">
+                    <div class="space-y-2">
+                        <label for="seller_name" class="text-sm font-medium">Name</label>
+                        <input type="text" id="seller_name" name="seller_name" value="{{ $user->name ?? '' }}"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Your name">
+                        <p class="field-help">Your full name</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="seller_phone" class="text-sm font-medium">Phone</label>
+                        <input type="text" id="seller_phone" name="seller_phone" value="{{ $user->phone ?? '' }}"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Your phone number">
+                        <p class="field-help">Your contact phone number</p>
+                    </div>
+
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="seller_address" class="text-sm font-medium">Address</label>
+                        <textarea id="seller_address" name="seller_address" rows="2"
+                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Your address">{{ $user->address ?? '' }}</textarea>
+                        <p class="field-help">Your street address</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="seller_postcode" class="text-sm font-medium">Postal Code</label>
+                        <input type="text" id="seller_postcode" name="seller_postcode" value="{{ $user->postcode ?? '' }}"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Postal code">
+                        <p class="field-help">Your postal code</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Packages -->
+        <div class="expandable-section" data-section="packages">
+            <div class="section-header active" onclick="toggleSection('packages')">
+                <div class="section-title-group">
+                    <div class="section-number">8</div>
+                    <div>
+                        <div class="section-title">Packages</div>
+                        <div class="section-subtitle">Select a package for your listing</div>
+                    </div>
+                </div>
+                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="section-content expanded">
+                <div class="section-description">
+                    Select a package to enhance your vehicle listing. Each package includes different features.
+                </div>
+                <div class="space-y-4">
+                    @foreach($lookupData['plans'] as $plan)
+                        <div class="border border-input rounded-lg p-4">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="radio" name="plan_id" value="{{ $plan->id }}" class="mt-1 h-4 w-4 text-primary">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-base">{{ $plan->name }}</div>
+                                    @if($plan->description)
+                                        <p class="text-sm text-muted-foreground mt-1">{{ $plan->description }}</p>
+                                    @endif
+                                    @if($plan->planFeatures && $plan->planFeatures->count() > 0)
+                                        <div class="mt-2">
+                                            <p class="text-xs font-medium text-muted-foreground mb-1">Features:</p>
+                                            <ul class="text-xs text-muted-foreground space-y-1">
+                                                @foreach($plan->planFeatures as $planFeature)
+                                                    <li>• {{ $planFeature->feature->description ?? $planFeature->feature->key }}: {{ $planFeature->value }}</li>
+                            @endforeach
+                                            </ul>
+                    </div>
+                                    @endif
+                </div>
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden fields for required data from API -->
+        <input type="hidden" id="registration" name="registration" value="" required>
+        <input type="hidden" id="brand_id" name="brand_id" value="">
+        <input type="hidden" id="model_id" name="model_id" value="">
+        <input type="hidden" id="model_year_id" name="model_year_id" value="">
+        <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="" required>
+        <input type="hidden" name="vehicle_list_status_id" value="{{ \App\Constants\VehicleListStatus::PUBLISHED }}">
+        <input type="hidden" name="published_at" value="">
+
+        <script>
+        function toggleTaxInfo() {
+            const content = document.getElementById('tax-info-content');
+            const icon = document.getElementById('tax-info-icon');
+            if (content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        }
+        </script>
+
+        <!-- Submit Section -->
         <input type="hidden" name="vehicle_list_status_id" value="{{ \App\Constants\VehicleListStatus::PUBLISHED }}">
         <input type="hidden" name="published_at" value="">
 

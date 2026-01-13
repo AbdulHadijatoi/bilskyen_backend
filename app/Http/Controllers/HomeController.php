@@ -192,13 +192,17 @@ class HomeController extends Controller
         // If AJAX request, return JSON
         if ($request->ajax() || $request->wantsJson()) {
             // Format vehicles for JSON response
-            $formattedVehicles = $vehicles->map(function ($vehicle) {
+            $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
                 // Get first image
                 $firstImage = $vehicle->images->first();
                 $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->url ?? '/placeholder-vehicle.jpg';
                 
                 // Get details
                 $details = $vehicle->details;
+                
+                // Determine seller type (dealer or private)
+                $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+                $sellerType = $isDealer ? 'Dealer' : 'Private';
                 
                 return [
                     'id' => $vehicle->id,
@@ -208,18 +212,27 @@ class HomeController extends Controller
                     'price' => $vehicle->price,
                     'mileage' => $vehicle->mileage,
                     'km_driven' => $vehicle->km_driven,
+                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                    'version' => $vehicle->version,
                     'brand_name' => $vehicle->brand_name,
                     'model_name' => $vehicle->model_name,
                     'category_name' => $vehicle->category_name,
                     'fuel_type_name' => $vehicle->fuel_type_name,
+                    'gear_type_name' => $vehicle->gear_type_name,
                     'model_year_name' => $vehicle->model_year_name,
                     'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+                    'engine_power_hp' => $vehicle->engine_power_hp,
+                    'seller_type' => $sellerType,
                     'image_url' => $imageUrl,
+                    'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
+                    'location' => $vehicle->location ? [
+                        'city' => $vehicle->location->city,
+                        'postcode' => $vehicle->location->postcode,
+                    ] : null,
                     'details' => $details ? [
-                        'version' => $details->version ?? null,
-                        'gear_type_name' => $details->gear_type_name ?? null,
                         'color_name' => $details->color_name ?? null,
                         'condition_name' => $details->condition_name ?? null,
+                        'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
                     ] : null,
                 ];
             });

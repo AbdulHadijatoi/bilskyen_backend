@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audit_actor_types', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 50);
-        });
+        if (!Schema::hasTable('audit_actor_types')) {
+            Schema::create('audit_actor_types', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 50);
+        
+            });
+        }
     }
 
     /**

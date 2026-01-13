@@ -11,18 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('vehicle_equipment');
-        
-        Schema::create('vehicle_equipment', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
-            $table->unsignedInteger('equipment_id');
-            $table->foreign('equipment_id')->references('id')->on('equipments')->cascadeOnDelete();
+        if (!Schema::hasTable('vehicle_equipment')) {
+            Schema::create('vehicle_equipment', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
+                $table->unsignedInteger('equipment_id');
+                $table->foreign('equipment_id')->references('id')->on('equipments')->cascadeOnDelete();
             
-            $table->unique(['vehicle_id', 'equipment_id']);
-            $table->index('vehicle_id');
-            $table->index('equipment_id');
-        });
+                $table->unique(['vehicle_id', 'equipment_id']);
+                $table->index('vehicle_id');
+                $table->index('equipment_id');
+        
+            });
+        }
     }
 
     /**
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vehicle_equipment');
+        Schema::dropIfExists(\'\');
     }
 };

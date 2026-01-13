@@ -20,7 +20,6 @@ class VehicleDetail extends Model
         'views_count',
         'vin_location',
         'type_id',
-        'version',
         'type_name',
         'registration_status',
         'registration_status_updated_date',
@@ -33,7 +32,6 @@ class VehicleDetail extends Model
         'towing_weight_brakes',
         'minimum_weight',
         'gross_combination_weight',
-        'fuel_efficiency',
         'engine_displacement',
         'engine_cylinders',
         'engine_code',
@@ -56,16 +54,17 @@ class VehicleDetail extends Model
         'use_id',
         'color_id',
         'body_type_id',
+        'variant_id',
         'dispensations',
         'permits',
         'ncap_five',
         'airbags',
         'integrated_child_seats',
         'seat_belt_alarms',
-        'euronorm',
+        'euronom_id',
+        'servicebog',
         'price_type_id',
         'condition_id',
-        'gear_type_id',
         'sales_type_id',
     ];
 
@@ -78,7 +77,6 @@ class VehicleDetail extends Model
         'towing_weight_brakes' => 'integer',
         'minimum_weight' => 'integer',
         'gross_combination_weight' => 'integer',
-        'fuel_efficiency' => 'decimal:2',
         'engine_displacement' => 'integer',
         'engine_cylinders' => 'integer',
         'last_inspection_odometer' => 'integer',
@@ -112,7 +110,6 @@ class VehicleDetail extends Model
         'body_type_name',
         'price_type_name',
         'condition_name',
-        'gear_type_name',
         'sales_type_name',
     ];
 
@@ -142,7 +139,6 @@ class VehicleDetail extends Model
                 'body_types' => BodyType::find($id),
                 'price_types' => PriceType::find($id),
                 'conditions' => Condition::find($id),
-                'gear_types' => GearType::find($id),
                 'sales_types' => SalesType::find($id),
                 default => null,
             };
@@ -207,14 +203,6 @@ class VehicleDetail extends Model
     }
 
     /**
-     * Get gear type name attribute (cached)
-     */
-    public function getGearTypeNameAttribute(): ?string
-    {
-        return self::getCachedLookup('gear_types', $this->gear_type_id);
-    }
-
-    /**
      * Get sales type name attribute (cached)
      */
     public function getSalesTypeNameAttribute(): ?string
@@ -239,14 +227,6 @@ class VehicleDetail extends Model
     }
 
     /**
-     * Get gear type for this detail
-     */
-    public function gearType(): BelongsTo
-    {
-        return $this->belongsTo(GearType::class);
-    }
-
-    /**
      * Get sales type for this detail
      */
     public function salesType(): BelongsTo
@@ -260,5 +240,21 @@ class VehicleDetail extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * Get variant for this detail
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(Variant::class);
+    }
+
+    /**
+     * Get euronom for this detail
+     */
+    public function euronom(): BelongsTo
+    {
+        return $this->belongsTo(Euronom::class);
     }
 }

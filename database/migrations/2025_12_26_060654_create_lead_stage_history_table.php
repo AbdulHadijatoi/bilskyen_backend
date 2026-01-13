@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lead_stage_history', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
-            $table->unsignedInteger('from_stage_id')->nullable();
-            $table->unsignedInteger('to_stage_id');
-            $table->foreignId('changed_by_user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('changed_at');
-        });
+        if (!Schema::hasTable('lead_stage_history')) {
+            Schema::create('lead_stage_history', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
+                $table->unsignedInteger('from_stage_id')->nullable();
+                $table->unsignedInteger('to_stage_id');
+                $table->foreignId('changed_by_user_id')->constrained('users')->cascadeOnDelete();
+                $table->timestamp('changed_at');
+            
+            });
+        }
     }
 
     /**

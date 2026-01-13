@@ -222,10 +222,10 @@
                     <span class="detail-value">{{ $vehicle->charging_type }}</span>
                 </div>
                 @endif
-                @if($vehicle->engine_power)
+                @if($vehicle->engine_power_hp)
                 <div class="detail-item">
                     <span class="detail-label">Engine Power</span>
-                    <span class="detail-value">{{ $vehicle->engine_power }} HP</span>
+                    <span class="detail-value">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
                     </div>
                 @endif
                 @if($vehicle->towing_weight)
@@ -308,10 +308,10 @@
                     <span class="detail-value">{{ $details->sales_type_name }}</span>
                 </div>
                 @endif
-                @if($details->version)
+                @if($vehicle->version)
                 <div class="detail-item">
                     <span class="detail-label">Version</span>
-                    <span class="detail-value">{{ $details->version }}</span>
+                    <span class="detail-value">{{ $vehicle->version }}</span>
                 </div>
                 @endif
                 @if($details->vin_location)
@@ -410,10 +410,10 @@
                     <span class="detail-value">{{ number_format($details->top_speed) }} km/h</span>
                 </div>
                 @endif
-                @if($details->fuel_efficiency)
+                @if($vehicle->fuel_efficiency)
                 <div class="detail-item">
                     <span class="detail-label">Fuel Efficiency</span>
-                    <span class="detail-value">{{ number_format($details->fuel_efficiency, 2) }} L/100km</span>
+                    <span class="detail-value">{{ number_format($vehicle->fuel_efficiency, 2) }} L/100km</span>
                 </div>
                 @endif
                 @if($details->airbags)

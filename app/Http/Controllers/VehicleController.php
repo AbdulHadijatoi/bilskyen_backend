@@ -411,11 +411,11 @@ class VehicleController extends Controller
 
             // Add vehicle details if provided
             $detailsFields = [
-                'description', 'vin_location', 'type_id', 'version', 'type_name',
+                'description', 'vin_location', 'type_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
-                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'gross_combination_weight', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
@@ -423,7 +423,7 @@ class VehicleController extends Controller
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
                 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronorm', 'price_type_id', 'condition_id',
-                'gear_type_id', 'sales_type_id'
+                'sales_type_id'
             ];
 
             foreach ($detailsFields as $field) {

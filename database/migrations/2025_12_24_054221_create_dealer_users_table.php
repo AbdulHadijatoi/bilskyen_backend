@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dealer_users', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+        if (!Schema::hasTable('dealer_users')) {
+            Schema::create('dealer_users', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('dealer_id')->constrained('dealers')->cascadeOnDelete();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
+                $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
 
-            $table->unique(['dealer_id', 'user_id']);
-        });
+                $table->unique(['dealer_id', 'user_id']);
+        
+            });
+        }
     }
 
     /**

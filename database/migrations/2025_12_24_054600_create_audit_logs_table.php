@@ -11,19 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audit_logs', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('actor_id');
-            $table->unsignedInteger('audit_actor_type_id');
-            $table->string('action', 100);
-            $table->string('target_type', 50);
-            $table->unsignedBigInteger('target_id');
-            $table->json('metadata')->nullable();
-            $table->string('ip_address', 45)->nullable();
-            $table->timestamp('created_at');
+        if (!Schema::hasTable('audit_logs')) {
+            Schema::create('audit_logs', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('actor_id');
+                $table->unsignedInteger('audit_actor_type_id');
+                $table->string('action', 100);
+                $table->string('target_type', 50);
+                $table->unsignedBigInteger('target_id');
+                $table->json('metadata')->nullable();
+                $table->string('ip_address', 45)->nullable();
+                $table->timestamp('created_at');
 
-            $table->foreign('audit_actor_type_id')->references('id')->on('audit_actor_types')->cascadeOnDelete();
-        });
+                $table->foreign('audit_actor_type_id')->references('id')->on('audit_actor_types')->cascadeOnDelete();
+        
+            });
+        }
     }
 
     /**
@@ -31,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('audit_logs');
+        Schema::dropIfExists(\'\');
     }
 };

@@ -29,10 +29,29 @@
         
         // Initialize image upload
         initImageUpload();
+        
+        // Initialize title auto-generation
+        initTitleAutoGeneration();
+        
+        // Initialize description auto-generation
+        initDescriptionAutoGeneration();
+        
+        // Initialize tax info toggle
+        initTaxInfoToggle();
     }
 
     // Expandable Sections
     function initExpandableSections() {
+        // Expand all sections by default on page load
+        document.querySelectorAll('.expandable-section').forEach(section => {
+            const header = section.querySelector('.section-header');
+            const content = section.querySelector('.section-content');
+            if (header && content) {
+                content.classList.add('expanded');
+                header.classList.add('active');
+            }
+        });
+        
         // Make toggleSection available globally
         window.toggleSection = function(sectionId) {
             const section = document.querySelector(`[data-section="${sectionId}"]`);
@@ -51,11 +70,6 @@
             } else {
                 content.classList.add('expanded');
                 header.classList.add('active');
-                
-                // Smooth scroll to section
-                setTimeout(() => {
-                    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 100);
             }
         };
         
@@ -161,7 +175,10 @@
                 lookupLoading.classList.add('hidden');
                 registrationInput.disabled = false;
 
-                if (data.status === 'error' || !data.data) {
+                console.log('API Response received:', data);
+
+                // Check for error status first
+                if (data.status === 'error') {
                     let errorMessage = data.message || 'Failed to fetch vehicle information';
                     
                     if (data.errors && data.errors.code === 'TIMEOUT') {
@@ -176,27 +193,40 @@
                 }
 
                 // Extract vehicle data from response
+                // Handle nested structure: { data: { data: { ...vehicle data... } } }
                 let vehicleData = null;
                 
-                if (data.data && data.data.data) {
+                if (data.data && data.data.data && typeof data.data.data === 'object') {
+                    // Nested structure: data.data.data (most common)
                     vehicleData = data.data.data;
-                } else if (data.data) {
+                } else if (data.data && typeof data.data === 'object' && !Array.isArray(data.data) && data.data.registration) {
+                    // Single nested: data.data with registration field
                     vehicleData = data.data;
-                } else if (data.vehicle) {
+                } else if (data.vehicle && typeof data.vehicle === 'object') {
                     vehicleData = data.vehicle;
                 } else if (Array.isArray(data) && data.length > 0) {
                     vehicleData = data[0];
                 } else if (data.status === 'success' && data.data) {
                     vehicleData = data.data;
-                } else if (typeof data === 'object' && !data.status && !data.errors) {
+                } else if (typeof data === 'object' && !data.status && !data.errors && data.registration) {
+                    // Direct vehicle data object
                     vehicleData = data;
                 }
                 
-                if (!vehicleData || typeof vehicleData !== 'object') {
+                console.log('Extracted vehicle data:', vehicleData);
+                
+                if (!vehicleData || typeof vehicleData !== 'object' || !vehicleData.registration) {
+                    console.error('Vehicle data extraction failed. Response structure:', JSON.stringify(data, null, 2));
                     const errorMsg = 'No vehicle data found in API response. Please try again.';
                     lookupError.textContent = errorMsg;
                     lookupError.style.color = 'var(--destructive)';
                     return;
+                }
+                
+                // Set registration in hidden field before showing form
+                const registrationHidden = document.getElementById('registration');
+                if (registrationHidden && registration) {
+                    registrationHidden.value = registration;
                 }
                 
                 // Show the form
@@ -205,23 +235,18 @@
                     vehicleForm.classList.add('form-visible');
                 }
                 
-                // Ensure all sections are collapsed initially
+                // Ensure all sections are expanded by default
                 document.querySelectorAll('.expandable-section').forEach(section => {
                     const header = section.querySelector('.section-header');
                     const content = section.querySelector('.section-content');
                     if (header && content) {
-                        content.classList.remove('expanded');
-                        header.classList.remove('active');
+                        content.classList.add('expanded');
+                        header.classList.add('active');
                     }
                 });
                 
-                // Prefill form and expand relevant sections
+                // Prefill form
                 prefillForm(vehicleData);
-                
-                // Expand essential section by default after lookup
-                setTimeout(() => {
-                    window.toggleSection('essential');
-                }, 100);
                 
                 // Show success message
                 const successMsg = document.createElement('div');
@@ -243,9 +268,32 @@
             .catch(error => {
                 lookupLoading.classList.add('hidden');
                 registrationInput.disabled = false;
-                lookupError.textContent = 'An error occurred while fetching vehicle information. Please try again.';
-                lookupError.style.color = 'var(--destructive)';
+                
                 console.error('Lookup error:', error);
+                
+                // Try to extract error message from error object
+                let errorMessage = 'An error occurred while fetching vehicle information. Please try again.';
+                
+                if (error && typeof error === 'object') {
+                    if (error.message) {
+                        errorMessage = error.message;
+                    } else if (error.errors && typeof error.errors === 'object') {
+                        const errorKeys = Object.keys(error.errors);
+                        if (errorKeys.length > 0) {
+                            const firstError = Array.isArray(error.errors[errorKeys[0]]) 
+                                ? error.errors[errorKeys[0]][0] 
+                                : error.errors[errorKeys[0]];
+                            errorMessage = firstError || errorMessage;
+                        }
+                    } else if (error.status === 'error' && error.message) {
+                        errorMessage = error.message;
+                    }
+                } else if (typeof error === 'string') {
+                    errorMessage = error;
+                }
+                
+                lookupError.textContent = errorMessage;
+                lookupError.style.color = 'var(--destructive)';
             });
         }
 
@@ -342,8 +390,31 @@
             return;
         }
         
+        // Generate title and description before submission if not already done
+        generateTitle();
+        generateDescription();
+        
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
+        
+        // Handle variant name if variant_id is not set but variant name exists
+        const variantSelect = document.getElementById('variant_id');
+        if (variantSelect && !variantSelect.value) {
+            // Check if there's a variant name input (from API)
+            const variantNameInput = document.getElementById('variant_name_hidden');
+            if (variantNameInput && variantNameInput.value) {
+                formData.append('variant_name', variantNameInput.value);
+            }
+        }
+        
+        // Handle euronom name if euronom_id is not set but euronom name exists
+        const euronomSelect = document.getElementById('euronom_id');
+        if (euronomSelect && !euronomSelect.value) {
+            const euronomNameInput = document.getElementById('euronom_name_hidden');
+            if (euronomNameInput && euronomNameInput.value) {
+                formData.append('euronom_name', euronomNameInput.value);
+            }
+        }
         
         // Manually append files from fileMap to ensure they're included
         // This is necessary because files added via DataTransfer API might not be
@@ -608,6 +679,12 @@
             }
             if (value === null || value === undefined || value === '') return false;
             
+            // Ensure it's a select element
+            if (select.tagName !== 'SELECT') {
+                console.warn(`Element ${selectId} is not a SELECT element`);
+                return false;
+            }
+            
             if (typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value))) {
                 const idValue = String(value);
                 if (select.querySelector(`option[value="${idValue}"]`)) {
@@ -627,8 +704,10 @@
             }
             
             const text = String(value).toLowerCase().trim();
-            for (let option of select.options) {
-                if (option.value && option.text.trim().toLowerCase() === text) {
+            // Convert HTMLOptionsCollection to array for safe iteration
+            const options = Array.from(select.options);
+            for (let option of options) {
+                if (option.value && option.text && option.text.trim().toLowerCase() === text) {
                     select.value = option.value;
                     console.log(`Set ${selectId} = ${option.value} (matched text: ${text})`);
                     return true;
@@ -642,73 +721,102 @@
         // Basic fields
         const registration = apiData.registration || apiData.registration_number || apiData.reg || apiData.plate || apiData.license_plate;
         if (registration) {
-            setFieldValue('registration', registration);
+            const registrationInput = document.getElementById('registration');
+            if (registrationInput) {
+                registrationInput.value = registration;
+            }
             setFieldValue('registration-lookup', registration);
         }
         
         const vin = apiData.vin || apiData.chassis_number || apiData.chassis || apiData.chassisNumber;
         if (vin) setFieldValue('vin', vin);
-        
-        const title = apiData.title || apiData.name;
-        if (title) setFieldValue('title', String(title).trim());
 
-        // Map brand
-        const brandValue = apiData.brand || apiData.make || apiData.manufacturer || apiData.make_name;
+        // Map brand (hidden field)
+        const brandValue = apiData.brand || apiData.make || apiData.manufacturer || apiData.make_name || apiData.brand_id;
         if (brandValue !== null && brandValue !== undefined) {
             const brandSelect = document.getElementById('brand_id');
-            let brandFound = false;
-            
-            if (setSelectByIdOrText('brand_id', brandValue)) {
-                if (brandSelect) {
-                    brandSelect.dispatchEvent(new Event('change'));
-                }
-                brandFound = true;
+            if (brandSelect) {
+                let brandFound = false;
                 
-                setTimeout(() => {
-                    const modelValue = apiData.model || apiData.model_name || apiData.modelName;
-                    if (modelValue !== null && modelValue !== undefined) {
-                        if (!setSelectByIdOrText('model_id', modelValue)) {
-                            const vehicleForm = document.getElementById('vehicle-form');
-                            let hiddenInput = document.getElementById('model_name_hidden');
-                            if (!hiddenInput && vehicleForm) {
-                                hiddenInput = document.createElement('input');
-                                hiddenInput.type = 'hidden';
-                                hiddenInput.id = 'model_name_hidden';
-                                hiddenInput.name = 'model_name';
-                                vehicleForm.appendChild(hiddenInput);
-                            }
-                            if (hiddenInput) {
-                                hiddenInput.value = typeof modelValue === 'object' ? modelValue.name : modelValue;
+                // Try to set by ID first if it's a number
+                if (typeof brandValue === 'number' || (typeof brandValue === 'string' && /^\d+$/.test(brandValue))) {
+                    const idValue = String(brandValue);
+                    if (brandSelect.querySelector(`option[value="${idValue}"]`)) {
+                        brandSelect.value = idValue;
+                        brandSelect.dispatchEvent(new Event('change'));
+                        brandFound = true;
+                    }
+                }
+                
+                // If not found by ID, try by name
+                if (!brandFound && setSelectByIdOrText('brand_id', brandValue)) {
+                    brandSelect.dispatchEvent(new Event('change'));
+                    brandFound = true;
+                }
+                
+                if (brandFound) {
+                    setTimeout(() => {
+                        const modelValue = apiData.model || apiData.model_name || apiData.modelName || apiData.model_id;
+                        if (modelValue !== null && modelValue !== undefined) {
+                            const modelSelect = document.getElementById('model_id');
+                            if (modelSelect) {
+                                // Try by ID first
+                                if (typeof modelValue === 'number' || (typeof modelValue === 'string' && /^\d+$/.test(modelValue))) {
+                                    const modelIdValue = String(modelValue);
+                                    if (modelSelect.querySelector(`option[value="${modelIdValue}"]`)) {
+                                        modelSelect.value = modelIdValue;
+                                    }
+                                } else {
+                                    setSelectByIdOrText('model_id', modelValue);
+                                }
                             }
                         }
+                        // Trigger title generation after model is set
+                        setTimeout(() => generateTitle(), 100);
+                    }, 500);
+                } else if (typeof brandValue === 'string') {
+                    // Create hidden input for brand name
+                    const vehicleForm = document.getElementById('vehicle-form');
+                    let brandHiddenInput = document.getElementById('brand_name_hidden');
+                    if (!brandHiddenInput && vehicleForm) {
+                        brandHiddenInput = document.createElement('input');
+                        brandHiddenInput.type = 'hidden';
+                        brandHiddenInput.id = 'brand_name_hidden';
+                        brandHiddenInput.name = 'brand_name';
+                        vehicleForm.appendChild(brandHiddenInput);
                     }
-                }, 500);
-            }
-            
-            if (!brandFound && typeof brandValue === 'string') {
-                const vehicleForm = document.getElementById('vehicle-form');
-                let brandHiddenInput = document.getElementById('brand_name_hidden');
-                if (!brandHiddenInput && vehicleForm) {
-                    brandHiddenInput = document.createElement('input');
-                    brandHiddenInput.type = 'hidden';
-                    brandHiddenInput.id = 'brand_name_hidden';
-                    brandHiddenInput.name = 'brand_name';
-                    vehicleForm.appendChild(brandHiddenInput);
-                }
-                if (brandHiddenInput) {
-                    brandHiddenInput.value = brandValue;
+                    if (brandHiddenInput) {
+                        brandHiddenInput.value = brandValue;
+                    }
                 }
             }
         }
 
-        // Map fuel type
-        const fuelTypeValue = apiData.fuel_type || apiData.fuelType || apiData.fuel || apiData.fuelTypeName;
+        // Map fuel type (hidden field)
+        const fuelTypeValue = apiData.fuel_type_id || apiData.fuel_type || apiData.fuelType || apiData.fuel || apiData.fuelTypeName;
         if (fuelTypeValue !== null && fuelTypeValue !== undefined) {
-            setSelectByIdOrText('fuel_type_id', fuelTypeValue);
+            const fuelTypeSelect = document.getElementById('fuel_type_id');
+            if (fuelTypeSelect) {
+                // Try by ID first
+                if (typeof fuelTypeValue === 'number' || (typeof fuelTypeValue === 'string' && /^\d+$/.test(fuelTypeValue))) {
+                    const idValue = String(fuelTypeValue);
+                    if (fuelTypeSelect.querySelector(`option[value="${idValue}"]`)) {
+                        fuelTypeSelect.value = idValue;
+                        fuelTypeSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => generateTitle(), 100);
+                    } else if (setSelectByIdOrText('fuel_type_id', fuelTypeValue)) {
+                        fuelTypeSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => generateTitle(), 100);
+                    }
+                } else if (setSelectByIdOrText('fuel_type_id', fuelTypeValue)) {
+                    fuelTypeSelect.dispatchEvent(new Event('change'));
+                    setTimeout(() => generateTitle(), 100);
+                }
+            }
         }
 
-        // Map model year
-        let year = apiData.model_year || apiData.year || apiData.modelYear || apiData.registration_year;
+        // Map model year (hidden field)
+        let year = apiData.model_year_id || apiData.model_year || apiData.year || apiData.modelYear || apiData.registration_year;
         if (!year && apiData.first_registration_date) {
             const dateStr = apiData.first_registration_date;
             const yearMatch = dateStr.match(/^(\d{4})/);
@@ -717,7 +825,24 @@
             }
         }
         if (year !== null && year !== undefined) {
-            setSelectByIdOrText('model_year_id', year);
+            const modelYearSelect = document.getElementById('model_year_id');
+            if (modelYearSelect) {
+                // Try by ID first
+                if (typeof year === 'number' || (typeof year === 'string' && /^\d+$/.test(year))) {
+                    const idValue = String(year);
+                    if (modelYearSelect.querySelector(`option[value="${idValue}"]`)) {
+                        modelYearSelect.value = idValue;
+                        modelYearSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => generateTitle(), 100);
+                    } else if (setSelectByIdOrText('model_year_id', year)) {
+                        modelYearSelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => generateTitle(), 100);
+                    }
+                } else if (setSelectByIdOrText('model_year_id', year)) {
+                    modelYearSelect.dispatchEvent(new Event('change'));
+                    setTimeout(() => generateTitle(), 100);
+                }
+            }
         }
 
         // Map category
@@ -730,10 +855,22 @@
         const price = apiData.price || apiData.price_dkk || apiData.list_price || apiData.priceDkk;
         if (price) setFieldValue('price', price);
         
-        const mileage = apiData.mileage || apiData.km || apiData.odometer || apiData.odometer_reading || apiData.kmDriven;
-        if (mileage) {
-            setFieldValue('mileage', mileage);
-            setFieldValue('km_driven', mileage);
+        // KM Driven (removed mileage)
+        const kmDriven = apiData.km_driven || apiData.mileage || apiData.km || apiData.odometer || apiData.odometer_reading || apiData.kmDriven;
+        if (kmDriven) {
+            setFieldValue('km_driven', kmDriven);
+        }
+        
+        // Fuel efficiency
+        const fuelEfficiency = apiData.fuel_efficiency || apiData.fuelEfficiency;
+        if (fuelEfficiency) {
+            setFieldValue('fuel_efficiency', fuelEfficiency);
+        }
+        
+        // Technical total weight
+        const technicalTotalWeight = apiData.technical_total_weight || apiData.technicalTotalWeight;
+        if (technicalTotalWeight) {
+            setFieldValue('technical_total_weight', technicalTotalWeight);
         }
         
         if (apiData.batteryCapacity || apiData.battery_capacity) setFieldValue('battery_capacity', apiData.batteryCapacity || apiData.battery_capacity);
@@ -741,16 +878,35 @@
         if (apiData.towingWeight || apiData.towing_weight) setFieldValue('towing_weight', apiData.towingWeight || apiData.towing_weight);
         if (apiData.ownershipTax || apiData.ownership_tax) setFieldValue('ownership_tax', apiData.ownershipTax || apiData.ownership_tax);
 
-        // First registration date
+        // First registration date (month/year picker)
         const regDate = apiData.firstRegistrationDate || apiData.first_registration_date || apiData.registration_date || apiData.first_reg_date;
         if (regDate) {
             try {
                 const date = new Date(regDate);
                 if (!isNaN(date.getTime())) {
-                    setFieldValue('first_registration_date', date.toISOString().split('T')[0]);
+                    const month = date.getMonth() + 1; // getMonth() returns 0-11
+                    const year = date.getFullYear();
+                    setFieldValue('first_registration_month', month);
+                    setFieldValue('first_registration_year', year);
                 }
             } catch (e) {
                 console.warn('Invalid date format:', regDate);
+            }
+        }
+        
+        // Last inspection date (month/year picker)
+        const lastInspectionDate = apiData.last_inspection_date || apiData.lastInspectionDate;
+        if (lastInspectionDate) {
+            try {
+                const date = new Date(lastInspectionDate);
+                if (!isNaN(date.getTime())) {
+                    const month = date.getMonth() + 1;
+                    const year = date.getFullYear();
+                    setFieldValue('last_inspection_month', month);
+                    setFieldValue('last_inspection_year', year);
+                }
+            } catch (e) {
+                console.warn('Invalid last inspection date format:', lastInspectionDate);
             }
         }
 
@@ -759,16 +915,75 @@
         if (bodyType) setSelectByIdOrText('body_type_id', bodyType);
 
         const color = apiData.color || apiData.colour || apiData.paint_color || apiData.exterior_color;
-        if (color) setSelectByIdOrText('color_id', color);
+        if (color) {
+            // Handle color as object with id or name
+            if (typeof color === 'object' && color !== null) {
+                if (color.id) {
+                    setSelectByIdOrText('color_id', color.id);
+                } else if (color.name) {
+                    setSelectByIdOrText('color_id', color.name);
+                }
+            } else {
+                setSelectByIdOrText('color_id', color);
+            }
+        }
         
-        const use = apiData.use || apiData.use_id;
-        if (use) setSelectByIdOrText('use_id', use);
+        // Variant
+        const variant = apiData.variant || apiData.variantName || apiData.variant_name;
+        if (variant) {
+            if (!setSelectByIdOrText('variant_id', variant)) {
+                // Create hidden input for variant name if not found in dropdown
+                const vehicleForm = document.getElementById('vehicle-form');
+                let variantHiddenInput = document.getElementById('variant_name_hidden');
+                if (!variantHiddenInput && vehicleForm) {
+                    variantHiddenInput = document.createElement('input');
+                    variantHiddenInput.type = 'hidden';
+                    variantHiddenInput.id = 'variant_name_hidden';
+                    variantHiddenInput.name = 'variant_name';
+                    vehicleForm.appendChild(variantHiddenInput);
+                }
+                if (variantHiddenInput) {
+                    variantHiddenInput.value = typeof variant === 'object' ? variant.name : variant;
+                }
+            }
+        }
+        
+        // Euronom
+        const euronom = apiData.euronorm || apiData.euronom || apiData.euroNorm || apiData.euro_norm;
+        if (euronom) {
+            if (!setSelectByIdOrText('euronom_id', euronom)) {
+                // Create hidden input for euronom name if not found in dropdown
+                const vehicleForm = document.getElementById('vehicle-form');
+                let euronomHiddenInput = document.getElementById('euronom_name_hidden');
+                if (!euronomHiddenInput && vehicleForm) {
+                    euronomHiddenInput = document.createElement('input');
+                    euronomHiddenInput.type = 'hidden';
+                    euronomHiddenInput.id = 'euronom_name_hidden';
+                    euronomHiddenInput.name = 'euronom_name';
+                    vehicleForm.appendChild(euronomHiddenInput);
+                }
+                if (euronomHiddenInput) {
+                    euronomHiddenInput.value = typeof euronom === 'object' ? euronom.name : euronom;
+                }
+            }
+        }
+        
+        // Servicebog
+        const servicebog = apiData.servicebog || apiData.service_book;
+        if (servicebog) {
+            const servicebogRadio = document.querySelector(`input[name="servicebog"][value="${servicebog}"]`);
+            if (servicebogRadio) {
+                servicebogRadio.checked = true;
+            }
+        }
 
-        const type = apiData.type || apiData.type_id;
-        if (type) setSelectByIdOrText('type_id', type);
-
-        // Additional fields
-        setFieldValue('description', apiData.description || apiData.notes || apiData.comments);
+        // Description - will be auto-generated, but allow API override
+        if (apiData.description) {
+            setFieldValue('description', apiData.description);
+        } else {
+            // Generate description after a short delay to allow other fields to be set
+            setTimeout(() => generateDescription(), 500);
+        }
         
         // Handle equipment array
         if (apiData.equipment && Array.isArray(apiData.equipment)) {
@@ -788,10 +1003,217 @@
             });
         }
         
-        // Only expand essential section after lookup, keep others collapsed
-        // User can manually expand other sections as needed
+        // Generate title after all fields are set
+        setTimeout(() => {
+            generateTitle();
+            if (!apiData.description) {
+                generateDescription();
+            }
+        }, 600);
+        
+        // Expand vehicle-info section after lookup
+        setTimeout(() => {
+            window.toggleSection('vehicle-info');
+        }, 100);
         
         console.log('Form prefilling completed');
+    }
+    
+    // Title auto-generation
+    function initTitleAutoGeneration() {
+        const fields = ['brand_id', 'model_id', 'model_year_id', 'fuel_type_id'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', () => {
+                    generateTitle();
+                });
+            }
+        });
+    }
+    
+    function generateTitle() {
+        const brandSelect = document.getElementById('brand_id');
+        const modelSelect = document.getElementById('model_id');
+        const modelYearSelect = document.getElementById('model_year_id');
+        const fuelTypeSelect = document.getElementById('fuel_type_id');
+        const titleInput = document.getElementById('title');
+        const titleDisplay = document.getElementById('title-display');
+        
+        if (!titleInput) return;
+        
+        const parts = [];
+        
+        if (brandSelect && brandSelect.value) {
+            const brandOption = brandSelect.options[brandSelect.selectedIndex];
+            if (brandOption && brandOption.text) {
+                parts.push(brandOption.text);
+            }
+        }
+        
+        if (modelSelect && modelSelect.value) {
+            const modelOption = modelSelect.options[modelSelect.selectedIndex];
+            if (modelOption && modelOption.text) {
+                parts.push(modelOption.text);
+            }
+        }
+        
+        if (modelYearSelect && modelYearSelect.value) {
+            const yearOption = modelYearSelect.options[modelYearSelect.selectedIndex];
+            if (yearOption && yearOption.text) {
+                parts.push(yearOption.text);
+            }
+        }
+        
+        if (fuelTypeSelect && fuelTypeSelect.value) {
+            const fuelOption = fuelTypeSelect.options[fuelTypeSelect.selectedIndex];
+            if (fuelOption && fuelOption.text) {
+                parts.push(fuelOption.text);
+            }
+        }
+        
+        const title = parts.length > 0 ? parts.join(' ') : 'Auto-generated from vehicle details';
+        titleInput.value = title;
+        if (titleDisplay) {
+            titleDisplay.textContent = title;
+        }
+    }
+    
+    // Description auto-generation
+    function initDescriptionAutoGeneration() {
+        const fields = [
+            'equipment_ids[]', 'servicebog', 'km_driven', 
+            'first_registration_month', 'first_registration_year',
+            'last_inspection_month', 'last_inspection_year',
+            'fuel_efficiency', 'euronom_id', 'technical_total_weight'
+        ];
+        
+        fields.forEach(fieldName => {
+            const inputs = document.querySelectorAll(`[name="${fieldName}"]`);
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    generateDescription();
+                });
+            });
+        });
+        
+        // Also listen for equipment checkboxes
+        document.addEventListener('change', (e) => {
+            if (e.target.name === 'equipment_ids[]') {
+                generateDescription();
+            }
+        });
+    }
+    
+    function generateDescription() {
+        const descriptionTextarea = document.getElementById('description');
+        if (!descriptionTextarea) return;
+        
+        // Don't regenerate if user has manually edited
+        if (descriptionTextarea.dataset.userEdited === 'true') {
+            return;
+        }
+        
+        const parts = [];
+        
+        // Equipment
+        const equipmentCheckboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');
+        if (equipmentCheckboxes.length > 0) {
+            const equipmentNames = Array.from(equipmentCheckboxes).map(cb => {
+                return cb.nextElementSibling?.textContent || '';
+            }).filter(name => name);
+            if (equipmentNames.length > 0) {
+                parts.push('Equipment: ' + equipmentNames.join(', '));
+            }
+        }
+        
+        // Servicebog
+        const servicebogRadio = document.querySelector('input[name="servicebog"]:checked');
+        if (servicebogRadio && servicebogRadio.value !== 'Default') {
+            parts.push('Service book: ' + servicebogRadio.value);
+        }
+        
+        // Kilometer Driven
+        const kmDriven = document.getElementById('km_driven')?.value;
+        if (kmDriven) {
+            parts.push('Kilometers driven: ' + parseInt(kmDriven).toLocaleString() + ' km');
+        }
+        
+        // First Registration
+        const firstRegMonth = document.getElementById('first_registration_month')?.value;
+        const firstRegYear = document.getElementById('first_registration_year')?.value;
+        if (firstRegMonth && firstRegYear) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(firstRegMonth) - 1];
+            parts.push('First registration: ' + monthName + ' ' + firstRegYear);
+        }
+        
+        // Last Inspection
+        const lastInspMonth = document.getElementById('last_inspection_month')?.value;
+        const lastInspYear = document.getElementById('last_inspection_year')?.value;
+        if (lastInspMonth && lastInspYear) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(lastInspMonth) - 1];
+            parts.push('Last inspection: ' + monthName + ' ' + lastInspYear);
+        }
+        
+        // KM/L (Fuel Efficiency)
+        const fuelEfficiency = document.getElementById('fuel_efficiency')?.value;
+        if (fuelEfficiency) {
+            parts.push('Fuel efficiency: ' + parseFloat(fuelEfficiency).toFixed(2) + ' km/l');
+        }
+        
+        // Euronom
+        const euronomSelect = document.getElementById('euronom_id');
+        if (euronomSelect && euronomSelect.value) {
+            const euronomOption = euronomSelect.options[euronomSelect.selectedIndex];
+            if (euronomOption && euronomOption.text) {
+                parts.push('Euro norm: ' + euronomOption.text);
+            }
+        }
+        
+        // Total Technical Weight
+        const technicalWeight = document.getElementById('technical_total_weight')?.value;
+        if (technicalWeight) {
+            parts.push('Total technical weight: ' + parseInt(technicalWeight).toLocaleString() + ' kg');
+        }
+        
+        if (parts.length > 0) {
+            descriptionTextarea.value = parts.join('. ') + '.';
+        }
+        
+        // Mark as auto-generated
+        descriptionTextarea.dataset.autoGenerated = 'true';
+    }
+    
+    // Allow user to edit description
+    document.addEventListener('DOMContentLoaded', () => {
+        const descriptionTextarea = document.getElementById('description');
+        if (descriptionTextarea) {
+            descriptionTextarea.addEventListener('input', () => {
+                descriptionTextarea.dataset.userEdited = 'true';
+            });
+        }
+    });
+    
+    // Tax info toggle
+    function initTaxInfoToggle() {
+        const taxToggle = document.querySelector('[onclick="toggleSection(\'tax-info\')"]');
+        if (taxToggle) {
+            taxToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const content = document.getElementById('tax-info-content');
+                const icon = this.querySelector('.equipment-type-icon');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    if (icon) {
+                        icon.classList.toggle('rotate-180');
+                    }
+                }
+            });
+        }
     }
     
     // Equipment collapsible functionality

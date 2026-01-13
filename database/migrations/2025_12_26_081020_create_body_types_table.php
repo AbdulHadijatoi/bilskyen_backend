@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('body_types');
+        if (!Schema::hasTable('body_types')) {
+            Schema::create('body_types', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 100);
         
-        Schema::create('body_types', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 100);
-        });
+            });
+        }
     }
 
     /**
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('body_types');
+        Schema::dropIfExists(\'\');
     }
 };

@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('price_history', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
-            $table->integer('old_price');
-            $table->integer('new_price');
-            $table->foreignId('changed_by_user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('changed_at');
-        });
+        if (!Schema::hasTable('price_history')) {
+            Schema::create('price_history', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
+                $table->integer('old_price');
+                $table->integer('new_price');
+                $table->foreignId('changed_by_user_id')->constrained('users')->cascadeOnDelete();
+                $table->timestamp('changed_at');
+            
+            });
+        }
     }
 
     /**

@@ -14,6 +14,8 @@ use App\Models\BodyType;
 use App\Models\Color;
 use App\Models\Type;
 use App\Models\VehicleUse;
+use App\Models\Variant;
+use App\Models\Euronom;
 use App\Constants\VehicleListStatus;
 use App\Services\FileService;
 use App\Services\NotificationService;
@@ -95,19 +97,19 @@ class VehicleService
             // Separate vehicle details if present
             $vehicleDetailsData = [];
             $detailsFields = [
-                'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'version', 'type_name',
+                'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
-                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'gross_combination_weight', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
-                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
-                'seat_belt_alarms', 'euronorm', 'price_type_id', 'condition_id',
-                'gear_type_id', 'sales_type_id'
+                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
+                'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
+                'sales_type_id'
             ];
 
             foreach ($detailsFields as $field) {
@@ -258,17 +260,13 @@ class VehicleService
             }
         }
 
-        // Map mileage/km_driven
+        // Map km_driven (removed mileage column)
         if (isset($apiData['mileage'])) {
-            $transformed['mileage'] = $apiData['mileage'];
             $transformed['km_driven'] = $apiData['mileage'];
         }
 
         if (isset($apiData['kmDriven'])) {
             $transformed['km_driven'] = $apiData['kmDriven'];
-            if (!isset($transformed['mileage'])) {
-                $transformed['mileage'] = $apiData['kmDriven'];
-            }
         }
 
         // Map other vehicle specifications
@@ -313,6 +311,34 @@ class VehicleService
             $transformed['title'] = ($apiData['make'] ?? '') . ' ' . ($apiData['model'] ?? '');
         }
 
+        // Handle variant lookup/insertion
+        if (isset($apiData['variant']) || isset($apiData['variantName'])) {
+            $variantName = $apiData['variant'] ?? $apiData['variantName'];
+            if ($variantName) {
+                $variant = Variant::firstOrCreate(['name' => $variantName]);
+                $transformed['variant_id'] = $variant->id;
+            }
+        }
+
+        // Handle euronom lookup/insertion
+        if (isset($apiData['euronorm']) || isset($apiData['euronom']) || isset($apiData['euroNorm'])) {
+            $euronomName = $apiData['euronorm'] ?? $apiData['euronom'] ?? $apiData['euroNorm'];
+            if ($euronomName) {
+                $euronom = Euronom::firstOrCreate(['name' => $euronomName]);
+                $transformed['euronom_id'] = $euronom->id;
+            }
+        }
+
+        // Map fuel_efficiency from API
+        if (isset($apiData['fuelEfficiency']) || isset($apiData['fuel_efficiency'])) {
+            $transformed['fuel_efficiency'] = $apiData['fuelEfficiency'] ?? $apiData['fuel_efficiency'];
+        }
+
+        // Map technical_total_weight
+        if (isset($apiData['technicalTotalWeight']) || isset($apiData['technical_total_weight'])) {
+            $transformed['technical_total_weight'] = $apiData['technicalTotalWeight'] ?? $apiData['technical_total_weight'];
+        }
+
         return $transformed;
     }
 
@@ -336,19 +362,19 @@ class VehicleService
             // Separate vehicle details if present
             $vehicleDetailsData = [];
             $detailsFields = [
-                'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'version', 'type_name',
+                'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
-                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
+                'gross_combination_weight', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
-                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
-                'seat_belt_alarms', 'euronorm', 'price_type_id', 'condition_id',
-                'gear_type_id', 'sales_type_id'
+                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
+                'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
+                'sales_type_id'
             ];
 
             foreach ($detailsFields as $field) {
@@ -486,7 +512,7 @@ class VehicleService
             ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
             ->with(['images' => function ($query) {
                 $query->orderBy('sort_order');
-            }, 'details']);
+            }, 'details', 'dealer']);
 
         // Search filter
         if (!empty($filters['search'])) {
@@ -620,22 +646,10 @@ class VehicleService
                 $query->orderByRaw('COALESCE(' . $tablePrefix . 'mileage, ' . $tablePrefix . 'km_driven, 0) ASC');
                 break;
             case 'fuel_efficiency_desc':
-                if (!$hasVehicleDetailsJoin) {
-                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
-                }
-                $query->orderBy('vehicle_details.fuel_efficiency', 'desc');
-                if (!$hasJoins) {
-                    $query->select('vehicles.*');
-                }
+                $query->orderBy($tablePrefix . 'fuel_efficiency', 'desc');
                 break;
             case 'fuel_efficiency_asc':
-                if (!$hasVehicleDetailsJoin) {
-                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
-                }
-                $query->orderBy('vehicle_details.fuel_efficiency', 'asc');
-                if (!$hasJoins) {
-                    $query->select('vehicles.*');
-                }
+                $query->orderBy($tablePrefix . 'fuel_efficiency', 'asc');
                 break;
             case 'range_desc':
                 $query->orderBy($tablePrefix . 'range_km', 'desc');
@@ -866,9 +880,9 @@ class VehicleService
         // Gear Type (supports array for multiple values)
         if (!empty($advancedFilters['gear_type_id'])) {
             if (is_array($advancedFilters['gear_type_id'])) {
-                $query->whereIn('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+                $query->whereIn('vehicles.gear_type_id', $advancedFilters['gear_type_id']);
             } else {
-                $query->where('vehicle_details.gear_type_id', $advancedFilters['gear_type_id']);
+                $query->where('vehicles.gear_type_id', $advancedFilters['gear_type_id']);
             }
         }
 
@@ -924,10 +938,10 @@ class VehicleService
 
         // Economy & Environment
         if (!empty($advancedFilters['fuel_efficiency_from'])) {
-            $query->where('vehicle_details.fuel_efficiency', '>=', $advancedFilters['fuel_efficiency_from']);
+            $query->where('vehicles.fuel_efficiency', '>=', $advancedFilters['fuel_efficiency_from']);
         }
         if (!empty($advancedFilters['fuel_efficiency_to'])) {
-            $query->where('vehicle_details.fuel_efficiency', '<=', $advancedFilters['fuel_efficiency_to']);
+            $query->where('vehicles.fuel_efficiency', '<=', $advancedFilters['fuel_efficiency_to']);
         }
         if (!empty($advancedFilters['euronorm'])) {
             $query->where('vehicle_details.euronorm', $advancedFilters['euronorm']);
@@ -1001,7 +1015,7 @@ class VehicleService
         // Eager load relationships
         $query->with(['images' => function ($query) {
             $query->orderBy('sort_order');
-        }, 'details']);
+        }, 'details', 'dealer']);
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }

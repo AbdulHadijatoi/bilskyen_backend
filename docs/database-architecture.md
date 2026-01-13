@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: d0c95d907584f85612157b940495a107ec23ccf099b71ea32a3fec9502773bbe
+Schema Checksum: 27bda12b771b434b39f88d6d32378836a7c6b16983b9ca12464075c4e0e45f8c
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -165,7 +165,7 @@ Vehicle listings with searchable attributes.
 | Column | Type | Description |
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
-| title | VARCHAR(255) | Listing title |
+| title | VARCHAR(255) (NULL) | Listing title (nullable, auto-generated from brand + model + model year if empty) |
 | registration | VARCHAR(20) | License plate number |
 | vin | VARCHAR(17) | Vehicle Identification Number |
 | dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
@@ -186,6 +186,9 @@ Vehicle listings with searchable attributes.
 | towing_weight | INT (NULL) | Towing weight capacity |
 | ownership_tax | INT (NULL) | Ownership tax amount |
 | first_registration_date | DATE (NULL) | First registration date |
+| version | VARCHAR(100) (NULL) | Vehicle version |
+| gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` |
+| fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency (km/l) |
 | vehicle_list_status_id | INT (FK) | Foreign key to `vehicle_list_statuses.id` |
 | listing_type_id | INT (FK, NULL) | Foreign key to `listing_types.id` (Purchase/Leasing) |
 | published_at | DATETIME (NULL) | Publication timestamp |
@@ -207,14 +210,17 @@ Vehicle listings with searchable attributes.
 - `listing_type_id` - For listing type filtering
 
 **Relationships:**
-- `belongsTo` Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType
+- `belongsTo` Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType, GearType
 - `hasOne` VehicleDetail
 - `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
 - `belongsToMany` Equipment (via vehicle_equipment)
 
 **Model Features:**
-- **Caching**: Lookup data (categories, brands, models, model_years, fuel_types, vehicle_list_statuses, listing_types) is cached using static property + Laravel Cache facade (24-hour TTL)
-- **Accessors**: Automatically appends resolved names (`category_name`, `brand_name`, `model_name`, `model_year_name`, `fuel_type_name`, `vehicle_list_status_name`, `listing_type_name`) to API responses
+- **Caching**: Lookup data (categories, brands, models, model_years, fuel_types, gear_types, vehicle_list_statuses, listing_types) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: 
+  - Automatically appends resolved names (`category_name`, `brand_name`, `model_name`, `model_year_name`, `fuel_type_name`, `gear_type_name`, `vehicle_list_status_name`, `listing_type_name`) to API responses
+  - `title` accessor auto-generates title from `brand_name + model_name + model_year_name` if the stored title is empty or null
+  - `engine_power_hp` accessor converts `engine_power` (in kW) to horsepower using formula: `engine_power * 1.36` (rounded to 2 decimal places)
 - **Default Ordering**: Global scope applies `ORDER BY id DESC` by default (can be overridden with explicit `orderBy`)
 - **Soft Deletes**: Enabled for data retention
 
@@ -230,7 +236,6 @@ Extended vehicle information and specifications.
 | views_count | INT | View counter (default: 0) |
 | vin_location | VARCHAR(255) (NULL) | VIN location |
 | type_id | INT (FK, NULL) | Foreign key to `types.id` |
-| version | VARCHAR(100) (NULL) | Vehicle version |
 | type_name | VARCHAR(255) (NULL) | Type name |
 | registration_status | VARCHAR(100) (NULL) | Registration status |
 | registration_status_updated_date | DATE (NULL) | Registration status update date |
@@ -243,7 +248,6 @@ Extended vehicle information and specifications.
 | towing_weight_brakes | INT (NULL) | Towing weight with brakes |
 | minimum_weight | INT (NULL) | Minimum weight |
 | gross_combination_weight | INT (NULL) | Gross combination weight |
-| fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency |
 | engine_displacement | INT (NULL) | Engine displacement |
 | engine_cylinders | INT (NULL) | Number of engine cylinders |
 | engine_code | VARCHAR(100) (NULL) | Engine code |
@@ -275,7 +279,6 @@ Extended vehicle information and specifications.
 | euronorm | VARCHAR(50) (NULL) | Euro norm standard |
 | price_type_id | INT (FK, NULL) | Foreign key to `price_types.id` |
 | condition_id | INT (FK, NULL) | Foreign key to `conditions.id` |
-| gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` |
 | sales_type_id | INT (FK, NULL) | Foreign key to `sales_types.id` |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
@@ -288,7 +291,6 @@ Extended vehicle information and specifications.
 - `body_type_id`
 - `price_type_id`
 - `condition_id`
-- `gear_type_id`
 - `sales_type_id`
 
 **Foreign Keys:**
@@ -298,12 +300,12 @@ Extended vehicle information and specifications.
 - `body_type_id` references `body_types.id` (nullOnDelete)
 - `price_type_id` references `price_types.id` (nullOnDelete)
 - `condition_id` references `conditions.id` (nullOnDelete)
-- `gear_type_id` references `gear_types.id` (nullOnDelete)
 - `sales_type_id` references `sales_types.id` (nullOnDelete)
 
 **Model Features:**
-- **Caching**: Lookup data (types, uses, colors, body_types, price_types, conditions, gear_types, sales_types) is cached using static property + Laravel Cache facade (24-hour TTL)
-- **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`, `price_type_name`, `condition_name`, `gear_type_name`, `sales_type_name`) to API responses
+- **Caching**: Lookup data (types, uses, colors, body_types, price_types, conditions, sales_types) is cached using static property + Laravel Cache facade (24-hour TTL)
+- **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`, `price_type_name`, `condition_name`, `sales_type_name`) to API responses
+- **Note**: `version`, `gear_type_id`, and `fuel_efficiency` were moved to the `vehicles` table for optimization (reduces JOIN operations)
 - No eager-loading of constant relations required
 
 **Relationships:**

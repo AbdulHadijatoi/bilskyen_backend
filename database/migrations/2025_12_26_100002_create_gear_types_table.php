@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('gear_types');
+        if (!Schema::hasTable('gear_types')) {
+            Schema::create('gear_types', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 100);
         
-        Schema::create('gear_types', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 100);
-        });
+            });
+        }
     }
 
     /**
@@ -24,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('gear_types');
+        Schema::dropIfExists(\'\');
     }
 };
 

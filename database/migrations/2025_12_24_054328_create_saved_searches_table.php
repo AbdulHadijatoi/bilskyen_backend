@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('saved_searches', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->json('filters');
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('saved_searches')) {
+            Schema::create('saved_searches', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->json('filters');
+                $table->timestamp('created_at');
+        
+            });
+        }
     }
 
     /**

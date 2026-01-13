@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blogs', function (Blueprint $table) {
-            $table->id();
-            $table->string('title', 255);
-            $table->string('slug', 255)->unique();
-            $table->longText('content');
-            $table->string('meta_title', 255)->nullable();
-            $table->text('meta_description')->nullable();
-            $table->timestamp('published_at')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('blogs')) {
+            Schema::create('blogs', function (Blueprint $table) {
+                $table->id();
+                $table->string('title', 255);
+                $table->string('slug', 255)->unique();
+                $table->longText('content');
+                $table->string('meta_title', 255)->nullable();
+                $table->text('meta_description')->nullable();
+                $table->timestamp('published_at')->nullable();
+                $table->timestamps();
+        
+            });
+        }
     }
 
     /**
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('blogs');
+        Schema::dropIfExists(\'\');
     }
 };

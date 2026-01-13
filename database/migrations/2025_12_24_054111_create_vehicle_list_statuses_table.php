@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vehicle_list_statuses', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 50);
-        });
+        if (!Schema::hasTable('vehicle_list_statuses')) {
+            Schema::create('vehicle_list_statuses', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 50);
+        
+            });
+        }
     }
 
     /**

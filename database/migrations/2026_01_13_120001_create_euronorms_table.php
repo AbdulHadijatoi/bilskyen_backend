@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('transmissions')) {
-            Schema::create('transmissions', function (Blueprint $table) {
+        if (!Schema::hasTable('euronorms')) {
+            Schema::create('euronorms', function (Blueprint $table) {
                 $table->integerIncrements('id');
-                $table->string('name', 50);
-        
+                $table->string('name', 100)->unique();
+                $table->timestamps();
             });
         }
     }
@@ -25,6 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transmissions');
+        Schema::dropIfExists('euronorms');
     }
 };
+

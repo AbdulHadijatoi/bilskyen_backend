@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lead_stages', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 50);
-        });
+        if (!Schema::hasTable('lead_stages')) {
+            Schema::create('lead_stages', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 50);
+        
+            });
+        }
     }
 
     /**

@@ -11,19 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dealers', function (Blueprint $table) {
-            $table->id();
-            $table->string('cvr', 20)->unique()->comment('Danish CVR');
-            $table->text('address');
-            $table->string('city', 100);
-            $table->string('postcode', 10);
-            $table->char('country_code', 2)->default('DK');
-            $table->string('logo_path', 255)->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('dealers')) {
+            Schema::create('dealers', function (Blueprint $table) {
+                $table->id();
+                $table->string('cvr', 20)->unique()->comment('Danish CVR');
+                $table->text('address');
+                $table->string('city', 100);
+                $table->string('postcode', 10);
+                $table->char('country_code', 2)->default('DK');
+                $table->string('logo_path', 255)->nullable();
+                $table->timestamps();
 
-            $table->index('cvr');
-            $table->index('postcode');
-        });
+                $table->index('cvr');
+                $table->index('postcode');
+        
+            });
+        }
     }
 
     /**

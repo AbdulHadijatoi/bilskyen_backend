@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('models');
-        
-        Schema::create('models', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->unsignedInteger('brand_id')->nullable();
-            $table->string('name', 100);
+        if (!Schema::hasTable('models')) {
+            Schema::create('models', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->unsignedInteger('brand_id')->nullable();
+                $table->string('name', 100);
             
-            $table->foreign('brand_id')->references('id')->on('brands')->nullOnDelete();
-            $table->index('brand_id');
-        });
+                $table->foreign('brand_id')->references('id')->on('brands')->nullOnDelete();
+                $table->index('brand_id');
+        
+            });
+        }
     }
 
     /**
@@ -28,7 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('models');
+        Schema::dropIfExists(\'\');
     }
 };
 

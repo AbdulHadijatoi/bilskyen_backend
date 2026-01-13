@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('transmissions')) {
-            Schema::create('transmissions', function (Blueprint $table) {
-                $table->integerIncrements('id');
-                $table->string('name', 50);
-        
-            });
-        }
+        Schema::table('vehicles', function (Blueprint $table) {
+            $table->string('title', 255)->nullable()->change();
+        });
     }
 
     /**
@@ -25,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transmissions');
+        Schema::table('vehicles', function (Blueprint $table) {
+            $table->string('title', 255)->nullable(false)->change();
+        });
     }
 };
+

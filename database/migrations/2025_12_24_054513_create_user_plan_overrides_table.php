@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_plan_overrides', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('feature_id')->constrained('features')->cascadeOnDelete();
-            $table->string('override_value', 100);
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('user_plan_overrides')) {
+            Schema::create('user_plan_overrides', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('feature_id')->constrained('features')->cascadeOnDelete();
+                $table->string('override_value', 100);
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamp('created_at');
+        
+            });
+        }
     }
 
     /**
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_plan_overrides');
+        Schema::dropIfExists(\'\');
     }
 };

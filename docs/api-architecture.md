@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: ee87c6ea1afcf5d43af4885d865c2ed3dd5007eab679b7aa1b2ebdb78770cf6e
+API Architecture Checksum: a430246362c3e3cc385ce87980bcb28a96cc0184c533c7f9b9ffca6228e892bf
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -123,7 +123,13 @@ Route::middleware('auth:api')->group(function () {
 }
 ```
 
-**Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_name, model_year_name, fuel_type_name, vehicle_list_status_name, listing_type_name) via model accessors. These are cached and do not require eager-loading relationships.
+**Note:** Vehicle responses automatically include resolved names for lookup fields (category_name, brand_name, model_name, model_year_name, fuel_type_name, gear_type_name, vehicle_list_status_name, listing_type_name) via model accessors. These are cached and do not require eager-loading relationships.
+
+**Title Auto-Generation:** The `title` field is nullable. If a vehicle's title is empty or null, the API automatically generates it from `brand_name + model_name + model_year_name` via the Vehicle model's `getTitleAttribute()` accessor. This ensures all vehicles have a displayable title even if one wasn't explicitly set.
+
+**Engine Power in HP:** The `engine_power_hp` accessor automatically converts `engine_power` (in kW) to horsepower using the formula: `engine_power * 1.36` (rounded to 2 decimal places). This is automatically appended to vehicle responses.
+
+**Optimized Fields:** The fields `version`, `gear_type_id`, and `fuel_efficiency` have been moved from `vehicle_details` to the `vehicles` table to optimize query performance by reducing JOIN operations. These fields are now directly accessible on the vehicle object.
 
 Vehicle details (when included) also automatically include resolved names for lookup fields (type_name_resolved, use_name, color_name, body_type_name, price_type_name, condition_name, gear_type_name, sales_type_name) via VehicleDetail model accessors with the same caching approach.
 
@@ -389,7 +395,7 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `price_type_id` - Filter by price type (from vehicle_details)
 - `condition_id` - Filter by condition (from vehicle_details)
 - `body_type_id` - Filter by body type (from vehicle_details)
-- `gear_type_id` - Filter by gear type (from vehicle_details)
+- `gear_type_id` - Filter by gear type (from vehicles table)
 - `drive_axles` - Filter by drive axles (from vehicle_details)
 - `first_registration_year_from` / `first_registration_year_to` - First registration year range
 - `dealer_id` - Filter by dealer/seller
@@ -399,7 +405,7 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `battery_capacity_from` / `battery_capacity_to` - Battery capacity range (EV)
 - `range_km_from` / `range_km_to` - Electric range range (EV)
 - `charging_type` - Filter by charging type (EV)
-- `fuel_efficiency_from` / `fuel_efficiency_to` - Fuel efficiency range
+- `fuel_efficiency_from` / `fuel_efficiency_to` - Fuel efficiency range (from vehicles table)
 - `euronorm` - Filter by Euro norm
 - `color_id` - Filter by color
 - `doors` - Filter by number of doors
@@ -414,7 +420,7 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `equipment_ids[]` - Filter by equipment (array of equipment IDs)
 
 **Vehicle Creation/Update Fields:**
-- `title` (required) - Vehicle title
+- `title` (optional) - Vehicle title (if not provided, auto-generated from brand + model + model year)
 - `registration` (optional) - License plate
 - `vin` (optional) - Vehicle Identification Number
 - `category_id` (optional) - Category ID
@@ -433,6 +439,9 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - `towing_weight` (optional) - Towing weight
 - `ownership_tax` (optional) - Ownership tax
 - `first_registration_date` (optional) - First registration date
+- `version` (optional) - Vehicle version
+- `gear_type_id` (optional) - Gear type ID
+- `fuel_efficiency` (optional) - Fuel efficiency (km/l)
 - `vehicle_list_status_id` (required) - Vehicle status ID
 - `listing_type_id` (optional) - Listing type ID (Purchase/Leasing)
 - `published_at` (optional) - Publication timestamp
@@ -440,7 +449,6 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 - Additional vehicle_details fields can be included in the same request:
   - `price_type_id` (optional) - Price type ID
   - `condition_id` (optional) - Condition ID
-  - `gear_type_id` (optional) - Gear type ID
   - `sales_type_id` (optional) - Sales type ID
   - Other existing vehicle_details fields (body_type_id, color_id, etc.)
 

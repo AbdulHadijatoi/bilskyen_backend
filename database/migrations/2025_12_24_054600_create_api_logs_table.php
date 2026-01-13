@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('api_logs', function (Blueprint $table) {
-            $table->id();
-            $table->string('api_service', 50);
-            $table->string('endpoint', 255);
-            $table->integer('status_code');
-            $table->integer('execution_time_ms');
-            $table->timestamp('created_at');
-        });
+        if (!Schema::hasTable('api_logs')) {
+            Schema::create('api_logs', function (Blueprint $table) {
+                $table->id();
+                $table->string('api_service', 50);
+                $table->string('endpoint', 255);
+                $table->integer('status_code');
+                $table->integer('execution_time_ms');
+                $table->timestamp('created_at');
+        
+            });
+        }
     }
 
     /**
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('api_logs');
+        Schema::dropIfExists(\'\');
     }
 };

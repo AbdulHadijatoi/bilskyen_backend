@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sources', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 50);
-        });
+        if (!Schema::hasTable('sources')) {
+            Schema::create('sources', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 50);
+        
+            });
+        }
     }
 
     /**

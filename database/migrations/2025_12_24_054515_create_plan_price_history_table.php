@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plan_price_history', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
-            $table->integer('price');
-            $table->char('currency', 3)->default('DKK');
-            $table->enum('billing_cycle', ['monthly', 'yearly']);
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at')->nullable();
-        });
+        if (!Schema::hasTable('plan_price_history')) {
+            Schema::create('plan_price_history', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
+                $table->integer('price');
+                $table->char('currency', 3)->default('DKK');
+                $table->enum('billing_cycle', ['monthly', 'yearly']);
+                $table->timestamp('starts_at');
+                $table->timestamp('ends_at')->nullable();
+        
+            });
+        }
     }
 
     /**
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plan_price_history');
+        Schema::dropIfExists(\'\');
     }
 };

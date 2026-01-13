@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('feature_value_types', function (Blueprint $table) {
-            $table->integerIncrements('id');
-            $table->string('name', 50);
-        });
+        if (!Schema::hasTable('feature_value_types')) {
+            Schema::create('feature_value_types', function (Blueprint $table) {
+                $table->integerIncrements('id');
+                $table->string('name', 50);
+        
+            });
+        }
     }
 
     /**

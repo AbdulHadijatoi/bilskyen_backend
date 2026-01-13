@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chat_messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('thread_id')->constrained('chat_threads')->cascadeOnDelete();
-            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
-            $table->text('message');
-            $table->boolean('is_internal')->default(false);
-            $table->timestamp('created_at');
+        if (!Schema::hasTable('chat_messages')) {
+            Schema::create('chat_messages', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('thread_id')->constrained('chat_threads')->cascadeOnDelete();
+                $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+                $table->text('message');
+                $table->boolean('is_internal')->default(false);
+                $table->timestamp('created_at');
 
-            $table->index('thread_id');
-        });
+                $table->index('thread_id');
+        
+            });
+        }
     }
 
     /**

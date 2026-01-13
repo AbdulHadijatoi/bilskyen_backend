@@ -11,17 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pages', function (Blueprint $table) {
-            $table->id();
-            $table->string('title', 255);
-            $table->string('slug', 255)->unique();
-            $table->longText('content');
-            $table->string('meta_title', 255)->nullable();
-            $table->text('meta_description')->nullable();
-            $table->unsignedInteger('page_status_id');
+        if (!Schema::hasTable('pages')) {
+            Schema::create('pages', function (Blueprint $table) {
+                $table->id();
+                $table->string('title', 255);
+                $table->string('slug', 255)->unique();
+                $table->longText('content');
+                $table->string('meta_title', 255)->nullable();
+                $table->text('meta_description')->nullable();
+                $table->unsignedInteger('page_status_id');
 
-            $table->foreign('page_status_id')->references('id')->on('page_statuses')->cascadeOnDelete();
-        });
+                $table->foreign('page_status_id')->references('id')->on('page_statuses')->cascadeOnDelete();
+        
+            });
+        }
     }
 
     /**

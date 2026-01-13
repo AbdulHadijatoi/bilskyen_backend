@@ -249,112 +249,90 @@
     <!-- Vehicle Grid/List -->
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" data-view="card">
         @forelse($vehicles as $vehicle)
-        <div class="rounded-lg border border-border bg-card overflow-hidden p-0">
-            <!-- Vehicle Image -->
-            <div class="relative aspect-video overflow-hidden">
-                <img
-                    src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
-                    alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                    class="h-full w-full object-cover transition-transform hover:scale-105"
-                />
-                <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                    {{ $vehicle->registration }}
-                </span>
-            </div>
-            
-            <!-- Vehicle Details -->
-            <div class="px-4 py-4 space-y-4">
-                <div class="flex flex-col gap-1">
-                    <h3 class="flex items-center gap-2 text-xl font-bold">
-                        {{ $vehicle->brand_name }} {{ $vehicle->model_name }}
-                    </h3>
-                    @if($vehicle->details?->version)
-                    <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                        {{ $vehicle->details->version }}
-                    </p>
-                    @endif
-                    <p class="text-primary text-2xl font-medium">
-                        {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
-                    </p>
+        <div class="flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full">
+            <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
+                <!-- Vehicle Image -->
+                <div class="relative aspect-video overflow-hidden">
+                    <img
+                        src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
+                        alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
+                        class="h-full w-full object-cover transition-transform hover:scale-105"
+                    />
+                    <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                        {{ $vehicle->registration }}
+                    </span>
                 </div>
+                
+                <!-- Vehicle Details -->
+                <div class="px-4 py-4 space-y-4">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="flex items-center gap-2 text-lg font-bold">
+                            {{ $vehicle->title }}
+                        </h3>
+                        @if($vehicle->version)
+                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                            {{ $vehicle->version }}
+                        </p>
+                        @endif
+                        <p class="text-primary text-lg font-bold">
+                            {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
+                        </p>
+                    </div>
 
-                <div class="-mt-2 flex flex-wrap gap-2 text-xs">
-                    @if($vehicle->details?->gear_type_name)
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->details->gear_type_name }}</span>
-                    @endif
-                    @if($vehicle->details?->color_name)
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->details->color_name }}</span>
-                    @endif
-                    @if($vehicle->category_name)
-                    <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->category_name }}</span>
-                    @endif
-                </div>
+                    <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                        @if($vehicle->mileage || $vehicle->km_driven)
+                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
+                        @endif
+                        @if($vehicle->engine_power_hp)
+                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
+                        @endif
+                        @if($vehicle->first_registration_date)
+                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
+                        @endif
+                        @if($vehicle->fuel_type_name)
+                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->fuel_type_name }}</span>
+                        @endif
+                        @if($vehicle->gear_type_name)
+                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
+                        @endif
+                    </div>
 
-                <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
-                    @if($vehicle->model_year_name)
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                            <line x1="16" x2="16" y1="2" y2="6"></line>
-                            <line x1="8" x2="8" y1="2" y2="6"></line>
-                            <line x1="3" x2="21" y1="10" y2="10"></line>
-                        </svg>
-                        <span>{{ $vehicle->model_year_name }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->mileage || $vehicle->km_driven)
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        <span>{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
-                    </div>
-                    @endif
-                    @if($vehicle->fuel_type_name)
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <line x1="2" x2="22" y1="2" y2="2"></line>
-                            <line x1="6" x2="6" y1="6" y2="22"></line>
-                            <line x1="18" x2="18" y1="6" y2="22"></line>
-                            <line x1="2" x2="22" y1="22" y2="22"></line>
-                        </svg>
-                        <span>{{ $vehicle->fuel_type_name }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->vehicle_list_status_name)
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        <span>{{ $vehicle->vehicle_list_status_name }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->details?->condition_name)
-                    <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            <path d="M18.63 13A17.888 17.888 0 0 1 18 8"></path>
-                            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9s14 0 17-5c.34-.94.56-1.92.73-2.92"></path>
-                            <path d="M2 2l20 20"></path>
-                            <path d="M22 8A10 10 0 0 0 9.04 4.32"></path>
-                        </svg>
-                        <span>{{ $vehicle->details->condition_name }}</span>
-                    </div>
-                    @endif
                 </div>
-            </div>
+            </a>
             
-            <!-- Vehicle Actions -->
-            <div class="mt-auto p-4 pt-2">
-                <div class="flex w-full flex-col gap-2 sm:flex-row">
-                    <a href="/vehicles/{{ $vehicle->id }}" class="flex-1">
-                        <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                            View Details
+            <!-- Card Footer -->
+            <div class="mt-auto" onclick="event.stopPropagation()">
+                @if($vehicle->location)
+                <div class="px-4 pt-3 pb-2">
+                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="truncate">
+                            @if($vehicle->location->city && $vehicle->location->postcode)
+                                {{ $vehicle->location->city }}, {{ $vehicle->location->postcode }}
+                            @elseif($vehicle->location->city)
+                                {{ $vehicle->location->city }}
+                            @elseif($vehicle->location->postcode)
+                                {{ $vehicle->location->postcode }}
+                            @endif
+                        </span>
+                    </div>
+                </div>
+                @endif
+                <!-- Vehicle Actions -->
+                <div class="p-4 pt-2">
+                    <div class="flex w-full flex-col gap-2 sm:flex-row">
+                        <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
+                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                View Details
+                            </button>
+                        </a>
+                        <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+                            Enquire
                         </button>
-                    </a>
-                    <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                        Enquire
-                    </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1457,6 +1435,7 @@
         padding: 0.5rem;
         height: 70px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item:hover {
@@ -1785,116 +1764,97 @@
         
         // Render single vehicle card
         function renderVehicleCard(vehicle) {
-            const details = vehicle.details || {};
-            const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
+            const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
+            
+            // Build location string
+            let locationText = '';
+            if (vehicle.location) {
+                if (vehicle.location.city && vehicle.location.postcode) {
+                    locationText = `${vehicle.location.city}, ${vehicle.location.postcode}`;
+                } else if (vehicle.location.city) {
+                    locationText = vehicle.location.city;
+                } else if (vehicle.location.postcode) {
+                    locationText = vehicle.location.postcode;
+                }
+            }
             
             return `
-                <div class="rounded-lg border border-border bg-card overflow-hidden p-0">
-                    <!-- Vehicle Image -->
-                    <div class="relative aspect-video overflow-hidden">
-                        <img
-                            src="${imageUrl}"
-                            alt="${vehicle.brand_name || ''} ${vehicle.model_name || ''}"
-                            class="h-full w-full object-cover transition-transform hover:scale-105"
-                        />
-                        <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                            ${vehicle.registration || ''}
-                        </span>
-                    </div>
-                    
-                    <!-- Vehicle Details -->
-                    <div class="px-4 py-4 space-y-4">
-                        <div class="flex flex-col gap-1">
-                            <h3 class="flex items-center gap-2 text-xl font-bold">
-                                ${vehicle.brand_name || ''} ${vehicle.model_name || ''}
-                            </h3>
-                            ${details.version ? `
-                            <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                                ${details.version}
-                            </p>
-                            ` : ''}
-                            <p class="text-primary text-2xl font-medium">
-                                ${formatCurrency(vehicle.price)}
-                            </p>
+                <div class="flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full">
+                    <a href="/vehicles/${vehicle.id}" class="block flex-1">
+                        <!-- Vehicle Image -->
+                        <div class="relative aspect-video overflow-hidden">
+                            <img
+                                src="${imageUrl}"
+                                alt="${vehicle.title || ''}"
+                                class="h-full w-full object-cover transition-transform hover:scale-105"
+                            />
+                            <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                                ${vehicle.registration || ''}
+                            </span>
                         </div>
+                        
+                        <!-- Vehicle Details -->
+                        <div class="px-4 py-4 space-y-4">
+                            <div class="flex flex-col gap-1">
+                                <h3 class="flex items-center gap-2 text-lg font-bold">
+                                    ${vehicle.title || ''}
+                                </h3>
+                                ${vehicle.version ? `
+                                <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                                    ${vehicle.version}
+                                </p>
+                                ` : ''}
+                                <p class="text-primary text-lg font-bold">
+                                    ${formatCurrency(vehicle.price)}
+                                </p>
+                            </div>
 
-                        <div class="-mt-2 flex flex-wrap gap-2 text-xs">
-                            ${details.gear_type_name ? `
-                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${details.gear_type_name}</span>
-                            ` : ''}
-                            ${details.color_name ? `
-                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${details.color_name}</span>
-                            ` : ''}
-                            ${vehicle.category_name ? `
-                            <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.category_name}</span>
-                            ` : ''}
-                        </div>
+                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                ${vehicle.mileage || vehicle.km_driven ? `
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                                ` : ''}
+                                ${vehicle.engine_power_hp ? `
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
+                                ` : ''}
+                                ${vehicle.first_registration_date ? `
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Date(vehicle.first_registration_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                ` : ''}
+                                ${vehicle.fuel_type_name ? `
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
+                                ` : ''}
+                                ${vehicle.gear_type_name ? `
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
+                                ` : ''}
+                            </div>
 
-                        <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
-                            ${vehicle.model_year_name ? `
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                                    <line x1="16" x2="16" y1="2" y2="6"></line>
-                                    <line x1="8" x2="8" y1="2" y2="6"></line>
-                                    <line x1="3" x2="21" y1="10" y2="10"></line>
-                                </svg>
-                                <span>${vehicle.model_year_name}</span>
-                            </div>
-                            ` : ''}
-                            ${vehicle.mileage || vehicle.km_driven ? `
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                                </svg>
-                                <span>${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
-                            </div>
-                            ` : ''}
-                            ${vehicle.fuel_type_name ? `
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <line x1="2" x2="22" y1="2" y2="2"></line>
-                                    <line x1="6" x2="6" y1="6" y2="22"></line>
-                                    <line x1="18" x2="18" y1="6" y2="22"></line>
-                                    <line x1="2" x2="22" y1="22" y2="22"></line>
-                                </svg>
-                                <span>${vehicle.fuel_type_name}</span>
-                            </div>
-                            ` : ''}
-                            ${vehicle.vehicle_list_status_name ? `
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                <span>${vehicle.vehicle_list_status_name}</span>
-                            </div>
-                            ` : ''}
-                            ${details.condition_name ? `
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                    <path d="M18.63 13A17.888 17.888 0 0 1 18 8"></path>
-                                    <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9s14 0 17-5c.34-.94.56-1.92.73-2.92"></path>
-                                    <path d="M2 2l20 20"></path>
-                                    <path d="M22 8A10 10 0 0 0 9.04 4.32"></path>
-                                </svg>
-                                <span>${details.condition_name}</span>
-                            </div>
-                            ` : ''}
                         </div>
-                    </div>
+                    </a>
                     
-                    <!-- Vehicle Actions -->
-                    <div class="mt-auto p-4 pt-2">
-                        <div class="flex w-full flex-col gap-2 sm:flex-row">
-                            <a href="/vehicles/${vehicle.id}" class="flex-1">
-                                <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                    View Details
+                    <!-- Card Footer -->
+                    <div class="mt-auto" onclick="event.stopPropagation()">
+                        ${locationText ? `
+                        <div class="px-4 pt-3 pb-2">
+                            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="truncate">${locationText}</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <!-- Vehicle Actions -->
+                        <div class="p-4 pt-2">
+                            <div class="flex w-full flex-col gap-2 sm:flex-row">
+                                <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
+                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                        View Details
+                                    </button>
+                                </a>
+                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+                                    Enquire
                                 </button>
-                            </a>
-                            <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                Enquire
-                            </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1908,7 +1868,14 @@
             
             // Build badges
             const badges = [];
-            if (details.gear_type_name) badges.push(details.gear_type_name);
+            if (vehicle.mileage || vehicle.km_driven) badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
+            if (vehicle.engine_power_hp) badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
+            if (vehicle.first_registration_date) {
+                const regDate = new Date(vehicle.first_registration_date);
+                badges.push(regDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+            }
+            if (vehicle.fuel_type_name) badges.push(vehicle.fuel_type_name);
+            if (vehicle.gear_type_name) badges.push(vehicle.gear_type_name);
             if (details.color_name) badges.push(details.color_name);
             if (vehicle.category_name) badges.push(vehicle.category_name);
             
@@ -1952,57 +1919,59 @@
             }
             
             return `
-                <div class="vehicle-item">
-                    <!-- Vehicle Image -->
-                    <div class="vehicle-image-container relative">
-                        <img
-                            src="${imageUrl}"
-                            alt="${vehicle.brand_name || ''} ${vehicle.model_name || ''}"
-                            class="h-full w-full object-cover"
-                        />
-                        <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                            ${vehicle.registration || ''}
-                        </span>
-                    </div>
+                <div class="vehicle-item cursor-pointer">
+                    <a href="/vehicles/${vehicle.id}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
+                        <!-- Vehicle Image -->
+                        <div class="vehicle-image-container relative">
+                            <img
+                                src="${imageUrl}"
+                                alt="${vehicle.title || ''}"
+                                class="h-full w-full object-cover"
+                            />
+                            <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                                ${vehicle.registration || ''}
+                            </span>
+                        </div>
+                        
+                        <!-- Vehicle Content -->
+                        <div class="vehicle-content">
+                            <!-- Main Info Section -->
+                            <div class="vehicle-main-info">
+                                <div class="vehicle-title-row">
+                                    <div class="vehicle-title-section">
+                                        <h3>${vehicle.title || ''}</h3>
+                                        ${vehicle.version ? `<p class="text-muted-foreground">${vehicle.version}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
+                                    <p class="vehicle-price">${formatCurrency(vehicle.price)}</p>
+                                    ${badges.length > 0 ? `
+                                    <div class="vehicle-badges">
+                                        ${badges.map(badge => `<span>${badge}</span>`).join('')}
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- Specs Section -->
+                            ${specs.length > 0 ? `
+                            <div class="vehicle-specs">
+                                ${specs.join('')}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </a>
                     
-                    <!-- Vehicle Content -->
-                    <div class="vehicle-content">
-                        <!-- Main Info Section -->
-                        <div class="vehicle-main-info">
-                            <div class="vehicle-title-row">
-                                <div class="vehicle-title-section">
-                                    <h3>${vehicle.brand_name || ''} ${vehicle.model_name || ''}</h3>
-                                    ${details.version ? `<p class="text-muted-foreground">${details.version}</p>` : ''}
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
-                                <p class="vehicle-price">${formatCurrency(vehicle.price)}</p>
-                                ${badges.length > 0 ? `
-                                <div class="vehicle-badges">
-                                    ${badges.map(badge => `<span>${badge}</span>`).join('')}
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                        
-                        <!-- Specs Section -->
-                        ${specs.length > 0 ? `
-                        <div class="vehicle-specs">
-                            ${specs.join('')}
-                        </div>
-                        ` : ''}
-                        
-                        <!-- Actions Section -->
-                        <div class="vehicle-actions-section">
-                            <a href="/vehicles/${vehicle.id}">
-                                <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                                    View
-                                </button>
-                            </a>
-                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                                Enquire
+                    <!-- Actions Section -->
+                    <div class="vehicle-actions-section" onclick="event.stopPropagation()">
+                        <a href="/vehicles/${vehicle.id}" onclick="event.stopPropagation()">
+                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                View
                             </button>
-                        </div>
+                        </a>
+                        <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onclick="event.stopPropagation()">
+                            Enquire
+                        </button>
                     </div>
                 </div>
             `;
@@ -3482,36 +3451,38 @@
                 const listItem = document.createElement('div');
                 listItem.className = 'vehicle-item';
                 listItem.innerHTML = `
-                    <div class="vehicle-image-container relative">
-                        ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
-                        ${registration ? `<span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
-                    </div>
-                    <div class="vehicle-content">
-                        <div class="vehicle-main-info">
-                            <div class="vehicle-title-row">
-                                <div class="vehicle-title-section">
-                                    <h3>${title}</h3>
-                                    ${version ? `<p class="text-muted-foreground">${version}</p>` : ''}
+                    <a href="/vehicles/${vehicleId}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
+                        <div class="vehicle-image-container relative">
+                            ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
+                            ${registration ? `<span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
+                        </div>
+                        <div class="vehicle-content">
+                            <div class="vehicle-main-info">
+                                <div class="vehicle-title-row">
+                                    <div class="vehicle-title-section">
+                                        <h3>${title}</h3>
+                                        ${version ? `<p class="text-muted-foreground">${version}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
+                                    <p class="vehicle-price">${price}</p>
+                                    ${badges.length > 0 ? `
+                                    <div class="vehicle-badges">
+                                        ${badges.map(b => `<span>${b}</span>`).join('')}
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
-                                <p class="vehicle-price">${price}</p>
-                                ${badges.length > 0 ? `
-                                <div class="vehicle-badges">
-                                    ${badges.map(b => `<span>${b}</span>`).join('')}
-                                </div>
-                                ` : ''}
+                            ${specs.length > 0 ? `
+                            <div class="vehicle-specs">
+                                ${specs.join('')}
                             </div>
+                            ` : ''}
                         </div>
-                        ${specs.length > 0 ? `
-                        <div class="vehicle-specs">
-                            ${specs.join('')}
-                        </div>
-                        ` : ''}
-                        <div class="vehicle-actions-section">
-                            ${vehicleId ? `<a href="/vehicles/${vehicleId}"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
-                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Enquire</button>
-                        </div>
+                    </a>
+                    <div class="vehicle-actions-section" onclick="event.stopPropagation()">
+                        ${vehicleId ? `<a href="/vehicles/${vehicleId}" onclick="event.stopPropagation()"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
+                        <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onclick="event.stopPropagation()">Enquire</button>
                     </div>
                 `;
                 

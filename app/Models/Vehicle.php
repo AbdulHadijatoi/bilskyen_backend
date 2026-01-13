@@ -38,7 +38,6 @@ class Vehicle extends Model
         'km_driven',
         'fuel_type_id',
         'price',
-        'mileage',
         'battery_capacity',
         'range_km',
         'charging_type',
@@ -46,6 +45,9 @@ class Vehicle extends Model
         'towing_weight',
         'ownership_tax',
         'first_registration_date',
+        'version',
+        'gear_type_id',
+        'fuel_efficiency',
         'vehicle_list_status_id',
         'listing_type_id',
         'published_at',
@@ -56,7 +58,6 @@ class Vehicle extends Model
      */
     protected $casts = [
         'price' => 'integer',
-        'mileage' => 'integer',
         'km_driven' => 'integer',
         'battery_capacity' => 'integer',
         'range_km' => 'integer',
@@ -64,6 +65,7 @@ class Vehicle extends Model
         'towing_weight' => 'integer',
         'ownership_tax' => 'integer',
         'first_registration_date' => 'date',
+        'fuel_efficiency' => 'decimal:2',
         'published_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -78,6 +80,8 @@ class Vehicle extends Model
         'model_name',
         'model_year_name',
         'fuel_type_name',
+        'gear_type_name',
+        'engine_power_hp',
         'vehicle_list_status_name',
         'listing_type_name',
     ];
@@ -121,6 +125,7 @@ class Vehicle extends Model
                 'models' => VehicleModel::withoutGlobalScopes()->find($id),
                 'model_years' => ModelYear::withoutGlobalScopes()->find($id),
                 'fuel_types' => FuelType::withoutGlobalScopes()->find($id),
+                'gear_types' => GearType::withoutGlobalScopes()->find($id),
                 'vehicle_list_statuses' => VehicleListStatus::withoutGlobalScopes()->select('id', 'name')->find($id),
                 'listing_types' => ListingType::withoutGlobalScopes()->find($id),
                 default => null,
@@ -175,6 +180,43 @@ class Vehicle extends Model
     public function getFuelTypeNameAttribute(): ?string
     {
         return self::getCachedLookup('fuel_types', $this->fuel_type_id);
+    }
+
+    /**
+     * Get gear type name attribute (cached)
+     */
+    public function getGearTypeNameAttribute(): ?string
+    {
+        return self::getCachedLookup('gear_types', $this->gear_type_id);
+    }
+
+    /**
+     * Get engine power in HP attribute
+     */
+    public function getEnginePowerHpAttribute(): ?float
+    {
+        return $this->engine_power ? round($this->engine_power * 1.36, 2) : null;
+    }
+
+    /**
+     * Get title attribute - returns title if exists, otherwise auto-generates from brand + model + model year
+     */
+    public function getTitleAttribute($value): ?string
+    {
+        // If title exists and is not empty, return it
+        if (!empty($value)) {
+            return $value;
+        }
+        
+        // Otherwise, auto-generate from brand + model + model year
+        // Use getAttribute to avoid infinite recursion with accessors
+        $parts = array_filter([
+            $this->getAttribute('brand_name'),
+            $this->getAttribute('model_name'),
+            $this->getAttribute('model_year_name'),
+        ]);
+        
+        return !empty($parts) ? implode(' ', $parts) : null;
     }
 
     /**
@@ -287,5 +329,13 @@ class Vehicle extends Model
     public function listingType(): BelongsTo
     {
         return $this->belongsTo(ListingType::class);
+    }
+
+    /**
+     * Get gear type for this vehicle
+     */
+    public function gearType(): BelongsTo
+    {
+        return $this->belongsTo(GearType::class);
     }
 }

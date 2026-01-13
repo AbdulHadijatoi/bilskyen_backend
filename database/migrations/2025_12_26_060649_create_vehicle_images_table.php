@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('vehicle_images');
-        
-        Schema::create('vehicle_images', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
-            $table->string('image_path', 255);
-            $table->integer('sort_order')->default(0);
+        if (!Schema::hasTable('vehicle_images')) {
+            Schema::create('vehicle_images', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
+                $table->string('image_path', 255);
+                $table->integer('sort_order')->default(0);
 
-            $table->index('vehicle_id');
-        });
+                $table->index('vehicle_id');
+        
+            });
+        }
     }
 
     /**
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vehicle_images');
+        Schema::dropIfExists(\'\');
     }
 };

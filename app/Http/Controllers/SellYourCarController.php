@@ -21,6 +21,9 @@ use App\Models\GearType;
 use App\Models\SalesType;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\Variant;
+use App\Models\Euronom;
+use App\Models\Plan;
 use App\Models\Dealer;
 use App\Models\DealerUser;
 use App\Services\AuthService;
@@ -66,10 +69,13 @@ class SellYourCarController extends Controller
             'conditions' => Condition::orderBy('name')->get(),
             'gearTypes' => GearType::orderBy('name')->get(),
             'salesTypes' => SalesType::orderBy('name')->get(),
+            'variants' => Variant::orderBy('name')->get(),
+            'euronorms' => Euronom::orderBy('name')->get(),
             'equipmentTypes' => EquipmentType::with(['equipments' => function($query) {
                 $query->orderBy('name');
             }])->orderBy('name')->get(),
             'equipment' => Equipment::with('equipmentType')->orderBy('name')->get(), // Keep for backward compatibility
+            'plans' => Plan::where('is_active', true)->with(['planFeatures.feature'])->orderBy('name')->get(),
         ];
 
 
@@ -124,7 +130,7 @@ class SellYourCarController extends Controller
 
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'registration' => 'required|string|max:20',
             'vin' => 'nullable|string|max:17',
             'price' => 'required|integer|min:0',
@@ -135,7 +141,6 @@ class SellYourCarController extends Controller
             'model_id' => 'nullable|exists:models,id',
             'model_year_id' => 'nullable|exists:model_years,id',
             'fuel_type_id' => 'required|exists:fuel_types,id',
-            'mileage' => 'nullable|integer|min:0',
             'km_driven' => 'nullable|integer|min:0',
             'battery_capacity' => 'nullable|integer|min:0',
             'range_km' => 'nullable|integer|min:0',
@@ -144,10 +149,24 @@ class SellYourCarController extends Controller
             'towing_weight' => 'nullable|integer|min:0',
             'ownership_tax' => 'nullable|integer|min:0',
             'first_registration_date' => 'nullable|date',
+            'first_registration_month' => 'nullable|integer|min:1|max:12',
+            'first_registration_year' => 'nullable|integer|min:1900|max:2100',
+            'last_inspection_month' => 'nullable|integer|min:1|max:12',
+            'last_inspection_year' => 'nullable|integer|min:1900|max:2100',
             'vehicle_list_status_id' => 'nullable|exists:vehicle_list_statuses,id',
             'published_at' => 'nullable|date',
             'equipment_ids' => 'nullable|array',
             'equipment_ids.*' => 'exists:equipments,id',
+            'variant_id' => 'nullable|exists:variants,id',
+            'variant_name' => 'nullable|string|max:100',
+            'euronom_id' => 'nullable|exists:euronorms,id',
+            'euronom_name' => 'nullable|string|max:100',
+            'servicebog' => 'nullable|in:Yes,No,Default',
+            'without_tax' => 'nullable|boolean',
+            'seller_name' => 'nullable|string|max:150',
+            'seller_phone' => 'nullable|string|max:30',
+            'seller_address' => 'nullable|string',
+            'seller_postcode' => 'nullable|string|max:10',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
@@ -168,15 +187,73 @@ class SellYourCarController extends Controller
         }
 
         try {
+            // Handle variant lookup/insertion
+            $variantId = null;
+            if ($request->has('variant_id') && $request->input('variant_id')) {
+                $variantId = $request->input('variant_id');
+            } elseif ($request->has('variant_name') && $request->input('variant_name')) {
+                $variant = Variant::firstOrCreate(['name' => $request->input('variant_name')]);
+                $variantId = $variant->id;
+            }
+
+            // Handle euronom lookup/insertion
+            $euronomId = null;
+            if ($request->has('euronom_id') && $request->input('euronom_id')) {
+                $euronomId = $request->input('euronom_id');
+            } elseif ($request->has('euronom_name') && $request->input('euronom_name')) {
+                $euronom = Euronom::firstOrCreate(['name' => $request->input('euronom_name')]);
+                $euronomId = $euronom->id;
+            }
+
+            // Handle month/year to date conversion for first_registration_date
+            if ($request->has('first_registration_month') && $request->has('first_registration_year')) {
+                $month = $request->input('first_registration_month');
+                $year = $request->input('first_registration_year');
+                $firstRegistrationDate = sprintf('%04d-%02d-01', $year, $month);
+            } elseif ($request->has('first_registration_date')) {
+                $firstRegistrationDate = $request->input('first_registration_date');
+            } else {
+                $firstRegistrationDate = null;
+            }
+
+            // Handle month/year to date conversion for last_inspection_date
+            $lastInspectionDate = null;
+            if ($request->has('last_inspection_month') && $request->has('last_inspection_year')) {
+                $month = $request->input('last_inspection_month');
+                $year = $request->input('last_inspection_year');
+                $lastInspectionDate = sprintf('%04d-%02d-01', $year, $month);
+            } elseif ($request->has('last_inspection_date')) {
+                $lastInspectionDate = $request->input('last_inspection_date');
+            }
+
+            // Auto-generate title if not provided
+            $title = $request->input('title');
+            if (empty($title) && $request->has('brand_id') && $request->has('model_id') && 
+                $request->has('model_year_id') && $request->has('fuel_type_id')) {
+                $title = $this->generateTitle(
+                    $request->input('brand_id'),
+                    $request->input('model_id'),
+                    $request->input('model_year_id'),
+                    $request->input('fuel_type_id')
+                );
+            }
+
             // Prepare vehicle data
             $vehicleData = $request->only([
-                'title', 'registration', 'vin', 'price', 'location_id',
+                'registration', 'vin', 'price', 'location_id',
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
-                'model_year_id', 'fuel_type_id', 'mileage', 'km_driven',
+                'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'first_registration_date',
-                'vehicle_list_status_id', 'published_at'
+                'ownership_tax', 'vehicle_list_status_id', 'published_at', 'fuel_efficiency'
             ]);
+            
+            // Add title and first_registration_date
+            if ($title) {
+                $vehicleData['title'] = $title;
+            }
+            if ($firstRegistrationDate) {
+                $vehicleData['first_registration_date'] = $firstRegistrationDate;
+            }
 
             // Add brand_name, model_name, and model_year_name if provided (for auto-creation)
             if ($request->has('brand_name')) {
@@ -223,27 +300,64 @@ class SellYourCarController extends Controller
                 $vehicleData['equipment_ids'] = $request->input('equipment_ids');
             }
 
+            // Handle "Without tax" checkbox - find or create price type
+            $priceTypeId = null;
+            if ($request->has('without_tax') && $request->boolean('without_tax')) {
+                $withoutTaxPriceType = PriceType::firstOrCreate(['name' => 'Without tax']);
+                $priceTypeId = $withoutTaxPriceType->id;
+            } elseif ($request->has('price_type_id')) {
+                $priceTypeId = $request->input('price_type_id');
+            }
+
+            // Auto-generate description
+            $description = $request->input('description');
+            if (empty($description)) {
+                $description = $this->generateDescription($request, $variantId, $euronomId);
+            }
+
             // Add vehicle details if provided
             $detailsFields = [
-                'description', 'vin_location', 'vehicle_external_id', 'type_id', 'version', 'type_name',
+                'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
                 'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
-                'gross_combination_weight', 'fuel_efficiency', 'engine_displacement',
-                'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
+                'gross_combination_weight', 'engine_displacement',
+                'engine_cylinders', 'engine_code', 'category',
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
                 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
-                'seat_belt_alarms', 'euronorm', 'price_type_id', 'condition_id',
-                'gear_type_id', 'sales_type_id'
+                'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog'
             ];
 
+            $vehicleDetailsData = [];
             foreach ($detailsFields as $field) {
                 if ($request->has($field)) {
-                    $vehicleData[$field] = $request->input($field);
+                    $vehicleDetailsData[$field] = $request->input($field);
                 }
+            }
+
+            // Add variant_id, euronom_id, last_inspection_date, description, price_type_id
+            if ($variantId) {
+                $vehicleDetailsData['variant_id'] = $variantId;
+            }
+            if ($euronomId) {
+                $vehicleDetailsData['euronom_id'] = $euronomId;
+            }
+            if ($lastInspectionDate) {
+                $vehicleDetailsData['last_inspection_date'] = $lastInspectionDate;
+            }
+            if ($description) {
+                $vehicleDetailsData['description'] = $description;
+            }
+            if ($priceTypeId) {
+                $vehicleDetailsData['price_type_id'] = $priceTypeId;
+            }
+
+            // Add vehicle details to vehicleData for VehicleService
+            foreach ($vehicleDetailsData as $key => $value) {
+                $vehicleData[$key] = $value;
             }
 
             // Handle image uploads
@@ -260,6 +374,25 @@ class SellYourCarController extends Controller
                 ]);
             } else {
                 Log::info('No images found in request');
+            }
+
+            // Update user's seller information if provided
+            if ($request->has('seller_name') || $request->has('seller_phone') || 
+                $request->has('seller_address') || $request->has('seller_postcode')) {
+                $userUpdate = [];
+                if ($request->has('seller_name')) {
+                    $userUpdate['name'] = $request->input('seller_name');
+                }
+                if ($request->has('seller_phone')) {
+                    $userUpdate['phone'] = $request->input('seller_phone');
+                }
+                if ($request->has('seller_address')) {
+                    $userUpdate['address'] = $request->input('seller_address');
+                }
+                if ($request->has('seller_postcode')) {
+                    $userUpdate['postcode'] = $request->input('seller_postcode');
+                }
+                $user->update($userUpdate);
             }
 
             // Create vehicle
@@ -291,6 +424,118 @@ class SellYourCarController extends Controller
                 ->withErrors(['error' => 'Failed to create vehicle: ' . $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    /**
+     * Generate title from brand, model, model year, and fuel type
+     */
+    private function generateTitle(?int $brandId, ?int $modelId, ?int $modelYearId, ?int $fuelTypeId): ?string
+    {
+        $parts = [];
+        
+        if ($brandId) {
+            $brand = Brand::find($brandId);
+            if ($brand) {
+                $parts[] = $brand->name;
+            }
+        }
+        
+        if ($modelId) {
+            $model = VehicleModel::find($modelId);
+            if ($model) {
+                $parts[] = $model->name;
+            }
+        }
+        
+        if ($modelYearId) {
+            $modelYear = ModelYear::find($modelYearId);
+            if ($modelYear) {
+                $parts[] = $modelYear->name;
+            }
+        }
+        
+        if ($fuelTypeId) {
+            $fuelType = FuelType::find($fuelTypeId);
+            if ($fuelType) {
+                $parts[] = $fuelType->name;
+            }
+        }
+        
+        return !empty($parts) ? implode(' ', $parts) : null;
+    }
+
+    /**
+     * Generate description from various fields
+     */
+    private function generateDescription(Request $request, ?int $variantId, ?int $euronomId): string
+    {
+        $descriptionParts = [];
+        
+        // Equipment
+        if ($request->has('equipment_ids') && is_array($request->input('equipment_ids'))) {
+            $equipmentIds = $request->input('equipment_ids');
+            if (!empty($equipmentIds)) {
+                $equipments = Equipment::whereIn('id', $equipmentIds)->pluck('name')->toArray();
+                if (!empty($equipments)) {
+                    $descriptionParts[] = 'Equipment: ' . implode(', ', $equipments);
+                }
+            }
+        }
+        
+        // Servicebog
+        if ($request->has('servicebog') && $request->input('servicebog')) {
+            $servicebog = $request->input('servicebog');
+            if ($servicebog !== 'Default') {
+                $descriptionParts[] = 'Service book: ' . $servicebog;
+            }
+        }
+        
+        // Kilometer Driven
+        if ($request->has('km_driven') && $request->input('km_driven')) {
+            $descriptionParts[] = 'Kilometers driven: ' . number_format($request->input('km_driven'), 0, ',', '.') . ' km';
+        }
+        
+        // First Registration
+        if ($request->has('first_registration_month') && $request->has('first_registration_year')) {
+            $month = $request->input('first_registration_month');
+            $year = $request->input('first_registration_year');
+            $monthName = date('F', mktime(0, 0, 0, $month, 1));
+            $descriptionParts[] = 'First registration: ' . $monthName . ' ' . $year;
+        } elseif ($request->has('first_registration_date')) {
+            $date = \Carbon\Carbon::parse($request->input('first_registration_date'));
+            $descriptionParts[] = 'First registration: ' . $date->format('F Y');
+        }
+        
+        // Last Inspection
+        if ($request->has('last_inspection_month') && $request->has('last_inspection_year')) {
+            $month = $request->input('last_inspection_month');
+            $year = $request->input('last_inspection_year');
+            $monthName = date('F', mktime(0, 0, 0, $month, 1));
+            $descriptionParts[] = 'Last inspection: ' . $monthName . ' ' . $year;
+        } elseif ($request->has('last_inspection_date')) {
+            $date = \Carbon\Carbon::parse($request->input('last_inspection_date'));
+            $descriptionParts[] = 'Last inspection: ' . $date->format('F Y');
+        }
+        
+        // KM/L (Fuel Efficiency)
+        if ($request->has('fuel_efficiency') && $request->input('fuel_efficiency')) {
+            $descriptionParts[] = 'Fuel efficiency: ' . number_format($request->input('fuel_efficiency'), 2) . ' km/l';
+        }
+        
+        // Euronom
+        if ($euronomId) {
+            $euronom = Euronom::find($euronomId);
+            if ($euronom) {
+                $descriptionParts[] = 'Euro norm: ' . $euronom->name;
+            }
+        }
+        
+        // Total Technical Weight
+        if ($request->has('technical_total_weight') && $request->input('technical_total_weight')) {
+            $descriptionParts[] = 'Total technical weight: ' . number_format($request->input('technical_total_weight'), 0, ',', '.') . ' kg';
+        }
+        
+        return implode('. ', $descriptionParts) . '.';
     }
 }
 
