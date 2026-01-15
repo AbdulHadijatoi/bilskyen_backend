@@ -42,9 +42,9 @@ class VehicleController extends Controller
     {
         // Include deleted records only if explicitly requested
         if ($request->boolean('with_deleted')) {
-            $query = Vehicle::withTrashed()->with(['dealer', 'location', 'images', 'details', 'equipment']);
+            $query = Vehicle::withTrashed()->with(['dealer', 'images', 'details', 'equipment']);
         } else {
-            $query = Vehicle::with(['dealer', 'location', 'images', 'details', 'equipment']);
+            $query = Vehicle::with(['dealer', 'images', 'details', 'equipment']);
         }
 
         // For dealer routes, filter by dealer_id
@@ -106,7 +106,6 @@ class VehicleController extends Controller
         $vehicle = Vehicle::with([
             'dealer',
             'user',
-            'location',
             'images',
             'details',
             'equipment'
@@ -198,7 +197,7 @@ class VehicleController extends Controller
 
         $vehicle = $this->vehicleService->createVehicle($data);
 
-        return $this->created($vehicle->load(['dealer', 'location', 'images', 'details']));
+        return $this->created($vehicle->load(['dealer', 'images', 'details']));
     }
 
     /**
@@ -215,7 +214,7 @@ class VehicleController extends Controller
 
         $vehicle = $this->vehicleService->updateVehicle($vehicle, $data);
 
-        return $this->success($vehicle->load(['dealer', 'location', 'images', 'details']));
+        return $this->success($vehicle->load(['dealer', 'images', 'details']));
     }
 
     /**
@@ -351,7 +350,7 @@ class VehicleController extends Controller
             
             // Prepare vehicle data
             $vehicleData = $request->only([
-                'title', 'registration', 'vin', 'price', 'location_id',
+                'title', 'registration', 'vin', 'price',
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'mileage', 'km_driven',
                 'battery_capacity', 'engine_power', 'towing_weight',
@@ -440,7 +439,7 @@ class VehicleController extends Controller
             // Create vehicle using the service
             $vehicle = $this->vehicleService->createVehicle($vehicleData);
 
-            return $this->created($vehicle->load(['dealer', 'location', 'images', 'details', 'equipment']));
+            return $this->created($vehicle->load(['dealer', 'images', 'details', 'equipment']));
         } catch (\Exception $e) {
             return $this->error(
                 'Failed to create vehicle listing: ' . $e->getMessage(),

@@ -33,7 +33,6 @@ Route::prefix('v1')->group(function () {
         ->name('api.sell-your-car');
     
     // Lookup routes
-    Route::get('/locations', [LookupController::class, 'locations']);
     Route::get('/fuel-types', [LookupController::class, 'fuelTypes']);
     Route::get('/transmissions', [LookupController::class, 'transmissions']);
     Route::get('/models', [LookupController::class, 'models']);

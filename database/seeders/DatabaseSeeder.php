@@ -35,7 +35,6 @@ class DatabaseSeeder extends Seeder
 
         // 2. Core Business Tables
         $this->call([
-            LocationSeeder::class,
             DealerSeeder::class,
             UserSeeder::class,
             DealerUserSeeder::class,

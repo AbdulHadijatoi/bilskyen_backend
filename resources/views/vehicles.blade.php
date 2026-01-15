@@ -302,25 +302,6 @@
             
             <!-- Card Footer -->
             <div class="mt-auto" onclick="event.stopPropagation()">
-                @if($vehicle->location)
-                <div class="px-4 pt-3 pb-2">
-                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span class="truncate">
-                            @if($vehicle->location->city && $vehicle->location->postcode)
-                                {{ $vehicle->location->city }}, {{ $vehicle->location->postcode }}
-                            @elseif($vehicle->location->city)
-                                {{ $vehicle->location->city }}
-                            @elseif($vehicle->location->postcode)
-                                {{ $vehicle->location->postcode }}
-                            @endif
-                        </span>
-                    </div>
-                </div>
-                @endif
                 <!-- Vehicle Actions -->
                 <div class="p-4 pt-2">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">

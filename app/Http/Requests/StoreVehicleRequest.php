@@ -25,7 +25,6 @@ class StoreVehicleRequest extends FormRequest
             'registration' => ['nullable', 'string', 'max:20'],
             'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'location_id' => ['required', 'integer', 'exists:locations,id'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
             'km_driven' => ['nullable', 'integer', 'min:0'],
@@ -49,8 +48,6 @@ class StoreVehicleRequest extends FormRequest
     {
         return [
             'title.required' => 'Please provide a vehicle title.',
-            'location_id.required' => 'Please select a location.',
-            'location_id.exists' => 'Please select a valid location.',
             'fuel_type_id.required' => 'Please select a fuel type.',
             'fuel_type_id.exists' => 'Please select a valid fuel type.',
             'price.required' => 'Please provide a price.',

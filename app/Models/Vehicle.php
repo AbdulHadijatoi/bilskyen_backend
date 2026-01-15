@@ -31,7 +31,6 @@ class Vehicle extends Model
         'dealer_id',
         'user_id',
         'category_id',
-        'location_id',
         'brand_id',
         'model_id',
         'model_year_id',
@@ -249,14 +248,6 @@ class Vehicle extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get location for this vehicle
-     */
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     /**

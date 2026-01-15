@@ -109,7 +109,7 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id'
+                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode'
             ];
 
             foreach ($detailsFields as $field) {
@@ -374,7 +374,7 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id'
+                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode'
             ];
 
             foreach ($detailsFields as $field) {
@@ -725,9 +725,9 @@ class VehicleService
                 break;
             case 'distance_asc':
             case 'distance_desc':
-                // Distance sorting requires location data - for now, sort by location_id
-                // This can be enhanced later with actual distance calculation
-                $query->orderBy($tablePrefix . 'location_id', $sort === 'distance_asc' ? 'asc' : 'desc');
+                // Distance sorting not available without location data
+                // Default to standard sorting
+                $query->orderBy($tablePrefix . 'id', 'desc');
                 break;
             case 'standard':
             default:

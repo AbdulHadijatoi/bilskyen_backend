@@ -24,7 +24,6 @@ class UpdateVehicleRequest extends FormRequest
             'registration' => ['nullable', 'string', 'max:20'],
             'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'location_id' => ['sometimes', 'required', 'integer', 'exists:locations,id'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
             'km_driven' => ['nullable', 'integer', 'min:0'],
@@ -47,7 +46,6 @@ class UpdateVehicleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'location_id.exists' => 'Please select a valid location.',
             'fuel_type_id.exists' => 'Please select a valid fuel type.',
             'price.min' => 'Price must be a positive number.',
             'vehicle_list_status_id.exists' => 'Please select a valid vehicle status.',

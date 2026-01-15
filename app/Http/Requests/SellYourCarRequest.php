@@ -26,7 +26,6 @@ class SellYourCarRequest extends FormRequest
             'registration' => ['required', 'string', 'max:20'],
             'vin' => ['nullable', 'string', 'max:17'],
             'price' => ['required', 'integer', 'min:0'],
-            'location_id' => ['required', 'integer', 'exists:locations,id'],
             'listing_type_id' => ['nullable', 'integer', 'exists:listing_types,id'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
@@ -118,8 +117,6 @@ class SellYourCarRequest extends FormRequest
         return [
             'title.required' => 'Please provide a vehicle title.',
             'registration.required' => 'Please provide a registration number.',
-            'location_id.required' => 'Please select a location.',
-            'location_id.exists' => 'Please select a valid location.',
             'fuel_type_id.required' => 'Please select a fuel type.',
             'fuel_type_id.exists' => 'Please select a valid fuel type.',
             'price.required' => 'Please provide a price.',

@@ -6,7 +6,6 @@ use App\Models\Vehicle;
 use App\Models\Dealer;
 use App\Models\User;
 use App\Models\DealerUser;
-use App\Models\Location;
 use App\Models\FuelType;
 use App\Models\Transmission;
 use App\Models\VehicleListStatus;
@@ -26,11 +25,10 @@ class VehicleSeeder extends Seeder
             
             $dealers = Dealer::all();
             $users = User::whereHas('dealers')->get();
-            $locations = Location::all();
             $fuelTypes = FuelType::all();
             $transmissions = Transmission::all();
             
-            if ($dealers->isEmpty() || $users->isEmpty() || $locations->isEmpty()) {
+            if ($dealers->isEmpty() || $users->isEmpty()) {
                 $this->command->warn('Required data not found. Please run previous seeders first.');
                 return;
             }
@@ -45,7 +43,6 @@ class VehicleSeeder extends Seeder
                 $dealerUserIds = DealerUser::where('dealer_id', $dealer->id)->pluck('user_id');
                 $dealerUsers = $users->whereIn('id', $dealerUserIds);
                 $user = $dealerUsers->isNotEmpty() ? $dealerUsers->random() : $users->random();
-                $location = $locations->random();
                 $fuelType = $fuelTypes->random();
                 $transmission = $transmissions->random();
                 
@@ -73,7 +70,6 @@ class VehicleSeeder extends Seeder
                 Vehicle::create([
                     'dealer_id' => $dealer->id,
                     'user_id' => $user->id,
-                    'location_id' => $location->id,
                     'title' => $title,
                     'description' => $faker->paragraph(5),
                     'price' => $price,

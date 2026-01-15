@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\VehicleModel;
 use App\Models\ModelYear;
 use App\Models\FuelType;
-use App\Models\Location;
 use App\Models\ListingType;
 use App\Models\VehicleListStatus;
 use App\Constants\VehicleListStatus as VehicleListStatusConstant;
@@ -58,7 +57,6 @@ class SellYourCarController extends Controller
             'categories' => Category::orderBy('name')->get(),
             'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
             'fuelTypes' => FuelType::orderBy('name')->get(),
-            'locations' => Location::orderBy('city')->get(),
             'listingTypes' => ListingType::orderBy('name')->get(),
             'vehicleListStatuses' => VehicleListStatus::orderBy('name')->get(),
             'bodyTypes' => BodyType::orderBy('name')->get(),
@@ -134,7 +132,6 @@ class SellYourCarController extends Controller
             'registration' => 'required|string|max:20',
             'vin' => 'nullable|string|max:17',
             'price' => 'required|integer|min:0',
-            'location_id' => 'nullable|exists:locations,id',
             'listing_type_id' => 'nullable|exists:listing_types,id',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
@@ -161,9 +158,9 @@ class SellYourCarController extends Controller
             'euronom_name' => 'nullable|string|max:100',
             'servicebog' => 'nullable|in:Yes,No,Default',
             'without_tax' => 'nullable|boolean',
-            'seller_phone' => 'nullable|string|max:30',
-            'seller_address' => 'nullable|string',
-            'seller_postcode' => 'nullable|string|max:10',
+            'seller_phone' => 'required|string|max:30',
+            'seller_address' => 'required|string',
+            'seller_postcode' => 'required|string|max:10',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
             // Additional API fields validation
@@ -308,7 +305,7 @@ class SellYourCarController extends Controller
 
             // Prepare vehicle data
             $vehicleData = $request->only([
-                'registration', 'vin', 'price', 'location_id',
+                'registration', 'vin', 'price',
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',

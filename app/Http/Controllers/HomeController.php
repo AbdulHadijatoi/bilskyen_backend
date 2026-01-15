@@ -225,10 +225,6 @@ class HomeController extends Controller
                     'seller_type' => $sellerType,
                     'image_url' => $imageUrl,
                     'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
-                    'location' => $vehicle->location ? [
-                        'city' => $vehicle->location->city,
-                        'postcode' => $vehicle->location->postcode,
-                    ] : null,
                     'details' => $details ? [
                         'color_name' => $details->color_name ?? null,
                         'condition_name' => $details->condition_name ?? null,
@@ -302,7 +298,6 @@ class HomeController extends Controller
         $vehicle = Vehicle::with([
             'details',
             'equipment',
-            'location',
             'listingType',
             'images',
             'user'
