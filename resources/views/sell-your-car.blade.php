@@ -589,6 +589,12 @@
         border: 2px solid var(--border);
         background: var(--muted);
         transition: all 0.2s ease;
+        cursor: move;
+        cursor: grab;
+    }
+    
+    .image-preview-item:active {
+        cursor: grabbing;
     }
     
     .image-preview-item:hover {
@@ -599,6 +605,51 @@
     
     .dark .image-preview-item:hover {
         box-shadow: 0 4px 12px oklch(0 0 0 / 0.3);
+    }
+    
+    /* Drag and drop states */
+    .image-preview-item.dragging {
+        opacity: 0.5;
+        transform: scale(0.95);
+        cursor: grabbing;
+        z-index: 1000;
+    }
+    
+    .image-preview-item.drag-over {
+        border-color: var(--primary);
+        border-width: 3px;
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px oklch(0 0 0 / 0.15);
+    }
+    
+    .dark .image-preview-item.drag-over {
+        box-shadow: 0 6px 16px oklch(0 0 0 / 0.4);
+    }
+    
+    /* Drag handle */
+    .image-drag-handle {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .image-preview-item:hover .image-drag-handle {
+        opacity: 1;
+    }
+    
+    .image-preview-item.dragging .image-drag-handle {
+        opacity: 1;
     }
     
     .image-preview-item img {
@@ -1025,7 +1076,7 @@
 
                     <div class="space-y-2">
                         <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">KM/L</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="0.01"
+                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
                         <p class="field-help" id="fuel_efficiency_help">Fuel efficiency in kilometers per liter</p>

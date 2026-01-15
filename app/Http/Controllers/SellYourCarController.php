@@ -189,7 +189,7 @@ class SellYourCarController extends Controller
             'doors' => 'nullable|integer|min:0',
             'minimum_seats' => 'nullable|integer|min:0',
             'maximum_seats' => 'nullable|integer|min:0',
-            'wheels' => 'nullable|integer|min:0',
+            'wheels' => 'nullable|string|max:65535',
             'extra_equipment' => 'nullable|string',
             'axles' => 'nullable|integer|min:0',
             'drive_axles' => 'nullable|integer|min:0',

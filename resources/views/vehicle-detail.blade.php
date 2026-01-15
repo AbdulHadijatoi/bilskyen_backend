@@ -6,6 +6,68 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
 <style>
+    /* Fix GLightbox z-index and description issues */
+    .gslide-description {
+        display: none !important;
+    }
+    
+    /* Ensure only one image is visible at a time */
+    .gslide {
+        opacity: 0;
+        visibility: hidden;
+        z-index: 1;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .gslide.current {
+        opacity: 1;
+        visibility: visible;
+        z-index: 10;
+    }
+    
+    .gslide.prev,
+    .gslide.next {
+        opacity: 0;
+        visibility: hidden;
+        z-index: 1;
+    }
+    
+    .gslide-image {
+        z-index: 1;
+        position: relative;
+    }
+    
+    .gslide-inner {
+        z-index: 1;
+        position: relative;
+    }
+    
+    /* Ensure proper stacking during transitions */
+    .glightbox-container {
+        z-index: 9999;
+    }
+    
+    .glightbox-opened .gslide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+    }
+    
+    .glightbox-opened .gslide.current {
+        opacity: 1;
+        visibility: visible;
+        z-index: 100;
+        position: relative;
+    }
+    
+    /* Hide all slides except current during navigation */
+    .glightbox-opened .gslide:not(.current) {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
     .detail-section {
         /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
@@ -81,17 +143,15 @@
                     <h1 class="text-foreground text-3xl font-bold tracking-tight">
                     {{ $vehicle->title }}
                     </h1>
-                <p class="text-muted-foreground text-xl">
+                {{-- <p class="text-muted-foreground text-xl">
                     Registration: <span class="text-foreground font-mono">{{ $vehicle->registration }}</span>
-                </p>
+                </p> --}}
             </div>
             <div class="flex flex-col items-start gap-3 lg:items-end">
                 <p class="text-3xl font-bold text-primary">
                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
-                <span class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-sm font-semibold text-secondary-foreground">
-                    {{ $vehicle->vehicle_list_status_name ?? 'Published' }}
-                </span>
+                
             </div>
         </div>
         <div class="border-t border-border"></div>
@@ -99,14 +159,14 @@
 
     <!-- Images Carousel Section -->
     @if($vehicle->images && $vehicle->images->count() > 0)
-    <div class="space-y-4">
+    <div class="space-y-2">
         <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground h-5 w-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground h-4 w-4">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
                 <circle cx="9" cy="9" r="2"></circle>
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
             </svg>
-            <h2 class="text-foreground text-xl font-semibold">
+            <h2 class="text-foreground text-sm font-medium">
                 Photos ({{ $vehicle->images->count() }})
             </h2>
         </div>
@@ -116,7 +176,7 @@
                 <div class="embla__container flex">
                     @foreach($vehicle->images as $index => $image)
                     <div class="embla__slide flex-shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
-                        <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery" data-glightbox="title: Vehicle photo {{ $index + 1 }}">
+                        <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery">
                             <div class="border-border bg-muted/50 relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
                                 <img
                                     src="{{ $image->image_url }}"
@@ -446,8 +506,27 @@
                 @endif
                 @if($vehicle->fuel_efficiency)
                 <div class="detail-item">
-                    <span class="detail-label">Fuel Efficiency</span>
-                    <span class="detail-value">{{ number_format($vehicle->fuel_efficiency, 2) }} L/100km</span>
+                    @php
+                        $fuelTypeId = $vehicle->fuel_type_id;
+                        $electricFuelTypes = [3, 7]; // Electric, El
+                        $hybridFuelTypes = [4, 5]; // Hybrid, Plug-in Hybrid
+                        
+                        if ($fuelTypeId && in_array($fuelTypeId, $electricFuelTypes)) {
+                            $label = 'Electric Range';
+                            $unit = 'km';
+                            $value = number_format($vehicle->fuel_efficiency, 0);
+                        } elseif ($fuelTypeId && in_array($fuelTypeId, $hybridFuelTypes)) {
+                            $label = 'Electric Range / KM/L';
+                            $unit = 'km';
+                            $value = number_format($vehicle->fuel_efficiency, 2);
+                        } else {
+                            $label = 'Fuel Efficiency';
+                            $unit = 'L/100km';
+                            $value = number_format($vehicle->fuel_efficiency, 2);
+                        }
+                    @endphp
+                    <span class="detail-label">{{ $label }}</span>
+                    <span class="detail-value">{{ $value }} {{ $unit }}</span>
                 </div>
                 @endif
                 @if($details->airbags)
@@ -569,7 +648,7 @@
             </div>
 
         <!-- Inspection Details Section -->
-        <div class="detail-section">
+        <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Inspection Details</h2>
             <div class="detail-grid">
                 @if($details->last_inspection_date)
@@ -947,15 +1026,30 @@ document.addEventListener('DOMContentLoaded', function() {
             draggable: true,
             openEffect: 'fade',
             closeEffect: 'fade',
-            slideEffect: 'slide',
+            slideEffect: 'fade', // Use fade instead of slide to show one image at a time
             moreText: 'See more',
             moreLength: 60,
             closeOnOutsideClick: true,
-            preload: true,
+            preload: false, // Disable preload to ensure only current image loads
+            description: false, // Disable description section
             cssEfects: {
-                fade: { in: 'fadeIn', out: 'fadeOut' },
-                slide: { in: 'slideIn', out: 'slideOut' }
+                fade: { in: 'fadeIn', out: 'fadeOut' }
             }
+        });
+        
+        // Ensure only current slide is visible
+        lightbox.on('slide_changed', ({ prev, current }) => {
+            // Hide all slides except current
+            const slides = document.querySelectorAll('.gslide');
+            slides.forEach(slide => {
+                if (!slide.classList.contains('current')) {
+                    slide.style.opacity = '0';
+                    slide.style.visibility = 'hidden';
+                } else {
+                    slide.style.opacity = '1';
+                    slide.style.visibility = 'visible';
+                }
+            });
         });
     }
 

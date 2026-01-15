@@ -87,7 +87,6 @@ class VehicleDetail extends Model
         'doors' => 'integer',
         'minimum_seats' => 'integer',
         'maximum_seats' => 'integer',
-        'wheels' => 'integer',
         'axles' => 'integer',
         'drive_axles' => 'integer',
         'wheelbase' => 'integer',

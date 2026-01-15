@@ -35,6 +35,39 @@
         
         // Initialize fuel efficiency label updater
         initFuelEfficiencyLabelUpdater();
+        
+        // Ensure fuel_efficiency field always allows decimals (step="any") unless explicitly electric
+        // This runs after all initialization to override any API-driven changes
+        setTimeout(function() {
+            const fuelEfficiencyInput = document.getElementById('fuel_efficiency');
+            if (fuelEfficiencyInput) {
+                // Check if current step is "1" - if so, check if we should keep it or change to "any"
+                const currentStep = fuelEfficiencyInput.getAttribute('step');
+                const currentValue = fuelEfficiencyInput.value;
+                
+                // If step is "1" and field is empty or has decimal, change to "any"
+                // This allows users to enter decimal values like 54.5
+                if (currentStep === '1') {
+                    // Only keep step="1" if field is empty AND we're certain it's electric
+                    // Otherwise, default to step="any" to allow decimals
+                    if (currentValue && (currentValue.includes('.') || parseFloat(currentValue) % 1 !== 0)) {
+                        fuelEfficiencyInput.setAttribute('step', 'any');
+                        fuelEfficiencyInput.setAttribute('inputmode', 'decimal');
+                        fuelEfficiencyInput.placeholder = '0.00';
+                    } else {
+                        // Even if empty, default to step="any" unless we're absolutely certain it's electric
+                        // Check if there's a fuel type select that explicitly says electric
+                        const fuelTypeSelect = document.getElementById('fuel_type_id');
+                        if (!fuelTypeSelect || !fuelTypeSelect.value) {
+                            // No fuel type selected - default to step="any"
+                            fuelEfficiencyInput.setAttribute('step', 'any');
+                            fuelEfficiencyInput.setAttribute('inputmode', 'decimal');
+                            fuelEfficiencyInput.placeholder = '0.00';
+                        }
+                    }
+                }
+            }
+        }, 200);
     }
 
     // Expandable Sections
@@ -776,6 +809,8 @@
     }
 
     // Update fuel efficiency label based on fuel type
+    // DEFAULT BEHAVIOR: Always use step="any" to allow decimal values like 54.5
+    // Only change to step="1" if fuel type is EXPLICITLY electric (3 or 7) AND user hasn't entered a decimal value
     function updateFuelEfficiencyLabel(fuelTypeId) {
         const label = document.getElementById('fuel_efficiency_label');
         const help = document.getElementById('fuel_efficiency_help');
@@ -783,27 +818,65 @@
         
         if (!label || !help || !input) return;
         
+        // Validate fuelTypeId - if invalid, default to decimal step
+        const parsedFuelTypeId = parseInt(fuelTypeId);
+        if (!fuelTypeId || isNaN(parsedFuelTypeId) || parsedFuelTypeId <= 0) {
+            // Default to decimal step if fuel type is invalid or not provided
+            label.textContent = 'KM/L';
+            help.textContent = 'Fuel efficiency in kilometers per liter';
+            input.placeholder = '0.00';
+            input.setAttribute('step', 'any');
+            input.setAttribute('inputmode', 'decimal');
+            return;
+        }
+        
         // Electric fuel types: 3 (Electric), 7 (El)
         const electricFuelTypes = [3, 7];
         // Hybrid fuel types: 4 (Hybrid), 5 (Plug-in Hybrid)
         const hybridFuelTypes = [4, 5];
         
-        if (electricFuelTypes.includes(parseInt(fuelTypeId))) {
-            label.textContent = 'Electric Range (km)';
-            help.textContent = 'Electric range in kilometers';
-            input.placeholder = '0';
-            input.step = '1';
-        } else if (hybridFuelTypes.includes(parseInt(fuelTypeId))) {
+        // Check if current value has decimals - if so, always preserve step="any"
+        const currentValue = input.value;
+        const hasDecimalValue = currentValue && (currentValue.includes('.') || (parseFloat(currentValue) % 1 !== 0));
+        
+        if (electricFuelTypes.includes(parsedFuelTypeId)) {
+            // For electric vehicles, only use step="1" if field is empty AND no decimal value exists
+            // If user has entered or wants to enter decimals, always use step="any"
+            if (hasDecimalValue) {
+                // User has entered decimal - keep step="any"
+                label.textContent = 'Electric Range (km)';
+                help.textContent = 'Electric range in kilometers';
+                input.placeholder = '0.00';
+                input.setAttribute('step', 'any');
+                input.setAttribute('inputmode', 'decimal');
+            } else if (!currentValue) {
+                // Field is empty - can use step="1" for electric
+                label.textContent = 'Electric Range (km)';
+                help.textContent = 'Electric range in kilometers';
+                input.placeholder = '0';
+                input.setAttribute('step', '1');
+                input.setAttribute('inputmode', 'numeric');
+            } else {
+                // Field has whole number - keep step="any" to allow user to change to decimal
+                label.textContent = 'Electric Range (km)';
+                help.textContent = 'Electric range in kilometers';
+                input.placeholder = '0.00';
+                input.setAttribute('step', 'any');
+                input.setAttribute('inputmode', 'decimal');
+            }
+        } else if (hybridFuelTypes.includes(parsedFuelTypeId)) {
             label.textContent = 'Electric Range / KM/L';
             help.textContent = 'Electric range in km (for EV mode) or fuel efficiency in km/l';
             input.placeholder = '0.00';
-            input.step = '0.01';
+            input.setAttribute('step', 'any');
+            input.setAttribute('inputmode', 'decimal');
         } else {
-            // Petrol, Diesel, Benzin
+            // Petrol, Diesel, Benzin, or any other fuel type - always allow decimals
             label.textContent = 'KM/L';
             help.textContent = 'Fuel efficiency in kilometers per liter';
             input.placeholder = '0.00';
-            input.step = '0.01';
+            input.setAttribute('step', 'any');
+            input.setAttribute('inputmode', 'decimal');
         }
     }
 
@@ -1273,21 +1346,93 @@
     function initFuelEfficiencyLabelUpdater() {
         // Check if fuel_type_id select exists and listen for changes
         const fuelTypeSelect = document.getElementById('fuel_type_id');
+        const input = document.getElementById('fuel_efficiency');
+        
+        // Always start with step="any" as default (allows decimal values like 54.5)
+        // This will be overridden only if fuel type is explicitly electric (3 or 7)
+        if (input) {
+            // Set default first, will be updated if fuel type is electric
+            input.setAttribute('step', 'any');
+            input.setAttribute('inputmode', 'decimal');
+            input.setAttribute('placeholder', '0.00');
+        }
+        
         if (fuelTypeSelect) {
+            // Set initial step value based on current selection
+            if (fuelTypeSelect.value) {
+                updateFuelEfficiencyLabel(fuelTypeSelect.value);
+            } else {
+                // Default to decimal step if no fuel type selected
+                if (input) {
+                    input.setAttribute('step', 'any');
+                    input.setAttribute('inputmode', 'decimal');
+                }
+            }
+            
             fuelTypeSelect.addEventListener('change', function() {
                 if (this.value) {
                     updateFuelEfficiencyLabel(this.value);
+                } else {
+                    // Reset to default decimal step if fuel type is cleared
+                    if (input) {
+                        input.setAttribute('step', 'any');
+                        input.setAttribute('inputmode', 'decimal');
+                    }
                 }
             });
+        } else {
+            // If no fuel type select exists, ensure step is set to decimal
+            if (input) {
+                input.setAttribute('step', 'any');
+                input.setAttribute('inputmode', 'decimal');
+            }
         }
         
         // Also check if fuel_type is already set from API response
+        // Default behavior: Always use step="any" to allow decimal values like 54.5
+        // Only change to step="1" if fuel type is explicitly electric (3 or 7) AND field is empty
         if (window.apiResponseData) {
             const fuelTypeId = window.apiResponseData.fuel_type?.id || window.apiResponseData.fuel_type_id;
-            if (fuelTypeId) {
-                updateFuelEfficiencyLabel(fuelTypeId);
+            const parsedFuelTypeId = parseInt(fuelTypeId);
+            
+            // Default to step="any" - only change if explicitly electric and field is empty
+            if (input) {
+                const electricFuelTypes = [3, 7];
+                const isElectric = fuelTypeId && !isNaN(parsedFuelTypeId) && electricFuelTypes.includes(parsedFuelTypeId);
+                
+                if (isElectric && !input.value) {
+                    // Only set to step="1" if explicitly electric AND field is empty
+                    updateFuelEfficiencyLabel(fuelTypeId);
+                } else {
+                    // Always default to step="any" for all other cases
+                    input.setAttribute('step', 'any');
+                    input.setAttribute('inputmode', 'decimal');
+                    if (!isElectric) {
+                        // Update label/help for non-electric, but keep step="any"
+                        const label = document.getElementById('fuel_efficiency_label');
+                        const help = document.getElementById('fuel_efficiency_help');
+                        if (label) label.textContent = 'KM/L';
+                        if (help) help.textContent = 'Fuel efficiency in kilometers per liter';
+                        input.placeholder = '0.00';
+                    }
+                }
             }
         }
+        
+        // Final safeguard: Ensure step="any" is set after a short delay to override any late API calls
+        setTimeout(function() {
+            const input = document.getElementById('fuel_efficiency');
+            if (input) {
+                // Only override if it's currently set to step="1" and field is empty or has decimal value
+                const currentStep = input.getAttribute('step');
+                const currentValue = input.value;
+                if (currentStep === '1' && (!currentValue || currentValue.includes('.'))) {
+                    input.setAttribute('step', 'any');
+                    input.setAttribute('inputmode', 'decimal');
+                    input.placeholder = '0.00';
+                }
+            }
+        }, 100);
     }
 
     function initTaxInfoToggle() {
@@ -1337,12 +1482,15 @@
     
     // Image Upload Handlers - Rewritten with cleaner architecture
     // Single source of truth: fileMap stores File objects with unique IDs
+    // fileOrder maintains the display/submission order for drag-and-drop reordering
     const imageUploadState = {
         fileMap: new Map(), // Map<fileId, File> - single source of truth
+        fileOrder: [], // Array<fileId> - maintains order for drag-and-drop
         fileInput: null,
         isUpdating: false, // Flag to prevent recursive updates
         maxSize: 10 * 1024 * 1024, // 10MB
-        allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+        allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
+        draggedElement: null // Currently dragged element for reordering
     };
     
     // Generate unique file ID using file properties (more robust than name_size)
@@ -1397,10 +1545,14 @@
             errors.forEach(error => displayImageError(error));
         }
         
-        // Add valid files to map
+        // Add valid files to map and order array
         validFiles.forEach(file => {
             const fileId = getFileId(file);
             imageUploadState.fileMap.set(fileId, file);
+            // Add to end of order array
+            if (!imageUploadState.fileOrder.includes(fileId)) {
+                imageUploadState.fileOrder.push(fileId);
+            }
         });
         
         // Update file input and previews
@@ -1415,12 +1567,17 @@
         if (imageUploadState.isUpdating) return;
         
         if (imageUploadState.fileMap.delete(fileId)) {
+            // Remove from order array
+            const index = imageUploadState.fileOrder.indexOf(fileId);
+            if (index > -1) {
+                imageUploadState.fileOrder.splice(index, 1);
+            }
             syncFileInput();
             updateImagePreviews();
         }
     }
     
-    // Sync the file input with the file map
+    // Sync the file input with the file map, maintaining order
     function syncFileInput() {
         if (!imageUploadState.fileInput) return;
         
@@ -1428,12 +1585,15 @@
         try {
             const dataTransfer = new DataTransfer();
             
-            // Add all files from map to DataTransfer
-            imageUploadState.fileMap.forEach(file => {
-                try {
-                    dataTransfer.items.add(file);
-                } catch (e) {
-                    console.error('Error adding file to DataTransfer:', e, file.name);
+            // Add files in the order specified by fileOrder array
+            imageUploadState.fileOrder.forEach(fileId => {
+                const file = imageUploadState.fileMap.get(fileId);
+                if (file) {
+                    try {
+                        dataTransfer.items.add(file);
+                    } catch (e) {
+                        console.error('Error adding file to DataTransfer:', e, file.name);
+                    }
                 }
             });
             
@@ -1456,11 +1616,14 @@
         
         imageUploadState.fileInput = fileInput;
         
-        // Initialize file map from existing files in input
+        // Initialize file map and order from existing files in input
         if (fileInput.files && fileInput.files.length > 0) {
             Array.from(fileInput.files).forEach(file => {
                 const fileId = getFileId(file);
                 imageUploadState.fileMap.set(fileId, file);
+                if (!imageUploadState.fileOrder.includes(fileId)) {
+                    imageUploadState.fileOrder.push(fileId);
+                }
             });
             updateImagePreviews();
         }
@@ -1540,24 +1703,29 @@
         // Clear existing previews
         grid.innerHTML = '';
         
-        // Create preview for each file in the map
-        imageUploadState.fileMap.forEach((file, fileId) => {
-            const previewItem = createImagePreview(file, fileId);
-            grid.appendChild(previewItem);
+        // Create preview for each file in the order specified by fileOrder array
+        imageUploadState.fileOrder.forEach(fileId => {
+            const file = imageUploadState.fileMap.get(fileId);
+            if (file) {
+                const previewItem = createImagePreview(file, fileId);
+                grid.appendChild(previewItem);
+            }
         });
     }
     
-    // Create preview element for a file
+    // Create preview element for a file with drag-and-drop support
     function createImagePreview(file, fileId) {
         const item = document.createElement('div');
         item.className = 'image-preview-item';
         item.dataset.fileId = fileId;
+        item.draggable = true;
         
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.createElement('img');
             img.src = e.target.result;
             img.alt = file.name;
+            img.draggable = false; // Prevent image from being draggable separately
             item.insertBefore(img, item.firstChild);
         };
         reader.readAsDataURL(file);
@@ -1568,6 +1736,21 @@
         info.className = 'image-preview-info';
         info.textContent = `${file.name} (${fileSize})`;
         item.appendChild(info);
+        
+        // Drag handle indicator (positioned to not interfere with remove button)
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'image-drag-handle';
+        dragHandle.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="9" y1="5" x2="9" y2="19"></line>
+                <line x1="15" y1="5" x2="15" y2="19"></line>
+            </svg>
+        `;
+        // Prevent drag handle from interfering with remove button clicks
+        dragHandle.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+        });
+        item.appendChild(dragHandle);
         
         // Overlay with remove button
         const overlay = document.createElement('div');
@@ -1586,6 +1769,10 @@
                 removeFileById(targetFileId);
             }
         });
+        // Prevent remove button from triggering drag
+        removeBtn.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+        });
         removeBtn.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1594,6 +1781,70 @@
         `;
         overlay.appendChild(removeBtn);
         item.appendChild(overlay);
+        
+        // Drag and drop event handlers
+        item.addEventListener('dragstart', function(e) {
+            imageUploadState.draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        item.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            // Remove drag-over class from all items
+            document.querySelectorAll('.image-preview-item').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            // Add visual feedback
+            if (this !== imageUploadState.draggedElement) {
+                this.classList.add('drag-over');
+            }
+            return false;
+        });
+        
+        item.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        item.addEventListener('drop', function(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            this.classList.remove('drag-over');
+            
+            if (imageUploadState.draggedElement !== this) {
+                const grid = document.getElementById('image-preview-grid');
+                const draggedFileId = imageUploadState.draggedElement.dataset.fileId;
+                const targetFileId = this.dataset.fileId;
+                
+                // Get current positions in order array
+                const draggedIndex = imageUploadState.fileOrder.indexOf(draggedFileId);
+                const targetIndex = imageUploadState.fileOrder.indexOf(targetFileId);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    // Remove from old position
+                    imageUploadState.fileOrder.splice(draggedIndex, 1);
+                    // Insert at new position
+                    imageUploadState.fileOrder.splice(targetIndex, 0, draggedFileId);
+                    
+                    // Update previews and sync file input
+                    updateImagePreviews();
+                    syncFileInput();
+                }
+            }
+            
+            return false;
+        });
         
         return item;
     }
@@ -1608,6 +1859,7 @@
         if (imageUploadState.isUpdating) return;
         
         imageUploadState.fileMap.clear();
+        imageUploadState.fileOrder = [];
         syncFileInput();
         updateImagePreviews();
     };
@@ -1633,5 +1885,84 @@
         } else {
             alert(message);
         }
+    }
+    // Final safeguard: Ensure fuel_efficiency always allows decimals (step="any")
+    // This runs after all initialization and watches for any changes to step attribute
+    function enforceDecimalStep() {
+        const input = document.getElementById('fuel_efficiency');
+        if (!input) return;
+        
+        const currentStep = input.getAttribute('step');
+        // If step is "1", check if we should keep it or change to "any"
+        if (currentStep === '1') {
+            const currentValue = input.value;
+            const fuelTypeSelect = document.getElementById('fuel_type_id');
+            const hasFuelTypeSelect = fuelTypeSelect && fuelTypeSelect.value;
+            
+            // Only keep step="1" if:
+            // 1. Field is empty
+            // 2. AND there's a fuel type select with electric value (3 or 7)
+            // Otherwise, default to step="any" to allow decimals like 54.5
+            if (currentValue || !hasFuelTypeSelect) {
+                input.setAttribute('step', 'any');
+                input.setAttribute('inputmode', 'decimal');
+                input.placeholder = '0.00';
+            } else {
+                // Check if fuel type is explicitly electric
+                const fuelTypeId = parseInt(fuelTypeSelect.value);
+                const electricFuelTypes = [3, 7];
+                if (!electricFuelTypes.includes(fuelTypeId)) {
+                    // Not electric - use step="any"
+                    input.setAttribute('step', 'any');
+                    input.setAttribute('inputmode', 'decimal');
+                    input.placeholder = '0.00';
+                }
+            }
+        } else if (!currentStep || currentStep === '0.01') {
+            // If no step or old step="0.01", set to "any"
+            input.setAttribute('step', 'any');
+            input.setAttribute('inputmode', 'decimal');
+        }
+    }
+    
+    // Run immediately and after delays to catch any late changes
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(enforceDecimalStep, 100);
+            setTimeout(enforceDecimalStep, 500);
+            setTimeout(enforceDecimalStep, 1000);
+        });
+    } else {
+        setTimeout(enforceDecimalStep, 100);
+        setTimeout(enforceDecimalStep, 500);
+        setTimeout(enforceDecimalStep, 1000);
+    }
+    
+    // Watch for changes to the step attribute (set up after DOM is ready)
+    function setupStepWatcher() {
+        const fuelEfficiencyInput = document.getElementById('fuel_efficiency');
+        if (fuelEfficiencyInput) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'step') {
+                        const newStep = fuelEfficiencyInput.getAttribute('step');
+                        if (newStep === '1') {
+                            // If changed to "1", check if we should keep it or change to "any"
+                            setTimeout(enforceDecimalStep, 50);
+                        }
+                    }
+                });
+            });
+            observer.observe(fuelEfficiencyInput, { attributes: true, attributeFilter: ['step'] });
+        }
+    }
+    
+    // Set up watcher after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(setupStepWatcher, 200);
+        });
+    } else {
+        setTimeout(setupStepWatcher, 200);
     }
 })();

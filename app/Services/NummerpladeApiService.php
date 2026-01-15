@@ -990,19 +990,57 @@ class NummerpladeApiService
      */
     protected function getModelYearId($value): ?int
     {
-        if (is_int($value)) {
-            return $value;
-        }
-        if (is_array($value) && isset($value['id'])) {
-            return (int)$value['id'];
+        $yearKey = null;
+        
+        // If value is an array with 'id' and/or 'name' keys
+        if (is_array($value)) {
+            $potentialId = isset($value['id']) ? (int)$value['id'] : null;
+            $nameValue = $value['name'] ?? $value['year'] ?? null;
+            
+            // If there's a name field, prioritize it (most reliable - use it to look up by name)
+            if ($nameValue) {
+                $yearKey = trim((string)$nameValue);
+            } elseif ($potentialId !== null) {
+                // No name field, check if the ID looks like a year value (1900-2100 range)
+                // If it does, treat it as a year value, not a database ID
+                if ($potentialId >= 1900 && $potentialId <= 2100) {
+                    $yearKey = (string)$potentialId;
+                } else {
+                    // ID is outside year range, check if it's a valid database ID
+                    $modelYear = ModelYear::find($potentialId);
+                    if ($modelYear) {
+                        return $modelYear->id;
+                    }
+                    // If not found, treat as year anyway
+                    $yearKey = (string)$potentialId;
+                }
+            }
+        } elseif (is_int($value)) {
+            // Integer value - could be a year (like 2020) or a database ID
+            // If it's a reasonable year value (1900-2100), treat it as a year
+            if ($value >= 1900 && $value <= 2100) {
+                $yearKey = (string)$value;
+            } else {
+                // Otherwise, check if it's a valid database ID
+                $modelYear = ModelYear::find($value);
+                if ($modelYear) {
+                    return $modelYear->id;
+                }
+                // If not found, treat as year anyway
+                $yearKey = (string)$value;
+            }
+        } else {
+            // Extract year value from various formats
+            $year = is_array($value) ? ($value['name'] ?? $value['year'] ?? $value['id'] ?? null) : $value;
+            if (!$year) {
+                return null;
+            }
+            $yearKey = trim((string)$year);
         }
         
-        $year = is_array($value) ? ($value['name'] ?? $value['year'] ?? null) : $value;
-        if (!$year) {
+        if (!$yearKey) {
             return null;
         }
-        
-        $yearKey = trim((string)$year);
         
         // Ensure cache is initialized
         $this->initializeLookupCache();
@@ -1011,7 +1049,7 @@ class NummerpladeApiService
             return self::$lookupCache['model_years'][$yearKey];
         }
         
-        // Not in cache - create it
+        // Not in cache - look up or create by name (not by ID)
         $modelYear = ModelYear::firstOrCreate(['name' => $yearKey]);
         self::$lookupCache['model_years'][$yearKey] = $modelYear->id;
         return $modelYear->id;
