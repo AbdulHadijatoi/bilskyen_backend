@@ -132,6 +132,8 @@ Route::post('/upload-image', function (Request $request) {
         'image' => 'required|image|mimes:jpg,jpeg,png,gif',
     ]);
 
+    dd($_FILES['image']);
+
     $path = $request->file('image')->store('uploads/logo');
 
     return "Image uploaded to: " . Storage::url($path);
