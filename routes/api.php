@@ -6,6 +6,8 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VersionController;
 use App\Http\Controllers\NummerpladeController;
 use App\Http\Controllers\LookupController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,4 +125,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/evaluations/{input}', [NummerpladeController::class, 'getEvaluations'])
             ->middleware('throttle:20,1');
     });
+});
+
+Route::post('/upload-image', function (Request $request) {
+    $request->validate([
+        'image' => 'required|image|mimes:jpg,jpeg,png,gif',
+    ]);
+
+    $path = $request->file('image')->store('uploads/logo');
+
+    return "Image uploaded to: " . Storage::url($path);
 });
