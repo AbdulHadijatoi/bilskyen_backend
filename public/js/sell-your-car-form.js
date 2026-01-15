@@ -580,16 +580,72 @@
             // Remove any existing images[] entries from FormData to avoid duplicates
             // Note: FormData.delete() removes all entries with the given key
             formData.delete('images[]');
+            formData.delete('images');
             
-            // Append all files from fileMap
-            imageUploadState.fileMap.forEach((file) => {
-                formData.append('images[]', file, file.name);
+            // Validate and append all files from fileMap in order
+            let validFileCount = 0;
+            const fileErrors = [];
+            
+            imageUploadState.fileOrder.forEach((fileId, index) => {
+                const file = imageUploadState.fileMap.get(fileId);
+                if (!file) {
+                    console.warn(`File not found in fileMap for fileId: ${fileId}`);
+                    fileErrors.push(`Image ${index + 1} is missing or invalid.`);
+                    return;
+                }
+                
+                // Validate file object
+                if (!(file instanceof File)) {
+                    console.error(`Invalid file object at index ${index}:`, file);
+                    fileErrors.push(`Image ${index + 1} is not a valid file.`);
+                    return;
+                }
+                
+                // Validate file size (10MB = 10 * 1024 * 1024 bytes)
+                const maxSize = 10 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    fileErrors.push(`Image ${index + 1} (${file.name}) exceeds 10MB limit.`);
+                    return;
+                }
+                
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    fileErrors.push(`Image ${index + 1} (${file.name}) has invalid file type. Only JPEG, PNG, and GIF are allowed.`);
+                    return;
+                }
+                
+                // Append valid file
+                try {
+                    formData.append('images[]', file, file.name);
+                    validFileCount++;
+                } catch (e) {
+                    console.error(`Error appending file ${file.name}:`, e);
+                    fileErrors.push(`Failed to upload image ${index + 1} (${file.name}).`);
+                }
             });
             
-            console.log(`Added ${imageUploadState.fileMap.size} image(s) to FormData:`, 
-                Array.from(imageUploadState.fileMap.keys()).map(id => {
-                    const file = imageUploadState.fileMap.get(id);
-                    return file ? file.name : 'unknown';
+            // Show validation errors if any
+            if (fileErrors.length > 0) {
+                hideLoadingState(submitBtn, form);
+                displayGeneralError(fileErrors.join('<br>'));
+                const photosSection = document.querySelector('[data-section="photos"]');
+                if (photosSection) {
+                    photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+            
+            if (validFileCount === 0) {
+                hideLoadingState(submitBtn, form);
+                displayGeneralError('No valid images found. Please upload at least one image.');
+                return;
+            }
+            
+            console.log(`Added ${validFileCount} valid image(s) to FormData:`, 
+                imageUploadState.fileOrder.map(fileId => {
+                    const file = imageUploadState.fileMap.get(fileId);
+                    return file ? `${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)` : 'unknown';
                 })
             );
         } else {
@@ -722,6 +778,7 @@
         }
 
         document.querySelectorAll('.field-error').forEach(el => el.remove());
+        document.querySelectorAll('.image-upload-error').forEach(el => el.remove());
         
         document.querySelectorAll('.border-red-500').forEach(el => {
             el.classList.remove('border-red-500');
@@ -752,13 +809,31 @@
         
         if (typeof errors === 'object' && !Array.isArray(errors)) {
             const errorMessages = [];
+            const imageErrors = [];
             
+            // First pass: collect image errors separately
+            Object.keys(errors).forEach(field => {
+                if (field.startsWith('images.')) {
+                    const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                    fieldErrors.forEach(error => {
+                        imageErrors.push(error);
+                    });
+                }
+            });
+            
+            // Display image errors together if any
+            if (imageErrors.length > 0) {
+                displayImageErrors(imageErrors);
+            }
+            
+            // Second pass: handle other errors
             Object.keys(errors).forEach(field => {
                 const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
                 fieldErrors.forEach(error => {
                     if (field === 'error' || field === 'message') {
                         errorMessages.push(error);
-                    } else {
+                    } else if (!field.startsWith('images.')) {
+                        // Skip image errors as they're handled above
                         displayFieldError(field, error);
                     }
                 });
@@ -773,14 +848,90 @@
             displayGeneralError(errors);
         }
     }
+    
+    function displayImageErrors(errorMessages) {
+        const photosSection = document.querySelector('[data-section="photos"]');
+        if (!photosSection) {
+            // Fallback to general error if photos section not found
+            displayGeneralError(errorMessages.join('<br>'));
+            return;
+        }
+        
+        // Expand photos section if not already expanded
+        const header = photosSection.querySelector('.section-header');
+        const content = photosSection.querySelector('.section-content');
+        if (header && content && !content.classList.contains('expanded')) {
+            content.classList.add('expanded');
+            header.classList.add('active');
+        }
+        
+        // Remove existing error
+        const existingError = photosSection.querySelector('.image-upload-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create error element
+        const errorElement = document.createElement('div');
+        errorElement.className = 'image-upload-error p-3 mb-4 rounded-md border border-red-500 bg-red-50 dark:bg-red-900/20';
+        
+        // Format error messages - make them more user-friendly
+        const formattedMessages = errorMessages.map(msg => {
+            // Replace technical messages with user-friendly ones
+            if (msg.includes('failed to upload')) {
+                return 'One or more images failed to upload. Please check file size (max 10MB) and format (JPEG, PNG, GIF only), then try again.';
+            }
+            return msg;
+        });
+        
+        // Remove duplicates
+        const uniqueMessages = [...new Set(formattedMessages)];
+        
+        errorElement.innerHTML = `
+            <div class="flex items-start gap-2">
+                <svg class="w-5 h-5 text-red-800 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-red-800 mb-1">Image Upload Error</p>
+                    <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
+                        ${uniqueMessages.map(msg => `<li>${escapeHtml(msg)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        // Insert error after upload area or at the top of section content
+        const uploadArea = document.getElementById('image-upload-area');
+        if (uploadArea && uploadArea.parentNode) {
+            uploadArea.parentNode.insertBefore(errorElement, uploadArea.nextSibling);
+        } else {
+            const sectionContent = photosSection.querySelector('.section-content');
+            if (sectionContent) {
+                sectionContent.insertBefore(errorElement, sectionContent.firstChild);
+            }
+        }
+        
+        // Scroll to photos section
+        photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
     function displayFieldError(fieldName, message) {
+        // Image errors are now handled by displayImageErrors() in displayErrors()
+        // This function only handles non-image field errors
+        if (fieldName.startsWith('images.')) {
+            // Should not reach here as image errors are handled separately
+            return;
+        }
+        
         const field = document.querySelector(`[name="${fieldName}"]`) || 
                      document.getElementById(fieldName) ||
                      document.getElementById(fieldName.replace('.', '_'));
         
         if (!field) {
             console.warn(`Field not found for error: ${fieldName}`);
+            // Still show as general error if field not found
+            displayGeneralError(`${fieldName}: ${message}`);
             return;
         }
 
