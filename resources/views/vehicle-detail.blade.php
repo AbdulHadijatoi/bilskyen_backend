@@ -32,9 +32,37 @@
     }
     
     .detail-value {
-        font-size: 1rem;
         color: var(--foreground);
+        /* font-weight: 500; */
+    }
+    
+    .equipment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.875rem;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
         font-weight: 500;
+        color: var(--foreground);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .equipment-chip:hover {
+        background: var(--accent);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .equipment-chip svg {
+        flex-shrink: 0;
+        color: var(--primary);
+        width: 14px;
+        height: 14px;
     }
 </style>
 @endpush
@@ -192,6 +220,12 @@
                     <span class="detail-value">{{ $vehicle->fuel_type_name }}</span>
                 </div>
                 @endif
+                @if($vehicle->engine_power_hp)
+                <div class="detail-item">
+                    <span class="detail-label">Engine Power</span>
+                    <span class="detail-value">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
+                </div>
+                @endif
                 @if($vehicle->mileage)
                 <div class="detail-item">
                     <span class="detail-label">Mileage</span>
@@ -222,12 +256,6 @@
                     <span class="detail-value">{{ $vehicle->charging_type }}</span>
                 </div>
                 @endif
-                @if($vehicle->engine_power_hp)
-                <div class="detail-item">
-                    <span class="detail-label">Engine Power</span>
-                    <span class="detail-value">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
-                    </div>
-                @endif
                 @if($vehicle->towing_weight)
                 <div class="detail-item">
                     <span class="detail-label">Towing Weight</span>
@@ -257,7 +285,7 @@
                 @if($details->description)
                 <div class="detail-item md:col-span-2">
                     <span class="detail-label">Description</span>
-                    <p class="detail-value whitespace-pre-wrap">{{ $details->description }}</p>
+                    <p class="detail-value whitespace-pre-wrap text-sm">{{ $details->description }}</p>
                 </div>
                 @endif
                 @if($details->type_name_resolved)
@@ -284,6 +312,12 @@
                     <span class="detail-value">{{ $details->body_type_name }}</span>
                 </div>
                 @endif
+                @if($details->variant && $details->variant->name)
+                <div class="detail-item">
+                    <span class="detail-label">Variant</span>
+                    <span class="detail-value">{{ $details->variant->name }}</span>
+                </div>
+                @endif
                 @if($details->price_type_name)
                 <div class="detail-item">
                     <span class="detail-label">Price Type</span>
@@ -306,6 +340,12 @@
                 <div class="detail-item">
                     <span class="detail-label">Sales Type</span>
                     <span class="detail-value">{{ $details->sales_type_name }}</span>
+                </div>
+                @endif
+                @if($details->servicebog && $details->servicebog !== 'Default')
+                <div class="detail-item">
+                    <span class="detail-label">Service Book</span>
+                    <span class="detail-value">{{ $details->servicebog }}</span>
                 </div>
                 @endif
                 @if($vehicle->version)
@@ -440,10 +480,10 @@
                     <span class="detail-value">{{ $details->seat_belt_alarms }}</span>
                 </div>
                 @endif
-                @if($details->euronorm)
+                @if($details->euronom && $details->euronom->name)
                 <div class="detail-item">
                     <span class="detail-label">Euro Norm</span>
-                    <span class="detail-value">{{ $details->euronorm }}</span>
+                    <span class="detail-value">{{ $details->euronom->name }}</span>
                     </div>
                 @endif
                 @if($details->wheels)
@@ -585,18 +625,18 @@
         @if($vehicle->equipment && $vehicle->equipment->count() > 0)
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Equipment & Features</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div class="flex flex-wrap gap-2">
                 @foreach($vehicle->equipment as $equip)
-                <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-primary">
+                <div class="equipment-chip">
+                    {{-- <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span class="text-foreground font-medium text-sm">{{ $equip->name }}</span>
+                    </svg> --}}
+                    <span>{{ $equip->name }}</span>
                 </div>
-                    @endforeach
+                @endforeach
             </div>
-            </div>
-            @endif
+        </div>
+        @endif
 
         </div>
 
@@ -624,7 +664,7 @@
                                     </svg>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-foreground">
-                                            {{ strtoupper($vehicle->location->country_code) }}
+                                            {{ strtoupper($vehicle->address) }}
                                         </p>
                                         <p class="text-xs text-muted-foreground">Country</p>
                                     </div>

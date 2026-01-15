@@ -15,9 +15,6 @@
         // Initialize expandable sections
         initExpandableSections();
         
-        // Initialize brand/model loading
-        initBrandModelLoading();
-        
         // Initialize registration lookup
         initRegistrationLookup();
         
@@ -29,9 +26,6 @@
         
         // Initialize image upload
         initImageUpload();
-        
-        // Initialize title auto-generation
-        initTitleAutoGeneration();
         
         // Initialize description auto-generation
         initDescriptionAutoGeneration();
@@ -98,38 +92,6 @@
         };
     }
 
-    // Load models when brand is selected
-    function initBrandModelLoading() {
-        const brandSelect = document.getElementById('brand_id');
-        if (!brandSelect) return;
-
-        brandSelect.addEventListener('change', function() {
-            const brandId = this.value;
-            const modelSelect = document.getElementById('model_id');
-            
-            if (!modelSelect) return;
-            
-            if (!brandId) {
-                modelSelect.innerHTML = '<option value="">Select Model</option>';
-                return;
-            }
-
-            fetch(`/api/v1/models?brand_id=${brandId}`)
-                .then(response => response.json())
-                .then(data => {
-                    modelSelect.innerHTML = '<option value="">Select Model</option>';
-                    if (data.data && Array.isArray(data.data)) {
-                        data.data.forEach(model => {
-                            const option = document.createElement('option');
-                            option.value = model.id;
-                            option.textContent = model.name;
-                            modelSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error loading models:', error));
-        });
-    }
 
     // Registration lookup
     function initRegistrationLookup() {
@@ -223,6 +185,9 @@
                     return;
                 }
                 
+                // Store complete API response data for form submission
+                window.apiResponseData = vehicleData;
+                
                 // Set registration in hidden field before showing form
                 const registrationHidden = document.getElementById('registration');
                 if (registrationHidden && registration) {
@@ -245,8 +210,20 @@
                     }
                 });
                 
-                // Prefill form
+                // Prefill form (will set fields by name, not ID)
                 prefillForm(vehicleData);
+                
+                // Set title from backend response (simple - just set it)
+                if (vehicleData.title) {
+                    const titleDisplay = document.getElementById('title-display');
+                    const titleInput = document.getElementById('title');
+                    if (titleDisplay) {
+                        titleDisplay.textContent = vehicleData.title;
+                    }
+                    if (titleInput) {
+                        titleInput.value = vehicleData.title;
+                    }
+                }
                 
                 // Show success message
                 const successMsg = document.createElement('div');
@@ -390,12 +367,149 @@
             return;
         }
         
-        // Generate title and description before submission if not already done
-        generateTitle();
+        // Generate description before submission if not already done
         generateDescription();
         
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
+        
+        // Merge all API response fields into form data
+        if (window.apiResponseData && typeof window.apiResponseData === 'object') {
+            const apiData = window.apiResponseData;
+            
+            // Helper function to safely add value to FormData
+            const addToFormData = (key, value) => {
+                if (value === null || value === undefined) {
+                    return; // Skip null/undefined values
+                }
+                
+                if (Array.isArray(value)) {
+                    // Handle arrays - convert to JSON string for complex arrays, or append each item for simple arrays
+                    if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+                        // Complex array (like equipment, dispensations, permits) - convert to JSON
+                        formData.append(key, JSON.stringify(value));
+                    } else {
+                        // Simple array - append each item
+                        value.forEach(item => {
+                            formData.append(key + '[]', item);
+                        });
+                    }
+                } else if (typeof value === 'object' && value !== null) {
+                    // Handle objects - extract ID if it's a lookup object, or convert to JSON
+                    if (value.id !== undefined && value.name !== undefined) {
+                        // Lookup object (color, variant, euronorm, body_type, use, type) - use ID
+                        formData.append(key.replace('_object', '_id'), value.id);
+                    } else {
+                        // Other objects - convert to JSON
+                        formData.append(key, JSON.stringify(value));
+                    }
+                } else if (typeof value === 'boolean') {
+                    // Convert boolean to integer (0 or 1)
+                    formData.append(key, value ? '1' : '0');
+                } else {
+                    // String, number, etc. - add as-is
+                    formData.append(key, value);
+                }
+            };
+            
+            // Map API fields to form fields, handling special cases
+            Object.keys(apiData).forEach(key => {
+                // Skip fields that are already in the form or are internal processing fields
+                if (key === 'title' || key === 'registration' || 
+                    key === 'brand_name' || key === 'model_name' || key === 'model_year_name' || key === 'fuel_type_name') {
+                    // These are internal processing fields - skip
+                    return;
+                }
+                
+                // Handle brand, model, model_year, fuel_type objects - extract IDs
+                if (key === 'brand' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
+                    formData.append('brand_id', apiData[key].id);
+                    return;
+                }
+                if (key === 'model' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
+                    formData.append('model_id', apiData[key].id);
+                    return;
+                }
+                if (key === 'model_year' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
+                    formData.append('model_year_id', apiData[key].id);
+                    return;
+                }
+                if (key === 'fuel_type' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
+                    formData.append('fuel_type_id', apiData[key].id);
+                    return;
+                }
+                
+                // Handle null model_year (might not be in API response)
+                if (key === 'model_year' && (apiData[key] === null || apiData[key] === undefined)) {
+                    // Skip null model_year - don't send it
+                    return;
+                }
+                
+                // Skip equipment, color, variant, euronorm - handled separately below
+                if (key === 'equipment' || key === 'color' || key === 'variant' || key === 'euronorm') {
+                    return;
+                }
+                
+                const value = apiData[key];
+                
+                // Special mappings
+                if (key === 'vehicle_id') {
+                    // Map vehicle_id from API to vehicle_external_id for database
+                    addToFormData('vehicle_external_id', value);
+                } else if (key === 'type' && typeof value === 'object' && value !== null && value.id) {
+                    // Type object - extract ID
+                    addToFormData('type_id', value.id);
+                    if (value.name) {
+                        addToFormData('type_name', value.name);
+                    }
+                } else if (key === 'use' && typeof value === 'object' && value !== null && value.id) {
+                    // Use object - extract ID
+                    addToFormData('use_id', value.id);
+                } else if (key === 'body_type' && typeof value === 'object' && value !== null && value.id) {
+                    // Body type object - extract ID
+                    addToFormData('body_type_id', value.id);
+                } else if (key === 'dispensations' || key === 'permits') {
+                    // Arrays - convert to JSON string
+                    addToFormData(key, value);
+                } else if (key === 'coupling' || key === 'ncap_five') {
+                    // Boolean fields - convert to integer
+                    addToFormData(key, value);
+                } else {
+                    // Regular field - add as-is
+                    addToFormData(key, value);
+                }
+            });
+            
+            // Handle equipment array separately (already handled in form, but include quantities if needed)
+            if (apiData.equipment && Array.isArray(apiData.equipment)) {
+                // Equipment IDs are already in form, but we could store quantities here if needed
+                // For now, just ensure equipment data is available
+            }
+            
+            // Handle color, variant, euronorm objects - extract IDs if not already in form
+            if (apiData.color && typeof apiData.color === 'object' && apiData.color.id) {
+                const colorId = formData.get('color_id');
+                if (!colorId || colorId === '') {
+                    formData.set('color_id', apiData.color.id);
+                }
+            }
+            
+            if (apiData.variant && typeof apiData.variant === 'object' && apiData.variant.id) {
+                const variantId = formData.get('variant_id');
+                if (!variantId || variantId === '') {
+                    formData.set('variant_id', apiData.variant.id);
+                }
+            }
+            
+            if (apiData.euronorm && typeof apiData.euronorm === 'object' && apiData.euronorm.id) {
+                const euronomId = formData.get('euronom_id');
+                if (!euronomId || euronomId === '') {
+                    formData.set('euronom_id', apiData.euronorm.id);
+                }
+            }
+            
+            console.log('Merged API response data into form submission');
+        }
         
         // Handle variant name if variant_id is not set but variant name exists
         const variantSelect = document.getElementById('variant_id');
@@ -653,7 +767,8 @@
 
     // Prefill form with API data
     function prefillForm(apiData) {
-        console.log('PrefillForm called with:', apiData);
+        console.log('PrefillForm called with API data:', apiData);
+        console.log('API response structure:', JSON.stringify(apiData, null, 2));
         
         // Helper function to safely set field value
         function setFieldValue(fieldId, value) {
@@ -668,6 +783,48 @@
                 return true;
             }
             return false;
+        }
+        
+        // Helper function to add option to select if it doesn't exist, and remove duplicates
+        function addOptionIfNotExists(selectId, value, text) {
+            const select = document.getElementById(selectId);
+            if (!select || select.tagName !== 'SELECT') {
+                return false;
+            }
+            
+            const valueStr = String(value);
+            const textStr = String(text).trim();
+            
+            // Check if option with this value already exists
+            const existingOption = select.querySelector(`option[value="${valueStr}"]`);
+            if (existingOption) {
+                // Option exists, just update text if different
+                if (existingOption.textContent.trim() !== textStr) {
+                    existingOption.textContent = textStr;
+                }
+                return true;
+            }
+            
+            // Remove any duplicate options with same text (but different value)
+            const options = Array.from(select.options);
+            const duplicateIndices = [];
+            options.forEach((option, index) => {
+                if (option.textContent.trim().toLowerCase() === textStr.toLowerCase() && option.value !== valueStr) {
+                    duplicateIndices.push(index);
+                }
+            });
+            
+            // Remove duplicates (in reverse order to maintain indices)
+            duplicateIndices.reverse().forEach(index => {
+                select.remove(index);
+            });
+            
+            // Add new option
+            const option = document.createElement('option');
+            option.value = valueStr;
+            option.textContent = textStr;
+            select.appendChild(option);
+            return true;
         }
         
         // Helper function to safely set select value by ID or text match
@@ -728,129 +885,6 @@
             setFieldValue('registration-lookup', registration);
         }
         
-        const vin = apiData.vin || apiData.chassis_number || apiData.chassis || apiData.chassisNumber;
-        if (vin) setFieldValue('vin', vin);
-
-        // Map brand (hidden field)
-        const brandValue = apiData.brand || apiData.make || apiData.manufacturer || apiData.make_name || apiData.brand_id;
-        if (brandValue !== null && brandValue !== undefined) {
-            const brandSelect = document.getElementById('brand_id');
-            if (brandSelect) {
-                let brandFound = false;
-                
-                // Try to set by ID first if it's a number
-                if (typeof brandValue === 'number' || (typeof brandValue === 'string' && /^\d+$/.test(brandValue))) {
-                    const idValue = String(brandValue);
-                    if (brandSelect.querySelector(`option[value="${idValue}"]`)) {
-                        brandSelect.value = idValue;
-                        brandSelect.dispatchEvent(new Event('change'));
-                        brandFound = true;
-                    }
-                }
-                
-                // If not found by ID, try by name
-                if (!brandFound && setSelectByIdOrText('brand_id', brandValue)) {
-                    brandSelect.dispatchEvent(new Event('change'));
-                    brandFound = true;
-                }
-                
-                if (brandFound) {
-                    setTimeout(() => {
-                        const modelValue = apiData.model || apiData.model_name || apiData.modelName || apiData.model_id;
-                        if (modelValue !== null && modelValue !== undefined) {
-                            const modelSelect = document.getElementById('model_id');
-                            if (modelSelect) {
-                                // Try by ID first
-                                if (typeof modelValue === 'number' || (typeof modelValue === 'string' && /^\d+$/.test(modelValue))) {
-                                    const modelIdValue = String(modelValue);
-                                    if (modelSelect.querySelector(`option[value="${modelIdValue}"]`)) {
-                                        modelSelect.value = modelIdValue;
-                                    }
-                                } else {
-                                    setSelectByIdOrText('model_id', modelValue);
-                                }
-                            }
-                        }
-                        // Trigger title generation after model is set
-                        setTimeout(() => generateTitle(), 100);
-                    }, 500);
-                } else if (typeof brandValue === 'string') {
-                    // Create hidden input for brand name
-                    const vehicleForm = document.getElementById('vehicle-form');
-                    let brandHiddenInput = document.getElementById('brand_name_hidden');
-                    if (!brandHiddenInput && vehicleForm) {
-                        brandHiddenInput = document.createElement('input');
-                        brandHiddenInput.type = 'hidden';
-                        brandHiddenInput.id = 'brand_name_hidden';
-                        brandHiddenInput.name = 'brand_name';
-                        vehicleForm.appendChild(brandHiddenInput);
-                    }
-                    if (brandHiddenInput) {
-                        brandHiddenInput.value = brandValue;
-                    }
-                }
-            }
-        }
-
-        // Map fuel type (hidden field)
-        const fuelTypeValue = apiData.fuel_type_id || apiData.fuel_type || apiData.fuelType || apiData.fuel || apiData.fuelTypeName;
-        if (fuelTypeValue !== null && fuelTypeValue !== undefined) {
-            const fuelTypeSelect = document.getElementById('fuel_type_id');
-            if (fuelTypeSelect) {
-                // Try by ID first
-                if (typeof fuelTypeValue === 'number' || (typeof fuelTypeValue === 'string' && /^\d+$/.test(fuelTypeValue))) {
-                    const idValue = String(fuelTypeValue);
-                    if (fuelTypeSelect.querySelector(`option[value="${idValue}"]`)) {
-                        fuelTypeSelect.value = idValue;
-                        fuelTypeSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => generateTitle(), 100);
-                    } else if (setSelectByIdOrText('fuel_type_id', fuelTypeValue)) {
-                        fuelTypeSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => generateTitle(), 100);
-                    }
-                } else if (setSelectByIdOrText('fuel_type_id', fuelTypeValue)) {
-                    fuelTypeSelect.dispatchEvent(new Event('change'));
-                    setTimeout(() => generateTitle(), 100);
-                }
-            }
-        }
-
-        // Map model year (hidden field)
-        let year = apiData.model_year_id || apiData.model_year || apiData.year || apiData.modelYear || apiData.registration_year;
-        if (!year && apiData.first_registration_date) {
-            const dateStr = apiData.first_registration_date;
-            const yearMatch = dateStr.match(/^(\d{4})/);
-            if (yearMatch) {
-                year = yearMatch[1];
-            }
-        }
-        if (year !== null && year !== undefined) {
-            const modelYearSelect = document.getElementById('model_year_id');
-            if (modelYearSelect) {
-                // Try by ID first
-                if (typeof year === 'number' || (typeof year === 'string' && /^\d+$/.test(year))) {
-                    const idValue = String(year);
-                    if (modelYearSelect.querySelector(`option[value="${idValue}"]`)) {
-                        modelYearSelect.value = idValue;
-                        modelYearSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => generateTitle(), 100);
-                    } else if (setSelectByIdOrText('model_year_id', year)) {
-                        modelYearSelect.dispatchEvent(new Event('change'));
-                        setTimeout(() => generateTitle(), 100);
-                    }
-                } else if (setSelectByIdOrText('model_year_id', year)) {
-                    modelYearSelect.dispatchEvent(new Event('change'));
-                    setTimeout(() => generateTitle(), 100);
-                }
-            }
-        }
-
-        // Map category
-        const categoryValue = apiData.category || apiData.vehicleType || apiData.vehicle_type || apiData.category_name;
-        if (categoryValue !== null && categoryValue !== undefined) {
-            setSelectByIdOrText('category_id', categoryValue);
-        }
-
         // Numeric fields
         const price = apiData.price || apiData.price_dkk || apiData.list_price || apiData.priceDkk;
         if (price) setFieldValue('price', price);
@@ -873,11 +907,6 @@
             setFieldValue('technical_total_weight', technicalTotalWeight);
         }
         
-        if (apiData.batteryCapacity || apiData.battery_capacity) setFieldValue('battery_capacity', apiData.batteryCapacity || apiData.battery_capacity);
-        if (apiData.enginePower || apiData.engine_power) setFieldValue('engine_power', apiData.enginePower || apiData.engine_power);
-        if (apiData.towingWeight || apiData.towing_weight) setFieldValue('towing_weight', apiData.towingWeight || apiData.towing_weight);
-        if (apiData.ownershipTax || apiData.ownership_tax) setFieldValue('ownership_tax', apiData.ownershipTax || apiData.ownership_tax);
-
         // First registration date (month/year picker)
         const regDate = apiData.firstRegistrationDate || apiData.first_registration_date || apiData.registration_date || apiData.first_reg_date;
         if (regDate) {
@@ -910,61 +939,36 @@
             }
         }
 
-        // Map body type, color, use, type
-        const bodyType = apiData.body_type || apiData.bodyType || apiData.body_style || apiData.vehicle_body;
-        if (bodyType) setSelectByIdOrText('body_type_id', bodyType);
-
-        const color = apiData.color || apiData.colour || apiData.paint_color || apiData.exterior_color;
-        if (color) {
-            // Handle color as object with id or name
-            if (typeof color === 'object' && color !== null) {
-                if (color.id) {
-                    setSelectByIdOrText('color_id', color.id);
-                } else if (color.name) {
-                    setSelectByIdOrText('color_id', color.name);
-                }
-            } else {
-                setSelectByIdOrText('color_id', color);
+        // Map color - use color object from backend (already processed and created if needed)
+        if (apiData.color && typeof apiData.color === 'object') {
+            const colorId = apiData.color.id;
+            const colorName = apiData.color.name;
+            if (colorId && colorName) {
+                // Add option if it doesn't exist (to handle newly created colors)
+                addOptionIfNotExists('color_id', colorId, colorName);
+                setSelectByIdOrText('color_id', colorId);
             }
         }
         
-        // Variant
-        const variant = apiData.variant || apiData.variantName || apiData.variant_name;
-        if (variant) {
-            if (!setSelectByIdOrText('variant_id', variant)) {
-                // Create hidden input for variant name if not found in dropdown
-                const vehicleForm = document.getElementById('vehicle-form');
-                let variantHiddenInput = document.getElementById('variant_name_hidden');
-                if (!variantHiddenInput && vehicleForm) {
-                    variantHiddenInput = document.createElement('input');
-                    variantHiddenInput.type = 'hidden';
-                    variantHiddenInput.id = 'variant_name_hidden';
-                    variantHiddenInput.name = 'variant_name';
-                    vehicleForm.appendChild(variantHiddenInput);
-                }
-                if (variantHiddenInput) {
-                    variantHiddenInput.value = typeof variant === 'object' ? variant.name : variant;
-                }
+        // Map variant - use variant object from backend (already processed and created if needed)
+        if (apiData.variant && typeof apiData.variant === 'object') {
+            const variantId = apiData.variant.id;
+            const variantName = apiData.variant.name;
+            if (variantId && variantName) {
+                // Add option if it doesn't exist (to handle newly created variants)
+                addOptionIfNotExists('variant_id', variantId, variantName);
+                setSelectByIdOrText('variant_id', variantId);
             }
         }
         
-        // Euronom
-        const euronom = apiData.euronorm || apiData.euronom || apiData.euroNorm || apiData.euro_norm;
-        if (euronom) {
-            if (!setSelectByIdOrText('euronom_id', euronom)) {
-                // Create hidden input for euronom name if not found in dropdown
-                const vehicleForm = document.getElementById('vehicle-form');
-                let euronomHiddenInput = document.getElementById('euronom_name_hidden');
-                if (!euronomHiddenInput && vehicleForm) {
-                    euronomHiddenInput = document.createElement('input');
-                    euronomHiddenInput.type = 'hidden';
-                    euronomHiddenInput.id = 'euronom_name_hidden';
-                    euronomHiddenInput.name = 'euronom_name';
-                    vehicleForm.appendChild(euronomHiddenInput);
-                }
-                if (euronomHiddenInput) {
-                    euronomHiddenInput.value = typeof euronom === 'object' ? euronom.name : euronom;
-                }
+        // Map euronorm - use euronorm object from backend (already processed and created if needed)
+        if (apiData.euronorm && typeof apiData.euronorm === 'object') {
+            const euronomId = apiData.euronorm.id;
+            const euronomName = apiData.euronorm.name;
+            if (euronomId && euronomName) {
+                // Add option if it doesn't exist (to handle newly created euronorms)
+                addOptionIfNotExists('euronom_id', euronomId, euronomName);
+                setSelectByIdOrText('euronom_id', euronomId);
             }
         }
         
@@ -977,7 +981,7 @@
             }
         }
 
-        // Description - will be auto-generated, but allow API override
+        // Description - allow API override
         if (apiData.description) {
             setFieldValue('description', apiData.description);
         } else {
@@ -985,98 +989,90 @@
             setTimeout(() => generateDescription(), 500);
         }
         
-        // Handle equipment array
+        // Handle equipment array - use equipment objects from backend (already processed and created if needed)
         if (apiData.equipment && Array.isArray(apiData.equipment)) {
-            apiData.equipment.forEach(function(equipId) {
-                if (equipId) {
-                    const actualId = typeof equipId === 'object' && equipId.id ? equipId.id : equipId;
-                    const checkbox = document.querySelector(`input[name="equipment_ids[]"][value="${actualId}"]`);
+            apiData.equipment.forEach(function(equipment) {
+                if (equipment && typeof equipment === 'object' && equipment.id && equipment.name) {
+                    const equipmentId = equipment.id;
+                    const equipmentName = equipment.name;
+                    
+                    // Find existing checkbox
+                    let checkbox = document.querySelector(`input[name="equipment_ids[]"][value="${equipmentId}"]`);
+                    
+                    if (!checkbox) {
+                        // Equipment doesn't exist in dropdown, create a checkbox dynamically
+                        const equipmentSection = document.querySelector('[data-section="equipment"] .section-content');
+                        if (equipmentSection) {
+                            // Find "Other" section or create it
+                            let otherSection = null;
+                            const allSections = equipmentSection.querySelectorAll('.equipment-type-group');
+                            for (let section of allSections) {
+                                const h4 = section.querySelector('h4');
+                                if (h4 && h4.textContent.trim().toLowerCase() === 'other') {
+                                    otherSection = section;
+                                    break;
+                                }
+                            }
+                            
+                            if (!otherSection) {
+                                // Create "Other" section
+                                const otherDiv = document.createElement('div');
+                                otherDiv.className = 'equipment-type-group';
+                                otherDiv.innerHTML = `
+                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">Other</h4>
+                                    <div class="flex flex-wrap gap-2"></div>
+                                `;
+                                equipmentSection.appendChild(otherDiv);
+                                otherSection = otherDiv;
+                            }
+                            
+                            // Add checkbox to the "Other" section
+                            const container = otherSection.querySelector('.flex.flex-wrap.gap-2');
+                            if (container) {
+                                const label = document.createElement('label');
+                                label.className = 'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input';
+                                
+                                const input = document.createElement('input');
+                                input.type = 'checkbox';
+                                input.name = 'equipment_ids[]';
+                                input.value = equipmentId;
+                                input.className = 'h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2';
+                                input.onchange = function() {
+                                    if (window.handleEquipmentChange) {
+                                        window.handleEquipmentChange(this, equipmentId, equipmentName);
+                                    }
+                                };
+                                
+                                const span = document.createElement('span');
+                                span.textContent = equipmentName;
+                                
+                                label.appendChild(input);
+                                label.appendChild(span);
+                                container.appendChild(label);
+                                checkbox = input;
+                            }
+                        }
+                    }
+                    
                     if (checkbox) {
                         checkbox.checked = true;
                         // Trigger change handler to update UI
-                        const equipmentName = checkbox.nextElementSibling?.textContent || '';
                         if (window.handleEquipmentChange) {
-                            window.handleEquipmentChange(checkbox, actualId, equipmentName);
+                            window.handleEquipmentChange(checkbox, equipmentId, equipmentName);
                         }
                     }
                 }
             });
         }
         
-        // Generate title after all fields are set
+        // Generate description after all fields are set (with longer delay to ensure models are loaded)
         setTimeout(() => {
-            generateTitle();
             if (!apiData.description) {
                 generateDescription();
             }
-        }, 600);
+        }, 1200);
         
-        // Expand vehicle-info section after lookup
-        setTimeout(() => {
-            window.toggleSection('vehicle-info');
-        }, 100);
-        
-        console.log('Form prefilling completed');
-    }
-    
-    // Title auto-generation
-    function initTitleAutoGeneration() {
-        const fields = ['brand_id', 'model_id', 'model_year_id', 'fuel_type_id'];
-        fields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                field.addEventListener('change', () => {
-                    generateTitle();
-                });
-            }
-        });
-    }
-    
-    function generateTitle() {
-        const brandSelect = document.getElementById('brand_id');
-        const modelSelect = document.getElementById('model_id');
-        const modelYearSelect = document.getElementById('model_year_id');
-        const fuelTypeSelect = document.getElementById('fuel_type_id');
-        const titleInput = document.getElementById('title');
-        const titleDisplay = document.getElementById('title-display');
-        
-        if (!titleInput) return;
-        
-        const parts = [];
-        
-        if (brandSelect && brandSelect.value) {
-            const brandOption = brandSelect.options[brandSelect.selectedIndex];
-            if (brandOption && brandOption.text) {
-                parts.push(brandOption.text);
-            }
-        }
-        
-        if (modelSelect && modelSelect.value) {
-            const modelOption = modelSelect.options[modelSelect.selectedIndex];
-            if (modelOption && modelOption.text) {
-                parts.push(modelOption.text);
-            }
-        }
-        
-        if (modelYearSelect && modelYearSelect.value) {
-            const yearOption = modelYearSelect.options[modelYearSelect.selectedIndex];
-            if (yearOption && yearOption.text) {
-                parts.push(yearOption.text);
-            }
-        }
-        
-        if (fuelTypeSelect && fuelTypeSelect.value) {
-            const fuelOption = fuelTypeSelect.options[fuelTypeSelect.selectedIndex];
-            if (fuelOption && fuelOption.text) {
-                parts.push(fuelOption.text);
-            }
-        }
-        
-        const title = parts.length > 0 ? parts.join(' ') : 'Auto-generated from vehicle details';
-        titleInput.value = title;
-        if (titleDisplay) {
-            titleDisplay.textContent = title;
-        }
+        console.log('Form prefilling completed. All fields processed.');
     }
     
     // Description auto-generation
@@ -1184,7 +1180,7 @@
             descriptionTextarea.value = parts.join('. ') + '.';
         }
         
-        // Mark as auto-generated
+        // Mark as generated
         descriptionTextarea.dataset.autoGenerated = 'true';
     }
     
@@ -1216,22 +1212,9 @@
         }
     }
     
-    // Equipment collapsible functionality
+    // Equipment collapsible functionality - removed, equipment types are now simple headings
     function initEquipmentCollapsible() {
-        const equipmentToggles = document.querySelectorAll('.equipment-type-toggle');
-        equipmentToggles.forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const content = toggle.nextElementSibling;
-                const icon = toggle.querySelector('.equipment-type-icon');
-                
-                if (content) {
-                    content.classList.toggle('hidden');
-                    if (icon) {
-                        icon.classList.toggle('rotate-180');
-                    }
-                }
-            });
-        });
+        // No longer needed - equipment types are displayed as simple headings
     }
     
     // Equipment selection handlers

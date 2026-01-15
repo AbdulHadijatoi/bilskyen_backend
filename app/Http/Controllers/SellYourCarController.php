@@ -134,7 +134,7 @@ class SellYourCarController extends Controller
             'registration' => 'required|string|max:20',
             'vin' => 'nullable|string|max:17',
             'price' => 'required|integer|min:0',
-            'location_id' => 'required|exists:locations,id',
+            'location_id' => 'nullable|exists:locations,id',
             'listing_type_id' => 'nullable|exists:listing_types,id',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
@@ -153,8 +153,6 @@ class SellYourCarController extends Controller
             'first_registration_year' => 'nullable|integer|min:1900|max:2100',
             'last_inspection_month' => 'nullable|integer|min:1|max:12',
             'last_inspection_year' => 'nullable|integer|min:1900|max:2100',
-            'vehicle_list_status_id' => 'nullable|exists:vehicle_list_statuses,id',
-            'published_at' => 'nullable|date',
             'equipment_ids' => 'nullable|array',
             'equipment_ids.*' => 'exists:equipments,id',
             'variant_id' => 'nullable|exists:variants,id',
@@ -163,12 +161,52 @@ class SellYourCarController extends Controller
             'euronom_name' => 'nullable|string|max:100',
             'servicebog' => 'nullable|in:Yes,No,Default',
             'without_tax' => 'nullable|boolean',
-            'seller_name' => 'nullable|string|max:150',
             'seller_phone' => 'nullable|string|max:30',
             'seller_address' => 'nullable|string',
             'seller_postcode' => 'nullable|string|max:10',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            // Additional API fields validation
+            'vin_location' => 'nullable|string|max:255',
+            'vehicle_external_id' => 'nullable|string|max:255',
+            'type_id' => 'nullable|exists:types,id',
+            'type_name' => 'nullable|string|max:255',
+            'registration_status' => 'nullable|string|max:100',
+            'registration_status_updated_date' => 'nullable|date',
+            'expire_date' => 'nullable|date',
+            'status_updated_date' => 'nullable|date',
+            'total_weight' => 'nullable|integer|min:0',
+            'vehicle_weight' => 'nullable|integer|min:0',
+            'coupling' => 'nullable|boolean',
+            'towing_weight_brakes' => 'nullable|integer|min:0',
+            'minimum_weight' => 'nullable|integer|min:0',
+            'gross_combination_weight' => 'nullable|integer|min:0',
+            'engine_displacement' => 'nullable|integer|min:0',
+            'engine_cylinders' => 'nullable|integer|min:0',
+            'engine_code' => 'nullable|string|max:100',
+            'category' => 'nullable|string|max:100',
+            'last_inspection_result' => 'nullable|string|max:100',
+            'last_inspection_odometer' => 'nullable|integer|min:0',
+            'type_approval_code' => 'nullable|string|max:100',
+            'top_speed' => 'nullable|integer|min:0',
+            'doors' => 'nullable|integer|min:0',
+            'minimum_seats' => 'nullable|integer|min:0',
+            'maximum_seats' => 'nullable|integer|min:0',
+            'wheels' => 'nullable|integer|min:0',
+            'extra_equipment' => 'nullable|string',
+            'axles' => 'nullable|integer|min:0',
+            'drive_axles' => 'nullable|integer|min:0',
+            'wheelbase' => 'nullable|integer|min:0',
+            'leasing_period_start' => 'nullable|date',
+            'leasing_period_end' => 'nullable|date',
+            'use_id' => 'nullable|exists:uses,id',
+            'body_type_id' => 'nullable|exists:body_types,id',
+            'dispensations' => 'nullable|string',
+            'permits' => 'nullable|string',
+            'ncap_five' => 'nullable|boolean',
+            'airbags' => 'nullable|integer|min:0',
+            'integrated_child_seats' => 'nullable|integer|min:0',
+            'seat_belt_alarms' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -203,6 +241,36 @@ class SellYourCarController extends Controller
             } elseif ($request->has('euronom_name') && $request->input('euronom_name')) {
                 $euronom = Euronom::firstOrCreate(['name' => $request->input('euronom_name')]);
                 $euronomId = $euronom->id;
+            }
+
+            // Handle type lookup/insertion
+            $typeId = null;
+            if ($request->has('type_id') && $request->input('type_id')) {
+                $typeId = $request->input('type_id');
+            } elseif ($request->has('type_name') && $request->input('type_name')) {
+                $type = \App\Models\Type::firstOrCreate(['name' => $request->input('type_name')]);
+                $typeId = $type->id;
+            } elseif ($request->has('type') && is_array($request->input('type')) && isset($request->input('type')['name'])) {
+                $type = \App\Models\Type::firstOrCreate(['name' => $request->input('type')['name']]);
+                $typeId = $type->id;
+            }
+
+            // Handle use lookup/insertion
+            $useId = null;
+            if ($request->has('use_id') && $request->input('use_id')) {
+                $useId = $request->input('use_id');
+            } elseif ($request->has('use') && is_array($request->input('use')) && isset($request->input('use')['name'])) {
+                $use = \App\Models\VehicleUse::firstOrCreate(['name' => $request->input('use')['name']]);
+                $useId = $use->id;
+            }
+
+            // Handle body_type lookup/insertion
+            $bodyTypeId = null;
+            if ($request->has('body_type_id') && $request->input('body_type_id')) {
+                $bodyTypeId = $request->input('body_type_id');
+            } elseif ($request->has('body_type') && is_array($request->input('body_type')) && isset($request->input('body_type')['name'])) {
+                $bodyType = \App\Models\BodyType::firstOrCreate(['name' => $request->input('body_type')['name']]);
+                $bodyTypeId = $bodyType->id;
             }
 
             // Handle month/year to date conversion for first_registration_date
@@ -244,8 +312,14 @@ class SellYourCarController extends Controller
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'vehicle_list_status_id', 'published_at', 'fuel_efficiency'
+                'ownership_tax', 'fuel_efficiency'
             ]);
+            
+            // Set vehicle_list_status_id automatically to 2 (ignore any value from frontend)
+            $vehicleData['vehicle_list_status_id'] = 2;
+            
+            // Set published_at automatically (ignore any value from frontend)
+            $vehicleData['published_at'] = now();
             
             // Add title and first_registration_date
             if ($title) {
@@ -280,21 +354,6 @@ class SellYourCarController extends Controller
                 }
             }
 
-            // Set default vehicle_list_status_id to PUBLISHED if not provided
-            if (!isset($vehicleData['vehicle_list_status_id']) || empty($vehicleData['vehicle_list_status_id'])) {
-                $vehicleData['vehicle_list_status_id'] = VehicleListStatusConstant::PUBLISHED; // 2
-            }
-
-            // Set published_at based on status (current time if published, null otherwise)
-            if (!isset($vehicleData['published_at']) || empty($vehicleData['published_at'])) {
-                if (isset($vehicleData['vehicle_list_status_id']) && 
-                    $vehicleData['vehicle_list_status_id'] == VehicleListStatusConstant::PUBLISHED) {
-                    $vehicleData['published_at'] = now();
-                } else {
-                    $vehicleData['published_at'] = null;
-                }
-            }
-
             // Add equipment IDs if provided
             if ($request->has('equipment_ids')) {
                 $vehicleData['equipment_ids'] = $request->input('equipment_ids');
@@ -317,34 +376,85 @@ class SellYourCarController extends Controller
 
             // Add vehicle details if provided
             $detailsFields = [
-                'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
+                'vin_location', 'vehicle_external_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
                 'status_updated_date', 'total_weight', 'vehicle_weight',
-                'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
+                'technical_total_weight', 'towing_weight_brakes', 'minimum_weight',
                 'gross_combination_weight', 'engine_displacement',
                 'engine_cylinders', 'engine_code', 'category',
                 'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
                 'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
                 'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'dispensations',
-                'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
-                'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog'
+                'leasing_period_end', 'color_id', 'dispensations',
+                'permits', 'airbags', 'integrated_child_seats',
+                'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog',
+                'seller_phone', 'seller_address', 'seller_postcode'
             ];
 
             $vehicleDetailsData = [];
             foreach ($detailsFields as $field) {
                 if ($request->has($field)) {
-                    $vehicleDetailsData[$field] = $request->input($field);
+                    $value = $request->input($field);
+                    // Handle JSON strings for arrays
+                    if (($field === 'dispensations' || $field === 'permits') && is_string($value)) {
+                        // Already a JSON string from frontend
+                        $vehicleDetailsData[$field] = $value;
+                    } else {
+                        $vehicleDetailsData[$field] = $value;
+                    }
                 }
             }
 
-            // Add variant_id, euronom_id, last_inspection_date, description, price_type_id
+            // Handle special fields
+            // Map vehicle_id from API to vehicle_external_id
+            if ($request->has('vehicle_id')) {
+                $vehicleDetailsData['vehicle_external_id'] = $request->input('vehicle_id');
+            }
+
+            // Handle boolean fields - convert to integer
+            if ($request->has('coupling')) {
+                $vehicleDetailsData['coupling'] = $request->boolean('coupling') ? 1 : 0;
+            }
+            if ($request->has('ncap_five')) {
+                $vehicleDetailsData['ncap_five'] = $request->boolean('ncap_five') ? 1 : 0;
+            }
+
+            // Handle arrays - convert to JSON strings
+            if ($request->has('dispensations') && is_array($request->input('dispensations'))) {
+                $vehicleDetailsData['dispensations'] = json_encode($request->input('dispensations'));
+            }
+            if ($request->has('permits') && is_array($request->input('permits'))) {
+                $vehicleDetailsData['permits'] = json_encode($request->input('permits'));
+            }
+
+            // Add lookup IDs
             if ($variantId) {
                 $vehicleDetailsData['variant_id'] = $variantId;
             }
             if ($euronomId) {
                 $vehicleDetailsData['euronom_id'] = $euronomId;
             }
+            if ($typeId) {
+                $vehicleDetailsData['type_id'] = $typeId;
+            }
+            if ($useId) {
+                $vehicleDetailsData['use_id'] = $useId;
+            }
+            if ($bodyTypeId) {
+                $vehicleDetailsData['body_type_id'] = $bodyTypeId;
+            }
+            
+            // Add type_name if provided separately
+            if ($request->has('type_name')) {
+                $vehicleDetailsData['type_name'] = $request->input('type_name');
+            } elseif ($typeId) {
+                // Get type name from database if we have the ID
+                $type = \App\Models\Type::find($typeId);
+                if ($type) {
+                    $vehicleDetailsData['type_name'] = $type->name;
+                }
+            }
+
             if ($lastInspectionDate) {
                 $vehicleDetailsData['last_inspection_date'] = $lastInspectionDate;
             }
@@ -376,24 +486,6 @@ class SellYourCarController extends Controller
                 Log::info('No images found in request');
             }
 
-            // Update user's seller information if provided
-            if ($request->has('seller_name') || $request->has('seller_phone') || 
-                $request->has('seller_address') || $request->has('seller_postcode')) {
-                $userUpdate = [];
-                if ($request->has('seller_name')) {
-                    $userUpdate['name'] = $request->input('seller_name');
-                }
-                if ($request->has('seller_phone')) {
-                    $userUpdate['phone'] = $request->input('seller_phone');
-                }
-                if ($request->has('seller_address')) {
-                    $userUpdate['address'] = $request->input('seller_address');
-                }
-                if ($request->has('seller_postcode')) {
-                    $userUpdate['postcode'] = $request->input('seller_postcode');
-                }
-                $user->update($userUpdate);
-            }
 
             // Create vehicle
             $vehicle = $this->vehicleService->createVehicle($vehicleData);

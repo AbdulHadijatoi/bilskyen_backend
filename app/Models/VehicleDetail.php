@@ -66,6 +66,9 @@ class VehicleDetail extends Model
         'price_type_id',
         'condition_id',
         'sales_type_id',
+        'seller_phone',
+        'seller_address',
+        'seller_postcode',
     ];
 
     protected $casts = [

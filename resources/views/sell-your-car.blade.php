@@ -9,7 +9,7 @@
         background: var(--card);
         /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 3.5rem;
         overflow: hidden;
         transition: all 0.3s ease;
         /* box-shadow: 0 2px 8px oklch(0 0 0 / 0.05); */
@@ -156,6 +156,23 @@
     @media (min-width: 1024px) {
         .form-grid {
             grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    /* Month/Year Field Pair - fields side by side within one grid column */
+    .field-pair-inner {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .field-pair-inner > div {
+        flex: 1;
+    }
+    
+    /* On mobile, stack month/year fields vertically */
+    @media (max-width: 640px) {
+        .field-pair-inner {
+            flex-direction: column;
         }
     }
     
@@ -712,6 +729,89 @@
         color: var(--primary-foreground);
         font-weight: 600;
     }
+    
+    /* Plan Cards Styles */
+    .plan-card {
+        border: 2px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--card);
+        position: relative;
+    }
+    
+    .plan-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.1);
+    }
+    
+    .plan-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .plan-card:has(input[type="radio"]:checked) {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: 0 4px 12px oklch(0 0 0 / 0.15);
+    }
+    
+    .plan-card:has(input[type="radio"]:checked) .plan-name {
+        color: var(--primary-foreground);
+    }
+    
+    .plan-card:has(input[type="radio"]:checked) .plan-description,
+    .plan-card:has(input[type="radio"]:checked) .plan-features-label,
+    .plan-card:has(input[type="radio"]:checked) .plan-feature-item {
+        color: var(--primary-foreground);
+        opacity: 0.95;
+    }
+    
+    .plan-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-description {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        margin-bottom: 0.75rem;
+    }
+    
+    .plan-features-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--muted-foreground);
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-feature-item {
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
+    }
+    
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1rem;
+    }
+    
+    @media (min-width: 640px) {
+        .plans-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .plans-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
 </style>
 @endpush
 
@@ -795,12 +895,6 @@
         <!-- Error Display Container -->
         <div id="form-errors-top" class="hidden w-full rounded-md border p-3 mb-4 error-container"></div>
 
-        <!-- Expand Controls -->
-        <div class="expand-controls">
-            <button type="button" class="expand-btn" onclick="expandAllSections()">Expand All</button>
-            <button type="button" class="expand-btn" onclick="collapseAllSections()">Collapse All</button>
-        </div>
-
         <!-- Section 1: Basic Vehicle Information -->
         <div class="expandable-section" data-section="basic-info">
             <div class="section-header active" onclick="toggleSection('basic-info')">
@@ -811,9 +905,6 @@
                         <div class="section-subtitle">Title, variant, and color</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
@@ -823,10 +914,12 @@
                     <div class="space-y-2">
                         <label class="text-sm font-medium">Title</label>
                         <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground">
-                            Auto-generated from vehicle details
+                            
                     </div>
                         <input type="hidden" id="title" name="title" value="">
-                        <p class="field-help">Auto-generated from brand + model + model year + fuel type</p>
+                        <p class="field-help">
+                            Vehicle title automatically generated from vehicle information.
+                        </p>
                     </div>
 
                     <div class="space-y-2">
@@ -866,9 +959,6 @@
                         <div class="section-subtitle">Kilometer driven, registration, inspection, and technical details</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
@@ -884,49 +974,53 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="first_registration_month" class="text-sm font-medium">First Registration - Month</label>
-                        <select id="first_registration_month" name="first_registration_month"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Month</option>
-                            @for($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
-                            @endfor
-                        </select>
-                        <p class="field-help">Month of first registration</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label for="first_registration_year" class="text-sm font-medium">First Registration - Year</label>
-                        <select id="first_registration_year" name="first_registration_year"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Year</option>
-                            @for($i = date('Y'); $i >= 1900; $i--)
-                                <option value="{{ $i }}">{{ $i }}</option>
-                            @endfor
-                        </select>
-                        <p class="field-help">Year of first registration</p>
+                        <label class="text-sm font-medium">First Registration</label>
+                        <div class="field-pair-inner">
+                            <div>
+                                <select id="first_registration_month" name="first_registration_month"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Select Month</option>
+                                    @for($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <select id="first_registration_year" name="first_registration_year"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Select Year</option>
+                                    @for($i = date('Y'); $i >= 1900; $i--)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+                        <p class="field-help">Month and year of first registration</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="last_inspection_month" class="text-sm font-medium">Last Inspection - Month</label>
-                        <select id="last_inspection_month" name="last_inspection_month"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Month</option>
-                            @for($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
-                            @endfor
-                        </select>
-                        <p class="field-help">Month of last inspection</p>
-                    </div>
-                    <div class="space-y-2">
-                        <label for="last_inspection_year" class="text-sm font-medium">Last Inspection - Year</label>
-                        <select id="last_inspection_year" name="last_inspection_year"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Year</option>
-                            @for($i = date('Y'); $i >= 1900; $i--)
-                                <option value="{{ $i }}">{{ $i }}</option>
-                            @endfor
-                        </select>
-                        <p class="field-help">Year of last inspection</p>
+                        <label class="text-sm font-medium">Last Inspection</label>
+                        <div class="field-pair-inner">
+                            <div>
+                                <select id="last_inspection_month" name="last_inspection_month"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Select Month</option>
+                                    @for($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <select id="last_inspection_year" name="last_inspection_year"
+                                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Select Year</option>
+                                    @for($i = date('Y'); $i >= 1900; $i--)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+                        <p class="field-help">Month and year of last inspection</p>
                     </div>
 
                     <div class="space-y-2">
@@ -970,9 +1064,6 @@
                         <div class="section-subtitle">Select the equipment your vehicle has</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
@@ -980,62 +1071,14 @@
                 </div>
                 
                 <!-- Equipment by Category -->
-                <div class="space-y-2">
+                <div class="space-y-4">
                     @foreach($lookupData['equipmentTypes'] as $equipmentType)
                         @if($equipmentType->equipments->count() > 0)
-                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
-                                <button 
-                                    type="button"
-                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
-                                    data-type-id="{{ $equipmentType->id }}"
-                                >
-                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
-                                        <path d="m6 9 6 6 6-6"></path>
-                                    </svg>
-                                </button>
-                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($equipmentType->equipments as $equipment)
-                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="equipment_ids[]" 
-                                                    value="{{ $equipment->id }}"
-                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                    onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                                >
-                                                <span>{{ $equipment->name }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    @endforeach
-                    
-                    <!-- Equipment without category -->
-                    @php
-                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
-                            return !$equip->equipment_type_id;
-                        });
-                    @endphp
-                    @if($equipmentWithoutType->count() > 0)
-                        <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
-                            <button 
-                                type="button"
-                                class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
-                                data-type-id="uncategorized"
-                            >
-                                <span class="uppercase tracking-wide">Other</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
-                                    <path d="m6 9 6 6 6-6"></path>
-                                </svg>
-                            </button>
-                            <div class="equipment-type-content hidden px-4 pb-3 pt-2">
+                            <div class="equipment-type-group">
+                                <h4 class="text-xs font-medium uppercase tracking-wide mb-3 text-muted-foreground">{{ $equipmentType->name }}</h4>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentWithoutType as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                    @foreach($equipmentType->equipments as $equipment)
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
                                             <input 
                                                 type="checkbox" 
                                                 name="equipment_ids[]" 
@@ -1048,15 +1091,39 @@
                                     @endforeach
                                 </div>
                             </div>
+                        @endif
+                    @endforeach
+                    
+                    <!-- Equipment without category -->
+                    @php
+                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
+                            return !$equip->equipment_type_id;
+                        });
+                    @endphp
+                    @if($equipmentWithoutType->count() > 0)
+                        <div class="equipment-type-group">
+                            <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">Other</h4>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($equipmentWithoutType as $equipment)
+                                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                        <input 
+                                            type="checkbox" 
+                                            name="equipment_ids[]" 
+                                            value="{{ $equipment->id }}"
+                                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                            onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
+                                        >
+                                        <span>{{ $equipment->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
 
-                <div class="section-description">
-                    Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for.
-                </div>
+               
                 
                 <!-- Servicebog -->
                 <div class="mb-4">
@@ -1088,9 +1155,6 @@
                         <div class="section-subtitle">Price and tax information</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="form-grid">
@@ -1106,12 +1170,14 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Without Tax</label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="without_tax" name="without_tax" value="1"
-                                class="h-4 w-4 rounded border-input text-primary">
-                            <span class="text-sm">Without tax</span>
-                        </label>
+                        <label for="without_tax" class="text-sm font-medium">Without Tax</label>
+                        <div class="flex items-center h-9">
+                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="without_tax" name="without_tax" value="1"
+                                    class="h-4 w-4 rounded border-input text-primary">
+                                <span class="text-sm">Without tax</span>
+                            </label>
+                        </div>
                         <p class="field-help">Price excludes tax</p>
                     </div>
                     </div>
@@ -1142,9 +1208,6 @@
                         <div class="section-subtitle">Add photos of your vehicle</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
@@ -1198,20 +1261,17 @@
                     <div class="section-number">6</div>
                     <div>
                         <div class="section-title">Description</div>
-                        <div class="section-subtitle">Auto-generated description (you can edit)</div>
+                        <div class="section-subtitle">Vehicle description</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                     <div class="space-y-2">
                     <label for="description" class="text-sm font-medium">Description</label>
                     <textarea id="description" name="description" rows="6"
                         class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="Description will be auto-generated from vehicle details..."></textarea>
-                    <p class="field-help">Auto-generated description (you can edit)</p>
+                        placeholder="Enter vehicle description..."></textarea>
+                    <p class="field-help">Describe your vehicle</p>
                 </div>
             </div>
                     </div>
@@ -1226,20 +1286,9 @@
                         <div class="section-subtitle">Your contact details</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="form-grid">
-                    <div class="space-y-2">
-                        <label for="seller_name" class="text-sm font-medium">Name</label>
-                        <input type="text" id="seller_name" name="seller_name" value="{{ $user->name ?? '' }}"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Your name">
-                        <p class="field-help">Your full name</p>
-                    </div>
-
                     <div class="space-y-2">
                         <label for="seller_phone" class="text-sm font-medium">Phone</label>
                         <input type="text" id="seller_phone" name="seller_phone" value="{{ $user->phone ?? '' }}"
@@ -1277,37 +1326,30 @@
                         <div class="section-subtitle">Select a package for your listing</div>
                     </div>
                 </div>
-                <svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
                     Select a package to enhance your vehicle listing. Each package includes different features.
                 </div>
-                <div class="space-y-4">
+                <div class="plans-grid">
                     @foreach($lookupData['plans'] as $plan)
-                        <div class="border border-input rounded-lg p-4">
-                            <label class="flex items-start gap-3 cursor-pointer">
-                                <input type="radio" name="plan_id" value="{{ $plan->id }}" class="mt-1 h-4 w-4 text-primary">
-                                <div class="flex-1">
-                                    <div class="font-semibold text-base">{{ $plan->name }}</div>
-                                    @if($plan->description)
-                                        <p class="text-sm text-muted-foreground mt-1">{{ $plan->description }}</p>
-                                    @endif
-                                    @if($plan->planFeatures && $plan->planFeatures->count() > 0)
-                                        <div class="mt-2">
-                                            <p class="text-xs font-medium text-muted-foreground mb-1">Features:</p>
-                                            <ul class="text-xs text-muted-foreground space-y-1">
-                                                @foreach($plan->planFeatures as $planFeature)
-                                                    <li>• {{ $planFeature->feature->description ?? $planFeature->feature->key }}: {{ $planFeature->value }}</li>
-                            @endforeach
-                                            </ul>
-                    </div>
-                                    @endif
-                </div>
-                            </label>
-                        </div>
+                        <label class="plan-card">
+                            <input type="radio" name="plan_id" value="{{ $plan->id }}">
+                            <div class="plan-name">{{ $plan->name }}</div>
+                            @if($plan->description)
+                                <p class="plan-description">{{ $plan->description }}</p>
+                            @endif
+                            @if($plan->planFeatures && $plan->planFeatures->count() > 0)
+                                <div class="mt-2">
+                                    <p class="plan-features-label">Features:</p>
+                                    <ul class="space-y-1">
+                                        @foreach($plan->planFeatures as $planFeature)
+                                            <li class="plan-feature-item">• {{ $planFeature->feature->description ?? $planFeature->feature->key }}: {{ $planFeature->value }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        </label>
                     @endforeach
                 </div>
             </div>
@@ -1315,12 +1357,6 @@
 
         <!-- Hidden fields for required data from API -->
         <input type="hidden" id="registration" name="registration" value="" required>
-        <input type="hidden" id="brand_id" name="brand_id" value="">
-        <input type="hidden" id="model_id" name="model_id" value="">
-        <input type="hidden" id="model_year_id" name="model_year_id" value="">
-        <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="" required>
-        <input type="hidden" name="vehicle_list_status_id" value="{{ \App\Constants\VehicleListStatus::PUBLISHED }}">
-        <input type="hidden" name="published_at" value="">
 
         <script>
         function toggleTaxInfo() {
@@ -1332,10 +1368,6 @@
             }
         }
         </script>
-
-        <!-- Submit Section -->
-        <input type="hidden" name="vehicle_list_status_id" value="{{ \App\Constants\VehicleListStatus::PUBLISHED }}">
-        <input type="hidden" name="published_at" value="">
 
         <!-- Submit Section -->
         <div class="submit-section">

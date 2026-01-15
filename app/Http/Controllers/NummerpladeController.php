@@ -28,10 +28,19 @@ class NummerpladeController extends Controller
         ]);
 
         try {
+            $startTime = microtime(true);
+            
             $data = $this->nummerpladeService->getVehicleByRegistration(
                 $request->input('registration'),
                 $request->boolean('advanced', false)
             );
+
+            $processingTime = microtime(true) - $startTime;
+            \Illuminate\Support\Facades\Log::info('Nummerplade API processing completed', [
+                'registration' => $request->input('registration'),
+                'processing_time' => round($processingTime, 2) . 's',
+                'data_keys' => array_keys($data),
+            ]);
 
             return $this->success($data);
         } catch (NummerpladeApiException $e) {
@@ -39,6 +48,18 @@ class NummerpladeController extends Controller
                 $e->getMessage(),
                 $e->toArray(),
                 $e->isRetryable() ? 503 : 400
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Unexpected error in NummerpladeController::getVehicleByRegistration', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->error(
+                'An unexpected error occurred: ' . $e->getMessage(),
+                ['exception' => get_class($e)],
+                500
             );
         }
     }
