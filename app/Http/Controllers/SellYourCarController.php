@@ -162,7 +162,7 @@ class SellYourCarController extends Controller
             'seller_address' => 'required|string',
             'seller_postcode' => 'required|string|max:10',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif',
             // Additional API fields validation
             'vin_location' => 'nullable|string|max:255',
             'vehicle_external_id' => 'nullable|string|max:255',
