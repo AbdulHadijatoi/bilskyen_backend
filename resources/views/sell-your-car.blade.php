@@ -1024,11 +1024,11 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" class="text-sm font-medium">KM/L</label>
+                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">KM/L</label>
                         <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="0.01"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help">Fuel efficiency in kilometers per liter</p>
+                        <p class="field-help" id="fuel_efficiency_help">Fuel efficiency in kilometers per liter</p>
                     </div>
 
                     <div class="space-y-2">
@@ -1169,17 +1169,6 @@
                         <p class="field-help">Selling price in DKK</p>
                     </div>
 
-                    <div class="space-y-2">
-                        <label for="without_tax" class="text-sm font-medium">Without Tax</label>
-                        <div class="flex items-center h-9">
-                            <label class="inline-flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="without_tax" name="without_tax" value="1"
-                                    class="h-4 w-4 rounded border-input text-primary">
-                                <span class="text-sm">Without tax</span>
-                            </label>
-                        </div>
-                        <p class="field-help">Price excludes tax</p>
-                    </div>
                     </div>
 
                 <!-- Expandable Tax Information Section -->

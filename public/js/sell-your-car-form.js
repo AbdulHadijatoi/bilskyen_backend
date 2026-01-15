@@ -32,6 +32,9 @@
         
         // Initialize tax info toggle
         initTaxInfoToggle();
+        
+        // Initialize fuel efficiency label updater
+        initFuelEfficiencyLabelUpdater();
     }
 
     // Expandable Sections
@@ -212,6 +215,13 @@
                 
                 // Prefill form (will set fields by name, not ID)
                 prefillForm(vehicleData);
+                
+                // Update fuel efficiency label after prefilling (in case fuel_type was set)
+                if (vehicleData.fuel_type && vehicleData.fuel_type.id) {
+                    updateFuelEfficiencyLabel(vehicleData.fuel_type.id);
+                } else if (vehicleData.fuel_type_id) {
+                    updateFuelEfficiencyLabel(vehicleData.fuel_type_id);
+                }
                 
                 // Set title from backend response (simple - just set it)
                 if (vehicleData.title) {
@@ -765,6 +775,38 @@
         return div.innerHTML;
     }
 
+    // Update fuel efficiency label based on fuel type
+    function updateFuelEfficiencyLabel(fuelTypeId) {
+        const label = document.getElementById('fuel_efficiency_label');
+        const help = document.getElementById('fuel_efficiency_help');
+        const input = document.getElementById('fuel_efficiency');
+        
+        if (!label || !help || !input) return;
+        
+        // Electric fuel types: 3 (Electric), 7 (El)
+        const electricFuelTypes = [3, 7];
+        // Hybrid fuel types: 4 (Hybrid), 5 (Plug-in Hybrid)
+        const hybridFuelTypes = [4, 5];
+        
+        if (electricFuelTypes.includes(parseInt(fuelTypeId))) {
+            label.textContent = 'Electric Range (km)';
+            help.textContent = 'Electric range in kilometers';
+            input.placeholder = '0';
+            input.step = '1';
+        } else if (hybridFuelTypes.includes(parseInt(fuelTypeId))) {
+            label.textContent = 'Electric Range / KM/L';
+            help.textContent = 'Electric range in km (for EV mode) or fuel efficiency in km/l';
+            input.placeholder = '0.00';
+            input.step = '0.01';
+        } else {
+            // Petrol, Diesel, Benzin
+            label.textContent = 'KM/L';
+            help.textContent = 'Fuel efficiency in kilometers per liter';
+            input.placeholder = '0.00';
+            input.step = '0.01';
+        }
+    }
+
     // Prefill form with API data
     function prefillForm(apiData) {
         console.log('PrefillForm called with API data:', apiData);
@@ -895,8 +937,22 @@
             setFieldValue('km_driven', kmDriven);
         }
         
+        // Handle fuel_type - update label and set fuel_type_id if available
+        let fuelTypeId = null;
+        if (apiData.fuel_type && typeof apiData.fuel_type === 'object' && apiData.fuel_type.id) {
+            fuelTypeId = apiData.fuel_type.id;
+            // Store fuel_type_id for form submission (will be handled in form submission)
+        } else if (apiData.fuel_type_id) {
+            fuelTypeId = apiData.fuel_type_id;
+        }
+        
+        // Update fuel efficiency label based on fuel type
+        if (fuelTypeId) {
+            updateFuelEfficiencyLabel(fuelTypeId);
+        }
+        
         // Fuel efficiency
-        const fuelEfficiency = apiData.fuel_efficiency || apiData.fuelEfficiency;
+        const fuelEfficiency = apiData.fuel_efficiency || apiData.fuelEfficiency || apiData.range_km || apiData.rangeKm;
         if (fuelEfficiency) {
             setFieldValue('fuel_efficiency', fuelEfficiency);
         }
@@ -970,6 +1026,13 @@
                 addOptionIfNotExists('euronom_id', euronomId, euronomName);
                 setSelectByIdOrText('euronom_id', euronomId);
             }
+        }
+        
+        // Map fuel_type - update label based on fuel type
+        if (apiData.fuel_type && typeof apiData.fuel_type === 'object' && apiData.fuel_type.id) {
+            updateFuelEfficiencyLabel(apiData.fuel_type.id);
+        } else if (apiData.fuel_type_id) {
+            updateFuelEfficiencyLabel(apiData.fuel_type_id);
         }
         
         // Servicebog
@@ -1155,10 +1218,21 @@
             parts.push('Last inspection: ' + monthName + ' ' + lastInspYear);
         }
         
-        // KM/L (Fuel Efficiency)
+        // Fuel Efficiency / Electric Range
         const fuelEfficiency = document.getElementById('fuel_efficiency')?.value;
         if (fuelEfficiency) {
-            parts.push('Fuel efficiency: ' + parseFloat(fuelEfficiency).toFixed(2) + ' km/l');
+            // Get fuel_type_id to determine the correct unit
+            const fuelTypeId = window.apiResponseData?.fuel_type?.id || window.apiResponseData?.fuel_type_id;
+            const electricFuelTypes = [3, 7]; // Electric, El
+            const hybridFuelTypes = [4, 5]; // Hybrid, Plug-in Hybrid
+            
+            if (fuelTypeId && electricFuelTypes.includes(parseInt(fuelTypeId))) {
+                parts.push('Electric range: ' + parseInt(fuelEfficiency).toLocaleString() + ' km');
+            } else if (fuelTypeId && hybridFuelTypes.includes(parseInt(fuelTypeId))) {
+                parts.push('Range/Efficiency: ' + parseFloat(fuelEfficiency).toFixed(2) + ' km');
+            } else {
+                parts.push('Fuel efficiency: ' + parseFloat(fuelEfficiency).toFixed(2) + ' km/l');
+            }
         }
         
         // Euronom
@@ -1195,6 +1269,27 @@
     });
     
     // Tax info toggle
+    // Initialize fuel efficiency label updater
+    function initFuelEfficiencyLabelUpdater() {
+        // Check if fuel_type_id select exists and listen for changes
+        const fuelTypeSelect = document.getElementById('fuel_type_id');
+        if (fuelTypeSelect) {
+            fuelTypeSelect.addEventListener('change', function() {
+                if (this.value) {
+                    updateFuelEfficiencyLabel(this.value);
+                }
+            });
+        }
+        
+        // Also check if fuel_type is already set from API response
+        if (window.apiResponseData) {
+            const fuelTypeId = window.apiResponseData.fuel_type?.id || window.apiResponseData.fuel_type_id;
+            if (fuelTypeId) {
+                updateFuelEfficiencyLabel(fuelTypeId);
+            }
+        }
+    }
+
     function initTaxInfoToggle() {
         const taxToggle = document.querySelector('[onclick="toggleSection(\'tax-info\')"]');
         if (taxToggle) {

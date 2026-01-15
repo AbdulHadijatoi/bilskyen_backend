@@ -356,7 +356,7 @@ class SellYourCarController extends Controller
                 $vehicleData['equipment_ids'] = $request->input('equipment_ids');
             }
 
-            // Handle "Without tax" checkbox - find or create price type
+            // Handle price type
             $priceTypeId = null;
             if ($request->has('without_tax') && $request->boolean('without_tax')) {
                 $withoutTaxPriceType = PriceType::firstOrCreate(['name' => 'Without tax']);
