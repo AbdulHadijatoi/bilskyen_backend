@@ -126,15 +126,3 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:20,1');
     });
 });
-
-Route::post('/upload-image', function (Request $request) {
-
-    $request->validate([
-        'image' => 'required|image|mimes:jpg,jpeg,png,gif',
-    ]);
-
-
-    $path = $request->file('image')->store('uploads/logo');
-
-    return "Image uploaded to: " . Storage::url($path);
-});
