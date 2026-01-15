@@ -128,11 +128,11 @@ Route::prefix('v1')->group(function () {
 });
 
 Route::post('/upload-image', function (Request $request) {
+    dd($_FILES['image']);
     $request->validate([
         'image' => 'required|image|mimes:jpg,jpeg,png,gif',
     ]);
 
-    dd($_FILES['image']);
 
     $path = $request->file('image')->store('uploads/logo');
 
