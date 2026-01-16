@@ -88,6 +88,15 @@ Route::prefix('v1')->group(function () {
         })->middleware('auth:api');
     });
     
+    // Favorites API routes (for authenticated users)
+    Route::middleware('auth:api')->prefix('favorites')->group(function () {
+        Route::get('/', [\App\Http\Controllers\FavoriteController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\FavoriteController::class, 'store']);
+        Route::delete('/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroy']);
+        Route::get('/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'check']);
+        Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
+    });
+    
     // Nummerplade API proxy routes (for Flutter/Vue.js)
     Route::prefix('nummerplade')->group(function () {
         // Vehicle lookup endpoints (rate limited)

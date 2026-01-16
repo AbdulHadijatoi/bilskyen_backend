@@ -258,9 +258,16 @@
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                         class="h-full w-full object-cover transition-transform hover:scale-105"
                     />
-                    <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                    <!-- Registration Number - Top Left -->
+                    <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
                         {{ $vehicle->registration }}
                     </span>
+                    <!-- Heart Icon - Top Right -->
+                    <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                        </svg>
+                    </button>
                 </div>
                 
                 <!-- Vehicle Details -->
@@ -1769,9 +1776,16 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover transition-transform hover:scale-105"
                             />
-                            <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                            <!-- Registration Number - Top Left -->
+                            <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
                                 ${vehicle.registration || ''}
                             </span>
+                            <!-- Heart Icon - Top Right -->
+                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
                         </div>
                         
                         <!-- Vehicle Details -->
@@ -1909,9 +1923,16 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover"
                             />
-                            <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                            <!-- Registration Number - Top Left -->
+                            <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
                                 ${vehicle.registration || ''}
                             </span>
+                            <!-- Heart Icon - Top Right -->
+                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
                         </div>
                         
                         <!-- Vehicle Content -->
@@ -1984,6 +2005,66 @@
                 vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleListItem(vehicle)).join('');
             } else {
                 vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleCard(vehicle)).join('');
+            }
+        }
+        
+        // Load favorite status for all vehicles in batch
+        async function checkFavoritesBatch() {
+            const heartIcons = document.querySelectorAll('.heart-icon');
+            if (heartIcons.length === 0) return;
+
+            // Collect all vehicle IDs
+            const vehicleIds = [];
+            const iconMap = new Map(); // Map vehicle ID to icon element
+            
+            heartIcons.forEach(icon => {
+                const vehicleId = icon.getAttribute('data-vehicle-id');
+                if (vehicleId) {
+                    vehicleIds.push(parseInt(vehicleId));
+                    iconMap.set(parseInt(vehicleId), icon);
+                }
+            });
+
+            if (vehicleIds.length === 0) return;
+
+            try {
+                // Make single batch API call
+                const response = await fetch('/favorites/check-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ vehicle_ids: vehicleIds })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.data) {
+                        // Update icons based on batch response
+                        Object.keys(data.data).forEach(vehicleIdStr => {
+                            const vehicleId = parseInt(vehicleIdStr);
+                            const isFavorited = data.data[vehicleId];
+                            const icon = iconMap.get(vehicleId);
+                            
+                            if (icon && isFavorited) {
+                                icon.classList.add('filled');
+                                icon.classList.remove('text-gray-700');
+                                icon.classList.add('text-red-500');
+                                const path = icon.querySelector('path');
+                                if (path) {
+                                    path.setAttribute('fill', 'currentColor');
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                // Silently fail if auth check fails or user is not authenticated
+                console.debug('Favorite check failed (user may not be authenticated):', error);
             }
         }
         
@@ -2542,6 +2623,9 @@
                 
                 // Render vehicles and pagination
                 renderVehicleGrid(data.vehicles || []);
+                
+                // Check favorites for rendered vehicles
+                await checkFavoritesBatch();
                 
                 // Always try to render pagination if it exists - let renderPagination handle validation
                 if (data.pagination) {
@@ -3435,7 +3519,14 @@
                     <a href="/vehicles/${vehicleId}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
                         <div class="vehicle-image-container relative">
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
-                            ${registration ? `<span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
+                            <!-- Registration Number - Top Left -->
+                            ${registration ? `<span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
+                            <!-- Heart Icon - Top Right -->
+                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="Add to favorites">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicleId}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
                         </div>
                         <div class="vehicle-content">
                             <div class="vehicle-main-info">
@@ -3503,6 +3594,126 @@
         
         // Initialize filter chips on page load
         renderFilterChips();
+        
+        // Get access token from cookie helper
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Toggle favorite function
+        window.toggleFavorite = async function(vehicleId, event) {
+            // Prevent any default behavior and stop propagation
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            
+            try {
+                const heartIcon = document.querySelector(`.heart-icon[data-vehicle-id="${vehicleId}"]`);
+                if (!heartIcon) {
+                    console.error('Heart icon not found for vehicle:', vehicleId);
+                    return false;
+                }
+                
+                const path = heartIcon.querySelector('path');
+                const isFavorited = heartIcon.classList.contains('filled') || path?.getAttribute('fill') === 'currentColor';
+
+                if (isFavorited) {
+                    // Remove from favorites
+                    const response = await fetch(`/favorites/${vehicleId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        heartIcon.classList.remove('filled');
+                        heartIcon.classList.remove('text-red-500');
+                        heartIcon.classList.add('text-gray-700');
+                        if (path) path.setAttribute('fill', 'none');
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Removed from favorites', 'success');
+                        }
+                    } else {
+                        if (response.status === 401) {
+                            if (window.showSnackbar) {
+                                window.showSnackbar('Please login to manage favorites', 'error');
+                            }
+                            setTimeout(() => {
+                                window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                            }, 1500);
+                            return false;
+                        }
+                        const data = await response.json().catch(() => ({}));
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Failed to remove from favorites', 'error');
+                        }
+                    }
+                } else {
+                    // Add to favorites
+                    const response = await fetch('/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ vehicle_id: vehicleId }),
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        heartIcon.classList.add('filled');
+                        heartIcon.classList.remove('text-gray-700');
+                        heartIcon.classList.add('text-red-500');
+                        if (path) path.setAttribute('fill', 'currentColor');
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                        }
+                    } else {
+                        if (response.status === 401) {
+                            if (window.showSnackbar) {
+                                window.showSnackbar('Please login to save favorites', 'error');
+                            }
+                            setTimeout(() => {
+                                window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                            }, 1500);
+                            return false;
+                        }
+                        const data = await response.json().catch(() => ({}));
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Failed to save to favorites', 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling favorite:', error);
+                if (window.showSnackbar) {
+                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                }
+            }
+            
+            return false;
+        };
+
+        // Load favorite status on page load
+        (async function() {
+            await checkFavoritesBatch();
+        })();
     })();
 </script>
 @endpush

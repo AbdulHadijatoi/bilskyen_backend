@@ -4,6 +4,179 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
+<style>
+    .featured-vehicles-scroll-container {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 1rem; /* Account for container left padding in snap */
+        scroll-padding-right: 1rem; /* Account for container right padding in snap */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .featured-vehicles-scroll-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .featured-vehicles-scroll-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .featured-vehicles-scroll-container::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted-foreground) / 0.3);
+        border-radius: 4px;
+    }
+    
+    .featured-vehicles-scroll-container::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--muted-foreground) / 0.5);
+    }
+    
+    /* Hide scrollbar on large screens */
+    @media (min-width: 768px) {
+        .featured-vehicles-scroll-container {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .featured-vehicles-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+    }
+    
+    /* Navigation buttons */
+    .featured-vehicles-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: hsl(var(--foreground));
+    }
+    
+    .featured-vehicles-nav-btn:hover {
+        background-color: hsl(var(--accent));
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .featured-vehicles-nav-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .featured-vehicles-nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .featured-vehicles-nav-btn-left {
+        left: -64px;
+    }
+    
+    .featured-vehicles-nav-btn-right {
+        right: -64px;
+    }
+    
+    @media (min-width: 1024px) {
+        .featured-vehicles-nav-btn-left {
+            left: -80px;
+        }
+        
+        .featured-vehicles-nav-btn-right {
+            right: -80px;
+        }
+    }
+    
+    @media (min-width: 1280px) {
+        .featured-vehicles-nav-btn-left {
+            left: -96px;
+        }
+        
+        .featured-vehicles-nav-btn-right {
+            right: -96px;
+        }
+    }
+    
+    .featured-vehicles-scroll-container > div {
+        display: flex;
+    }
+    
+    .featured-vehicle-card {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        /* Mobile: 1 item per row, smaller size but still one at a time */
+        /* Use 85% of viewport width minus padding for a more compact look */
+        flex: 0 0 calc(85vw - 2rem);
+        min-width: calc(85vw - 2rem);
+        max-width: calc(85vw - 2rem);
+    }
+    
+    @media (min-width: 640px) {
+        .featured-vehicle-card {
+            /* Tablet: 2 items per row, account for container padding (1rem each) and gap (1.5rem total, 0.75rem per item) */
+            flex: 0 0 calc(50vw - 1rem - 0.75rem);
+            min-width: calc(50vw - 1rem - 0.75rem);
+            max-width: calc(50vw - 1rem - 0.75rem);
+        }
+    }
+    
+    @media (min-width: 768px) {
+        .featured-vehicles-scroll-container > div {
+            /* Set flex container width to match scroll container's inner width */
+            /* Scroll container extends with -mx-4 px-4, so inner width = viewport width */
+            /* But we need to account for scroll container padding (px-4 = 1rem each side) */
+            width: calc(100vw - 2rem);
+        }
+        
+        .featured-vehicle-card {
+            /* Desktop: 3 items per row - exactly fit 3 items */
+            /* Flex container width = 100vw - 2rem (scroll padding) */
+            /* Flex container has gap-6 (1.5rem) between items, so 2 gaps = 3rem total */
+            /* Formula: (flex container width - 3rem gaps) / 3 items */
+            /* = ((100vw - 2rem) - 3rem) / 3 = (100vw - 5rem) / 3 */
+            flex: 0 0 calc((100vw - 5rem) / 3);
+            min-width: calc((100vw - 5rem) / 3);
+            max-width: calc((100vw - 5rem) / 3);
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .featured-vehicles-scroll-container > div {
+            width: calc(100vw - 2rem);
+        }
+        
+        .featured-vehicle-card {
+            flex: 0 0 calc((100vw - 5rem) / 3);
+            min-width: calc((100vw - 5rem) / 3);
+            max-width: calc((100vw - 5rem) / 3);
+        }
+    }
+    
+    @media (min-width: 1280px) {
+        .featured-vehicles-scroll-container > div {
+            /* On large screens, limit to container max-width (1280px) + parent padding (2rem each = 4rem) */
+            /* Scroll container extends, so: min(100vw, 1280px + 4rem) - 2rem scroll padding */
+            width: calc(min(100vw, 1316px) - 2rem);
+        }
+        
+        .featured-vehicle-card {
+            /* Available width: (min(100vw, 1316px) - 2rem) - 3rem gaps */
+            flex: 0 0 calc((min(100vw, 1316px) - 5rem) / 3);
+            min-width: calc((min(100vw, 1316px) - 5rem) / 3);
+            max-width: calc((min(100vw, 1316px) - 5rem) / 3);
+        }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -255,179 +428,101 @@
                     </p>
                 </div>
                 
-                <!-- Featured Vehicles Carousel -->
+                <!-- Featured Vehicles Horizontal Scroll -->
                 <div class="relative">
-                    @php
-                        $featuredVehicles = [
-                            [
-                                'id' => 1,
-                                'make' => 'Toyota',
-                                'model' => 'Camry',
-                                'variant' => 'XLE',
-                                'year' => 2022,
-                                'listingPrice' => 2500000,
-                                'transmissionType' => 'Automatic',
-                                'color' => 'Silver',
-                                'vehicleType' => 'Sedan',
-                                'odometer' => 15000,
-                                'fuelType' => 'Petrol',
-                                'ownershipCount' => 1,
-                                'status' => 'Available',
-                                'condition' => 'Excellent',
-                                'registrationNumber' => 'KL-01-AB-1234',
-                                'image' => 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&h=600&fit=crop'
-                            ],
-                            [
-                                'id' => 2,
-                                'make' => 'Honda',
-                                'model' => 'CR-V',
-                                'variant' => 'VX',
-                                'year' => 2021,
-                                'listingPrice' => 3200000,
-                                'transmissionType' => 'Automatic',
-                                'color' => 'White',
-                                'vehicleType' => 'SUV',
-                                'odometer' => 25000,
-                                'fuelType' => 'Petrol',
-                                'ownershipCount' => 1,
-                                'status' => 'Available',
-                                'condition' => 'Excellent',
-                                'registrationNumber' => 'KL-02-CD-5678',
-                                'image' => 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop'
-                            ],
-                            [
-                                'id' => 3,
-                                'make' => 'BMW',
-                                'model' => '3 Series',
-                                'variant' => '330i',
-                                'year' => 2023,
-                                'listingPrice' => 5500000,
-                                'transmissionType' => 'Automatic',
-                                'color' => 'Black',
-                                'vehicleType' => 'Sedan',
-                                'odometer' => 8000,
-                                'fuelType' => 'Petrol',
-                                'ownershipCount' => 1,
-                                'status' => 'Available',
-                                'condition' => 'Excellent',
-                                'registrationNumber' => 'KL-03-EF-9012',
-                                'image' => 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=800&h=600&fit=crop'
-                            ],
-                        ];
-                    @endphp
-                    <div class="relative">
-                        <div class="embla overflow-hidden" id="featured-vehicles-embla">
-                            <div class="embla__container -ml-4 flex">
-                                @foreach($featuredVehicles as $vehicle)
-                                <div class="embla__slide pl-4 basis-full sm:basis-1/2 lg:basis-1/3 flex-shrink-0 min-w-0">
-                                    <div class="gap-y-2 overflow-hidden rounded-lg border border-border bg-card p-0 h-full">
-                            <div class="p-0">
+                    @if(isset($featuredVehicles) && $featuredVehicles->count() > 0)
+                    <!-- Navigation Arrows (Desktop Only) -->
+                    <button 
+                        id="featured-vehicles-prev" 
+                        class="featured-vehicles-nav-btn featured-vehicles-nav-btn-left hidden md:flex"
+                        aria-label="Previous vehicles"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                    <button 
+                        id="featured-vehicles-next" 
+                        class="featured-vehicles-nav-btn featured-vehicles-nav-btn-right hidden md:flex"
+                        aria-label="Next vehicles"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="featured-vehicles-scroll-container overflow-x-auto pb-4 -mx-4 px-4 scroll-smooth snap-x snap-mandatory" id="featured-vehicles-scroll">
+                        <div class="flex gap-6">
+                            @foreach($featuredVehicles as $vehicle)
+                        <div class="featured-vehicle-card flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
+                            <a href="/vehicles/{{ $vehicle['id'] }}" class="block flex-1">
+                                <!-- Vehicle Image -->
                                 <div class="relative aspect-video overflow-hidden">
-                                    <img src="{{ $vehicle['image'] }}" alt="{{ $vehicle['make'] }} {{ $vehicle['model'] }}" class="h-full w-full object-cover transition-transform hover:scale-105">
-                                    <span class="absolute top-2 right-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs">
-                                        {{ $vehicle['registrationNumber'] }}
-                                    </span>
+                                    <img
+                                        src="{{ $vehicle['image'] }}"
+                                        alt="{{ $vehicle['title'] }}"
+                                        class="h-full w-full object-cover transition-transform hover:scale-105"
+                                    />
                                 </div>
-                            </div>
-                            <div class="px-4 py-0">
-                                <div class="space-y-4">
+                                
+                                <!-- Vehicle Details -->
+                                <div class="px-4 py-4 space-y-4">
                                     <div class="flex flex-col gap-1">
-                                        <h3 class="flex items-center gap-2 text-xl font-bold">
-                                            {{ $vehicle['make'] }} {{ $vehicle['model'] }}
+                                        <h3 class="flex items-center gap-2 text-lg font-bold">
+                                            {{ $vehicle['title'] }}
                                         </h3>
-                                        <p class="-mt-1.5 text-xs font-normal text-muted-foreground">
-                                            {{ $vehicle['variant'] }}
+                                        @if(!empty($vehicle['version']))
+                                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                                            {{ $vehicle['version'] }}
                                         </p>
-                                        <p class="text-2xl font-medium text-primary">
-                                            {{ number_format($vehicle['listingPrice'], 0, ',', '.') }} kr.
+                                        @endif
+                                        <p class="text-primary text-lg font-bold">
+                                            {{ number_format($vehicle['price'], 0, ',', '.') }} kr.
                                         </p>
                                     </div>
 
-                                    <div class="-mt-2 flex flex-wrap gap-2 text-xs">
-                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['transmissionType'] }}</span>
-                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['color'] }}</span>
-                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['vehicleType'] }}</span>
+                                    <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                        @if($vehicle['km_driven'])
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, ',', '.') }} km</span>
+                                        @endif
+                                        @if($vehicle['engine_power_hp'])
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format(round($vehicle['engine_power_hp']), 0) }} HP</span>
+                                        @endif
+                                        @if($vehicle['first_registration_date'])
+                                        @php
+                                            $regDate = \Carbon\Carbon::parse($vehicle['first_registration_date']);
+                                        @endphp
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $regDate->format('M Y') }}</span>
+                                        @endif
+                                        @if($vehicle['fuel_type_name'])
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['fuel_type_name'] }}</span>
+                                        @endif
+                                        @if($vehicle['gear_type_name'])
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['gear_type_name'] }}</span>
+                                        @endif
                                     </div>
 
-                                    <div class="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                                                <line x1="16" x2="16" y1="2" y2="6"></line>
-                                                <line x1="8" x2="8" y1="2" y2="6"></line>
-                                                <line x1="3" x2="21" y1="10" y2="10"></line>
-                                            </svg>
-                                            <span>{{ $vehicle['year'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <path d="M18 6H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h13"></path>
-                                                <path d="M6 12h13a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6"></path>
-                                                <path d="M12 6v12"></path>
-                                            </svg>
-                                            <span>{{ number_format($vehicle['odometer']) }} km</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <path d="M3 3h18v18H3zM12 7v10M7 12h10"></path>
-                                            </svg>
-                                            <span>{{ $vehicle['fuelType'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                                                <circle cx="9" cy="7" r="4"></circle>
-                                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                            </svg>
-                                            <span>{{ $vehicle['ownershipCount'] }} Owner{{ $vehicle['ownershipCount'] > 1 ? 's' : '' }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                            <span>{{ $vehicle['status'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                                <path d="M21.16 6.26l-9 5a2 2 0 0 1-1.84 0l-9-5A2 2 0 0 0 1 8v8a2 2 0 0 0 1.16 1.74l9 5a2 2 0 0 0 1.84 0l9-5A2 2 0 0 0 22 16V8a2 2 0 0 0-1.16-1.74z"></path>
-                                                <path d="M12 2v20"></path>
-                                            </svg>
-                                            <span>{{ $vehicle['condition'] }}</span>
-                                        </div>
-                                    </div>
                                 </div>
-                            </div>
-                            <div class="mt-auto p-4 pt-2">
-                                <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                    <a href="/vehicles/{{ $vehicle['id'] }}" class="flex-1">
-                                        <button class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                                            View Details
+                            </a>
+                            
+                            <!-- Card Footer -->
+                            <div class="mt-auto" onclick="event.stopPropagation()">
+                                <!-- Vehicle Actions -->
+                                <div class="p-4 pt-2">
+                                    <div class="flex w-full flex-col gap-2 sm:flex-row">
+                                        <a href="/vehicles/{{ $vehicle['id'] }}" class="flex-1" onclick="event.stopPropagation()">
+                                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                                View Details
+                                            </button>
+                                        </a>
+                                        <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+                                            Enquire
                                         </button>
-                                    </a>
-                                    <button class="flex-1 inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                                        Enquire
-                                    </button>
-                                </div>
-                            </div>
                                     </div>
                                 </div>
-                                @endforeach
                             </div>
                         </div>
-                        <div class="mt-6 flex justify-center gap-2">
-                            <button class="embla__prev inline-flex h-8 w-8 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Previous slide">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <path d="m12 19-7-7 7-7"></path>
-                                    <path d="M19 12H5"></path>
-                                </svg>
-                            </button>
-                            <button class="embla__next inline-flex h-8 w-8 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Next slide">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                    <path d="m12 5 7 7-7 7"></path>
-                                    <path d="M19 12H5"></path>
-                                </svg>
-                            </button>
+                            @endforeach
                         </div>
                     </div>
                     <div class="mt-4 flex justify-center">
@@ -438,6 +533,13 @@
                             </svg>
                         </a>
                     </div>
+                    @else
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <p class="text-muted-foreground">No featured vehicles available at this time.</p>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1169,6 +1271,89 @@
     // Initialize everything
     initSearchableDropdowns();
     initDropdownRangeSliders();
-</script>
+    </script>
+    
+    <!-- Featured Vehicles Navigation Script -->
+    <script>
+        (function() {
+            const scrollContainer = document.getElementById('featured-vehicles-scroll');
+            const prevBtn = document.getElementById('featured-vehicles-prev');
+            const nextBtn = document.getElementById('featured-vehicles-next');
+            
+            if (!scrollContainer || !prevBtn || !nextBtn) return;
+            
+            // Calculate scroll amount (width of one card + gap)
+            const getScrollAmount = () => {
+                const firstCard = scrollContainer.querySelector('.featured-vehicle-card');
+                if (!firstCard) return scrollContainer.clientWidth;
+                const cardWidth = firstCard.offsetWidth;
+                const gap = 24; // gap-6 = 1.5rem = 24px
+                return cardWidth + gap;
+            };
+            
+            // Update button states based on scroll position
+            const updateButtonStates = () => {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+                const isAtStart = scrollLeft <= 1;
+                const isAtEnd = scrollLeft >= scrollWidth - clientWidth - 1;
+                
+                prevBtn.disabled = isAtStart;
+                nextBtn.disabled = isAtEnd;
+            };
+            
+            // Scroll functions
+            const scrollLeft = () => {
+                const scrollAmount = getScrollAmount();
+                scrollContainer.scrollBy({
+                    left: -scrollAmount,
+                    behavior: 'smooth'
+                });
+            };
+            
+            const scrollRight = () => {
+                const scrollAmount = getScrollAmount();
+                scrollContainer.scrollBy({
+                    left: scrollAmount,
+                    behavior: 'smooth'
+                });
+            };
+            
+            // Event listeners
+            prevBtn.addEventListener('click', scrollLeft);
+            nextBtn.addEventListener('click', scrollRight);
+            
+            // Update button states on scroll
+            scrollContainer.addEventListener('scroll', updateButtonStates);
+            
+            // Update button states on resize
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(updateButtonStates, 100);
+            });
+            
+            // Initial state update
+            updateButtonStates();
+            
+            // Update after images load (in case cards resize)
+            const images = scrollContainer.querySelectorAll('img');
+            let loadedImages = 0;
+            images.forEach(img => {
+                if (img.complete) {
+                    loadedImages++;
+                } else {
+                    img.addEventListener('load', () => {
+                        loadedImages++;
+                        if (loadedImages === images.length) {
+                            setTimeout(updateButtonStates, 100);
+                        }
+                    });
+                }
+            });
+            if (loadedImages === images.length) {
+                setTimeout(updateButtonStates, 100);
+            }
+        })();
+    </script>
 @endsection
 

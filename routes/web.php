@@ -55,6 +55,13 @@ Route::middleware('auth.web')->group(function () {
     Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
     Route::post('/profile', [HomeController::class, 'updateProfile'])->name('profile.update');
     
+    // Favorites Routes
+    Route::get('/favorites', [HomeController::class, 'showFavorites'])->name('favorites');
+    Route::post('/favorites', [\App\Http\Controllers\FavoriteController::class, 'storeWeb'])->name('favorites.store');
+    Route::delete('/favorites/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
+    Route::get('/favorites/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
+    Route::post('/favorites/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
+    
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');

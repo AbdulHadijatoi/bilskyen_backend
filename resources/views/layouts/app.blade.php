@@ -188,6 +188,46 @@
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
         @include('components.footer')
     @endif
+    
+    <!-- Global Snackbar Notification System -->
+    <script>
+        // Snackbar notification system
+        window.showSnackbar = function(message, type = 'success') {
+            // Remove existing snackbar if any
+            const existingSnackbar = document.getElementById('snackbar');
+            if (existingSnackbar) {
+                existingSnackbar.remove();
+            }
+
+            const snackbar = document.createElement('div');
+            snackbar.id = 'snackbar';
+            snackbar.className = `fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all transform translate-y-0 opacity-100 ${
+                type === 'success' 
+                    ? 'bg-green-50 border-green-200 text-green-900'
+                    : 'bg-red-50 border-red-200 text-red-900'
+            }`;
+            
+            snackbar.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+                    ${type === 'success' 
+                        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+                        : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
+                    }
+                </svg>
+                <span class="text-sm font-medium">${message}</span>
+            `;
+            
+            document.body.appendChild(snackbar);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                snackbar.style.transform = 'translateY(100%)';
+                snackbar.style.opacity = '0';
+                setTimeout(() => snackbar.remove(), 300);
+            }, 3000);
+        };
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

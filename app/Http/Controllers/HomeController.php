@@ -16,6 +16,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Condition;
 use App\Models\SalesType;
+use App\Models\FeaturedListing;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
@@ -54,8 +55,49 @@ class HomeController extends Controller
         $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
         $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
 
+        // Fetch featured vehicles
+        $featuredVehicles = FeaturedListing::with([
+            'vehicle.images',
+            'vehicle.details',
+        ])
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($featuredListing) {
+                $vehicle = $featuredListing->vehicle;
+                if (!$vehicle) {
+                    return null;
+                }
+
+                // Get first image
+                $firstImage = $vehicle->images->first();
+                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+
+                // Get details
+                $details = $vehicle->details;
+
+                // Build title
+                $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
+                
+                return [
+                    'id' => $vehicle->id,
+                    'title' => $title,
+                    'version' => $vehicle->version ?? '',
+                    'price' => $vehicle->price ?? 0,
+                    'image' => $imageUrl,
+                    'km_driven' => $vehicle->km_driven ?? 0,
+                    'engine_power_hp' => $vehicle->engine_power_hp,
+                    'model_year_name' => $vehicle->model_year_name,
+                    'fuel_type_name' => $vehicle->fuel_type_name,
+                    'gear_type_name' => $vehicle->gear_type_name,
+                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                ];
+            })
+            ->filter() // Remove null entries
+            ->values(); // Re-index array
+
         return view('home', [
             'filterOptions' => $filterOptions,
+            'featuredVehicles' => $featuredVehicles,
         ]);
     }
 
@@ -305,6 +347,35 @@ class HomeController extends Controller
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
+        ]);
+    }
+
+    /**
+     * Show the favorites page
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function showFavorites(Request $request)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        if (!$user) {
+            return redirect()->route('login')->with('return_url', '/favorites');
+        }
+
+        // Get user's favorite vehicles
+        $favorites = \App\Models\Favorite::where('user_id', $user->id)
+            ->with([
+                'vehicle.images',
+                'vehicle.listingType',
+                'vehicle.details'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return view('favorites', [
+            'favorites' => $favorites,
         ]);
     }
 }
