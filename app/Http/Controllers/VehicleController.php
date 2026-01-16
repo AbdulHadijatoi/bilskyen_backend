@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Dealer;
 use App\Models\DealerUser;
+use App\Models\FeaturedListing;
 use App\Services\VehicleService;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
@@ -22,16 +23,74 @@ class VehicleController extends Controller
 
     /**
      * Get featured vehicles
+     * Returns data in the same format as the vehicles API
      */
     public function getFeaturedVehicles(Request $request): JsonResponse
     {
-        $limit = $request->input('limit', 6);
-        $page = $request->input('page', 1);
+        // Fetch featured vehicles from FeaturedListing model
+        $featuredListings = FeaturedListing::with([
+            'vehicle.images',
+            'vehicle.details',
+            'vehicle.dealer',
+        ])
+            ->orderBy('sort_order')
+            ->get();
 
-        $vehicles = Vehicle::orderBy('listing_price', 'desc')
-            ->paginate($limit, ['*'], 'page', $page);
+        // Format vehicles for JSON response (same format as vehicles API)
+        $formattedVehicles = $featuredListings->map(function ($featuredListing) {
+            $vehicle = $featuredListing->vehicle;
+            if (!$vehicle) {
+                return null;
+            }
 
-        return $this->paginated($vehicles);
+            // Get first image
+            $firstImage = $vehicle->images->first();
+            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+            
+            // Get details
+            $details = $vehicle->details;
+            
+            // Determine seller type (dealer or private)
+            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+            $sellerType = $isDealer ? 'Dealer' : 'Private';
+            
+            // Build title (same logic as HomeController)
+            $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
+            
+            return [
+                'id' => $vehicle->id,
+                'title' => $title,
+                'registration' => $vehicle->registration,
+                'vin' => $vehicle->vin,
+                'price' => $vehicle->price ?? 0,
+                'mileage' => $vehicle->mileage,
+                'km_driven' => $vehicle->km_driven ?? 0,
+                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                'version' => $vehicle->version ?? '',
+                'brand_name' => $vehicle->brand_name,
+                'model_name' => $vehicle->model_name,
+                'category_name' => $vehicle->category_name,
+                'fuel_type_name' => $vehicle->fuel_type_name,
+                'gear_type_name' => $vehicle->gear_type_name,
+                'model_year_name' => $vehicle->model_year_name,
+                'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+                'engine_power_hp' => $vehicle->engine_power_hp,
+                'seller_type' => $sellerType,
+                'image_url' => $imageUrl,
+                'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
+                'details' => $details ? [
+                    'color_name' => $details->color_name ?? null,
+                    'condition_name' => $details->condition_name ?? null,
+                    'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
+                ] : null,
+            ];
+        })
+        ->filter() // Remove null entries
+        ->values(); // Re-index array
+
+        return response()->json([
+            'vehicles' => $formattedVehicles,
+        ]);
     }
 
     /**
