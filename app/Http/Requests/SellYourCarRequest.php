@@ -46,7 +46,7 @@ class SellYourCarRequest extends FormRequest
             'equipment_ids' => ['nullable', 'array'],
             'equipment_ids.*' => ['integer', 'exists:equipments,id'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif', 'max:10240'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif', 'max:20480'], // 20MB
             
             // Auto-creation fields (for brands/models/years that don't exist)
             'brand_name' => ['nullable', 'string', 'max:255'],

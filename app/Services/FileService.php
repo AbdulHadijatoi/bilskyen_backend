@@ -106,14 +106,14 @@ class FileService
     public function validateFile(UploadedFile $file): void
     {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        $maxSize = 4 * 1024 * 1024; // 4MB
+        $maxSize = 20 * 1024 * 1024; // 20MB
 
         if (!in_array($file->getMimeType(), $allowedTypes)) {
             throw new \Exception('Invalid file type. Allowed types: ' . implode(', ', $allowedTypes));
         }
 
         if ($file->getSize() > $maxSize) {
-            throw new \Exception('File size exceeds maximum allowed size of 4MB');
+            throw new \Exception('File size exceeds maximum allowed size of 20MB');
         }
     }
 

@@ -601,10 +601,10 @@
                     return;
                 }
                 
-                // Validate file size (10MB = 10 * 1024 * 1024 bytes)
-                const maxSize = 10 * 1024 * 1024;
+                // Validate file size (20MB = 20 * 1024 * 1024 bytes)
+                const maxSize = 20 * 1024 * 1024;
                 if (file.size > maxSize) {
-                    fileErrors.push(`Image ${index + 1} (${file.name}) exceeds 10MB limit.`);
+                    fileErrors.push(`Image ${index + 1} (${file.name}) exceeds 20MB limit.`);
                     return;
                 }
                 
@@ -879,7 +879,7 @@
         const formattedMessages = errorMessages.map(msg => {
             // Replace technical messages with user-friendly ones
             if (msg.includes('failed to upload')) {
-                return 'One or more images failed to upload. Please check file size (max 10MB) and format (JPEG, PNG, GIF only), then try again.';
+                return 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.';
             }
             return msg;
         });
@@ -1639,7 +1639,7 @@
         fileOrder: [], // Array<fileId> - maintains order for drag-and-drop
         fileInput: null,
         isUpdating: false, // Flag to prevent recursive updates
-        maxSize: 10 * 1024 * 1024, // 10MB
+        maxSize: 20 * 1024 * 1024, // 20MB
         allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
         draggedElement: null // Currently dragged element for reordering
     };
@@ -1668,7 +1668,7 @@
         }
         
         if (file.size > imageUploadState.maxSize) {
-            return { valid: false, error: `File "${file.name}" is too large. Maximum size is 10MB.` };
+            return { valid: false, error: `File "${file.name}" is too large. Maximum size is 20MB.` };
         }
         
         return { valid: true };

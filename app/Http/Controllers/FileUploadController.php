@@ -19,7 +19,7 @@ class FileUploadController extends Controller
     {
         $request->validate([
             'pathname' => 'required|uuid',
-            'file' => 'required|file|mimes:jpeg,png,webp,gif|max:20480',
+            'file' => 'required|file|mimes:jpeg,png,webp,gif',
         ]);
 
         $file = $request->file('file');

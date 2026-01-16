@@ -1272,7 +1272,7 @@
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
                             <p class="upload-text">Click to upload or drag and drop</p>
-                            <p class="upload-hint">PNG, JPG, GIF up to 10MB each</p>
+                            <p class="upload-hint">PNG, JPG, GIF up to 20MB each</p>
                         </div>
                     </div>
                 </div>
