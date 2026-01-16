@@ -1734,14 +1734,15 @@ class NummerpladeApiService
             // Fetch DMR data
             $dmrData = $this->getDmrData($vehicleId);
 
+
             // Extract annual_tax from the response
             // The structure is: data.calculated_tax.details[year].fee
             // We need to get the last year's fee
-            if (isset($dmrData['data']['calculated_tax']['details']) && 
-                is_array($dmrData['data']['calculated_tax']['details'])) {
+            if (isset($dmrData['calculated_tax']['details']) && 
+                is_array($dmrData['calculated_tax']['details'])) {
                 
-                $details = $dmrData['data']['calculated_tax']['details'];
-                
+                $details = $dmrData['calculated_tax']['details'];
+
                 // Get all years and find the highest (last) year
                 $years = array_keys($details);
                 if (!empty($years)) {

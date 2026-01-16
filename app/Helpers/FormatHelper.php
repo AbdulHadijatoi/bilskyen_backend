@@ -22,11 +22,11 @@ class FormatHelper
 
         if ($currency === 'DKK') {
             // Format Danish Krone with dot as thousands separator and comma as decimal separator
-            return number_format($amount, 0, ',', '.') . ' kr.';
+            return number_format($amount, 0, ',', ',') . ' kr.';
         }
 
         // For other currencies, use standard formatting
-        return number_format($amount, 2, '.', ',') . ' ' . $currency;
+        return number_format($amount, 2, ',', ',') . ' ' . $currency;
     }
 
     /**

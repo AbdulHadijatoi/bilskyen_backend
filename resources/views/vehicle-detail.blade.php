@@ -306,6 +306,12 @@
                     <span class="detail-value">{{ FormatHelper::formatCurrency($vehicle->ownership_tax ?? null) }}</span>
                     </div>
                 @endif
+                @if($details && $details->annual_tax)
+                <div class="detail-item">
+                    <span class="detail-label">Annual Tax</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($details->annual_tax ?? null) }}</span>
+                </div>
+                @endif
                 @if($vehicle->first_registration_date)
                 <div class="detail-item">
                     <span class="detail-label">First Registration Date</span>
