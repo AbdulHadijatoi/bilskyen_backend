@@ -27,7 +27,7 @@ Route::prefix('v1')->group(function () {
     // Public vehicle listings (uses database data)
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
-    Route::get('/vehicles/featured', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');
+    Route::get('/featured-vehicles', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');
     
     // Sell Your Car API (authenticated users can create vehicle listings)
     Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
