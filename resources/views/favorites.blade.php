@@ -31,10 +31,6 @@
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                         class="h-full w-full object-cover transition-transform hover:scale-105"
                     />
-                    <!-- Registration Number - Top Left -->
-                    <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                        {{ $vehicle->registration }}
-                    </span>
                     <!-- Heart Icon - Top Right (Filled) -->
                     <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }})" aria-label="Remove from favorites">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-red-500 heart-icon filled" data-vehicle-id="{{ $vehicle->id }}">

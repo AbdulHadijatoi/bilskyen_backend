@@ -81,20 +81,24 @@ class NummerpladeApiService
 
             $data = $this->handleResponse($response, 'getVehicleByRegistration');
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::warning('Nummerplade API connection timeout', [
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
                 'method' => 'getVehicleByRegistration',
                 'registration' => $registration,
                 'timeout' => $vehicleLookupTimeout,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::timeout($e->getMessage());
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getVehicleByRegistration',
                 'registration' => $registration,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
 
         // Process the data to replace lookup values with IDs
@@ -113,6 +117,12 @@ class NummerpladeApiService
             
             $processedData = $this->processLookupData($data);
             
+            // Fetch annual_tax from DMR API if vehicle_id is available
+            $annualTax = $this->fetchAnnualTaxFromDmr($processedData);
+            if ($annualTax !== null) {
+                $processedData['annual_tax'] = $annualTax;
+            }
+            
             $processingTime = microtime(true) - $startTime;
             $memoryAfter = memory_get_usage(true);
             $memoryUsed = round(($memoryAfter - $memoryBefore) / 1024 / 1024, 2);
@@ -123,6 +133,7 @@ class NummerpladeApiService
                 'memory_used_mb' => $memoryUsed,
                 'memory_after_mb' => round($memoryAfter / 1024 / 1024, 2),
                 'data_keys_count' => count($processedData),
+                'annual_tax' => $annualTax,
             ]);
             
             return $processedData;
@@ -161,20 +172,24 @@ class NummerpladeApiService
 
             $data = $this->handleResponse($response, 'getVehicleByVin');
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::warning('Nummerplade API connection timeout', [
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
                 'method' => 'getVehicleByVin',
                 'vin' => $vin,
                 'timeout' => $vehicleLookupTimeout,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::timeout($e->getMessage());
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getVehicleByVin',
                 'vin' => $vin,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
 
         // Process the data using cached lookup tables (no DB queries for existing values)
@@ -376,13 +391,24 @@ class NummerpladeApiService
                 ->get($url);
 
             return $this->handleResponse($response, 'getInspections');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
+                'method' => 'getInspections',
+                'vehicle_id' => $vehicleId,
+                'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
+            ]);
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getInspections',
                 'vehicle_id' => $vehicleId,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
     }
 
@@ -399,13 +425,24 @@ class NummerpladeApiService
                 ->get($url);
 
             return $this->handleResponse($response, 'getDmrData');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
+                'method' => 'getDmrData',
+                'vehicle_id' => $vehicleId,
+                'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
+            ]);
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getDmrData',
                 'vehicle_id' => $vehicleId,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
     }
 
@@ -422,13 +459,24 @@ class NummerpladeApiService
                 ->get($url);
 
             return $this->handleResponse($response, 'getDebt');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
+                'method' => 'getDebt',
+                'vehicle_id' => $vehicleId,
+                'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
+            ]);
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getDebt',
                 'vehicle_id' => $vehicleId,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
     }
 
@@ -445,13 +493,24 @@ class NummerpladeApiService
                 ->get($url);
 
             return $this->handleResponse($response, 'getTinglysning');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
+            Log::warning('Nummerplade API connection error', [
+                'method' => 'getTinglysning',
+                'vin' => $vin,
+                'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
+            ]);
+            throw NummerpladeApiException::timeout($userFriendlyMessage);
         } catch (\Exception $e) {
+            $userFriendlyMessage = $this->getConnectionErrorMessage($e->getMessage());
             Log::error('Nummerplade API error', [
                 'method' => 'getTinglysning',
                 'vin' => $vin,
                 'error' => $e->getMessage(),
+                'user_message' => $userFriendlyMessage,
             ]);
-            throw NummerpladeApiException::unknown($e->getMessage());
+            throw NummerpladeApiException::unknown($userFriendlyMessage);
         }
     }
 
@@ -1649,6 +1708,114 @@ class NummerpladeApiService
         }
 
         return $headers;
+    }
+
+    /**
+     * Fetch annual tax from DMR API using vehicle_id
+     */
+    protected function fetchAnnualTaxFromDmr(array $vehicleData): ?float
+    {
+        try {
+            // Get vehicle_id from the processed data
+            $vehicleId = null;
+            if (isset($vehicleData['vehicle_id'])) {
+                $vehicleId = (int) $vehicleData['vehicle_id'];
+            } elseif (isset($vehicleData['vehicle_external_id'])) {
+                $vehicleId = (int) $vehicleData['vehicle_external_id'];
+            }
+
+            if (!$vehicleId) {
+                Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - No vehicle_id found', [
+                    'available_keys' => array_keys($vehicleData),
+                ]);
+                return null;
+            }
+
+            // Fetch DMR data
+            $dmrData = $this->getDmrData($vehicleId);
+
+            // Extract annual_tax from the response
+            // The structure is: data.calculated_tax.details[year].fee
+            // We need to get the last year's fee
+            if (isset($dmrData['data']['calculated_tax']['details']) && 
+                is_array($dmrData['data']['calculated_tax']['details'])) {
+                
+                $details = $dmrData['data']['calculated_tax']['details'];
+                
+                // Get all years and find the highest (last) year
+                $years = array_keys($details);
+                if (!empty($years)) {
+                    // Sort years in descending order to get the latest year
+                    rsort($years, SORT_NUMERIC);
+                    $latestYear = $years[0];
+                    
+                    if (isset($details[$latestYear]['fee'])) {
+                        $annualTax = (float) $details[$latestYear]['fee'];
+                        
+                        Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - Annual tax found', [
+                            'vehicle_id' => $vehicleId,
+                            'latest_year' => $latestYear,
+                            'annual_tax' => $annualTax,
+                        ]);
+                        
+                        return $annualTax;
+                    }
+                }
+            }
+
+            Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - No annual tax found in DMR data', [
+                'vehicle_id' => $vehicleId,
+            ]);
+            
+            return null;
+        } catch (\Exception $e) {
+            // Log but don't fail the request if DMR API fails
+            Log::warning('NummerpladeApiService::fetchAnnualTaxFromDmr - Error fetching annual tax', [
+                'error' => $e->getMessage(),
+                'vehicle_data_keys' => array_keys($vehicleData),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convert cURL/connection errors to user-friendly messages
+     */
+    protected function getConnectionErrorMessage(string $errorMessage): string
+    {
+        // Check for common connection error patterns
+        if (stripos($errorMessage, 'Failed to connect') !== false || 
+            stripos($errorMessage, 'Could not connect') !== false ||
+            stripos($errorMessage, 'Connection refused') !== false ||
+            stripos($errorMessage, 'cURL error 7') !== false) {
+            return 'Unable to connect to the network. Please check your internet connection and try again.';
+        }
+
+        if (stripos($errorMessage, 'timeout') !== false || 
+            stripos($errorMessage, 'timed out') !== false ||
+            stripos($errorMessage, 'cURL error 28') !== false) {
+            return 'The request timed out. The vehicle data service is taking longer than expected. Please try again.';
+        }
+
+        if (stripos($errorMessage, 'SSL') !== false || 
+            stripos($errorMessage, 'certificate') !== false ||
+            stripos($errorMessage, 'cURL error 60') !== false ||
+            stripos($errorMessage, 'cURL error 35') !== false) {
+            return 'There was a security certificate error. Please try again later.';
+        }
+
+        if (stripos($errorMessage, 'DNS') !== false || 
+            stripos($errorMessage, 'cURL error 6') !== false) {
+            return 'Unable to resolve the server address. Please check your internet connection and try again.';
+        }
+
+        // Default user-friendly message for any other connection-related errors
+        if (stripos($errorMessage, 'cURL error') !== false) {
+            return 'A network error occurred while connecting to the vehicle data service. Please try again.';
+        }
+
+        // If it doesn't match any pattern, return a generic message
+        return 'Unable to connect to the network. Please try again later.';
     }
 
     /**

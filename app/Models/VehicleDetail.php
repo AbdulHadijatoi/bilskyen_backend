@@ -69,6 +69,8 @@ class VehicleDetail extends Model
         'seller_phone',
         'seller_address',
         'seller_postcode',
+        'annual_tax',
+        'owners',
     ];
 
     protected $casts = [
@@ -100,6 +102,8 @@ class VehicleDetail extends Model
         'last_inspection_date' => 'date',
         'leasing_period_start' => 'date',
         'leasing_period_end' => 'date',
+        'annual_tax' => 'decimal:2',
+        'owners' => 'array',
     ];
 
     /**

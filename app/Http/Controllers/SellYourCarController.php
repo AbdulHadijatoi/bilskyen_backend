@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Vehicle;
 use App\Models\VehicleModel;
 use App\Models\ModelYear;
 use App\Models\FuelType;
@@ -25,6 +26,7 @@ use App\Models\Euronom;
 use App\Models\Plan;
 use App\Models\Dealer;
 use App\Models\DealerUser;
+use App\Models\VehicleDetail;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
@@ -385,7 +387,7 @@ class SellYourCarController extends Controller
                 'leasing_period_end', 'color_id', 'dispensations',
                 'permits', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog',
-                'seller_phone', 'seller_address', 'seller_postcode'
+                'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
             ];
 
             $vehicleDetailsData = [];

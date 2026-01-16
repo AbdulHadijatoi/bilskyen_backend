@@ -218,16 +218,6 @@
                     <span class="detail-value">{{ $vehicle->title }}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Registration</span>
-                    <span class="detail-value font-mono">{{ $vehicle->registration }}</span>
-                    </div>
-                @if($vehicle->vin)
-                <div class="detail-item">
-                    <span class="detail-label">VIN</span>
-                    <span class="detail-value font-mono text-sm">{{ $vehicle->vin }}</span>
-                    </div>
-                    @endif
-                <div class="detail-item">
                     <span class="detail-label">Price</span>
                     <span class="detail-value text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
                     </div>
@@ -244,12 +234,6 @@
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Vehicle Specifications</h2>
             <div class="detail-grid">
-                @if($vehicle->category_name)
-                <div class="detail-item">
-                    <span class="detail-label">Category</span>
-                    <span class="detail-value">{{ $vehicle->category_name }}</span>
-                </div>
-                @endif
                 @if($vehicle->brand_name)
                 <div class="detail-item">
                     <span class="detail-label">Brand</span>
@@ -414,12 +398,6 @@
                     <span class="detail-value">{{ $details->vin_location }}</span>
                 </div>
                 @endif
-                @if($details->vehicle_external_id)
-                <div class="detail-item">
-                    <span class="detail-label">Vehicle External ID</span>
-                    <span class="detail-value font-mono text-sm">{{ $details->vehicle_external_id }}</span>
-                </div>
-                @endif
                 @if($details->total_weight)
                 <div class="detail-item">
                     <span class="detail-label">Total Weight</span>
@@ -454,12 +432,6 @@
                 <div class="detail-item">
                     <span class="detail-label">Towing Weight with Brakes</span>
                     <span class="detail-value">{{ number_format($details->towing_weight_brakes) }} kg</span>
-                </div>
-                @endif
-                @if($details->coupling !== null)
-                <div class="detail-item">
-                    <span class="detail-label">Coupling</span>
-                    <span class="detail-value">{{ $details->coupling ? 'Yes' : 'No' }}</span>
                 </div>
                 @endif
                 @if($details->engine_displacement)
@@ -521,7 +493,7 @@
                             $value = number_format($vehicle->fuel_efficiency, 2);
                         } else {
                             $label = 'Fuel Efficiency';
-                            $unit = 'L/100km';
+                            $unit = 'km/l';
                             $value = number_format($vehicle->fuel_efficiency, 2);
                         }
                     @endphp
@@ -582,12 +554,6 @@
                     <span class="detail-label">Wheelbase</span>
                     <span class="detail-value">{{ number_format($details->wheelbase) }} mm</span>
                 </div>
-                @endif
-                @if($details->type_approval_code)
-                <div class="detail-item">
-                    <span class="detail-label">Type Approval Code</span>
-                    <span class="detail-value font-mono text-sm">{{ $details->type_approval_code }}</span>
-            </div>
                 @endif
                 @if($details->category)
                 <div class="detail-item">
@@ -728,7 +694,50 @@
                         </h2>
                     </div>
                     <div class="space-y-3">
-
+                        @if($vehicle->user && $vehicle->user->name)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ ucfirst($vehicle->user->name) }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Name</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($details && $details->seller_address)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $details->seller_address }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Address</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($details && $details->seller_postcode)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $details->seller_postcode }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Postal Code</p>
+                                </div>
+                            </div>
+                        @endif
                         @php
                             $sellerPhone = $details && $details->seller_phone ? $details->seller_phone : null;
                         @endphp
@@ -754,36 +763,6 @@
                                         Show Phone Number
                                     </button>
                                     <p class="text-xs text-muted-foreground">Phone</p>
-                                </div>
-                            </div>
-                        @endif
-                        @if($details && $details->seller_address)
-                            <div class="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground whitespace-pre-line">
-                                        {{ $details->seller_address }}
-                                    </p>
-                                    <p class="text-xs text-muted-foreground">Address</p>
-                                </div>
-                            </div>
-                        @endif
-                        @if($details && $details->seller_postcode)
-                            <div class="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
-                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground">
-                                        {{ $details->seller_postcode }}
-                                    </p>
-                                    <p class="text-xs text-muted-foreground">Postal Code</p>
                                 </div>
                             </div>
                         @endif

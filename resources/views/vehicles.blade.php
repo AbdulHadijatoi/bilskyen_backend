@@ -258,10 +258,6 @@
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                         class="h-full w-full object-cover transition-transform hover:scale-105"
                     />
-                    <!-- Registration Number - Top Left -->
-                    <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                        {{ $vehicle->registration }}
-                    </span>
                     <!-- Heart Icon - Top Right -->
                     <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
@@ -1776,10 +1772,6 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover transition-transform hover:scale-105"
                             />
-                            <!-- Registration Number - Top Left -->
-                            <span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                                ${vehicle.registration || ''}
-                            </span>
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
@@ -3503,7 +3495,6 @@
                 
                 // Extract data
                 const img = imageDiv.querySelector('img');
-                const registration = imageDiv.querySelector('span')?.textContent || '';
                 const title = detailsDiv.querySelector('h3')?.textContent || '';
                 const version = detailsDiv.querySelector('.text-muted-foreground.-mt-1\\.5')?.textContent || '';
                 const price = detailsDiv.querySelector('.text-primary.text-2xl')?.textContent || '';
@@ -3519,8 +3510,6 @@
                     <a href="/vehicles/${vehicleId}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
                         <div class="vehicle-image-container relative">
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
-                            <!-- Registration Number - Top Left -->
-                            ${registration ? `<span class="absolute top-2 left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">${registration}</span>` : ''}
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicleId}">

@@ -109,7 +109,7 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode'
+                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
             ];
 
             foreach ($detailsFields as $field) {
@@ -374,7 +374,7 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode'
+                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
             ];
 
             foreach ($detailsFields as $field) {

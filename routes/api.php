@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Storage;
 | This prevents breaking changes for mobile apps and external clients
 |
 */
-Route::get('/ttt', [NummerpladeController::class, 'getVehicleByRegistration']);
 // All routes are automatically prefixed with /api via bootstrap/app.php
 // We add /v1 prefix here for versioning
 Route::prefix('v1')->group(function () {

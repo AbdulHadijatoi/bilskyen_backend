@@ -268,6 +268,9 @@
                     }
                 }
                 
+                // Update vehicle info display (brand, model, year, fuel type)
+                updateVehicleInfoDisplay(vehicleData);
+                
                 // Show success message
                 const successMsg = document.createElement('div');
                 successMsg.className = 'success-badge';
@@ -1028,6 +1031,82 @@
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
+        }
+    }
+
+    // Update vehicle info display (brand, model, year, fuel type)
+    function updateVehicleInfoDisplay(vehicleData) {
+        const infoDisplay = document.getElementById('vehicle-info-display');
+        if (!infoDisplay) return;
+        
+        // Extract brand name
+        let brandName = '';
+        if (vehicleData.brand) {
+            if (typeof vehicleData.brand === 'object' && vehicleData.brand.name) {
+                brandName = vehicleData.brand.name;
+            } else if (typeof vehicleData.brand === 'string') {
+                brandName = vehicleData.brand;
+            }
+        } else if (vehicleData.brand_name) {
+            brandName = vehicleData.brand_name;
+        }
+        
+        // Extract model name
+        let modelName = '';
+        if (vehicleData.model) {
+            if (typeof vehicleData.model === 'object' && vehicleData.model.name) {
+                modelName = vehicleData.model.name;
+            } else if (typeof vehicleData.model === 'string') {
+                modelName = vehicleData.model;
+            }
+        } else if (vehicleData.model_name) {
+            modelName = vehicleData.model_name;
+        }
+        
+        // Extract model year
+        let modelYear = '';
+        if (vehicleData.model_year) {
+            if (typeof vehicleData.model_year === 'object' && vehicleData.model_year.name) {
+                modelYear = vehicleData.model_year.name;
+            } else if (typeof vehicleData.model_year === 'object' && vehicleData.model_year.year) {
+                modelYear = vehicleData.model_year.year;
+            } else if (typeof vehicleData.model_year === 'string' || typeof vehicleData.model_year === 'number') {
+                modelYear = String(vehicleData.model_year);
+            }
+        } else if (vehicleData.model_year_name) {
+            modelYear = vehicleData.model_year_name;
+        } else if (vehicleData.year) {
+            modelYear = String(vehicleData.year);
+        }
+        
+        // Extract fuel type
+        let fuelType = '';
+        if (vehicleData.fuel_type) {
+            if (typeof vehicleData.fuel_type === 'object' && vehicleData.fuel_type.name) {
+                fuelType = vehicleData.fuel_type.name;
+            } else if (typeof vehicleData.fuel_type === 'string') {
+                fuelType = vehicleData.fuel_type;
+            }
+        } else if (vehicleData.fuel_type_name) {
+            fuelType = vehicleData.fuel_type_name;
+        }
+        
+        // Update display elements
+        const brandDisplay = document.getElementById('vehicle-brand-display');
+        const modelDisplay = document.getElementById('vehicle-model-display');
+        const yearDisplay = document.getElementById('vehicle-year-display');
+        const fuelDisplay = document.getElementById('vehicle-fuel-display');
+        
+        if (brandDisplay) brandDisplay.textContent = brandName || '';
+        if (modelDisplay) modelDisplay.textContent = modelName || '';
+        if (yearDisplay) yearDisplay.textContent = modelYear || '';
+        if (fuelDisplay) fuelDisplay.textContent = fuelType || '';
+        
+        // Show the display if at least one value is available
+        if (brandName || modelName || modelYear || fuelType) {
+            infoDisplay.classList.remove('hidden');
+        } else {
+            infoDisplay.classList.add('hidden');
         }
     }
 

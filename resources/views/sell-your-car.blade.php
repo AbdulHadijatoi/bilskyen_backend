@@ -7,9 +7,9 @@
     /* Expandable Section Styles */
     .expandable-section {
         background: var(--card);
-        /* border: 1px solid var(--border); */
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
-        margin-bottom: 3.5rem;
+        margin-bottom: 3rem;
         overflow: hidden;
         transition: all 0.3s ease;
         /* box-shadow: 0 2px 8px oklch(0 0 0 / 0.05); */
@@ -25,7 +25,7 @@
     }
     
     .section-header {
-        padding: 0.875rem 1rem;
+        padding: 0.5rem 0.75rem;
         cursor: pointer;
         display: flex;
         justify-content: space-between;
@@ -47,13 +47,13 @@
     .section-title-group {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.375rem;
         flex: 1;
     }
     
     .section-number {
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
         background: var(--background);
         color: var(--foreground);
@@ -61,7 +61,7 @@
         align-items: center;
         justify-content: center;
         font-weight: 600;
-        font-size: 0.75rem;
+        font-size: 0.625rem;
         flex-shrink: 0;
     }
     
@@ -71,9 +71,10 @@
     }
     
     .section-title {
-        font-size: 1rem;
+        font-size: 0.8125rem;
         font-weight: 600;
         color: var(--foreground);
+        line-height: 1.2;
     }
     
     .section-header.active .section-title {
@@ -81,9 +82,10 @@
     }
     
     .section-subtitle {
-        font-size: 0.75rem;
+        font-size: 0.625rem;
         color: var(--muted-foreground);
-        margin-top: 0.25rem;
+        margin-top: 0.125rem;
+        line-height: 1.2;
     }
     
     .section-header.active .section-subtitle {
@@ -92,8 +94,8 @@
     }
     
     .section-icon {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         transition: transform 0.3s ease;
         flex-shrink: 0;
     }
@@ -178,24 +180,43 @@
     
     /* License Plate Lookup Section */
     .lookup-section {
-        /* border: 1px solid var(--border); */
-        /* background: linear-gradient(135deg, #004aad 0%, #004aad 100%); */
-        border-radius: 0.5rem;
-        padding: 1.25rem;
-        margin-bottom: 1.25rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+    }
+    
+    .lookup-section:hover {
+        box-shadow: 0 4px 16px rgba(0, 74, 173, 0.1);
     }
     
     .dark .lookup-section {
-        background: linear-gradient(135deg, #004aad 0%, #004aad 100%);
+        background: var(--card);
+        border-color: var(--border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .dark .lookup-section:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 16px rgba(0, 74, 173, 0.2);
     }
     
     .lookup-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
         margin-bottom: 0.5rem;
+        color: var(--foreground);
+        letter-spacing: -0.02em;
     }
     
     .lookup-section p {
-        opacity: 0.9;
-        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
     }
     
     .lookup-input-group {
@@ -207,17 +228,90 @@
     .lookup-input-wrapper {
         flex: 1;
         min-width: 200px;
+        position: relative;
+    }
+    
+    .lookup-input-wrapper label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted-foreground);
+        margin-bottom: 0.75rem;
+        display: block;
     }
     
     .lookup-input-wrapper input {
+        width: 100%;
+        height: 3.75rem;
+        padding: 0 1.25rem 0 3.75rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         background: var(--background);
         color: var(--foreground);
-        border: 2px solid transparent;
+        border: 1px solid var(--border);
+        border-radius: 0.875rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 0 rgba(0, 0, 0, 0); */
+        outline: none;
+    }
+    
+    .lookup-input-wrapper input::placeholder {
+        color: var(--muted-foreground);
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: normal;
+        opacity: 0.6;
+    }
+    
+    .lookup-input-wrapper input:hover {
+        border-color: var(--border);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 0 0 0 rgba(0, 0, 0, 0);
+        transform: translateY(-1px);
     }
     
     .lookup-input-wrapper input:focus {
-        border-color: oklch(0.985 0 0);
+        border-color: var(--border);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
         background: var(--background);
+    }
+    
+    .dark .lookup-input-wrapper input {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+    
+    .dark .lookup-input-wrapper input:hover {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+    
+    .dark .lookup-input-wrapper input:focus {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.05);
+    }
+    
+    .lookup-input-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        color: var(--muted-foreground);
+        pointer-events: none;
+        z-index: 1;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .lookup-input-wrapper input:focus ~ .lookup-input-icon {
+        color: var(--foreground);
+        transform: translateY(-50%) scale(1.15);
+    }
+    
+    .lookup-input-wrapper input:hover ~ .lookup-input-icon {
+        color: var(--foreground);
+        transform: translateY(-50%) scale(1.05);
     }
     
     .btn {
@@ -396,7 +490,7 @@
         }
         
         .section-header {
-            padding: 0.75rem;
+            padding: 0.5rem 0.625rem;
         }
         
         .section-content.expanded {
@@ -781,6 +875,73 @@
         font-weight: 600;
     }
     
+    /* Vehicle Info Display - Compact with Icons */
+    .vehicle-info-display {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--muted);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    @media (min-width: 640px) {
+        .vehicle-info-display {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+    
+    .vehicle-info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: var(--background);
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+    }
+    
+    .vehicle-info-item:hover {
+        background: var(--accent);
+    }
+    
+    .vehicle-info-icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        color: var(--primary);
+    }
+    
+    .vehicle-info-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .vehicle-info-label {
+        font-size: 0.625rem;
+        color: var(--muted-foreground);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.125rem;
+    }
+    
+    .vehicle-info-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .vehicle-info-value:empty::before {
+        content: '—';
+        color: var(--muted-foreground);
+        font-weight: 400;
+    }
+    
     /* Plan Cards Styles */
     .plan-card {
         border: 2px solid var(--border);
@@ -872,8 +1033,8 @@
         <h1 class="text-2xl font-bold tracking-tight mb-2">
             Sell your car on Denmark's largest car market
         </h1>
-        <p class="text-muted-foreground max-w-2xl">
-            Enter your car's license plate and we'll help you with the rest. All fields are visible - expand sections to add more details.
+        <p class="text-muted-foreground">
+            Enter your car's license plate and we'll help you with the rest. All fields are visible.
         </p>
     </div>
 
@@ -909,22 +1070,28 @@
     @endif
 
     <!-- License Plate Lookup Section -->
-    <div class="lookup-section bg-gray-100">
+    <div class="lookup-section bg-gray-50">
         <h2 class="text-lg font-semibold">Find Your Vehicle</h2>
         <p class="text-muted-foreground">Enter your car's license plate number and press Enter. We'll automatically fill in the vehicle information for you.</p>
         
         <div class="lookup-input-group">
             <div class="lookup-input-wrapper">
-                <label for="registration-lookup" class="block text-sm text-muted-foreground font-medium mb-2">
+                <label for="registration-lookup">
                     License Plate Number
                 </label>
-                <input
-                    type="text"
-                    id="registration-lookup"
-                    placeholder="e.g., AB12345 (Press Enter to search)"
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-                <p class="text-xs mt-1" id="lookup-error" style="opacity: 0.8;"></p>
+                <div style="position: relative;">
+                    <svg class="lookup-input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                        type="text"
+                        id="registration-lookup"
+                        placeholder="Enter license plate (e.g., AB12345)"
+                        autocomplete="off"
+                        spellcheck="false"
+                    />
+                </div>
+                <p class="text-xs mt-2" id="lookup-error" style="opacity: 0.8; min-height: 1.25rem;"></p>
             </div>
         </div>
         
@@ -961,6 +1128,47 @@
                 <div class="section-description">
                     Basic information about your vehicle.
                 </div>
+                
+                <!-- Vehicle Info Display -->
+                <div id="vehicle-info-display" class="vehicle-info-display hidden">
+                    <div class="vehicle-info-item">
+                        <svg class="vehicle-info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="vehicle-info-content">
+                            <div class="vehicle-info-label">Brand</div>
+                            <div class="vehicle-info-value" id="vehicle-brand-display"></div>
+                        </div>
+                    </div>
+                    <div class="vehicle-info-item">
+                        <svg class="vehicle-info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <div class="vehicle-info-content">
+                            <div class="vehicle-info-label">Model</div>
+                            <div class="vehicle-info-value" id="vehicle-model-display"></div>
+                        </div>
+                    </div>
+                    <div class="vehicle-info-item">
+                        <svg class="vehicle-info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <div class="vehicle-info-content">
+                            <div class="vehicle-info-label">Year</div>
+                            <div class="vehicle-info-value" id="vehicle-year-display"></div>
+                        </div>
+                    </div>
+                    <div class="vehicle-info-item">
+                        <svg class="vehicle-info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <div class="vehicle-info-content">
+                            <div class="vehicle-info-label">Fuel Type</div>
+                            <div class="vehicle-info-value" id="vehicle-fuel-display"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label class="text-sm font-medium">Title</label>
