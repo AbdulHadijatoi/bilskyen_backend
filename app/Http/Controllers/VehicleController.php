@@ -36,66 +36,123 @@ class VehicleController extends Controller
 
     /**
      * Get vehicles list (public or dealer)
-     * Excludes deleted records by default unless with_deleted=true is passed
+     * Uses the same filtering logic as HomeController::showVehicles
      */
     public function index(Request $request): JsonResponse
     {
-        // Include deleted records only if explicitly requested
-        if ($request->boolean('with_deleted')) {
-            $query = Vehicle::withTrashed()->with(['dealer', 'images', 'details', 'equipment']);
+        // Define advanced filter keys (vehicles and vehicle_details table attributes)
+        $advancedFilterKeys = [
+            // Price, Make, Model, Model Year, Mileage, Listing Type, Category
+            'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
+            'year_from', 'year_to', 'mileage_from', 'mileage_to', 
+            'odometer_from', 'odometer_to', 'listing_type_id', 'vehicle_list_status_id',
+            'category_id', 'price_type_id', 'condition_id',
+            // Vehicle Body Type, Fuel Type, Gear Type, Drive Wheels
+            'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
+            // First Registration Year, Seller Type, Sales Type, Seller Distance
+            'first_registration_year_from', 'first_registration_year_to',
+            'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
+            // Performance
+            'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
+            // Owner Tax
+            'ownership_tax_from', 'ownership_tax_to',
+            // Battery & Charging (EV)
+            'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
+            // Economy & Environment
+            'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm',
+            // Physical Details
+            'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
+            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 
+            'engine_displacement_to', 'airbags', 'ncap_five',
+            // Equipment
+            'equipment_ids', 'equipment_id'
+        ];
+        
+        // Check if any advanced filters are present
+        $hasAdvancedFilters = $request->hasAny($advancedFilterKeys);
+        
+        // Basic filter keys (vehicles table attributes)
+        $basicFilterKeys = [
+            'search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 
+            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort'
+        ];
+        
+        if ($hasAdvancedFilters) {
+            // Use advanced filtering method
+            $basicFilters = $request->only($basicFilterKeys);
+            $advancedFilters = $request->only($advancedFilterKeys);
+            
+            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters(
+                $basicFilters,
+                $advancedFilters,
+                $request->input('limit', 15),
+                $request->input('page', 1)
+            );
         } else {
-            $query = Vehicle::with(['dealer', 'images', 'details', 'equipment']);
+            // Use basic filtering method (faster, most common)
+            $filters = $request->only($basicFilterKeys);
+            
+            $vehicles = $this->vehicleService->getPublicVehicles(
+                $filters,
+                $request->input('limit', 15),
+                $request->input('page', 1)
+            );
         }
 
-        // For dealer routes, filter by dealer_id
-        if ($request->user() && $request->user()->dealers()->exists()) {
-            $dealerId = $request->user()->dealers()->first()->id;
-            $query->where('dealer_id', $dealerId);
-        } else {
-            // Public routes: only show published vehicles
-            $query->where('vehicle_list_status_id', \App\Constants\VehicleListStatus::PUBLISHED);
-        }
+        // Format vehicles for JSON response
+        $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
+            // Get first image
+            $firstImage = $vehicle->images->first();
+            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+            
+            // Get details
+            $details = $vehicle->details;
+            
+            // Determine seller type (dealer or private)
+            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+            $sellerType = $isDealer ? 'Dealer' : 'Private';
+            
+            return [
+                'id' => $vehicle->id,
+                'title' => $vehicle->title,
+                'registration' => $vehicle->registration,
+                'vin' => $vehicle->vin,
+                'price' => $vehicle->price,
+                'mileage' => $vehicle->mileage,
+                'km_driven' => $vehicle->km_driven,
+                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                'version' => $vehicle->version,
+                'brand_name' => $vehicle->brand_name,
+                'model_name' => $vehicle->model_name,
+                'category_name' => $vehicle->category_name,
+                'fuel_type_name' => $vehicle->fuel_type_name,
+                'gear_type_name' => $vehicle->gear_type_name,
+                'model_year_name' => $vehicle->model_year_name,
+                'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+                'engine_power_hp' => $vehicle->engine_power_hp,
+                'seller_type' => $sellerType,
+                'image_url' => $imageUrl,
+                'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
+                'details' => $details ? [
+                    'color_name' => $details->color_name ?? null,
+                    'condition_name' => $details->condition_name ?? null,
+                    'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
+                ] : null,
+            ];
+        });
 
-        // Apply search
-        $search = $request->input('search');
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply filters
-        if ($request->has('fuel_type_id')) {
-            $query->where('fuel_type_id', $request->fuel_type_id);
-        }
-
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->has('brand_id')) {
-            $query->where('brand_id', $request->brand_id);
-        }
-
-        if ($request->has('model_year_id')) {
-            $query->where('model_year_id', $request->model_year_id);
-        }
-
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
-
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        // Paginate
-        $perPage = $request->input('limit', 15);
-        $vehicles = $query->paginate($perPage);
-
-        return $this->paginated($vehicles);
+        return response()->json([
+            'vehicles' => $formattedVehicles,
+            'pagination' => [
+                'current_page' => $vehicles->currentPage(),
+                'last_page' => $vehicles->lastPage(),
+                'per_page' => $vehicles->perPage(),
+                'total' => $vehicles->total(),
+                'from' => $vehicles->firstItem(),
+                'to' => $vehicles->lastItem(),
+            ],
+            'filters' => $request->all(),
+        ]);
     }
 
     /**
