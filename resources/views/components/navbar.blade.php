@@ -3,10 +3,10 @@
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-2">
                 <a href="/" class="flex items-center space-x-2">
-                    <img src="/images/logo_white.png" alt="Bilskyen" class="h-8">
+                    <img src="/images/logo_white.png" alt="Bilskyen" class="h-6 md:h-8">
                 </a>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 md:gap-4">
                 <!-- Desktop Navigation -->
                 <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
                     <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
@@ -16,8 +16,8 @@
                 <div class="flex items-center gap-2">
                     @include('components.user-auth-status')
                     <!-- Mobile Menu Button -->
-                    <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-md bg-muted transition-colors" aria-label="Toggle menu">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <button id="mobile-menu-toggle" class="md:hidden p-1.5 rounded-md bg-muted transition-colors" aria-label="Toggle menu">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>

@@ -1179,17 +1179,17 @@
                 <!-- Servicebog -->
                 <div class="mb-4">
                     <label class="text-sm font-medium mb-2 block">Servicebog</label>
-                    <div class="flex gap-3">
-                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
-                            <input type="radio" name="servicebog" value="Yes" class="h-4 w-4 text-primary">
+                    <div class="flex gap-2 md:gap-3">
+                        <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="Yes" class="h-3 w-3 md:h-4 md:w-4 text-primary">
                             <span>Yes</span>
                         </label>
-                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
-                            <input type="radio" name="servicebog" value="No" class="h-4 w-4 text-primary">
+                        <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="No" class="h-3 w-3 md:h-4 md:w-4 text-primary">
                             <span>No</span>
                         </label>
-                        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
-                            <input type="radio" name="servicebog" value="Default" checked class="h-4 w-4 text-primary">
+                        <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
+                            <input type="radio" name="servicebog" value="Default" checked class="h-3 w-3 md:h-4 md:w-4 text-primary">
                             <span>Default</span>
                         </label>
                     </div>
