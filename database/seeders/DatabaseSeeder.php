@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             PageStatusSeeder::class,
             FeatureValueTypeSeeder::class,
             AuditActorTypeSeeder::class,
+            LocationSeeder::class,
         ]);
 
         // 2. Core Business Tables

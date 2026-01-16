@@ -171,7 +171,7 @@
             </h2>
         </div>
 
-            <div class="relative">
+        <div class="relative">
             <div class="embla overflow-hidden" id="vehicle-images-carousel">
                 <div class="embla__container flex">
                     @foreach($vehicle->images as $index => $image)

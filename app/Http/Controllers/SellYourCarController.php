@@ -27,6 +27,7 @@ use App\Models\Plan;
 use App\Models\Dealer;
 use App\Models\DealerUser;
 use App\Models\VehicleDetail;
+use App\Models\Location;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
@@ -76,6 +77,7 @@ class SellYourCarController extends Controller
             }])->orderBy('name')->get(),
             'equipment' => Equipment::with('equipmentType')->orderBy('name')->get(), // Keep for backward compatibility
             'plans' => Plan::where('is_active', true)->with(['planFeatures.feature'])->orderBy('name')->get(),
+            'locations' => Location::select('city', 'postcode', 'region')->orderBy('city')->get(),
         ];
 
 

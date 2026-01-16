@@ -36,6 +36,9 @@
         // Initialize fuel efficiency label updater
         initFuelEfficiencyLabelUpdater();
         
+        // Initialize location autocomplete
+        initLocationAutocomplete();
+        
         // Ensure fuel_efficiency field always allows decimals (step="any") unless explicitly electric
         // This runs after all initialization to override any API-driven changes
         setTimeout(function() {
@@ -2194,5 +2197,205 @@
         });
     } else {
         setTimeout(setupStepWatcher, 200);
+    }
+    
+    // Location Autocomplete Functionality
+    function initLocationAutocomplete() {
+        const locationInput = document.getElementById('seller_address');
+        const postcodeInput = document.getElementById('seller_postcode');
+        const locationDropdown = document.getElementById('location-autocomplete');
+        const postcodeDropdown = document.getElementById('postcode-autocomplete');
+        
+        if (!locationInput || !postcodeInput || !locationDropdown || !postcodeDropdown) {
+            return;
+        }
+        
+        const locationsData = window.locationsData || [];
+        
+        // Create autocomplete function for location field
+        function createLocationAutocomplete(input, dropdown, isLocationField) {
+            let selectedIndex = -1;
+            let currentMatches = [];
+            let blurTimeout = null;
+            
+            function filterLocations(query) {
+                if (!query || query.trim().length === 0) {
+                    return [];
+                }
+                
+                const queryLower = query.toLowerCase().trim();
+                const matches = [];
+                
+                for (let i = 0; i < locationsData.length && matches.length < 10; i++) {
+                    const location = locationsData[i];
+                    
+                    if (isLocationField) {
+                        // For location field: filter by city or region
+                        const cityMatch = location.city && location.city.toLowerCase().includes(queryLower);
+                        const regionMatch = location.region && location.region.toLowerCase().includes(queryLower);
+                        
+                        if (cityMatch || regionMatch) {
+                            matches.push({
+                                ...location,
+                                displayText: `${location.city}, ${location.region}`
+                            });
+                        }
+                    } else {
+                        // For postcode field: filter by postcode (starts with or contains)
+                        if (location.postcode && (
+                            location.postcode.toLowerCase().startsWith(queryLower) ||
+                            location.postcode.toLowerCase().includes(queryLower)
+                        )) {
+                            matches.push({
+                                ...location,
+                                displayText: location.postcode
+                            });
+                        }
+                    }
+                }
+                
+                return matches;
+            }
+            
+            function renderDropdown(matches) {
+                if (matches.length === 0) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+                
+                dropdown.innerHTML = '';
+                currentMatches = matches;
+                selectedIndex = -1;
+                
+                matches.forEach((location, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'location-autocomplete-item';
+                    item.dataset.index = index;
+                    item.innerHTML = `<div class="location-autocomplete-item-text">${escapeHtml(location.displayText)}</div>`;
+                    
+                    item.addEventListener('click', function() {
+                        selectLocation(location);
+                    });
+                    
+                    item.addEventListener('mouseenter', function() {
+                        selectedIndex = index;
+                        updateHighlight();
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.classList.add('show');
+            }
+            
+            function updateHighlight() {
+                const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                items.forEach((item, index) => {
+                    if (index === selectedIndex) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+            
+            function selectLocation(location) {
+                if (isLocationField) {
+                    // For location field: populate with full display text (city, region)
+                    input.value = location.displayText;
+                    
+                    // Try to auto-fill postcode if the selected location has one and field is empty
+                    if (location.postcode && postcodeInput.value.trim() === '') {
+                        postcodeInput.value = location.postcode;
+                    }
+                } else {
+                    // For postcode field: populate with postcode
+                    input.value = location.postcode;
+                    
+                    // Try to auto-fill location if the selected location has a city and field is empty
+                    if (location.city && locationInput.value.trim() === '') {
+                        locationInput.value = `${location.city}, ${location.region}`;
+                    }
+                }
+                
+                dropdown.classList.remove('show');
+                input.focus();
+            }
+            
+            function handleInput() {
+                const query = input.value;
+                const matches = filterLocations(query);
+                renderDropdown(matches);
+            }
+            
+            function handleKeyDown(e) {
+                if (!dropdown.classList.contains('show') || currentMatches.length === 0) {
+                    return;
+                }
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, currentMatches.length - 1);
+                    updateHighlight();
+                    // Scroll into view
+                    const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                    if (items[selectedIndex]) {
+                        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateHighlight();
+                    // Scroll into view
+                    if (selectedIndex >= 0) {
+                        const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                        if (items[selectedIndex]) {
+                            items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                        }
+                    }
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectLocation(currentMatches[selectedIndex]);
+                } else if (e.key === 'Escape') {
+                    dropdown.classList.remove('show');
+                }
+            }
+            
+            function handleFocus() {
+                // Clear any pending blur timeout
+                if (blurTimeout) {
+                    clearTimeout(blurTimeout);
+                    blurTimeout = null;
+                }
+                
+                const query = input.value;
+                if (query && query.trim().length > 0) {
+                    const matches = filterLocations(query);
+                    renderDropdown(matches);
+                }
+            }
+            
+            function handleBlur() {
+                // Delay hiding dropdown to allow click events
+                blurTimeout = setTimeout(function() {
+                    dropdown.classList.remove('show');
+                }, 200);
+            }
+            
+            // Event listeners
+            input.addEventListener('input', handleInput);
+            input.addEventListener('keydown', handleKeyDown);
+            input.addEventListener('focus', handleFocus);
+            input.addEventListener('blur', handleBlur);
+            
+            // Prevent dropdown from closing when clicking on it
+            dropdown.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+            });
+        }
+        
+        // Initialize autocomplete for both fields
+        createLocationAutocomplete(locationInput, locationDropdown, true);
+        createLocationAutocomplete(postcodeInput, postcodeDropdown, false);
     }
 })();

@@ -1024,6 +1024,47 @@
             grid-template-columns: repeat(4, 1fr);
         }
     }
+    /* Location Autocomplete Styles */
+    .location-autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        margin-top: 0.25rem;
+    }
+    
+    .location-autocomplete-dropdown.show {
+        display: block;
+    }
+    
+    .location-autocomplete-item {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .location-autocomplete-item:last-child {
+        border-bottom: none;
+    }
+    
+    .location-autocomplete-item:hover,
+    .location-autocomplete-item.active {
+        background: var(--accent);
+    }
+    
+    .location-autocomplete-item-text {
+        font-size: 0.875rem;
+        color: var(--foreground);
+    }
 </style>
 @endpush
 
@@ -1545,19 +1586,25 @@
                         <p class="field-help">Your contact phone number</p>
                     </div>
 
-                    <div class="space-y-2 md:col-span-2">
-                        <label for="seller_address" class="text-sm font-medium">Address</label>
-                        <textarea id="seller_address" name="seller_address" rows="2"
-                            class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Your address">{{ $user->address ?? '' }}</textarea>
-                        <p class="field-help">Your street address</p>
+                    <div class="space-y-2">
+                        <label for="seller_address" class="text-sm font-medium">Location</label>
+                        <div class="relative">
+                            <input type="text" id="seller_address" name="seller_address" value="{{ $user->address ?? '' }}"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="Your address">
+                            <div id="location-autocomplete" class="location-autocomplete-dropdown"></div>
+                        </div>
+                        <p class="field-help">Your location</p>
                     </div>
 
                     <div class="space-y-2">
                         <label for="seller_postcode" class="text-sm font-medium">Postal Code</label>
-                        <input type="text" id="seller_postcode" name="seller_postcode" value="{{ $user->postcode ?? '' }}"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Postal code">
+                        <div class="relative">
+                            <input type="text" id="seller_postcode" name="seller_postcode" value="{{ $user->postcode ?? '' }}"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="Postal code">
+                            <div id="postcode-autocomplete" class="location-autocomplete-dropdown"></div>
+                        </div>
                         <p class="field-help">Your postal code</p>
                     </div>
                 </div>
@@ -1629,6 +1676,9 @@
 </div>
 
 @push('scripts')
+<script>
+    window.locationsData = @json($lookupData['locations'] ?? []);
+</script>
 <script src="{{ asset('js/sell-your-car-form.js') }}"></script>
 @endpush
 @endsection
