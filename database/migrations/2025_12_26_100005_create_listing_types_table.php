@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(\'\');
+        Schema::dropIfExists('listing_types');
     }
 };
 
