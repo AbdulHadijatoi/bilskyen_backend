@@ -18,10 +18,73 @@ class FavoriteController extends Controller
     public function index(Request $request): JsonResponse
     {
         $favorites = Favorite::where('user_id', $request->user()->id)
-            ->with('vehicle')
+            ->with([
+                'vehicle.images',
+                'vehicle.details',
+                'vehicle.dealer',
+            ])
             ->paginate($request->get('limit', 15));
 
-        return $this->paginated($favorites);
+        // Format vehicles for JSON response (same format as vehicles API)
+        $formattedVehicles = collect($favorites->items())->map(function ($favorite) {
+            $vehicle = $favorite->vehicle;
+            if (!$vehicle) {
+                return null;
+            }
+
+            // Get first image
+            $firstImage = $vehicle->images->first();
+            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+            
+            // Get details
+            $details = $vehicle->details;
+            
+            // Determine seller type (dealer or private)
+            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+            $sellerType = $isDealer ? 'Dealer' : 'Private';
+            
+            return [
+                'id' => $vehicle->id,
+                'title' => $vehicle->title,
+                'registration' => $vehicle->registration,
+                'vin' => $vehicle->vin,
+                'price' => $vehicle->price,
+                'mileage' => $vehicle->mileage,
+                'km_driven' => $vehicle->km_driven,
+                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                'version' => $vehicle->version,
+                'brand_name' => $vehicle->brand_name,
+                'model_name' => $vehicle->model_name,
+                'category_name' => $vehicle->category_name,
+                'fuel_type_name' => $vehicle->fuel_type_name,
+                'gear_type_name' => $vehicle->gear_type_name,
+                'model_year_name' => $vehicle->model_year_name,
+                'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+                'engine_power_hp' => $vehicle->engine_power_hp,
+                'seller_type' => $sellerType,
+                'image_url' => $imageUrl,
+                'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
+                'details' => $details ? [
+                    'color_name' => $details->color_name ?? null,
+                    'condition_name' => $details->condition_name ?? null,
+                    'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
+                ] : null,
+            ];
+        })
+        ->filter() // Remove null entries
+        ->values(); // Re-index array
+
+        return response()->json([
+            'vehicles' => $formattedVehicles,
+            'pagination' => [
+                'current_page' => $favorites->currentPage(),
+                'last_page' => $favorites->lastPage(),
+                'per_page' => $favorites->perPage(),
+                'total' => $favorites->total(),
+                'from' => $favorites->firstItem(),
+                'to' => $favorites->lastItem(),
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse
