@@ -241,6 +241,70 @@
         display: block;
     }
     
+    .lookup-input-button-container {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    
+    .lookup-button {
+        height: 3.75rem;
+        padding: 0 1.5rem;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border: 1px solid var(--primary);
+        border-radius: 0.875rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    
+    .lookup-button:hover:not(:disabled) {
+        background: var(--primary);
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 74, 173, 0.2);
+    }
+    
+    .lookup-button:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    
+    .lookup-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .lookup-button-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .lookup-button-text {
+        display: inline-block;
+    }
+    
+    @media (max-width: 640px) {
+        .lookup-input-button-container {
+            flex-direction: column;
+        }
+        
+        .lookup-button {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .lookup-input-button-container > div {
+            width: 100%;
+        }
+    }
+    
     .lookup-input-wrapper input {
         width: 100%;
         height: 3.75rem;
@@ -1113,24 +1177,32 @@
     <!-- License Plate Lookup Section -->
     <div class="lookup-section bg-gray-50">
         <h2 class="text-lg font-semibold">Find Your Vehicle</h2>
-        <p class="text-muted-foreground">Enter your car's license plate number and press Enter. We'll automatically fill in the vehicle information for you.</p>
+        <p class="text-muted-foreground">Enter your car's license plate number and click Find or press Enter. We'll automatically fill in the vehicle information for you.</p>
         
         <div class="lookup-input-group">
             <div class="lookup-input-wrapper">
                 <label for="registration-lookup">
                     License Plate Number
                 </label>
-                <div style="position: relative;">
-                    <svg class="lookup-input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        id="registration-lookup"
-                        placeholder="Enter license plate (e.g., AB12345)"
-                        autocomplete="off"
-                        spellcheck="false"
-                    />
+                <div class="lookup-input-button-container">
+                    <div style="position: relative; flex: 1;">
+                        <svg class="lookup-input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                            type="text"
+                            id="registration-lookup"
+                            placeholder="Enter license plate (e.g., AB12345)"
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                    </div>
+                    <button type="button" id="lookup-button" class="lookup-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="lookup-button-icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span class="lookup-button-text">Find A Vehicle</span>
+                    </button>
                 </div>
                 <p class="text-xs mt-2" id="lookup-error" style="opacity: 0.8; min-height: 1.25rem;"></p>
             </div>
@@ -1266,8 +1338,8 @@
                     </div>
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="km_driven" class="text-sm font-medium">Kilometer Driven</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0"
+                        <label for="km_driven" class="text-sm font-medium required-field">Kilometer Driven</label>
+                        <input type="number" id="km_driven" name="km_driven" min="0" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         <p class="field-help">How far car has driven</p>

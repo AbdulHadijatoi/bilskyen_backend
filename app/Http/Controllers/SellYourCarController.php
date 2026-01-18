@@ -142,7 +142,7 @@ class SellYourCarController extends Controller
             'model_id' => 'nullable|exists:models,id',
             'model_year_id' => 'nullable|exists:model_years,id',
             'fuel_type_id' => 'required|exists:fuel_types,id',
-            'km_driven' => 'nullable|integer|min:0',
+            'km_driven' => 'required|integer|min:0',
             'battery_capacity' => 'nullable|integer|min:0',
             'range_km' => 'nullable|integer|min:0',
             'charging_type' => 'nullable|string|max:100',

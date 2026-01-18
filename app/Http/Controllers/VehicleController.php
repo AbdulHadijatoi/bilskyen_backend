@@ -14,6 +14,7 @@ use App\Helpers\FilterHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class VehicleController extends Controller
 {
@@ -23,20 +24,18 @@ class VehicleController extends Controller
 
     /**
      * Get featured vehicles
-     * Returns data in the same format as the vehicles API
+     * Returns only the fields needed for the featured vehicles display
      */
     public function getFeaturedVehicles(Request $request): JsonResponse
     {
         // Fetch featured vehicles from FeaturedListing model
         $featuredListings = FeaturedListing::with([
             'vehicle.images',
-            'vehicle.details',
-            'vehicle.dealer',
         ])
             ->orderBy('sort_order')
             ->get();
 
-        // Format vehicles for JSON response (same format as vehicles API)
+        // Format vehicles for JSON response (only fields used in home.blade.php)
         $formattedVehicles = $featuredListings->map(function ($featuredListing) {
             $vehicle = $featuredListing->vehicle;
             if (!$vehicle) {
@@ -47,48 +46,26 @@ class VehicleController extends Controller
             $firstImage = $vehicle->images->first();
             $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
             
-            // Get details
-            $details = $vehicle->details;
-            
-            // Determine seller type (dealer or private)
-            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
-            $sellerType = $isDealer ? 'Dealer' : 'Private';
-            
-            // Build title (same logic as HomeController)
+            // Build title
             $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
-            
+
             return [
                 'id' => $vehicle->id,
                 'title' => $title,
-                'registration' => $vehicle->registration,
-                'vin' => $vehicle->vin,
-                'price' => $vehicle->price ?? 0,
-                'mileage' => $vehicle->mileage,
-                'km_driven' => $vehicle->km_driven ?? 0,
-                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                 'version' => $vehicle->version ?? '',
-                'brand_name' => $vehicle->brand_name,
-                'model_name' => $vehicle->model_name,
-                'category_name' => $vehicle->category_name,
+                'price' => $vehicle->price ?? 0,
+                'image' => $imageUrl,
+                'km_driven' => $vehicle->km_driven ?? 0,
+                'engine_power_hp' => $vehicle->engine_power_hp,
+                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                 'fuel_type_name' => $vehicle->fuel_type_name,
                 'gear_type_name' => $vehicle->gear_type_name,
-                'model_year_name' => $vehicle->model_year_name,
-                'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
-                'engine_power_hp' => $vehicle->engine_power_hp,
-                'seller_type' => $sellerType,
-                'image_url' => $imageUrl,
-                'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
-                'details' => $details ? [
-                    'color_name' => $details->color_name ?? null,
-                    'condition_name' => $details->condition_name ?? null,
-                    'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
-                ] : null,
             ];
         })
         ->filter() // Remove null entries
         ->values(); // Re-index array
 
-        return response()->json([
+        return $this->success([
             'vehicles' => $formattedVehicles,
         ]);
     }
@@ -200,18 +177,16 @@ class VehicleController extends Controller
             ];
         });
 
-        return response()->json([
-            'vehicles' => $formattedVehicles,
-            'pagination' => [
-                'current_page' => $vehicles->currentPage(),
-                'last_page' => $vehicles->lastPage(),
-                'per_page' => $vehicles->perPage(),
-                'total' => $vehicles->total(),
-                'from' => $vehicles->firstItem(),
-                'to' => $vehicles->lastItem(),
-            ],
-            'filters' => $request->all(),
-        ]);
+        // Create new paginator with formatted vehicles
+        $formattedPaginator = new LengthAwarePaginator(
+            $formattedVehicles,
+            $vehicles->total(),
+            $vehicles->perPage(),
+            $vehicles->currentPage(),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return $this->paginated($formattedPaginator);
     }
 
     /**

@@ -11,7 +11,7 @@ class VersionController extends Controller
      */
     public function getVersion(): JsonResponse
     {
-        return response()->json([
+        return $this->success([
             'version' => config('app.version', '1.0.0'),
         ]);
     }

@@ -135,6 +135,7 @@
     // Registration lookup
     function initRegistrationLookup() {
         const registrationInput = document.getElementById('registration-lookup');
+        const lookupButton = document.getElementById('lookup-button');
         const lookupError = document.getElementById('lookup-error');
         const lookupLoading = document.getElementById('lookup-loading');
         const vehicleForm = document.getElementById('vehicle-form');
@@ -154,6 +155,9 @@
             lookupError.style.color = '';
             lookupLoading.classList.remove('hidden');
             registrationInput.disabled = true;
+            if (lookupButton) {
+                lookupButton.disabled = true;
+            }
 
             fetch('/api/v1/nummerplade/vehicle-by-registration', {
                 method: 'POST',
@@ -175,6 +179,9 @@
             .then(data => {
                 lookupLoading.classList.add('hidden');
                 registrationInput.disabled = false;
+                if (lookupButton) {
+                    lookupButton.disabled = false;
+                }
 
                 console.log('API Response received:', data);
 
@@ -294,6 +301,9 @@
             .catch(error => {
                 lookupLoading.classList.add('hidden');
                 registrationInput.disabled = false;
+                if (lookupButton) {
+                    lookupButton.disabled = false;
+                }
                 
                 console.error('Lookup error:', error);
                 
@@ -330,6 +340,17 @@
                 performLookup();
             }
         });
+        
+        // Trigger lookup on button click
+        if (lookupButton) {
+            lookupButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                performLookup();
+            });
+        }
+        
+        // Make performLookup available globally for button onclick (if needed)
+        window.performLookup = performLookup;
     }
 
     // Form submission handler
