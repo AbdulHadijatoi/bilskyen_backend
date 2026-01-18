@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: a430246362c3e3cc385ce87980bcb28a96cc0184c533c7f9b9ffca6228e892bf
+API Architecture Checksum: e48ed5394dbb734b6da6265b642d54de8aa86dddfac0b54555cd757e6d591554
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -97,12 +97,17 @@ Route::middleware('auth:api')->group(function () {
 
 ## Response Format
 
+**All API responses follow a unified format** with consistent fields: `success`, `failed`, `message`, `data`, and `errors`. This ensures consistency across all endpoints, whether they return data or perform actions.
+
 ### Success Response
 
-**All success responses are consistently wrapped in a `data` object** for consistency:
+All successful responses include `success: true`, `failed: false`, a descriptive message, the response data, and an empty errors array:
 
 ```json
 {
+  "success": true,
+  "failed": false,
+  "message": "Operation completed successfully",
   "data": {
     "id": 1,
     "title": "Vehicle Name",
@@ -119,7 +124,8 @@ Route::middleware('auth:api')->group(function () {
     "fuel_type_name": "Petrol",
     "listing_type_id": 1,
     "listing_type_name": "Purchase"
-  }
+  },
+  "errors": []
 }
 ```
 
@@ -140,10 +146,13 @@ Vehicle images include both `image_path` and `thumbnail_path` fields. The `thumb
 
 ### Paginated Response
 
-Paginated responses follow this structure:
+Paginated responses follow this structure with success/failed/message/errors fields:
 
 ```json
 {
+  "success": true,
+  "failed": false,
+  "message": "Data retrieved successfully",
   "data": {
     "docs": [...],
     "limit": 15,
@@ -154,7 +163,8 @@ Paginated responses follow this structure:
     "nextPage": 2,
     "totalDocs": 50,
     "totalPages": 4
-  }
+  },
+  "errors": []
 }
 ```
 
@@ -162,12 +172,28 @@ Paginated responses follow this structure:
 
 ### Error Response
 
-Error responses follow this structure:
+All error responses include `success: false`, `failed: true`, an error message, `data: null`, and an errors array (empty for general errors, populated for validation errors):
 
 ```json
 {
-  "status": "error",
-  "message": "Error message",
+  "success": false,
+  "failed": true,
+  "message": "An error occurred",
+  "data": null,
+  "errors": []
+}
+```
+
+### Validation Error Response
+
+Validation errors include the `errors` object with field-specific error messages:
+
+```json
+{
+  "success": false,
+  "failed": true,
+  "message": "Validation failed",
+  "data": null,
   "errors": {
     "field": ["Validation error message"]
   }
@@ -180,13 +206,26 @@ For responses with metadata (feature flags, limits, app config):
 
 ```json
 {
+  "success": true,
+  "failed": false,
+  "message": "Operation completed successfully",
   "data": {...},
   "meta": {
     "feature_flags": {...},
     "limits": {...}
-  }
+  },
+  "errors": []
 }
 ```
+
+### Response Field Requirements
+
+**All API responses MUST include these fields:**
+- `success` (boolean) - Indicates if the operation was successful
+- `failed` (boolean) - Indicates if the operation failed (opposite of success)
+- `message` (string) - Human-readable message describing the result
+- `data` (mixed) - Response data (object, array, or null)
+- `errors` (array|object) - Empty array `[]` for success or errors without details, error object `{...}` for validation errors
 
 ## Error Handling
 
@@ -208,12 +247,15 @@ Standard HTTP status codes are used:
 
 ### Nummerplade API Errors
 
-Nummerplade API errors follow a standardized structure:
+Nummerplade API errors follow the unified response format:
 
 ```json
 {
-  "status": "error",
+  "success": false,
+  "failed": true,
   "message": "External vehicle data unavailable",
+  "data": null,
+  "errors": [],
   "source": "nummerplade",
   "retryable": true,
   "code": "TIMEOUT"
