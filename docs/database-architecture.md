@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: 27bda12b771b434b39f88d6d32378836a7c6b16983b9ca12464075c4e0e45f8c
+Schema Checksum: b4dfc7cdda7b620ebcc48d48e6c9d69953a6b559dc6b2bbd354b3a4676c92067
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -50,21 +50,35 @@ Core user table for all system users (buyers, dealers, admins).
 | id | BIGINT (PK) | Primary key |
 | name | VARCHAR(150) | User's full name |
 | email | VARCHAR(150) | Unique email address |
-| phone | VARCHAR(30) | Phone number |
+| phone | VARCHAR(30) (NULL) | Phone number |
+| address | TEXT (NULL) | Street address |
+| postcode | VARCHAR(10) (NULL) | Postal code |
 | password | VARCHAR(255) | Hashed password |
-| status_id | INT (FK) | Foreign key to `user_statuses.id` |
-| email_verified_at | DATETIME | Email verification timestamp |
-| remember_token | VARCHAR(100) | Remember me token |
+| status_id | INT (FK, NULL) | Foreign key to `user_statuses.id` |
+| email_verified_at | DATETIME (NULL) | Email verification timestamp |
+| remember_token | VARCHAR(100) (NULL) | Remember me token |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
+| deleted_at | DATETIME (NULL) | Soft delete timestamp |
 
 **Indexes:**
 - `email` (unique)
 - `status_id`
 
+**Foreign Keys:**
+- `status_id` references `user_statuses.id` (nullOnDelete)
+
+**Model Features:**
+- **Soft Deletes**: Enabled for data retention
+- **JWT Subject**: Implements JWTSubject interface for authentication
+- **Roles & Permissions**: Uses Spatie Permission package (guard: 'web')
+- **Accessors**: 
+  - `initials` - Generates initials from user name (first letter of first name + first letter of last name, or first 2 characters if single word)
+
 **Relationships:**
 - `belongsTo` UserStatus
-- `hasMany` DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), ChatMessage, PriceHistory, ListingViewsLog, UserPlanOverride
+- `belongsToMany` Dealers (through DealerUser)
+- `hasMany` DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
 
 #### `user_statuses`
 Lookup table for user status values.
@@ -94,18 +108,23 @@ Dealer companies registered in the system.
 | city | VARCHAR(100) | City name |
 | postcode | VARCHAR(10) | Postal code |
 | country_code | CHAR(2) | Country code (default: 'DK') |
-| logo_path | VARCHAR(255) | Logo file path |
+| logo_path | VARCHAR(255) (NULL) | Logo file path |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
+| deleted_at | DATETIME (NULL) | Soft delete timestamp |
 
 **Indexes:**
 - `cvr` (unique)
 - `postcode`
 
+**Model Features:**
+- **Soft Deletes**: Enabled for data retention
+
 **Accessors (Model):**
-- `logo_url` - Full URL to logo image
+- `logo_url` - Full URL to logo image (returns `asset('storage/' . logo_path)` or null)
 
 **Relationships:**
+- `belongsToMany` Users (through DealerUser)
 - `hasMany` DealerUser, Vehicle, Lead, DealerSubscription, DealerPlanOverride
 
 #### `dealer_users`
@@ -166,29 +185,27 @@ Vehicle listings with searchable attributes.
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
 | title | VARCHAR(255) (NULL) | Listing title (nullable, auto-generated from brand + model + model year if empty) |
-| registration | VARCHAR(20) | License plate number |
-| vin | VARCHAR(17) | Vehicle Identification Number |
-| dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
+| registration | VARCHAR(20) (NULL) | License plate number |
+| vin | VARCHAR(17) (NULL) | Vehicle Identification Number |
+| dealer_id | BIGINT (FK, NULL) | Foreign key to `dealers.id` (nullable for private sellers) |
 | user_id | BIGINT (FK) | Foreign key to `users.id` (creator) |
 | category_id | INT (FK, NULL) | Foreign key to `categories.id` |
-| location_id | BIGINT (FK) | Foreign key to `locations.id` |
 | brand_id | INT (FK, NULL) | Foreign key to `brands.id` |
 | model_id | INT (FK, NULL) | Foreign key to `models.id` |
 | model_year_id | INT (FK, NULL) | Foreign key to `model_years.id` |
 | km_driven | INT (NULL) | Kilometers driven |
 | fuel_type_id | INT (FK) | Foreign key to `fuel_types.id` |
 | price | INT | Price in DKK |
-| mileage | INT (NULL) | Odometer reading |
 | battery_capacity | INT (NULL) | Battery capacity (for electric vehicles) |
 | range_km | INT (NULL) | Electric range in kilometers (for electric vehicles) |
 | charging_type | VARCHAR(100) (NULL) | Charging type (AC, DC, AC/DC) |
-| engine_power | INT (NULL) | Engine power |
+| engine_power | INT (NULL) | Engine power (in kW) |
 | towing_weight | INT (NULL) | Towing weight capacity |
 | ownership_tax | INT (NULL) | Ownership tax amount |
 | first_registration_date | DATE (NULL) | First registration date |
-| version | VARCHAR(100) (NULL) | Vehicle version |
-| gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` |
-| fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency (km/l) |
+| version | VARCHAR(100) (NULL) | Vehicle version (moved from vehicle_details) |
+| gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` (moved from vehicle_details) |
+| fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency (km/l) (moved from vehicle_details) |
 | vehicle_list_status_id | INT (FK) | Foreign key to `vehicle_list_statuses.id` |
 | listing_type_id | INT (FK, NULL) | Foreign key to `listing_types.id` (Purchase/Leasing) |
 | published_at | DATETIME (NULL) | Publication timestamp |
@@ -201,18 +218,29 @@ Vehicle listings with searchable attributes.
 - `vin` - For Nummerplade API lookups
 - `(vehicle_list_status_id, published_at)` - For active listings
 - `(vehicle_list_status_id, price)` - For price sorting
-- `(vehicle_list_status_id, mileage)` - For mileage filtering
-- `(location_id, price)` - For location-based search
 - `category_id` - For category filtering
 - `brand_id` - For brand filtering
 - `model_id` - For model filtering
 - `model_year_id` - For model year filtering
 - `listing_type_id` - For listing type filtering
+- `gear_type_id` - For gear type filtering
+
+**Foreign Keys:**
+- `dealer_id` references `dealers.id` (nullOnDelete)
+- `user_id` references `users.id` (cascadeOnDelete)
+- `category_id` references `categories.id` (nullOnDelete)
+- `brand_id` references `brands.id` (nullOnDelete)
+- `model_id` references `models.id` (nullOnDelete)
+- `model_year_id` references `model_years.id` (nullOnDelete)
+- `fuel_type_id` references `fuel_types.id` (cascadeOnDelete)
+- `gear_type_id` references `gear_types.id` (nullOnDelete)
+- `vehicle_list_status_id` references `vehicle_list_statuses.id` (cascadeOnDelete)
+- `listing_type_id` references `listing_types.id` (nullOnDelete)
 
 **Relationships:**
-- `belongsTo` Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType, GearType
+- `belongsTo` Dealer (nullable), User, Brand, VehicleModel (model), ModelYear, ListingType, GearType
 - `hasOne` VehicleDetail
-- `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+- `hasMany` VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog, FeaturedListing
 - `belongsToMany` Equipment (via vehicle_equipment)
 
 **Model Features:**
@@ -244,7 +272,7 @@ Extended vehicle information and specifications.
 | total_weight | INT (NULL) | Total weight |
 | vehicle_weight | INT (NULL) | Vehicle weight |
 | technical_total_weight | INT (NULL) | Technical total weight |
-| coupling | INT (NULL) | Coupling weight |
+| coupling | BOOLEAN (NULL) | Coupling (changed from INT to BOOLEAN) |
 | towing_weight_brakes | INT (NULL) | Towing weight with brakes |
 | minimum_weight | INT (NULL) | Minimum weight |
 | gross_combination_weight | INT (NULL) | Gross combination weight |
@@ -260,7 +288,7 @@ Extended vehicle information and specifications.
 | doors | INT (NULL) | Number of doors |
 | minimum_seats | INT (NULL) | Minimum seats |
 | maximum_seats | INT (NULL) | Maximum seats |
-| wheels | INT (NULL) | Number of wheels |
+| wheels | TEXT (NULL) | Number of wheels (changed from INT to TEXT) |
 | extra_equipment | TEXT (NULL) | Extra equipment details |
 | axles | INT (NULL) | Number of axles |
 | drive_axles | INT (NULL) | Number of drive axles |
@@ -270,16 +298,23 @@ Extended vehicle information and specifications.
 | use_id | INT (FK, NULL) | Foreign key to `uses.id` |
 | color_id | INT (FK, NULL) | Foreign key to `colors.id` |
 | body_type_id | INT (FK, NULL) | Foreign key to `body_types.id` |
+| variant_id | INT (FK, NULL) | Foreign key to `variants.id` |
 | dispensations | TEXT (NULL) | Dispensations |
 | permits | TEXT (NULL) | Permits |
 | ncap_five | BOOLEAN (NULL) | NCAP 5-star rating |
 | airbags | INT (NULL) | Number of airbags |
 | integrated_child_seats | INT (NULL) | Number of integrated child seats |
 | seat_belt_alarms | INT (NULL) | Number of seat belt alarms |
-| euronorm | VARCHAR(50) (NULL) | Euro norm standard |
+| euronom_id | INT (FK, NULL) | Foreign key to `euronorms.id` (replaces euronorm string) |
+| servicebog | ENUM('Yes', 'No', 'Default') (NULL) | Service book status |
 | price_type_id | INT (FK, NULL) | Foreign key to `price_types.id` |
 | condition_id | INT (FK, NULL) | Foreign key to `conditions.id` |
 | sales_type_id | INT (FK, NULL) | Foreign key to `sales_types.id` |
+| seller_phone | VARCHAR(30) (NULL) | Seller contact phone |
+| seller_address | TEXT (NULL) | Seller contact address |
+| seller_postcode | VARCHAR(10) (NULL) | Seller contact postcode |
+| annual_tax | DECIMAL(10,2) (NULL) | Annual tax amount |
+| owners | TEXT (NULL) | Vehicle owners information (stored as JSON array) |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
 
@@ -289,15 +324,20 @@ Extended vehicle information and specifications.
 - `use_id`
 - `color_id`
 - `body_type_id`
+- `variant_id`
+- `euronom_id`
 - `price_type_id`
 - `condition_id`
 - `sales_type_id`
 
 **Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (cascadeOnDelete)
 - `type_id` references `types.id` (nullOnDelete)
 - `use_id` references `uses.id` (nullOnDelete)
 - `color_id` references `colors.id` (nullOnDelete)
 - `body_type_id` references `body_types.id` (nullOnDelete)
+- `variant_id` references `variants.id` (nullOnDelete)
+- `euronom_id` references `euronorms.id` (nullOnDelete)
 - `price_type_id` references `price_types.id` (nullOnDelete)
 - `condition_id` references `conditions.id` (nullOnDelete)
 - `sales_type_id` references `sales_types.id` (nullOnDelete)
@@ -305,11 +345,12 @@ Extended vehicle information and specifications.
 **Model Features:**
 - **Caching**: Lookup data (types, uses, colors, body_types, price_types, conditions, sales_types) is cached using static property + Laravel Cache facade (24-hour TTL)
 - **Accessors**: Automatically appends resolved names (`type_name_resolved`, `use_name`, `color_name`, `body_type_name`, `price_type_name`, `condition_name`, `sales_type_name`) to API responses
+- **Casts**: `owners` is cast to array, `coupling` is cast to boolean, `annual_tax` is cast to decimal
 - **Note**: `version`, `gear_type_id`, and `fuel_efficiency` were moved to the `vehicles` table for optimization (reduces JOIN operations)
 - No eager-loading of constant relations required
 
 **Relationships:**
-- `belongsTo` Vehicle, PriceType, Condition, GearType, SalesType
+- `belongsTo` Vehicle, PriceType, Condition, SalesType, Variant, Euronom
 
 #### `categories`
 Vehicle category lookup table.
@@ -332,7 +373,43 @@ Vehicle brand/manufacturer lookup table.
 **Note:** No timestamps. Used for caching in Vehicle model.
 
 **Relationships:**
-- `hasMany` VehicleModel (models)
+- `hasMany` VehicleModel (models), Vehicle
+
+#### `variants`
+Vehicle variant lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Variant name |
+
+**Note:** No timestamps. Used in VehicleDetail model.
+
+#### `euronorms`
+Euro norm lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Euro norm name |
+
+**Note:** No timestamps. Table name is `euronorms` (plural). Used in VehicleDetail model.
+
+**Model Features:**
+- **Caching**: Uses CachedLookup trait
+
+#### `equipment_types`
+Equipment type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Equipment type name |
+
+**Note:** No timestamps. Used to categorize equipment.
+
+**Relationships:**
+- `hasMany` Equipment
 
 #### `model_years`
 Vehicle model year lookup table.
@@ -371,8 +448,19 @@ Vehicle equipment lookup table.
 |--------|------|-------------|
 | id | INT (PK) | Primary key |
 | name | VARCHAR(100) | Equipment name |
+| equipment_type_id | INT (FK, NULL) | Foreign key to `equipment_types.id` |
 
-**Note:** No timestamps. Reference data for equipment options.
+**Indexes:**
+- `equipment_type_id`
+
+**Foreign Keys:**
+- `equipment_type_id` references `equipment_types.id` (nullOnDelete)
+
+**Note:** No timestamps. Reference data for equipment options. Table name is `equipments` (plural).
+
+**Relationships:**
+- `belongsTo` EquipmentType
+- `belongsToMany` Vehicle (via vehicle_equipment)
 
 #### `permits`
 Vehicle permit lookup table.
@@ -551,8 +639,15 @@ Saved search filters for users.
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
 | user_id | BIGINT (FK) | Foreign key to `users.id` |
-| filters | JSON | Search filter criteria |
+| filters | JSON | Search filter criteria (cast to array) |
 | created_at | DATETIME | Creation timestamp |
+
+**Foreign Keys:**
+- `user_id` references `users.id` (cascadeOnDelete)
+
+**Model Features:**
+- **Casts**: `filters` is cast to array
+- **No Timestamps**: Only has `created_at`, no `updated_at`
 
 **Relationships:**
 - `belongsTo` User
@@ -573,12 +668,23 @@ Lead management for vehicle inquiries.
 | assigned_user_id | BIGINT (FK, NULL) | Foreign key to `users.id` (assigned staff) |
 | lead_stage_id | INT (FK) | Foreign key to `lead_stages.id` |
 | source_id | INT (FK) | Foreign key to `sources.id` |
-| last_activity_at | DATETIME | Last activity timestamp |
+| last_activity_at | DATETIME (NULL) | Last activity timestamp |
 | created_at | DATETIME | Creation timestamp |
 
 **Indexes:**
 - `dealer_id`
 - `lead_stage_id`
+
+**Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (cascadeOnDelete)
+- `buyer_user_id` references `users.id` (cascadeOnDelete)
+- `dealer_id` references `dealers.id` (cascadeOnDelete)
+- `assigned_user_id` references `users.id` (nullOnDelete)
+- `lead_stage_id` references `lead_stages.id` (cascadeOnDelete)
+- `source_id` references `sources.id` (cascadeOnDelete)
+
+**Model Features:**
+- **No Timestamps**: Only has `created_at`, no `updated_at`
 
 **Relationships:**
 - `belongsTo` Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
@@ -608,13 +714,29 @@ Audit trail for lead stage changes.
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
 | lead_id | BIGINT (FK) | Foreign key to `leads.id` |
-| from_stage_id | INT | Previous stage ID |
+| from_stage_id | INT (NULL) | Previous stage ID (nullable for initial stage) |
 | to_stage_id | INT | New stage ID |
 | changed_by_user_id | BIGINT (FK) | Foreign key to `users.id` |
 | changed_at | DATETIME | Change timestamp |
 
+**Foreign Keys:**
+- `lead_id` references `leads.id` (cascadeOnDelete)
+- `changed_by_user_id` references `users.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Uses `changed_at` field.
+
 **Relationships:**
 - `belongsTo` Lead, User (changed by)
+
+#### `transmissions`
+Transmission type lookup table.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Transmission type name |
+
+**Note:** No timestamps. Reference data for transmission types.
 
 #### `sources`
 Lead source lookup (website, phone, referral, etc.).
@@ -624,6 +746,31 @@ Lead source lookup (website, phone, referral, etc.).
 | id | INT (PK) | Primary key |
 | name | VARCHAR(50) | Source name |
 
+**Note:** No timestamps. Reference data for lead sources.
+
+**Relationships:**
+- `hasMany` Lead
+
+#### `vehicle_equipment`
+Pivot table for vehicle-equipment many-to-many relationship.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT (PK) | Primary key |
+| vehicle_id | BIGINT (FK) | Foreign key to `vehicles.id` |
+| equipment_id | INT (FK) | Foreign key to `equipments.id` |
+
+**Indexes:**
+- `(vehicle_id, equipment_id)` (unique)
+- `vehicle_id`
+- `equipment_id`
+
+**Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (cascadeOnDelete)
+- `equipment_id` references `equipments.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Pivot table for Vehicle-Equipment many-to-many relationship.
+
 #### `chat_threads`
 Chat conversation threads linked to leads.
 
@@ -632,6 +779,11 @@ Chat conversation threads linked to leads.
 | id | BIGINT (PK) | Primary key |
 | lead_id | BIGINT (FK) | Foreign key to `leads.id` |
 | created_at | DATETIME | Creation timestamp |
+
+**Foreign Keys:**
+- `lead_id` references `leads.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Only has `created_at`.
 
 **Relationships:**
 - `belongsTo` Lead
@@ -646,11 +798,17 @@ Chat messages within threads.
 | thread_id | BIGINT (FK) | Foreign key to `chat_threads.id` |
 | sender_id | BIGINT (FK) | Foreign key to `users.id` |
 | message | TEXT | Message content |
-| is_internal | BOOLEAN | Internal note flag |
+| is_internal | BOOLEAN | Internal note flag (default: false) |
 | created_at | DATETIME | Creation timestamp |
 
 **Indexes:**
 - `thread_id`
+
+**Foreign Keys:**
+- `thread_id` references `chat_threads.id` (cascadeOnDelete)
+- `sender_id` references `users.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Only has `created_at`.
 
 **Relationships:**
 - `belongsTo` ChatThread, User (sender)
@@ -667,10 +825,15 @@ CMS pages for static content.
 | id | BIGINT (PK) | Primary key |
 | title | VARCHAR(255) | Page title |
 | slug | VARCHAR(255) | URL slug (unique) |
-| content | LONGTEXT | Page content |
-| meta_title | VARCHAR(255) | SEO meta title |
-| meta_description | TEXT | SEO meta description |
+| content | LONGTEXT (NULL) | Page content |
+| meta_title | VARCHAR(255) (NULL) | SEO meta title |
+| meta_description | TEXT (NULL) | SEO meta description |
 | page_status_id | INT (FK) | Foreign key to `page_statuses.id` |
+
+**Foreign Keys:**
+- `page_status_id` references `page_statuses.id` (cascadeOnDelete)
+
+**Note:** No timestamps.
 
 **Relationships:**
 - `belongsTo` PageStatus
@@ -696,11 +859,20 @@ Blog posts.
 | title | VARCHAR(255) | Post title |
 | slug | VARCHAR(255) | URL slug (unique) |
 | content | LONGTEXT | Post content |
-| meta_title | VARCHAR(255) | SEO meta title |
-| meta_description | TEXT | SEO meta description |
-| published_at | DATETIME | Publication timestamp |
+| meta_title | VARCHAR(255) (NULL) | SEO meta title |
+| meta_description | TEXT (NULL) | SEO meta description |
+| published_at | DATETIME (NULL) | Publication timestamp |
 | created_at | DATETIME | Creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
+
+**Indexes:**
+- `slug` (unique)
+
+**Model Features:**
+- **Casts**: `published_at` is cast to datetime
+
+**Relationships:**
+- None (standalone CMS content)
 
 ---
 
@@ -734,7 +906,12 @@ Historical pricing for plans.
 | currency | CHAR(3) | Currency code (default: 'DKK') |
 | billing_cycle | ENUM | 'monthly' or 'yearly' |
 | starts_at | DATETIME | Effective start date |
-| ends_at | DATETIME | Effective end date (nullable) |
+| ends_at | DATETIME (NULL) | Effective end date (nullable) |
+
+**Foreign Keys:**
+- `plan_id` references `plans.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Table name is `plan_price_history`.
 
 **Relationships:**
 - `belongsTo` Plan
@@ -778,6 +955,12 @@ Plan-to-feature mapping with values.
 | feature_id | BIGINT (FK) | Foreign key to `features.id` |
 | value | VARCHAR(100) | Feature value |
 
+**Foreign Keys:**
+- `plan_id` references `plans.id` (cascadeOnDelete)
+- `feature_id` references `features.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Pivot table for Plan-Feature many-to-many relationship.
+
 **Relationships:**
 - `belongsTo` Plan, Feature
 
@@ -791,9 +974,19 @@ Dealer subscription records (immutable pattern).
 | plan_id | BIGINT (FK) | Foreign key to `plans.id` |
 | subscription_status_id | INT (FK) | Foreign key to `subscription_statuses.id` |
 | starts_at | DATETIME | Subscription start date |
-| ends_at | DATETIME | Subscription end date (nullable) |
-| auto_renew | BOOLEAN | Auto-renewal flag |
+| ends_at | DATETIME (NULL) | Subscription end date (nullable) |
+| auto_renew | BOOLEAN | Auto-renewal flag (default: false) |
 | created_at | DATETIME | Creation timestamp |
+| deleted_at | DATETIME (NULL) | Soft delete timestamp |
+
+**Foreign Keys:**
+- `dealer_id` references `dealers.id` (cascadeOnDelete)
+- `plan_id` references `plans.id` (cascadeOnDelete)
+- `subscription_status_id` references `subscription_statuses.id` (cascadeOnDelete)
+
+**Model Features:**
+- **Soft Deletes**: Enabled for data retention
+- **No Timestamps**: Only has `created_at`, no `updated_at`
 
 **Important:** This table follows an immutable pattern. Upgrades/downgrades create new rows; existing rows are never updated.
 
@@ -823,11 +1016,17 @@ Plan availability rules by role.
 | id | BIGINT (PK) | Primary key |
 | plan_id | BIGINT (FK) | Foreign key to `plans.id` |
 | allowed_role_id | BIGINT (FK, NULL) | Foreign key to `roles.id` (Spatie Permission) |
-| is_enabled | BOOLEAN | Availability flag |
+| is_enabled | BOOLEAN | Availability flag (default: true) |
 | created_at | DATETIME | Creation timestamp |
 
+**Foreign Keys:**
+- `plan_id` references `plans.id` (cascadeOnDelete)
+- `allowed_role_id` references `roles.id` (Spatie Permission, nullOnDelete)
+
+**Note:** No timestamps. Only has `created_at`. Table name is `plan_availability`.
+
 **Relationships:**
-- `belongsTo` Plan, Role (Spatie Permission)
+- `belongsTo` Plan, Role (Spatie Permission, nullable)
 
 #### `user_plan_overrides`
 User-level feature overrides.
@@ -838,8 +1037,14 @@ User-level feature overrides.
 | user_id | BIGINT (FK) | Foreign key to `users.id` |
 | feature_id | BIGINT (FK) | Foreign key to `features.id` |
 | override_value | VARCHAR(100) | Override value |
-| expires_at | DATETIME | Expiration date (nullable) |
+| expires_at | DATETIME (NULL) | Expiration date (nullable) |
 | created_at | DATETIME | Creation timestamp |
+
+**Foreign Keys:**
+- `user_id` references `users.id` (cascadeOnDelete)
+- `feature_id` references `features.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Only has `created_at`.
 
 **Relationships:**
 - `belongsTo` User, Feature
@@ -853,8 +1058,14 @@ Dealer-level feature overrides.
 | dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
 | feature_id | BIGINT (FK) | Foreign key to `features.id` |
 | override_value | VARCHAR(100) | Override value |
-| expires_at | DATETIME | Expiration date (nullable) |
+| expires_at | DATETIME (NULL) | Expiration date (nullable) |
 | created_at | DATETIME | Creation timestamp |
+
+**Foreign Keys:**
+- `dealer_id` references `dealers.id` (cascadeOnDelete)
+- `feature_id` references `features.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Only has `created_at`.
 
 **Relationships:**
 - `belongsTo` Dealer, Feature
@@ -863,20 +1074,6 @@ Dealer-level feature overrides.
 
 ### Analytics & Logging
 
-#### `price_history`
-Vehicle price change audit trail.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | BIGINT (PK) | Primary key |
-| vehicle_id | BIGINT (FK) | Foreign key to `vehicles.id` |
-| old_price | INT | Previous price |
-| new_price | INT | New price |
-| changed_by_user_id | BIGINT (FK) | Foreign key to `users.id` |
-| changed_at | DATETIME | Change timestamp |
-
-**Relationships:**
-- `belongsTo` Vehicle, User (changed by)
 
 #### `listing_views_log`
 Vehicle listing view tracking.
@@ -893,8 +1090,35 @@ Vehicle listing view tracking.
 **Indexes:**
 - `(vehicle_id, viewed_at)`
 
+**Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (cascadeOnDelete)
+- `user_id` references `users.id` (nullOnDelete)
+
+**Note:** No timestamps. Uses `viewed_at` field. Table name is `listing_views_log`.
+
 **Relationships:**
-- `belongsTo` Vehicle, User (if logged in)
+- `belongsTo` Vehicle, User (if logged in, nullable)
+
+#### `price_history`
+Vehicle price change audit trail.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT (PK) | Primary key |
+| vehicle_id | BIGINT (FK) | Foreign key to `vehicles.id` |
+| old_price | INT | Previous price |
+| new_price | INT | New price |
+| changed_by_user_id | BIGINT (FK) | Foreign key to `users.id` |
+| changed_at | DATETIME | Change timestamp |
+
+**Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (cascadeOnDelete)
+- `changed_by_user_id` references `users.id` (cascadeOnDelete)
+
+**Note:** No timestamps. Uses `changed_at` field. Table name is `price_history`.
+
+**Relationships:**
+- `belongsTo` Vehicle, User (changed by)
 
 #### `audit_logs`
 System-wide audit logging.
@@ -907,9 +1131,17 @@ System-wide audit logging.
 | action | VARCHAR(100) | Action performed |
 | target_type | VARCHAR(50) | Target model type |
 | target_id | BIGINT | Target record ID |
-| metadata | JSON | Additional audit data |
-| ip_address | VARCHAR(45) | Actor IP address |
+| metadata | JSON (NULL) | Additional audit data (cast to array) |
+| ip_address | VARCHAR(45) (NULL) | Actor IP address |
 | created_at | DATETIME | Creation timestamp |
+
+**Foreign Keys:**
+- `audit_actor_type_id` references `audit_actor_types.id` (cascadeOnDelete)
+
+**Model Features:**
+- **Casts**: `metadata` is cast to array
+- **No Timestamps**: Only has `created_at`, no `updated_at`
+- **Table Name**: `audit_logs`
 
 **Relationships:**
 - `belongsTo` AuditActorType
@@ -939,6 +1171,8 @@ API performance and status logging.
 | execution_time_ms | INT | Execution time in milliseconds |
 | created_at | DATETIME | Creation timestamp |
 
+**Note:** No timestamps. Only has `created_at`. Table name is `api_logs`.
+
 ---
 
 ## Key Relationships Diagram
@@ -946,60 +1180,105 @@ API performance and status logging.
 ```
 Users
   ├── belongsTo UserStatus
-  ├── belongsToMany Dealers (through DealerUser)
-  ├── hasMany Vehicles
-  ├── hasMany Favorites
-  ├── hasMany SavedSearches
-  ├── hasMany Leads (as buyer/assigned)
-  └── hasMany ChatMessages
+  ├── belongsToMany Dealers (through DealerUser pivot)
+  ├── hasMany DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
+  └── Note: Soft deletes enabled, JWT Subject, Spatie Permission roles
 
 Dealers
-  ├── hasMany DealerUsers
-  ├── hasMany Vehicles
-  ├── hasMany Leads
-  ├── hasMany DealerSubscriptions
-  └── hasMany DealerPlanOverrides
+  ├── belongsToMany Users (through DealerUser pivot)
+  ├── hasMany DealerUser, Vehicle, Lead, DealerSubscription, DealerPlanOverride
+  └── Note: Soft deletes enabled
+
+DealerUsers (Pivot)
+  ├── belongsTo Dealer, User, Role (Spatie Permission)
+  └── Note: Links users to dealers with roles
 
 Vehicles
-  ├── belongsTo Dealer, User, Location, Brand, VehicleModel (model), ModelYear, ListingType
-  ├── hasOne VehicleDetail
-  ├── hasMany VehicleImages
-  ├── hasMany Favorites
-  ├── hasMany Leads
-  ├── hasMany PriceHistory
-  ├── hasMany ListingViewsLog
-  └── belongsToMany Equipment (via vehicle_equipment)
+  ├── belongsTo Dealer (nullable), User, Brand, VehicleModel (model), ModelYear, ListingType, GearType
+  ├── hasOne VehicleDetail, FeaturedListing
+  ├── hasMany VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+  ├── belongsToMany Equipment (via vehicle_equipment pivot)
+  └── Note: Soft deletes enabled, caching for lookup data, auto-generated title accessor
 
 VehicleDetails
-  ├── belongsTo Vehicle
-  ├── belongsTo PriceType, Condition, GearType, SalesType
+  ├── belongsTo Vehicle, PriceType, Condition, SalesType, Variant, Euronom
+  └── Note: version, gear_type_id, fuel_efficiency moved to vehicles table for optimization
 
 Brands
-  └── hasMany VehicleModel (models)
+  └── hasMany VehicleModel (models), Vehicle
 
 VehicleModel (models)
   ├── belongsTo Brand
   └── hasMany Vehicle
 
 Equipment
-  └── belongsToMany Vehicle (via vehicle_equipment)
+  ├── belongsTo EquipmentType
+  └── belongsToMany Vehicle (via vehicle_equipment pivot)
 
-BodyTypes, Colors, Permits, Types, Uses, PriceTypes, Conditions, GearTypes, SalesTypes
+EquipmentTypes
+  └── hasMany Equipment
+
+BodyTypes, Colors, Permits, Types, Uses, PriceTypes, Conditions, SalesTypes
   └── Lookup tables (used for caching in VehicleDetail model)
 
-ListingTypes
-  └── Lookup table (used for caching in Vehicle model)
+Variants, Euronorms
+  └── Lookup tables (used in VehicleDetail model)
+
+FeaturedListings
+  └── belongsTo Vehicle (one-to-one relationship)
+
+ListingTypes, FuelTypes, GearTypes, VehicleListStatuses, ModelYears, Categories
+  └── Lookup tables (used for caching in Vehicle model)
 
 Leads
   ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
-  ├── hasMany LeadStageHistory
-  └── hasMany ChatThreads
+  ├── hasMany LeadStageHistory, ChatThread
+  └── Note: No timestamps (only created_at)
+
+LeadStages
+  └── hasMany Lead
+
+Sources
+  └── hasMany Lead
+
+ChatThreads
+  ├── belongsTo Lead
+  └── hasMany ChatMessage
+
+ChatMessages
+  ├── belongsTo ChatThread, User (sender)
+  └── Note: No timestamps (only created_at)
 
 Plans
-  ├── hasMany PlanPriceHistory
-  ├── hasMany PlanFeatures
-  ├── hasMany DealerSubscriptions
-  └── belongsToMany Features (through PlanFeatures)
+  ├── hasMany PlanPriceHistory, PlanFeature, DealerSubscription, PlanAvailability
+  ├── belongsToMany Feature (through PlanFeature pivot, with value)
+  └── Note: Soft deletes enabled
+
+Features
+  ├── belongsTo FeatureValueType
+  ├── belongsToMany Plan (through PlanFeature pivot, with value)
+  └── hasMany PlanFeature, UserPlanOverride, DealerPlanOverride
+
+PlanFeatures (Pivot)
+  ├── belongsTo Plan, Feature
+  └── Note: Stores feature values for plans
+
+DealerSubscriptions
+  ├── belongsTo Dealer, Plan, SubscriptionStatus
+  └── Note: Immutable pattern, soft deletes enabled, no timestamps (only created_at)
+
+UserPlanOverrides, DealerPlanOverrides
+  ├── belongsTo User/Dealer, Feature
+  └── Note: No timestamps (only created_at)
+
+Pages
+  └── belongsTo PageStatus
+
+Blogs
+  └── Note: Standalone CMS content
+
+PriceHistory, ListingViewsLog, AuditLogs, ApiLogs
+  └── Analytics and logging tables
 ```
 
 ## Design Decisions
@@ -1011,14 +1290,13 @@ The `dealer_subscriptions` table follows an immutable pattern where upgrades/dow
 Multiple composite indexes on `vehicles` table optimize common search queries:
 - `(vehicle_list_status_id, published_at)` - Active listings
 - `(vehicle_list_status_id, price)` - Price sorting
-- `(location_id, price)` - Location-based search
+- Note: `location_id` was removed from vehicles table (migration 2026_01_15_130000)
 
 ### 3. JSON Fields for Flexibility
-Several tables use JSON fields for flexible data storage:
-- `vehicles.specs` - Vehicle specifications
-- `vehicles.equipment` - Equipment list
-- `saved_searches.filters` - Search criteria
-- `audit_logs.metadata` - Additional audit data
+Several tables use JSON/array fields for flexible data storage:
+- `saved_searches.filters` - Search criteria (JSON)
+- `audit_logs.metadata` - Additional audit data (JSON)
+- `vehicle_details.owners` - Vehicle owners information (cast to array)
 
 ### 4. Status Lookup Tables with Constants
 All status/enum values use lookup tables with constants defined in the model classes. This provides type safety and easy reference in code.
@@ -1061,21 +1339,33 @@ The following tables are managed by Laravel packages and are preserved:
 
 Migrations are ordered by dependency (timestamps ensure correct execution order):
 
-1. Lookup tables (user_statuses, fuel_types, etc.) - 054109-054117
-2. Core business tables (dealers, locations) - 054220-054222
-3. Vehicle tables - 054247-054248
-4. User feature tables - 054327-054328
-5. Lead management tables - 054351-054354
-6. CMS tables - 054426-054427
-7. Subscription tables:
-   - 054511: features, plans (both independent, run alphabetically)
-   - 054512: plan_features (depends on features, plans)
-   - 054513: user_plan_overrides (depends on features, users)
-   - 054514: dealer_plan_overrides (depends on features, dealers)
-   - 054515: plan_price_history (depends on plans)
-   - 054516: plan_availability (depends on plans, roles)
-   - 054517: dealer_subscriptions (depends on plans, dealers, subscription_statuses)
-8. Analytics tables - 054600
+1. Lookup tables (user_statuses, fuel_types, transmissions, vehicle_list_statuses, lead_stages, sources, feature_value_types, page_statuses, subscription_statuses, audit_actor_types) - 054109-054117
+2. Core business tables (dealers, dealer_users, locations) - 054220-054222
+3. Vehicle lookup tables (categories, brands, model_years) - 060624-060626
+4. Vehicle tables (vehicles, vehicle_images, vehicle_details) - 060648-060707
+5. Vehicle detail lookup tables (body_types, colors, equipments, types, permits, uses) - 081020-081024
+6. Additional vehicle lookup tables (price_types, conditions, gear_types, sales_types, models, listing_types) - 100000-100007
+7. Vehicle equipment pivot table - 091947
+8. User feature tables (favorites, saved_searches) - 060650, 054328
+9. Lead management tables (leads, lead_stage_history, chat_threads, chat_messages) - 060651, 060654-060656
+10. CMS tables (pages, blogs) - 054426-054427
+11. Subscription tables:
+    - 054511: features, plans (both independent, run alphabetically)
+    - 054512: plan_features (depends on features, plans)
+    - 054513: user_plan_overrides (depends on features, users)
+    - 054514: dealer_plan_overrides (depends on features, dealers)
+    - 054515: plan_price_history (depends on plans)
+    - 054516: plan_availability (depends on plans, roles)
+    - 054517: dealer_subscriptions (depends on plans, dealers, subscription_statuses)
+12. Analytics tables (price_history, listing_views_log, audit_logs, api_logs) - 060652-060653, 054600
+13. Additional tables:
+    - Equipment types - 031211
+    - Variants, Euronorms - 120000-120001
+    - Featured listings - 080820
+14. Schema modifications:
+    - Users: Added address, postcode - 120004
+    - Vehicles: Made title nullable, dealer_id nullable, removed location_id, removed mileage, added model_id, listing_type_id, range_km, charging_type, moved version/gear_type_id/fuel_efficiency from vehicle_details - Various migrations
+    - Vehicle details: Added variant_id, euronom_id, servicebog, seller contact fields, annual_tax, owners; Changed coupling to boolean, wheels to text; Removed model_year - Various migrations
 
 ## Notes
 
