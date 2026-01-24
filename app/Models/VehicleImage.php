@@ -24,6 +24,14 @@ class VehicleImage extends Model
     ];
 
     /**
+     * Append URLs to JSON output
+     */
+    protected $appends = [
+        'image_url',
+        'thumbnail_url',
+    ];
+
+    /**
      * Get image URL attribute
      */
     public function getImageUrlAttribute(): ?string

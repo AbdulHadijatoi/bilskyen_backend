@@ -71,6 +71,13 @@ class VehicleDetail extends Model
         'seller_postcode',
         'annual_tax',
         'owners',
+        'production_date',
+        'cover_image_index',
+        'fuel_consumption_wltp',
+        'fuel_consumption_nedc',
+        'co2_emissions',
+        'is_import',
+        'is_factory_new',
     ];
 
     protected $casts = [
@@ -104,6 +111,13 @@ class VehicleDetail extends Model
         'leasing_period_end' => 'date',
         'annual_tax' => 'decimal:2',
         'owners' => 'array',
+        'production_date' => 'date',
+        'cover_image_index' => 'integer',
+        'fuel_consumption_wltp' => 'decimal:2',
+        'fuel_consumption_nedc' => 'decimal:2',
+        'co2_emissions' => 'integer',
+        'is_import' => 'boolean',
+        'is_factory_new' => 'boolean',
     ];
 
     /**

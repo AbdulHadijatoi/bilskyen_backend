@@ -38,163 +38,184 @@ class VehicleService
      */
     public function createVehicle(array $vehicleData): Vehicle
     {
-        return DB::transaction(function () use ($vehicleData) {
-            // Handle Brand creation if brand name is provided but brand_id is not
-            if (isset($vehicleData['brand_name']) && !isset($vehicleData['brand_id'])) {
-                $brand = Brand::firstOrCreate(
-                    ['name' => $vehicleData['brand_name']]
-                );
-                $vehicleData['brand_id'] = $brand->id;
-                unset($vehicleData['brand_name']);
+
+        // Handle Brand creation if brand name is provided but brand_id is not
+        if (isset($vehicleData['brand_name']) && !isset($vehicleData['brand_id'])) {
+            $brand = Brand::firstOrCreate(
+                ['name' => $vehicleData['brand_name']]
+            );
+            $vehicleData['brand_id'] = $brand->id;
+            unset($vehicleData['brand_name']);
+        }
+
+        // Handle VehicleModel creation if model name is provided but model_id is not
+        if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id'])) {
+            // brand_id is required for model creation
+            if (!isset($vehicleData['brand_id'])) {
+                throw new \InvalidArgumentException('brand_id is required when creating a model');
             }
+            
+            $model = VehicleModel::firstOrCreate(
+                [
+                    'brand_id' => $vehicleData['brand_id'],
+                    'name' => $vehicleData['model_name']
+                ]
+            );
+            $vehicleData['model_id'] = $model->id;
+            unset($vehicleData['model_name']);
+        }
 
-            // Handle VehicleModel creation if model name is provided but model_id is not
-            if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id'])) {
-                // brand_id is required for model creation
-                if (!isset($vehicleData['brand_id'])) {
-                    throw new \InvalidArgumentException('brand_id is required when creating a model');
-                }
-                
-                $model = VehicleModel::firstOrCreate(
-                    [
-                        'brand_id' => $vehicleData['brand_id'],
-                        'name' => $vehicleData['model_name']
-                    ]
-                );
-                $vehicleData['model_id'] = $model->id;
-                unset($vehicleData['model_name']);
+        // Handle ModelYear creation if model year name is provided but model_year_id is not
+        if (isset($vehicleData['model_year_name']) && !isset($vehicleData['model_year_id'])) {
+            $modelYear = ModelYear::firstOrCreate(
+                ['name' => (string) $vehicleData['model_year_name']]
+            );
+            $vehicleData['model_year_id'] = $modelYear->id;
+            unset($vehicleData['model_year_name']);
+        }
+
+        // Also handle if model_year is provided as a number
+        if (isset($vehicleData['model_year']) && !isset($vehicleData['model_year_id'])) {
+            $modelYear = ModelYear::firstOrCreate(
+                ['name' => (string) $vehicleData['model_year']]
+            );
+            $vehicleData['model_year_id'] = $modelYear->id;
+            unset($vehicleData['model_year']);
+        }
+
+        // Handle Euronom creation if euronorm name is provided but euronom_id is not
+        if (isset($vehicleData['euronorm']) && !isset($vehicleData['euronom_id'])) {
+            $euronom = Euronom::firstOrCreate(
+                ['name' => trim($vehicleData['euronorm'])]
+            );
+            $vehicleData['euronom_id'] = $euronom->id;
+            unset($vehicleData['euronorm']);
+        }
+
+        // Separate equipment IDs if present
+        $equipmentIds = null;
+        if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
+            $equipmentIds = $vehicleData['equipment_ids'];
+            unset($vehicleData['equipment_ids']);
+        } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
+            // Support legacy 'equipment' key for backward compatibility
+            $equipmentIds = $vehicleData['equipment'];
+            unset($vehicleData['equipment']);
+        }
+
+        // Resolve variant name to ID if provided
+        if (empty($vehicleData['variant_id']) && (isset($vehicleData['variant']) || isset($vehicleData['variantName']))) {
+            $variantName = $vehicleData['variant'] ?? $vehicleData['variantName'];
+            if (!empty($variantName)) {
+                $variant = Variant::firstOrCreate(['name' => $variantName]);
+                $vehicleData['variant_id'] = $variant->id;
             }
+            unset($vehicleData['variant'], $vehicleData['variantName']);
+        }
 
-            // Handle ModelYear creation if model year name is provided but model_year_id is not
-            if (isset($vehicleData['model_year_name']) && !isset($vehicleData['model_year_id'])) {
-                $modelYear = ModelYear::firstOrCreate(
-                    ['name' => (string) $vehicleData['model_year_name']]
-                );
-                $vehicleData['model_year_id'] = $modelYear->id;
-                unset($vehicleData['model_year_name']);
+        // Separate vehicle details if present
+        $vehicleDetailsData = [];
+        $detailsFields = [
+            'description', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
+            'registration_status', 'registration_status_updated_date', 'expire_date',
+            'status_updated_date', 'total_weight', 'vehicle_weight',
+            'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
+            'gross_combination_weight', 'engine_displacement',
+            'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
+            'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
+            'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
+            'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
+            'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
+            'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
+            'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
+            'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+            'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
+            'co2_emissions', 'is_import', 'is_factory_new'
+        ];
+
+        foreach ($detailsFields as $field) {
+            if (isset($vehicleData[$field])) {
+                $vehicleDetailsData[$field] = $vehicleData[$field];
+                unset($vehicleData[$field]);
             }
+        }
 
-            // Also handle if model_year is provided as a number
-            if (isset($vehicleData['model_year']) && !isset($vehicleData['model_year_id'])) {
-                $modelYear = ModelYear::firstOrCreate(
-                    ['name' => (string) $vehicleData['model_year']]
-                );
-                $vehicleData['model_year_id'] = $modelYear->id;
-                unset($vehicleData['model_year']);
-            }
+        // Create vehicle
+        $vehicle = Vehicle::create($vehicleData);
 
-            // Separate equipment IDs if present
-            $equipmentIds = null;
-            if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
-                $equipmentIds = $vehicleData['equipment_ids'];
-                unset($vehicleData['equipment_ids']);
-            } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
-                // Support legacy 'equipment' key for backward compatibility
-                $equipmentIds = $vehicleData['equipment'];
-                unset($vehicleData['equipment']);
-            }
+        // Sync equipment if provided
+        if ($equipmentIds !== null) {
+            $vehicle->equipment()->sync($equipmentIds);
+        }
+        // Create vehicle details if provided
+        if (!empty($vehicleDetailsData)) {
+            $vehicleDetailsData['vehicle_id'] = $vehicle->id;
+            $details = VehicleDetail::create($vehicleDetailsData);
+            Log::info("vehicle details: " , [$details]);
+        }
 
-            // Separate vehicle details if present
-            $vehicleDetailsData = [];
-            $detailsFields = [
-                'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
-                'registration_status', 'registration_status_updated_date', 'expire_date',
-                'status_updated_date', 'total_weight', 'vehicle_weight',
-                'technical_total_weight', 'coupling', 'towing_weight_brakes', 'minimum_weight',
-                'gross_combination_weight', 'engine_displacement',
-                'engine_cylinders', 'engine_code', 'category', 'last_inspection_date',
-                'last_inspection_result', 'last_inspection_odometer', 'type_approval_code',
-                'top_speed', 'doors', 'minimum_seats', 'maximum_seats', 'wheels',
-                'extra_equipment', 'axles', 'drive_axles', 'wheelbase', 'leasing_period_start',
-                'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
-                'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
-                'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
-            ];
-
-            foreach ($detailsFields as $field) {
-                if (isset($vehicleData[$field])) {
-                    $vehicleDetailsData[$field] = $vehicleData[$field];
-                    unset($vehicleData[$field]);
-                }
-            }
-
-            // Create vehicle
-            $vehicle = Vehicle::create($vehicleData);
-
-            // Sync equipment if provided
-            if ($equipmentIds !== null) {
-                $vehicle->equipment()->sync($equipmentIds);
-            }
-
-            // Create vehicle details if provided
-            if (!empty($vehicleDetailsData)) {
-                $vehicleDetailsData['vehicle_id'] = $vehicle->id;
-                VehicleDetail::create($vehicleDetailsData);
-            }
-
-            // Handle file uploads if present
-            if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
-                $sortOrder = 0;
-                foreach ($vehicleData['images'] as $file) {
-                    if (is_string($file)) {
-                        // Already a path/URL - extract relative path and try to generate thumbnail if it doesn't exist
-                        // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
-                        $imagePath = str_replace('/storage/', '', parse_url($file, PHP_URL_PATH));
-                        
-                        $thumbnailPath = null;
-                        try {
-                            $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
-                            // Extract path from URL
-                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                        } catch (\Exception $e) {
-                            // Thumbnail generation failed, continue without thumbnail
-                        }
-                        
-                        VehicleImage::create([
-                            'vehicle_id' => $vehicle->id,
-                            'image_path' => $imagePath,
-                            'thumbnail_path' => $thumbnailPath,
-                            'sort_order' => $sortOrder++,
-                        ]);
-                    } else {
-                        // Upload file with thumbnail generation
-                        $this->fileService->validateFile($file);
-                        $uploadedUrl = $this->fileService->uploadFiles(
-                            [$file], 
-                            'public', 
-                            'vehicles',
-                            true, // createThumbnails
-                            false, // optimizeImages
-                            300, // thumbnailWidth
-                            300  // thumbnailHeight
-                        )[0];
-                        
-                        // Extract relative path from URL (remove domain and /storage/ prefix)
-                        // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
-                        $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-                        
-                        // Extract thumbnail path from URL
-                        $thumbnailPath = null;
-                        try {
-                            $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                        } catch (\Exception $e) {
-                            // Thumbnail generation failed, continue without thumbnail
-                        }
-                        
-                        VehicleImage::create([
-                            'vehicle_id' => $vehicle->id,
-                            'image_path' => $imagePath,
-                            'thumbnail_path' => $thumbnailPath,
-                            'sort_order' => $sortOrder++,
-                        ]);
+        // Handle file uploads if present
+        if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
+            $sortOrder = 0;
+            foreach ($vehicleData['images'] as $file) {
+                if (is_string($file)) {
+                    // Already a path/URL - extract relative path and try to generate thumbnail if it doesn't exist
+                    // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
+                    $imagePath = str_replace('/storage/', '', parse_url($file, PHP_URL_PATH));
+                    
+                    $thumbnailPath = null;
+                    try {
+                        $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
+                        // Extract path from URL
+                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                    } catch (\Exception $e) {
+                        // Thumbnail generation failed, continue without thumbnail
                     }
+                    
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image_path' => $imagePath,
+                        'thumbnail_path' => $thumbnailPath,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                } else {
+                    // Upload file with thumbnail generation
+                    $this->fileService->validateFile($file);
+                    $uploadedUrl = $this->fileService->uploadFiles(
+                        [$file], 
+                        'public', 
+                        'vehicles',
+                        true, // createThumbnails
+                        false, // optimizeImages
+                        300, // thumbnailWidth
+                        300  // thumbnailHeight
+                    )[0];
+                    
+                    // Extract relative path from URL (remove domain and /storage/ prefix)
+                    // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
+                    $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
+                    
+                    // Extract thumbnail path from URL
+                    $thumbnailPath = null;
+                    try {
+                        $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
+                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                    } catch (\Exception $e) {
+                        // Thumbnail generation failed, continue without thumbnail
+                    }
+                    
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image_path' => $imagePath,
+                        'thumbnail_path' => $thumbnailPath,
+                        'sort_order' => $sortOrder++,
+                    ]);
                 }
             }
+        }
 
-            return $vehicle->fresh(['images', 'details', 'equipment']);
-        });
+        return $vehicle->fresh(['images', 'details', 'equipment']);
+
     }
 
     /**
@@ -374,7 +395,9 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
+                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+                'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
+                'co2_emissions', 'is_import', 'is_factory_new'
             ];
 
             foreach ($detailsFields as $field) {
@@ -572,6 +595,39 @@ class VehicleService
         }
 
         // Apply sorting
+        $this->applySorting($query, $filters['sort'] ?? 'standard');
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Get dealer vehicles (all statuses) with relations
+     */
+    public function getDealerVehicles(int $dealerId, array $filters = [], int $perPage = 15, int $page = 1)
+    {
+        $query = Vehicle::query()
+            ->where('dealer_id', $dealerId)
+            ->with([
+                'images' => function ($query) {
+                    $query->orderBy('sort_order');
+                },
+                'details',
+                'equipment',
+            ]);
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('registration', 'like', "%{$search}%")
+                  ->orWhere('vin', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['vehicle_list_status_id'])) {
+            $query->where('vehicle_list_status_id', $filters['vehicle_list_status_id']);
+        }
+
         $this->applySorting($query, $filters['sort'] ?? 'standard');
 
         return $query->paginate($perPage, ['*'], 'page', $page);

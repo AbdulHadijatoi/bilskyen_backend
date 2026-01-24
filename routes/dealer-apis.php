@@ -8,6 +8,7 @@ use App\Http\Controllers\SavedSearchController;
 use App\Http\Controllers\DealerProfileController;
 use App\Http\Controllers\DealerStaffController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\DealerLookupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,14 +32,14 @@ Route::middleware('auth:api')->group(function () {
     
     // Vehicle Management
     Route::prefix('vehicles')->group(function () {
-        Route::get('/', [VehicleController::class, 'index'])
-            ->middleware(permission_middleware('vehicle', 'list'));
+        Route::get('/', [VehicleController::class, 'dealerIndex']);
+            // ->middleware(permission_middleware('vehicle', 'list'));
         
         Route::get('/{id}', [VehicleController::class, 'show'])
             ->middleware(permission_middleware('vehicle', 'view'));
         
-        Route::post('/', [VehicleController::class, 'store'])
-            ->middleware(['throttle:20,1', 'idempotency', permission_middleware('vehicle', 'create')]);
+        Route::post('/', [VehicleController::class, 'store']);
+            // ->middleware(['throttle:20,1', 'idempotency', permission_middleware('vehicle', 'create')]);
         
         Route::put('/{id}', [VehicleController::class, 'update'])
             ->middleware(permission_middleware('vehicle', 'update'));
@@ -61,6 +62,13 @@ Route::middleware('auth:api')->group(function () {
         
         Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
             ->middleware(['throttle:40,1', permission_middleware('vehicle', 'create')]);
+    });
+    
+    // Lookup endpoints (for form dropdowns and vehicle lookup)
+    Route::get('/lookup-constants', [DealerLookupController::class, 'getLookupConstants']);
+    Route::prefix('lookup')->group(function () {
+        Route::post('/vehicle-by-registration', [DealerLookupController::class, 'lookupVehicleByRegistration'])
+            ->middleware('throttle:40,1'); // Rate limit vehicle lookups
     });
     
     // Lead Management

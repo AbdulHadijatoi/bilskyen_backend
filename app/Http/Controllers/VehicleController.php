@@ -190,6 +190,33 @@ class VehicleController extends Controller
     }
 
     /**
+     * Get dealer vehicles list
+     */
+    public function dealerIndex(Request $request): JsonResponse
+    {
+        $dealer = $request->user()?->dealers()->first();
+        if (!$dealer) {
+            $emptyPaginator = new LengthAwarePaginator([], 0, $request->input('limit', 15), $request->input('page', 1));
+            return $this->paginated($emptyPaginator);
+        }
+
+        $filters = $request->only([
+            'search',
+            'vehicle_list_status_id',
+            'sort',
+        ]);
+
+        $vehicles = $this->vehicleService->getDealerVehicles(
+            $dealer->id,
+            $filters,
+            $request->input('limit', 15),
+            $request->input('page', 1)
+        );
+
+        return $this->paginated($vehicles);
+    }
+
+    /**
      * Get vehicle details
      */
     public function show(int $id): JsonResponse
@@ -269,9 +296,9 @@ class VehicleController extends Controller
     /**
      * Create vehicle
      */
-    public function store(StoreVehicleRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $data = $request->validated();
+        $data = $request->all();
 
         // Set dealer_id from authenticated user
         if ($request->user() && $request->user()->dealers()->exists()) {
@@ -294,9 +321,9 @@ class VehicleController extends Controller
     /**
      * Update vehicle
      */
-    public function update(UpdateVehicleRequest $request, Vehicle $vehicle): JsonResponse
+    public function update(Request $request, Vehicle $vehicle): JsonResponse
     {
-        $data = $request->validated();
+        $data = $request->all();
 
         // Handle file uploads
         if ($request->hasFile('images')) {
