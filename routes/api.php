@@ -39,6 +39,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/transmissions', [LookupController::class, 'transmissions']);
     Route::get('/models', [LookupController::class, 'models']);
     
+    // Constants API - Get all lookup tables data
+    Route::get('/constants', [LookupController::class, 'constants'])->name('constants');
+    
     // Authentication routes
     Route::prefix('auth')->group(function () {
         // Public auth routes with isolated rate limiting (named limiters prevent cross-endpoint interference)
