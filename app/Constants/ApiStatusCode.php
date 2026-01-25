@@ -9,9 +9,9 @@ class ApiStatusCode
 {
     // Success codes
     public const OK = 200;
-    public const CREATED = 201;
-    public const ACCEPTED = 202;
-    public const NO_CONTENT = 204;
+    public const CREATED = 200;//201
+    public const ACCEPTED = 200;//202
+    public const NO_CONTENT = 200;//204
 
     // Client error codes
     public const BAD_REQUEST = 400;

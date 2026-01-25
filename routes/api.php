@@ -95,7 +95,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:api')->prefix('favorites')->group(function () {
         Route::get('/', [\App\Http\Controllers\FavoriteController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\FavoriteController::class, 'store']);
-        Route::delete('/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroy']);
+        Route::post('delete/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroy']);
         Route::get('/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'check']);
         Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
     });
