@@ -21,6 +21,7 @@ use App\Models\ModelYear;
 use App\Models\ListingType;
 use App\Models\EquipmentType;
 use App\Models\Equipment;
+use App\Models\Euronom;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -149,6 +150,7 @@ class LookupController extends Controller
             $modelYears = ModelYear::select('id', 'name')->orderBy('name')->get();
             $listingTypes = ListingType::select('id', 'name')->orderBy('name')->get();
             $equipmentTypes = EquipmentType::select('id', 'name')->orderBy('name')->get();
+            $euronorms = Euronom::select('id', 'name')->orderBy('name')->get();
 
             // Models with parent reference (brand_id)
             $models = VehicleModel::select('id', 'name', 'brand_id')->orderBy('name')->get();
@@ -174,6 +176,7 @@ class LookupController extends Controller
                 'model_years' => $modelYears,
                 'listing_types' => $listingTypes,
                 'equipment_types' => $equipmentTypes,
+                'euronorms' => $euronorms,
                 'models' => $models,
                 'equipments' => $equipments,
             ]);
