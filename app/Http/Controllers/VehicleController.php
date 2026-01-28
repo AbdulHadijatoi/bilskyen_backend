@@ -720,32 +720,32 @@ class VehicleController extends Controller
             $vehicleData['user_id'] = $user->id;
 
             // Get or create dealer for the user
-            $dealer = $user->dealers()->first();
+            // $dealer = $user->dealers()->first();
             
-            if (!$dealer) {
-                $dealer = DB::transaction(function () use ($user) {
-                    // Create a default dealer for individual sellers
-                    $dealer = Dealer::create([
-                        'cvr' => 'INDIVIDUAL-' . $user->id . '-' . time(),
-                        'address' => $user->address ?? '',
-                        'city' => $user->city ?? '',
-                        'postcode' => $user->postcode ?? '',
-                        'country_code' => 'DK',
-                    ]);
+            // if (!$dealer) {
+            //     $dealer = DB::transaction(function () use ($user) {
+            //         // Create a default dealer for individual sellers
+            //         $dealer = Dealer::create([
+            //             'cvr' => 'INDIVIDUAL-' . $user->id . '-' . time(),
+            //             'address' => $user->address ?? '',
+            //             'city' => $user->city ?? '',
+            //             'postcode' => $user->postcode ?? '',
+            //             'country_code' => 'DK',
+            //         ]);
 
-                    // Associate user with dealer
-                    DealerUser::create([
-                        'dealer_id' => $dealer->id,
-                        'user_id' => $user->id,
-                        'role_id' => 1, // ROLE_OWNER
-                        'created_at' => now(),
-                    ]);
+            //         // Associate user with dealer
+            //         DealerUser::create([
+            //             'dealer_id' => $dealer->id,
+            //             'user_id' => $user->id,
+            //             'role_id' => 1, // ROLE_OWNER
+            //             'created_at' => now(),
+            //         ]);
 
-                    return $dealer;
-                });
-            }
+            //         return $dealer;
+            //     });
+            // }
             
-            $vehicleData['dealer_id'] = $dealer->id;
+            // $vehicleData['dealer_id'] = $dealer->id;
 
             // Set default listing_type_id to "Purchase" if not provided
             if (!isset($vehicleData['listing_type_id']) || empty($vehicleData['listing_type_id'])) {

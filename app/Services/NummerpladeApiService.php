@@ -1719,9 +1719,7 @@ class NummerpladeApiService
             // Get vehicle_id from the processed data
             $vehicleId = null;
             if (isset($vehicleData['vehicle_id'])) {
-                $vehicleId = (int) $vehicleData['vehicle_id'];
-            } elseif (isset($vehicleData['vehicle_external_id'])) {
-                $vehicleId = (int) $vehicleData['vehicle_external_id'];
+                $vehicleId = $vehicleData['vehicle_id'];
             }
 
             if (!$vehicleId) {
