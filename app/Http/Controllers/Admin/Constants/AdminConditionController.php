@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Condition;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Condition Controller
  */
 class AdminConditionController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $conditions = Condition::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminConditionController extends Controller
         $condition = Condition::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_conditions');
+        $this->clearConstantsCache('conditions');
 
         return $this->created($condition);
     }
@@ -51,7 +52,7 @@ class AdminConditionController extends Controller
         $condition->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_conditions');
+        $this->clearConstantsCache('conditions');
 
         return $this->success($condition);
     }
@@ -62,7 +63,7 @@ class AdminConditionController extends Controller
         $condition->delete();
 
         // Clear cache
-        Cache::forget('constants_conditions');
+        $this->clearConstantsCache('conditions');
 
         return $this->noContent();
     }

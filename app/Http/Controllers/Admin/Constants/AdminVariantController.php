@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Variant Controller
  */
 class AdminVariantController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $variants = Variant::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminVariantController extends Controller
         $variant = Variant::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_variants');
+        $this->clearConstantsCache('variants');
 
         return $this->created($variant);
     }
@@ -51,7 +52,7 @@ class AdminVariantController extends Controller
         $variant->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_variants');
+        $this->clearConstantsCache('variants');
 
         return $this->success($variant);
     }
@@ -62,7 +63,7 @@ class AdminVariantController extends Controller
         $variant->delete();
 
         // Clear cache
-        Cache::forget('constants_variants');
+        $this->clearConstantsCache('variants');
 
         return $this->noContent();
     }

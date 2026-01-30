@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\CachedLookup;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VehicleListStatus extends Model
 {
-    use HasFactory, CachedLookup;
+    use HasFactory;
 
     public const DRAFT = 1;
     public const PUBLISHED = 2;

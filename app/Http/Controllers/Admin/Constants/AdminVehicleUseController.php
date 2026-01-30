@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\VehicleUse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Vehicle Use Controller
  */
 class AdminVehicleUseController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $vehicleUses = VehicleUse::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminVehicleUseController extends Controller
         $vehicleUse = VehicleUse::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_vehicle_uses');
+        $this->clearConstantsCache('vehicle_uses');
 
         return $this->created($vehicleUse);
     }
@@ -51,7 +52,7 @@ class AdminVehicleUseController extends Controller
         $vehicleUse->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_vehicle_uses');
+        $this->clearConstantsCache('vehicle_uses');
 
         return $this->success($vehicleUse);
     }
@@ -62,7 +63,7 @@ class AdminVehicleUseController extends Controller
         $vehicleUse->delete();
 
         // Clear cache
-        Cache::forget('constants_vehicle_uses');
+        $this->clearConstantsCache('vehicle_uses');
 
         return $this->noContent();
     }

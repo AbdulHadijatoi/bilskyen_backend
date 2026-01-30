@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ListingType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Listing Type Controller
  */
 class AdminListingTypeController extends Controller
+{
+    use ConstantsCacheHelper;
 {
     public function index(Request $request): JsonResponse
     {

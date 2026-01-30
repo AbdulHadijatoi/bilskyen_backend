@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Vehicle List Status Controller
  */
 class AdminVehicleListStatusController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $vehicleListStatuses = VehicleListStatus::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminVehicleListStatusController extends Controller
         $vehicleListStatus = VehicleListStatus::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_vehicle_list_statuses');
+        $this->clearConstantsCache('vehicle_list_statuses');
 
         return $this->created($vehicleListStatus);
     }
@@ -51,7 +52,7 @@ class AdminVehicleListStatusController extends Controller
         $vehicleListStatus->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_vehicle_list_statuses');
+        $this->clearConstantsCache('vehicle_list_statuses');
 
         return $this->success($vehicleListStatus);
     }
@@ -62,7 +63,7 @@ class AdminVehicleListStatusController extends Controller
         $vehicleListStatus->delete();
 
         // Clear cache
-        Cache::forget('constants_vehicle_list_statuses');
+        $this->clearConstantsCache('vehicle_list_statuses');
 
         return $this->noContent();
     }

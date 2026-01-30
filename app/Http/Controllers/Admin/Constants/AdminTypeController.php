@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Type Controller
  */
 class AdminTypeController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $types = Type::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminTypeController extends Controller
         $type = Type::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_types');
+        $this->clearConstantsCache('types');
 
         return $this->created($type);
     }
@@ -51,7 +52,7 @@ class AdminTypeController extends Controller
         $type->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_types');
+        $this->clearConstantsCache('types');
 
         return $this->success($type);
     }
@@ -62,7 +63,7 @@ class AdminTypeController extends Controller
         $type->delete();
 
         // Clear cache
-        Cache::forget('constants_types');
+        $this->clearConstantsCache('types');
 
         return $this->noContent();
     }

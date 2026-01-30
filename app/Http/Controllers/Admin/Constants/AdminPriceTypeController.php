@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Price Type Controller
  */
 class AdminPriceTypeController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $priceTypes = PriceType::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminPriceTypeController extends Controller
         $priceType = PriceType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_price_types');
+        $this->clearConstantsCache('price_types');
 
         return $this->created($priceType);
     }
@@ -51,7 +52,7 @@ class AdminPriceTypeController extends Controller
         $priceType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_price_types');
+        $this->clearConstantsCache('price_types');
 
         return $this->success($priceType);
     }
@@ -62,7 +63,7 @@ class AdminPriceTypeController extends Controller
         $priceType->delete();
 
         // Clear cache
-        Cache::forget('constants_price_types');
+        $this->clearConstantsCache('price_types');
 
         return $this->noContent();
     }

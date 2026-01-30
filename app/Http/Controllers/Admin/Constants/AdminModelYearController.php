@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ModelYear;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Model Year Controller
  */
 class AdminModelYearController extends Controller
+{
+    use ConstantsCacheHelper;
 {
     public function index(Request $request): JsonResponse
     {

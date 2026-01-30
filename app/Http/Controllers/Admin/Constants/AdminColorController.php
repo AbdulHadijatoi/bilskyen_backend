@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Color;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Color Controller
  */
 class AdminColorController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $colors = Color::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminColorController extends Controller
         $color = Color::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_colors');
+        $this->clearConstantsCache('colors');
 
         return $this->created($color);
     }
@@ -51,7 +52,7 @@ class AdminColorController extends Controller
         $color->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_colors');
+        $this->clearConstantsCache('colors');
 
         return $this->success($color);
     }
@@ -62,7 +63,7 @@ class AdminColorController extends Controller
         $color->delete();
 
         // Clear cache
-        Cache::forget('constants_colors');
+        $this->clearConstantsCache('colors');
 
         return $this->noContent();
     }

@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\SalesType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+
 
 /**
  * Admin Sales Type Controller
  */
 class AdminSalesTypeController extends Controller
 {
+    use ConstantsCacheHelper;
     public function index(Request $request): JsonResponse
     {
         $salesTypes = SalesType::orderBy('name')->paginate($request->get('limit', 15));
@@ -35,7 +36,7 @@ class AdminSalesTypeController extends Controller
         $salesType = SalesType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_sales_types');
+        $this->clearConstantsCache('sales_types');
 
         return $this->created($salesType);
     }
@@ -51,7 +52,7 @@ class AdminSalesTypeController extends Controller
         $salesType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_sales_types');
+        $this->clearConstantsCache('sales_types');
 
         return $this->success($salesType);
     }
@@ -62,7 +63,7 @@ class AdminSalesTypeController extends Controller
         $salesType->delete();
 
         // Clear cache
-        Cache::forget('constants_sales_types');
+        $this->clearConstantsCache('sales_types');
 
         return $this->noContent();
     }
