@@ -13,6 +13,25 @@ use App\Http\Controllers\AdminAnalyticsController;
 use App\Http\Controllers\AdminAuditLogController;
 use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\AdminNotificationController;
+use App\Http\Controllers\Admin\Constants\AdminConstantsController;
+use App\Http\Controllers\Admin\Constants\AdminBrandController;
+use App\Http\Controllers\Admin\Constants\AdminModelYearController;
+use App\Http\Controllers\Admin\Constants\AdminFuelTypeController;
+use App\Http\Controllers\Admin\Constants\AdminGearTypeController;
+use App\Http\Controllers\Admin\Constants\AdminListingTypeController;
+use App\Http\Controllers\Admin\Constants\AdminBodyTypeController;
+use App\Http\Controllers\Admin\Constants\AdminColorController;
+use App\Http\Controllers\Admin\Constants\AdminVariantController;
+use App\Http\Controllers\Admin\Constants\AdminTypeController;
+use App\Http\Controllers\Admin\Constants\AdminConditionController;
+use App\Http\Controllers\Admin\Constants\AdminSalesTypeController;
+use App\Http\Controllers\Admin\Constants\AdminPriceTypeController;
+use App\Http\Controllers\Admin\Constants\AdminEuronomController;
+use App\Http\Controllers\Admin\Constants\AdminVehicleModelController;
+use App\Http\Controllers\Admin\Constants\AdminVehicleUseController;
+use App\Http\Controllers\Admin\Constants\AdminVehicleListStatusController;
+use App\Http\Controllers\Admin\Constants\AdminEquipmentController;
+use App\Http\Controllers\Admin\Constants\AdminEquipmentTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,5 +143,153 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/model-items', [PermissionManagementController::class, 'modelItems']);
         Route::post('/assign', [PermissionManagementController::class, 'assign']);
         Route::post('/revoke', [PermissionManagementController::class, 'revoke']);
+    });
+    
+    // Constants Data
+    Route::get('/constants', [AdminConstantsController::class, 'getConstantsData']);
+    
+    // Constants Management
+    Route::prefix('brands')->group(function () {
+        Route::get('/', [AdminBrandController::class, 'index']);
+        Route::get('show/{id}', [AdminBrandController::class, 'show']);
+        Route::post('/create', [AdminBrandController::class, 'create']);
+        Route::post('/update/{id}', [AdminBrandController::class, 'update']);
+        Route::post('delete/{id}', [AdminBrandController::class, 'delete']);
+    });
+    
+    Route::prefix('model-years')->group(function () {
+        Route::get('/', [AdminModelYearController::class, 'index']);
+        Route::get('show/{id}', [AdminModelYearController::class, 'show']);
+        Route::post('/create', [AdminModelYearController::class, 'create']);
+        Route::post('/update/{id}', [AdminModelYearController::class, 'update']);
+        Route::post('delete/{id}', [AdminModelYearController::class, 'delete']);
+    });
+    
+    Route::prefix('fuel-types')->group(function () {
+        Route::get('/', [AdminFuelTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminFuelTypeController::class, 'show']);
+        Route::post('/create', [AdminFuelTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminFuelTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminFuelTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('gear-types')->group(function () {
+        Route::get('/', [AdminGearTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminGearTypeController::class, 'show']);
+        Route::post('/create', [AdminGearTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminGearTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminGearTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('listing-types')->group(function () {
+        Route::get('/', [AdminListingTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminListingTypeController::class, 'show']);
+        Route::post('/create', [AdminListingTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminListingTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminListingTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('body-types')->group(function () {
+        Route::get('/', [AdminBodyTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminBodyTypeController::class, 'show']);
+        Route::post('/create', [AdminBodyTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminBodyTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminBodyTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('colors')->group(function () {
+        Route::get('/', [AdminColorController::class, 'index']);
+        Route::get('show/{id}', [AdminColorController::class, 'show']);
+        Route::post('/create', [AdminColorController::class, 'create']);
+        Route::post('/update/{id}', [AdminColorController::class, 'update']);
+        Route::post('delete/{id}', [AdminColorController::class, 'delete']);
+    });
+    
+    Route::prefix('variants')->group(function () {
+        Route::get('/', [AdminVariantController::class, 'index']);
+        Route::get('show/{id}', [AdminVariantController::class, 'show']);
+        Route::post('/create', [AdminVariantController::class, 'create']);
+        Route::post('/update/{id}', [AdminVariantController::class, 'update']);
+        Route::post('delete/{id}', [AdminVariantController::class, 'delete']);
+    });
+    
+    Route::prefix('types')->group(function () {
+        Route::get('/', [AdminTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminTypeController::class, 'show']);
+        Route::post('/create', [AdminTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('conditions')->group(function () {
+        Route::get('/', [AdminConditionController::class, 'index']);
+        Route::get('show/{id}', [AdminConditionController::class, 'show']);
+        Route::post('/create', [AdminConditionController::class, 'create']);
+        Route::post('/update/{id}', [AdminConditionController::class, 'update']);
+        Route::post('delete/{id}', [AdminConditionController::class, 'delete']);
+    });
+    
+    Route::prefix('sales-types')->group(function () {
+        Route::get('/', [AdminSalesTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminSalesTypeController::class, 'show']);
+        Route::post('/create', [AdminSalesTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminSalesTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminSalesTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('price-types')->group(function () {
+        Route::get('/', [AdminPriceTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminPriceTypeController::class, 'show']);
+        Route::post('/create', [AdminPriceTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminPriceTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminPriceTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('euronorms')->group(function () {
+        Route::get('/', [AdminEuronomController::class, 'index']);
+        Route::get('show/{id}', [AdminEuronomController::class, 'show']);
+        Route::post('/create', [AdminEuronomController::class, 'create']);
+        Route::post('/update/{id}', [AdminEuronomController::class, 'update']);
+        Route::post('delete/{id}', [AdminEuronomController::class, 'delete']);
+    });
+    
+    Route::prefix('vehicle-models')->group(function () {
+        Route::get('/', [AdminVehicleModelController::class, 'index']);
+        Route::get('show/{id}', [AdminVehicleModelController::class, 'show']);
+        Route::post('/create', [AdminVehicleModelController::class, 'create']);
+        Route::post('/update/{id}', [AdminVehicleModelController::class, 'update']);
+        Route::post('delete/{id}', [AdminVehicleModelController::class, 'delete']);
+    });
+    
+    Route::prefix('vehicle-uses')->group(function () {
+        Route::get('/', [AdminVehicleUseController::class, 'index']);
+        Route::get('show/{id}', [AdminVehicleUseController::class, 'show']);
+        Route::post('/create', [AdminVehicleUseController::class, 'create']);
+        Route::post('/update/{id}', [AdminVehicleUseController::class, 'update']);
+        Route::post('delete/{id}', [AdminVehicleUseController::class, 'delete']);
+    });
+    
+    Route::prefix('vehicle-list-statuses')->group(function () {
+        Route::get('/', [AdminVehicleListStatusController::class, 'index']);
+        Route::get('show/{id}', [AdminVehicleListStatusController::class, 'show']);
+        Route::post('/create', [AdminVehicleListStatusController::class, 'create']);
+        Route::post('/update/{id}', [AdminVehicleListStatusController::class, 'update']);
+        Route::post('delete/{id}', [AdminVehicleListStatusController::class, 'delete']);
+    });
+    
+    Route::prefix('equipment-types')->group(function () {
+        Route::get('/', [AdminEquipmentTypeController::class, 'index']);
+        Route::get('show/{id}', [AdminEquipmentTypeController::class, 'show']);
+        Route::post('/create', [AdminEquipmentTypeController::class, 'create']);
+        Route::post('/update/{id}', [AdminEquipmentTypeController::class, 'update']);
+        Route::post('delete/{id}', [AdminEquipmentTypeController::class, 'delete']);
+    });
+    
+    Route::prefix('equipments')->group(function () {
+        Route::get('/', [AdminEquipmentController::class, 'index']);
+        Route::get('show/{id}', [AdminEquipmentController::class, 'show']);
+        Route::post('/create', [AdminEquipmentController::class, 'create']);
+        Route::post('/update/{id}', [AdminEquipmentController::class, 'update']);
+        Route::post('delete/{id}', [AdminEquipmentController::class, 'delete']);
     });
 });
