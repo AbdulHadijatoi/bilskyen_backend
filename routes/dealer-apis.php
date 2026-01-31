@@ -9,6 +9,7 @@ use App\Http\Controllers\DealerProfileController;
 use App\Http\Controllers\DealerStaffController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DealerLookupController;
+use App\Http\Controllers\DealerDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,9 @@ if (!function_exists('permission_middleware')) {
 
 // Dealer routes (requires authentication - standardized to auth:api)
 Route::middleware('auth:api')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [DealerDashboardController::class, 'index']);
     
     // Vehicle Management
     Route::prefix('vehicles')->group(function () {
