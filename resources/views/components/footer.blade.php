@@ -1,4 +1,28 @@
 <footer class="bg-primary border-t border-primary-foreground/20 py-8 md:py-12">
+    <!-- CTA Section -->
+
+    <div class="container mx-auto px-4 md:px-6">
+        <div class="flex flex-col items-center justify-between gap-8 lg:flex-row text-white">
+            <div class="max-w-xl space-y-4">
+                <h2 class="text-3xl font-bold tracking-tight text-white">
+                    Ready to Find Your Next Vehicle?
+                </h2>
+                <p class="text-white/90">
+                    Visit our showroom or browse our inventory online. Our team is ready to help you find the perfect vehicle that fits your needs and budget.
+                </p>
+            </div>
+            <div class="flex flex-col gap-4 sm:flex-row">
+                <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-white shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-white/20">
+                    Browse Inventory
+                </a>
+                <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-primary shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    Contact Us
+                </a>
+            </div>
+        </div>
+        <div class="my-8 border-b border-white/20 w-full"></div>
+    </div>
+
     <div class="container mx-auto px-4 md:px-6">
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div class="space-y-4">

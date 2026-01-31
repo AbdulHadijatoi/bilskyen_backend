@@ -416,7 +416,7 @@
     </section>
 
     <!-- Featured Vehicles Section -->
-    <section class="py-16">
+    <section class="py-16 bg-muted">
         <div class="container mx-auto px-4 md:px-6">
             <div class="flex flex-col gap-8">
                 <div class="space-y-2">
@@ -461,7 +461,7 @@
                                     <img
                                         src="{{ $vehicle['image'] }}"
                                         alt="{{ $vehicle['title'] }}"
-                                        class="h-full w-full object-cover transition-transform hover:scale-105"
+                                        class="h-full w-full object-cover"
                                     />
                                 </div>
                                 
@@ -546,7 +546,7 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="bg-muted py-16">
+    <section class="py-16">
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
@@ -620,7 +620,7 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-16">
+    <section class="py-16 bg-muted">
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
@@ -673,7 +673,7 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section class="bg-muted py-16">
+    <section class="py-16">
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
@@ -739,29 +739,6 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="bg-gray-200 py-16">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="flex flex-col items-center justify-between gap-8 lg:flex-row">
-                <div class="max-w-xl space-y-4">
-                    <h2 class="text-3xl font-bold tracking-tight">
-                        Ready to Find Your Next Vehicle?
-                    </h2>
-                    <p class="">
-                        Visit our showroom or browse our inventory online. Our team is ready to help you find the perfect vehicle that fits your needs and budget.
-                    </p>
-                </div>
-                <div class="flex flex-col gap-4 sm:flex-row">
-                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-white shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                        Browse Inventory
-                    </a>
-                    <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-secondary-foreground shadow transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                        Contact Us
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
 </div>
 
 <script type="module">

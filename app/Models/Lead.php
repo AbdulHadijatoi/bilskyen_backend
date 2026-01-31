@@ -20,6 +20,7 @@ class Lead extends Model
         'assigned_user_id',
         'lead_stage_id',
         'source_id',
+        'lead_category_id',
         'last_activity_at',
         'created_at',
     ];
@@ -75,6 +76,14 @@ class Lead extends Model
     public function source(): BelongsTo
     {
         return $this->belongsTo(Source::class);
+    }
+
+    /**
+     * Get lead category for this lead
+     */
+    public function leadCategory(): BelongsTo
+    {
+        return $this->belongsTo(LeadCategory::class);
     }
 
     /**
