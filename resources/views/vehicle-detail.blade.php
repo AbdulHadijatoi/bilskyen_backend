@@ -693,8 +693,102 @@
 
         <!-- Right Sidebar -->
         <div class="space-y-6">
-            <!-- Seller Information -->
-            @if($vehicle->user)
+            <!-- Dealer Information -->
+            @if($vehicle->dealer)
+                @php
+                    $dealerUser = $vehicle->dealer->users()->first();
+                    $dealerPhone = null;
+                    if ($details && $details->seller_phone) {
+                        $dealerPhone = $details->seller_phone;
+                    } elseif ($dealerUser && $dealerUser->phone) {
+                        $dealerPhone = $dealerUser->phone;
+                    }
+                @endphp
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                            <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"></path>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-foreground">
+                            Dealer Information
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        @if($dealerUser && $dealerUser->name)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ ucfirst($dealerUser->name) }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Contact Name</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($details && $details->seller_address)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $details->seller_address }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Address</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($details && $details->seller_postcode)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $details->seller_postcode }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">Postal Code</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($dealerPhone)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <div id="dealer-phone-display" class="hidden">
+                                        <p class="text-sm font-medium text-foreground">
+                                            <a href="tel:{{ $dealerPhone }}" class="hover:underline">
+                                                {{ $dealerPhone }}
+                                            </a>
+                                        </p>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        id="show-dealer-phone-btn"
+                                        onclick="showDealerPhoneAndCreateLead({{ $vehicle->id }}, event)"
+                                        class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                                    >
+                                        Show Phone Number
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">Phone</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            <!-- Seller Information (Private Seller) -->
+            @if($vehicle->user && !$vehicle->dealer)
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -752,6 +846,9 @@
                         @endif
                         @php
                             $sellerPhone = $details && $details->seller_phone ? $details->seller_phone : null;
+                            if (empty($sellerPhone) && $vehicle->user && $vehicle->user->phone) {
+                                $sellerPhone = $vehicle->user->phone;
+                            }
                         @endphp
                         @if($sellerPhone)
                             <div class="flex items-start gap-3">
@@ -769,7 +866,7 @@
                                     <button 
                                         type="button"
                                         id="show-phone-btn"
-                                        onclick="togglePhone()"
+                                        onclick="showPhoneAndCreateLead({{ $vehicle->id }}, event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                     >
                                         Show Phone Number
@@ -780,7 +877,7 @@
                         @endif
                     </div>
                 </div>
-                @endif
+            @endif
 
             <!-- Pricing -->
             <div class="rounded-lg bg-primary p-6">
@@ -965,7 +1062,7 @@
                         <p>• Discuss financing options</p>
                         <p>• Arrange test drive</p>
                     </div>
-            </div>
+                </div>
             @endguest
         </div>
     </div>
@@ -1060,8 +1157,229 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Show phone number and create lead
+    window.showPhoneAndCreateLead = async function(vehicleId, event) {
+        // Prevent any default behavior and stop propagation
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        
+        // Get button element to show loading state
+        const button = event?.target?.closest('button') || event?.target;
+        const originalText = button ? button.textContent : 'Show Phone Number';
+        
+        try {
+            // Show loading state
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Loading...';
+                
+                // Restore button state after timeout (fallback)
+                setTimeout(() => {
+                    if (button) {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }
+                }, 5000);
+            }
+            
+            // Make API call to create lead
+            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    category: 'View Phone Number'
+                }),
+                credentials: 'same-origin'
+            });
+            
+            // Restore button state
+            if (button) {
+                button.disabled = false;
+            }
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Redirect to login
+                    if (window.showSnackbar) {
+                        window.showSnackbar('Please login to view phone number', 'error');
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return false;
+                }
+                
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.message || 'Failed to load phone number. Please try again.';
+                
+                if (window.showSnackbar) {
+                    window.showSnackbar(errorMessage, 'error');
+                } else {
+                    alert(errorMessage);
+                }
+                return false;
+            }
+            
+            const data = await response.json();
+            
+            // Show phone number after lead is created
+            if (data.status === 'success') {
+                togglePhone();
+            } else {
+                // Still show phone if API succeeded but response format is different
+                togglePhone();
+            }
+        } catch (error) {
+            console.error('Error creating enquiry:', error);
+            
+            // Restore button state
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+            
+            if (window.showSnackbar) {
+                window.showSnackbar('An error occurred. Please try again.', 'error');
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        }
+        
+        return false;
+    };
+    
+    // Toggle dealer phone number visibility
+    function toggleDealerPhone() {
+        const phoneDisplay = document.getElementById('dealer-phone-display');
+        const showPhoneBtn = document.getElementById('show-dealer-phone-btn');
+        
+        if (phoneDisplay && showPhoneBtn) {
+            if (phoneDisplay.classList.contains('hidden')) {
+                phoneDisplay.classList.remove('hidden');
+                showPhoneBtn.classList.add('hidden');
+            } else {
+                phoneDisplay.classList.add('hidden');
+                showPhoneBtn.classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Show dealer phone number and create lead
+    window.showDealerPhoneAndCreateLead = async function(vehicleId, event) {
+        // Prevent any default behavior and stop propagation
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        
+        // Get button element to show loading state
+        const button = event?.target?.closest('button') || event?.target;
+        const originalText = button ? button.textContent : 'Show Phone Number';
+        
+        try {
+            // Show loading state
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Loading...';
+                
+                // Restore button state after timeout (fallback)
+                setTimeout(() => {
+                    if (button) {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }
+                }, 5000);
+            }
+            
+            // Make API call to create lead
+            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    category: 'View Phone Number'
+                }),
+                credentials: 'same-origin'
+            });
+            
+            // Restore button state
+            if (button) {
+                button.disabled = false;
+            }
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Redirect to login
+                    if (window.showSnackbar) {
+                        window.showSnackbar('Please login to view phone number', 'error');
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return false;
+                }
+                
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.message || 'Failed to load phone number. Please try again.';
+                
+                if (window.showSnackbar) {
+                    window.showSnackbar(errorMessage, 'error');
+                } else {
+                    alert(errorMessage);
+                }
+                return false;
+            }
+            
+            const data = await response.json();
+            
+            // Show phone number after lead is created
+            if (data.status === 'success') {
+                toggleDealerPhone();
+            } else {
+                // Still show phone if API succeeded but response format is different
+                toggleDealerPhone();
+            }
+        } catch (error) {
+            console.error('Error creating enquiry:', error);
+            
+            // Restore button state
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+            
+            if (window.showSnackbar) {
+                window.showSnackbar('An error occurred. Please try again.', 'error');
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        }
+        
+        return false;
+    };
+    
     // Make togglePhone available globally
     window.togglePhone = togglePhone;
+    window.toggleDealerPhone = toggleDealerPhone;
 });
 </script>
 @endsection

@@ -17,9 +17,11 @@ use App\Models\EquipmentType;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Models\FeaturedListing;
+use App\Models\ListingViewsLog;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -90,6 +92,7 @@ class HomeController extends Controller
                     'fuel_type_name' => $vehicle->fuel_type_name,
                     'gear_type_name' => $vehicle->gear_type_name,
                     'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                    'dealer_id' => $vehicle->dealer_id,
                 ];
             })
             ->filter() // Remove null entries
@@ -265,6 +268,7 @@ class HomeController extends Controller
                     'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                     'engine_power_hp' => $vehicle->engine_power_hp,
                     'seller_type' => $sellerType,
+                    'dealer_id' => $vehicle->dealer_id,
                     'image_url' => $imageUrl,
                     'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
                     'details' => $details ? [
@@ -332,18 +336,52 @@ class HomeController extends Controller
     /**
      * Show the vehicle detail page
      *
+     * @param Request $request
      * @param int $serialNo
      * @return \Illuminate\View\View
      */
-    public function showVehicleDetail($serialNo)
+    public function showVehicleDetail(Request $request, $serialNo)
     {
         $vehicle = Vehicle::with([
             'details',
             'equipment',
             'listingType',
             'images',
-            'user'
+            'user',
+            'dealer.users'
         ])->findOrFail($serialNo);
+
+        // Get authenticated user (if any)
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        // Get IP address and user agent
+        $ipAddress = $request->ip();
+        $userAgent = $request->userAgent();
+
+        // Increment view count and log the view
+        DB::transaction(function () use ($vehicle, $user, $ipAddress, $userAgent) {
+            // Increment views_count in vehicle_details
+            if ($vehicle->details) {
+                $vehicle->details->increment('views_count');
+            } else {
+                // Create vehicle_details if it doesn't exist
+                $vehicle->details()->create([
+                    'views_count' => 1,
+                ]);
+            }
+
+            // Create view log entry
+            ListingViewsLog::create([
+                'vehicle_id' => $vehicle->id,
+                'user_id' => $user?->id,
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+                'viewed_at' => now(),
+            ]);
+        });
+
+        // Reload vehicle with updated details
+        $vehicle->load('details');
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,

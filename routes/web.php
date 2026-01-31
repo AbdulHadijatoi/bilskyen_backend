@@ -62,6 +62,9 @@ Route::middleware('auth.web')->group(function () {
     Route::get('/favorites/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
     Route::post('/favorites/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
     
+    // Enquiry Routes
+    Route::post('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
+    
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');

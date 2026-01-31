@@ -2,103 +2,107 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Enquiry;
-use App\Helpers\FilterHelper;
+use App\Models\Lead;
+use App\Models\Vehicle;
+use App\Models\Source;
+use App\Models\LeadCategory;
+use App\Services\AuthService;
+use App\Constants\LeadStage;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Enquiry Controller for Web
+ * Handles vehicle enquiry/lead creation
+ */
 class EnquiryController extends Controller
 {
+    public function __construct(
+        private AuthService $authService
+    ) {}
+
     /**
-     * Get enquiries list
+     * Create a lead/enquiry for a vehicle
+     * Requires authentication (handled by middleware)
      */
-    public function getEnquiries(Request $request): JsonResponse
+    public function enquire(Request $request, int $id): JsonResponse
     {
-        $query = Enquiry::with(['contact', 'user', 'vehicle']);
-
-        // Apply search
-        $search = $request->input('search');
-        $searchableFields = ['subject', 'message', 'type', 'status', 'source'];
-        FilterHelper::applySearch($query, $search, $searchableFields);
-
-        // Apply filters
-        $filters = json_decode($request->input('filters', '[]'), true);
-        $joinOperator = $request->input('joinOperator', 'or');
-        FilterHelper::applyFilters($query, $filters, $joinOperator);
-
-        // Apply sorting
-        $sort = json_decode($request->input('sort', '[]'), true);
-        if (empty($sort)) {
-            $sort = [['id' => 'created_at', 'desc' => true]];
+        // Get authenticated user (middleware ensures user is authenticated)
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized',
+            ], 401);
         }
-        FilterHelper::applySorting($query, $sort);
 
-        // Paginate
-        $perPage = $request->input('perPage', 10);
-        $enquiries = $query->paginate($perPage);
+        // Find vehicle
+        $vehicle = Vehicle::with(['details', 'dealer.users', 'user'])->find($id);
+        
+        if (!$vehicle) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Vehicle not found',
+            ], 404);
+        }
 
-        return $this->paginatedResponse($enquiries);
-    }
+        // Get dealer_id (can be null for private listings)
+        $dealerId = $vehicle->dealer_id;
 
-    /**
-     * Get enquiry by serial number
-     */
-    public function getEnquiryBySerial(int $serialNo): JsonResponse
-    {
-        $enquiry = Enquiry::where('serial_no', $serialNo)
-            ->with(['contact', 'user', 'vehicle'])
-            ->firstOrFail();
+        // Get phone number with fallback logic
+        $phoneNumber = null;
+        
+        // First try: vehicle details seller_phone
+        if ($vehicle->details && !empty($vehicle->details->seller_phone)) {
+            $phoneNumber = $vehicle->details->seller_phone;
+        }
+        // If empty and vehicle has dealer: Get phone from dealer's first user
+        elseif (empty($phoneNumber) && $vehicle->dealer) {
+            $dealerUser = $vehicle->dealer->users()->first();
+            if ($dealerUser && !empty($dealerUser->phone)) {
+                $phoneNumber = $dealerUser->phone;
+            }
+        }
+        // If empty and vehicle has user (seller/private listing): Get phone from vehicle user
+        elseif (empty($phoneNumber) && $vehicle->user) {
+            if (!empty($vehicle->user->phone)) {
+                $phoneNumber = $vehicle->user->phone;
+            }
+        }
 
-        return response()->json($enquiry);
-    }
+        // Find or create "Website" source
+        $source = Source::firstOrCreate(['name' => 'Website']);
 
-    /**
-     * Create enquiry
-     */
-    public function create(Request $request): JsonResponse
-    {
-        $enquiry = Enquiry::create($request->all());
+        // Get lead category from request (default to 'Enquire' if not specified)
+        $categoryName = $request->input('category', 'Enquire');
+        $leadCategory = LeadCategory::where('name', $categoryName)->first();
+        
+        // If category doesn't exist, default to 'Enquire'
+        if (!$leadCategory) {
+            $leadCategory = LeadCategory::where('name', 'Enquire')->first();
+        }
 
-        return response()->json($enquiry, 201);
-    }
-
-    /**
-     * Update enquiry
-     */
-    public function update(Request $request, Enquiry $enquiry): JsonResponse
-    {
-        $enquiry->update($request->all());
-
-        return response()->json($enquiry);
-    }
-
-    /**
-     * Delete enquiry
-     */
-    public function delete(Enquiry $enquiry): JsonResponse
-    {
-        $enquiry->delete();
-
-        return response()->json(['message' => 'Enquiry deleted successfully']);
-    }
-
-    /**
-     * Format paginated response
-     */
-    private function paginatedResponse($paginator): JsonResponse
-    {
-        return response()->json([
-            'docs' => $paginator->items(),
-            'totalDocs' => $paginator->total(),
-            'limit' => $paginator->perPage(),
-            'page' => $paginator->currentPage(),
-            'totalPages' => $paginator->lastPage(),
-            'hasPrevPage' => $paginator->currentPage() > 1,
-            'hasNextPage' => $paginator->hasMorePages(),
-            'prevPage' => $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
-            'nextPage' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+        // Create lead record
+        $lead = Lead::create([
+            'vehicle_id' => $vehicle->id,
+            'buyer_user_id' => $user->id,
+            'dealer_id' => $dealerId,
+            'lead_stage_id' => LeadStage::NEW,
+            'source_id' => $source->id,
+            'lead_category_id' => $leadCategory?->id,
+            'created_at' => now(),
+            'last_activity_at' => now(),
         ]);
+
+        // Return response with lead data and phone number
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lead created successfully',
+            'data' => [
+                'lead_id' => $lead->id,
+                'phone_number' => $phoneNumber,
+            ],
+        ], 201);
     }
 }
-
-
