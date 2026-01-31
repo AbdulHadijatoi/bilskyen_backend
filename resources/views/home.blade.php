@@ -840,8 +840,19 @@
                     }
                 });
                 menu.classList.toggle('hidden');
-                if (!menu.classList.contains('hidden') && searchInput) {
-                    setTimeout(() => searchInput.focus(), 50);
+                if (!menu.classList.contains('hidden')) {
+                    // If opening model dropdown, apply brand filter
+                    if (dropdownType === 'model') {
+                        const selectedBrandId = document.querySelector('[data-dropdown="brand"] .dropdown-input')?.value || '';
+                        filterModelsByBrand(selectedBrandId);
+                    }
+                    // Clear search input and focus
+                    if (searchInput) {
+                        searchInput.value = '';
+                        // Trigger input event to refresh visible options
+                        searchInput.dispatchEvent(new Event('input'));
+                        setTimeout(() => searchInput.focus(), 50);
+                    }
                 }
             });
             
@@ -849,14 +860,18 @@
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
                     const searchTerm = e.target.value.toLowerCase();
-                    options.forEach(option => {
-                        const text = option.textContent.toLowerCase();
-                        if (text.includes(searchTerm)) {
-                            option.style.display = '';
-                        } else {
-                            option.style.display = 'none';
-                        }
-                    });
+                    
+                    // For model dropdown, use the filterModelsByBrand function to respect brand filter
+                    if (dropdownType === 'model') {
+                        const selectedBrandId = document.querySelector('[data-dropdown="brand"] .dropdown-input')?.value || '';
+                        filterModelsByBrand(selectedBrandId);
+                    } else {
+                        // For other dropdowns, just filter by search term
+                        options.forEach(option => {
+                            const text = option.textContent.toLowerCase();
+                            option.style.display = text.includes(searchTerm) ? '' : 'none';
+                        });
+                    }
                 });
             }
             
@@ -954,17 +969,28 @@
         
         const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
         const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
+        const searchInput = modelDropdown.querySelector('.dropdown-search');
+        const searchTerm = searchInput?.value.toLowerCase() || '';
         
         if (brandId === '') {
-            // Show all models
+            // Show all models (respecting search if any)
             modelOptions.forEach(option => {
-                option.style.display = '';
+                const text = option.textContent.toLowerCase();
+                if (searchTerm) {
+                    option.style.display = text.includes(searchTerm) ? '' : 'none';
+                } else {
+                    option.style.display = '';
+                }
             });
         } else {
-            // Show only models for selected brand
+            // Show only models for selected brand (respecting search if any)
             modelOptions.forEach(option => {
                 const optionBrandId = option.getAttribute('data-brand-id');
-                if (optionBrandId === brandId) {
+                const text = option.textContent.toLowerCase();
+                const matchesBrand = optionBrandId === brandId;
+                const matchesSearch = !searchTerm || text.includes(searchTerm);
+                
+                if (matchesBrand && matchesSearch) {
                     option.style.display = '';
                 } else {
                     option.style.display = 'none';
@@ -976,11 +1002,19 @@
             const selectedModelOption = Array.from(modelOptions).find(opt => 
                 opt.getAttribute('data-value') === modelInput?.value
             );
-            if (selectedModelOption && selectedModelOption.style.display === 'none') {
-                if (modelInput) modelInput.value = '';
-                const selectedText = modelDropdown.querySelector('.dropdown-selected');
-                if (selectedText) selectedText.textContent = 'Model';
+            if (selectedModelOption) {
+                const optionBrandId = selectedModelOption.getAttribute('data-brand-id');
+                if (optionBrandId !== brandId && brandId !== '') {
+                    if (modelInput) modelInput.value = '';
+                    const selectedText = modelDropdown.querySelector('.dropdown-selected');
+                    if (selectedText) selectedText.textContent = 'Model';
+                }
             }
+        }
+        
+        // Always show the default "All Models" option
+        if (defaultOption) {
+            defaultOption.style.display = '';
         }
     }
     
@@ -1255,10 +1289,12 @@
         // Reset model dropdown options visibility (show all models)
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (modelDropdown) {
-            const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
-            modelOptions.forEach(option => {
-                option.style.display = '';
-            });
+            const modelSearchInput = modelDropdown.querySelector('.dropdown-search');
+            if (modelSearchInput) {
+                modelSearchInput.value = '';
+            }
+            // Call filterModelsByBrand with empty brand to show all models
+            filterModelsByBrand('');
         }
     }
     
