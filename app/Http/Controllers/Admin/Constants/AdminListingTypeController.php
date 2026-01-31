@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ListingType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Traits\ConstantsCacheTrait;
 
 
 /**
@@ -13,8 +14,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminListingTypeController extends Controller
 {
-    use ConstantsCacheHelper;
-{
+    use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
         $listingTypes = ListingType::orderBy('name')->paginate($request->get('limit', 15));
@@ -37,7 +37,7 @@ class AdminListingTypeController extends Controller
         $listingType = ListingType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_listing_types');
+        $this->clearConstantsCache('listing_types');
 
         return $this->created($listingType);
     }
@@ -53,7 +53,7 @@ class AdminListingTypeController extends Controller
         $listingType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_listing_types');
+        $this->clearConstantsCache('listing_types');
 
         return $this->success($listingType);
     }
@@ -64,7 +64,7 @@ class AdminListingTypeController extends Controller
         $listingType->delete();
 
         // Clear cache
-        Cache::forget('constants_listing_types');
+        $this->clearConstantsCache('listing_types');
 
         return $this->noContent();
     }

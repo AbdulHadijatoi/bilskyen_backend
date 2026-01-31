@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ModelYear;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Traits\ConstantsCacheTrait;
 
 
 /**
@@ -13,8 +14,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminModelYearController extends Controller
 {
-    use ConstantsCacheHelper;
-{
+    use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
         $modelYears = ModelYear::orderBy('name')->paginate($request->get('limit', 15));
@@ -37,7 +37,7 @@ class AdminModelYearController extends Controller
         $modelYear = ModelYear::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_model_years');
+        $this->clearConstantsCache('model_years');
 
         return $this->created($modelYear);
     }
@@ -53,7 +53,7 @@ class AdminModelYearController extends Controller
         $modelYear->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_model_years');
+        $this->clearConstantsCache('model_years');
 
         return $this->success($modelYear);
     }
@@ -64,7 +64,7 @@ class AdminModelYearController extends Controller
         $modelYear->delete();
 
         // Clear cache
-        Cache::forget('constants_model_years');
+        $this->clearConstantsCache('model_years');
 
         return $this->noContent();
     }

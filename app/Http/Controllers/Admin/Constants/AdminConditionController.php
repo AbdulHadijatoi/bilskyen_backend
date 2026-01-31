@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Condition;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Traits\ConstantsCacheTrait;
 
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminConditionController extends Controller
 {
-    use ConstantsCacheHelper;
+    use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
         $conditions = Condition::orderBy('name')->paginate($request->get('limit', 15));

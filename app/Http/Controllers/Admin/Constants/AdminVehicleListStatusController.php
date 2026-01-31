@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Traits\ConstantsCacheTrait;
 
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminVehicleListStatusController extends Controller
 {
-    use ConstantsCacheHelper;
+    use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
         $vehicleListStatuses = VehicleListStatus::orderBy('name')->paginate($request->get('limit', 15));

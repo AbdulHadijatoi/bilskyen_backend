@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Traits\ConstantsCacheTrait;
 
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminPriceTypeController extends Controller
 {
-    use ConstantsCacheHelper;
+    use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
         $priceTypes = PriceType::orderBy('name')->paginate($request->get('limit', 15));
