@@ -130,7 +130,7 @@ class VehicleService
             'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
             'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
             'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
-            'co2_emissions', 'is_import', 'is_factory_new'
+            'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
         ];
 
         foreach ($detailsFields as $field) {
@@ -397,7 +397,7 @@ class VehicleService
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
                 'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
                 'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
-                'co2_emissions', 'is_import', 'is_factory_new'
+                'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
             ];
 
             foreach ($detailsFields as $field) {
@@ -413,13 +413,27 @@ class VehicleService
             }
 
             // Update vehicle details if provided
-            if (!empty($vehicleDetailsData)) {
-                $details = $vehicle->details;
-                if ($details) {
-                    $details->update($vehicleDetailsData);
-                } else {
-                    $vehicleDetailsData['vehicle_id'] = $vehicle->id;
-                    VehicleDetail::create($vehicleDetailsData);
+            if (!empty($vehicleDetailsData) && $vehicle->id) {
+                // Filter out any fields that aren't fillable in VehicleDetail model
+                $fillableFields = (new \App\Models\VehicleDetail())->getFillable();
+                $filteredDetailsData = array_intersect_key(
+                    $vehicleDetailsData,
+                    array_flip($fillableFields)
+                );
+                
+                // Get or create the vehicle details record
+                if (!empty($filteredDetailsData)) {
+                    // Find existing details or create new instance
+                    $details = VehicleDetail::where('vehicle_id', $vehicle->id)->first();
+                    
+                    if ($details) {
+                        // Update existing record
+                        $details->update($filteredDetailsData);
+                    } else {
+                        // Create new record with vehicle_id explicitly set
+                        $filteredDetailsData['vehicle_id'] = $vehicle->id;
+                        VehicleDetail::create($filteredDetailsData);
+                    }
                 }
             }
 
@@ -495,9 +509,19 @@ class VehicleService
             }
 
             // Update vehicle
-            $vehicle->update($vehicleData);
+            if (!empty($vehicleData)) {
+                $vehicle->update($vehicleData);
+            }
 
-            return $vehicle->fresh(['images', 'details', 'equipment']);
+            // Refresh vehicle with relationships
+            $updatedVehicle = $vehicle->fresh(['images', 'details', 'equipment']);
+            
+            // Fallback: reload by ID if fresh() returns null (shouldn't happen, but safety check)
+            if (!$updatedVehicle) {
+                $updatedVehicle = Vehicle::with(['images', 'details', 'equipment'])->findOrFail($vehicle->id);
+            }
+            
+            return $updatedVehicle;
         });
     }
 

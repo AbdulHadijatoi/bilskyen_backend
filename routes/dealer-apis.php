@@ -35,30 +35,35 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/', [VehicleController::class, 'dealerIndex']);
             // ->middleware(permission_middleware('vehicle', 'list'));
         
-        Route::get('/{id}', [VehicleController::class, 'show'])
-            ->middleware(permission_middleware('vehicle', 'view'));
+        Route::get('/show/{id}', [VehicleController::class, 'show']);
+            // ->middleware(permission_middleware('vehicle', 'view'));
         
-        Route::post('/', [VehicleController::class, 'store']);
+        Route::post('/', [VehicleController::class, 'store']);  
             // ->middleware(['throttle:20,1', 'idempotency', permission_middleware('vehicle', 'create')]);
         
-        Route::put('/{id}', [VehicleController::class, 'update'])
-            ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/draft', [VehicleController::class, 'storeDraft']);
+            // ->middleware(permission_middleware('vehicle', 'create'));
         
-        Route::delete('/{id}', [VehicleController::class, 'destroy'])
-            ->middleware(permission_middleware('vehicle', 'delete'));
+        Route::post('/update/{id}', [VehicleController::class, 'update']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
         
-        Route::post('/{id}/images', [VehicleController::class, 'uploadImages'])
-            ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/delete/{id}', [VehicleController::class, 'destroy']);
+            // ->middleware(permission_middleware('vehicle', 'delete'));
         
-        Route::delete('/{id}/images/{imageId}', [VehicleController::class, 'deleteImage'])
-            ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/update-status/{id}', [VehicleController::class, 'updateStatus']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
         
-        // Single status endpoint (replaces publish/unpublish)
-        Route::put('/{id}/status', [VehicleController::class, 'updateStatus'])
-            ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
         
-        Route::put('/{id}/price', [VehicleController::class, 'updatePrice'])
-            ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/{id}/images', [VehicleController::class, 'uploadImages']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
+        
+        Route::delete('/{id}/images/{imageId}', [VehicleController::class, 'deleteImage']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
+        
+        Route::put('/{id}/price', [VehicleController::class, 'updatePrice']);
+            // ->middleware(permission_middleware('vehicle', 'update'));
         
         Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
             ->middleware(['throttle:40,1', permission_middleware('vehicle', 'create')]);
@@ -92,23 +97,10 @@ Route::middleware('auth:api')->group(function () {
             ->middleware(permission_middleware('lead', 'update'));
     });
     
-    // Favorites & Saved Searches
-    Route::prefix('favorites')->group(function () {
-        Route::get('/', [FavoriteController::class, 'index']);
-        Route::post('/', [FavoriteController::class, 'store']);
-        Route::delete('/{vehicleId}', [FavoriteController::class, 'destroy']);
-    });
-    
-    Route::prefix('saved-searches')->group(function () {
-        Route::get('/', [SavedSearchController::class, 'index']);
-        Route::post('/', [SavedSearchController::class, 'store']);
-        Route::delete('/{id}', [SavedSearchController::class, 'destroy']);
-    });
-    
     // Dealer Profile
     Route::prefix('profile')->group(function () {
         Route::get('/', [DealerProfileController::class, 'show']);
-        Route::put('/', [DealerProfileController::class, 'update']);
+        Route::post('/update', [DealerProfileController::class, 'update']);
     });
     
     // Dealer Staff

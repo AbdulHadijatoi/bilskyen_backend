@@ -10,6 +10,8 @@ use App\Helpers\FilterHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\Models\Role;
 
 class AdminUserController extends Controller
 {
@@ -25,14 +27,43 @@ class AdminUserController extends Controller
     {
         $query = User::with('roles', 'userStatus');
 
-        // Apply filters
+        // Apply direct query parameter filters
+        if ($request->has('status_id')) {
+            $query->where('status_id', $request->input('status_id'));
+        }
+
+        // Apply search filter
+        if ($request->has('search') && $request->input('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply role filter
+        if ($request->has('role') && $request->input('role')) {
+            $roleName = $request->input('role');
+            $query->whereHas('roles', function ($q) use ($roleName) {
+                $q->where('name', $roleName);
+            });
+        }
+
+        // Apply advanced JSON filters (for backward compatibility)
         $filters = json_decode($request->input('filters', '[]'), true);
-        $joinOperator = $request->input('joinOperator', 'or');
-        FilterHelper::applyFilters($query, $filters, $joinOperator);
+        if (!empty($filters)) {
+            $joinOperator = $request->input('joinOperator', 'or');
+            FilterHelper::applyFilters($query, $filters, $joinOperator);
+        }
 
         // Apply sorting
         $sort = json_decode($request->input('sort', '[]'), true);
-        FilterHelper::applySorting($query, $sort);
+        if (empty($sort)) {
+            // Default sorting by created_at desc
+            $query->orderBy('created_at', 'desc');
+        } else {
+            FilterHelper::applySorting($query, $sort);
+        }
 
         // Paginate
         $perPage = $request->input('limit', 15);
@@ -53,7 +84,7 @@ class AdminUserController extends Controller
     /**
      * Create user
      */
-    public function store(Request $request): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|min:2|max:100',
@@ -61,8 +92,7 @@ class AdminUserController extends Controller
             'password' => 'required|string|min:8|max:128',
             'phone' => 'nullable|string|max:15',
             'status_id' => ['required', Rule::in(UserStatus::values())],
-            'roles' => 'nullable|array',
-            'roles.*' => 'string|exists:roles,name',
+            'role_id' => 'required|integer|exists:roles,id',
         ]);
 
         $user = User::create([
@@ -73,10 +103,9 @@ class AdminUserController extends Controller
             'status_id' => $request->status_id,
         ]);
 
-        // Assign roles
-        if ($request->has('roles')) {
-            $this->rolePermissionService->assignRoleToUser($user, $request->roles);
-        }
+        // Assign role by ID
+        $role = Role::findOrFail($request->role_id);
+        $user->assignRole($role);
 
         // Audit log
         $this->auditLogService->log(
@@ -106,15 +135,15 @@ class AdminUserController extends Controller
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'phone' => 'nullable|string|max:15',
             'status_id' => ['sometimes', Rule::in(UserStatus::values())],
-            'roles' => 'nullable|array',
-            'roles.*' => 'string|exists:roles,name',
+            'role_id' => 'sometimes|integer|exists:roles,id',
         ]);
 
         $user->update($request->only(['name', 'email', 'phone', 'status_id']));
 
-        // Update roles if provided
-        if ($request->has('roles')) {
-            $user->syncRoles($request->roles);
+        // Update role if provided
+        if ($request->has('role_id')) {
+            $role = Role::findOrFail($request->role_id);
+            $user->syncRoles([$role]);
         }
 
         // Audit log
@@ -135,7 +164,7 @@ class AdminUserController extends Controller
     /**
      * Delete user (soft delete)
      */
-    public function destroy(int $id, Request $request): JsonResponse
+    public function delete(int $id, Request $request): JsonResponse
     {
         $user = User::findOrFail($id);
         $before = $user->toArray();
@@ -239,5 +268,104 @@ class AdminUserController extends Controller
     public function getUsers(Request $request): JsonResponse
     {
         return $this->index($request);
+    }
+
+    /**
+     * Get all roles (cached forever since roles are fixed)
+     */
+    public function getRoles(): JsonResponse
+    {
+        $roles = Cache::rememberForever('admin_roles_all', function () {
+            return Role::orderBy('name')->get();
+        });
+
+        return $this->success($roles);
+    }
+
+    /**
+     * Change user password (admin can change other users' passwords without current password)
+     */
+    public function changePassword(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+        $before = ['password' => '***'];
+
+        $request->validate([
+            'password' => 'required|string|min:8|max:128',
+        ]);
+
+        $user->password = $request->password;
+        $user->save();
+
+        // Audit log
+        $this->auditLogService->log(
+            $request->user()->id,
+            \App\Models\AuditActorType::ADMIN,
+            'password_change',
+            'User',
+            $user->id,
+            $before,
+            ['password' => '***'],
+            $request
+        );
+
+        return $this->success(['message' => 'Password changed successfully']);
+    }
+
+    /**
+     * Change admin's own password
+     * Requires current password verification and admin role check
+     */
+    public function changeOwnPassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verify user is an admin
+        if (!$user->hasRole('admin')) {
+            return $this->error('Only admins can use this endpoint', null, 403);
+        }
+
+        // Match frontend API format: current_password, password, password_confirmation
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'current_password' => 'required|string|max:128',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:128',
+            ],
+            'password_confirmation' => 'required|string|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        // Verify current password
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return $this->error('Current password is incorrect', [
+                'current_password' => ['The current password is incorrect.'],
+            ], 401);
+        }
+
+        $before = ['password' => '***'];
+        
+        // Update password
+        $user->password = $request->password;
+        $user->save();
+
+        // Audit log
+        $this->auditLogService->log(
+            $user->id,
+            \App\Models\AuditActorType::ADMIN,
+            'password_change',
+            'User',
+            $user->id,
+            $before,
+            ['password' => '***'],
+            $request
+        );
+
+        return $this->success(['message' => 'Password changed successfully']);
     }
 }

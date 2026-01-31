@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
+use App\Models\VehicleImage;
 use App\Models\Dealer;
 use App\Models\DealerUser;
 use App\Models\FeaturedListing;
@@ -19,22 +20,30 @@ use App\Models\BodyType;
 use App\Models\PriceType;
 use App\Models\Equipment;
 use App\Services\VehicleService;
+use App\Services\FileService;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Helpers\FilterHelper;
+use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class VehicleController extends Controller
 {
+    protected FileService $fileService;
+
     public function __construct(
-        private VehicleService $vehicleService
-    ) {}
+        private VehicleService $vehicleService,
+        FileService $fileService
+    ) {
+        $this->fileService = $fileService;
+    }
 
     /**
      * Get featured vehicles
@@ -220,6 +229,14 @@ class VehicleController extends Controller
             'sort',
         ]);
 
+        // Handle status parameter (convert status name to ID)
+        if ($request->has('status') && $request->input('status')) {
+            $statusId = VehicleListStatus::nameToId($request->input('status'));
+            if ($statusId) {
+                $filters['vehicle_list_status_id'] = $statusId;
+            }
+        }
+
         $vehicles = $this->vehicleService->getDealerVehicles(
             $dealer->id,
             $filters,
@@ -333,10 +350,41 @@ class VehicleController extends Controller
     }
 
     /**
+     * Create vehicle draft (no validation)
+     * Allows saving incomplete vehicle data without validation
+     */
+    public function storeDraft(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        // Set dealer_id from authenticated user
+        if ($request->user() && $request->user()->dealers()->exists()) {
+            $data['dealer_id'] = $request->user()->dealers()->first()->id;
+        }
+
+        // Set user_id (creator)
+        $data['user_id'] = $request->user()->id;
+
+        // Automatically set status to Draft (ID: 1)
+        $data['vehicle_list_status_id'] = 1;
+
+        // Handle file uploads
+        if ($request->hasFile('images')) {
+            $data['images'] = $request->file('images');
+        }
+
+        // No validation - allow partial/incomplete data
+        $vehicle = $this->vehicleService->createVehicle($data);
+
+        return $this->created($vehicle->load(['dealer', 'images', 'details']), 'Vehicle draft saved successfully');
+    }
+
+    /**
      * Update vehicle
      */
-    public function update(Request $request, Vehicle $vehicle): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
+        $vehicle = Vehicle::findOrFail($id);
         $data = $request->all();
 
         // Handle file uploads
@@ -352,8 +400,9 @@ class VehicleController extends Controller
     /**
      * Delete vehicle (soft delete)
      */
-    public function destroy(Vehicle $vehicle): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
+        $vehicle = Vehicle::findOrFail($id);
         $this->vehicleService->deleteVehicle($vehicle);
 
         return $this->noContent();
@@ -365,19 +414,29 @@ class VehicleController extends Controller
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'status' => ['required', 'in:published,unpublished,archived,draft'],
+            'status' => ['sometimes', 'in:published,unpublished,archived,draft,sold'],
+            'vehicle_list_status_id' => ['sometimes', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
-        $statusId = \App\Constants\VehicleListStatus::nameToId($request->status);
-
-        if (!$statusId) {
-            return $this->validationError(['status' => ['Invalid status value']]);
+        
+        // If vehicle_list_status_id is provided, use it directly
+        if ($request->has('vehicle_list_status_id')) {
+            $statusId = $request->vehicle_list_status_id;
+        } elseif ($request->has('status')) {
+            // Otherwise, convert status name to ID
+            $statusId = \App\Constants\VehicleListStatus::nameToId($request->status);
+            
+            if (!$statusId) {
+                return $this->validationError(['status' => ['Invalid status value']]);
+            }
+        } else {
+            return $this->validationError(['status' => ['Either status or vehicle_list_status_id is required']]);
         }
 
         $vehicle->vehicle_list_status_id = $statusId;
         
-        if ($request->status === 'published' && !$vehicle->published_at) {
+        if ($request->input('status') === 'published' && !$vehicle->published_at) {
             $vehicle->published_at = now();
         }
 
@@ -444,16 +503,69 @@ class VehicleController extends Controller
     public function uploadImages(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'images' => 'required|array|min:1|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            'images' => 'required|array|min:1|max:20',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
         
-        // TODO: Implement image upload logic
-        // This should use FileService to upload images and associate with vehicle
+        // Get current sort order (highest existing sort_order + 1)
+        $currentMaxSortOrder = $vehicle->images()->max('sort_order') ?? -1;
+        $sortOrder = $currentMaxSortOrder + 1;
+        
+        $uploadedImages = [];
+        
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            // Handle both array format (images[]) and single file
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+            
+            foreach ($files as $file) {
+                if ($file && $file->isValid()) {
+                    $this->fileService->validateFile($file);
+                    
+                    // Upload file (without thumbnail first to ensure file is saved)
+                    $uploadedUrl = $this->fileService->uploadFiles(
+                        [$file],
+                        'public',
+                        'vehicles',
+                        false, // Don't create thumbnails here - we'll do it explicitly below
+                        false, // optimizeImages
+                        300, // thumbnailWidth
+                        300  // thumbnailHeight
+                    )[0];
+                    
+                    $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
+                    
+                    // Explicitly create thumbnail for each image to ensure it's created
+                    $thumbnailPath = null;
+                    try {
+                        $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
+                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
+                    } catch (\Exception $e) {
+                        // Log the error but continue - image will be saved without thumbnail
+                        Log::warning('Failed to create thumbnail for vehicle image', [
+                            'vehicle_id' => $vehicle->id,
+                            'image_path' => $imagePath,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                    
+                    $vehicleImage = VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image_path' => $imagePath,
+                        'thumbnail_path' => $thumbnailPath,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                    
+                    $uploadedImages[] = $vehicleImage;
+                }
+            }
+        }
 
-        return $this->success(['message' => 'Images uploaded successfully']);
+        return $this->success($vehicle->load('images'));
     }
 
     /**
@@ -462,11 +574,41 @@ class VehicleController extends Controller
     public function deleteImage(int $id, int $imageId): JsonResponse
     {
         $vehicle = Vehicle::findOrFail($id);
-        
-        // TODO: Implement image deletion logic
-        // This should remove the image from vehicle_images table and delete file
+        $image = VehicleImage::where('id', $imageId)
+            ->where('vehicle_id', $vehicle->id)
+            ->firstOrFail();
 
-        return $this->noContent();
+        // Delete image file
+        if ($image->image_path && Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        // Delete thumbnail file
+        if ($image->thumbnail_path && Storage::disk('public')->exists($image->thumbnail_path)) {
+            Storage::disk('public')->delete($image->thumbnail_path);
+        }
+
+        $image->delete();
+
+        return $this->success(['message' => 'Image deleted successfully']);
+    }
+
+    /**
+     * Update vehicle equipment
+     */
+    public function updateEquipment(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'equipment_ids' => 'required|array',
+            'equipment_ids.*' => 'integer|exists:equipments,id',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+        
+        // Sync equipment associations
+        $vehicle->equipment()->sync($request->equipment_ids);
+
+        return $this->success($vehicle->load(['equipment', 'equipment.equipmentType']));
     }
 
     /**

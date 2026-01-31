@@ -2,15 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\AdminDealerController;
 use App\Http\Controllers\AdminVehicleController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AdminFeatureController;
 use App\Http\Controllers\AdminSubscriptionController;
 use App\Http\Controllers\AdminPageController;
-use App\Http\Controllers\AdminBlogController;
 use App\Http\Controllers\AdminAnalyticsController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminAuditLogController;
+use App\Http\Controllers\AdminFeaturedVehicleController;
 use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\Admin\Constants\AdminConstantsController;
@@ -46,36 +46,39 @@ use App\Http\Controllers\Admin\Constants\AdminEquipmentTypeController;
 // Admin routes (requires authentication and admin role - standardized to auth:api)
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
     
+    // Dashboard
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+    
     // User Management
     Route::prefix('users')->group(function () {
         Route::get('/', [AdminUserController::class, 'index']);
-        Route::get('/{id}', [AdminUserController::class, 'show']);
-        Route::post('/', [AdminUserController::class, 'store'])
+        Route::get('/show/{id}', [AdminUserController::class, 'show']);
+        Route::get('/roles', [AdminUserController::class, 'getRoles']);
+        Route::post('/create', [AdminUserController::class, 'create'])
             ->middleware(['idempotency']); // Idempotency for user creation
-        Route::put('/{id}', [AdminUserController::class, 'update']);
-        Route::delete('/{id}', [AdminUserController::class, 'destroy']); // Soft delete
-        Route::put('/{id}/status', [AdminUserController::class, 'updateStatus']);
-        Route::put('/{id}/ban', [AdminUserController::class, 'ban']);
-        Route::put('/{id}/unban', [AdminUserController::class, 'unban']);
+        Route::post('/update/{id}', [AdminUserController::class, 'update']);
+        Route::post('/delete/{id}', [AdminUserController::class, 'delete']); // Soft delete
+        Route::post('/update-status/{id}', [AdminUserController::class, 'updateStatus']);
+        Route::post('/change-password/{id}', [AdminUserController::class, 'changePassword']);
+        Route::post('/ban/{id}', [AdminUserController::class, 'ban']);
+        Route::post('/unban/{id}', [AdminUserController::class, 'unban']);
     });
     
-    // Dealer Management
-    Route::prefix('dealers')->group(function () {
-        Route::get('/', [AdminDealerController::class, 'index']);
-        Route::get('/{id}', [AdminDealerController::class, 'show']);
-        Route::post('/', [AdminDealerController::class, 'store'])
-            ->middleware(['idempotency']); // Idempotency for dealer creation
-        Route::put('/{id}', [AdminDealerController::class, 'update']);
-        Route::delete('/{id}', [AdminDealerController::class, 'destroy']); // Soft delete
-    });
+    // Admin self password change
+    Route::post('/change-password', [AdminUserController::class, 'changeOwnPassword']);
     
     // Vehicle Management (Admin can see all dealer listings)
     Route::prefix('vehicles')->group(function () {
         Route::get('/', [AdminVehicleController::class, 'index']);
-        Route::get('/{id}', [AdminVehicleController::class, 'show']);
-        Route::put('/{id}/status', [AdminVehicleController::class, 'updateStatus']); // Single status endpoint
-        Route::delete('/{id}', [AdminVehicleController::class, 'destroy']); // Soft delete
-        Route::get('/{id}/history', [AdminVehicleController::class, 'getHistory']);
+        Route::get('/show/{id}', [AdminVehicleController::class, 'show']);
+        Route::get('/images/{id}', [AdminVehicleController::class, 'getImages']);
+        Route::get('/history/{id}', [AdminVehicleController::class, 'getHistory']);
+        Route::post('/update/{id}', [AdminVehicleController::class, 'update']);
+        Route::post('/update-status/{id}', [AdminVehicleController::class, 'updateStatus']);
+        Route::post('/update-images/{id}', [AdminVehicleController::class, 'updateImages']);
+        Route::post('/delete-image/{id}', [AdminVehicleController::class, 'deleteImage']);
+        Route::post('/update-equipment/{id}', [AdminVehicleController::class, 'updateEquipment']);
+        Route::post('/delete/{id}', [AdminVehicleController::class, 'delete']); // Soft delete
     });
     
     // Plan & Subscription Management
@@ -116,12 +119,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::put('/{id}/publish', [AdminPageController::class, 'publish']);
     });
     
-    Route::prefix('blogs')->group(function () {
-        Route::get('/', [AdminBlogController::class, 'index']);
-        Route::get('/{id}', [AdminBlogController::class, 'show']);
-        Route::post('/', [AdminBlogController::class, 'store']);
-        Route::put('/{id}', [AdminBlogController::class, 'update']);
-        Route::delete('/{id}', [AdminBlogController::class, 'destroy']);
+    // Featured Vehicles Management
+    Route::prefix('featured-vehicles')->group(function () {
+        Route::get('/', [AdminFeaturedVehicleController::class, 'index']);
+        Route::post('/create', [AdminFeaturedVehicleController::class, 'create']);
+        Route::post('/update/{id}', [AdminFeaturedVehicleController::class, 'update']);
+        Route::post('/delete/{id}', [AdminFeaturedVehicleController::class, 'delete']);
     });
     
     // Analytics

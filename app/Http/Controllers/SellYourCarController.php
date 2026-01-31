@@ -128,6 +128,8 @@ class SellYourCarController extends Controller
             'content_type' => $request->header('Content-Type'),
             'is_ajax' => $request->ajax(),
             'is_json' => $request->wantsJson(),
+            'transmission_id' => $request->input('transmission_id'),
+            'transmission_name' => $request->input('transmission_name'),
         ]);
 
         // Validate the request
@@ -208,6 +210,8 @@ class SellYourCarController extends Controller
             'airbags' => 'nullable|integer|min:0',
             'integrated_child_seats' => 'nullable|integer|min:0',
             'seat_belt_alarms' => 'nullable|integer|min:0',
+            'transmission_id' => 'nullable|exists:transmissions,id',
+            'transmission_name' => 'nullable|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -389,7 +393,8 @@ class SellYourCarController extends Controller
                 'leasing_period_end', 'color_id', 'dispensations',
                 'permits', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog',
-                'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
+                'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+                'transmission_id', 'transmission_name'
             ];
 
             $vehicleDetailsData = [];
@@ -443,6 +448,11 @@ class SellYourCarController extends Controller
             }
             if ($bodyTypeId) {
                 $vehicleDetailsData['body_type_id'] = $bodyTypeId;
+            }
+            
+            // Handle transmission_id if provided
+            if ($request->has('transmission_id') && $request->input('transmission_id')) {
+                $vehicleDetailsData['transmission_id'] = $request->input('transmission_id');
             }
             
             // Add type_name if provided separately

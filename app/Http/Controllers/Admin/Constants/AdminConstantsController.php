@@ -98,7 +98,8 @@ class AdminConstantsController extends Controller
                 return VehicleUse::orderBy('name')->get();
             });
 
-            $vehicleListStatuses = Cache::remember('constants_vehicle_list_statuses', 86400, function () {
+            // Cache vehicle list statuses forever since they are fixed constants
+            $vehicleListStatuses = Cache::rememberForever('constants_vehicle_list_statuses', function () {
                 return VehicleListStatus::orderBy('name')->get();
             });
 

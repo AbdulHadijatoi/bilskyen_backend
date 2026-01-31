@@ -13,24 +13,36 @@ class DealerProfileController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $user = $request->user();
+        $dealer = $user->dealers()->first();
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
         }
 
-        return $this->success($dealer);
+        // Include user data in response
+        $response = $dealer->toArray();
+        $response['user'] = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+        ];
+
+        return $this->success($response);
     }
 
     public function update(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $user = $request->user();
+        $dealer = $user->dealers()->first();
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
         }
 
-        $request->validate([
+        // Validate dealer fields
+        $dealerValidation = $request->validate([
             'cvr' => 'sometimes|string|max:20',
             'address' => 'sometimes|string',
             'city' => 'sometimes|string',
@@ -38,9 +50,37 @@ class DealerProfileController extends Controller
             'country_code' => 'sometimes|string|max:2',
         ]);
 
-        $dealer->update($request->only(['cvr', 'address', 'city', 'postcode', 'country_code']));
+        // Validate user fields
+        $userValidation = $request->validate([
+            'name' => 'sometimes|string|min:2|max:100',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:15',
+        ]);
 
-        return $this->success($dealer);
+        // Update dealer
+        if (!empty($dealerValidation)) {
+            $dealer->update($dealerValidation);
+        }
+
+        // Update user
+        if (!empty($userValidation)) {
+            $user->update($userValidation);
+        }
+
+        // Reload relationships
+        $dealer->refresh();
+        $user->refresh();
+
+        // Include updated user data in response
+        $response = $dealer->toArray();
+        $response['user'] = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+        ];
+
+        return $this->success($response);
     }
 }
 

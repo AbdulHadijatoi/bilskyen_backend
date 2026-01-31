@@ -538,6 +538,13 @@
                 } else if (key === 'body_type' && typeof value === 'object' && value !== null && value.id) {
                     // Body type object - extract ID
                     addToFormData('body_type_id', value.id);
+                } else if (key === 'transmission' && typeof value === 'object' && value !== null && value.id) {
+                    // Transmission object - extract ID
+                    console.log('Adding transmission to form data:', value);
+                    addToFormData('transmission_id', value.id);
+                    if (value.name) {
+                        addToFormData('transmission_name', value.name);
+                    }
                 } else if (key === 'dispensations' || key === 'permits') {
                     // Arrays - convert to JSON string
                     addToFormData(key, value);

@@ -54,6 +54,7 @@ class VehicleDetail extends Model
         'use_id',
         'color_id',
         'body_type_id',
+        'transmission_id',
         'variant_id',
         'dispensations',
         'permits',
@@ -131,6 +132,7 @@ class VehicleDetail extends Model
         'price_type_name',
         'condition_name',
         'sales_type_name',
+        'transmission_name',
     ];
 
     /**
@@ -160,6 +162,7 @@ class VehicleDetail extends Model
                 'price_types' => PriceType::find($id),
                 'conditions' => Condition::find($id),
                 'sales_types' => SalesType::find($id),
+                'transmissions' => \App\Models\Transmission::find($id),
                 default => null,
             };
 
@@ -231,6 +234,14 @@ class VehicleDetail extends Model
     }
 
     /**
+     * Get transmission name attribute (cached)
+     */
+    public function getTransmissionNameAttribute(): ?string
+    {
+        return self::getCachedLookup('transmissions', $this->transmission_id);
+    }
+
+    /**
      * Get price type for this detail
      */
     public function priceType(): BelongsTo
@@ -276,5 +287,13 @@ class VehicleDetail extends Model
     public function euronom(): BelongsTo
     {
         return $this->belongsTo(Euronom::class);
+    }
+
+    /**
+     * Get transmission for this detail
+     */
+    public function transmission(): BelongsTo
+    {
+        return $this->belongsTo(Transmission::class);
     }
 }

@@ -380,6 +380,12 @@
                     <span class="detail-value">{{ $details->gear_type_name }}</span>
                 </div>
                 @endif
+                @if($details->transmission_name)
+                <div class="detail-item">
+                    <span class="detail-label">Transmission</span>
+                    <span class="detail-value">{{ $details->transmission_name }}</span>
+                </div>
+                @endif
                 @if($details->sales_type_name)
                 <div class="detail-item">
                     <span class="detail-label">Sales Type</span>
