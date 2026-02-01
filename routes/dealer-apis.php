@@ -91,6 +91,10 @@ Route::middleware('auth:api')->group(function () {
         
         Route::post('stage/{id}', [LeadController::class, 'updateStage']);
         
+        Route::post('intent/{id}', [LeadController::class, 'updateIntent']);
+        
+        Route::post('category/{id}', [LeadController::class, 'updateCategory']);
+        
         Route::get('messages/{id}', [LeadController::class, 'getMessages']);
         
         Route::post('messages/{id}', [LeadController::class, 'sendMessage']);

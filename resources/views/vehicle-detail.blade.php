@@ -1091,7 +1091,7 @@
                                     Days in Inventory
                                 </label>
                                 <p class="font-semibold">
-                                    {{ $vehicle->published_at->diffInDays(now()) }} days
+                                    {{ floor($vehicle->published_at->diffInDays(now(), false)) }} days
                                 </p>
                             </div>
                         @endif

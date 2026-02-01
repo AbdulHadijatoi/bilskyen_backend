@@ -20,6 +20,8 @@ use App\Models\VehicleUse;
 use App\Models\VehicleListStatus;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\LeadIntent;
+use App\Models\LeadCategory;
 use App\Services\NummerpladeApiService;
 use App\Exceptions\NummerpladeApiException;
 use Illuminate\Http\Request;
@@ -115,6 +117,14 @@ class DealerLookupController extends Controller
                 return Equipment::with('equipmentType')->orderBy('name')->get();
             });
 
+            $leadIntents = Cache::rememberForever('constants_lead_intents', function () {
+                return LeadIntent::orderBy('id')->get();
+            });
+
+            $leadCategories = Cache::remember('constants_lead_categories', 86400, function () {
+                return LeadCategory::orderBy('name')->get();
+            });
+
             return $this->success([
                 'brands' => $brands,
                 'model_years' => $modelYears,
@@ -134,6 +144,8 @@ class DealerLookupController extends Controller
                 'vehicle_list_statuses' => $vehicleListStatuses,
                 'equipment_types' => $equipmentTypes,
                 'equipments' => $equipments,
+                'lead_intents' => $leadIntents,
+                'lead_categories' => $leadCategories,
             ]);
         } catch (\Exception $e) {
             return $this->error(
