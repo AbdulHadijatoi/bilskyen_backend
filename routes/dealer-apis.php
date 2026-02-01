@@ -10,6 +10,7 @@ use App\Http\Controllers\DealerStaffController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DealerLookupController;
 use App\Http\Controllers\DealerDashboardController;
+use App\Http\Controllers\DealerEnquiryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,23 +83,28 @@ Route::middleware('auth:api')->group(function () {
     
     // Lead Management
     Route::prefix('leads')->group(function () {
-        Route::get('/', [LeadController::class, 'index'])
-            ->middleware(permission_middleware('lead', 'list'));
+        Route::get('/', [LeadController::class, 'index']);
         
-        Route::get('/{id}', [LeadController::class, 'show'])
-            ->middleware(permission_middleware('lead', 'view'));
+        Route::get('show/{id}', [LeadController::class, 'show']);
         
-        Route::post('/{id}/assign', [LeadController::class, 'assign'])
-            ->middleware(permission_middleware('lead', 'update'));
+        Route::post('assign/{id}', [LeadController::class, 'assign']);
         
-        Route::put('/{id}/stage', [LeadController::class, 'updateStage'])
-            ->middleware(permission_middleware('lead', 'update'));
+        Route::post('stage/{id}', [LeadController::class, 'updateStage']);
         
-        Route::get('/{id}/messages', [LeadController::class, 'getMessages'])
-            ->middleware(permission_middleware('lead', 'view'));
+        Route::get('messages/{id}', [LeadController::class, 'getMessages']);
         
-        Route::post('/{id}/messages', [LeadController::class, 'sendMessage'])
-            ->middleware(permission_middleware('lead', 'update'));
+        Route::post('messages/{id}', [LeadController::class, 'sendMessage']);
+    });
+    
+    // Enquiry Management
+    Route::prefix('enquiries')->group(function () {
+        Route::get('/', [DealerEnquiryController::class, 'index']);
+        
+        Route::get('show/{id}', [DealerEnquiryController::class, 'show']);
+        
+        Route::post('status/{id}', [DealerEnquiryController::class, 'updateStatus']);
+        
+        Route::post('type/{id}', [DealerEnquiryController::class, 'updateType']);
     });
     
     // Dealer Profile

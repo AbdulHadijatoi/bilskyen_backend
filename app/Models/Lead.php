@@ -19,6 +19,7 @@ class Lead extends Model
         'dealer_id',
         'assigned_user_id',
         'lead_stage_id',
+        'lead_intent_id',
         'source_id',
         'lead_category_id',
         'last_activity_at',
@@ -68,6 +69,14 @@ class Lead extends Model
     public function leadStage(): BelongsTo
     {
         return $this->belongsTo(LeadStage::class);
+    }
+
+    /**
+     * Get lead intent for this lead
+     */
+    public function leadIntent(): BelongsTo
+    {
+        return $this->belongsTo(LeadIntent::class);
     }
 
     /**

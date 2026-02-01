@@ -17,6 +17,17 @@ class Source extends Model
     ];
 
     /**
+     * Source name constants
+     */
+    public const WEBSITE = 'Website';
+    public const MOBILE_APP = 'Mobile App';
+    public const PHONE = 'Phone';
+    public const EMAIL = 'Email';
+    public const REFERRAL = 'Referral';
+    public const SOCIAL_MEDIA = 'Social Media';
+    public const WALK_IN = 'Walk-in';
+
+    /**
      * Get leads from this source
      */
     public function leads(): HasMany

@@ -1,0 +1,239 @@
+@extends('layouts.app')
+
+@section('title', 'Enquiry Form | Bilskyen')
+
+@php
+    use App\Helpers\FormatHelper;
+@endphp
+
+@section('content')
+<div class="container space-y-8 py-6 max-w-4xl">
+    <!-- Header Section -->
+    <div class="space-y-4">
+        <div class="flex flex-col gap-4">
+            <h1 class="text-foreground text-3xl font-bold tracking-tight">
+                Enquiry Form
+            </h1>
+            <p class="text-muted-foreground">
+                Submit your enquiry about this vehicle. We'll get back to you as soon as possible.
+            </p>
+        </div>
+        <div class="border-t border-border"></div>
+    </div>
+
+    <!-- Vehicle Information Card -->
+    <div class="bg-gray-50 rounded-lg p-6 border border-border">
+        <h2 class="text-foreground text-xl font-semibold mb-4">Vehicle Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <span class="text-sm text-muted-foreground">Vehicle</span>
+                <p class="text-foreground font-medium">{{ $vehicle->title }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-muted-foreground">Price</span>
+                <p class="text-foreground font-medium text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</p>
+            </div>
+            @if($vehicle->brand_name)
+            <div>
+                <span class="text-sm text-muted-foreground">Brand</span>
+                <p class="text-foreground font-medium">{{ $vehicle->brand_name }}</p>
+            </div>
+            @endif
+            @if($vehicle->model_name)
+            <div>
+                <span class="text-sm text-muted-foreground">Model</span>
+                <p class="text-foreground font-medium">{{ $vehicle->model_name }}</p>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Enquiry Form -->
+    <div class="bg-gray-50 rounded-lg p-6 border border-border">
+        <h2 class="text-foreground text-xl font-semibold mb-4">Your Details</h2>
+        <form id="enquiry-form" class="space-y-4">
+            @csrf
+            <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
+
+            <!-- Error Display Container -->
+            <div id="form-errors" class="hidden w-full rounded-md border border-red-200 bg-red-50 p-3 mb-4">
+                <ul id="error-list" class="list-disc list-inside text-sm text-red-800"></ul>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="hidden w-full rounded-md border border-green-200 bg-green-50 p-3 mb-4">
+                <p class="text-sm text-green-800"></p>
+            </div>
+
+            <div class="space-y-2">
+                <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Full Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    required
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter your full name"
+                >
+            </div>
+
+            <div class="space-y-2">
+                <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Message <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    id="message" 
+                    name="message" 
+                    required
+                    rows="6"
+                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Tell us about your enquiry..."
+                ></textarea>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                <button 
+                    type="submit" 
+                    id="submit-btn"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                >
+                    <span id="submit-text">Submit Enquiry</span>
+                    <svg id="submit-spinner" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+                <a 
+                    href="{{ route('vehicle.detail', $vehicle->id) }}" 
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('enquiry-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const submitSpinner = document.getElementById('submit-spinner');
+    const errorContainer = document.getElementById('form-errors');
+    const errorList = document.getElementById('error-list');
+    const successMessage = document.getElementById('success-message');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Hide previous messages
+        errorContainer.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        errorList.innerHTML = '';
+
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitText.textContent = 'Submitting...';
+        submitSpinner.classList.remove('hidden');
+
+        // Get form data
+        const formData = new FormData(form);
+        const data = {
+            name: formData.get('name'),
+            message: formData.get('message'),
+        };
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        try {
+            const response = await fetch(`/vehicles/{{ $vehicle->id }}/enquire/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data),
+                credentials: 'same-origin'
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Redirect to login
+                    if (window.showSnackbar) {
+                        window.showSnackbar('Please login to submit an enquiry', 'error');
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return;
+                }
+
+                // Show validation errors
+                if (result.errors) {
+                    const errors = result.errors;
+                    for (const field in errors) {
+                        const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                        fieldErrors.forEach(error => {
+                            const li = document.createElement('li');
+                            li.textContent = error;
+                            errorList.appendChild(li);
+                        });
+                    }
+                    errorContainer.classList.remove('hidden');
+                } else {
+                    const errorMsg = result.message || 'Failed to submit enquiry. Please try again.';
+                    if (window.showSnackbar) {
+                        window.showSnackbar(errorMsg, 'error');
+                    } else {
+                        errorList.innerHTML = `<li>${errorMsg}</li>`;
+                        errorContainer.classList.remove('hidden');
+                    }
+                }
+            } else {
+                // Success
+                const successMsg = result.message || 'Your enquiry has been submitted successfully!';
+                successMessage.querySelector('p').textContent = successMsg;
+                successMessage.classList.remove('hidden');
+                
+                // Reset form
+                form.reset();
+                
+                // Scroll to success message
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                if (window.showSnackbar) {
+                    window.showSnackbar(successMsg, 'success');
+                }
+
+                // Redirect after 3 seconds
+                setTimeout(() => {
+                    window.location.href = '{{ route("vehicle.detail", $vehicle->id) }}';
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error submitting enquiry:', error);
+            const errorMsg = 'An error occurred. Please try again.';
+            if (window.showSnackbar) {
+                window.showSnackbar(errorMsg, 'error');
+            } else {
+                errorList.innerHTML = `<li>${errorMsg}</li>`;
+                errorContainer.classList.remove('hidden');
+            }
+        } finally {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitText.textContent = 'Submit Enquiry';
+            submitSpinner.classList.add('hidden');
+        }
+    });
+});
+</script>
+@endsection

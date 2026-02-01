@@ -24,29 +24,11 @@ class AuthenticateWeb
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            // Return JSON response for AJAX/API requests
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Please login to access this page.',
-                    'error_code' => 'UNAUTHORIZED',
-                ], 401);
-            }
-            
             return redirect('/auth/login')->with('error', 'Please login to access this page.');
         }
 
         // Check if user is banned
         if ($user->banned) {
-            // Return JSON response for AJAX/API requests
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''),
-                    'error_code' => 'FORBIDDEN',
-                ], 403);
-            }
-            
             return redirect('/auth/login')->with('error', 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''));
         }
 

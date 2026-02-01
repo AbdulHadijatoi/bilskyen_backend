@@ -329,4 +329,44 @@ class Vehicle extends Model
     {
         return $this->belongsTo(GearType::class);
     }
+
+    /**
+     * Get category for this vehicle
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get brand for this vehicle
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    /**
+     * Get model year for this vehicle
+     */
+    public function modelYear(): BelongsTo
+    {
+        return $this->belongsTo(ModelYear::class);
+    }
+
+    /**
+     * Get fuel type for this vehicle
+     */
+    public function fuelType(): BelongsTo
+    {
+        return $this->belongsTo(FuelType::class);
+    }
+
+    /**
+     * Get vehicle list status for this vehicle
+     */
+    public function vehicleListStatus(): BelongsTo
+    {
+        return $this->belongsTo(VehicleListStatus::class);
+    }
 }

@@ -91,9 +91,11 @@
                                 View Details
                             </button>
                         </a>
-                        <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); handleEnquire({{ $vehicle->id }}, event);">
-                            Enquire
-                        </button>
+                        <a href="{{ route('vehicles.enquire.form', $vehicle->id) }}" class="flex-1" onclick="event.stopPropagation()">
+                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                Enquire
+                            </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -277,114 +279,6 @@
         return false;
     };
 
-    // Handle Enquire button click
-    window.handleEnquire = async function(vehicleId, event) {
-        // Prevent any default behavior and stop propagation
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-        }
-        
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        
-        // Get button element to show loading state
-        const button = event?.target?.closest('button') || event?.target;
-        
-        try {
-            // Show loading state
-            if (button) {
-                const originalText = button.textContent;
-                button.disabled = true;
-                button.textContent = 'Loading...';
-                
-                // Restore button state after timeout (fallback)
-                setTimeout(() => {
-                    if (button) {
-                        button.disabled = false;
-                        button.textContent = originalText;
-                    }
-                }, 5000);
-            }
-            
-            // Make API call to create lead
-            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    category: 'Enquire'
-                }),
-                credentials: 'same-origin'
-            });
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-                button.textContent = button.getAttribute('data-original-text') || 'Enquire';
-            }
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Redirect to login
-                    if (window.showSnackbar) {
-                        window.showSnackbar('Please login to enquire about vehicles', 'error');
-                    }
-                    setTimeout(() => {
-                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                    }, 1500);
-                    return false;
-                }
-                
-                const errorData = await response.json().catch(() => ({}));
-                const errorMessage = errorData.message || 'Failed to create enquiry. Please try again.';
-                
-                if (window.showSnackbar) {
-                    window.showSnackbar(errorMessage, 'error');
-                } else {
-                    alert(errorMessage);
-                }
-                return false;
-            }
-            
-            const data = await response.json();
-            
-            if (data.status === 'success' && data.data) {
-                const phoneNumber = data.data.phone_number;
-                
-                // Initiate phone call if phone number is available
-                if (phoneNumber) {
-                    window.location.href = 'tel:' + phoneNumber;
-                } else {
-                    // Show message that phone number is not available
-                    if (window.showSnackbar) {
-                        window.showSnackbar('Phone number is not available for this vehicle', 'info');
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error creating enquiry:', error);
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-                button.textContent = button.getAttribute('data-original-text') || 'Enquire';
-            }
-            
-            if (window.showSnackbar) {
-                window.showSnackbar('An error occurred. Please try again.', 'error');
-            } else {
-                alert('An error occurred. Please try again.');
-            }
-        }
-        
-        return false;
-    };
 </script>
 @endpush
 @endsection

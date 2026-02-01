@@ -899,6 +899,115 @@
                 </div>
             </div>
 
+            <!-- Contact Actions -->
+            @php
+                // Get contact information for dealer or private seller
+                $contactUser = null;
+                $contactWhatsApp = null;
+                $contactEmail = null;
+                
+                if ($vehicle->dealer) {
+                    $dealerUser = $vehicle->dealer->users()->first();
+                    if ($dealerUser) {
+                        $contactUser = $dealerUser;
+                        $contactWhatsApp = $dealerUser->whatsapp_number ?? $dealerUser->phone ?? null;
+                        $contactEmail = $dealerUser->email ?? null;
+                    }
+                } elseif ($vehicle->user) {
+                    $contactUser = $vehicle->user;
+                    $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
+                    $contactEmail = $vehicle->user->email ?? null;
+                }
+            @endphp
+            
+            @if($contactUser)
+            <div class="rounded-lg bg-gray-50 p-6 border border-border">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold text-foreground">
+                        Contact Actions
+                    </h2>
+                </div>
+                <div class="space-y-3">
+                    <!-- Enquiry Form Button -->
+                    <a 
+                        href="{{ route('vehicles.enquire.form', $vehicle->id) }}" 
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Send Enquiry
+                    </a>
+
+                    <!-- WhatsApp Button -->
+                    @if($contactWhatsApp)
+                    <button 
+                        type="button"
+                        onclick="handleWhatsAppClick({{ $vehicle->id }}, event)"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-900 transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                        id="whatsapp-btn-{{ $vehicle->id }}"
+                        data-whatsapp="{{ $contactWhatsApp }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        <span class="whatsapp-btn-text">Contact via WhatsApp</span>
+                    </button>
+                    @endif
+
+                    <!-- Email Button -->
+                    @if($contactEmail)
+                    <button 
+                        type="button"
+                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                        id="email-btn-{{ $vehicle->id }}"
+                        data-email="{{ $contactEmail }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
+                        <span class="email-btn-text">Send Email</span>
+                    </button>
+                    @endif
+
+                    <!-- Test Drive Request Button -->
+                    <a 
+                        href="{{ route('vehicles.test-drive.form', $vehicle->id) }}"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <rect x="3" y="11" width="18" height="6" rx="2" />
+                            <path d="M5 17l1.5 2h11L19 17" />
+                            <circle cx="7.5" cy="16" r="1" />
+                            <circle cx="16.5" cy="16" r="1" />
+                            <path d="M7 11V7a3 3 0 0 1 6 0v4" />
+                            <path d="M9 11V7a1 1 0 1 1 2 0v4" />
+                            <path d="M4 11V8" />
+                            <path d="M20 11V8" />
+                        </svg>
+                        <span>Request Test Drive</span>
+                    </a>
+
+                    <!-- Price Negotiation Button -->
+                    <a 
+                        href="{{ route('vehicles.price-negotiation.form', $vehicle->id) }}"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Price Negotiation</span>
+                    </a>
+                </div>
+            </div>
+            @endif
+
             @auth
                 @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
                     <!-- Edit Action - Only for admin/dealer -->
@@ -1054,12 +1163,11 @@
                     </h2>
                     <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
                         Contact us for more information about this vehicle, including
-                        pricing, financing options, and scheduling a test drive.
+                        pricing and scheduling a test drive.
                     </p>
                     <div class="text-muted-foreground text-sm">
                         <p>• Request detailed vehicle history</p>
                         <p>• Schedule inspection</p>
-                        <p>• Discuss financing options</p>
                         <p>• Arrange test drive</p>
                     </div>
                 </div>
@@ -1166,95 +1274,37 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopImmediatePropagation();
         }
         
-        // Get CSRF token
+        // Get button element
+        const button = event?.target?.closest('button') || event?.target;
+        
+        // Show phone number immediately (before creating lead)
+        togglePhone();
+        
+        // Hide the button after showing phone
+        if (button) {
+            button.style.display = 'none';
+        }
+        
+        // Create lead in the background (don't wait for it)
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         
-        // Get button element to show loading state
-        const button = event?.target?.closest('button') || event?.target;
-        const originalText = button ? button.textContent : 'Show Phone Number';
-        
-        try {
-            // Show loading state
-            if (button) {
-                button.disabled = true;
-                button.textContent = 'Loading...';
-                
-                // Restore button state after timeout (fallback)
-                setTimeout(() => {
-                    if (button) {
-                        button.disabled = false;
-                        button.textContent = originalText;
-                    }
-                }, 5000);
-            }
-            
-            // Make API call to create lead
-            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    category: 'View Phone Number'
-                }),
-                credentials: 'same-origin'
-            });
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-            }
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Redirect to login
-                    if (window.showSnackbar) {
-                        window.showSnackbar('Please login to view phone number', 'error');
-                    }
-                    setTimeout(() => {
-                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                    }, 1500);
-                    return false;
-                }
-                
-                const errorData = await response.json().catch(() => ({}));
-                const errorMessage = errorData.message || 'Failed to load phone number. Please try again.';
-                
-                if (window.showSnackbar) {
-                    window.showSnackbar(errorMessage, 'error');
-                } else {
-                    alert(errorMessage);
-                }
-                return false;
-            }
-            
-            const data = await response.json();
-            
-            // Show phone number after lead is created
-            if (data.status === 'success') {
-                togglePhone();
-            } else {
-                // Still show phone if API succeeded but response format is different
-                togglePhone();
-            }
-        } catch (error) {
-            console.error('Error creating enquiry:', error);
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-                button.textContent = originalText;
-            }
-            
-            if (window.showSnackbar) {
-                window.showSnackbar('An error occurred. Please try again.', 'error');
-            } else {
-                alert('An error occurred. Please try again.');
-            }
-        }
+        // Make API call to create lead asynchronously (fire and forget)
+        fetch(`/vehicles/${vehicleId}/enquire`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                category: 'Phone Number Revealed'
+            }),
+            credentials: 'same-origin'
+        }).catch(error => {
+            // Silently handle errors - phone is already shown
+            console.error('Error creating lead:', error);
+        });
         
         return false;
     };
@@ -1284,29 +1334,68 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopImmediatePropagation();
         }
         
-        // Get CSRF token
+        // Get button element
+        const button = event?.target?.closest('button') || event?.target;
+        
+        // Show phone number immediately (before creating lead)
+        toggleDealerPhone();
+        
+        // Hide the button after showing phone
+        if (button) {
+            button.style.display = 'none';
+        }
+        
+        // Create lead in the background (don't wait for it)
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         
-        // Get button element to show loading state
-        const button = event?.target?.closest('button') || event?.target;
-        const originalText = button ? button.textContent : 'Show Phone Number';
+        // Make API call to create lead asynchronously (fire and forget)
+        fetch(`/vehicles/${vehicleId}/enquire`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                category: 'Phone Number Revealed'
+            }),
+            credentials: 'same-origin'
+        }).catch(error => {
+            // Silently handle errors - phone is already shown
+            console.error('Error creating lead:', error);
+        });
         
+        return false;
+    };
+    
+    // Make togglePhone available globally
+    window.togglePhone = togglePhone;
+    window.toggleDealerPhone = toggleDealerPhone;
+
+    // Helper function to create lead
+    async function createLead(vehicleId, category, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const button = event?.target?.closest('button') || event?.target;
+        const originalText = button ? button.querySelector('span')?.textContent || button.textContent : '';
+
         try {
-            // Show loading state
             if (button) {
                 button.disabled = true;
-                button.textContent = 'Loading...';
-                
-                // Restore button state after timeout (fallback)
-                setTimeout(() => {
-                    if (button) {
-                        button.disabled = false;
-                        button.textContent = originalText;
-                    }
-                }, 5000);
+                const textSpan = button.querySelector('span');
+                if (textSpan) {
+                    textSpan.textContent = 'Loading...';
+                } else {
+                    button.textContent = 'Loading...';
+                }
             }
-            
-            // Make API call to create lead
+
             const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
                 method: 'POST',
                 headers: {
@@ -1315,31 +1404,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    category: 'View Phone Number'
-                }),
+                body: JSON.stringify({ category }),
                 credentials: 'same-origin'
             });
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-            }
-            
+
             if (!response.ok) {
                 if (response.status === 401) {
-                    // Redirect to login
                     if (window.showSnackbar) {
-                        window.showSnackbar('Please login to view phone number', 'error');
+                        window.showSnackbar('Please login to continue', 'error');
                     }
                     setTimeout(() => {
                         window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
                     }, 1500);
                     return false;
                 }
-                
+
                 const errorData = await response.json().catch(() => ({}));
-                const errorMessage = errorData.message || 'Failed to load phone number. Please try again.';
+                const errorMessage = errorData.message || 'Failed to process request. Please try again.';
                 
                 if (window.showSnackbar) {
                     window.showSnackbar(errorMessage, 'error');
@@ -1348,38 +1429,104 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 return false;
             }
-            
+
             const data = await response.json();
-            
-            // Show phone number after lead is created
-            if (data.status === 'success') {
-                toggleDealerPhone();
-            } else {
-                // Still show phone if API succeeded but response format is different
-                toggleDealerPhone();
-            }
+            return data;
         } catch (error) {
-            console.error('Error creating enquiry:', error);
-            
-            // Restore button state
-            if (button) {
-                button.disabled = false;
-                button.textContent = originalText;
-            }
-            
+            console.error('Error creating lead:', error);
             if (window.showSnackbar) {
                 window.showSnackbar('An error occurred. Please try again.', 'error');
             } else {
                 alert('An error occurred. Please try again.');
             }
+            return false;
+        } finally {
+            if (button) {
+                button.disabled = false;
+                const textSpan = button.querySelector('span');
+                if (textSpan && originalText) {
+                    textSpan.textContent = originalText;
+                } else if (originalText) {
+                    button.textContent = originalText;
+                }
+            }
+        }
+    }
+
+    // Handle WhatsApp click
+    window.handleWhatsAppClick = async function(vehicleId, event) {
+        const button = event?.target?.closest('button');
+        const whatsappNumber = button?.dataset?.whatsapp;
+        
+        if (!whatsappNumber) {
+            if (window.showSnackbar) {
+                window.showSnackbar('WhatsApp number not available', 'error');
+            }
+            return false;
+        }
+
+        // Create lead first
+        const leadResult = await createLead(vehicleId, 'WhatsApp Clicked', event);
+        
+        if (leadResult) {
+            // Format phone number for WhatsApp (remove spaces, dashes, etc.)
+            const formattedNumber = whatsappNumber.replace(/[\s\-\(\)]/g, '');
+            // Open WhatsApp
+            window.open(`https://wa.me/${formattedNumber}`, '_blank');
+            
+            if (window.showSnackbar) {
+                window.showSnackbar('Opening WhatsApp...', 'success');
+            }
         }
         
         return false;
     };
-    
-    // Make togglePhone available globally
-    window.togglePhone = togglePhone;
-    window.toggleDealerPhone = toggleDealerPhone;
+
+    // Handle Email click
+    window.handleEmailClick = async function(vehicleId, event) {
+        const button = event?.target?.closest('button');
+        const email = button?.dataset?.email;
+        
+        if (!email) {
+            if (window.showSnackbar) {
+                window.showSnackbar('Email address not available', 'error');
+            }
+            return false;
+        }
+
+        // Create lead first
+        const leadResult = await createLead(vehicleId, 'Email Clicked', event);
+        
+        if (leadResult) {
+            // Get vehicle title for email subject
+            const vehicleTitle = document.querySelector('h1')?.textContent?.trim() || 'Vehicle Enquiry';
+            const subject = encodeURIComponent(`Enquiry about: ${vehicleTitle}`);
+            const body = encodeURIComponent(`Hello,\n\nI am interested in this vehicle: ${vehicleTitle}\n\nPlease contact me with more information.\n\nThank you!`);
+            
+            // Open email client
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            
+            if (window.showSnackbar) {
+                window.showSnackbar('Opening email client...', 'success');
+            }
+        }
+        
+        return false;
+    };
+
+    // Handle Test Drive Request - Now handled by form page, keeping for backward compatibility
+    window.handleTestDriveRequest = async function(vehicleId, event) {
+        // Redirect to test drive form instead of creating lead directly
+        window.location.href = `/vehicles/${vehicleId}/test-drive`;
+        return false;
+    };
+
+    // Handle Price Negotiation - Now handled by form page, keeping for backward compatibility
+    window.handlePriceNegotiation = async function(vehicleId, event) {
+        // Redirect to price negotiation form instead of creating lead directly
+        window.location.href = `/vehicles/${vehicleId}/price-negotiation`;
+        return false;
+    };
 });
 </script>
 @endsection

@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: e48ed5394dbb734b6da6265b642d54de8aa86dddfac0b54555cd757e6d591554
+API Architecture Checksum: 7c02af0412c3a701625e53f55d5466a57604dc38e0775569f741d4cc537a6bd3
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -377,6 +377,66 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 | GET | `/api/v1/vehicles` | List published vehicles |
 | GET | `/api/v1/vehicles/{id}` | Get vehicle details |
 
+#### Lead Tracking
+
+All lead tracking endpoints require `auth:api` middleware.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/vehicles/{id}/leads` | Record a lead (phone revealed, WhatsApp clicked, Email clicked) |
+| POST | `/api/v1/vehicles/{id}/enquiries` | Submit enquiry form (creates lead + enquiry) |
+| POST | `/api/v1/vehicles/{id}/test-drive` | Submit test drive request (creates lead + enquiry) |
+| POST | `/api/v1/vehicles/{id}/price-negotiation` | Submit price negotiation request (creates lead + enquiry) |
+
+**Lead Tracking Request Bodies:**
+
+- `POST /api/v1/vehicles/{id}/leads`:
+  ```json
+  {
+    "category": "Phone Number Revealed" | "WhatsApp Clicked" | "Email Clicked"
+  }
+  ```
+
+- `POST /api/v1/vehicles/{id}/enquiries`:
+  ```json
+  {
+    "name": "string",
+    "message": "string"
+  }
+  ```
+
+- `POST /api/v1/vehicles/{id}/test-drive`:
+  ```json
+  {
+    "name": "string",
+    "message": "string"
+  }
+  ```
+
+- `POST /api/v1/vehicles/{id}/price-negotiation`:
+  ```json
+  {
+    "name": "string",
+    "message": "string"
+  }
+  ```
+
+**Lead Categories and Intents:**
+
+Leads are automatically assigned intent levels based on the action:
+- **Enquiry Form Submission**: High Intent
+- **Phone Number Revealed**: Medium Intent
+- **WhatsApp Clicked**: High Intent
+- **Email Clicked**: Medium Intent
+- **Request Test Drive**: Very High Intent
+- **Price Negotiation Request**: Very High Intent
+
+**Source Detection:**
+
+The system automatically detects the request source:
+- API requests (from mobile apps): Source = "Mobile App"
+- Web requests (from browser): Source = "Website"
+
 #### Lookup Endpoints
 
 | Method | Endpoint | Description |
@@ -504,6 +564,22 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 | PUT | `/api/v1/dealer/leads/{id}/stage` | Update lead stage |
 | GET | `/api/v1/dealer/leads/{id}/messages` | Get chat messages |
 | POST | `/api/v1/dealer/leads/{id}/messages` | Send message |
+
+#### Enquiries
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/dealer/enquiries` | List dealer's enquiries |
+| GET | `/api/v1/dealer/enquiries/show/{id}` | Get enquiry details |
+| POST | `/api/v1/dealer/enquiries/status/{id}` | Update enquiry status |
+| POST | `/api/v1/dealer/enquiries/type/{id}` | Update enquiry type |
+
+**Query Parameters for `/api/v1/dealer/enquiries`:**
+- `status` - Filter by status
+- `type` - Filter by type
+- `search` - Search in subject, message, user name/email/phone, vehicle title/registration
+- `limit` - Results per page (default: 15)
+- `page` - Page number
 
 #### Favorites & Saved Searches
 

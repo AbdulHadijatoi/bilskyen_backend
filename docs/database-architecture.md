@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: b4dfc7cdda7b620ebcc48d48e6c9d69953a6b559dc6b2bbd354b3a4676c92067
+Schema Checksum: a88c234e89a582229edbd0404897f2e2a386f95f0e4121219cbc1fd4a69117d6
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -51,6 +51,7 @@ Core user table for all system users (buyers, dealers, admins).
 | name | VARCHAR(150) | User's full name |
 | email | VARCHAR(150) | Unique email address |
 | phone | VARCHAR(30) (NULL) | Phone number |
+| whatsapp_number | VARCHAR(30) (NULL) | WhatsApp number (falls back to phone if null) |
 | address | TEXT (NULL) | Street address |
 | postcode | VARCHAR(10) (NULL) | Postal code |
 | password | VARCHAR(255) | Hashed password |
@@ -78,7 +79,7 @@ Core user table for all system users (buyers, dealers, admins).
 **Relationships:**
 - `belongsTo` UserStatus
 - `belongsToMany` Dealers (through DealerUser)
-- `hasMany` DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
+- `hasMany` DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
 
 #### `user_statuses`
 Lookup table for user status values.
@@ -667,13 +668,17 @@ Lead management for vehicle inquiries.
 | dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
 | assigned_user_id | BIGINT (FK, NULL) | Foreign key to `users.id` (assigned staff) |
 | lead_stage_id | INT (FK) | Foreign key to `lead_stages.id` |
+| lead_intent_id | INT (FK, NULL) | Foreign key to `lead_intents.id` (Low, Medium, High, Very High) |
 | source_id | INT (FK) | Foreign key to `sources.id` |
+| lead_category_id | INT (FK, NULL) | Foreign key to `lead_categories.id` |
 | last_activity_at | DATETIME (NULL) | Last activity timestamp |
 | created_at | DATETIME | Creation timestamp |
 
 **Indexes:**
 - `dealer_id`
 - `lead_stage_id`
+- `lead_intent_id`
+- `lead_category_id`
 
 **Foreign Keys:**
 - `vehicle_id` references `vehicles.id` (cascadeOnDelete)
@@ -681,13 +686,15 @@ Lead management for vehicle inquiries.
 - `dealer_id` references `dealers.id` (cascadeOnDelete)
 - `assigned_user_id` references `users.id` (nullOnDelete)
 - `lead_stage_id` references `lead_stages.id` (cascadeOnDelete)
+- `lead_intent_id` references `lead_intents.id` (nullOnDelete)
 - `source_id` references `sources.id` (cascadeOnDelete)
+- `lead_category_id` references `lead_categories.id` (nullOnDelete)
 
 **Model Features:**
 - **No Timestamps**: Only has `created_at`, no `updated_at`
 
 **Relationships:**
-- `belongsTo` Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
+- `belongsTo` Vehicle, User (buyer), Dealer, User (assigned), LeadStage, LeadIntent, Source, LeadCategory
 - `hasMany` LeadStageHistory, ChatThread
 
 #### `lead_stages`
@@ -739,17 +746,106 @@ Transmission type lookup table.
 **Note:** No timestamps. Reference data for transmission types.
 
 #### `sources`
-Lead source lookup (website, phone, referral, etc.).
+Lead source lookup (website, mobile app, phone, referral, etc.).
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | INT (PK) | Primary key |
 | name | VARCHAR(50) | Source name |
 
-**Note:** No timestamps. Reference data for lead sources.
+**Constants (Model):**
+- `WEBSITE = 'Website'`
+- `MOBILE_APP = 'Mobile App'`
+- `PHONE = 'Phone'`
+- `EMAIL = 'Email'`
+- `REFERRAL = 'Referral'`
+- `SOCIAL_MEDIA = 'Social Media'`
+- `WALK_IN = 'Walk-in'`
+
+**Note:** No timestamps. Reference data for lead sources. Source is automatically detected based on request type (API vs Web).
 
 **Relationships:**
 - `hasMany` Lead
+
+#### `lead_categories`
+Lead category lookup (enquiry form, WhatsApp clicked, email clicked, etc.).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(100) | Category name |
+| description | TEXT (NULL) | Category description |
+| created_at | DATETIME | Creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
+
+**Constants (Model):**
+- `PRICE_NEGOTIATION_REQUEST = 1`
+- `FINANCING_REQUEST = 2`
+- `WHATSAPP_CLICKED = 3`
+- `EMAIL_CLICKED = 4`
+- `ENQUIRY_FORM_SUBMISSION = 5`
+- `PHONE_NUMBER_REVEALED = 6`
+- `REQUEST_TEST_DRIVE = 7`
+
+**Relationships:**
+- `hasMany` Lead
+
+#### `lead_intents`
+Lead intent level lookup (low, medium, high, very high).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Primary key |
+| name | VARCHAR(50) | Intent name |
+
+**Constants (Model):**
+- `LOW = 1`
+- `MEDIUM = 2`
+- `HIGH = 3`
+- `VERY_HIGH = 4`
+
+**Note:** No timestamps. Intent levels are automatically assigned based on lead category.
+
+**Relationships:**
+- `hasMany` Lead
+
+#### `enquiries`
+Detailed enquiry messages from users.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT (PK) | Primary key |
+| serial_no | INT (NULL) | Serial number |
+| subject | VARCHAR(200) | Enquiry subject |
+| message | TEXT | Enquiry message |
+| type | VARCHAR(50) | Enquiry type (General, Test Drive, Price Enquiry, etc.) |
+| status | VARCHAR(50) | Enquiry status (New, In Progress, etc.) |
+| source | VARCHAR(50) | Source (Website, Mobile App, etc.) |
+| contact_id | BIGINT (FK, NULL) | Foreign key to `contacts.id` |
+| user_id | BIGINT (FK, NULL) | Foreign key to `users.id` |
+| vehicle_id | BIGINT (FK, NULL) | Foreign key to `vehicles.id` |
+| created_at | DATETIME | Creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
+
+**Indexes:**
+- `serial_no`
+- `user_id`
+- `vehicle_id`
+- `contact_id`
+- `status`
+- `type`
+
+**Foreign Keys:**
+- `user_id` references `users.id` (nullOnDelete)
+- `vehicle_id` references `vehicles.id` (nullOnDelete)
+- `contact_id` references `contacts.id` (nullOnDelete, conditional - only if contacts table exists)
+
+**Model Features:**
+- **HasSerialNumber**: Uses HasSerialNumber trait for auto-generating serial numbers
+- **Source Detection**: Source is automatically set based on request type (API = "Mobile App", Web = "Website")
+
+**Relationships:**
+- `belongsTo` User, Vehicle, Contact (nullable, conditional)
 
 #### `vehicle_equipment`
 Pivot table for vehicle-equipment many-to-many relationship.
@@ -1181,7 +1277,7 @@ API performance and status logging.
 Users
   ├── belongsTo UserStatus
   ├── belongsToMany Dealers (through DealerUser pivot)
-  ├── hasMany DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
+  ├── hasMany DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
   └── Note: Soft deletes enabled, JWT Subject, Spatie Permission roles
 
 Dealers
@@ -1196,7 +1292,7 @@ DealerUsers (Pivot)
 Vehicles
   ├── belongsTo Dealer (nullable), User, Brand, VehicleModel (model), ModelYear, ListingType, GearType
   ├── hasOne VehicleDetail, FeaturedListing
-  ├── hasMany VehicleImage, Favorite, Lead, PriceHistory, ListingViewsLog
+  ├── hasMany VehicleImage, Favorite, Lead, Enquiry, PriceHistory, ListingViewsLog
   ├── belongsToMany Equipment (via vehicle_equipment pivot)
   └── Note: Soft deletes enabled, caching for lookup data, auto-generated title accessor
 
@@ -1231,15 +1327,25 @@ ListingTypes, FuelTypes, GearTypes, VehicleListStatuses, ModelYears, Categories
   └── Lookup tables (used for caching in Vehicle model)
 
 Leads
-  ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, Source
+  ├── belongsTo Vehicle, User (buyer), Dealer, User (assigned), LeadStage, LeadIntent, Source, LeadCategory
   ├── hasMany LeadStageHistory, ChatThread
   └── Note: No timestamps (only created_at)
 
 LeadStages
   └── hasMany Lead
 
+LeadIntents
+  └── hasMany Lead
+
+LeadCategories
+  └── hasMany Lead
+
 Sources
   └── hasMany Lead
+
+Enquiries
+  ├── belongsTo User, Vehicle, Contact (nullable, conditional)
+  └── Note: Uses HasSerialNumber trait
 
 ChatThreads
   ├── belongsTo Lead

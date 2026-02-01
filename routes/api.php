@@ -100,6 +100,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
     });
     
+    Route::middleware('auth:api')->prefix('vehicles')->group(function () {
+        Route::post('/{id}/leads', [\App\Http\Controllers\EnquiryController::class, 'enquire']);
+        Route::post('/{id}/enquiries', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm']);
+        Route::post('/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm']);
+        Route::post('/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm']);
+    });
+    
     // Nummerplade API proxy routes (for Flutter/Vue.js)
     Route::prefix('nummerplade')->group(function () {
         // Vehicle lookup endpoints (rate limited)

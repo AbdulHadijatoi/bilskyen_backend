@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Enquiry;
+use App\Models\Vehicle;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+/**
+ * Dealer Enquiry Controller
+ * Handles enquiries for dealer's vehicles
+ */
+class DealerEnquiryController extends Controller
+{
+    /**
+     * Get all enquiries for dealer's vehicles
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $dealer = $request->user()->dealers()->first();
+        
+        if (!$dealer) {
+            return $this->notFound('Dealer not found');
+        }
+
+        // Get all vehicle IDs for this dealer
+        $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
+
+        $query = Enquiry::with(['user', 'vehicle', 'contact'])
+            ->whereIn('vehicle_id', $vehicleIds);
+
+        // Apply filters
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->has('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->has('vehicle_id')) {
+            $query->where('vehicle_id', $request->input('vehicle_id'));
+        }
+
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->input('user_id'));
+        }
+
+        // Apply sorting
+        $sortBy = $request->input('sort', 'created_at');
+        $sortOrder = $request->input('order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $enquiries = $query->paginate($request->get('limit', 15));
+
+        return $this->paginated($enquiries);
+    }
+
+    /**
+     * Get a specific enquiry
+     */
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()->dealers()->first();
+        
+        if (!$dealer) {
+            return $this->notFound('Dealer not found');
+        }
+
+        // Get all vehicle IDs for this dealer
+        $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
+
+        $enquiry = Enquiry::with(['user', 'vehicle.brand', 'vehicle.model', 'contact'])
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->findOrFail($id);
+
+        return $this->success($enquiry);
+    }
+
+    /**
+     * Update enquiry status
+     */
+    public function updateStatus(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required|string|in:New,In Progress,Awaiting Customer,Responded,Closed,Converted to Sale,Cancelled',
+        ]);
+
+        $dealer = $request->user()->dealers()->first();
+        
+        if (!$dealer) {
+            return $this->notFound('Dealer not found');
+        }
+
+        // Get all vehicle IDs for this dealer
+        $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
+
+        $enquiry = Enquiry::whereIn('vehicle_id', $vehicleIds)->findOrFail($id);
+        $enquiry->status = $request->status;
+        $enquiry->save();
+
+        return $this->success($enquiry->load(['user', 'vehicle', 'contact']));
+    }
+
+    /**
+     * Update enquiry type
+     */
+    public function updateType(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'type' => 'required|string|in:General,Sales,Vehicle Information,Test Drive,Price Enquiry,Financing,Insurance,Trade-In,Availability,Service,Parts,Complaint,Feedback,Other',
+        ]);
+
+        $dealer = $request->user()->dealers()->first();
+        
+        if (!$dealer) {
+            return $this->notFound('Dealer not found');
+        }
+
+        // Get all vehicle IDs for this dealer
+        $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
+
+        $enquiry = Enquiry::whereIn('vehicle_id', $vehicleIds)->findOrFail($id);
+        $enquiry->type = $request->type;
+        $enquiry->save();
+
+        return $this->success($enquiry->load(['user', 'vehicle', 'contact']));
+    }
+}
