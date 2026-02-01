@@ -24,6 +24,7 @@ use App\Models\Equipment;
 use App\Models\Euronom;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Lookup Controller
@@ -128,35 +129,94 @@ class LookupController extends Controller
      * - Simple lookups: id and name
      * - Models: id, name, and brand_id
      * - Equipments: id, name, and equipment_type_id
+     * 
+     * Uses the same cache keys as dealer and admin APIs for consistency
      */
     public function constants(): JsonResponse
     {
         try {
-            // Simple lookups (id and name only)
-            $brands = Brand::select('id', 'name')->orderBy('name')->get();
-            $fuelTypes = FuelType::select('id', 'name')->orderBy('name')->get();
-            $transmissions = Transmission::select('id', 'name')->orderBy('name')->get();
-            $gearTypes = GearType::select('id', 'name')->orderBy('name')->get();
-            $vehicleUses = VehicleUse::select('id', 'name')->orderBy('name')->get();
-            $salesTypes = SalesType::select('id', 'name')->orderBy('name')->get();
-            $priceTypes = PriceType::select('id', 'name')->orderBy('name')->get();
-            $conditions = Condition::select('id', 'name')->orderBy('name')->get();
-            $variants = Variant::select('id', 'name')->orderBy('name')->get();
-            $categories = Category::select('id', 'name')->orderBy('name')->get();
-            $bodyTypes = BodyType::select('id', 'name')->orderBy('name')->get();
-            $colors = Color::select('id', 'name')->orderBy('name')->get();
-            $types = Type::select('id', 'name')->orderBy('name')->get();
-            $permits = Permit::select('id', 'name')->orderBy('name')->get();
-            $modelYears = ModelYear::select('id', 'name')->orderBy('name')->get();
-            $listingTypes = ListingType::select('id', 'name')->orderBy('name')->get();
-            $equipmentTypes = EquipmentType::select('id', 'name')->orderBy('name')->get();
-            $euronorms = Euronom::select('id', 'name')->orderBy('name')->get();
+            // Fetch all lookup data with individual caching (24 hour TTL)
+            // Using same cache keys as dealer and admin APIs
+            $brands = Cache::remember('constants_brands', 86400, function () {
+                return Brand::select('id', 'name')->orderBy('name')->get();
+            });
 
-            // Models with parent reference (brand_id)
-            $models = VehicleModel::select('id', 'name', 'brand_id')->orderBy('name')->get();
+            $modelYears = Cache::remember('constants_model_years', 86400, function () {
+                return ModelYear::select('id', 'name')->orderBy('name')->get();
+            });
 
-            // Equipments with parent reference (equipment_type_id)
-            $equipments = Equipment::select('id', 'name', 'equipment_type_id')->orderBy('name')->get();
+            $fuelTypes = Cache::remember('constants_fuel_types', 86400, function () {
+                return FuelType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $gearTypes = Cache::remember('constants_gear_types', 86400, function () {
+                return GearType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $listingTypes = Cache::remember('constants_listing_types', 86400, function () {
+                return ListingType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $bodyTypes = Cache::remember('constants_body_types', 86400, function () {
+                return BodyType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $colors = Cache::remember('constants_colors', 86400, function () {
+                return Color::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $variants = Cache::remember('constants_variants', 86400, function () {
+                return Variant::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $types = Cache::remember('constants_types', 86400, function () {
+                return Type::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $conditions = Cache::remember('constants_conditions', 86400, function () {
+                return Condition::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $salesTypes = Cache::remember('constants_sales_types', 86400, function () {
+                return SalesType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $priceTypes = Cache::remember('constants_price_types', 86400, function () {
+                return PriceType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $euronorms = Cache::remember('constants_euronorms', 86400, function () {
+                return Euronom::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $vehicleModels = Cache::remember('constants_vehicle_models', 86400, function () {
+                return VehicleModel::select('id', 'name', 'brand_id')->orderBy('name')->get();
+            });
+
+            $vehicleUses = Cache::remember('constants_vehicle_uses', 86400, function () {
+                return VehicleUse::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $equipmentTypes = Cache::remember('constants_equipment_types', 86400, function () {
+                return EquipmentType::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $equipments = Cache::remember('constants_equipments', 86400, function () {
+                return Equipment::select('id', 'name', 'equipment_type_id')->orderBy('name')->get();
+            });
+
+            // Additional constants not in dealer/admin APIs
+            $transmissions = Cache::remember('constants_transmissions', 86400, function () {
+                return Transmission::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $categories = Cache::remember('constants_categories', 86400, function () {
+                return Category::select('id', 'name')->orderBy('name')->get();
+            });
+
+            $permits = Cache::remember('constants_permits', 86400, function () {
+                return Permit::select('id', 'name')->orderBy('name')->get();
+            });
 
             return $this->success([
                 'brands' => $brands,
@@ -177,7 +237,7 @@ class LookupController extends Controller
                 'listing_types' => $listingTypes,
                 'equipment_types' => $equipmentTypes,
                 'euronorms' => $euronorms,
-                'models' => $models,
+                'models' => $vehicleModels,
                 'equipments' => $equipments,
             ]);
         } catch (\Exception $e) {
