@@ -17,14 +17,16 @@ class AdminVariantController extends Controller
     use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
-        $variants = Variant::orderBy('name')->paginate($request->get('limit', 15));
+        $variants = Variant::with('model')
+            ->orderBy('name')
+            ->paginate($request->get('limit', 15));
 
         return $this->paginated($variants);
     }
 
     public function show(int $id): JsonResponse
     {
-        $variant = Variant::findOrFail($id);
+        $variant = Variant::with('model')->findOrFail($id);
         return $this->success($variant);
     }
 
@@ -32,9 +34,10 @@ class AdminVariantController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:variants,name',
+            'model_id' => 'nullable|integer|exists:models,id',
         ]);
 
-        $variant = Variant::create($request->only(['name']));
+        $variant = Variant::create($request->only(['name', 'model_id']));
 
         // Clear cache
         $this->clearConstantsCache('variants');
@@ -48,9 +51,10 @@ class AdminVariantController extends Controller
 
         $request->validate([
             'name' => 'sometimes|string|max:255|unique:variants,name,' . $id,
+            'model_id' => 'nullable|integer|exists:models,id',
         ]);
 
-        $variant->update($request->only(['name']));
+        $variant->update($request->only(['name', 'model_id']));
 
         // Clear cache
         $this->clearConstantsCache('variants');

@@ -1296,14 +1296,15 @@
 
                     <div class="space-y-2">
                         <label for="variant_id" class="text-sm font-medium">Variant</label>
-                        <select id="variant_id" name="variant_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <select id="variant_id" disabled
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm opacity-60 cursor-not-allowed">
                             <option value="">Select Variant</option>
                             @foreach($lookupData['variants'] as $variant)
                                 <option value="{{ $variant->id }}">{{ $variant->name }}</option>
                             @endforeach
                         </select>
-                        <p class="field-help">Vehicle variant/trim level</p>
+                        <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
+                        <p class="field-help">Vehicle variant/trim level (automatically set based on model)</p>
                     </div>
 
                     <div class="space-y-2">
@@ -1679,45 +1680,6 @@
                         </div>
                         <p class="field-help">Your postal code</p>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 8: Packages -->
-        <div class="expandable-section" data-section="packages">
-            <div class="section-header active" onclick="toggleSection('packages')">
-                <div class="section-title-group">
-                    <div class="section-number">8</div>
-                    <div>
-                        <div class="section-title">Packages</div>
-                        <div class="section-subtitle">Select a package for your listing</div>
-                    </div>
-                </div>
-            </div>
-            <div class="section-content expanded">
-                <div class="section-description">
-                    Select a package to enhance your vehicle listing. Each package includes different features.
-                </div>
-                <div class="plans-grid">
-                    @foreach($lookupData['plans'] as $plan)
-                        <label class="plan-card">
-                            <input type="radio" name="plan_id" value="{{ $plan->id }}">
-                            <div class="plan-name">{{ $plan->name }}</div>
-                            @if($plan->description)
-                                <p class="plan-description">{{ $plan->description }}</p>
-                            @endif
-                            @if($plan->planFeatures && $plan->planFeatures->count() > 0)
-                                <div class="mt-2">
-                                    <p class="plan-features-label">Features:</p>
-                                    <ul class="space-y-1">
-                                        @foreach($plan->planFeatures as $planFeature)
-                                            <li class="plan-feature-item">• {{ $planFeature->feature->description ?? $planFeature->feature->key }}: {{ $planFeature->value }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-                        </label>
-                    @endforeach
                 </div>
             </div>
         </div>

@@ -39,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'vehicle.create',
             'vehicle.update',
             'vehicle.delete',
+            'vehicle.feature',
             
             // Contact permissions
             'contact.list',
@@ -155,6 +156,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'vehicle.create',
             'vehicle.update',
             'vehicle.delete',
+            'vehicle.feature',
             'contact.list',
             'contact.view',
             'contact.create',

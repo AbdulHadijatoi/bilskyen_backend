@@ -28,12 +28,16 @@ use App\Models\Dealer;
 use App\Models\DealerUser;
 use App\Models\VehicleDetail;
 use App\Models\Location;
+use App\Models\FeaturedListing;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SellYourCarController extends Controller
 {
@@ -501,17 +505,21 @@ class SellYourCarController extends Controller
             // Create vehicle
             $vehicle = $this->vehicleService->createVehicle($vehicleData);
 
+            // Generate secure token for success page access
+            $token = $this->generateSuccessToken($vehicle->id, $user->id);
+
             // Handle AJAX requests
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Vehicle listed successfully!',
                     'vehicle_id' => $vehicle->id,
-                    'redirect_url' => route('vehicle.detail', ['id' => $vehicle->id])
+                    'token' => $token,
+                    'redirect_url' => route('sell-your-car.success', ['token' => $token])
                 ]);
             }
 
-            return redirect()->route('vehicle.detail', ['id' => $vehicle->id])
+            return redirect()->route('sell-your-car.success', ['token' => $token])
                 ->with('success', 'Vehicle listed successfully!');
         } catch (\Exception $e) {
             // Handle AJAX requests
@@ -639,6 +647,193 @@ class SellYourCarController extends Controller
         }
         
         return implode('. ', $descriptionParts) . '.';
+    }
+
+    /**
+     * Generate secure token for success page access
+     */
+    private function generateSuccessToken(int $vehicleId, int $userId): string
+    {
+        // Generate cryptographically secure random token
+        $token = Str::random(32);
+        
+        // Store token in cache with 1 hour expiration
+        // Token data includes vehicle_id and user_id for verification
+        Cache::put("vehicle_success_token:{$token}", [
+            'vehicle_id' => $vehicleId,
+            'user_id' => $userId,
+        ], now()->addHour());
+        
+        return $token;
+    }
+
+    /**
+     * Verify token and retrieve vehicle data
+     */
+    private function verifySuccessToken(string $token, int $expectedUserId): ?array
+    {
+        $tokenData = Cache::get("vehicle_success_token:{$token}");
+        
+        if (!$tokenData) {
+            return null; // Token doesn't exist or expired
+        }
+        
+        // Verify user_id matches
+        if ($tokenData['user_id'] !== $expectedUserId) {
+            return null; // Token doesn't belong to this user
+        }
+        
+        return $tokenData;
+    }
+
+    /**
+     * Show success page after vehicle creation
+     */
+    public function showSuccess(Request $request, string $token)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        if (!$user) {
+            return redirect()->route('login')->with('return_url', '/sell-your-car');
+        }
+
+        // Verify token and get vehicle_id
+        $tokenData = $this->verifySuccessToken($token, $user->id);
+        
+        if (!$tokenData) {
+            return redirect()->route('sell-your-car')
+                ->with('error', 'Invalid or expired access token. Please create a new vehicle listing.');
+        }
+
+        $vehicleId = $tokenData['vehicle_id'];
+        
+        try {
+            // Use withTrashed() to include soft-deleted vehicles for the original creator
+            $vehicle = Vehicle::withTrashed()
+                ->with(['images', 'brand', 'model', 'modelYear', 'fuelType', 'details'])
+                ->findOrFail($vehicleId);
+        } catch (ModelNotFoundException $e) {
+            // Vehicle has been permanently deleted
+            return redirect()->route('sell-your-car')
+                ->with('error', 'This vehicle listing no longer exists. It may have been permanently deleted.');
+        }
+
+        // Verify user owns this vehicle (double check)
+        if ($vehicle->user_id !== $user->id) {
+            return redirect()->route('sell-your-car')
+                ->with('error', 'You do not have permission to access this vehicle listing.');
+        }
+
+        // Check if vehicle is soft-deleted
+        if ($vehicle->trashed()) {
+            return redirect()->route('sell-your-car')
+                ->with('error', 'This vehicle listing has been deleted and is no longer accessible.');
+        }
+
+        // Check if vehicle is already featured
+        $isFeatured = FeaturedListing::where('vehicle_id', $vehicleId)->exists();
+        
+        // Check if user has permission to feature vehicles
+        $canFeature = $user->can('vehicle.feature');
+
+        return view('sell-your-car-success', [
+            'vehicle' => $vehicle,
+            'isFeatured' => $isFeatured,
+            'canFeature' => $canFeature,
+            'token' => $token, // Pass token to view for feature button
+        ]);
+    }
+
+    /**
+     * Feature a vehicle listing
+     */
+    public function feature(Request $request, string $token)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You must be logged in to feature a vehicle.'
+            ], 401);
+        }
+
+        // Check permission to feature vehicles
+        if (!$user->can('vehicle.feature')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to feature vehicles. Please contact your administrator.'
+            ], 403);
+        }
+
+        // Verify token and get vehicle_id
+        $tokenData = $this->verifySuccessToken($token, $user->id);
+        
+        if (!$tokenData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid or expired access token.'
+            ], 403);
+        }
+
+        $vehicleId = $tokenData['vehicle_id'];
+        
+        try {
+            $vehicle = Vehicle::findOrFail($vehicleId);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Vehicle not found. It may have been deleted.'
+            ], 404);
+        }
+
+        // Verify user owns this vehicle (double check)
+        if ($vehicle->user_id !== $user->id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to feature this vehicle.'
+            ], 403);
+        }
+
+        // Check if vehicle is soft-deleted
+        if ($vehicle->trashed()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot feature a deleted vehicle listing.'
+            ], 400);
+        }
+
+        // Check if already featured
+        $existingFeatured = FeaturedListing::where('vehicle_id', $vehicleId)->first();
+        if ($existingFeatured) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Vehicle is already featured.',
+                'already_featured' => true
+            ]);
+        }
+
+        // Get max sort order and add 1
+        $maxSortOrder = FeaturedListing::max('sort_order') ?? 0;
+        $sortOrder = $maxSortOrder + 1;
+
+        // Create featured listing
+        $featuredListing = FeaturedListing::create([
+            'vehicle_id' => $vehicleId,
+            'sort_order' => $sortOrder,
+        ]);
+
+        // Handle AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Vehicle featured successfully!',
+                'featured_listing' => $featuredListing
+            ]);
+        }
+
+        return redirect()->route('sell-your-car.success', ['token' => $token])
+            ->with('success', 'Vehicle featured successfully!');
     }
 }
 

@@ -589,8 +589,8 @@
         }
         
         // Handle variant name if variant_id is not set but variant name exists
-        const variantSelect = document.getElementById('variant_id');
-        if (variantSelect && !variantSelect.value) {
+        const variantHiddenInput = document.getElementById('variant_id_hidden');
+        if (variantHiddenInput && !variantHiddenInput.value) {
             // Check if there's a variant name input (from API)
             const variantNameInput = document.getElementById('variant_name_hidden');
             if (variantNameInput && variantNameInput.value) {
@@ -740,11 +740,14 @@
                 return;
             }
 
-            // Success - redirect to vehicle detail page
+            // Success - redirect to success page
             if (data.redirect_url) {
                 window.location.href = data.redirect_url;
+            } else if (data.token) {
+                window.location.href = `/sell-your-car/success/${data.token}`;
             } else if (data.vehicle_id) {
-                window.location.href = `/vehicle/${data.vehicle_id}`;
+                // Fallback: if token is missing, redirect with error message
+                displayGeneralError('Vehicle saved successfully, but access token is missing. Please contact support.');
             } else {
                 displayGeneralError('Vehicle saved successfully, but redirect URL is missing.');
             }
@@ -1348,6 +1351,12 @@
                 // Add option if it doesn't exist (to handle newly created variants)
                 addOptionIfNotExists('variant_id', variantId, variantName);
                 setSelectByIdOrText('variant_id', variantId);
+                
+                // Update hidden input for form submission (select is disabled)
+                const variantHiddenInput = document.getElementById('variant_id_hidden');
+                if (variantHiddenInput) {
+                    variantHiddenInput.value = variantId;
+                }
             }
         }
         

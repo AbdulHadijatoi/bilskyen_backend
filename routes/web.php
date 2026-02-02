@@ -78,6 +78,8 @@ Route::middleware('auth.web')->group(function () {
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
+    Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
+    Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
 });
 
 // About Page

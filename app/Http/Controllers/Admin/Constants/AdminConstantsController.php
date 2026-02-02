@@ -67,7 +67,7 @@ class AdminConstantsController extends Controller
             });
 
             $variants = Cache::remember('constants_variants', 86400, function () {
-                return Variant::orderBy('name')->get();
+                return Variant::with('model')->orderBy('name')->get();
             });
 
             $types = Cache::remember('constants_types', 86400, function () {
