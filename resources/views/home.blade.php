@@ -521,11 +521,13 @@
                                                 View Details
                                             </button>
                                         </a>
-                                        <a href="{{ route('vehicles.enquire.form', $vehicle['id']) }}" class="flex-1" onclick="event.stopPropagation()">
-                                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                                Enquire
-                                            </button>
-                                        </a>
+                                        <button 
+                                            type="button"
+                                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle['id'] }})"
+                                            class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                                        >
+                                            Enquire
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -533,6 +535,13 @@
                             @endforeach
                         </div>
                     </div>
+                    <!-- Enquiry Dialogs for Featured Vehicles -->
+                    @foreach($featuredVehicles as $vehicle)
+                        <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
+                    @endforeach
+
+                    <!-- Login Dialog -->
+                    <x-login-dialog />
                     <div class="mt-4 flex justify-center">
                         <a href="/vehicles" class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                             View All Vehicles
@@ -1379,6 +1388,41 @@
 
 @push('scripts')
 <script>
+    (function() {
+        // Get access token from cookie helper
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Check if user is authenticated
+        function isUserAuthenticated() {
+            return getCookie('access_token') !== null;
+        }
+        
+        // Override openEnquiryDialog to check authentication first
+        const originalOpenEnquiryDialog = window.openEnquiryDialog;
+        window.openEnquiryDialog = function(type, vehicleId) {
+            // Check if user is authenticated
+            if (!isUserAuthenticated()) {
+                // Open login dialog with callback to open enquiry dialog after login
+                if (window.openLoginDialog) {
+                    window.openLoginDialog(() => {
+                        // After successful login (page will refresh), the enquiry dialog will be available
+                        // The user will need to click enquire again, but they'll be logged in
+                    });
+                }
+                return;
+            }
+            
+            // User is authenticated, proceed with original function
+            if (originalOpenEnquiryDialog) {
+                originalOpenEnquiryDialog(type, vehicleId);
+            }
+        };
+    })();
 </script>
 @endpush
 @endsection

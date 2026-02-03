@@ -319,11 +319,13 @@
                                 View Details
                             </button>
                         </a>
-                        <a href="{{ route('vehicles.enquire.form', $vehicle->id) }}" class="flex-1" onclick="event.stopPropagation()">
-                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                Enquire
-                            </button>
-                        </a>
+                        <button 
+                            type="button"
+                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                            class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                        >
+                            Enquire
+                        </button>
                     </div>
                 </div>
             </div>
@@ -343,6 +345,14 @@
         </div>
         @endforelse
     </div>
+
+    <!-- Enquiry Dialogs for Vehicles -->
+    @foreach($vehicles as $vehicle)
+        <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
+    @endforeach
+
+    <!-- Login Dialog -->
+    <x-login-dialog />
 
     <!-- Pagination -->
     <div id="pagination-container" class="mt-8 flex items-center justify-center gap-2">
@@ -3618,6 +3628,11 @@
             return null;
         }
         
+        // Check if user is authenticated
+        function isUserAuthenticated() {
+            return getCookie('access_token') !== null;
+        }
+        
         // Toggle favorite function
         window.toggleFavorite = async function(vehicleId, event) {
             // Prevent any default behavior and stop propagation
@@ -3625,6 +3640,18 @@
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
+            }
+            
+            // Check if user is authenticated
+            if (!isUserAuthenticated()) {
+                // Open login dialog with callback to favorite after login
+                if (window.openLoginDialog) {
+                    window.openLoginDialog(() => {
+                        // After successful login, automatically favorite the vehicle
+                        window.toggleFavorite(vehicleId, event);
+                    });
+                }
+                return false;
             }
             
             // Get CSRF token
@@ -3666,9 +3693,16 @@
                             if (window.showSnackbar) {
                                 window.showSnackbar('Please login to manage favorites', 'error');
                             }
-                            setTimeout(() => {
-                                window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                            }, 1500);
+                            // Open login dialog instead of redirecting
+                            if (window.openLoginDialog) {
+                                window.openLoginDialog(() => {
+                                    window.toggleFavorite(vehicleId, event);
+                                });
+                            } else {
+                                setTimeout(() => {
+                                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                                }, 1500);
+                            }
                             return false;
                         }
                         const data = await response.json().catch(() => ({}));
@@ -3704,9 +3738,16 @@
                             if (window.showSnackbar) {
                                 window.showSnackbar('Please login to save favorites', 'error');
                             }
-                            setTimeout(() => {
-                                window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                            }, 1500);
+                            // Open login dialog instead of redirecting
+                            if (window.openLoginDialog) {
+                                window.openLoginDialog(() => {
+                                    window.toggleFavorite(vehicleId, event);
+                                });
+                            } else {
+                                setTimeout(() => {
+                                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                                }, 1500);
+                            }
                             return false;
                         }
                         const data = await response.json().catch(() => ({}));
@@ -3723,6 +3764,29 @@
             }
             
             return false;
+        };
+
+        // Override openEnquiryDialog to check authentication first
+        const originalOpenEnquiryDialog = window.openEnquiryDialog;
+        window.openEnquiryDialog = function(type, vehicleId) {
+            // Check if user is authenticated
+            if (!isUserAuthenticated()) {
+                // Open login dialog with callback to open enquiry dialog after login
+                if (window.openLoginDialog) {
+                    window.openLoginDialog(() => {
+                        // After successful login, open the enquiry dialog
+                        if (originalOpenEnquiryDialog) {
+                            originalOpenEnquiryDialog(type, vehicleId);
+                        }
+                    });
+                }
+                return;
+            }
+            
+            // User is authenticated, proceed with original function
+            if (originalOpenEnquiryDialog) {
+                originalOpenEnquiryDialog(type, vehicleId);
+            }
         };
 
         // Load favorite status on page load

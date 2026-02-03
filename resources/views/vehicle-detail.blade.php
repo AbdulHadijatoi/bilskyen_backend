@@ -703,6 +703,9 @@
                     } elseif ($dealerUser && $dealerUser->phone) {
                         $dealerPhone = $dealerUser->phone;
                     }
+                    
+                    // Get contact email for dealer (used later in dealer section)
+                    $contactEmail = $dealerUser->email ?? null;
                 @endphp
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
@@ -783,12 +786,36 @@
                                 </div>
                             </div>
                         @endif
+                        @if($contactEmail && $vehicle->dealer)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <button 
+                                        type="button"
+                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                                        id="dealer-email-btn-{{ $vehicle->id }}"
+                                        data-email="{{ $contactEmail }}"
+                                    >
+                                        Send Email
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">Email</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
 
             <!-- Seller Information (Private Seller) -->
             @if($vehicle->user && !$vehicle->dealer)
+                @php
+                    // Get contact email for private seller (used later in seller section)
+                    $contactEmail = $vehicle->user->email ?? null;
+                @endphp
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -875,6 +902,26 @@
                                 </div>
                             </div>
                         @endif
+                        @if($contactEmail && $vehicle->user && !$vehicle->dealer)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <button 
+                                        type="button"
+                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                                        id="seller-email-btn-{{ $vehicle->id }}"
+                                        data-email="{{ $contactEmail }}"
+                                    >
+                                        Send Email
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">Email</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -904,19 +951,25 @@
                 // Get contact information for dealer or private seller
                 $contactUser = null;
                 $contactWhatsApp = null;
-                $contactEmail = null;
                 
+                // Contact email is already set above in dealer/seller sections, but ensure it's set here too
                 if ($vehicle->dealer) {
                     $dealerUser = $vehicle->dealer->users()->first();
                     if ($dealerUser) {
                         $contactUser = $dealerUser;
                         $contactWhatsApp = $dealerUser->whatsapp_number ?? $dealerUser->phone ?? null;
-                        $contactEmail = $dealerUser->email ?? null;
+                        // $contactEmail is already set in the dealer section above
+                        if (!isset($contactEmail)) {
+                            $contactEmail = $dealerUser->email ?? null;
+                        }
                     }
                 } elseif ($vehicle->user) {
                     $contactUser = $vehicle->user;
                     $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
-                    $contactEmail = $vehicle->user->email ?? null;
+                    // $contactEmail is already set in the seller section above
+                    if (!isset($contactEmail)) {
+                        $contactEmail = $vehicle->user->email ?? null;
+                    }
                 }
             @endphp
             
@@ -932,22 +985,23 @@
                 </div>
                 <div class="space-y-3">
                     <!-- Enquiry Form Button -->
-                    <a 
-                        href="{{ route('vehicles.enquire.form', $vehicle->id) }}" 
+                    <button 
+                        type="button"
+                        onclick="openEnquiryDialog('enquiry', {{ $vehicle->id }})"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                         Send Enquiry
-                    </a>
+                    </button>
 
                     <!-- WhatsApp Button -->
                     @if($contactWhatsApp)
                     <button 
                         type="button"
                         onclick="handleWhatsAppClick({{ $vehicle->id }}, event)"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-900 transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                         id="whatsapp-btn-{{ $vehicle->id }}"
                         data-whatsapp="{{ $contactWhatsApp }}"
                     >
@@ -958,26 +1012,10 @@
                     </button>
                     @endif
 
-                    <!-- Email Button -->
-                    @if($contactEmail)
+                    <!-- Test Drive Request Button -->
                     <button 
                         type="button"
-                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-                        id="email-btn-{{ $vehicle->id }}"
-                        data-email="{{ $contactEmail }}"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                        </svg>
-                        <span class="email-btn-text">Send Email</span>
-                    </button>
-                    @endif
-
-                    <!-- Test Drive Request Button -->
-                    <a 
-                        href="{{ route('vehicles.test-drive.form', $vehicle->id) }}"
+                        onclick="openEnquiryDialog('test-drive', {{ $vehicle->id }})"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -991,11 +1029,12 @@
                             <path d="M20 11V8" />
                         </svg>
                         <span>Request Test Drive</span>
-                    </a>
+                    </button>
 
                     <!-- Price Negotiation Button -->
-                    <a 
-                        href="{{ route('vehicles.price-negotiation.form', $vehicle->id) }}"
+                    <button 
+                        type="button"
+                        onclick="openEnquiryDialog('price-negotiation', {{ $vehicle->id }})"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -1003,7 +1042,7 @@
                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
                         <span>Price Negotiation</span>
-                    </a>
+                    </button>
                 </div>
             </div>
             @endif
@@ -1175,6 +1214,11 @@
         </div>
     </div>
 </div>
+
+<!-- Enquiry Dialogs -->
+<x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
+<x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />
+<x-enquiry-dialog type="price-negotiation" :vehicle="$vehicle" />
 
 <script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>

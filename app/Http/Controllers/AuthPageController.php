@@ -172,7 +172,7 @@ class AuthPageController extends Controller
      * Handle login form submission
      *
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function handleLogin(Request $request)
     {
@@ -186,6 +186,14 @@ class AuthPageController extends Controller
 
         // Attempt authentication using JWT
         if (!$token = auth('api')->attempt($credentials)) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'These credentials do not match our records.',
+                    'errors' => [
+                        'email' => ['These credentials do not match our records.'],
+                    ]
+                ], 422);
+            }
             return back()->withErrors([
                 'email' => 'These credentials do not match our records.',
             ])->withInput($request->only('email'));
@@ -197,6 +205,14 @@ class AuthPageController extends Controller
         // Check if user is banned
         if ($user->banned) {
             auth('api')->logout();
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''),
+                    'errors' => [
+                        'email' => ['Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : '')],
+                    ]
+                ], 403);
+            }
             return back()->withErrors([
                 'email' => 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''),
             ])->withInput($request->only('email'));
@@ -228,6 +244,27 @@ class AuthPageController extends Controller
             false, // raw
             'Strict' // sameSite
         );
+
+        // If AJAX request, return JSON response
+        if ($request->expectsJson() || $request->ajax()) {
+            $response = response()->json([
+                'message' => 'Login successful!',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->map(function($role) {
+                        return ['id' => $role->id, 'name' => $role->name];
+                    }),
+                ]
+            ]);
+            
+            // Set cookies on the response
+            $response->cookie($refreshCookie);
+            $response->cookie($accessCookie);
+            
+            return $response;
+        }
 
         // Redirect all users to home page after login
         return redirect('/')->withCookies([$refreshCookie, $accessCookie]);

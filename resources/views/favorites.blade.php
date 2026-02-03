@@ -91,11 +91,13 @@
                                 View Details
                             </button>
                         </a>
-                        <a href="{{ route('vehicles.enquire.form', $vehicle->id) }}" class="flex-1" onclick="event.stopPropagation()">
-                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                Enquire
-                            </button>
-                        </a>
+                        <button 
+                            type="button"
+                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                            class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                        >
+                            Enquire
+                        </button>
                     </div>
                 </div>
             </div>
@@ -103,6 +105,13 @@
         @endif
         @endforeach
     </div>
+
+    <!-- Enquiry Dialogs for Favorite Vehicles -->
+    @foreach($favorites as $favorite)
+        @if($favorite->vehicle)
+            <x-enquiry-dialog type="enquiry" :vehicle="$favorite->vehicle" />
+        @endif
+    @endforeach
 
     <!-- Pagination -->
     @if($favorites->hasPages())

@@ -226,6 +226,49 @@
                 setTimeout(() => snackbar.remove(), 300);
             }, 3000);
         };
+        
+        // Enquiry Dialog Management
+        window.openEnquiryDialog = function(type, vehicleId) {
+            const dialogId = `${type}-dialog-${vehicleId}`;
+            const dialog = document.getElementById(dialogId);
+            if (dialog) {
+                dialog.classList.remove('hidden');
+                dialog.setAttribute('aria-hidden', 'false');
+                // Prevent body scroll when dialog is open
+                document.body.style.overflow = 'hidden';
+                // Focus on first input
+                const firstInput = dialog.querySelector('input[type="text"]');
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 100);
+                }
+            }
+        };
+        
+        window.closeEnquiryDialog = function(type, vehicleId) {
+            const dialogId = `${type}-dialog-${vehicleId}`;
+            const dialog = document.getElementById(dialogId);
+            if (dialog) {
+                dialog.classList.add('hidden');
+                dialog.setAttribute('aria-hidden', 'true');
+                // Restore body scroll
+                document.body.style.overflow = '';
+            }
+        };
+        
+        // Close dialog on ESC key (handled per dialog in component)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const openDialogs = document.querySelectorAll('[role="dialog"]:not(.hidden)');
+                openDialogs.forEach(dialog => {
+                    const dialogId = dialog.id;
+                    const match = dialogId.match(/^(.+)-dialog-(\d+)$/);
+                    if (match) {
+                        const [, type, vehicleId] = match;
+                        closeEnquiryDialog(type, parseInt(vehicleId));
+                    }
+                });
+            }
+        });
     </script>
     
     @stack('scripts')
