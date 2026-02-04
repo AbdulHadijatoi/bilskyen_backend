@@ -8,6 +8,7 @@ use App\Models\Source;
 use App\Models\LeadCategory;
 use App\Models\Enquiry;
 use App\Services\AuthService;
+use App\Services\AuditLogService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -22,7 +23,8 @@ use Illuminate\View\View;
 class EnquiryController extends Controller
 {
     public function __construct(
-        private AuthService $authService
+        private AuthService $authService,
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -133,6 +135,27 @@ class EnquiryController extends Controller
             'last_activity_at' => now(),
         ]);
 
+        // Log audit trail
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Lead',
+                $lead->id,
+                $lead->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Lead created for vehicle',
+                ['lead', 'enquiry']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
+                'lead_id' => $lead->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Return response with lead data and phone number
         return response()->json([
             'status' => 'success',
@@ -235,6 +258,48 @@ class EnquiryController extends Controller
             'user_id' => $user->id,
             'vehicle_id' => $vehicle->id,
         ]);
+
+        // Log audit trail for lead
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Lead',
+                $lead->id,
+                $lead->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Lead created for vehicle',
+                ['lead', 'enquiry']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
+                'lead_id' => $lead->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Log audit trail for enquiry
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                $enquiry->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Enquiry submitted for vehicle',
+                ['enquiry', 'form']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
+                'enquiry_id' => $enquiry->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Return success response
         return response()->json([
@@ -340,6 +405,48 @@ class EnquiryController extends Controller
             'vehicle_id' => $vehicle->id,
         ]);
 
+        // Log audit trail for lead
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Lead',
+                $lead->id,
+                $lead->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Lead created for vehicle',
+                ['lead', 'enquiry']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
+                'lead_id' => $lead->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Log audit trail for enquiry
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                $enquiry->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Test drive request submitted for vehicle',
+                ['enquiry', 'test-drive']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
+                'enquiry_id' => $enquiry->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Return success response
         return response()->json([
             'status' => 'success',
@@ -443,6 +550,48 @@ class EnquiryController extends Controller
             'user_id' => $user->id,
             'vehicle_id' => $vehicle->id,
         ]);
+
+        // Log audit trail for lead
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Lead',
+                $lead->id,
+                $lead->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Lead created for vehicle',
+                ['lead', 'enquiry']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
+                'lead_id' => $lead->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Log audit trail for enquiry
+        try {
+            $this->auditLogService->logCreate(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                $enquiry->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Price negotiation request submitted for vehicle',
+                ['enquiry', 'price-negotiation']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
+                'enquiry_id' => $enquiry->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Return success response
         return response()->json([

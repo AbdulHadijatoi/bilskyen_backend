@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Dealer;
 use App\Models\DealerUser;
+use App\Models\AuditActorType;
 use App\Services\RolePermissionService;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +23,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthRegisterController extends Controller
 {
     public function __construct(
-        private RolePermissionService $rolePermissionService
+        private RolePermissionService $rolePermissionService,
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -62,9 +65,10 @@ class AuthRegisterController extends Controller
         $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
+        $dealer = null;
         // If user registered as dealer, create dealer record and associate user
         if (in_array('dealer', $roles)) {
-            DB::transaction(function () use ($user, $request) {
+            DB::transaction(function () use ($user, $request, &$dealer) {
                 // Create dealer with placeholder CVR (can be updated later)
                 // Using user ID to ensure uniqueness
                 $dealer = Dealer::create([
@@ -87,6 +91,35 @@ class AuthRegisterController extends Controller
 
         // Load roles for response
         $user->load('roles');
+
+        // Log audit trail (use SYSTEM actor type since user doesn't exist yet)
+        try {
+            $userData = $user->toArray();
+            // Remove sensitive data
+            unset($userData['password']);
+            
+            $this->auditLogService->log(
+                0, // System actor ID
+                AuditActorType::SYSTEM,
+                'create',
+                'User',
+                $user->id,
+                null,
+                $userData,
+                $request,
+                $dealer ? 'Dealer' : null,
+                $dealer?->id,
+                'User registered',
+                ['user', 'registration'],
+                'info',
+                $dealer?->id
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for user registration', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Generate JWT access token
         $token = auth('api')->login($user);

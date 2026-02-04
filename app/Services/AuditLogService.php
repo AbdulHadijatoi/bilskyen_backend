@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use App\Models\AuditActorType;
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -16,6 +17,47 @@ use Illuminate\Http\Request;
 class AuditLogService
 {
     /**
+     * Determine actor type from user roles
+     */
+    public function determineActorType(User $user): int
+    {
+        if ($user->hasRole('admin')) {
+            return AuditActorType::ADMIN;
+        }
+        
+        if ($user->hasRole('dealer')) {
+            return AuditActorType::DEALER;
+        }
+        
+        if ($user->hasRole('staff')) {
+            return AuditActorType::STAFF;
+        }
+        
+        // Default to seller
+        return AuditActorType::SELLER;
+    }
+
+    /**
+     * Get dealer ID from user
+     */
+    public function getDealerIdFromUser(User $user): ?int
+    {
+        // Try to get dealer from dealers relationship
+        $dealer = $user->dealers()->first();
+        if ($dealer) {
+            return $dealer->id;
+        }
+        
+        // Fallback to dealerUsers relationship
+        $dealerUser = $user->dealerUsers()->first();
+        if ($dealerUser) {
+            return $dealerUser->dealer_id;
+        }
+        
+        return null;
+    }
+
+    /**
      * Log an action
      */
     public function log(
@@ -26,7 +68,15 @@ class AuditLogService
         int $targetId,
         ?array $payloadBefore = null,
         ?array $payloadAfter = null,
-        ?Request $request = null
+        ?Request $request = null,
+        ?string $relatedTargetType = null,
+        ?int $relatedTargetId = null,
+        ?string $description = null,
+        ?array $tags = null,
+        ?string $severity = 'info',
+        ?int $dealerId = null,
+        ?string $status = 'success',
+        ?string $errorMessage = null
     ): AuditLog {
         try {
             // Calculate payload diff
@@ -35,24 +85,36 @@ class AuditLogService
             // Get request information
             $ipAddress = $request?->ip();
             $userAgent = $request?->userAgent();
+            $requestMethod = $request?->method();
+            $requestUrl = $request?->fullUrl();
 
             // Prepare metadata with full audit information
             $metadata = [
                 'payload_before' => $payloadBefore,
                 'payload_after' => $payloadAfter,
                 'payload_diff' => $payloadDiff,
-                'user_agent' => $userAgent,
             ];
 
-            // Create audit log entry
+            // Create audit log entry with all new fields
             $auditLog = AuditLog::create([
                 'actor_id' => $actorId,
                 'audit_actor_type_id' => $actorTypeId,
+                'dealer_id' => $dealerId,
                 'action' => $action,
+                'status' => $status,
+                'error_message' => $errorMessage,
+                'request_method' => $requestMethod,
+                'request_url' => $requestUrl,
                 'target_type' => $targetType,
                 'target_id' => $targetId,
+                'related_target_type' => $relatedTargetType,
+                'related_target_id' => $relatedTargetId,
+                'description' => $description,
+                'tags' => $tags,
+                'severity' => $severity,
                 'metadata' => $metadata,
                 'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
                 'created_at' => now(),
             ]);
 
@@ -81,6 +143,145 @@ class AuditLogService
     }
 
     /**
+     * Convenience method to log create operations
+     */
+    public function logCreate(
+        User $user,
+        string $targetType,
+        int $targetId,
+        array $payloadAfter,
+        Request $request,
+        ?string $relatedTargetType = null,
+        ?int $relatedTargetId = null,
+        ?string $description = null,
+        ?array $tags = null,
+        ?string $severity = 'info'
+    ): ?AuditLog {
+        try {
+            $actorTypeId = $this->determineActorType($user);
+            $dealerId = $this->getDealerIdFromUser($user);
+            
+            return $this->log(
+                $user->id,
+                $actorTypeId,
+                'create',
+                $targetType,
+                $targetId,
+                null,
+                $payloadAfter,
+                $request,
+                $relatedTargetType,
+                $relatedTargetId,
+                $description,
+                $tags,
+                $severity,
+                $dealerId
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for create operation', [
+                'user_id' => $user->id,
+                'target_type' => $targetType,
+                'target_id' => $targetId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convenience method to log update operations
+     */
+    public function logUpdate(
+        User $user,
+        string $targetType,
+        int $targetId,
+        array $payloadBefore,
+        array $payloadAfter,
+        Request $request,
+        ?string $relatedTargetType = null,
+        ?int $relatedTargetId = null,
+        ?string $description = null,
+        ?array $tags = null,
+        ?string $severity = 'info'
+    ): ?AuditLog {
+        try {
+            $actorTypeId = $this->determineActorType($user);
+            $dealerId = $this->getDealerIdFromUser($user);
+            
+            return $this->log(
+                $user->id,
+                $actorTypeId,
+                'update',
+                $targetType,
+                $targetId,
+                $payloadBefore,
+                $payloadAfter,
+                $request,
+                $relatedTargetType,
+                $relatedTargetId,
+                $description,
+                $tags,
+                $severity,
+                $dealerId
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for update operation', [
+                'user_id' => $user->id,
+                'target_type' => $targetType,
+                'target_id' => $targetId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convenience method to log delete operations
+     */
+    public function logDelete(
+        User $user,
+        string $targetType,
+        int $targetId,
+        array $payloadBefore,
+        Request $request,
+        ?string $relatedTargetType = null,
+        ?int $relatedTargetId = null,
+        ?string $description = null,
+        ?array $tags = null,
+        ?string $severity = 'info'
+    ): ?AuditLog {
+        try {
+            $actorTypeId = $this->determineActorType($user);
+            $dealerId = $this->getDealerIdFromUser($user);
+            
+            return $this->log(
+                $user->id,
+                $actorTypeId,
+                'delete',
+                $targetType,
+                $targetId,
+                $payloadBefore,
+                null,
+                $request,
+                $relatedTargetType,
+                $relatedTargetId,
+                $description,
+                $tags,
+                $severity,
+                $dealerId
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for delete operation', [
+                'user_id' => $user->id,
+                'target_type' => $targetType,
+                'target_id' => $targetId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Log admin user ban
      */
     public function logUserBan(int $adminId, int $userId, array $userData, Request $request): AuditLog
@@ -93,7 +294,12 @@ class AuditLogService
             $userId,
             $userData,
             array_merge($userData, ['banned' => true]),
-            $request
+            $request,
+            null,
+            null,
+            'User banned by admin',
+            ['user', 'ban', 'admin'],
+            'warning'
         );
     }
 
@@ -110,7 +316,12 @@ class AuditLogService
             $userId,
             $userData,
             array_merge($userData, ['banned' => false]),
-            $request
+            $request,
+            null,
+            null,
+            'User unbanned by admin',
+            ['user', 'unban', 'admin'],
+            'info'
         );
     }
 
@@ -133,14 +344,18 @@ class AuditLogService
             $vehicleId,
             $before,
             $after,
-            $request
+            $request,
+            null,
+            null,
+            'Vehicle status changed',
+            ['vehicle', 'status']
         );
     }
 
     /**
-     * Log soft delete
+     * Log soft delete (legacy method - use logDelete with User instead)
      */
-    public function logDelete(
+    public function logDeleteLegacy(
         int $actorId,
         int $actorTypeId,
         string $targetType,
@@ -156,7 +371,11 @@ class AuditLogService
             $targetId,
             $targetData,
             array_merge($targetData, ['deleted_at' => now()->toDateTimeString()]),
-            $request
+            $request,
+            null,
+            null,
+            "{$targetType} deleted",
+            [strtolower($targetType), 'delete']
         );
     }
 
@@ -173,7 +392,11 @@ class AuditLogService
             $planId,
             null,
             $planData,
-            $request
+            $request,
+            null,
+            null,
+            'Plan created',
+            ['plan', 'subscription']
         );
     }
 
@@ -195,7 +418,11 @@ class AuditLogService
             $planId,
             $before,
             $after,
-            $request
+            $request,
+            null,
+            null,
+            'Plan updated',
+            ['plan', 'subscription']
         );
     }
 
@@ -217,7 +444,11 @@ class AuditLogService
             $subscriptionId,
             $before,
             $after,
-            $request
+            $request,
+            null,
+            null,
+            'Subscription status changed',
+            ['subscription', 'status']
         );
     }
 

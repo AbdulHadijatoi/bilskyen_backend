@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Validator;
  */
 class AuthPasswordController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService
+    ) {}
     /**
      * Change password
      * Note: Admins cannot use this endpoint for security reasons.
@@ -55,6 +59,28 @@ class AuthPasswordController extends Controller
         // Update password
         $user->password = $request->password;
         $user->save();
+
+        // Log audit trail (don't log password values)
+        try {
+            $this->auditLogService->logUpdate(
+                $user,
+                'User',
+                $user->id,
+                ['password' => '[REDACTED]'],
+                ['password' => '[REDACTED]'],
+                $request,
+                null,
+                null,
+                'User password changed',
+                ['user', 'password', 'security'],
+                'warning'
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for password change', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success(['message' => 'Password changed successfully']);
     }

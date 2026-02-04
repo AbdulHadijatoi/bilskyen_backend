@@ -21,6 +21,7 @@ use App\Models\PriceType;
 use App\Models\Equipment;
 use App\Services\VehicleService;
 use App\Services\FileService;
+use App\Services\AuditLogService;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
@@ -40,7 +41,8 @@ class VehicleController extends Controller
 
     public function __construct(
         private VehicleService $vehicleService,
-        FileService $fileService
+        FileService $fileService,
+        private AuditLogService $auditLogService
     ) {
         $this->fileService = $fileService;
     }
@@ -1031,6 +1033,28 @@ class VehicleController extends Controller
 
             // Create vehicle
             $vehicle = $this->vehicleService->createVehicle($vehicleData);
+
+            // Log audit trail
+            try {
+                $this->auditLogService->logCreate(
+                    $user,
+                    'Vehicle',
+                    $vehicle->id,
+                    $vehicle->toArray(),
+                    $request,
+                    null,
+                    null,
+                    'Vehicle listing created via Sell Your Car API',
+                    ['vehicle', 'listing', 'sell-your-car']
+                );
+            } catch (\Exception $e) {
+                // Log error but don't fail the main operation
+                Log::warning('Failed to create audit log for vehicle creation', [
+                    'vehicle_id' => $vehicle->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             return $this->created($vehicle->load(['dealer', 'images', 'details', 'equipment']));
         } catch (\Exception $e) {

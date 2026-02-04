@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -16,6 +17,9 @@ use Tymon\JWTAuth\Exceptions\JWTException;
  */
 class AuthSessionController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService
+    ) {}
     /**
      * Sign out user (JWT)
      * Note: JWT tokens are stateless. Client should discard the token.
@@ -91,8 +95,33 @@ class AuthSessionController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        // Capture before state for audit log
+        $beforeData = $user->only(['name', 'phone', 'address', 'image']);
+
         $user->update($validator->validated());
         $user->load('roles');
+
+        // Log audit trail
+        try {
+            $afterData = $user->only(['name', 'phone', 'address', 'image']);
+            $this->auditLogService->logUpdate(
+                $user,
+                'User',
+                $user->id,
+                $beforeData,
+                $afterData,
+                $request,
+                null,
+                null,
+                'User profile updated',
+                ['user', 'profile']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for user profile update', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Match frontend expected response format (camelCase)
         return $this->success([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Favorite;
 use App\Services\AuthService;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,7 +15,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class FavoriteController extends Controller
 {
     public function __construct(
-        private AuthService $authService
+        private AuthService $authService,
+        private AuditLogService $auditLogService
     ) {}
     public function index(Request $request): JsonResponse
     {
@@ -84,14 +86,63 @@ class FavoriteController extends Controller
             ]
         );
 
+        // Log audit trail (only if newly created)
+        if ($favorite->wasRecentlyCreated) {
+            try {
+                $this->auditLogService->logCreate(
+                    $request->user(),
+                    'Favorite',
+                    $favorite->id,
+                    $favorite->toArray(),
+                    $request,
+                    'Vehicle',
+                    $request->vehicle_id,
+                    'Vehicle added to favorites',
+                    ['favorite', 'vehicle']
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to create audit log for favorite creation', [
+                    'favorite_id' => $favorite->id,
+                    'user_id' => $request->user()->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return $this->created($favorite);
     }
 
     public function destroy(int $vehicleId, Request $request): JsonResponse
     {
-        Favorite::where('user_id', $request->user()->id)
+        // Get favorite before deletion for audit log
+        $favorite = Favorite::where('user_id', $request->user()->id)
             ->where('vehicle_id', $vehicleId)
-            ->delete();
+            ->first();
+
+        if ($favorite) {
+            // Log audit trail before deletion
+            try {
+                $this->auditLogService->logDelete(
+                    $request->user(),
+                    'Favorite',
+                    $favorite->id,
+                    $favorite->toArray(),
+                    $request,
+                    'Vehicle',
+                    $vehicleId,
+                    'Vehicle removed from favorites',
+                    ['favorite', 'vehicle']
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to create audit log for favorite deletion', [
+                    'favorite_id' => $favorite->id,
+                    'user_id' => $request->user()->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            $favorite->delete();
+        }
 
         return $this->noContent();
     }
