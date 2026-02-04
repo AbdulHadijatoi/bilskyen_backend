@@ -187,6 +187,29 @@ class FavoriteController extends Controller
             ]
         );
 
+        // Log audit trail (only if newly created)
+        if ($favorite->wasRecentlyCreated) {
+            try {
+                $this->auditLogService->logCreate(
+                    $user,
+                    'Favorite',
+                    $favorite->id,
+                    $favorite->toArray(),
+                    $request,
+                    'Vehicle',
+                    $request->vehicle_id,
+                    'Vehicle added to favorites via web',
+                    ['favorite', 'vehicle', 'web']
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to create audit log for favorite creation', [
+                    'favorite_id' => $favorite->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Saved to favorites',
@@ -208,9 +231,35 @@ class FavoriteController extends Controller
             ], 401);
         }
 
-        Favorite::where('user_id', $user->id)
+        // Get favorite before deletion for audit log
+        $favorite = Favorite::where('user_id', $user->id)
             ->where('vehicle_id', $vehicleId)
-            ->delete();
+            ->first();
+
+        if ($favorite) {
+            // Log audit trail before deletion
+            try {
+                $this->auditLogService->logDelete(
+                    $user,
+                    'Favorite',
+                    $favorite->id,
+                    $favorite->toArray(),
+                    $request,
+                    'Vehicle',
+                    $vehicleId,
+                    'Vehicle removed from favorites via web',
+                    ['favorite', 'vehicle', 'web']
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to create audit log for favorite deletion', [
+                    'favorite_id' => $favorite->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            $favorite->delete();
+        }
 
         return response()->json([
             'status' => 'success',

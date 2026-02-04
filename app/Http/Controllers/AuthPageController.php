@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AuditActorType;
 use App\Services\AuthService;
 use App\Services\RolePermissionService;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +23,8 @@ class AuthPageController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private RolePermissionService $rolePermissionService
+        private RolePermissionService $rolePermissionService,
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -306,6 +309,35 @@ class AuthPageController extends Controller
         $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
+        // Log audit trail (use SYSTEM actor type since user doesn't exist yet)
+        try {
+            $userData = $user->toArray();
+            // Remove sensitive data
+            unset($userData['password']);
+            
+            $this->auditLogService->log(
+                0, // System actor ID
+                AuditActorType::SYSTEM,
+                'create',
+                'User',
+                $user->id,
+                null,
+                $userData,
+                $request,
+                null,
+                null,
+                'User registered via web signup form',
+                ['user', 'registration', 'web'],
+                'info',
+                null
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for user registration', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Generate JWT tokens
         $token = auth('api')->login($user);
         $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
@@ -511,9 +543,38 @@ class AuthPageController extends Controller
             return redirect('/auth/verify-email')->with('error', 'Invalid or expired verification link.');
         }
 
+        // Capture before state for audit log
+        $beforeData = ['email_verified' => $user->email_verified];
+
         // Mark email as verified
         $user->email_verified = true;
         $user->save();
+
+        // Log audit trail (use SYSTEM actor type as it's automated verification)
+        try {
+            $afterData = ['email_verified' => $user->email_verified];
+            $this->auditLogService->log(
+                0, // System actor ID
+                AuditActorType::SYSTEM,
+                'update',
+                'User',
+                $user->id,
+                $beforeData,
+                $afterData,
+                $request,
+                null,
+                null,
+                'User email verified',
+                ['user', 'email', 'verification', 'web'],
+                'info',
+                null
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for email verification', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Delete verification token
         DB::table('verifications')->where('identifier', $identifier)->delete();
@@ -589,6 +650,35 @@ class AuthPageController extends Controller
         // Assign default role
         $roles = $request->input('roles', ['seller']);
         $this->rolePermissionService->assignRoleToUser($user, $roles);
+
+        // Log audit trail (use SYSTEM actor type since user doesn't exist yet)
+        try {
+            $userData = $user->toArray();
+            // Remove sensitive data
+            unset($userData['password']);
+            
+            $this->auditLogService->log(
+                0, // System actor ID
+                AuditActorType::SYSTEM,
+                'create',
+                'User',
+                $user->id,
+                null,
+                $userData,
+                $request,
+                null,
+                null,
+                'User registered via magic link signup',
+                ['user', 'registration', 'magic-link', 'web'],
+                'info',
+                null
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for magic link user registration', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Generate magic link token
         $token = Str::random(64);

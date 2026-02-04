@@ -20,6 +20,7 @@ use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
 use App\Services\AuthService;
 use App\Services\VehicleService;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +28,8 @@ class HomeController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private VehicleService $vehicleService
+        private VehicleService $vehicleService,
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -137,12 +139,37 @@ class HomeController extends Controller
             'address' => 'nullable|string|max:500',
         ]);
 
+        // Capture before state for audit log
+        $beforeData = $user->only(['name', 'email', 'phone', 'address']);
+
         // Update user profile
         $user->name = $validated['name'];
         $user->email = strtolower($validated['email']);
         $user->phone = $validated['phone'] ?? null;
         $user->address = $validated['address'] ?? null;
         $user->save();
+
+        // Log audit trail
+        try {
+            $afterData = $user->only(['name', 'email', 'phone', 'address']);
+            $this->auditLogService->logUpdate(
+                $user,
+                'User',
+                $user->id,
+                $beforeData,
+                $afterData,
+                $request,
+                null,
+                null,
+                'User profile updated via web',
+                ['user', 'profile', 'web']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for user profile update', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect('/profile')->with('status', 'Profile updated successfully!');
     }

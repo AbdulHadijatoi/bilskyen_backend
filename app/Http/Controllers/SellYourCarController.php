@@ -31,6 +31,7 @@ use App\Models\Location;
 use App\Models\FeaturedListing;
 use App\Services\AuthService;
 use App\Services\VehicleService;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,8 @@ class SellYourCarController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private VehicleService $vehicleService
+        private VehicleService $vehicleService,
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -504,6 +506,27 @@ class SellYourCarController extends Controller
 
             // Create vehicle
             $vehicle = $this->vehicleService->createVehicle($vehicleData);
+
+            // Log audit trail
+            try {
+                $this->auditLogService->logCreate(
+                    $user,
+                    'Vehicle',
+                    $vehicle->id,
+                    $vehicle->toArray(),
+                    $request,
+                    null,
+                    null,
+                    'Vehicle listing created via Sell Your Car web form',
+                    ['vehicle', 'listing', 'sell-your-car', 'web']
+                );
+            } catch (\Exception $e) {
+                Log::warning('Failed to create audit log for vehicle creation', [
+                    'vehicle_id' => $vehicle->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // Generate secure token for success page access
             $token = $this->generateSuccessToken($vehicle->id, $user->id);
