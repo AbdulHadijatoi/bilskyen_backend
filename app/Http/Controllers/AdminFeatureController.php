@@ -27,12 +27,17 @@ class AdminFeatureController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:features',
-            'description' => 'sometimes|string',
+            'key' => 'required|string|max:100|unique:features',
+            'feature_value_type_id' => 'required|exists:feature_value_types,id',
+            'description' => 'required|string|max:255',
         ]);
 
-        $feature = Feature::create($request->only(['name', 'slug', 'description']));
+        $feature = Feature::create([
+            'key' => $request->key,
+            'feature_value_type_id' => $request->feature_value_type_id,
+            'description' => $request->description,
+            'created_at' => now(),
+        ]);
 
         return $this->created($feature);
     }
@@ -42,12 +47,12 @@ class AdminFeatureController extends Controller
         $feature = Feature::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|max:255|unique:features,slug,' . $id,
-            'description' => 'sometimes|string',
+            'key' => 'sometimes|string|max:100|unique:features,key,' . $id,
+            'feature_value_type_id' => 'sometimes|exists:feature_value_types,id',
+            'description' => 'sometimes|string|max:255',
         ]);
 
-        $feature->update($request->only(['name', 'slug', 'description']));
+        $feature->update($request->only(['key', 'feature_value_type_id', 'description']));
 
         return $this->success($feature);
     }

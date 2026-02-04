@@ -83,4 +83,12 @@ class Dealer extends Model
     {
         return $this->hasMany(DealerPlanOverride::class);
     }
+
+    /**
+     * Get plan availability records for this dealer
+     */
+    public function planAvailability(): HasMany
+    {
+        return $this->hasMany(PlanAvailability::class);
+    }
 }

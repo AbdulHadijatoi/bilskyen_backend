@@ -130,5 +130,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/', [SubscriptionController::class, 'show']);
         Route::get('/features', [SubscriptionController::class, 'getFeatures']);
         Route::get('/history', [SubscriptionController::class, 'getHistory']);
+        Route::post('/', [SubscriptionController::class, 'store']);
     });
+    
+    // Available Plans
+    Route::get('/plans', [SubscriptionController::class, 'getAvailablePlans']);
 });

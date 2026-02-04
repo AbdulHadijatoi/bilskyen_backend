@@ -18,6 +18,7 @@ class PlanAvailability extends Model
     protected $fillable = [
         'plan_id',
         'allowed_role_id',
+        'dealer_id',
         'is_enabled',
         'created_at',
     ];
@@ -41,5 +42,13 @@ class PlanAvailability extends Model
     public function allowedRole(): BelongsTo
     {
         return $this->belongsTo(Role::class, 'allowed_role_id');
+    }
+
+    /**
+     * Get dealer for this availability rule
+     */
+    public function dealer(): BelongsTo
+    {
+        return $this->belongsTo(Dealer::class);
     }
 }

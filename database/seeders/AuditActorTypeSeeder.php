@@ -15,8 +15,10 @@ class AuditActorTypeSeeder extends Seeder
     {
         DB::transaction(function () {
             $types = [
-                ['id' => AuditActorType::ADMIN, 'name' => 'Admin'],
+                ['id' => AuditActorType::SELLER, 'name' => 'Seller'],
                 ['id' => AuditActorType::DEALER, 'name' => 'Dealer'],
+                ['id' => AuditActorType::ADMIN, 'name' => 'Admin'],
+                ['id' => AuditActorType::STAFF, 'name' => 'Staff'],
                 ['id' => AuditActorType::SYSTEM, 'name' => 'System'],
             ];
 

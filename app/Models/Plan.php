@@ -17,10 +17,12 @@ class Plan extends Model
         'slug',
         'description',
         'is_active',
+        'trial_days',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'trial_days' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -64,5 +66,39 @@ class Plan extends Model
     public function availability(): HasMany
     {
         return $this->hasMany(PlanAvailability::class);
+    }
+
+    /**
+     * Check if plan is available to a specific dealer
+     * 
+     * @param int $dealerId
+     * @param array $dealerRoleIds Array of role IDs that dealer's users have
+     * @return bool
+     */
+    public function isAvailableToDealer(int $dealerId, array $dealerRoleIds = []): bool
+    {
+        // Check if dealer is specifically allowed
+        $dealerAvailable = $this->availability()
+            ->where('dealer_id', $dealerId)
+            ->where('is_enabled', true)
+            ->exists();
+
+        if ($dealerAvailable) {
+            return true;
+        }
+
+        // Check if any of dealer's roles are allowed
+        if (!empty($dealerRoleIds)) {
+            $roleAvailable = $this->availability()
+                ->whereIn('allowed_role_id', $dealerRoleIds)
+                ->where('is_enabled', true)
+                ->exists();
+
+            if ($roleAvailable) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

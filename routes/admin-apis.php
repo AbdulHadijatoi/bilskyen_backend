@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminVehicleController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AdminFeatureController;
 use App\Http\Controllers\AdminSubscriptionController;
+use App\Http\Controllers\AdminDealerController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AdminAnalyticsController;
 use App\Http\Controllers\AdminDashboardController;
@@ -92,12 +93,27 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/{id}/features', [AdminPlanController::class, 'getFeatures']);
         Route::post('/{id}/features', [AdminPlanController::class, 'assignFeature']);
         Route::delete('/{id}/features/{featureId}', [AdminPlanController::class, 'removeFeature']);
+        Route::get('/{id}/availability', [AdminPlanController::class, 'getAvailability']);
+        Route::post('/{id}/availability', [AdminPlanController::class, 'syncAvailability']);
+        Route::get('/{id}/pricing', [AdminPlanController::class, 'getPricing']);
+        Route::post('/{id}/pricing', [AdminPlanController::class, 'updatePricing']);
     });
     
     Route::prefix('subscriptions')->group(function () {
         Route::get('/', [AdminSubscriptionController::class, 'index']);
+        Route::get('/{id}', [AdminSubscriptionController::class, 'show']);
         Route::post('/', [AdminSubscriptionController::class, 'store']);
+        Route::put('/{id}', [AdminSubscriptionController::class, 'update']);
         Route::put('/{id}/status', [AdminSubscriptionController::class, 'updateStatus']);
+        Route::post('/{id}/cancel', [AdminSubscriptionController::class, 'cancel']);
+        Route::post('/{id}/renew', [AdminSubscriptionController::class, 'renew']);
+        Route::get('/dealer/{dealerId}', [AdminSubscriptionController::class, 'getDealerSubscriptions']);
+    });
+
+    // Dealer Management
+    Route::prefix('dealers')->group(function () {
+        Route::get('/', [AdminDealerController::class, 'index']);
+        Route::get('/{id}', [AdminDealerController::class, 'show']);
     });
     
     // Feature Management

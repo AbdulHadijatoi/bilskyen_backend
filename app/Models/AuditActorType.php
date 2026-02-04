@@ -10,9 +10,11 @@ class AuditActorType extends Model
 {
     use HasFactory;
 
-    public const ADMIN = 1;
+    public const SELLER = 1;
     public const DEALER = 2;
-    public const SYSTEM = 3;
+    public const ADMIN = 3;
+    public const STAFF = 4;
+    public const SYSTEM = 5;
 
     public $timestamps = false;
 

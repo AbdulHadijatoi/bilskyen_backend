@@ -31,7 +31,7 @@ Route::prefix('v1')->group(function () {
     
     // Sell Your Car API (authenticated users can create vehicle listings)
     Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
-        ->middleware('auth:api')
+        ->middleware(['auth:api', 'idempotency'])
         ->name('api.sell-your-car');
     
     // Lookup routes

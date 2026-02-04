@@ -17,16 +17,32 @@ class AuditLog extends Model
     protected $fillable = [
         'actor_id',
         'audit_actor_type_id',
+        'dealer_id',
         'action',
+        'status',
+        'error_message',
+        'duration_ms',
+        'request_method',
+        'request_url',
         'target_type',
         'target_id',
+        'related_target_type',
+        'related_target_id',
+        'description',
+        'tags',
+        'severity',
         'metadata',
         'ip_address',
+        'user_agent',
+        'session_id',
+        'request_id',
         'created_at',
     ];
 
     protected $casts = [
         'metadata' => 'array',
+        'tags' => 'array',
+        'duration_ms' => 'integer',
         'created_at' => 'datetime',
     ];
 
@@ -36,5 +52,13 @@ class AuditLog extends Model
     public function auditActorType(): BelongsTo
     {
         return $this->belongsTo(AuditActorType::class);
+    }
+
+    /**
+     * Get dealer for this log (if applicable)
+     */
+    public function dealer(): BelongsTo
+    {
+        return $this->belongsTo(Dealer::class);
     }
 }
