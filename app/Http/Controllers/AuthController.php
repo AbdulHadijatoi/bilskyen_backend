@@ -104,4 +104,22 @@ class AuthController extends Controller
     {
         return $this->passwordController->changePassword($request);
     }
+
+    /**
+     * Panel Login - delegate to AuthLoginController (for Vue.js admin panel)
+     * Only allows dealer, staff, or admin roles
+     */
+    public function panelLogin(Request $request): JsonResponse
+    {
+        return $this->loginController->panelLogin($request);
+    }
+
+    /**
+     * Panel Refresh - delegate to AuthLoginController (for Vue.js admin panel)
+     * Only allows dealer, staff, or admin roles
+     */
+    public function panelRefresh(Request $request): JsonResponse
+    {
+        return $this->loginController->panelRefresh($request);
+    }
 }

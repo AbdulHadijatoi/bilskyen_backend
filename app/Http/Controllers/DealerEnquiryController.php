@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Enquiry;
 use App\Models\Vehicle;
+use App\Services\AuditLogService;
+use App\Services\DealerContextService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Dealer Enquiry Controller
@@ -13,6 +16,10 @@ use Illuminate\Http\JsonResponse;
  */
 class DealerEnquiryController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService,
+        private DealerContextService $dealerContextService
+    ) {}
     /**
      * Get all enquiries for dealer's vehicles
      */
@@ -87,18 +94,37 @@ class DealerEnquiryController extends Controller
             'status' => 'required|string|in:New,In Progress,Awaiting Customer,Responded,Closed,Converted to Sale,Cancelled',
         ]);
 
-        $dealer = $request->user()->dealers()->first();
-        
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
 
         // Get all vehicle IDs for this dealer
         $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
 
         $enquiry = Enquiry::whereIn('vehicle_id', $vehicleIds)->findOrFail($id);
+        $oldStatus = $enquiry->status;
         $enquiry->status = $request->status;
         $enquiry->save();
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                ['status' => $oldStatus],
+                ['status' => $request->status],
+                $request,
+                'Dealer',
+                $dealer->id,
+                "Enquiry status changed: {$oldStatus} -> {$request->status}",
+                ['dealer', 'enquiry', 'update', 'status']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for enquiry status update', [
+                'enquiry_id' => $enquiry->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($enquiry->load(['user', 'vehicle', 'contact']));
     }
@@ -112,18 +138,37 @@ class DealerEnquiryController extends Controller
             'type' => 'required|string|in:General,Sales,Vehicle Information,Test Drive,Price Enquiry,Financing,Insurance,Trade-In,Availability,Service,Parts,Complaint,Feedback,Other',
         ]);
 
-        $dealer = $request->user()->dealers()->first();
-        
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
 
         // Get all vehicle IDs for this dealer
         $vehicleIds = Vehicle::where('dealer_id', $dealer->id)->pluck('id');
 
         $enquiry = Enquiry::whereIn('vehicle_id', $vehicleIds)->findOrFail($id);
+        $oldType = $enquiry->type;
         $enquiry->type = $request->type;
         $enquiry->save();
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                ['type' => $oldType],
+                ['type' => $request->type],
+                $request,
+                'Dealer',
+                $dealer->id,
+                "Enquiry type changed: {$oldType} -> {$request->type}",
+                ['dealer', 'enquiry', 'update', 'type']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for enquiry type update', [
+                'enquiry_id' => $enquiry->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($enquiry->load(['user', 'vehicle', 'contact']));
     }

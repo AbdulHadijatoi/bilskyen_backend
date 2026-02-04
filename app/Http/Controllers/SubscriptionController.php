@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\DealerSubscription;
 use App\Models\Plan;
 use App\Constants\SubscriptionStatus;
+use App\Services\AuditLogService;
+use App\Services\DealerContextService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 /**
@@ -15,6 +18,10 @@ use Carbon\Carbon;
  */
 class SubscriptionController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService,
+        private DealerContextService $dealerContextService
+    ) {}
     public function show(Request $request): JsonResponse
     {
         $dealer = $request->user()->dealers()->first();
@@ -167,6 +174,34 @@ class SubscriptionController extends Controller
             ]);
 
             DB::commit();
+
+            // Audit log
+            try {
+                $user = $request->user();
+                $this->auditLogService->logCreate(
+                    $user,
+                    'DealerSubscription',
+                    $subscription->id,
+                    [
+                        'plan_id' => $plan->id,
+                        'subscription_status_id' => $subscriptionStatusId,
+                        'billing_cycle' => $request->billing_cycle,
+                        'starts_at' => $startsAt->toIso8601String(),
+                        'ends_at' => $endsAt ? $endsAt->toIso8601String() : null,
+                    ],
+                    $request,
+                    'Dealer',
+                    $dealer->id,
+                    "Subscription created: Plan ID {$plan->id} ({$request->billing_cycle})",
+                    ['dealer', 'subscription', 'create', 'purchase']
+                );
+            } catch (\Exception $e) {
+                Log::warning('Failed to create audit log for subscription creation', [
+                    'subscription_id' => $subscription->id,
+                    'dealer_id' => $dealer->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             $subscription->load(['plan.features', 'plan.priceHistory', 'subscriptionStatus']);
             return $this->created($subscription);

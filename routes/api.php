@@ -54,6 +54,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/refresh', [AuthController::class, 'refresh'])
             ->middleware('throttle:auth.refresh'); // 20 requests per minute
         
+        // Panel login endpoints (for Vue.js admin panel - restricted to dealer/staff/admin roles)
+        Route::post('/panel-login', [AuthController::class, 'panelLogin'])
+            ->middleware('throttle:auth.login'); // 10 requests per minute
+        
+        Route::post('/panel-refresh', [AuthController::class, 'panelRefresh'])
+            ->middleware('throttle:auth.refresh'); // 20 requests per minute
+        
         // Protected routes (use auth:api middleware - standardized)
         Route::middleware('auth:api')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);

@@ -11,6 +11,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DealerLookupController;
 use App\Http\Controllers\DealerDashboardController;
 use App\Http\Controllers\DealerEnquiryController;
+use App\Http\Controllers\DealerAuditLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,56 +23,50 @@ use App\Http\Controllers\DealerEnquiryController;
 |
 */
 
-// Helper function to apply permission middleware with correct syntax
-if (!function_exists('permission_middleware')) {
-    function permission_middleware($permission, $action) {
-        return 'permission:' . $permission . ',' . $action;
-    }
-}
-
 // Dealer routes (requires authentication - standardized to auth:api)
 Route::middleware('auth:api')->group(function () {
     
     // Dashboard
-    Route::get('/dashboard', [DealerDashboardController::class, 'index']);
+    Route::get('/dashboard', [DealerDashboardController::class, 'index'])
+        ->middleware('permission:dealer.dashboard.view');
     
     // Vehicle Management
     Route::prefix('vehicles')->group(function () {
-        Route::get('/', [VehicleController::class, 'dealerIndex']);
-            // ->middleware(permission_middleware('vehicle', 'list'));
+        Route::get('/', [VehicleController::class, 'dealerIndex'])
+            ->middleware('permission:dealer.vehicles.view');
         
-        Route::get('/show/{id}', [VehicleController::class, 'show']);
-            // ->middleware(permission_middleware('vehicle', 'view'));
+        Route::get('/show/{id}', [VehicleController::class, 'show'])
+            ->middleware('permission:dealer.vehicles.view');
         
-        Route::post('/', [VehicleController::class, 'store']);  
-            // ->middleware(['throttle:20,1', 'idempotency', permission_middleware('vehicle', 'create')]);
+        Route::post('/', [VehicleController::class, 'store'])
+            ->middleware(['throttle:20,1', 'idempotency', 'permission:dealer.vehicles.create']);
         
-        Route::post('/draft', [VehicleController::class, 'storeDraft']);
-            // ->middleware(permission_middleware('vehicle', 'create'));
+        Route::post('/draft', [VehicleController::class, 'storeDraft'])
+            ->middleware('permission:dealer.vehicles.create');
         
-        Route::post('/update/{id}', [VehicleController::class, 'update']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/update/{id}', [VehicleController::class, 'update'])
+            ->middleware('permission:dealer.vehicles.update');
         
-        Route::post('/delete/{id}', [VehicleController::class, 'destroy']);
-            // ->middleware(permission_middleware('vehicle', 'delete'));
+        Route::post('/delete/{id}', [VehicleController::class, 'destroy'])
+            ->middleware('permission:dealer.vehicles.delete');
         
-        Route::post('/update-status/{id}', [VehicleController::class, 'updateStatus']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/update-status/{id}', [VehicleController::class, 'updateStatus'])
+            ->middleware('permission:dealer.vehicles.status');
         
-        Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment'])
+            ->middleware('permission:dealer.vehicles.update');
         
-        Route::post('/{id}/images', [VehicleController::class, 'uploadImages']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::post('/{id}/images', [VehicleController::class, 'uploadImages'])
+            ->middleware('permission:dealer.vehicles.media');
         
-        Route::delete('/{id}/images/{imageId}', [VehicleController::class, 'deleteImage']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::delete('/{id}/images/{imageId}', [VehicleController::class, 'deleteImage'])
+            ->middleware('permission:dealer.vehicles.media');
         
-        Route::put('/{id}/price', [VehicleController::class, 'updatePrice']);
-            // ->middleware(permission_middleware('vehicle', 'update'));
+        Route::put('/{id}/price', [VehicleController::class, 'updatePrice'])
+            ->middleware('permission:dealer.vehicles.update');
         
         Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
-            ->middleware(['throttle:40,1', permission_middleware('vehicle', 'create')]);
+            ->middleware(['throttle:40,1', 'permission:dealer.vehicles.create']);
     });
     
     // Lookup endpoints (for form dropdowns and vehicle lookup)
@@ -83,21 +78,29 @@ Route::middleware('auth:api')->group(function () {
     
     // Lead Management
     Route::prefix('leads')->group(function () {
-        Route::get('/', [LeadController::class, 'index']);
+        Route::get('/', [LeadController::class, 'index'])
+            ->middleware('permission:dealer.leads.view');
         
-        Route::get('show/{id}', [LeadController::class, 'show']);
+        Route::get('show/{id}', [LeadController::class, 'show'])
+            ->middleware('permission:dealer.leads.view');
         
-        Route::post('assign/{id}', [LeadController::class, 'assign']);
+        Route::post('assign/{id}', [LeadController::class, 'assign'])
+            ->middleware('permission:dealer.leads.assign');
         
-        Route::post('stage/{id}', [LeadController::class, 'updateStage']);
+        Route::post('stage/{id}', [LeadController::class, 'updateStage'])
+            ->middleware('permission:dealer.leads.update');
         
-        Route::post('intent/{id}', [LeadController::class, 'updateIntent']);
+        Route::post('intent/{id}', [LeadController::class, 'updateIntent'])
+            ->middleware('permission:dealer.leads.update');
         
-        Route::post('category/{id}', [LeadController::class, 'updateCategory']);
+        Route::post('category/{id}', [LeadController::class, 'updateCategory'])
+            ->middleware('permission:dealer.leads.update');
         
-        Route::get('messages/{id}', [LeadController::class, 'getMessages']);
+        Route::get('messages/{id}', [LeadController::class, 'getMessages'])
+            ->middleware('permission:dealer.leads.messages');
         
-        Route::post('messages/{id}', [LeadController::class, 'sendMessage']);
+        Route::post('messages/{id}', [LeadController::class, 'sendMessage'])
+            ->middleware('permission:dealer.leads.messages');
     });
     
     // Enquiry Management
@@ -119,20 +122,37 @@ Route::middleware('auth:api')->group(function () {
     
     // Dealer Staff
     Route::prefix('staff')->group(function () {
-        Route::get('/', [DealerStaffController::class, 'index']);
-        Route::post('/', [DealerStaffController::class, 'store']);
-        Route::put('/{userId}', [DealerStaffController::class, 'update']);
-        Route::delete('/{userId}', [DealerStaffController::class, 'destroy']);
+        Route::get('/', [DealerStaffController::class, 'index'])
+            ->middleware('permission:dealer.staff.manage');
+        Route::post('/', [DealerStaffController::class, 'store'])
+            ->middleware('permission:dealer.staff.manage');
+        Route::post('/invite', [DealerStaffController::class, 'invite'])
+            ->middleware('permission:dealer.staff.manage');
+        Route::put('/{userId}', [DealerStaffController::class, 'update'])
+            ->middleware('permission:dealer.staff.manage');
+        Route::delete('/{userId}', [DealerStaffController::class, 'destroy'])
+            ->middleware('permission:dealer.staff.manage');
     });
     
-    // Subscriptions
+    // Subscriptions (admin only)
     Route::prefix('subscription')->group(function () {
-        Route::get('/', [SubscriptionController::class, 'show']);
-        Route::get('/features', [SubscriptionController::class, 'getFeatures']);
-        Route::get('/history', [SubscriptionController::class, 'getHistory']);
-        Route::post('/', [SubscriptionController::class, 'store']);
+        Route::get('/', [SubscriptionController::class, 'show'])
+            ->middleware('permission:dealer.subscription.manage');
+        Route::get('/features', [SubscriptionController::class, 'getFeatures'])
+            ->middleware('permission:dealer.subscription.manage');
+        Route::get('/history', [SubscriptionController::class, 'getHistory'])
+            ->middleware('permission:dealer.subscription.manage');
+        Route::post('/', [SubscriptionController::class, 'store'])
+            ->middleware('permission:dealer.subscription.manage');
     });
     
     // Available Plans
-    Route::get('/plans', [SubscriptionController::class, 'getAvailablePlans']);
+    Route::get('/plans', [SubscriptionController::class, 'getAvailablePlans'])
+        ->middleware('permission:dealer.subscription.manage');
+    
+    // Audit Logs (admin only)
+    Route::prefix('audit-logs')->group(function () {
+        Route::get('/', [DealerAuditLogController::class, 'index'])
+            ->middleware('permission:dealer.audit.view');
+    });
 });

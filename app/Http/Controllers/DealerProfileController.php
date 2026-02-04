@@ -3,14 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dealer;
+use App\Services\AuditLogService;
+use App\Services\DealerContextService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Dealer Profile Controller
  */
 class DealerProfileController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService,
+        private DealerContextService $dealerContextService
+    ) {}
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -35,11 +42,11 @@ class DealerProfileController extends Controller
     public function update(Request $request): JsonResponse
     {
         $user = $request->user();
-        $dealer = $user->dealers()->first();
-        
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        $dealer = $this->dealerContextService->requireDealer($user);
+
+        // Store before state for audit log
+        $dealerBefore = $dealer->only(['cvr', 'address', 'city', 'postcode', 'country_code']);
+        $userBefore = $user->only(['name', 'email', 'phone']);
 
         // Validate dealer fields
         $dealerValidation = $request->validate([
@@ -70,6 +77,48 @@ class DealerProfileController extends Controller
         // Reload relationships
         $dealer->refresh();
         $user->refresh();
+
+        // Audit log
+        try {
+            $changes = [];
+            $before = [];
+            
+            // Track dealer changes
+            foreach ($dealerValidation as $key => $value) {
+                if (isset($dealerBefore[$key]) && $dealerBefore[$key] != $value) {
+                    $before['dealer_' . $key] = $dealerBefore[$key];
+                    $changes['dealer_' . $key] = $value;
+                }
+            }
+            
+            // Track user changes
+            foreach ($userValidation as $key => $value) {
+                if (isset($userBefore[$key]) && $userBefore[$key] != $value) {
+                    $before['user_' . $key] = $userBefore[$key];
+                    $changes['user_' . $key] = $value;
+                }
+            }
+            
+            if (!empty($changes)) {
+                $this->auditLogService->logUpdate(
+                    $user,
+                    'Dealer',
+                    $dealer->id,
+                    $before,
+                    $changes,
+                    $request,
+                    'Dealer',
+                    $dealer->id,
+                    'Dealer profile updated',
+                    ['dealer', 'profile', 'update']
+                );
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for dealer profile update', [
+                'dealer_id' => $dealer->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Include updated user data in response
         $response = $dealer->toArray();

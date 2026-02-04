@@ -22,6 +22,7 @@ use App\Models\Equipment;
 use App\Services\VehicleService;
 use App\Services\FileService;
 use App\Services\AuditLogService;
+use App\Services\DealerContextService;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
@@ -42,7 +43,8 @@ class VehicleController extends Controller
     public function __construct(
         private VehicleService $vehicleService,
         FileService $fileService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private DealerContextService $dealerContextService
     ) {
         $this->fileService = $fileService;
     }
@@ -348,6 +350,26 @@ class VehicleController extends Controller
 
         $vehicle = $this->vehicleService->createVehicle($data);
 
+        // Audit log
+        try {
+            $this->auditLogService->logCreate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                $vehicle->toArray(),
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle created: {$vehicle->title}",
+                ['vehicle', 'dealer', 'create']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle creation', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return $this->created($vehicle->load(['dealer', 'images', 'details']));
     }
 
@@ -378,6 +400,26 @@ class VehicleController extends Controller
         // No validation - allow partial/incomplete data
         $vehicle = $this->vehicleService->createVehicle($data);
 
+        // Audit log
+        try {
+            $this->auditLogService->logCreate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                $vehicle->toArray(),
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle draft created: {$vehicle->title}",
+                ['vehicle', 'dealer', 'draft', 'create']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle draft creation', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return $this->created($vehicle->load(['dealer', 'images', 'details']), 'Vehicle draft saved successfully');
     }
 
@@ -388,6 +430,9 @@ class VehicleController extends Controller
     {
         $vehicle = Vehicle::findOrFail($id);
         $data = $request->all();
+        
+        // Store before state for audit log
+        $beforeState = $vehicle->toArray();
 
         // Handle file uploads
         if ($request->hasFile('images')) {
@@ -395,6 +440,28 @@ class VehicleController extends Controller
         }
 
         $vehicle = $this->vehicleService->updateVehicle($vehicle, $data);
+        $vehicle->refresh();
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                $beforeState,
+                $vehicle->toArray(),
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle updated: {$vehicle->title}",
+                ['vehicle', 'dealer', 'update']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle update', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($vehicle->load(['dealer', 'images', 'details']));
     }
@@ -402,10 +469,35 @@ class VehicleController extends Controller
     /**
      * Delete vehicle (soft delete)
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id, Request $request): JsonResponse
     {
         $vehicle = Vehicle::findOrFail($id);
+        
+        // Store before state for audit log
+        $beforeState = $vehicle->toArray();
+        $dealerId = $vehicle->dealer_id;
+        
         $this->vehicleService->deleteVehicle($vehicle);
+
+        // Audit log
+        try {
+            $this->auditLogService->logDelete(
+                $request->user(),
+                'Vehicle',
+                $id,
+                $beforeState,
+                $request,
+                'Dealer',
+                $dealerId,
+                "Vehicle deleted: {$beforeState['title'] ?? 'N/A'}",
+                ['vehicle', 'dealer', 'delete']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle deletion', [
+                'vehicle_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->noContent();
     }
@@ -436,6 +528,7 @@ class VehicleController extends Controller
             return $this->validationError(['status' => ['Either status or vehicle_list_status_id is required']]);
         }
 
+        $oldStatusId = $vehicle->vehicle_list_status_id;
         $vehicle->vehicle_list_status_id = $statusId;
         
         if ($request->input('status') === 'published' && !$vehicle->published_at) {
@@ -443,6 +536,28 @@ class VehicleController extends Controller
         }
 
         $vehicle->save();
+        $vehicle->refresh();
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                ['vehicle_list_status_id' => $oldStatusId],
+                ['vehicle_list_status_id' => $statusId],
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle status changed: {$request->input('status', 'status_id ' . $statusId)}",
+                ['vehicle', 'dealer', 'status', 'update']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle status change', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($vehicle);
     }
@@ -469,6 +584,27 @@ class VehicleController extends Controller
             'new_price' => $request->price,
             'changed_by_user_id' => $request->user()->id,
         ]);
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                ['price' => $oldPrice],
+                ['price' => $request->price],
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle price updated: {$oldPrice} -> {$request->price}",
+                ['vehicle', 'dealer', 'price', 'update']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle price change', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($vehicle);
     }
@@ -567,18 +703,41 @@ class VehicleController extends Controller
             }
         }
 
+        // Audit log
+        try {
+            $imageCount = count($uploadedImages);
+            $this->auditLogService->logCreate(
+                $request->user(),
+                'VehicleImage',
+                $vehicle->id,
+                ['images_uploaded' => $imageCount],
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                "Uploaded {$imageCount} image(s) to vehicle: {$vehicle->title}",
+                ['vehicle', 'dealer', 'media', 'upload']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle image upload', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return $this->success($vehicle->load('images'));
     }
 
     /**
      * Delete vehicle image
      */
-    public function deleteImage(int $id, int $imageId): JsonResponse
+    public function deleteImage(int $id, int $imageId, Request $request): JsonResponse
     {
         $vehicle = Vehicle::findOrFail($id);
         $image = VehicleImage::where('id', $imageId)
             ->where('vehicle_id', $vehicle->id)
             ->firstOrFail();
+
+        $imageData = $image->toArray();
 
         // Delete image file
         if ($image->image_path && Storage::disk('public')->exists($image->image_path)) {
@@ -591,6 +750,27 @@ class VehicleController extends Controller
         }
 
         $image->delete();
+
+        // Audit log
+        try {
+            $this->auditLogService->logDelete(
+                $request->user(),
+                'VehicleImage',
+                $imageId,
+                $imageData,
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                "Deleted image from vehicle: {$vehicle->title}",
+                ['vehicle', 'dealer', 'media', 'delete']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle image deletion', [
+                'vehicle_id' => $id,
+                'image_id' => $imageId,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success(['message' => 'Image deleted successfully']);
     }
@@ -607,8 +787,31 @@ class VehicleController extends Controller
 
         $vehicle = Vehicle::findOrFail($id);
         
+        $oldEquipmentIds = $vehicle->equipment()->pluck('equipments.id')->toArray();
+        
         // Sync equipment associations
         $vehicle->equipment()->sync($request->equipment_ids);
+
+        // Audit log
+        try {
+            $this->auditLogService->logUpdate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                ['equipment_ids' => $oldEquipmentIds],
+                ['equipment_ids' => $request->equipment_ids],
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Vehicle equipment updated: {$vehicle->title}",
+                ['vehicle', 'dealer', 'equipment', 'update']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for vehicle equipment update', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $this->success($vehicle->load(['equipment', 'equipment.equipmentType']));
     }
