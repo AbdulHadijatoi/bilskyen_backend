@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\Constants\AdminVehicleUseController;
 use App\Http\Controllers\Admin\Constants\AdminVehicleListStatusController;
 use App\Http\Controllers\Admin\Constants\AdminEquipmentController;
 use App\Http\Controllers\Admin\Constants\AdminEquipmentTypeController;
+use App\Http\Controllers\AdminTranslationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -162,6 +163,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/model-items', [PermissionManagementController::class, 'modelItems']);
         Route::post('/assign', [PermissionManagementController::class, 'assign']);
         Route::post('/revoke', [PermissionManagementController::class, 'revoke']);
+        Route::post('/clear-cache', [PermissionManagementController::class, 'clearCache']);
     });
     
     // Constants Data
@@ -310,5 +312,18 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/create', [AdminEquipmentController::class, 'create']);
         Route::post('/update/{id}', [AdminEquipmentController::class, 'update']);
         Route::post('delete/{id}', [AdminEquipmentController::class, 'delete']);
+    });
+    
+    // Translation Management
+    Route::prefix('translations')->group(function () {
+        Route::get('/', [AdminTranslationController::class, 'index']);
+        Route::get('/{id}', [AdminTranslationController::class, 'show']);
+        Route::post('/', [AdminTranslationController::class, 'store']);
+        Route::put('/{id}', [AdminTranslationController::class, 'update']);
+        Route::put('/{id}/values/{locale}', [AdminTranslationController::class, 'updateValue']);
+        Route::delete('/{id}', [AdminTranslationController::class, 'destroy']);
+        Route::post('/import', [AdminTranslationController::class, 'import']);
+        Route::get('/export', [AdminTranslationController::class, 'export']);
+        Route::get('/locales', [AdminTranslationController::class, 'locales']);
     });
 });

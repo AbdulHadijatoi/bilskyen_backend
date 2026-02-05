@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Models\Dealer;
-use App\Models\DealerUser;
 use App\Models\FeaturedListing;
 use App\Models\Brand;
 use App\Models\VehicleModel;
@@ -221,7 +220,7 @@ class VehicleController extends Controller
      */
     public function dealerIndex(Request $request): JsonResponse
     {
-        $dealer = $request->user()?->dealers()->first();
+        $dealer = $request->user()?->dealer;
         if (!$dealer) {
             $emptyPaginator = new LengthAwarePaginator([], 0, $request->input('limit', 15), $request->input('page', 1));
             return $this->paginated($emptyPaginator);
@@ -336,8 +335,8 @@ class VehicleController extends Controller
         $data = $request->all();
 
         // Set dealer_id from authenticated user
-        if ($request->user() && $request->user()->dealers()->exists()) {
-            $data['dealer_id'] = $request->user()->dealers()->first()->id;
+        if ($request->user() && $request->user()->dealer) {
+            $data['dealer_id'] = $request->user()->dealer->id;
         }
 
         // Set user_id (creator)
@@ -382,8 +381,8 @@ class VehicleController extends Controller
         $data = $request->all();
 
         // Set dealer_id from authenticated user
-        if ($request->user() && $request->user()->dealers()->exists()) {
-            $data['dealer_id'] = $request->user()->dealers()->first()->id;
+        if ($request->user() && $request->user()->dealer) {
+            $data['dealer_id'] = $request->user()->dealer->id;
         }
 
         // Set user_id (creator)
@@ -489,7 +488,7 @@ class VehicleController extends Controller
                 $request,
                 'Dealer',
                 $dealerId,
-                "Vehicle deleted: {$beforeState['title'] ?? 'N/A'}",
+                "Vehicle deleted: " . $beforeState['title'] ?? 'N/A',
                 ['vehicle', 'dealer', 'delete']
             );
         } catch (\Exception $e) {
@@ -1067,7 +1066,7 @@ class VehicleController extends Controller
             $vehicleData['user_id'] = $user->id;
 
             // Get or create dealer for the user
-            // $dealer = $user->dealers()->first();
+            // $dealer = $user->dealer;
             
             // if (!$dealer) {
             //     $dealer = DB::transaction(function () use ($user) {
@@ -1080,13 +1079,7 @@ class VehicleController extends Controller
             //             'country_code' => 'DK',
             //         ]);
 
-            //         // Associate user with dealer
-            //         DealerUser::create([
-            //             'dealer_id' => $dealer->id,
-            //             'user_id' => $user->id,
-            //             'role_id' => 1, // ROLE_OWNER
-            //             'created_at' => now(),
-            //         ]);
+            //         // Dealer owner is set via user_id on dealer record
 
             //         return $dealer;
             //     });

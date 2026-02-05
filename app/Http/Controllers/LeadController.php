@@ -25,7 +25,7 @@ class LeadController extends Controller
     ) {}
     public function index(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -59,7 +59,7 @@ class LeadController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -251,7 +251,7 @@ class LeadController extends Controller
 
     public function getMessages(int $id, Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');

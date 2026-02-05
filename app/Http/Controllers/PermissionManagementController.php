@@ -27,17 +27,56 @@ class PermissionManagementController extends Controller
     {
         $cacheKey = 'permissions:all_items';
         
-        $items = Cache::remember($cacheKey, 60, function () {
+            $items = Cache::remember($cacheKey, 60, function () {
             $permissions = $this->rolePermissionService->getAllPermissions();
             
-            // Group permissions by entity (e.g., "vehicle.list" -> entity: "vehicle", action: "list")
+            // Group permissions by resource
+            // Permission format: {role}.{resource}.{action} (e.g., "dealer.vehicles.view", "admin.vehicles.view")
+            // We only show dealer permissions (exclude admin permissions)
+            // We group by resource, ignoring the role prefix
             $grouped = [];
             
             foreach ($permissions as $permission) {
                 $parts = explode('.', $permission->name);
-                if (count($parts) >= 2) {
+                
+                // Handle format: {role}.{resource}.{action} (3 parts)
+                if (count($parts) >= 3) {
+                    $role = $parts[0];      // e.g., "dealer" or "admin"
+                    
+                    // Skip admin permissions - only show dealer permissions
+                    if ($role === 'admin') {
+                        continue;
+                    }
+                    
+                    $resource = $parts[1]; // e.g., "vehicles", "users"
+                    $action = $parts[2];   // e.g., "view", "create"
+                    
+                    // Use resource as the entity name for grouping
+                    $entity = $resource;
+                    
+                    if (!isset($grouped[$entity])) {
+                        $grouped[$entity] = [
+                            'name' => $entity,
+                            'actions' => []
+                        ];
+                    }
+                    
+                    // Add permission with its ID
+                    $grouped[$entity]['actions'][] = [
+                        'id' => $permission->id,
+                        'action' => $action,
+                        'status' => 0 // Will be updated based on model assignment
+                    ];
+                }
+                // Fallback for old format: {entity}.{action} (2 parts) - for backward compatibility
+                elseif (count($parts) >= 2) {
                     $entity = $parts[0];
                     $action = $parts[1];
+                    
+                    // Skip if it's an admin permission (starts with "admin")
+                    if ($entity === 'admin') {
+                        continue;
+                    }
                     
                     if (!isset($grouped[$entity])) {
                         $grouped[$entity] = [
@@ -49,7 +88,7 @@ class PermissionManagementController extends Controller
                     $grouped[$entity]['actions'][] = [
                         'id' => $permission->id,
                         'action' => $action,
-                        'status' => 0 // Will be updated based on model assignment
+                        'status' => 0
                     ];
                 }
             }
@@ -77,6 +116,7 @@ class PermissionManagementController extends Controller
 
         if ($type === 'role') {
             $models = Role::where('name', 'like', "%{$query}%")
+                ->where('name', '!=', 'admin') // Exclude admin role
                 ->limit($limit)
                 ->get()
                 ->map(function ($role) {
@@ -175,7 +215,8 @@ class PermissionManagementController extends Controller
                 $this->rolePermissionService->assignPermissionToUser($model, $permission->name);
             }
 
-            // Clear cache
+            // Clear all permission and role caches to ensure fresh data
+            // This clears: permissions:all_items cache, Spatie Permission cache, and service caches
             Cache::forget('permissions:all_items');
             $this->rolePermissionService->clearCaches();
 
@@ -226,7 +267,8 @@ class PermissionManagementController extends Controller
                 }
             }
 
-            // Clear cache
+            // Clear all permission and role caches to ensure fresh data
+            // This clears: permissions:all_items cache, Spatie Permission cache, and service caches
             Cache::forget('permissions:all_items');
             $this->rolePermissionService->clearCaches();
 
@@ -239,6 +281,29 @@ class PermissionManagementController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to revoke permission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear permissions and roles cache
+     */
+    public function clearCache(Request $request)
+    {
+        try {
+            // Clear all permission-related caches
+            Cache::forget('permissions:all_items');
+            $this->rolePermissionService->clearCaches();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permissions and roles cache cleared successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to clear cache: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear cache: ' . $e->getMessage()
             ], 500);
         }
     }

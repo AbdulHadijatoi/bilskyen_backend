@@ -14,10 +14,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // First, seed roles and permissions (required for DealerUser and PlanAvailability)
-        $this->call([
-            RolesAndPermissionsSeeder::class,
-        ]);
+        // Note: Roles and permissions are now created via migration (create_permissions_from_routes)
+        // Run migrations before seeding to ensure roles and permissions exist
 
         // 1. Lookup Tables (no dependencies)
         $this->call([

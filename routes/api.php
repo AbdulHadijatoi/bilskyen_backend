@@ -61,6 +61,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/panel-refresh', [AuthController::class, 'panelRefresh'])
             ->middleware('throttle:auth.refresh'); // 20 requests per minute
         
+        // Staff login endpoint (for dealer staff members using username)
+        Route::post('/staff-login', [AuthController::class, 'staffLogin'])
+            ->middleware('throttle:auth.login'); // 10 requests per minute
+        
         // Protected routes (use auth:api middleware - standardized)
         Route::middleware('auth:api')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);

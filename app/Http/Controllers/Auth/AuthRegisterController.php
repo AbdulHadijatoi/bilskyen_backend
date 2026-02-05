@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Dealer;
-use App\Models\DealerUser;
 use App\Models\AuditActorType;
 use App\Services\RolePermissionService;
 use App\Services\AuditLogService;
@@ -66,25 +65,19 @@ class AuthRegisterController extends Controller
         $this->rolePermissionService->assignRoleToUser($user, $roles);
 
         $dealer = null;
-        // If user registered as dealer, create dealer record and associate user
+        // If user registered as dealer, create dealer record and set user as owner
         if (in_array('dealer', $roles)) {
             DB::transaction(function () use ($user, $request, &$dealer) {
                 // Create dealer with placeholder CVR (can be updated later)
                 // Using user ID to ensure uniqueness
+                // Set user_id to make user the owner
                 $dealer = Dealer::create([
+                    'user_id' => $user->id,
                     'cvr' => 'PENDING-' . $user->id,
                     'address' => $request->input('address', ''),
                     'city' => $request->input('city', ''),
                     'postcode' => $request->input('postcode', ''),
                     'country_code' => $request->input('country_code', 'DK'),
-                ]);
-
-                // Associate user with dealer as owner
-                DealerUser::create([
-                    'dealer_id' => $dealer->id,
-                    'user_id' => $user->id,
-                    'role_id' => DealerUser::ROLE_OWNER,
-                    'created_at' => now(),
                 ]);
             });
         }

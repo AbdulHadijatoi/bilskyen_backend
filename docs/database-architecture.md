@@ -78,8 +78,9 @@ Core user table for all system users (buyers, dealers, admins).
 
 **Relationships:**
 - `belongsTo` UserStatus
-- `belongsToMany` Dealers (through DealerUser)
-- `hasMany` DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
+- `hasMany` Dealer (owned dealers via `user_id`)
+- `hasMany` DealerStaff (staff memberships)
+- `hasMany` Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
 
 #### `user_statuses`
 Lookup table for user status values.
@@ -104,6 +105,7 @@ Dealer companies registered in the system.
 | Column | Type | Description |
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
+| user_id | BIGINT (FK) | Foreign key to `users.id` (dealer owner, required) |
 | cvr | VARCHAR(20) | Danish CVR number (unique) |
 | address | TEXT | Street address |
 | city | VARCHAR(100) | City name |
@@ -117,6 +119,10 @@ Dealer companies registered in the system.
 **Indexes:**
 - `cvr` (unique)
 - `postcode`
+- `user_id`
+
+**Foreign Keys:**
+- `user_id` references `users.id` (cascadeOnDelete)
 
 **Model Features:**
 - **Soft Deletes**: Enabled for data retention
@@ -125,30 +131,32 @@ Dealer companies registered in the system.
 - `logo_url` - Full URL to logo image (returns `asset('storage/' . logo_path)` or null)
 
 **Relationships:**
-- `belongsToMany` Users (through DealerUser)
-- `hasMany` DealerUser, Vehicle, Lead, DealerSubscription, DealerPlanOverride
+- `belongsTo` User (owner via `user_id`)
+- `hasMany` DealerStaff, Vehicle, Lead, DealerSubscription, DealerPlanOverride
 
-#### `dealer_users`
-Pivot table linking users to dealers with roles.
+#### `dealer_staff`
+Table linking staff members to dealers with auto-generated usernames.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | BIGINT (PK) | Primary key |
 | dealer_id | BIGINT (FK) | Foreign key to `dealers.id` |
 | user_id | BIGINT (FK) | Foreign key to `users.id` |
-| role_id | BIGINT (FK) | Foreign key to `roles.id` (Spatie Permission) |
+| username | VARCHAR(150) | Auto-generated username (unique, format: staff_{dealer_id}_{sequential}) |
 | created_at | DATETIME | Creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
 
 **Constraints:**
 - Unique constraint on `(dealer_id, user_id)`
+- Unique constraint on `username`
 
-**Constants (Model):**
-- `ROLE_OWNER = 1`
-- `ROLE_MANAGER = 2`
-- `ROLE_STAFF = 3`
+**Indexes:**
+- `username` (unique)
+- `dealer_id`
+- `user_id`
 
 **Relationships:**
-- `belongsTo` Dealer, User, Role (Spatie Permission)
+- `belongsTo` Dealer, User
 
 ---
 
@@ -1276,16 +1284,18 @@ API performance and status logging.
 ```
 Users
   ├── belongsTo UserStatus
-  ├── belongsToMany Dealers (through DealerUser pivot)
-  ├── hasMany DealerUser, Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
+  ├── hasMany Dealer (owned dealers via `user_id`)
+  ├── hasMany DealerStaff (staff memberships)
+  ├── hasMany Vehicle, Favorite, SavedSearch, Lead (buyer/assigned), Enquiry, ChatMessage, PriceHistory (changed_by), ListingViewsLog, UserPlanOverride
   └── Note: Soft deletes enabled, JWT Subject, Spatie Permission roles
 
 Dealers
-  ├── belongsToMany Users (through DealerUser pivot)
-  ├── hasMany DealerUser, Vehicle, Lead, DealerSubscription, DealerPlanOverride
+  ├── belongsTo User (owner via `user_id`)
+  ├── hasMany DealerStaff (staff members)
+  ├── hasMany Vehicle, Lead, DealerSubscription, DealerPlanOverride
   └── Note: Soft deletes enabled
 
-DealerUsers (Pivot)
+DealerStaff
   ├── belongsTo Dealer, User, Role (Spatie Permission)
   └── Note: Links users to dealers with roles
 
@@ -1408,7 +1418,7 @@ Several tables use JSON/array fields for flexible data storage:
 All status/enum values use lookup tables with constants defined in the model classes. This provides type safety and easy reference in code.
 
 ### 5. Dealer-User Relationship
-The `dealer_users` pivot table links users to dealers with roles. This allows users to be associated with multiple dealers in different roles.
+The `dealer_staff` table links staff members to dealers with auto-generated usernames. Each dealer has one owner (via `dealers.user_id`) and can have multiple staff members (via `dealer_staff` table).
 
 ### 6. Lead Management System
 Leads track the full lifecycle from inquiry to sale, with:
@@ -1446,7 +1456,7 @@ The following tables are managed by Laravel packages and are preserved:
 Migrations are ordered by dependency (timestamps ensure correct execution order):
 
 1. Lookup tables (user_statuses, fuel_types, transmissions, vehicle_list_statuses, lead_stages, sources, feature_value_types, page_statuses, subscription_statuses, audit_actor_types) - 054109-054117
-2. Core business tables (dealers, dealer_users, locations) - 054220-054222
+2. Core business tables (dealers, dealer_staff, locations) - 054220-054222
 3. Vehicle lookup tables (categories, brands, model_years) - 060624-060626
 4. Vehicle tables (vehicles, vehicle_images, vehicle_details) - 060648-060707
 5. Vehicle detail lookup tables (body_types, colors, equipments, types, permits, uses) - 081020-081024

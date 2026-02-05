@@ -25,7 +25,6 @@ use App\Models\Variant;
 use App\Models\Euronom;
 use App\Models\Plan;
 use App\Models\Dealer;
-use App\Models\DealerUser;
 use App\Models\VehicleDetail;
 use App\Models\Location;
 use App\Models\FeaturedListing;

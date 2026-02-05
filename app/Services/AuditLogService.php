@@ -42,16 +42,10 @@ class AuditLogService
      */
     public function getDealerIdFromUser(User $user): ?int
     {
-        // Try to get dealer from dealers relationship
-        $dealer = $user->dealers()->first();
+        // Get dealer from dealer relationship
+        $dealer = $user->dealer;
         if ($dealer) {
             return $dealer->id;
-        }
-        
-        // Fallback to dealerUsers relationship
-        $dealerUser = $user->dealerUsers()->first();
-        if ($dealerUser) {
-            return $dealerUser->dealer_id;
         }
         
         return null;

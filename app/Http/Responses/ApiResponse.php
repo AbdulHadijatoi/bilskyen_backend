@@ -26,12 +26,12 @@ trait ApiResponse
     /**
      * Return successful response with data
      */
-    protected function success($data = null, int $statusCode = ApiStatusCode::OK, string $message = 'Operation completed successfully'): JsonResponse
+    protected function success($data = null, int $statusCode = ApiStatusCode::OK, ?string $message = null): JsonResponse
     {
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.operation_completed_successfully'),
             'data' => $data,
             'errors' => [],
         ], $statusCode);
@@ -69,7 +69,7 @@ trait ApiResponse
         LengthAwarePaginator $paginator,
         int $statusCode = ApiStatusCode::OK,
         bool $includeTotal = true,
-        string $message = 'Data retrieved successfully'
+        ?string $message = null
     ): JsonResponse {
         $paginationData = [
             'docs' => $paginator->items(),
@@ -89,7 +89,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.data_retrieved_successfully'),
             'data' => $paginationData,
             'errors' => [],
         ], $statusCode);
@@ -98,12 +98,12 @@ trait ApiResponse
     /**
      * Return created response (201)
      */
-    protected function created($data = null, string $message = 'Resource created successfully'): JsonResponse
+    protected function created($data = null, ?string $message = null): JsonResponse
     {
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.resource_created_successfully'),
             'data' => $data,
             'errors' => [],
         ], ApiStatusCode::CREATED);
@@ -112,12 +112,12 @@ trait ApiResponse
     /**
      * Return no content response (now returns JSON with unified format)
      */
-    protected function noContent(string $message = 'Operation completed successfully'): JsonResponse
+    protected function noContent(?string $message = null): JsonResponse
     {
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.operation_completed_successfully'),
             'data' => null,
             'errors' => [],
         ], ApiStatusCode::NO_CONTENT);
@@ -126,45 +126,45 @@ trait ApiResponse
     /**
      * Return unauthorized response (401)
      */
-    protected function unauthorized(string $message = 'Unauthorized', string $errorCode = 'UNAUTHORIZED'): JsonResponse
+    protected function unauthorized(?string $message = null, string $errorCode = 'UNAUTHORIZED'): JsonResponse
     {
-        return $this->error($message, [], ApiStatusCode::UNAUTHORIZED, $errorCode);
+        return $this->error($message ?? trans('api.unauthorized'), [], ApiStatusCode::UNAUTHORIZED, $errorCode);
     }
 
     /**
      * Return forbidden response (403)
      */
-    protected function forbidden(string $message = 'Forbidden', string $errorCode = 'FORBIDDEN'): JsonResponse
+    protected function forbidden(?string $message = null, string $errorCode = 'FORBIDDEN'): JsonResponse
     {
-        return $this->error($message, [], ApiStatusCode::FORBIDDEN, $errorCode);
+        return $this->error($message ?? trans('api.forbidden'), [], ApiStatusCode::FORBIDDEN, $errorCode);
     }
 
     /**
      * Return not found response (404)
      */
-    protected function notFound(string $message = 'Resource not found'): JsonResponse
+    protected function notFound(?string $message = null): JsonResponse
     {
-        return $this->error($message, [], ApiStatusCode::NOT_FOUND);
+        return $this->error($message ?? trans('api.resource_not_found'), [], ApiStatusCode::NOT_FOUND);
     }
 
     /**
      * Return validation error response (422)
      */
-    protected function validationError($errors, string $message = 'Validation failed'): JsonResponse
+    protected function validationError($errors, ?string $message = null): JsonResponse
     {
-        return $this->error($message, $this->normalizeErrors($errors), ApiStatusCode::UNPROCESSABLE_ENTITY);
+        return $this->error($message ?? trans('api.validation_failed'), $this->normalizeErrors($errors), ApiStatusCode::UNPROCESSABLE_ENTITY);
     }
 
     /**
      * Return data with metadata
      * Useful for feature flags, limits, or app configuration data
      */
-    protected function withMeta($data, array $meta, string $message = 'Operation completed successfully'): JsonResponse
+    protected function withMeta($data, array $meta, ?string $message = null): JsonResponse
     {
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.operation_completed_successfully'),
             'data' => $data,
             'meta' => $meta,
             'errors' => [],
@@ -174,12 +174,12 @@ trait ApiResponse
     /**
      * Return metadata-only response
      */
-    protected function meta(array $meta, string $message = 'Operation completed successfully'): JsonResponse
+    protected function meta(array $meta, ?string $message = null): JsonResponse
     {
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message,
+            'message' => $message ?? trans('api.operation_completed_successfully'),
             'data' => null,
             'meta' => $meta,
             'errors' => [],

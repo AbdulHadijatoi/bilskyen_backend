@@ -1,0 +1,14 @@
+Starting translation extraction...
+Scanning Laravel files...
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/backend/app/Http/Controllers
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/backend/app/Http/Requests
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/backend/app/Services
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/backend/resources/views
+Scanning Vue files...
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/panel_vue/src/views
+Path does not exist: /Users/abdulhadi/Projects/Berken Project/berken_project/backend/panel_vue/src/components
+
+Extracted 0 unique strings
++-----+---------------+
+| Key | Default Value |
++-----+---------------+

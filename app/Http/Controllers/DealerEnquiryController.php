@@ -25,7 +25,7 @@ class DealerEnquiryController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -69,7 +69,7 @@ class DealerEnquiryController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
