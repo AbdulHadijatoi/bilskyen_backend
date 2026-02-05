@@ -23,8 +23,22 @@ return new class extends Migration
         
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
 
-        // Ensure feature value types exist (they should be seeded by FeatureValueTypeSeeder)
-        // We'll use the constants directly since IDs are fixed
+        // Ensure feature value types exist before inserting features
+        // This is critical for production where seeders may not have run
+        $featureValueTypes = [
+            ['id' => FeatureValueType::BOOLEAN, 'name' => 'Boolean'],
+            ['id' => FeatureValueType::NUMBER, 'name' => 'Number'],
+            ['id' => FeatureValueType::TEXT, 'name' => 'Text'],
+        ];
+
+        foreach ($featureValueTypes as $type) {
+            DB::table('feature_value_types')->updateOrInsert(
+                ['id' => $type['id']],
+                ['name' => $type['name']]
+            );
+        }
+
+        // Use the constants directly since IDs are fixed
         $booleanTypeId = FeatureValueType::BOOLEAN; // 1
         $numberTypeId = FeatureValueType::NUMBER; // 2
         $textTypeId = FeatureValueType::TEXT; // 3
