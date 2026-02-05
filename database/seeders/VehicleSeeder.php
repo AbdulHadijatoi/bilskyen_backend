@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\Vehicle;
 use App\Models\Dealer;
 use App\Models\User;
-use App\Models\DealerUser;
+use App\Models\DealerStaff;
 use App\Models\FuelType;
 use App\Models\Transmission;
 use App\Models\VehicleListStatus;
@@ -39,8 +39,11 @@ class VehicleSeeder extends Seeder
             
             for ($i = 0; $i < 30; $i++) {
                 $dealer = $dealers->random();
-                // Get users associated with this dealer
-                $dealerUserIds = DealerUser::where('dealer_id', $dealer->id)->pluck('user_id');
+                // Get users associated with this dealer (owner + staff)
+                $dealerUserIds = $dealer->staff()->pluck('user_id')->toArray();
+                if ($dealer->user_id) {
+                    $dealerUserIds[] = $dealer->user_id;
+                }
                 $dealerUsers = $users->whereIn('id', $dealerUserIds);
                 $user = $dealerUsers->isNotEmpty() ? $dealerUsers->random() : $users->random();
                 $fuelType = $fuelTypes->random();

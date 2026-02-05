@@ -24,7 +24,7 @@ class SubscriptionController extends Controller
     ) {}
     public function show(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -41,7 +41,7 @@ class SubscriptionController extends Controller
 
     public function getFeatures(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -60,7 +60,7 @@ class SubscriptionController extends Controller
 
     public function getHistory(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->first();
+        $dealer = $request->user()->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
@@ -76,16 +76,26 @@ class SubscriptionController extends Controller
 
     public function getAvailablePlans(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealers()->with('users.roles')->first();
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
         
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        // Load owner with roles
+        $dealer->load('owner.roles');
 
-        // Get dealer's role IDs
-        $dealerRoleIds = $dealer->users->flatMap(function($user) {
-            return $user->roles->pluck('id');
-        })->unique()->toArray();
+        // Get dealer's role IDs (from owner + staff)
+        $dealerRoleIds = collect();
+        
+        // Add owner's roles (dealer himself is the owner)
+        if ($dealer->owner) {
+            $dealerRoleIds = $dealerRoleIds->merge($dealer->owner->roles->pluck('id'));
+        }
+        
+        // Add staff members' roles
+        $dealerRoleIds = $dealerRoleIds->merge(
+            $dealer->staff()->with('user.roles')->get()->flatMap(function($staff) {
+                return $staff->user->roles->pluck('id');
+            })
+        )->unique()->toArray();
 
         // Get all active plans with pricing and features
         $allPlans = Plan::with([
@@ -115,18 +125,26 @@ class SubscriptionController extends Controller
             'starts_at' => 'sometimes|date',
         ]);
 
-        $dealer = $request->user()->dealers()->with('users.roles')->first();
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
         
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        // Load owner with roles
+        $dealer->load('owner.roles');
 
         $plan = Plan::with('availability')->findOrFail($request->plan_id);
 
-        // Check if plan is available to dealer
-        $dealerRoleIds = $dealer->users->flatMap(function($user) {
-            return $user->roles->pluck('id');
-        })->unique()->toArray();
+        // Check if plan is available to dealer (from owner + staff)
+        $dealerRoleIds = collect();
+        
+        // Add owner's roles (dealer himself is the owner)
+        if ($dealer->owner) {
+            $dealerRoleIds = $dealerRoleIds->merge($dealer->owner->roles->pluck('id'));
+        }
+        $dealerRoleIds = $dealerRoleIds->merge(
+            $dealer->staff()->with('user.roles')->get()->flatMap(function($staff) {
+                return $staff->user->roles->pluck('id');
+            })
+        )->unique()->toArray();
 
         if (!$plan->isAvailableToDealer($dealer->id, $dealerRoleIds)) {
             return $this->error('This plan is not available for your dealer account', 403);

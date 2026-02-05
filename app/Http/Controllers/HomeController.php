@@ -375,7 +375,7 @@ class HomeController extends Controller
             'listingType',
             'images',
             'user',
-            'dealer.users'
+            'dealer.owner'
         ])->findOrFail($serialNo);
 
         // Get authenticated user (if any)

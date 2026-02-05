@@ -51,13 +51,21 @@ class AdminSubscriptionController extends Controller
             'billing_cycle' => 'sometimes|in:monthly,yearly',
         ]);
 
-        $dealer = Dealer::with('users.roles')->findOrFail($request->dealer_id);
+        $dealer = Dealer::with('owner.roles')->findOrFail($request->dealer_id);
         $plan = Plan::with('availability')->findOrFail($request->plan_id);
 
-        // Check if dealer is allowed to subscribe to this plan
-        $dealerRoleIds = $dealer->users->flatMap(function($user) {
-            return $user->roles->pluck('id');
-        })->unique()->toArray();
+        // Check if dealer is allowed to subscribe to this plan (from owner + staff)
+        $dealerRoleIds = collect();
+        
+        // Add owner's roles (dealer himself is the owner)
+        if ($dealer->owner) {
+            $dealerRoleIds = $dealerRoleIds->merge($dealer->owner->roles->pluck('id'));
+        }
+        $dealerRoleIds = $dealerRoleIds->merge(
+            $dealer->staff()->with('user.roles')->get()->flatMap(function($staff) {
+                return $staff->user->roles->pluck('id');
+            })
+        )->unique()->toArray();
 
         if (!$plan->isAvailableToDealer($dealer->id, $dealerRoleIds)) {
             return $this->error('This dealer is not allowed to subscribe to this plan', 403);

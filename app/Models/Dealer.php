@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Dealer extends Model
@@ -13,6 +13,7 @@ class Dealer extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'user_id',
         'cvr',
         'address',
         'city',
@@ -35,21 +36,19 @@ class Dealer extends Model
     }
 
     /**
-     * Get users (staff) for this dealer
+     * Get owner (user who owns this dealer)
      */
-    public function users(): BelongsToMany
+    public function owner(): BelongsTo
     {
-        return $this->belongsToMany(User::class, 'dealer_users')
-            ->withPivot('role_id')
-            ->withPivot('created_at');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
-     * Get dealer users pivot records
+     * Get staff members for this dealer
      */
-    public function dealerUsers(): HasMany
+    public function staff(): HasMany
     {
-        return $this->hasMany(DealerUser::class);
+        return $this->hasMany(DealerStaff::class);
     }
 
     /**

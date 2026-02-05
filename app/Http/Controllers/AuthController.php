@@ -122,4 +122,12 @@ class AuthController extends Controller
     {
         return $this->loginController->panelRefresh($request);
     }
+
+    /**
+     * Staff Login - delegate to AuthLoginController (for dealer staff using username)
+     */
+    public function staffLogin(Request $request): JsonResponse
+    {
+        return $this->loginController->staffLogin($request);
+    }
 }

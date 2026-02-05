@@ -126,8 +126,6 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.staff.manage');
         Route::post('/', [DealerStaffController::class, 'store'])
             ->middleware('permission:dealer.staff.manage');
-        Route::post('/invite', [DealerStaffController::class, 'invite'])
-            ->middleware('permission:dealer.staff.manage');
         Route::put('/{userId}', [DealerStaffController::class, 'update'])
             ->middleware('permission:dealer.staff.manage');
         Route::delete('/{userId}', [DealerStaffController::class, 'destroy'])

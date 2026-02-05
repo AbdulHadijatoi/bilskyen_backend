@@ -21,7 +21,7 @@ class DealerProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        $dealer = $user->dealers()->first();
+        $dealer = $user->dealer;
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');

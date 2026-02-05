@@ -26,8 +26,8 @@ class LeadSeeder extends Seeder
             $buyers = User::whereHas('roles', function ($query) {
                 $query->where('name', 'seller');
             })->get();
-            $dealers = Dealer::all();
-            $dealerStaff = User::whereHas('dealers')->get();
+            $dealers = Dealer::with(['owner', 'staff.user'])->get();
+            $dealerStaff = User::whereHas('dealerStaff')->get();
             $leadStages = LeadStage::all();
             $sources = Source::all();
             
@@ -39,7 +39,18 @@ class LeadSeeder extends Seeder
             foreach ($vehicles->take(20) as $vehicle) {
                 $buyer = $buyers->random();
                 $dealer = $vehicle->dealer;
-                $assignedUser = $dealerStaff->whereIn('id', $dealer->users->pluck('id'))->random();
+                
+                // Load owner relationship
+                $dealer->load('owner');
+                
+                // Get dealer user IDs (owner + staff)
+                $dealerUserIds = collect();
+                // Add owner's ID (dealer himself is the owner)
+                if ($dealer->owner) {
+                    $dealerUserIds->push($dealer->owner->id);
+                }
+                $dealerUserIds = $dealerUserIds->merge($dealer->staff->pluck('user_id'))->unique();
+                $assignedUser = $dealerStaff->whereIn('id', $dealerUserIds)->random();
                 $leadStage = $faker->randomElement($leadStages);
                 $source = $sources->random();
                 

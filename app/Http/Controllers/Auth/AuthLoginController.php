@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\DealerStaff;
+use App\Models\User;
 use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -174,18 +177,19 @@ class AuthLoginController extends Controller
 
             $user->load('roles');
 
-            return $this->success([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'roles' => $user->roles->pluck('name')->toArray(),
-                'emailVerified' => $user->email_verified_at !== null,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'image' => $user->image ?? null,
-                'banned' => $user->banned ?? false,
-                'created_at' => $user->created_at,
-            ]);
+        return $this->success([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name')->toArray(),
+            'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+            'emailVerified' => $user->email_verified_at !== null,
+            'phone' => $user->phone,
+            'address' => $user->address,
+            'image' => $user->image ?? null,
+            'banned' => $user->banned ?? false,
+            'created_at' => $user->created_at,
+        ]);
         } catch (\Exception $e) {
             return $this->unauthorized('Unauthenticated');
         }
@@ -256,6 +260,7 @@ class AuthLoginController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
                 'emailVerified' => $user->email_verified_at !== null,
             ],
             'access_token' => $token,
@@ -326,6 +331,87 @@ class AuthLoginController extends Controller
         } catch (\Exception $e) {
             return $this->error('Failed to refresh token', null, 500);
         }
+    }
+
+    /**
+     * Staff Login - Authenticate staff member using username
+     * Staff members login with auto-generated username instead of email
+     */
+    public function staffLogin(Request $request): JsonResponse
+    {
+        $credentials = $request->validate([
+            'username' => 'required|string|max:150',
+            'password' => 'required|string|max:128',
+        ]);
+
+        // Find user by username
+        $user = User::where('username', $credentials['username'])->first();
+
+        if (!$user) {
+            return $this->error('Invalid credentials', [
+                'username' => ['These credentials do not match our records.'],
+            ], 401);
+        }
+
+        // Verify password
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return $this->error('Invalid credentials', [
+                'username' => ['These credentials do not match our records.'],
+            ], 401);
+        }
+
+        // Verify user belongs to a dealer (has DealerStaff record)
+        $dealerStaff = DealerStaff::where('user_id', $user->id)->first();
+        if (!$dealerStaff) {
+            return $this->error('Invalid account type', [
+                'username' => ['This account is not associated with any dealer.'],
+            ], 403);
+        }
+
+        // Check if user is banned
+        if ($user->banned ?? false) {
+            return $this->error('Account is banned', [
+                'ban_reason' => $user->ban_reason ?? null,
+                'ban_expires' => $user->ban_expires ?? null,
+            ], 403);
+        }
+
+        // Load roles
+        $user->load('roles');
+
+        // Generate JWT token
+        $token = auth('api')->login($user);
+
+        // Generate refresh token with custom claim
+        $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
+
+        // Set refresh token as HttpOnly cookie
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            20160, // 14 days in minutes
+            null,
+            null,
+            true, // secure
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        );
+
+        return $this->success([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'username' => $user->username,
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+                'emailVerified' => $user->email_verified_at !== null,
+            ],
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
+        ])->cookie($cookie);
     }
 }
 

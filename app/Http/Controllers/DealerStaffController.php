@@ -3,27 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\DealerUser;
+use App\Models\DealerStaff;
 use App\Services\DealerContextService;
 use App\Services\AuditLogService;
-use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
 
 /**
  * Dealer Staff Controller
- * Manages dealer staff members with permission-based access control
+ * Manages dealer staff members
  */
 class DealerStaffController extends Controller
 {
     public function __construct(
         private DealerContextService $dealerContextService,
-        private AuditLogService $auditLogService,
-        private RolePermissionService $rolePermissionService
+        private AuditLogService $auditLogService
     ) {}
 
     /**
@@ -34,22 +30,20 @@ class DealerStaffController extends Controller
         $user = $request->user();
         $dealer = $this->dealerContextService->requireDealer($user);
 
-        $staff = $dealer->users()
-            ->withPivot('role_id', 'created_at')
-            ->with('roles')
+        $staff = $dealer->staff()
+            ->with('user')
             ->paginate($request->get('limit', 15));
 
-        // Transform to include membership role info
-        $staff->getCollection()->transform(function ($user) use ($dealer) {
-            $membership = $this->dealerContextService->getDealerMembership($user, $dealer);
+        // Transform to include user details
+        $staff->getCollection()->transform(function ($dealerStaff) {
+            $user = $dealerStaff->user;
             return [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'username' => $dealerStaff->username,
                 'phone' => $user->phone,
-                'membership_role_id' => $membership?->role_id,
-                'spatie_roles' => $user->roles->pluck('name'),
-                'created_at' => $membership?->created_at,
+                'created_at' => $dealerStaff->created_at,
             ];
         });
 
@@ -57,11 +51,10 @@ class DealerStaffController extends Controller
     }
 
     /**
-     * Add staff member - supports both attach existing user and invite/create
+     * Create new staff member
      * 
      * Request body:
-     * - Option 1 (attach existing): { "user_id": 123, "membership_role_id": 1 }
-     * - Option 2 (invite/create): { "email": "staff@example.com", "name": "John Doe", "membership_role_id": 3 }
+     * { "name": "John Doe", "email": "john@example.com" (optional), "phone": "123456789" (optional), "password": "password123" }
      */
     public function store(Request $request): JsonResponse
     {
@@ -75,114 +68,70 @@ class DealerStaffController extends Controller
 
         // Validate request
         $request->validate([
-            'user_id' => 'required_without:email|exists:users,id',
-            'email' => 'required_without:user_id|email|unique:users,email',
-            'name' => 'required_with:email|string|max:255',
-            'membership_role_id' => 'required|integer|in:1,2,3', // ROLE_OWNER, ROLE_MANAGER, ROLE_STAFF
+            'name' => 'required|string|min:2|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:30',
+            'password' => 'required|string|min:8|max:128',
         ]);
 
-        $targetUser = null;
-        $isNewUser = false;
+        // Generate unique username: staff_{dealer_id}_{sequential_number}
+        $username = $this->generateUniqueUsername($dealer->id);
 
-        if ($request->has('user_id')) {
-            // Attach existing user
-            $targetUser = User::findOrFail($request->user_id);
-            
-            // Check if user is already a member
-            $existingMembership = DealerUser::where('dealer_id', $dealer->id)
-                ->where('user_id', $targetUser->id)
-                ->first();
-            
-            if ($existingMembership) {
-                return $this->validationError(['user_id' => ['User is already a member of this dealer']]);
-            }
-        } else {
-            // Invite/create new user
-            $targetUser = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make(uniqid()), // Temporary password, will be reset
-            ]);
-            $isNewUser = true;
+        // Create new user
+        $targetUser = User::create([
+            'name' => $request->name,
+            'email' => $request->email ? strtolower($request->email) : null,
+            'username' => $username,
+            'phone' => $request->phone,
+            'password' => $request->password, // Will be automatically hashed by the model cast
+        ]);
+
+        // Assign staff role to the newly created user
+        if (!$targetUser->hasRole('staff')) {
+            $targetUser->assignRole('staff'); 
         }
 
-        // All staff members get "staff" role (regardless of membership_role_id)
-        $membershipRoleId = $request->membership_role_id;
-
-        // Create dealer membership
-        $dealerUser = DealerUser::create([
+        // Create dealer staff record
+        $dealerStaff = DealerStaff::create([
             'dealer_id' => $dealer->id,
             'user_id' => $targetUser->id,
-            'role_id' => $membershipRoleId, // This is the membership role (OWNER/MANAGER/STAFF)
-            'created_at' => now(),
+            'username' => $username,
         ]);
-
-        // Assign "staff" role to all staff members
-        if (!$targetUser->hasRole('staff')) {
-            $this->rolePermissionService->assignRoleToUser($targetUser, 'staff');
-        }
-
-        // If new user, send password reset token (invite flow)
-        $resetToken = null;
-        if ($isNewUser) {
-            try {
-                $resetToken = Password::createToken($targetUser);
-                // In a real implementation, you would send an email here
-                // Mail::to($targetUser)->send(new StaffInvitationMail($dealer, $resetToken));
-            } catch (\Exception $e) {
-                Log::warning('Failed to create password reset token for new staff', [
-                    'user_id' => $targetUser->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
 
         // Audit log
         try {
             $this->auditLogService->logCreate(
                 $user,
-                'DealerUser',
-                $dealerUser->id,
+                'DealerStaff',
+                $dealerStaff->id,
                 [
                     'dealer_id' => $dealer->id,
                     'user_id' => $targetUser->id,
-                    'membership_role_id' => $membershipRoleId,
-                    'is_new_user' => $isNewUser,
+                    'username' => $username,
+                    'is_new_user' => true,
                 ],
                 $request,
                 'Dealer',
                 $dealer->id,
-                "Staff member added to dealer: {$targetUser->name} ({$targetUser->email})",
+                "Staff member created: {$targetUser->name} (username: {$username})",
                 ['dealer', 'staff', 'management']
             );
         } catch (\Exception $e) {
-            Log::warning('Failed to create audit log for staff addition', [
-                'dealer_user_id' => $dealerUser->id,
+            Log::warning('Failed to create audit log for staff creation', [
+                'dealer_staff_id' => $dealerStaff->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
         return $this->created([
-            'message' => $isNewUser ? 'Staff member invited successfully' : 'Staff member added successfully',
-            'dealer_user' => $dealerUser->load('user', 'role'),
-            'reset_token' => $isNewUser ? $resetToken : null, // Only return token for new users
+            'message' => 'Staff member created successfully',
+            'dealer_staff' => $dealerStaff->load('user'),
+            'username' => $username,
         ]);
     }
 
     /**
-     * Invite a new staff member (alternative endpoint for clarity)
-     */
-    public function invite(Request $request): JsonResponse
-    {
-        // This is essentially the same as store() but with email/name required
-        $request->merge(['email' => $request->input('email')]);
-        $request->merge(['name' => $request->input('name')]);
-        
-        return $this->store($request);
-    }
-
-    /**
-     * Update staff member role/permissions
+     * Update staff member
      */
     public function update(int $userId, Request $request): JsonResponse
     {
@@ -195,51 +144,70 @@ class DealerStaffController extends Controller
         }
 
         $request->validate([
-            'membership_role_id' => 'required|integer|in:1,2,3',
+            'name' => 'sometimes|required|string|min:2|max:255',
+            'phone' => 'nullable|string|max:30',
+            'password' => 'sometimes|required|string|min:8|max:128',
         ]);
 
-        $dealerUser = DealerUser::where('dealer_id', $dealer->id)
+        $dealerStaff = DealerStaff::where('dealer_id', $dealer->id)
             ->where('user_id', $userId)
             ->firstOrFail();
 
         $targetUser = User::findOrFail($userId);
-        $oldRoleId = $dealerUser->role_id;
-        $newRoleId = $request->membership_role_id;
 
-        // Update membership role
-        $dealerUser->update(['role_id' => $newRoleId]);
+        // Store before state for audit log
+        $beforeData = [
+            'name' => $targetUser->name,
+            'phone' => $targetUser->phone,
+        ];
 
-        // Ensure user has "staff" role (all staff members get this role)
-        if (!$targetUser->hasRole('staff')) {
-            $this->rolePermissionService->assignRoleToUser($targetUser, 'staff');
+        // Update user details
+        $updateData = [];
+        if ($request->has('name')) {
+            $updateData['name'] = $request->name;
         }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $request->phone;
+        }
+        if ($request->has('password')) {
+            $updateData['password'] = $request->password; // Will be automatically hashed
+        }
+
+        $targetUser->update($updateData);
 
         // Audit log
         try {
+            $afterData = [
+                'name' => $targetUser->name,
+                'phone' => $targetUser->phone,
+            ];
+            if ($request->has('password')) {
+                $afterData['password_changed'] = true;
+            }
+
             $this->auditLogService->logUpdate(
                 $user,
-                'DealerUser',
-                $dealerUser->id,
-                [
-                    'membership_role_id' => $oldRoleId,
-                ],
-                [
-                    'membership_role_id' => $newRoleId,
-                ],
+                'DealerStaff',
+                $dealerStaff->id,
+                $beforeData,
+                $afterData,
                 $request,
                 'Dealer',
                 $dealer->id,
-                "Staff member role updated: {$targetUser->name}",
+                "Staff member updated: {$targetUser->name}",
                 ['dealer', 'staff', 'management']
             );
         } catch (\Exception $e) {
             Log::warning('Failed to create audit log for staff update', [
-                'dealer_user_id' => $dealerUser->id,
+                'dealer_staff_id' => $dealerStaff->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        return $this->success($dealerUser->load('user', 'role'));
+        return $this->success([
+            'dealer_staff' => $dealerStaff->load('user'),
+            'user' => $targetUser->fresh(),
+        ]);
     }
 
     /**
@@ -255,33 +223,29 @@ class DealerStaffController extends Controller
             return $this->forbidden('You do not have permission to manage staff');
         }
 
-        $dealerUser = DealerUser::where('dealer_id', $dealer->id)
+        $dealerStaff = DealerStaff::where('dealer_id', $dealer->id)
             ->where('user_id', $userId)
             ->firstOrFail();
 
         $targetUser = User::findOrFail($userId);
-        $membershipRoleId = $dealerUser->role_id;
 
         // Store data for audit log before deletion
-        $dealerUserData = $dealerUser->toArray();
+        $dealerStaffData = $dealerStaff->toArray();
 
-        // Delete membership
-        $dealerUser->delete();
-
-        // Note: We don't remove the Spatie role here as the user might belong to other dealers
-        // If you want to remove it, check if user has other dealer memberships first
+        // Delete staff record
+        $dealerStaff->delete();
 
         // Audit log
         try {
             $this->auditLogService->logDelete(
                 $user,
-                'DealerUser',
-                $dealerUserData['id'],
-                $dealerUserData,
+                'DealerStaff',
+                $dealerStaffData['id'],
+                $dealerStaffData,
                 $request,
                 'Dealer',
                 $dealer->id,
-                "Staff member removed from dealer: {$targetUser->name} ({$targetUser->email})",
+                "Staff member removed from dealer: {$targetUser->name} (username: {$dealerStaffData['username']})",
                 ['dealer', 'staff', 'management']
             );
         } catch (\Exception $e) {
@@ -294,5 +258,48 @@ class DealerStaffController extends Controller
 
         return $this->noContent();
     }
-}
 
+    /**
+     * Generate unique username for staff member
+     * Format: staff_{dealer_id}_{sequential_number}
+     * 
+     * @param int $dealerId
+     * @return string
+     */
+    private function generateUniqueUsername(int $dealerId): string
+    {
+        // Get the highest sequential number for this dealer from dealer_staff table
+        $existingUsernames = DealerStaff::where('dealer_id', $dealerId)
+            ->where('username', 'like', "staff_{$dealerId}_%")
+            ->pluck('username')
+            ->toArray();
+
+        $maxNumber = 0;
+        foreach ($existingUsernames as $username) {
+            if (preg_match('/staff_' . $dealerId . '_(\d+)$/', $username, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
+        }
+
+        // Generate next sequential number
+        $nextNumber = $maxNumber + 1;
+        $username = sprintf('staff_%d_%03d', $dealerId, $nextNumber);
+
+        // Double-check uniqueness (shouldn't happen, but safety check)
+        $attempts = 0;
+        while (DealerStaff::where('username', $username)->exists() && $attempts < 100) {
+            $nextNumber++;
+            $username = sprintf('staff_%d_%03d', $dealerId, $nextNumber);
+            $attempts++;
+        }
+
+        if ($attempts >= 100) {
+            throw new \Exception('Unable to generate unique username after 100 attempts');
+        }
+
+        return $username;
+    }
+}

@@ -73,7 +73,7 @@ class EnquiryController extends Controller
         }
 
         // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user'])->find($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
         
         if (!$vehicle) {
             return response()->json([
@@ -92,11 +92,12 @@ class EnquiryController extends Controller
         if ($vehicle->details && !empty($vehicle->details->seller_phone)) {
             $phoneNumber = $vehicle->details->seller_phone;
         }
-        // If empty and vehicle has dealer: Get phone from dealer's first user
+        // If empty and vehicle has dealer: Get phone from dealer owner
         elseif (empty($phoneNumber) && $vehicle->dealer) {
-            $dealerUser = $vehicle->dealer->users()->first();
-            if ($dealerUser && !empty($dealerUser->phone)) {
-                $phoneNumber = $dealerUser->phone;
+            // Load owner relationship
+            $vehicle->dealer->load('owner');
+            if ($vehicle->dealer->owner && !empty($vehicle->dealer->owner->phone)) {
+                $phoneNumber = $vehicle->dealer->owner->phone;
             }
         }
         // If empty and vehicle has user (seller/private listing): Get phone from vehicle user
@@ -172,7 +173,7 @@ class EnquiryController extends Controller
      */
     public function showEnquiryForm(int $id): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user', 'images', 'brand', 'model'])->findOrFail($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
         
         return view('vehicle-enquiry-form', [
             'vehicle' => $vehicle,
@@ -201,7 +202,7 @@ class EnquiryController extends Controller
         ]);
 
         // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user'])->find($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
         
         if (!$vehicle) {
             return response()->json([
@@ -317,7 +318,7 @@ class EnquiryController extends Controller
      */
     public function showTestDriveForm(int $id): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user', 'images', 'brand', 'model'])->findOrFail($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-test-drive-form', [
             'vehicle' => $vehicle,
@@ -347,7 +348,7 @@ class EnquiryController extends Controller
         ]);
 
         // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user'])->find($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
         
         if (!$vehicle) {
             return response()->json([
@@ -463,7 +464,7 @@ class EnquiryController extends Controller
      */
     public function showPriceNegotiationForm(int $id): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user', 'images', 'brand', 'model'])->findOrFail($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-price-negotiation-form', [
             'vehicle' => $vehicle,
@@ -493,7 +494,7 @@ class EnquiryController extends Controller
         ]);
 
         // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.users', 'user'])->find($id);
+        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
         
         if (!$vehicle) {
             return response()->json([

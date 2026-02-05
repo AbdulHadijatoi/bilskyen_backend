@@ -696,16 +696,16 @@
             <!-- Dealer Information -->
             @if($vehicle->dealer)
                 @php
-                    $dealerUser = $vehicle->dealer->users()->first();
+                    $dealerOwner = $vehicle->dealer->owner;
                     $dealerPhone = null;
                     if ($details && $details->seller_phone) {
                         $dealerPhone = $details->seller_phone;
-                    } elseif ($dealerUser && $dealerUser->phone) {
-                        $dealerPhone = $dealerUser->phone;
+                    } elseif ($dealerOwner && $dealerOwner->phone) {
+                        $dealerPhone = $dealerOwner->phone;
                     }
                     
                     // Get contact email for dealer (used later in dealer section)
-                    $contactEmail = $dealerUser->email ?? null;
+                    $contactEmail = $dealerOwner->email ?? null;
                 @endphp
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
@@ -717,7 +717,7 @@
                         </h2>
                     </div>
                     <div class="space-y-3">
-                        @if($dealerUser && $dealerUser->name)
+                        @if($dealerOwner && $dealerOwner->name)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -725,7 +725,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ ucfirst($dealerUser->name) }}
+                                        {{ ucfirst($dealerOwner->name) }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">Contact Name</p>
                                 </div>
@@ -953,15 +953,13 @@
                 $contactWhatsApp = null;
                 
                 // Contact email is already set above in dealer/seller sections, but ensure it's set here too
-                if ($vehicle->dealer) {
-                    $dealerUser = $vehicle->dealer->users()->first();
-                    if ($dealerUser) {
-                        $contactUser = $dealerUser;
-                        $contactWhatsApp = $dealerUser->whatsapp_number ?? $dealerUser->phone ?? null;
-                        // $contactEmail is already set in the dealer section above
-                        if (!isset($contactEmail)) {
-                            $contactEmail = $dealerUser->email ?? null;
-                        }
+                if ($vehicle->dealer && $vehicle->dealer->owner) {
+                    $dealerOwner = $vehicle->dealer->owner;
+                    $contactUser = $dealerOwner;
+                    $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
+                    // $contactEmail is already set in the dealer section above
+                    if (!isset($contactEmail)) {
+                        $contactEmail = $dealerOwner->email ?? null;
                     }
                 } elseif ($vehicle->user) {
                     $contactUser = $vehicle->user;

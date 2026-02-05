@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -25,6 +25,7 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'username',
         'phone',
         'whatsapp_number',
         'address',
@@ -55,21 +56,19 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Get dealer users (dealer memberships) for this user
+     * Get dealers owned by this user
      */
-    public function dealerUsers(): HasMany
+    public function dealer(): HasOne
     {
-        return $this->hasMany(DealerUser::class);
+        return $this->hasOne(Dealer::class, 'user_id');
     }
 
     /**
-     * Get dealers this user belongs to
+     * Get dealer staff records for this user
      */
-    public function dealers(): BelongsToMany
+    public function dealerStaff(): HasMany
     {
-        return $this->belongsToMany(Dealer::class, 'dealer_users')
-            ->withPivot('role_id')
-            ->withTimestamps('created_at');
+        return $this->hasMany(DealerStaff::class);
     }
 
     /**

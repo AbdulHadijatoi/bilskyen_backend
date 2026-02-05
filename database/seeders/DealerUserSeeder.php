@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Dealer;
-use App\Models\DealerUser;
+use App\Models\DealerStaff;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -29,27 +29,39 @@ class DealerUserSeeder extends Seeder
                 return;
             }
             
-            // Link some users to dealers
+            // Link users to dealers
             $userIndex = 0;
             foreach ($dealers as $dealer) {
-                // Each dealer gets 1-3 staff members
+                // Set first user as dealer owner (if not already set)
+                if (!$dealer->user_id && $userIndex < $users->count()) {
+                    $owner = $users[$userIndex];
+                    $dealer->update(['user_id' => $owner->id]);
+                    
+                    // Assign dealer role to owner if not already assigned
+                    if (!$owner->hasRole('dealer')) {
+                        $owner->assignRole('dealer');
+                    }
+                    
+                    $userIndex++;
+                }
+                
+                // Each dealer gets 1-3 additional staff members
                 $staffCount = rand(1, 3);
                 
                 for ($i = 0; $i < $staffCount && $userIndex < $users->count(); $i++) {
                     $user = $users[$userIndex];
                     
-                    // First user is owner, others are manager or staff
-                    $roleId = $i === 0 
-                        ? DealerUser::ROLE_OWNER 
-                        : ($i === 1 ? DealerUser::ROLE_MANAGER : DealerUser::ROLE_STAFF);
+                    // Generate username for staff
+                    $username = $this->generateUsername($dealer->id, $i + 1);
                     
-                    DealerUser::firstOrCreate(
+                    // Create dealer staff record
+                    DealerStaff::firstOrCreate(
                         [
                             'dealer_id' => $dealer->id,
                             'user_id' => $user->id,
                         ],
                         [
-                            'role_id' => $dealerRole->id, // Spatie role ID
+                            'username' => $username,
                             'created_at' => now()->subDays(rand(30, 365)),
                         ]
                     );
@@ -72,5 +84,13 @@ class DealerUserSeeder extends Seeder
             }
         });
     }
-}
 
+    /**
+     * Generate username for staff member
+     * Format: staff_{dealer_id}_{sequential_number}
+     */
+    private function generateUsername(int $dealerId, int $number): string
+    {
+        return sprintf('staff_%d_%03d', $dealerId, $number);
+    }
+}
