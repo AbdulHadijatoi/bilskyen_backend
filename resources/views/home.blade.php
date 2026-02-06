@@ -465,13 +465,18 @@
                                     />
                                     @if(isset($vehicle['dealer_id']) && $vehicle['dealer_id'])
                                     <!-- Dealer Label - Top Left -->
-                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                         Dealer
+                                    </span>
+                                    @else
+                                    <!-- Private Label - Top Left -->
+                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                        Private
                                     </span>
                                     @endif
                                     <!-- Heart Icon - Top Right -->
                                     <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle['id'] }}, event); return false;" aria-label="Add to favorites">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle['id'] }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ isset($vehicle['dealer_id']) && $vehicle['dealer_id'] ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle['id'] }}" data-dealer-id="{{ $vehicle['dealer_id'] ?? '' }}">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                         </svg>
                                     </button>
@@ -1518,7 +1523,15 @@
                         const data = await response.json().catch(() => ({}));
                         heartIcon.classList.remove('filled');
                         heartIcon.classList.remove('text-red-500');
-                        heartIcon.classList.add('text-gray-700');
+                        // Restore original color based on dealer status
+                        const dealerId = heartIcon.getAttribute('data-dealer-id');
+                        if (dealerId && dealerId !== '') {
+                            heartIcon.classList.add('text-blue-600');
+                            heartIcon.classList.remove('text-orange-600');
+                        } else {
+                            heartIcon.classList.add('text-orange-600');
+                            heartIcon.classList.remove('text-blue-600');
+                        }
                         if (path) path.setAttribute('fill', 'none');
                         if (window.showSnackbar) {
                             window.showSnackbar(data.message || 'Removed from favorites', 'success');
@@ -1562,7 +1575,7 @@
                     if (response.ok) {
                         const data = await response.json().catch(() => ({}));
                         heartIcon.classList.add('filled');
-                        heartIcon.classList.remove('text-gray-700');
+                        heartIcon.classList.remove('text-blue-600', 'text-orange-600');
                         heartIcon.classList.add('text-red-500');
                         if (path) path.setAttribute('fill', 'currentColor');
                         if (window.showSnackbar) {
