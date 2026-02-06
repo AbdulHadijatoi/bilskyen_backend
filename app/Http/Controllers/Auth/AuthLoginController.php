@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\DealerStaff;
 use App\Models\User;
 use App\Services\RolePermissionService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -21,7 +23,8 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 class AuthLoginController extends Controller
 {
     public function __construct(
-        private RolePermissionService $rolePermissionService
+        private RolePermissionService $rolePermissionService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
 
     /**
@@ -177,6 +180,31 @@ class AuthLoginController extends Controller
 
             $user->load('roles');
 
+            // Get subscription features for dealer/staff users (not admin)
+            $subscriptionFeatures = [];
+            if ($user->hasAnyRole(['dealer', 'staff']) && !$user->hasRole('admin')) {
+                $dealer = $user->dealer;
+                
+                // For staff users, get dealer from DealerStaff relationship
+                if (!$dealer && $user->hasRole('staff')) {
+                    $dealerStaff = DealerStaff::where('user_id', $user->id)->first();
+                    if ($dealerStaff) {
+                        $dealer = $dealerStaff->dealer;
+                    }
+                }
+                
+                if ($dealer) {
+                    $subscriptionFeatures = $this->subscriptionFeatureService->getFeatures($dealer);
+                }
+            }
+
+            // Ensure subscription_features is always an object (not array) for JSON encoding
+            // Convert empty array to empty object to ensure JSON encodes as {} not []
+            // Non-empty associative arrays will JSON encode as objects automatically
+            if (is_array($subscriptionFeatures) && empty($subscriptionFeatures)) {
+                $subscriptionFeatures = new \stdClass();
+            }
+
         return $this->success([
             'id' => $user->id,
             'name' => $user->name,
@@ -189,6 +217,7 @@ class AuthLoginController extends Controller
             'image' => $user->image ?? null,
             'banned' => $user->banned ?? false,
             'created_at' => $user->created_at,
+            'subscription_features' => $subscriptionFeatures,
         ]);
         } catch (\Exception $e) {
             return $this->unauthorized('Unauthenticated');
@@ -254,6 +283,24 @@ class AuthLoginController extends Controller
             'Strict' // sameSite
         );
 
+        // Get subscription features for dealer/staff users (not admin)
+        $subscriptionFeatures = [];
+        if ($user->hasAnyRole(['dealer', 'staff']) && !$user->hasRole('admin')) {
+            $dealer = $user->dealer;
+            
+            // For staff users, get dealer from DealerStaff relationship
+            if (!$dealer && $user->hasRole('staff')) {
+                $dealerStaff = DealerStaff::where('user_id', $user->id)->first();
+                if ($dealerStaff) {
+                    $dealer = $dealerStaff->dealer;
+                }
+            }
+            
+            if ($dealer) {
+                $subscriptionFeatures = $this->subscriptionFeatureService->getFeatures($dealer);
+            }
+        }
+
         return $this->success([
             'user' => [
                 'id' => $user->id,
@@ -266,6 +313,7 @@ class AuthLoginController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
+            'subscription_features' => $subscriptionFeatures,
         ])->cookie($cookie);
     }
 
@@ -321,10 +369,29 @@ class AuthLoginController extends Controller
                 'Strict' // sameSite
             );
 
+            // Get subscription features for dealer/staff users (not admin)
+            $subscriptionFeatures = [];
+            if ($user->hasAnyRole(['dealer', 'staff']) && !$user->hasRole('admin')) {
+                $dealer = $user->dealer;
+                
+                // For staff users, get dealer from DealerStaff relationship
+                if (!$dealer && $user->hasRole('staff')) {
+                    $dealerStaff = DealerStaff::where('user_id', $user->id)->first();
+                    if ($dealerStaff) {
+                        $dealer = $dealerStaff->dealer;
+                    }
+                }
+                
+                if ($dealer) {
+                    $subscriptionFeatures = $this->subscriptionFeatureService->getFeatures($dealer);
+                }
+            }
+
             return $this->success([
                 'access_token' => $newAccessToken,
                 'token_type' => 'bearer',
                 'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
+                'subscription_features' => $subscriptionFeatures,
             ])->cookie($cookie);
         } catch (JWTException $e) {
             return $this->error('Refresh token expired or invalid', null, 401);

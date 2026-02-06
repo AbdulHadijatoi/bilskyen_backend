@@ -362,7 +362,14 @@ class AdminPlanController extends Controller
 
             DB::commit();
             
-            return $this->success(['message' => 'Plan availability synced successfully']);
+            // Get updated availability to return
+            $plan->load(['availability.allowedRole', 'availability.dealer']);
+            $availability = [
+                'roles' => $plan->availability->where('allowed_role_id', '!=', null)->pluck('allowedRole')->filter()->values(),
+                'dealers' => $plan->availability->where('dealer_id', '!=', null)->pluck('dealer')->filter()->values(),
+            ];
+            
+            return $this->success($availability, 200, 'Plan availability updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error('Failed to sync plan availability: ' . $e->getMessage(), 500);

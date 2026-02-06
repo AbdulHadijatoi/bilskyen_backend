@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Constants\SubscriptionStatus;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,8 @@ class SubscriptionController extends Controller
 {
     public function __construct(
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
     public function show(Request $request): JsonResponse
     {
@@ -53,7 +55,8 @@ class SubscriptionController extends Controller
             return $this->success([]);
         }
 
-        $features = $subscription->plan->features ?? [];
+        // Use SubscriptionFeatureService to get processed features (key-value pairs)
+        $features = $this->subscriptionFeatureService->getFeatures($dealer);
 
         return $this->success($features);
     }
@@ -108,7 +111,7 @@ class SubscriptionController extends Controller
         ])
         ->where('is_active', true)
         ->get();
-
+        
         // Filter plans by availability
         $availablePlans = $allPlans->filter(function($plan) use ($dealer, $dealerRoleIds) {
             return $plan->isAvailableToDealer($dealer->id, $dealerRoleIds);
@@ -150,17 +153,50 @@ class SubscriptionController extends Controller
             return $this->error('This plan is not available for your dealer account', 403);
         }
 
-        // Check for existing active subscription
-        $existingActive = DealerSubscription::where('dealer_id', $dealer->id)
-            ->where('subscription_status_id', SubscriptionStatus::ACTIVE)
-            ->exists();
-
-        if ($existingActive) {
-            return $this->error('You already have an active subscription', 422);
-        }
-
         DB::beginTransaction();
         try {
+            // Cancel existing active or trial subscriptions before creating new one
+            $existingSubscriptions = DealerSubscription::where('dealer_id', $dealer->id)
+                ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
+                ->get();
+
+            if ($existingSubscriptions->isNotEmpty()) {
+                foreach ($existingSubscriptions as $existingSubscription) {
+                    // Get payload before update
+                    $payloadBefore = [
+                        'subscription_status_id' => $existingSubscription->subscription_status_id,
+                    ];
+                    
+                    $existingSubscription->update([
+                        'subscription_status_id' => SubscriptionStatus::CANCELED
+                    ]);
+
+                    // Audit log for cancellation
+                    try {
+                        $this->auditLogService->logUpdate(
+                            $user,
+                            'DealerSubscription',
+                            $existingSubscription->id,
+                            $payloadBefore,
+                            [
+                                'subscription_status_id' => SubscriptionStatus::CANCELED,
+                            ],
+                            $request,
+                            'Dealer',
+                            $dealer->id,
+                            "Subscription canceled due to plan change: Plan ID {$plan->id}",
+                            ['dealer', 'subscription', 'cancel', 'change']
+                        );
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to create audit log for subscription cancellation', [
+                            'subscription_id' => $existingSubscription->id,
+                            'dealer_id' => $dealer->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
             // Determine start date
             $startsAt = $request->starts_at ? Carbon::parse($request->starts_at) : now();
             
@@ -221,8 +257,19 @@ class SubscriptionController extends Controller
                 ]);
             }
 
+            // Clear feature cache for this dealer since subscription changed
+            $this->subscriptionFeatureService->clearCache($dealer);
+            
+            // Get updated subscription features
+            $subscriptionFeatures = $this->subscriptionFeatureService->getFeatures($dealer);
+            
             $subscription->load(['plan.features', 'plan.priceHistory', 'subscriptionStatus']);
-            return $this->created($subscription);
+            
+            // Add subscription features to response
+            $responseData = $subscription->toArray();
+            $responseData['subscription_features'] = $subscriptionFeatures;
+            
+            return $this->created($responseData);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error('Failed to create subscription: ' . $e->getMessage(), 500);

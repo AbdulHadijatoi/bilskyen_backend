@@ -9,6 +9,7 @@ use App\Models\LeadStageHistory;
 use App\Constants\LeadStage;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -21,7 +22,8 @@ class LeadController extends Controller
 {
     public function __construct(
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
     public function index(Request $request): JsonResponse
     {
@@ -29,6 +31,14 @@ class LeadController extends Controller
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
+        }
+
+        // Check if lead_management feature is enabled
+        if (!$this->subscriptionFeatureService->hasFeature($dealer, 'lead_management')) {
+            return $this->error(
+                'Lead management is not available in your current subscription plan. Please upgrade to access this feature.',
+                403
+            );
         }
 
         $query = Lead::with(['vehicle', 'buyerUser', 'assignedUser', 'leadStage', 'source'])

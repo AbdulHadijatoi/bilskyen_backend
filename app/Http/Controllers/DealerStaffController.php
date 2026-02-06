@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\DealerStaff;
 use App\Services\DealerContextService;
 use App\Services\AuditLogService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,8 @@ class DealerStaffController extends Controller
 {
     public function __construct(
         private DealerContextService $dealerContextService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
 
     /**
@@ -29,6 +31,14 @@ class DealerStaffController extends Controller
     {
         $user = $request->user();
         $dealer = $this->dealerContextService->requireDealer($user);
+
+        // Check if staff_management feature is enabled
+        if (!$this->subscriptionFeatureService->hasFeature($dealer, 'staff_management')) {
+            return $this->error(
+                'Staff management is not available in your current subscription plan. Please upgrade to access this feature.',
+                403
+            );
+        }
 
         $staff = $dealer->staff()
             ->with('user')

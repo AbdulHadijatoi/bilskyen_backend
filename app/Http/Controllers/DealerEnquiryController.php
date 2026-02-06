@@ -6,6 +6,7 @@ use App\Models\Enquiry;
 use App\Models\Vehicle;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,8 @@ class DealerEnquiryController extends Controller
 {
     public function __construct(
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
     /**
      * Get all enquiries for dealer's vehicles
@@ -29,6 +31,14 @@ class DealerEnquiryController extends Controller
         
         if (!$dealer) {
             return $this->notFound('Dealer not found');
+        }
+
+        // Check if enquiry_management feature is enabled
+        if (!$this->subscriptionFeatureService->hasFeature($dealer, 'enquiry_management')) {
+            return $this->error(
+                'Enquiry management is not available in your current subscription plan. Please upgrade to access this feature.',
+                403
+            );
         }
 
         // Get all vehicle IDs for this dealer

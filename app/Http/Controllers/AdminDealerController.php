@@ -16,7 +16,7 @@ class AdminDealerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Dealer::with('users.roles');
+        $query = Dealer::with('staff.user.roles');
 
         // Apply search filter
         if ($request->has('search') && $request->input('search')) {
@@ -38,7 +38,7 @@ class AdminDealerController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $dealer = Dealer::with(['users.roles', 'subscriptions.plan', 'vehicles'])
+        $dealer = Dealer::with(['staff.user.roles', 'subscriptions.plan', 'vehicles'])
             ->findOrFail($id);
 
         return $this->success($dealer);

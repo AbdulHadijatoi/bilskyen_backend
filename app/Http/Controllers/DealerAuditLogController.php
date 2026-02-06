@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Services\DealerContextService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -15,7 +16,8 @@ use Carbon\Carbon;
 class DealerAuditLogController extends Controller
 {
     public function __construct(
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {}
 
     /**
@@ -26,6 +28,15 @@ class DealerAuditLogController extends Controller
     {
         $user = $request->user();
         $dealer = $this->dealerContextService->requireDealer($user);
+
+        // Check if audit_logs feature is enabled
+        // Note: If 'audit_logs' feature doesn't exist in subscription, default to false (no access)
+        if (!$this->subscriptionFeatureService->hasFeature($dealer, 'audit_logs')) {
+            return $this->error(
+                'Audit logs access is not available in your current subscription plan. Please upgrade to access this feature.',
+                403
+            );
+        }
 
         $query = AuditLog::with(['auditActorType'])
             ->where('dealer_id', $dealer->id);

@@ -22,6 +22,7 @@ use App\Services\VehicleService;
 use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
+use App\Services\SubscriptionFeatureService;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
@@ -43,7 +44,8 @@ class VehicleController extends Controller
         private VehicleService $vehicleService,
         FileService $fileService,
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private SubscriptionFeatureService $subscriptionFeatureService
     ) {
         $this->fileService = $fileService;
     }
@@ -335,12 +337,30 @@ class VehicleController extends Controller
         $data = $request->all();
 
         // Set dealer_id from authenticated user
+        $dealer = null;
         if ($request->user() && $request->user()->dealer) {
-            $data['dealer_id'] = $request->user()->dealer->id;
+            $dealer = $request->user()->dealer;
+            $data['dealer_id'] = $dealer->id;
         }
 
         // Set user_id (creator)
         $data['user_id'] = $request->user()->id;
+
+        // Check max_listings limit if vehicle is being published
+        $vehicleListStatusId = $data['vehicle_list_status_id'] ?? null;
+        if ($dealer && ($vehicleListStatusId == VehicleListStatus::PUBLISHED || $vehicleListStatusId == 2)) {
+            $publishedCount = Vehicle::where('dealer_id', $dealer->id)
+                ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                ->count();
+            
+            if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
+                $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
+                return $this->error(
+                    "You have reached your maximum listing limit of {$limit}. Please upgrade your subscription or unpublish existing vehicles.",
+                    403
+                );
+            }
+        }
 
         // Handle file uploads
         if ($request->hasFile('images')) {
@@ -528,6 +548,30 @@ class VehicleController extends Controller
         }
 
         $oldStatusId = $vehicle->vehicle_list_status_id;
+        
+        // Check max_listings limit if changing to published status
+        if ($statusId == VehicleListStatus::PUBLISHED && $oldStatusId != VehicleListStatus::PUBLISHED) {
+            $dealer = $vehicle->dealer;
+            if ($dealer) {
+                $publishedCount = Vehicle::where('dealer_id', $dealer->id)
+                    ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                    ->count();
+                
+                // Don't count the current vehicle if it's already published
+                if ($oldStatusId == VehicleListStatus::PUBLISHED) {
+                    $publishedCount--;
+                }
+                
+                if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
+                    $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
+                    return $this->error(
+                        "You have reached your maximum listing limit of {$limit}. Please upgrade your subscription or unpublish existing vehicles.",
+                        403
+                    );
+                }
+            }
+        }
+        
         $vehicle->vehicle_list_status_id = $statusId;
         
         if ($request->input('status') === 'published' && !$vehicle->published_at) {
@@ -645,6 +689,22 @@ class VehicleController extends Controller
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
+        
+        // Check max_vehicle_images limit
+        $dealer = $vehicle->dealer;
+        if ($dealer) {
+            $currentImageCount = $vehicle->images()->count();
+            $newImageCount = count($request->file('images', []));
+            $totalImageCount = $currentImageCount + $newImageCount;
+            
+            $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
+            if ($maxImages > 0 && $totalImageCount > $maxImages) {
+                return $this->error(
+                    "You have reached your maximum image limit of {$maxImages} per vehicle. Please remove some images or upgrade your subscription.",
+                    403
+                );
+            }
+        }
         
         // Get current sort order (highest existing sort_order + 1)
         $currentMaxSortOrder = $vehicle->images()->max('sort_order') ?? -1;
