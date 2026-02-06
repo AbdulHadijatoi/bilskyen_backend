@@ -77,7 +77,7 @@ class AdminUserController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $user = User::with('roles', 'userStatus', 'dealers')->findOrFail($id);
+        $user = User::with('roles', 'userStatus', 'dealer')->findOrFail($id);
         return $this->success($user);
     }
 
