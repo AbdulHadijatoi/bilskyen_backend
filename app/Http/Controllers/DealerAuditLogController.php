@@ -132,4 +132,60 @@ class DealerAuditLogController extends Controller
 
         return $this->paginated($logs);
     }
+
+    /**
+     * Get a single audit log by ID for the current dealer
+     */
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
+
+        // Check if audit_logs feature is enabled
+        if (!$this->subscriptionFeatureService->hasFeature($dealer, 'audit_logs')) {
+            return $this->error(
+                'Audit logs access is not available in your current subscription plan. Please upgrade to access this feature.',
+                403
+            );
+        }
+
+        $log = AuditLog::with('auditActorType')
+            ->where('dealer_id', $dealer->id)
+            ->find($id);
+
+        if (!$log) {
+            return $this->error('Audit log not found', 404);
+        }
+
+        // Transform log to include all details
+        $logData = [
+            'id' => $log->id,
+            'actor_id' => $log->actor_id,
+            'actor_type' => $log->auditActorType->name ?? 'Unknown',
+            'dealer_id' => $log->dealer_id,
+            'action' => $log->action,
+            'target_type' => $log->target_type,
+            'target_id' => $log->target_id,
+            'related_target_type' => $log->related_target_type,
+            'related_target_id' => $log->related_target_id,
+            'description' => $log->description,
+            'status' => $log->status,
+            'severity' => $log->severity,
+            'tags' => $log->tags,
+            'metadata' => $log->metadata,
+            'ip_address' => $log->ip_address,
+            'user_agent' => $log->user_agent,
+            'request_method' => $log->request_method,
+            'request_url' => $log->request_url,
+            'error_message' => $log->error_message,
+            'duration_ms' => $log->duration_ms,
+            'payload_before' => $log->payload_before,
+            'payload_after' => $log->payload_after,
+            'session_id' => $log->session_id,
+            'request_id' => $log->request_id,
+            'created_at' => $log->created_at?->toISOString(),
+        ];
+
+        return $this->success($logData);
+    }
 }

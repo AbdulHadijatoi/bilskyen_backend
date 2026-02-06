@@ -10,10 +10,18 @@ class StoreEnquiryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * Allow both authenticated and guest users to create enquiries.
      */
     public function authorize(): bool
     {
-        return $this->user()->can('enquiry:create');
+        // Allow guest users (user can be null)
+        $user = $this->user();
+        if (!$user) {
+            return true;
+        }
+        
+        // For authenticated users, check permission
+        return $user->can('enquiry:create');
     }
 
     /**

@@ -605,11 +605,11 @@ class VehicleService
             $query->where('km_driven', $filters['km_driven']);
         }
 
-        // Price range filter
-        if (!empty($filters['price_from'])) {
+        // Price range filter (exclude 0 values)
+        if (!empty($filters['price_from']) && $filters['price_from'] > 0) {
             $query->where('price', '>=', $filters['price_from']);
         }
-        if (!empty($filters['price_to'])) {
+        if (!empty($filters['price_to']) && $filters['price_to'] > 0) {
             $query->where('price', '<=', $filters['price_to']);
         }
 
@@ -720,10 +720,10 @@ class VehicleService
                 }
                 break;
             case 'mileage_desc':
-                $query->orderByRaw('COALESCE(' . $tablePrefix . 'mileage, ' . $tablePrefix . 'km_driven, 0) DESC');
+                $query->orderByRaw('COALESCE(' . $tablePrefix . 'km_driven, 0) DESC');
                 break;
             case 'mileage_asc':
-                $query->orderByRaw('COALESCE(' . $tablePrefix . 'mileage, ' . $tablePrefix . 'km_driven, 0) ASC');
+                $query->orderByRaw('COALESCE(' . $tablePrefix . 'km_driven, 0) ASC');
                 break;
             case 'fuel_efficiency_desc':
                 $query->orderBy($tablePrefix . 'fuel_efficiency', 'desc');
@@ -858,6 +858,18 @@ class VehicleService
             $query->where('vehicles.model_year_id', $basicFilters['model_year_id']);
         }
 
+        // Model Year range filter (year_from and year_to)
+        if (!empty($advancedFilters['year_from']) && $advancedFilters['year_from'] > 1975) {
+            $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
+            $query->whereRaw('CAST(model_years.name AS UNSIGNED) >= ?', [$advancedFilters['year_from']]);
+        }
+        if (!empty($advancedFilters['year_to']) && $advancedFilters['year_to'] < (date('Y') + 1)) {
+            if (!str_contains($query->toSql(), 'model_years')) {
+                $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
+            }
+            $query->whereRaw('CAST(model_years.name AS UNSIGNED) <= ?', [$advancedFilters['year_to']]);
+        }
+
         if (!empty($basicFilters['fuel_type_id'])) {
             if (is_array($basicFilters['fuel_type_id'])) {
                 $query->whereIn('vehicles.fuel_type_id', $basicFilters['fuel_type_id']);
@@ -873,7 +885,7 @@ class VehicleService
         if (!empty($basicFilters['price_from'])) {
             $query->where('vehicles.price', '>=', $basicFilters['price_from']);
         }
-        if (!empty($basicFilters['price_to'])) {
+        if (!empty($basicFilters['price_to']) && $basicFilters['price_to'] > 0) {
             $query->where('vehicles.price', '<=', $basicFilters['price_to']);
         }
 
@@ -893,18 +905,18 @@ class VehicleService
             }
         }
 
-        // Mileage range
-        if (!empty($advancedFilters['mileage_from'])) {
-            $query->where('vehicles.mileage', '>=', $advancedFilters['mileage_from']);
+        // Mileage range (using km_driven column, exclude 0 values)
+        if (!empty($advancedFilters['mileage_from']) && $advancedFilters['mileage_from'] > 0) {
+            $query->where('vehicles.km_driven', '>=', $advancedFilters['mileage_from']);
         }
-        if (!empty($advancedFilters['mileage_to'])) {
-            $query->where('vehicles.mileage', '<=', $advancedFilters['mileage_to']);
+        if (!empty($advancedFilters['mileage_to']) && $advancedFilters['mileage_to'] > 0) {
+            $query->where('vehicles.km_driven', '<=', $advancedFilters['mileage_to']);
         }
         if (!empty($advancedFilters['odometer_from'])) {
-            $query->where('vehicles.mileage', '>=', $advancedFilters['odometer_from']);
+            $query->where('vehicles.km_driven', '>=', $advancedFilters['odometer_from']);
         }
         if (!empty($advancedFilters['odometer_to'])) {
-            $query->where('vehicles.mileage', '<=', $advancedFilters['odometer_to']);
+            $query->where('vehicles.km_driven', '<=', $advancedFilters['odometer_to']);
         }
 
         // Listing Status
@@ -930,11 +942,11 @@ class VehicleService
             }
         }
 
-        // First Registration Year
-        if (!empty($advancedFilters['first_registration_year_from'])) {
+        // First Registration Year (exclude default min/max values)
+        if (!empty($advancedFilters['first_registration_year_from']) && $advancedFilters['first_registration_year_from'] > 1975) {
             $query->whereYear('vehicles.first_registration_date', '>=', $advancedFilters['first_registration_year_from']);
         }
-        if (!empty($advancedFilters['first_registration_year_to'])) {
+        if (!empty($advancedFilters['first_registration_year_to']) && $advancedFilters['first_registration_year_to'] < date('Y')) {
             $query->whereYear('vehicles.first_registration_date', '<=', $advancedFilters['first_registration_year_to']);
         }
 
@@ -983,33 +995,33 @@ class VehicleService
             $query->where('vehicle_details.top_speed', '<=', $advancedFilters['top_speed_to']);
         }
 
-        // Performance - Engine Power
-        if (!empty($advancedFilters['engine_power_from'])) {
+        // Performance - Engine Power (exclude 0 values)
+        if (!empty($advancedFilters['engine_power_from']) && $advancedFilters['engine_power_from'] > 0) {
             $query->where('vehicles.engine_power', '>=', $advancedFilters['engine_power_from']);
         }
-        if (!empty($advancedFilters['engine_power_to'])) {
+        if (!empty($advancedFilters['engine_power_to']) && $advancedFilters['engine_power_to'] > 0) {
             $query->where('vehicles.engine_power', '<=', $advancedFilters['engine_power_to']);
         }
 
-        // Owner Tax range filter
-        if (!empty($advancedFilters['ownership_tax_from'])) {
+        // Owner Tax range filter (exclude 0 values)
+        if (!empty($advancedFilters['ownership_tax_from']) && $advancedFilters['ownership_tax_from'] > 0) {
             $query->where('vehicles.ownership_tax', '>=', $advancedFilters['ownership_tax_from']);
         }
-        if (!empty($advancedFilters['ownership_tax_to'])) {
+        if (!empty($advancedFilters['ownership_tax_to']) && $advancedFilters['ownership_tax_to'] > 0) {
             $query->where('vehicles.ownership_tax', '<=', $advancedFilters['ownership_tax_to']);
         }
 
-        // Battery & Charging (EV)
-        if (!empty($advancedFilters['battery_capacity_from'])) {
+        // Battery & Charging (EV) (exclude 0 values)
+        if (!empty($advancedFilters['battery_capacity_from']) && $advancedFilters['battery_capacity_from'] > 0) {
             $query->where('vehicles.battery_capacity', '>=', $advancedFilters['battery_capacity_from']);
         }
-        if (!empty($advancedFilters['battery_capacity_to'])) {
+        if (!empty($advancedFilters['battery_capacity_to']) && $advancedFilters['battery_capacity_to'] > 0) {
             $query->where('vehicles.battery_capacity', '<=', $advancedFilters['battery_capacity_to']);
         }
-        if (!empty($advancedFilters['range_km_from'])) {
+        if (!empty($advancedFilters['range_km_from']) && $advancedFilters['range_km_from'] > 0) {
             $query->where('vehicles.range_km', '>=', $advancedFilters['range_km_from']);
         }
-        if (!empty($advancedFilters['range_km_to'])) {
+        if (!empty($advancedFilters['range_km_to']) && $advancedFilters['range_km_to'] > 0) {
             $query->where('vehicles.range_km', '<=', $advancedFilters['range_km_to']);
         }
         if (!empty($advancedFilters['charging_type'])) {

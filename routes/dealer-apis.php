@@ -12,6 +12,7 @@ use App\Http\Controllers\DealerLookupController;
 use App\Http\Controllers\DealerDashboardController;
 use App\Http\Controllers\DealerEnquiryController;
 use App\Http\Controllers\DealerAuditLogController;
+use App\Http\Controllers\DealerAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -152,5 +153,16 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('audit-logs')->group(function () {
         Route::get('/', [DealerAuditLogController::class, 'index'])
             ->middleware('permission:dealer.audit.view');
+        Route::get('/{id}', [DealerAuditLogController::class, 'show'])
+            ->middleware('permission:dealer.audit.view');
+    });
+    
+    // Analytics
+    Route::prefix('analytics')->group(function () {
+        Route::get('/overview', [DealerAnalyticsController::class, 'overview']);
+        Route::get('/leads', [DealerAnalyticsController::class, 'leads']);
+        Route::get('/vehicles', [DealerAnalyticsController::class, 'vehicles']);
+        Route::get('/marketing', [DealerAnalyticsController::class, 'marketing']);
+        Route::get('/subscription', [DealerAnalyticsController::class, 'subscription']);
     });
 });

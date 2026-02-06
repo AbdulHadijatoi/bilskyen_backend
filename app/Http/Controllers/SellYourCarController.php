@@ -438,6 +438,11 @@ class SellYourCarController extends Controller
                 $vehicleDetailsData['permits'] = json_encode($request->input('permits'));
             }
 
+            // Set default condition_id to 2 if not provided
+            if (!isset($vehicleDetailsData['condition_id']) || empty($vehicleDetailsData['condition_id'])) {
+                $vehicleDetailsData['condition_id'] = 2;
+            }
+
             // Add lookup IDs
             if ($variantId) {
                 $vehicleDetailsData['variant_id'] = $variantId;

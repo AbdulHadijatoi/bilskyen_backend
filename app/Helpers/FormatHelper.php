@@ -21,12 +21,21 @@ class FormatHelper
         }
 
         if ($currency === 'DKK') {
-            // Format Danish Krone with dot as thousands separator and comma as decimal separator
-            return number_format($amount, 0, ',', ',') . ' kr.';
+            // Format Danish Krone with comma as thousands separator and dot as decimal separator
+            // Show decimals only when they exist and are non-zero
+            $hasDecimals = ($amount != floor($amount));
+            if ($hasDecimals) {
+                // Format with 2 decimals, remove trailing zeros
+                $formatted = rtrim(rtrim(number_format($amount, 2, '.', ','), '0'), '.');
+            } else {
+                // Format without decimals
+                $formatted = number_format($amount, 0, '.', ',');
+            }
+            return $formatted . ' kr.';
         }
 
-        // For other currencies, use standard formatting
-        return number_format($amount, 2, ',', ',') . ' ' . $currency;
+        // For other currencies, use standard formatting with comma as thousands separator and dot as decimal separator
+        return number_format($amount, 2, '.', ',') . ' ' . $currency;
     }
 
     /**

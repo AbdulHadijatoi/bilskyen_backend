@@ -443,6 +443,11 @@
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
         
+        // Set default condition_id to 2 if not already set
+        if (!formData.has('condition_id') || !formData.get('condition_id')) {
+            formData.append('condition_id', '2');
+        }
+        
         // Merge all API response fields into form data
         if (window.apiResponseData && typeof window.apiResponseData === 'object') {
             const apiData = window.apiResponseData;
@@ -585,7 +590,17 @@
                 }
             }
             
+            // Ensure condition_id is set to 2 if not provided by API or form
+            if (!formData.has('condition_id') || !formData.get('condition_id')) {
+                formData.set('condition_id', '2');
+            }
+            
             console.log('Merged API response data into form submission');
+        }
+        
+        // Final check: ensure condition_id is always 2 if not set
+        if (!formData.has('condition_id') || !formData.get('condition_id')) {
+            formData.set('condition_id', '2');
         }
         
         // Handle variant name if variant_id is not set but variant name exists

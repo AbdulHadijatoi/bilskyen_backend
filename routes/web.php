@@ -49,6 +49,19 @@ Route::prefix('auth')->group(function () {
 Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout');
 Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
+// Enquiry Routes - Public (guests can submit enquiries)
+Route::post('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
+Route::get('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
+Route::post('/vehicles/{id}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])->name('vehicles.enquire.submit');
+
+// Test Drive Routes - Public (guests can submit test drive requests)
+Route::get('/vehicles/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
+Route::post('/vehicles/{id}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])->name('vehicles.test-drive.submit');
+
+// Price Negotiation Routes - Public (guests can submit price negotiations)
+Route::get('/vehicles/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
+Route::post('/vehicles/{id}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
+
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
     // Profile Routes
@@ -61,19 +74,6 @@ Route::middleware('auth.web')->group(function () {
     Route::delete('/favorites/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
     Route::get('/favorites/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
     Route::post('/favorites/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
-    
-    // Enquiry Routes
-    Route::post('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
-    Route::get('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
-    Route::post('/vehicles/{id}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])->name('vehicles.enquire.submit');
-    
-    // Test Drive Routes
-    Route::get('/vehicles/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
-    Route::post('/vehicles/{id}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])->name('vehicles.test-drive.submit');
-    
-    // Price Negotiation Routes
-    Route::get('/vehicles/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
-    Route::post('/vehicles/{id}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
     
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');

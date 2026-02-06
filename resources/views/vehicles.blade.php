@@ -60,15 +60,40 @@
                 </span>
             </button>
         </div>
-        
-        <!-- Applied Filters Chips -->
-        <div id="applied-filters-container" class="flex flex-wrap gap-2 mt-2 pt-2">
-            <!-- Filter chips will be rendered here via JavaScript -->
-        </div>
     </div>
 
     <!-- Sort and View Controls -->
-    <div class="flex items-center justify-end gap-2">
+    <div id="sort-and-condition-controls" class="flex items-center justify-between gap-4">
+        <!-- Condition Filter -->
+        <div class="flex items-center gap-2">
+            <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                    <input 
+                        type="radio" 
+                        name="condition_id" 
+                        value=""
+                        class="sr-only peer condition-radio"
+                        @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
+                    >
+                    <span>All</span>
+                </label>
+                @foreach($filterOptions['conditions'] as $condition)
+                    <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                        <input 
+                            type="radio" 
+                            name="condition_id" 
+                            value="{{ $condition->id }}"
+                            class="sr-only peer condition-radio"
+                            @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
+                        >
+                        <span>{{ $condition->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+        
+        <!-- Sort and View Toggle -->
+        <div class="flex items-center gap-2">
         <!-- Sort Dropdown -->
         <div class="relative">
             <button 
@@ -224,7 +249,7 @@
         <button 
             type="button" 
             id="view-toggle-button"
-            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="hidden sm:inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Toggle view style"
         >
             <!-- Card View Icon (shown when in card view) -->
@@ -244,28 +269,29 @@
                 <line x1="3" x2="3.01" y1="18" y2="18"></line>
             </svg>
         </button>
+        </div>
     </div>
 
     <!-- Vehicle Grid/List -->
-    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" data-view="card">
+    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" data-view="card">
         @forelse($vehicles as $vehicle)
-        <div class="flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full">
+        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
             <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
                 <!-- Vehicle Image -->
-                <div class="relative aspect-video overflow-hidden">
+                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                     <img
                         src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                        class="h-full w-full object-cover transition-transform hover:scale-105"
+                        class="h-full w-full object-cover rounded-md"
                     />
                     @if($vehicle->dealer_id)
                     <!-- Dealer Label - Top Left -->
-                    <span class="absolute top-2 left-2 z-10 inline-flex items-center rounded-md bg-primary/90 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         Dealer
                     </span>
                     @endif
                     <!-- Heart Icon - Top Right -->
-                    <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
+                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                         </svg>
@@ -273,9 +299,9 @@
                 </div>
                 
                 <!-- Vehicle Details -->
-                <div class="px-4 py-4 space-y-4">
+                <div class="p-3 space-y-4">
                     <div class="flex flex-col gap-1">
-                        <h3 class="flex items-center gap-2 text-lg font-bold">
+                        <h3 class="flex items-center gap-2 text-xs">
                             {{ $vehicle->title }}
                         </h3>
                         @if($vehicle->version)
@@ -283,7 +309,7 @@
                             {{ $vehicle->version }}
                         </p>
                         @endif
-                        <p class="text-primary text-lg font-bold">
+                        <p class="text-lg font-bold">
                             {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                         </p>
                     </div>
@@ -312,7 +338,7 @@
             <!-- Card Footer -->
             <div class="mt-auto" onclick="event.stopPropagation()">
                 <!-- Vehicle Actions -->
-                <div class="p-4 pt-2">
+                <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                         <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
@@ -389,44 +415,17 @@
         class="absolute right-0 top-0 h-full w-full max-w-md bg-background shadow-2xl flex flex-col transform transition-transform duration-300 ease-out translate-x-full"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="filter-drawer-title"
     >
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-5 bg-background border-b border-border shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                        <line x1="4" y1="21" x2="4" y2="14"></line>
-                        <line x1="4" y1="10" x2="4" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12" y2="3"></line>
-                        <line x1="20" y1="21" x2="20" y2="16"></line>
-                        <line x1="20" y1="12" x2="20" y2="3"></line>
-                        <line x1="1" y1="14" x2="7" y2="14"></line>
-                        <line x1="9" y1="8" x2="15" y2="8"></line>
-                        <line x1="17" y1="16" x2="23" y2="16"></line>
-                    </svg>
-                </div>
-                <div>
-                    <h2 id="filter-drawer-title" class="text-xl font-semibold text-foreground">Advanced Filters</h2>
-                    <p class="text-xs text-muted-foreground mt-0.5">Refine your search</p>
-                </div>
-            </div>
-            <button
-                id="filter-close-button"
-                type="button"
-                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                aria-label="Close filters"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 6 6 18M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+       
 
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto overscroll-contain" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
             <div class="px-6 py-6 space-y-8">
+            <!-- Applied Filters Chips -->
+            <div id="applied-filters-container" class="flex flex-wrap gap-2 pb-2 border-b border-border">
+                <!-- Filter chips will be rendered here via JavaScript -->
+            </div>
+            
             <!-- Tabs: Purchase/Leasing -->
             <div class="space-y-3">
                 <label class="text-sm font-semibold text-foreground">Listing Type</label>
@@ -439,7 +438,7 @@
                         $isLeasingActive = isset($currentFilters['listing_type_id']) && $leasingType && $currentFilters['listing_type_id'] == $leasingType->id;
                     @endphp
                     @if($purchaseType)
-                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isPurchaseActive) bg-accent border-primary @else border-input @endif" data-tab="purchase" data-listing-type-id="{{ $purchaseType->id }}">
+                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isPurchaseActive) bg-accent border-foreground @else border-input @endif" data-tab="purchase" data-listing-type-id="{{ $purchaseType->id }}">
                             <input 
                                 type="radio" 
                                 name="listing_type_id_radio" 
@@ -451,7 +450,7 @@
                         </label>
                     @endif
                     @if($leasingType)
-                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isLeasingActive) bg-accent border-primary @else border-input @endif" data-tab="leasing" data-listing-type-id="{{ $leasingType->id }}">
+                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isLeasingActive) bg-accent border-foreground @else border-input @endif" data-tab="leasing" data-listing-type-id="{{ $leasingType->id }}">
                             <input 
                                 type="radio" 
                                 name="listing_type_id_radio" 
@@ -508,7 +507,7 @@
                 <!-- Range Slider -->
                 <div class="relative px-2 py-4">
                     <div class="relative h-2 bg-muted rounded-full">
-                        <div id="price-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                        <div id="price-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                         <input 
                             type="range" 
                             id="price-slider-min"
@@ -524,11 +523,11 @@
                             min="0"
                             max="1000000"
                             step="1000"
-                            value="{{ $currentFilters['price_to'] ?? 1000000 }}"
+                            value="{{ $currentFilters['price_to'] ?? 0 }}"
                             class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                         >
-                        <div id="price-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="price-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="price-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="price-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                     </div>
                 </div>
             </div>
@@ -616,7 +615,7 @@
                 <!-- Range Slider -->
                 <div class="relative px-2 py-4">
                     <div class="relative h-2 bg-muted rounded-full">
-                        <div id="owner-tax-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                        <div id="owner-tax-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                         <input 
                             type="range" 
                             id="owner-tax-slider-min"
@@ -632,11 +631,11 @@
                             min="0"
                             max="100000"
                             step="100"
-                            value="{{ $currentFilters['ownership_tax_to'] ?? 100000 }}"
+                            value="{{ $currentFilters['ownership_tax_to'] ?? 0 }}"
                             class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                         >
-                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                     </div>
                 </div>
             </div>
@@ -677,7 +676,7 @@
                 <!-- Range Slider -->
                 <div class="relative px-2 py-4">
                     <div class="relative h-2 bg-muted rounded-full">
-                        <div id="year-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                        <div id="year-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                         <input 
                             type="range" 
                             id="year-slider-min"
@@ -693,11 +692,11 @@
                             min="1975"
                             max="{{ date('Y') + 1 }}"
                             step="1"
-                            value="{{ $currentFilters['year_to'] ?? (date('Y') + 1) }}"
+                            value="{{ $currentFilters['year_to'] ?? date('Y') + 1 }}"
                             class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                         >
-                        <div id="year-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="year-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="year-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="year-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                     </div>
                 </div>
             </div>
@@ -740,7 +739,7 @@
                     <!-- Range Slider -->
                     <div class="relative px-2 py-4">
                         <div class="relative h-2 bg-muted rounded-full">
-                            <div id="mileage-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                            <div id="mileage-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                             <input 
                                 type="range" 
                                 id="mileage-slider-min"
@@ -756,11 +755,11 @@
                                 min="0"
                                 max="500000"
                                 step="1000"
-                                value="{{ $currentFilters['mileage_to'] ?? 500000 }}"
+                                value="{{ $currentFilters['mileage_to'] ?? 0 }}"
                                 class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                             >
-                            <div id="mileage-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="mileage-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="mileage-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="mileage-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                         </div>
                     </div>
                 </div>
@@ -770,44 +769,15 @@
                     <label class="text-sm font-semibold text-foreground mb-3 block">Price Type</label>
                     <div class="flex flex-wrap gap-2">
                         @foreach($filterOptions['priceTypes'] as $priceType)
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-primary @endif">
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-foreground @endif">
                                 <input 
                                     type="checkbox" 
                         name="price_type_id[]" 
                                     value="{{ $priceType->id }}"
-                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
                                 >
                                 <span>{{ $priceType->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Condition -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Condition</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label class="condition-radio-label inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-accent border-primary @else border-input @endif">
-                            <input 
-                                type="radio" 
-                                name="condition_id" 
-                                value=""
-                                class="sr-only peer condition-radio"
-                                @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
-                            >
-                            <span class="peer-checked:font-semibold">All</span>
-                        </label>
-                        @foreach($filterOptions['conditions'] as $condition)
-                            <label class="condition-radio-label inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-accent border-primary @else border-input @endif">
-                                <input 
-                                    type="radio" 
-                                    name="condition_id" 
-                                    value="{{ $condition->id }}"
-                                    class="sr-only peer condition-radio"
-                                    @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
-                                >
-                                <span class="peer-checked:font-semibold">{{ $condition->name }}</span>
                             </label>
                         @endforeach
                     </div>
@@ -842,12 +812,12 @@
                                 }
                             @endphp
                             @if($isRelevant || in_array($bodyTypeNameLower, $bodyTypeMap))
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) bg-accent border-primary @endif">
+                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) bg-accent border-foreground @endif">
                                     <input 
                                         type="checkbox" 
                                         name="body_type_id[]" 
                                         value="{{ $bodyType->id }}"
-                                        class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) checked @endif
                                     >
                                     <span>{{ $bodyType->name }}</span>
@@ -863,12 +833,12 @@
                 <label class="text-sm font-semibold text-foreground mb-3 block">Fuel Type</label>
                 <div class="flex flex-wrap gap-2">
                     @foreach($filterOptions['fuelTypes'] as $fuelType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-primary @endif">
+                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-foreground @endif">
                             <input 
                                 type="checkbox" 
                                 name="fuel_type_id[]" 
                                 value="{{ $fuelType->id }}"
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) checked @endif
                             >
                             <span>{{ $fuelType->name }}</span>
@@ -882,12 +852,12 @@
                 <label class="text-sm font-semibold text-foreground mb-3 block">Gear Type</label>
                 <div class="flex flex-wrap gap-2">
                     @foreach($filterOptions['gearTypes'] as $gearType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-primary @endif">
+                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-foreground @endif">
                             <input 
                                 type="checkbox" 
                                 name="gear_type_id[]" 
                                 value="{{ $gearType->id }}"
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) checked @endif
                             >
                             <span>{{ $gearType->name }}</span>
@@ -900,32 +870,32 @@
             <div>
                 <label class="text-sm font-semibold text-foreground mb-3 block">Drive Wheels</label>
                 <div class="flex flex-wrap gap-2">
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-primary @endif">
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-foreground @endif">
                         <input 
                             type="checkbox" 
                             name="drive_axles[]" 
                             value="fwd"
-                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
                         >
                         <span>FWD</span>
                     </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-primary @endif">
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-foreground @endif">
                         <input 
                             type="checkbox" 
                             name="drive_axles[]" 
                             value="rwd"
-                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
                         >
                         <span>RWD</span>
                     </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-primary @endif">
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-foreground @endif">
                         <input 
                             type="checkbox" 
                             name="drive_axles[]" 
                             value="awd"
-                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
                         >
                         <span>AWD</span>
@@ -971,7 +941,7 @@
                     <!-- Range Slider -->
                     <div class="relative px-2 py-4">
                         <div class="relative h-2 bg-muted rounded-full">
-                            <div id="first-reg-year-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                            <div id="first-reg-year-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                             <input 
                                 type="range" 
                                 id="first-reg-year-slider-min"
@@ -990,8 +960,8 @@
                                 value="{{ $currentFilters['first_registration_year_to'] ?? date('Y') }}"
                                 class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                             >
-                            <div id="first-reg-year-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="first-reg-year-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="first-reg-year-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="first-reg-year-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                         </div>
                     </div>
                 </div>
@@ -1002,22 +972,22 @@
                     <div>
                         <label class="text-sm font-semibold text-foreground mb-3 block">Seller Type</label>
                         <div class="flex flex-col gap-2">
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-primary @endif">
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-foreground @endif">
                                 <input 
                                     type="checkbox" 
                                     name="seller_type[]" 
                                     value="dealer"
-                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
                                 >
                                 <span>Dealer</span>
                             </label>
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-primary @endif">
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-foreground @endif">
                                 <input 
                                     type="checkbox" 
                                     name="seller_type[]" 
                                     value="private"
-                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
                                 >
                                 <span>Private</span>
@@ -1030,12 +1000,12 @@
                         <label class="text-sm font-semibold text-foreground mb-3 block">Sales Type</label>
                         <div class="flex flex-col gap-2">
                             @foreach($filterOptions['salesTypes'] as $salesType)
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-primary @endif">
+                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-foreground @endif">
                                     <input 
                                         type="checkbox" 
                                         name="sales_type_id[]" 
                                         value="{{ $salesType->id }}"
-                                        class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) checked @endif
                                     >
                                     <span>{{ $salesType->name }}</span>
@@ -1097,7 +1067,7 @@
                     <!-- Range Slider -->
                     <div class="relative px-2 py-4">
                         <div class="relative h-2 bg-muted rounded-full">
-                            <div id="horsepower-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                            <div id="horsepower-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                             <input 
                                 type="range" 
                                 id="horsepower-slider-min"
@@ -1113,11 +1083,11 @@
                                 min="0"
                                 max="1000"
                                 step="10"
-                                value="{{ $currentFilters['engine_power_to'] ?? 1000 }}"
+                                value="{{ $currentFilters['engine_power_to'] ?? 0 }}"
                                 class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                             >
-                            <div id="horsepower-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="horsepower-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="horsepower-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="horsepower-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                         </div>
                     </div>
                 </div>
@@ -1161,7 +1131,7 @@
                     <!-- Range Slider -->
                     <div class="relative px-2 py-4">
                         <div class="relative h-2 bg-muted rounded-full">
-                            <div id="battery-capacity-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                            <div id="battery-capacity-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                             <input 
                                 type="range" 
                                 id="battery-capacity-slider-min"
@@ -1177,11 +1147,11 @@
                                 min="0"
                                 max="200"
                                 step="5"
-                                value="{{ $currentFilters['battery_capacity_to'] ?? 200 }}"
+                                value="{{ $currentFilters['battery_capacity_to'] ?? 0 }}"
                                 class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                             >
-                            <div id="battery-capacity-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="battery-capacity-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="battery-capacity-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="battery-capacity-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                         </div>
                     </div>
                 </div>
@@ -1222,7 +1192,7 @@
                     <!-- Range Slider -->
                     <div class="relative px-2 py-4">
                         <div class="relative h-2 bg-muted rounded-full">
-                            <div id="range-km-range-track" class="absolute h-2 bg-primary rounded-full"></div>
+                            <div id="range-km-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
                             <input 
                                 type="range" 
                                 id="range-km-slider-min"
@@ -1238,11 +1208,11 @@
                                 min="0"
                                 max="1000"
                                 step="10"
-                                value="{{ $currentFilters['range_km_to'] ?? 1000 }}"
+                                value="{{ $currentFilters['range_km_to'] ?? 0 }}"
                                 class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
                             >
-                            <div id="range-km-handle-min" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="range-km-handle-max" class="absolute w-5 h-5 bg-primary rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="range-km-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="range-km-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
                         </div>
                     </div>
                 </div>
@@ -1336,12 +1306,12 @@
                                 <div class="equipment-type-content hidden px-4 pb-3 pt-2">
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($equipmentType->equipments as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-primary @endif">
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-foreground @endif">
                                             <input 
                                                 type="checkbox" 
                                                 name="equipment_ids[]" 
                                                 value="{{ $equipment->id }}"
-                                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                                 @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) checked @endif
                                             >
                                             <span>{{ $equipment->name }}</span>
@@ -1417,47 +1387,45 @@
         background-color: hsl(var(--muted-foreground) / 0.3);
     }
     
-    /* List view styles - Fixed height compact design */
+    /* List view styles - Compact design matching card view styles */
     #vehicle-container[data-view="list"] {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 1rem;
+        grid-template-columns: 1fr;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item {
         display: flex;
         flex-direction: row;
-        align-items: center;
-        gap: 0.625rem;
-        border: 2px solid hsl(var(--border));
-        border-radius: 0.375rem;
+        border: 1px solid hsl(var(--border));
+        border-radius: 0.5rem;
         background-color: hsl(var(--card));
         overflow: hidden;
         transition: all 0.2s ease;
-        padding: 0.5rem;
-        height: 70px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         cursor: pointer;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item:hover {
-        border-color: hsl(var(--primary) / 0.5);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-1px);
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-dealer-label {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 20;
+        pointer-events: none;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container {
         flex-shrink: 0;
-        width: 100px;
-        min-width: 100px;
-        height: 100%;
-        max-height: 70px;
+        width: 200px;
+        min-width: 200px;
+        height: 150px;
         overflow: hidden;
-        border-radius: 0.25rem;
         background-color: hsl(var(--muted) / 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: block;
         position: relative;
     }
     
@@ -1466,124 +1434,71 @@
         height: 100%;
         object-fit: cover;
         display: block;
+        transition: transform 0.2s ease;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-content {
-        flex: 1;
+    #vehicle-container[data-view="list"] .vehicle-item:hover .vehicle-image-container img {
+        transform: scale(1.05);
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item > a {
         display: flex;
         flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0;
-        gap: 0.75rem;
-        min-width: 0;
-        height: 100%;
-        overflow: hidden;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-main-info {
         flex: 1;
         min-width: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+        flex: 1;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: 0.125rem;
-        overflow: hidden;
+        padding: 1rem;
+        gap: 1rem;
+        position: relative;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-title-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        overflow: hidden;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-title-section h3 {
-        font-size: 0.8125rem;
-        font-weight: 600;
-        line-height: 1.2;
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        line-height: 1.3;
         margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         color: hsl(var(--foreground));
     }
     
-    #vehicle-container[data-view="list"] .vehicle-title-section .text-muted-foreground {
-        font-size: 0.6875rem;
-        margin: 0;
-        line-height: 1.2;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-muted-foreground {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-top: -0.375rem;
+        font-weight: 400;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-price {
-        font-size: 0.875rem;
-        font-weight: 600;
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-primary {
+        font-size: 1.125rem;
+        font-weight: 700;
         margin: 0;
         line-height: 1.2;
         color: hsl(var(--primary));
-        white-space: nowrap;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-badges {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        flex-wrap: nowrap;
-        overflow: hidden;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-badges span {
-        padding: 0.125rem 0.375rem;
-        font-size: 0.625rem;
-        border-radius: 0.25rem;
-        display: inline-flex;
-        align-items: center;
-        line-height: 1;
-        white-space: nowrap;
-        border: 1px solid hsl(var(--border));
-        background-color: hsl(var(--muted) / 0.5);
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-specs {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-shrink: 0;
-        overflow: hidden;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-specs > div {
-        font-size: 0.6875rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        line-height: 1;
-        color: hsl(var(--muted-foreground));
-        white-space: nowrap;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-specs svg {
-        width: 0.75rem;
-        height: 0.75rem;
-        flex-shrink: 0;
+    #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+        margin-top: auto;
+        padding: 1rem;
+        padding-top: 0.5rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section {
-        flex-shrink: 0;
         display: flex;
-        gap: 0.375rem;
+        gap: 0.5rem;
         align-items: center;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
     #vehicle-container[data-view="list"] .vehicle-actions-section a button {
-        height: 1.625rem;
-        padding: 0 0.5rem;
-        font-size: 0.6875rem;
-        border-radius: 0.25rem;
+        height: 2.25rem;
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
         white-space: nowrap;
         display: inline-flex;
         align-items: center;
@@ -1591,102 +1506,131 @@
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
-        top: 0.125rem;
-        right: 0.125rem;
-        padding: 0.125rem 0.25rem;
-        font-size: 0.5625rem;
-        border-radius: 0.125rem;
+        top: 0.5rem;
+        right: 0.5rem;
         z-index: 10;
-        line-height: 1;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container .absolute.top-2.left-2 {
+        top: 0.5rem;
+        left: 0.5rem;
     }
     
     /* Tablet and up */
     @media (min-width: 768px) {
-        #vehicle-container[data-view="list"] .vehicle-item {
-            height: 80px;
-            gap: 0.75rem;
-            padding: 0.625rem;
-        }
-        
         #vehicle-container[data-view="list"] .vehicle-image-container {
-            width: 120px;
-            min-width: 120px;
-            max-height: 80px;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-title-section h3 {
-            font-size: 0.875rem;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-price {
-            font-size: 0.9375rem;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-specs {
-            gap: 1rem;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-specs > div {
-            font-size: 0.75rem;
+            width: 240px;
+            min-width: 240px;
+            height: 180px;
         }
     }
     
     /* Large screens */
     @media (min-width: 1024px) {
-        #vehicle-container[data-view="list"] .vehicle-item {
-            height: 85px;
-        }
-        
         #vehicle-container[data-view="list"] .vehicle-image-container {
-            width: 140px;
-            min-width: 140px;
-            max-height: 85px;
+            width: 280px;
+            min-width: 280px;
+            height: 200px;
         }
     }
     
     /* Mobile optimizations */
     @media (max-width: 640px) {
         #vehicle-container[data-view="list"] {
-            gap: 0.375rem;
+            gap: 0.75rem;
         }
         
         #vehicle-container[data-view="list"] .vehicle-item {
-            height: 65px;
-            gap: 0.5rem;
-            padding: 0.375rem;
+            flex-direction: column;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-item > a {
+            flex-direction: column;
         }
         
         #vehicle-container[data-view="list"] .vehicle-image-container {
-            width: 80px;
-            min-width: 80px;
-            max-height: 65px;
+            width: 100%;
+            min-width: 100%;
+            height: 200px;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-content {
-            gap: 0.5rem;
+        #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+            padding: 1rem;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-title-section h3 {
-            font-size: 0.75rem;
+        #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+            padding: 1rem;
+            padding-top: 0.5rem;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-price {
-            font-size: 0.8125rem;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-specs {
-            display: none;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-badges {
-            display: none;
+        #vehicle-container[data-view="list"] .vehicle-actions-section {
+            flex-direction: column;
+            width: 100%;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section button,
         #vehicle-container[data-view="list"] .vehicle-actions-section a button {
-            height: 1.5rem;
-            padding: 0 0.375rem;
-            font-size: 0.625rem;
+            width: 100%;
+        }
+    }
+    
+    /* Condition filter pill-style tabs */
+    .condition-radio-label {
+        border: none !important;
+    }
+    
+    .condition-radio-label.bg-white {
+        background-color: rgb(255 255 255) !important;
+        color: hsl(var(--foreground)) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+    .condition-radio-label.bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+        color: hsl(var(--muted-foreground)) !important;
+    }
+    
+    .condition-radio-label.bg-gray-150:hover {
+        color: hsl(var(--foreground)) !important;
+        }
+        
+    .bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+    }
+    
+    /* Condition filter responsive styles */
+    @media (max-width: 768px) {
+        #sort-and-condition-controls {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        #sort-and-condition-controls > div:first-child {
+            width: 100%;
+        }
+        
+        #sort-and-condition-controls > div:first-child > div {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        #sort-and-condition-controls > div:first-child > label {
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        #sort-and-condition-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        #sort-and-condition-controls > div:last-child {
+            width: 100%;
+            justify-content: space-between;
         }
     }
 </style>
@@ -1717,6 +1661,17 @@
         
         // View state
         let currentView = localStorage.getItem('vehicleView') || 'card';
+        
+        // Check if device is mobile (screen width <= 640px)
+        function isMobile() {
+            return window.innerWidth <= 640;
+        }
+        
+        // Force card view on mobile
+        if (isMobile()) {
+            currentView = 'card';
+            localStorage.setItem('vehicleView', 'card');
+        }
         
         const sortLabels = {
             'standard': 'Standard',
@@ -1758,9 +1713,9 @@
             if (amount === null || amount === undefined) {
                 return 'N/A';
             }
-            return new Intl.NumberFormat('da-DK', {
+            return new Intl.NumberFormat('en-US', {
                 minimumFractionDigits: 0,
-                maximumFractionDigits: 0
+                maximumFractionDigits: 2
             }).format(amount) + ' kr.';
         }
         
@@ -1781,23 +1736,23 @@
             }
             
             return `
-                <div class="flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full">
+                <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
                     <a href="/vehicles/${vehicle.id}" class="block flex-1">
                         <!-- Vehicle Image -->
-                        <div class="relative aspect-video overflow-hidden">
+                        <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
                                 src="${imageUrl}"
                                 alt="${vehicle.title || ''}"
-                                class="h-full w-full object-cover transition-transform hover:scale-105"
+                                class="h-full w-full object-cover rounded-md"
                             />
                             ${vehicle.dealer_id ? `
                             <!-- Dealer Label - Top Left -->
-                            <span class="absolute top-2 left-2 z-10 inline-flex items-center rounded-md bg-primary/90 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 Dealer
                             </span>
                             ` : ''}
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -1805,9 +1760,9 @@
                         </div>
                         
                         <!-- Vehicle Details -->
-                        <div class="px-4 py-4 space-y-4">
+                        <div class="p-3 space-y-4">
                             <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-lg font-bold">
+                                <h3 class="flex items-center gap-2 text-xs">
                                     ${vehicle.title || ''}
                                 </h3>
                                 ${vehicle.version ? `
@@ -1815,7 +1770,7 @@
                                     ${vehicle.version}
                                 </p>
                                 ` : ''}
-                                <p class="text-primary text-lg font-bold">
+                                <p class="text-lg font-bold">
                                     ${formatCurrency(vehicle.price)}
                                 </p>
                             </div>
@@ -1855,7 +1810,7 @@
                         </div>
                         ` : ''}
                         <!-- Vehicle Actions -->
-                        <div class="p-4 pt-2">
+                        <div class="p-3 pt-0">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
@@ -1872,66 +1827,39 @@
             `;
         }
         
-        // Render single vehicle list item - Fixed height compact design
+        // Render single vehicle list item - Compact design matching card view styles
         function renderVehicleListItem(vehicle) {
             const details = vehicle.details || {};
             const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
             
-            // Build badges
+            // Build badges (same as card view)
             const badges = [];
-            if (vehicle.mileage || vehicle.km_driven) badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
-            if (vehicle.engine_power_hp) badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
+            if (vehicle.mileage || vehicle.km_driven) {
+                badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
+            }
+            if (vehicle.engine_power_hp) {
+                badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
+            }
             if (vehicle.first_registration_date) {
                 const regDate = new Date(vehicle.first_registration_date);
                 badges.push(regDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
             }
-            if (vehicle.fuel_type_name) badges.push(vehicle.fuel_type_name);
-            if (vehicle.gear_type_name) badges.push(vehicle.gear_type_name);
-            if (details.color_name) badges.push(details.color_name);
-            if (vehicle.category_name) badges.push(vehicle.category_name);
-            
-            // Build specs
-            const specs = [];
-            if (vehicle.model_year_name) {
-                specs.push(`
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                            <line x1="16" x2="16" y1="2" y2="6"></line>
-                            <line x1="8" x2="8" y1="2" y2="6"></line>
-                            <line x1="3" x2="21" y1="10" y2="10"></line>
-                        </svg>
-                        <span>${vehicle.model_year_name}</span>
-                    </div>
-                `);
-            }
-            if (vehicle.mileage || vehicle.km_driven) {
-                specs.push(`
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        <span>${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
-                    </div>
-                `);
-            }
             if (vehicle.fuel_type_name) {
-                specs.push(`
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="2" x2="22" y1="2" y2="2"></line>
-                            <line x1="6" x2="6" y1="6" y2="22"></line>
-                            <line x1="18" x2="18" y1="6" y2="22"></line>
-                            <line x1="2" x2="22" y1="22" y2="22"></line>
-                        </svg>
-                        <span>${vehicle.fuel_type_name}</span>
-                    </div>
-                `);
+                badges.push(vehicle.fuel_type_name);
+            }
+            if (vehicle.gear_type_name) {
+                badges.push(vehicle.gear_type_name);
             }
             
             return `
-                <div class="vehicle-item cursor-pointer">
-                    <a href="/vehicles/${vehicle.id}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
+                <div class="vehicle-item relative">
+                    ${vehicle.dealer_id ? `
+                    <!-- Dealer Label - Top Right of List Item -->
+                    <span class="vehicle-dealer-label absolute top-2 right-2 z-20 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                        Dealer
+                    </span>
+                    ` : ''}
+                    <a href="/vehicles/${vehicle.id}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="vehicle-image-container relative">
                             <img
@@ -1939,20 +1867,8 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover"
                             />
-                            ${vehicle.dealer_id ? `
-                            <!-- Dealer Label - Top Left -->
-                            <span class="absolute top-2 left-2 z-10 inline-flex items-center rounded-md bg-primary/90 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                Dealer
-                            </span>
-                            ` : ''}
-                            ${vehicle.registration ? `
-                            <!-- Registration Number - Top Left (if no dealer label) or below dealer label -->
-                            <span class="absolute ${vehicle.dealer_id ? 'top-8' : 'top-2'} left-2 z-10 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                                ${vehicle.registration}
-                            </span>
-                            ` : ''}
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -1960,46 +1876,46 @@
                         </div>
                         
                         <!-- Vehicle Content -->
-                        <div class="vehicle-content">
-                            <!-- Main Info Section -->
-                            <div class="vehicle-main-info">
-                                <div class="vehicle-title-row">
-                                    <div class="vehicle-title-section">
-                                        <h3>${vehicle.title || ''}</h3>
-                                        ${vehicle.version ? `<p class="text-muted-foreground">${vehicle.version}</p>` : ''}
+                        <div class="vehicle-content-wrapper">
+                            <!-- Header Section -->
+                            <div class="flex flex-col gap-1">
+                                <h3 class="flex items-center gap-2 text-sm">
+                                    ${vehicle.title || ''}
+                                </h3>
+                                ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal">${vehicle.version}</p>` : ''}
+                                <p class="text-lg font-bold">
+                                    ${formatCurrency(vehicle.price)}
+                                </p>
                                     </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
-                                    <p class="vehicle-price">${formatCurrency(vehicle.price)}</p>
-                                    ${badges.length > 0 ? `
-                                    <div class="vehicle-badges">
-                                        ${badges.map(badge => `<span>${badge}</span>`).join('')}
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
                             
-                            <!-- Specs Section -->
-                            ${specs.length > 0 ? `
-                            <div class="vehicle-specs">
-                                ${specs.join('')}
+                            <!-- Badges Section (same as card view) -->
+                                    ${badges.length > 0 ? `
+                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
                             </div>
                             ` : ''}
                         </div>
                     </a>
                     
-                    <!-- Actions Section -->
-                    <div class="vehicle-actions-section" onclick="event.stopPropagation()">
-                        <a href="/vehicles/${vehicle.id}" onclick="event.stopPropagation()">
-                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                                View
+                    <!-- Card Footer -->
+                    <div class="mt-auto" onclick="event.stopPropagation()">
+                        <!-- Vehicle Actions -->
+                        <div class="vehicle-actions-section">
+                            <div class="flex w-full flex-col gap-2 sm:flex-row">
+                                <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
+                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                        View Details
                             </button>
                         </a>
-                        <a href="/vehicles/${vehicle.id}/enquire" onclick="event.stopPropagation()">
-                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                <button 
+                                    type="button"
+                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
+                                    class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                                >
                                 Enquire
                             </button>
-                        </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2239,7 +2155,7 @@
                     <div class="flex flex-col items-center justify-center text-center">
                         <svg class="animate-spin h-8 w-8 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12 h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         <p class="text-muted-foreground">Loading vehicles...</p>
                     </div>
@@ -2957,20 +2873,23 @@
                 const label = radio.closest('.condition-radio-label');
                 if (label) {
                     if (radio.checked) {
-                        label.classList.add('bg-accent', 'border-primary');
-                        label.classList.remove('border-input');
+                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
                     } else {
-                        label.classList.remove('bg-accent', 'border-primary');
-                        label.classList.add('border-input');
+                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.add('bg-gray-150', 'text-muted-foreground');
                     }
                 }
             });
         }
         
-        // Set up condition radio listeners
+        // Set up condition radio listeners - apply filter when changed
         document.querySelectorAll('input[name="condition_id"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 updateConditionStyles();
+                // Apply filter immediately
+                const filters = collectFilters();
+                fetchVehicles({ ...filters, page: 1 });
             });
         });
         
@@ -3021,9 +2940,18 @@
                 const finalMin = Math.min(minVal, maxVal);
                 const finalMax = Math.max(minVal, maxVal);
                 
-                // Update input fields
-                minInput.value = finalMin || '';
-                maxInput.value = finalMax || '';
+                // Update input fields - clear if at default values (0 for min, max for max)
+                if (finalMin === min || finalMin === 0) {
+                    minInput.value = '';
+                } else {
+                    minInput.value = finalMin;
+                }
+                
+                if (finalMax === max) {
+                    maxInput.value = '';
+                } else {
+                    maxInput.value = finalMax;
+                }
                 
                 // Calculate percentages
                 const minPercent = ((finalMin - min) / (max - min)) * 100;
@@ -3040,10 +2968,15 @@
             
             function updateFromInput(input, slider) {
                 const value = parseFloat(input.value);
-                if (!isNaN(value)) {
+                if (!isNaN(value) && value > 0) {
                     const clampedValue = Math.max(min, Math.min(max, value));
                     slider.value = clampedValue;
-                    input.value = clampedValue || '';
+                    input.value = clampedValue;
+                    updateSlider();
+                } else if (input.value === '' || input.value === '0') {
+                    // Clear slider to default: min for min slider, max for max slider
+                    slider.value = (slider === minSlider) ? min : max;
+                    input.value = '';
                     updateSlider();
                 }
             }
@@ -3185,8 +3118,12 @@
         ];
 
         // Close drawer
-        filterCloseButton.addEventListener('click', closeDrawer);
-        filterBackdrop.addEventListener('click', closeDrawer);
+        if (filterCloseButton) {
+            filterCloseButton.addEventListener('click', closeDrawer);
+        }
+        if (filterBackdrop) {
+            filterBackdrop.addEventListener('click', closeDrawer);
+        }
 
         // Close on Escape key
         document.addEventListener('keydown', (e) => {
@@ -3253,9 +3190,22 @@
         });
         }
 
+        // Helper function to check if a value should be included in filters
+        // Excludes empty strings, 0, and max/default values
+        function shouldIncludeFilterValue(value, maxValue = null) {
+            if (!value || value === '' || value === '0') return false;
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) return false;
+            if (numValue === 0) return false;
+            // Exclude max values (these are defaults and shouldn't be applied)
+            if (maxValue !== null && numValue >= maxValue) return false;
+            return true;
+        }
+        
         // Collect all filter values
         function collectFilters() {
             const filters = {};
+            const currentYear = new Date().getFullYear(); // Declare once at the top
             
             // Preserve search and sort parameters from URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -3278,40 +3228,46 @@
             const modelId = document.querySelector('[name="model_id"]')?.value;
             if (modelId) filters.model_id = modelId;
             
-            // Price range
+            // Price range (exclude 0 and max value 1000000)
             const priceFrom = document.querySelector('[name="price_from"]')?.value;
-            if (priceFrom) filters.price_from = priceFrom;
+            if (shouldIncludeFilterValue(priceFrom)) filters.price_from = priceFrom;
             
             const priceTo = document.querySelector('[name="price_to"]')?.value;
-            if (priceTo) filters.price_to = priceTo;
+            if (shouldIncludeFilterValue(priceTo, 1000000)) filters.price_to = priceTo;
             
-            // Owner tax range
+            // Owner tax range (exclude 0 and max value 100000)
             const ownershipTaxFrom = document.querySelector('[name="ownership_tax_from"]')?.value;
-            if (ownershipTaxFrom) filters.ownership_tax_from = ownershipTaxFrom;
+            if (shouldIncludeFilterValue(ownershipTaxFrom)) filters.ownership_tax_from = ownershipTaxFrom;
             
             const ownershipTaxTo = document.querySelector('[name="ownership_tax_to"]')?.value;
-            if (ownershipTaxTo) filters.ownership_tax_to = ownershipTaxTo;
+            if (shouldIncludeFilterValue(ownershipTaxTo, 100000)) filters.ownership_tax_to = ownershipTaxTo;
             
-            // Year range
+            // Year range (exclude default min 1975 and max year)
             const yearFrom = document.querySelector('[name="year_from"]')?.value;
-            if (yearFrom) filters.year_from = yearFrom;
+            const yearFromNum = parseFloat(yearFrom);
+            if (yearFrom && !isNaN(yearFromNum) && yearFromNum > 1975) {
+                filters.year_from = yearFrom;
+            }
             
             const yearTo = document.querySelector('[name="year_to"]')?.value;
-            if (yearTo) filters.year_to = yearTo;
+            const yearToNum = parseFloat(yearTo);
+            if (yearTo && !isNaN(yearToNum) && yearToNum < (currentYear + 1)) {
+                filters.year_to = yearTo;
+            }
             
-            // Mileage range
+            // Mileage range (exclude 0 and max value 500000)
             const mileageFrom = document.querySelector('[name="mileage_from"]')?.value;
-            if (mileageFrom) filters.mileage_from = mileageFrom;
+            if (shouldIncludeFilterValue(mileageFrom)) filters.mileage_from = mileageFrom;
             
             const mileageTo = document.querySelector('[name="mileage_to"]')?.value;
-            if (mileageTo) filters.mileage_to = mileageTo;
+            if (shouldIncludeFilterValue(mileageTo, 500000)) filters.mileage_to = mileageTo;
             
             // Price Type (checkboxes)
             const priceTypeIds = Array.from(document.querySelectorAll('[name="price_type_id[]"]:checked')).map(cb => cb.value);
                 if (priceTypeIds.length > 0) filters.price_type_id = priceTypeIds;
             
             const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
-            if (conditionId) filters.condition_id = conditionId;
+            if (conditionId && conditionId !== '') filters.condition_id = conditionId;
             
             const bodyTypeIds = Array.from(document.querySelectorAll('[name="body_type_id[]"]:checked')).map(cb => cb.value);
             if (bodyTypeIds.length > 0) filters.body_type_id = bodyTypeIds;
@@ -3325,12 +3281,12 @@
             const driveAxles = Array.from(document.querySelectorAll('[name="drive_axles[]"]:checked')).map(cb => cb.value);
             if (driveAxles.length > 0) filters.drive_axles = driveAxles;
             
-            // First registration year
+            // First registration year (exclude 0 and max year)
             const firstRegYearFrom = document.querySelector('[name="first_registration_year_from"]')?.value;
-            if (firstRegYearFrom) filters.first_registration_year_from = firstRegYearFrom;
+            if (shouldIncludeFilterValue(firstRegYearFrom, 1975)) filters.first_registration_year_from = firstRegYearFrom;
             
             const firstRegYearTo = document.querySelector('[name="first_registration_year_to"]')?.value;
-            if (firstRegYearTo) filters.first_registration_year_to = firstRegYearTo;
+            if (shouldIncludeFilterValue(firstRegYearTo, currentYear)) filters.first_registration_year_to = firstRegYearTo;
             
             // Seller type
             const sellerTypes = Array.from(document.querySelectorAll('[name="seller_type[]"]:checked')).map(cb => cb.value);
@@ -3340,29 +3296,30 @@
             const salesTypeIds = Array.from(document.querySelectorAll('[name="sales_type_id[]"]:checked')).map(cb => cb.value);
             if (salesTypeIds.length > 0) filters.sales_type_id = salesTypeIds;
             
-            // Seller distance
+            // Seller distance (exclude 0)
             const sellerDistance = document.querySelector('[name="seller_distance"]')?.value;
-            if (sellerDistance) filters.seller_distance = sellerDistance;
+            if (shouldIncludeFilterValue(sellerDistance)) filters.seller_distance = sellerDistance;
             
-            // Performance
+            // Performance (exclude 0 and max value 1000)
             const enginePowerFrom = document.querySelector('[name="engine_power_from"]')?.value;
-            if (enginePowerFrom) filters.engine_power_from = enginePowerFrom;
+            if (shouldIncludeFilterValue(enginePowerFrom)) filters.engine_power_from = enginePowerFrom;
             
             const enginePowerTo = document.querySelector('[name="engine_power_to"]')?.value;
-            if (enginePowerTo) filters.engine_power_to = enginePowerTo;
+            if (shouldIncludeFilterValue(enginePowerTo, 1000)) filters.engine_power_to = enginePowerTo;
             
-            // Battery & Charging
+            // Battery & Charging (exclude 0 and max value 200)
             const batteryCapacityFrom = document.querySelector('[name="battery_capacity_from"]')?.value;
-            if (batteryCapacityFrom) filters.battery_capacity_from = batteryCapacityFrom;
+            if (shouldIncludeFilterValue(batteryCapacityFrom)) filters.battery_capacity_from = batteryCapacityFrom;
             
             const batteryCapacityTo = document.querySelector('[name="battery_capacity_to"]')?.value;
-            if (batteryCapacityTo) filters.battery_capacity_to = batteryCapacityTo;
+            if (shouldIncludeFilterValue(batteryCapacityTo, 200)) filters.battery_capacity_to = batteryCapacityTo;
             
+            // Range km (exclude 0 and max value 1000)
             const rangeKmFrom = document.querySelector('[name="range_km_from"]')?.value;
-            if (rangeKmFrom) filters.range_km_from = rangeKmFrom;
+            if (shouldIncludeFilterValue(rangeKmFrom)) filters.range_km_from = rangeKmFrom;
             
             const rangeKmTo = document.querySelector('[name="range_km_to"]')?.value;
-            if (rangeKmTo) filters.range_km_to = rangeKmTo;
+            if (shouldIncludeFilterValue(rangeKmTo, 1000)) filters.range_km_to = rangeKmTo;
             
             const chargingType = document.querySelector('[name="charging_type"]')?.value;
             if (chargingType) filters.charging_type = chargingType;
@@ -3483,6 +3440,11 @@
         function setView(view) {
             if (!vehicleContainer || (view !== 'card' && view !== 'list')) return;
             
+            // Force card view on mobile devices
+            if (isMobile() && view === 'list') {
+                view = 'card';
+            }
+            
             currentView = view;
             localStorage.setItem('vehicleView', view);
             
@@ -3545,7 +3507,7 @@
                         <div class="vehicle-image-container relative">
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicleId}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -3591,6 +3553,11 @@
         // View toggle button handler
         if (viewToggleButton) {
             viewToggleButton.addEventListener('click', () => {
+                // Prevent switching to list view on mobile
+                if (isMobile()) {
+                    return;
+                }
+                
                 // Toggle between card and list view
                 const newView = currentView === 'card' ? 'list' : 'card';
                 setView(newView);
@@ -3602,11 +3569,30 @@
             });
         }
         
+        // Handle window resize to force card view if switching to mobile
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (isMobile() && currentView === 'list') {
+                    setView('card');
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentPage = parseInt(urlParams.get('page')) || 1;
+                    fetchVehicles({ page: currentPage });
+                }
+            }, 250);
+        });
+        
         // Initialize view on page load
         if (currentView) {
+            // Force card view on mobile
+            if (isMobile()) {
+                currentView = 'card';
+                localStorage.setItem('vehicleView', 'card');
+            }
             setView(currentView);
-            // If list view is saved, re-fetch to render in list format
-            if (currentView === 'list') {
+            // If list view is saved, re-fetch to render in list format (only on desktop)
+            if (currentView === 'list' && !isMobile()) {
                 // Get current URL params to preserve filters
                 const urlParams = new URLSearchParams(window.location.search);
                 const page = urlParams.get('page') || 1;
@@ -3766,28 +3752,8 @@
             return false;
         };
 
-        // Override openEnquiryDialog to check authentication first
-        const originalOpenEnquiryDialog = window.openEnquiryDialog;
-        window.openEnquiryDialog = function(type, vehicleId) {
-            // Check if user is authenticated
-            if (!isUserAuthenticated()) {
-                // Open login dialog with callback to open enquiry dialog after login
-                if (window.openLoginDialog) {
-                    window.openLoginDialog(() => {
-                        // After successful login, open the enquiry dialog
-                        if (originalOpenEnquiryDialog) {
-                            originalOpenEnquiryDialog(type, vehicleId);
-                        }
-                    });
-                }
-                return;
-            }
-            
-            // User is authenticated, proceed with original function
-            if (originalOpenEnquiryDialog) {
-                originalOpenEnquiryDialog(type, vehicleId);
-            }
-        };
+        // openEnquiryDialog is available globally from layouts/app.blade.php
+        // No authentication check needed - guests can submit enquiries
 
         // Load favorite status on page load
         (async function() {

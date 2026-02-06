@@ -146,12 +146,18 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     
     // Analytics
     Route::prefix('analytics')->group(function () {
+        Route::get('/overview', [AdminAnalyticsController::class, 'overview']);
+        Route::get('/revenue', [AdminAnalyticsController::class, 'revenue']);
+        Route::get('/dealers', [AdminAnalyticsController::class, 'dealers']);
         Route::get('/vehicles', [AdminAnalyticsController::class, 'vehicles']);
         Route::get('/leads', [AdminAnalyticsController::class, 'leads']);
-        Route::get('/subscriptions', [AdminAnalyticsController::class, 'subscriptions']);
+        Route::get('/activity', [AdminAnalyticsController::class, 'activity']);
     });
     
-    Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
+    Route::prefix('audit-logs')->group(function () {
+        Route::get('/', [AdminAuditLogController::class, 'index']);
+        Route::get('/{id}', [AdminAuditLogController::class, 'show']);
+    });
     
     // Notifications
     Route::get('/notifications', [AdminNotificationController::class, 'getNotifications']);

@@ -16,29 +16,29 @@
 
     <!-- Favorites Grid -->
     @if($favorites->count() > 0)
-    <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         @foreach($favorites as $favorite)
         @php
             $vehicle = $favorite->vehicle;
         @endphp
         @if($vehicle)
-        <div class="flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full">
+        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
             <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
                 <!-- Vehicle Image -->
-                <div class="relative aspect-video overflow-hidden">
+                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                     <img
                         src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                        class="h-full w-full object-cover transition-transform hover:scale-105"
+                        class="h-full w-full object-cover rounded-md"
                     />
                     @if($vehicle->dealer_id)
                     <!-- Dealer Label - Top Left -->
-                    <span class="absolute top-2 left-2 z-10 inline-flex items-center rounded-md bg-primary/90 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         Dealer
                     </span>
                     @endif
                     <!-- Heart Icon - Top Right (Filled) -->
-                    <button type="button" class="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }})" aria-label="Remove from favorites">
+                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Remove from favorites">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-red-500 heart-icon filled" data-vehicle-id="{{ $vehicle->id }}">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                         </svg>
@@ -46,9 +46,9 @@
                 </div>
                 
                 <!-- Vehicle Details -->
-                <div class="px-4 py-4 space-y-4">
+                <div class="p-3 space-y-4">
                     <div class="flex flex-col gap-1">
-                        <h3 class="flex items-center gap-2 text-lg font-bold">
+                        <h3 class="flex items-center gap-2 text-xs">
                             {{ $vehicle->title }}
                         </h3>
                         @if($vehicle->version)
@@ -56,7 +56,7 @@
                             {{ $vehicle->version }}
                         </p>
                         @endif
-                        <p class="text-primary text-lg font-bold">
+                        <p class="text-lg font-bold">
                             {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                         </p>
                     </div>
@@ -78,13 +78,14 @@
                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
                         @endif
                     </div>
+
                 </div>
             </a>
             
             <!-- Card Footer -->
             <div class="mt-auto" onclick="event.stopPropagation()">
                 <!-- Vehicle Actions -->
-                <div class="p-4 pt-2">
+                <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                         <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">

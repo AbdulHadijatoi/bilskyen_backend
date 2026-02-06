@@ -58,19 +58,12 @@ class EnquiryController extends Controller
 
     /**
      * Create a lead/enquiry for a vehicle
-     * Requires authentication (handled by middleware)
+     * Allows both authenticated and guest users
      */
     public function enquire(Request $request, int $id): JsonResponse
     {
-        // Get authenticated user (middleware ensures user is authenticated)
+        // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
-        
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized',
-            ], 401);
-        }
 
         // Find vehicle
         $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
@@ -123,10 +116,10 @@ class EnquiryController extends Controller
         // Get lead intent based on category
         $leadIntentId = $this->getLeadIntentId($categoryName);
 
-        // Create lead record
+        // Create lead record (buyer_user_id can be null for guest users)
         $lead = Lead::create([
             'vehicle_id' => $vehicle->id,
-            'buyer_user_id' => $user->id,
+            'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
             'lead_stage_id' => LeadStage::NEW,
             'lead_intent_id' => $leadIntentId,
@@ -136,9 +129,9 @@ class EnquiryController extends Controller
             'last_activity_at' => now(),
         ]);
 
-        // Log audit trail
+        // Log audit trail (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Lead',
                 $lead->id,
@@ -152,7 +145,7 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
                 'lead_id' => $lead->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
@@ -182,18 +175,12 @@ class EnquiryController extends Controller
 
     /**
      * Submit enquiry form and create lead
+     * Allows both authenticated and guest users
      */
     public function submitEnquiryForm(Request $request, int $id): JsonResponse
     {
-        // Get authenticated user (middleware ensures user is authenticated)
+        // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
-        
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized',
-            ], 401);
-        }
 
         // Validate form data
         $validated = $request->validate([
@@ -229,16 +216,16 @@ class EnquiryController extends Controller
         // Get lead intent based on category
         $leadIntentId = $this->getLeadIntentId('Enquiry Form Submission');
 
-        // Update user profile if name differs
-        if ($validated['name'] !== $user->name) {
+        // Update user profile if authenticated and name differs
+        if ($user && $validated['name'] !== $user->name) {
             $user->name = $validated['name'];
             $user->save();
         }
 
-        // Create lead record
+        // Create lead record (buyer_user_id can be null for guest users)
         $lead = Lead::create([
             'vehicle_id' => $vehicle->id,
-            'buyer_user_id' => $user->id,
+            'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
             'lead_stage_id' => LeadStage::NEW,
             'lead_intent_id' => $leadIntentId,
@@ -248,7 +235,7 @@ class EnquiryController extends Controller
             'last_activity_at' => now(),
         ]);
 
-        // Create enquiry record with the message details
+        // Create enquiry record with the message details (user_id can be null for guest users)
         $enquirySubject = 'Enquiry about ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
             'subject' => $enquirySubject,
@@ -256,13 +243,13 @@ class EnquiryController extends Controller
             'type' => Enquiries::TYPES[0], // 'General' as default
             'status' => Enquiries::STATUSES[0], // 'New' as default
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
         ]);
 
-        // Log audit trail for lead
+        // Log audit trail for lead (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Lead',
                 $lead->id,
@@ -276,14 +263,14 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
                 'lead_id' => $lead->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        // Log audit trail for enquiry
+        // Log audit trail for enquiry (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Enquiry',
                 $enquiry->id,
@@ -297,7 +284,7 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
                 'enquiry_id' => $enquiry->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
@@ -328,18 +315,12 @@ class EnquiryController extends Controller
 
     /**
      * Submit test drive request form and create lead + enquiry
+     * Allows both authenticated and guest users
      */
     public function submitTestDriveForm(Request $request, int $id): JsonResponse
     {
-        // Get authenticated user (middleware ensures user is authenticated)
+        // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
-        
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized',
-            ], 401);
-        }
 
         // Validate form data
         $validated = $request->validate([
@@ -375,16 +356,16 @@ class EnquiryController extends Controller
         // Get lead intent based on category
         $leadIntentId = $this->getLeadIntentId('Request Test Drive');
 
-        // Update user profile if name differs
-        if ($validated['name'] !== $user->name) {
+        // Update user profile if authenticated and name differs
+        if ($user && $validated['name'] !== $user->name) {
             $user->name = $validated['name'];
             $user->save();
         }
 
-        // Create lead record
+        // Create lead record (buyer_user_id can be null for guest users)
         $lead = Lead::create([
             'vehicle_id' => $vehicle->id,
-            'buyer_user_id' => $user->id,
+            'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
             'lead_stage_id' => LeadStage::NEW,
             'lead_intent_id' => $leadIntentId,
@@ -394,7 +375,7 @@ class EnquiryController extends Controller
             'last_activity_at' => now(),
         ]);
 
-        // Create enquiry record with type "Test Drive"
+        // Create enquiry record with type "Test Drive" (user_id can be null for guest users)
         $enquirySubject = 'Test Drive Request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
             'subject' => $enquirySubject,
@@ -402,13 +383,13 @@ class EnquiryController extends Controller
             'type' => 'Test Drive', // Use Test Drive type
             'status' => Enquiries::STATUSES[0], // 'New' as default
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
         ]);
 
-        // Log audit trail for lead
+        // Log audit trail for lead (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Lead',
                 $lead->id,
@@ -422,14 +403,14 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
                 'lead_id' => $lead->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        // Log audit trail for enquiry
+        // Log audit trail for enquiry (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Enquiry',
                 $enquiry->id,
@@ -443,7 +424,7 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
                 'enquiry_id' => $enquiry->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
@@ -474,18 +455,12 @@ class EnquiryController extends Controller
 
     /**
      * Submit price negotiation form and create lead + enquiry
+     * Allows both authenticated and guest users
      */
     public function submitPriceNegotiationForm(Request $request, int $id): JsonResponse
     {
-        // Get authenticated user (middleware ensures user is authenticated)
+        // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
-        
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized',
-            ], 401);
-        }
 
         // Validate form data
         $validated = $request->validate([
@@ -521,16 +496,16 @@ class EnquiryController extends Controller
         // Get lead intent based on category
         $leadIntentId = $this->getLeadIntentId('Price Negotiation Request');
 
-        // Update user profile if name differs
-        if ($validated['name'] !== $user->name) {
+        // Update user profile if authenticated and name differs
+        if ($user && $validated['name'] !== $user->name) {
             $user->name = $validated['name'];
             $user->save();
         }
 
-        // Create lead record
+        // Create lead record (buyer_user_id can be null for guest users)
         $lead = Lead::create([
             'vehicle_id' => $vehicle->id,
-            'buyer_user_id' => $user->id,
+            'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
             'lead_stage_id' => LeadStage::NEW,
             'lead_intent_id' => $leadIntentId,
@@ -540,7 +515,7 @@ class EnquiryController extends Controller
             'last_activity_at' => now(),
         ]);
 
-        // Create enquiry record with type "Price Enquiry"
+        // Create enquiry record with type "Price Enquiry" (user_id can be null for guest users)
         $enquirySubject = 'Price Negotiation for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
             'subject' => $enquirySubject,
@@ -548,13 +523,13 @@ class EnquiryController extends Controller
             'type' => 'Price Enquiry', // Use Price Enquiry type
             'status' => Enquiries::STATUSES[0], // 'New' as default
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
         ]);
 
-        // Log audit trail for lead
+        // Log audit trail for lead (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Lead',
                 $lead->id,
@@ -568,14 +543,14 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
                 'lead_id' => $lead->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        // Log audit trail for enquiry
+        // Log audit trail for enquiry (handles both authenticated and guest users)
         try {
-            $this->auditLogService->logCreate(
+            $this->auditLogService->logCreateForGuest(
                 $user,
                 'Enquiry',
                 $enquiry->id,
@@ -589,7 +564,7 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
                 'enquiry_id' => $enquiry->id,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'error' => $e->getMessage(),
             ]);
         }

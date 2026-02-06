@@ -183,6 +183,66 @@ class AuditLogService
     }
 
     /**
+     * Convenience method to log create operations for guest users
+     * Uses SYSTEM actor type when user is null
+     */
+    public function logCreateForGuest(
+        ?User $user,
+        string $targetType,
+        int $targetId,
+        array $payloadAfter,
+        Request $request,
+        ?string $relatedTargetType = null,
+        ?int $relatedTargetId = null,
+        ?string $description = null,
+        ?array $tags = null,
+        ?string $severity = 'info'
+    ): ?AuditLog {
+        try {
+            // If user is authenticated, use regular logCreate
+            if ($user) {
+                return $this->logCreate(
+                    $user,
+                    $targetType,
+                    $targetId,
+                    $payloadAfter,
+                    $request,
+                    $relatedTargetType,
+                    $relatedTargetId,
+                    $description,
+                    $tags,
+                    $severity
+                );
+            }
+            
+            // For guest users, use SYSTEM actor type
+            return $this->log(
+                0, // actor_id = 0 for system/guest actions
+                AuditActorType::SYSTEM,
+                'create',
+                $targetType,
+                $targetId,
+                null,
+                $payloadAfter,
+                $request,
+                $relatedTargetType,
+                $relatedTargetId,
+                $description,
+                $tags,
+                $severity,
+                null // dealer_id is null for guest users
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for guest create operation', [
+                'target_type' => $targetType,
+                'target_id' => $targetId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Convenience method to log update operations
      */
     public function logUpdate(

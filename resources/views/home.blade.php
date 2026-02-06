@@ -451,30 +451,36 @@
                         </svg>
                     </button>
                     
-                    <div class="featured-vehicles-scroll-container overflow-x-auto pb-4 -mx-4 px-4 scroll-smooth snap-x snap-mandatory" id="featured-vehicles-scroll">
-                        <div class="flex gap-6">
+                    <div class="featured-vehicles-scroll-container overflow-x-auto pb-4 -mx-4 scroll-smooth snap-x snap-mandatory" id="featured-vehicles-scroll">
+                        <div class="flex gap-3">
                             @foreach($featuredVehicles as $vehicle)
-                        <div class="featured-vehicle-card flex flex-col rounded-lg border border-border bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
+                        <div class="featured-vehicle-card flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
                             <a href="/vehicles/{{ $vehicle['id'] }}" class="block flex-1">
                                 <!-- Vehicle Image -->
-                                <div class="relative aspect-video overflow-hidden">
+                                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                                     <img
                                         src="{{ $vehicle['image'] }}"
                                         alt="{{ $vehicle['title'] }}"
-                                        class="h-full w-full object-cover"
+                                        class="h-full w-full object-cover rounded-md"
                                     />
                                     @if(isset($vehicle['dealer_id']) && $vehicle['dealer_id'])
                                     <!-- Dealer Label - Top Left -->
-                                    <span class="absolute top-2 left-2 z-10 inline-flex items-center rounded-md bg-primary/90 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                         Dealer
                                     </span>
                                     @endif
+                                    <!-- Heart Icon - Top Right -->
+                                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle['id'] }}, event); return false;" aria-label="Add to favorites">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-gray-700 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle['id'] }}">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                        </svg>
+                                    </button>
                                 </div>
                                 
                                 <!-- Vehicle Details -->
-                                <div class="px-4 py-4 space-y-4">
+                                <div class="p-3 space-y-4">
                                     <div class="flex flex-col gap-1">
-                                        <h3 class="flex items-center gap-2 text-lg font-bold">
+                                        <h3 class="flex items-center gap-2 text-xs">
                                             {{ $vehicle['title'] }}
                                         </h3>
                                         @if(!empty($vehicle['version']))
@@ -482,14 +488,14 @@
                                             {{ $vehicle['version'] }}
                                         </p>
                                         @endif
-                                        <p class="text-primary text-lg font-bold">
-                                            {{ number_format($vehicle['price'], 0, ',', '.') }} kr.
+                                        <p class="text-lg font-bold">
+                                            {{ \App\Helpers\FormatHelper::formatCurrency($vehicle['price'] ?? null) }}
                                         </p>
                                     </div>
 
                                     <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
                                         @if($vehicle['km_driven'])
-                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, ',', '.') }} km</span>
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, '.', ',') }} km</span>
                                         @endif
                                         @if($vehicle['engine_power_hp'])
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format(round($vehicle['engine_power_hp']), 0) }} HP</span>
@@ -514,7 +520,7 @@
                             <!-- Card Footer -->
                             <div class="mt-auto" onclick="event.stopPropagation()">
                                 <!-- Vehicle Actions -->
-                                <div class="p-4 pt-2">
+                                <div class="p-3 pt-0">
                                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                                         <a href="/vehicles/{{ $vehicle['id'] }}" class="flex-1" onclick="event.stopPropagation()">
                                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
@@ -1402,26 +1408,206 @@
             return getCookie('access_token') !== null;
         }
         
-        // Override openEnquiryDialog to check authentication first
-        const originalOpenEnquiryDialog = window.openEnquiryDialog;
-        window.openEnquiryDialog = function(type, vehicleId) {
-            // Check if user is authenticated
-            if (!isUserAuthenticated()) {
-                // Open login dialog with callback to open enquiry dialog after login
-                if (window.openLoginDialog) {
-                    window.openLoginDialog(() => {
-                        // After successful login (page will refresh), the enquiry dialog will be available
-                        // The user will need to click enquire again, but they'll be logged in
-                    });
+        // Load favorite status for all vehicles in batch
+        async function checkFavoritesBatch() {
+            const heartIcons = document.querySelectorAll('.heart-icon');
+            if (heartIcons.length === 0) return;
+
+            // Collect all vehicle IDs
+            const vehicleIds = [];
+            const iconMap = new Map(); // Map vehicle ID to icon element
+            
+            heartIcons.forEach(icon => {
+                const vehicleId = icon.getAttribute('data-vehicle-id');
+                if (vehicleId) {
+                    vehicleIds.push(parseInt(vehicleId));
+                    iconMap.set(parseInt(vehicleId), icon);
                 }
-                return;
+            });
+
+            if (vehicleIds.length === 0) return;
+
+            try {
+                // Make single batch API call
+                const response = await fetch('/favorites/check-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ vehicle_ids: vehicleIds })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.data) {
+                        // Update icons based on batch response
+                        Object.keys(data.data).forEach(vehicleIdStr => {
+                            const vehicleId = parseInt(vehicleIdStr);
+                            const isFavorited = data.data[vehicleId];
+                            const icon = iconMap.get(vehicleId);
+                            
+                            if (icon && isFavorited) {
+                                icon.classList.add('filled');
+                                icon.classList.remove('text-gray-700');
+                                icon.classList.add('text-red-500');
+                                const path = icon.querySelector('path');
+                                if (path) {
+                                    path.setAttribute('fill', 'currentColor');
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                // Silently fail if auth check fails or user is not authenticated
+                console.debug('Favorite check failed (user may not be authenticated):', error);
+            }
+        }
+        
+        // Toggle favorite function
+        window.toggleFavorite = async function(vehicleId, event) {
+            // Prevent any default behavior and stop propagation
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
             }
             
-            // User is authenticated, proceed with original function
-            if (originalOpenEnquiryDialog) {
-                originalOpenEnquiryDialog(type, vehicleId);
+            // Check if user is authenticated
+            if (!isUserAuthenticated()) {
+                // Open login dialog with callback to favorite after login
+                if (window.openLoginDialog) {
+                    window.openLoginDialog(() => {
+                        // After successful login, automatically favorite the vehicle
+                        window.toggleFavorite(vehicleId, event);
+                    });
+                }
+                return false;
             }
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            
+            try {
+                const heartIcon = document.querySelector(`.heart-icon[data-vehicle-id="${vehicleId}"]`);
+                if (!heartIcon) {
+                    console.error('Heart icon not found for vehicle:', vehicleId);
+                    return false;
+                }
+                
+                const path = heartIcon.querySelector('path');
+                const isFavorited = heartIcon.classList.contains('filled') || path?.getAttribute('fill') === 'currentColor';
+
+                if (isFavorited) {
+                    // Remove from favorites
+                    const response = await fetch(`/favorites/${vehicleId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        heartIcon.classList.remove('filled');
+                        heartIcon.classList.remove('text-red-500');
+                        heartIcon.classList.add('text-gray-700');
+                        if (path) path.setAttribute('fill', 'none');
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Removed from favorites', 'success');
+                        }
+                    } else {
+                        if (response.status === 401) {
+                            if (window.showSnackbar) {
+                                window.showSnackbar('Please login to manage favorites', 'error');
+                            }
+                            // Open login dialog instead of redirecting
+                            if (window.openLoginDialog) {
+                                window.openLoginDialog(() => {
+                                    window.toggleFavorite(vehicleId, event);
+                                });
+                            } else {
+                                setTimeout(() => {
+                                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                                }, 1500);
+                            }
+                            return false;
+                        }
+                        const data = await response.json().catch(() => ({}));
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Failed to remove from favorites', 'error');
+                        }
+                    }
+                } else {
+                    // Add to favorites
+                    const response = await fetch('/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ vehicle_id: vehicleId }),
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        heartIcon.classList.add('filled');
+                        heartIcon.classList.remove('text-gray-700');
+                        heartIcon.classList.add('text-red-500');
+                        if (path) path.setAttribute('fill', 'currentColor');
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                        }
+                    } else {
+                        if (response.status === 401) {
+                            if (window.showSnackbar) {
+                                window.showSnackbar('Please login to save favorites', 'error');
+                            }
+                            // Open login dialog instead of redirecting
+                            if (window.openLoginDialog) {
+                                window.openLoginDialog(() => {
+                                    window.toggleFavorite(vehicleId, event);
+                                });
+                            } else {
+                                setTimeout(() => {
+                                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                                }, 1500);
+                            }
+                            return false;
+                        }
+                        const data = await response.json().catch(() => ({}));
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Failed to save to favorites', 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling favorite:', error);
+                if (window.showSnackbar) {
+                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                }
+            }
+            
+            return false;
         };
+        
+        // openEnquiryDialog is available globally from layouts/app.blade.php
+        // No authentication check needed - guests can submit enquiries
+        
+        // Load favorite status on page load
+        (async function() {
+            await checkFavoritesBatch();
+        })();
     })();
 </script>
 @endpush

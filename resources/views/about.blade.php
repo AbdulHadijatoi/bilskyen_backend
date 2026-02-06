@@ -193,7 +193,7 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="bg-primary text-primary-foreground py-16">
+    <section class="bg-muted py-16">
         <div class="container mx-auto px-4 md:px-6 text-center">
             <h2 class="text-3xl font-bold">Join the Revolution</h2>
             <p class="text-primary-foreground/90 mx-auto mt-4 max-w-2xl text-lg">
@@ -201,10 +201,12 @@
                 features or get in touch with our team today.
             </p>
             <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-                <a href="/vehicles" class="inline-flex h-10 items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                <a href="/vehicles"
+                   class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     Explore Vehicles
                 </a>
-                <a href="/contact" class="inline-flex h-10 items-center justify-center rounded-md border border-primary-foreground bg-transparent px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                <a href="/contact"
+                   class="inline-flex h-10 items-center justify-center rounded-md border border-primary px-8 text-sm font-medium bg-muted text-primary hover:bg-primary hover:text-primary-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     Contact Us
                 </a>
             </div>
