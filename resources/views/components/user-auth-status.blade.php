@@ -8,8 +8,16 @@
     // Check user roles using Spatie Permission
     $hasAdminRole = $user?->hasRole('admin') ?? false;
     $hasDealerRole = $user?->hasRole('dealer') ?? false;
+    $hasSellerRole = $user?->hasRole('seller') ?? false;
     $showPanelButton = $hasAdminRole || $hasDealerRole;
     $panelButtonText = $hasAdminRole ? 'Admin Panel' : 'Dealer Panel';
+    
+    // Generate seller token if user is a seller
+    $sellerToken = null;
+    if ($hasSellerRole && $user) {
+        $sellerTokenService = app(\App\Services\SellerTokenService::class);
+        $sellerToken = $sellerTokenService->generateToken($user);
+    }
 @endphp
 
     <div class="flex items-center gap-2 md:gap-3">

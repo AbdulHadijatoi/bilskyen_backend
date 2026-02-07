@@ -80,6 +80,15 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
     Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
     Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
+    
+    // Seller Dashboard Routes (Private with encrypted token)
+    Route::get('/seller-dashboard/{token}', [\App\Http\Controllers\SellerController::class, 'dashboard'])->name('seller.dashboard');
+    Route::get('/seller-dashboard/{token}/vehicle/{id}/edit', [\App\Http\Controllers\SellerController::class, 'edit'])->name('seller.vehicle.edit');
+    Route::post('/seller-dashboard/{token}/vehicle/{id}/update', [\App\Http\Controllers\SellerController::class, 'update'])->name('seller.vehicle.update');
+    Route::post('/seller-dashboard/{token}/vehicle/{id}/unpublish', [\App\Http\Controllers\SellerController::class, 'unpublish'])->name('seller.vehicle.unpublish');
+    Route::delete('/seller-dashboard/{token}/vehicle/{id}', [\App\Http\Controllers\SellerController::class, 'destroy'])->name('seller.vehicle.destroy');
+    Route::post('/seller-dashboard/{token}/vehicle/{id}/status', [\App\Http\Controllers\SellerController::class, 'updateStatus'])->name('seller.vehicle.status');
+    Route::get('/seller-dashboard/{token}/vehicle/{id}/inquiries', [\App\Http\Controllers\SellerController::class, 'getInquiries'])->name('seller.vehicle.inquiries');
 });
 
 // About Page

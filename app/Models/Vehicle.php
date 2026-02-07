@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Enquiry;
 
 class Vehicle extends Model
 {
@@ -282,6 +283,14 @@ class Vehicle extends Model
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);
+    }
+
+    /**
+     * Get enquiries for this vehicle
+     */
+    public function enquiries(): HasMany
+    {
+        return $this->hasMany(Enquiry::class);
     }
 
     /**

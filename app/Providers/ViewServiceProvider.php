@@ -33,6 +33,25 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
 
+        // Share authenticated user data to navbar component
+        View::composer('components.navbar', function ($view) {
+            $authService = app(AuthService::class);
+            $user = $authService->getAuthenticatedUser(request());
+            
+            // Generate seller token if user is a seller
+            $sellerToken = null;
+            if ($user && $user->hasRole('seller')) {
+                $sellerTokenService = app(\App\Services\SellerTokenService::class);
+                $sellerToken = $sellerTokenService->generateToken($user);
+            }
+            
+            $view->with([
+                'user' => $user,
+                'hasSellerRole' => $user?->hasRole('seller') ?? false,
+                'sellerToken' => $sellerToken,
+            ]);
+        });
+
         // Share authenticated user data to dealer sidebar component
         // View::composer('components.dealer.sidebar', function ($view) {
         //     $authService = app(AuthService::class);

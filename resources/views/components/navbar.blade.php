@@ -12,6 +12,9 @@
                     <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
                     <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">About Us</a>
                     <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Contact</a>
+                    @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
+                    <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">My Listings</a>
+                    @endif
                 </nav>
                 <div class="flex items-center gap-2">
                     @include('components.user-auth-status')
@@ -31,6 +34,9 @@
                 <a href="/vehicles" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Vehicles</a>
                 <a href="/about" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">About Us</a>
                 <a href="/contact" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Contact</a>
+                @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
+                <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">My Listings</a>
+                @endif
             </div>
         </nav>
     </div>
