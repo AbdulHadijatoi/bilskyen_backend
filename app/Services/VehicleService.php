@@ -128,7 +128,7 @@ class VehicleService
             'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
             'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
             'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-            'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+            'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
             'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
             'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
         ];
@@ -395,7 +395,7 @@ class VehicleService
                 'leasing_period_end', 'use_id', 'color_id', 'body_type_id', 'variant_id',
                 'dispensations', 'permits', 'ncap_five', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
-                'sales_type_id', 'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+                'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
                 'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
                 'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
             ];
@@ -652,6 +652,88 @@ class VehicleService
             $query->where('vehicle_list_status_id', $filters['vehicle_list_status_id']);
         }
 
+        $this->applySorting($query, $filters['sort'] ?? 'standard');
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Get public dealer vehicles (published only) with filters
+     * Similar to getPublicVehicles but filtered by dealer_id
+     * 
+     * @param int $dealerId
+     * @param array $filters
+     * @param int $perPage
+     * @param int $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getPublicDealerVehicles(int $dealerId, array $filters = [], int $perPage = 15, int $page = 1)
+    {
+        $query = Vehicle::query()
+            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->where('dealer_id', $dealerId)
+            ->with(['images' => function ($query) {
+                $query->orderBy('sort_order');
+            }, 'details', 'dealer']);
+
+        // Search filter
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('registration', 'like', "%{$search}%")
+                  ->orWhere('vin', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        // Brand filter
+        if (!empty($filters['brand_id'])) {
+            $query->where('brand_id', $filters['brand_id']);
+        }
+
+        // Model filter
+        if (!empty($filters['model_id'])) {
+            $query->where('model_id', $filters['model_id']);
+        }
+
+        // Model Year filter
+        if (!empty($filters['model_year_id'])) {
+            $query->where('model_year_id', $filters['model_year_id']);
+        }
+
+        // Fuel Type filter (supports array for multiple values)
+        if (!empty($filters['fuel_type_id'])) {
+            if (is_array($filters['fuel_type_id'])) {
+                $query->whereIn('fuel_type_id', $filters['fuel_type_id']);
+            } else {
+                $query->where('fuel_type_id', $filters['fuel_type_id']);
+            }
+        }
+
+        // Kilometers Driven filter
+        if (!empty($filters['km_driven'])) {
+            $query->where('km_driven', $filters['km_driven']);
+        }
+
+        // Price range filter (exclude 0 values)
+        if (!empty($filters['price_from']) && $filters['price_from'] > 0) {
+            $query->where('price', '>=', $filters['price_from']);
+        }
+        if (!empty($filters['price_to']) && $filters['price_to'] > 0) {
+            $query->where('price', '<=', $filters['price_to']);
+        }
+
+        // Listing Type filter
+        if (!empty($filters['listing_type_id'])) {
+            $query->where('listing_type_id', $filters['listing_type_id']);
+        }
+
+        // Apply sorting
         $this->applySorting($query, $filters['sort'] ?? 'standard');
 
         return $query->paginate($perPage, ['*'], 'page', $page);

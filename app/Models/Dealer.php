@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Dealer extends Model
 {
@@ -14,6 +15,7 @@ class Dealer extends Model
 
     protected $fillable = [
         'user_id',
+        'slug',
         'cvr',
         'address',
         'city',
@@ -89,5 +91,25 @@ class Dealer extends Model
     public function planAvailability(): HasMany
     {
         return $this->hasMany(PlanAvailability::class);
+    }
+
+    /**
+     * Generate slug from owner's name if not provided
+     */
+    public function setSlugAttribute($value): void
+    {
+        if (empty($value) && $this->owner && !empty($this->owner->name)) {
+            $this->attributes['slug'] = Str::slug($this->owner->name);
+        } else {
+            $this->attributes['slug'] = $value;
+        }
+    }
+
+    /**
+     * Scope to find dealer by slug
+     */
+    public function scopeFindBySlug($query, string $slug)
+    {
+        return $query->where('slug', $slug)->first();
     }
 }

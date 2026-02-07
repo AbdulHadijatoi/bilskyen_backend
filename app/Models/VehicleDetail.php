@@ -68,8 +68,6 @@ class VehicleDetail extends Model
         'condition_id',
         'sales_type_id',
         'seller_phone',
-        'seller_address',
-        'seller_postcode',
         'annual_tax',
         'owners',
         'production_date',

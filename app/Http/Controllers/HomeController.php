@@ -95,6 +95,8 @@ class HomeController extends Controller
                     'gear_type_name' => $vehicle->gear_type_name,
                     'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                     'dealer_id' => $vehicle->dealer_id,
+                    'seller_address' => $vehicle->seller_address,
+                    'seller_postcode' => $vehicle->seller_postcode,
                 ];
             })
             ->filter() // Remove null entries
@@ -295,6 +297,8 @@ class HomeController extends Controller
                     'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                     'engine_power_hp' => $vehicle->engine_power_hp,
                     'seller_type' => $sellerType,
+                    'seller_address' => $vehicle->seller_address,
+                    'seller_postcode' => $vehicle->seller_postcode,
                     'dealer_id' => $vehicle->dealer_id,
                     'image_url' => $imageUrl,
                     'thumbnail_url' => $firstImage?->thumbnail_url ?? null,

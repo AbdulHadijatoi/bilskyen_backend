@@ -322,7 +322,7 @@ class SellYourCarController extends Controller
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'fuel_efficiency'
+                'ownership_tax', 'fuel_efficiency', 'seller_address', 'seller_postcode'
             ]);
             
             // Set vehicle_list_status_id automatically to 2 (ignore any value from frontend)
@@ -398,7 +398,7 @@ class SellYourCarController extends Controller
                 'leasing_period_end', 'color_id', 'dispensations',
                 'permits', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog',
-                'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners',
+                'seller_phone', 'annual_tax', 'owners',
                 'transmission_id', 'transmission_name'
             ];
 

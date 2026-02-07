@@ -222,7 +222,7 @@
 
                     <!-- Model Dropdown -->
                     <div class="relative flex-1" data-dropdown="model">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <button type="button" id="model-dropdown-button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                             <span class="dropdown-selected">Model</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -483,7 +483,7 @@
                                 </div>
                                 
                                 <!-- Vehicle Details -->
-                                <div class="p-3 space-y-4">
+                                <div class="p-3 space-y-1">
                                     <div class="flex flex-col gap-1">
                                         <h3 class="flex items-center gap-2 text-xs">
                                             {{ $vehicle['title'] }}
@@ -498,7 +498,7 @@
                                         </p>
                                     </div>
 
-                                    <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                    <div class="flex flex-wrap gap-1 text-xs font-light">
                                         @if($vehicle['km_driven'])
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, '.', ',') }} km</span>
                                         @endif
@@ -524,6 +524,21 @@
                             
                             <!-- Card Footer -->
                             <div class="mt-auto" onclick="event.stopPropagation()">
+                                @if((isset($vehicle['seller_address']) && $vehicle['seller_address']) || (isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']))
+                                <div class="px-3 pt-3 pb-2">
+                                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
+                                        <span class="truncate text-right">
+                                            @if(isset($vehicle['seller_address']) && $vehicle['seller_address']){{ $vehicle['seller_address'] }}@endif
+                                            @if(isset($vehicle['seller_address']) && $vehicle['seller_address'] && isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']), @endif
+                                            @if(isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']){{ $vehicle['seller_postcode'] }}@endif
+                                        </span>
+                                    </div>
+                                </div>
+                                @endif
                                 <!-- Vehicle Actions -->
                                 <div class="p-3 pt-0">
                                     <div class="flex w-full flex-col gap-2 sm:flex-row">
@@ -838,6 +853,10 @@
             // Toggle menu
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Don't open if button is disabled (for model dropdown)
+                if (button.disabled) {
+                    return;
+                }
                 // Close all other dropdowns
                 dropdowns.forEach(d => {
                     if (d !== dropdown) {
@@ -972,22 +991,45 @@
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (!modelDropdown) return;
         
+        const modelButton = document.getElementById('model-dropdown-button');
         const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
         const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
+        const selectedText = modelDropdown.querySelector('.dropdown-selected');
         const searchInput = modelDropdown.querySelector('.dropdown-search');
         const searchTerm = searchInput?.value.toLowerCase() || '';
+        const modelInput = modelDropdown.querySelector('.dropdown-input');
         
-        if (brandId === '') {
-            // Show all models (respecting search if any)
+        if (brandId === '' || !brandId) {
+            // No brand selected - disable model dropdown
+            if (modelButton) {
+                modelButton.disabled = true;
+            }
+            if (selectedText) {
+                selectedText.textContent = 'Model';
+            }
+            if (modelInput) {
+                modelInput.value = '';
+            }
+            
+            // Hide all model options
             modelOptions.forEach(option => {
-                const text = option.textContent.toLowerCase();
-                if (searchTerm) {
-                    option.style.display = text.includes(searchTerm) ? '' : 'none';
-                } else {
-                    option.style.display = '';
-                }
+                option.style.display = 'none';
             });
+            
+            // Close dropdown if open
+            const menu = modelDropdown.querySelector('.dropdown-menu');
+            if (menu) {
+                menu.classList.add('hidden');
+            }
         } else {
+            // Brand selected - enable model dropdown
+            if (modelButton) {
+                modelButton.disabled = false;
+            }
+            if (selectedText && !modelInput?.value) {
+                selectedText.textContent = 'Model';
+            }
+            
             // Show only models for selected brand (respecting search if any)
             modelOptions.forEach(option => {
                 const optionBrandId = option.getAttribute('data-brand-id');
@@ -1003,22 +1045,22 @@
             });
             
             // Reset model selection if current selection doesn't match brand
-            const modelInput = modelDropdown.querySelector('.dropdown-input');
-            const selectedModelOption = Array.from(modelOptions).find(opt => 
-                opt.getAttribute('data-value') === modelInput?.value
-            );
-            if (selectedModelOption) {
-                const optionBrandId = selectedModelOption.getAttribute('data-brand-id');
-                if (optionBrandId !== brandId && brandId !== '') {
-                    if (modelInput) modelInput.value = '';
-                    const selectedText = modelDropdown.querySelector('.dropdown-selected');
-                    if (selectedText) selectedText.textContent = 'Model';
+            if (modelInput?.value) {
+                const selectedModelOption = Array.from(modelOptions).find(opt => 
+                    opt.getAttribute('data-value') === modelInput.value
+                );
+                if (selectedModelOption) {
+                    const optionBrandId = selectedModelOption.getAttribute('data-brand-id');
+                    if (optionBrandId !== brandId) {
+                        if (modelInput) modelInput.value = '';
+                        if (selectedText) selectedText.textContent = 'Model';
+                    }
                 }
             }
         }
         
-        // Always show the default "All Models" option
-        if (defaultOption) {
+        // Always show the default "All Models" option when brand is selected
+        if (defaultOption && brandId) {
             defaultOption.style.display = '';
         }
     }
@@ -1291,14 +1333,14 @@
             updateKmSlider();
         }
         
-        // Reset model dropdown options visibility (show all models)
+        // Reset model dropdown - disable it since no brand is selected
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (modelDropdown) {
             const modelSearchInput = modelDropdown.querySelector('.dropdown-search');
             if (modelSearchInput) {
                 modelSearchInput.value = '';
             }
-            // Call filterModelsByBrand with empty brand to show all models
+            // Call filterModelsByBrand with empty brand to disable dropdown
             filterModelsByBrand('');
         }
     }
@@ -1312,6 +1354,11 @@
     // Initialize everything
     initSearchableDropdowns();
     initDropdownRangeSliders();
+    
+    // Initialize model dropdown state on page load
+    const brandInput = document.querySelector('[data-dropdown="brand"] .dropdown-input');
+    const initialBrandId = brandInput?.value || '';
+    filterModelsByBrand(initialBrandId);
     </script>
     
     <!-- Featured Vehicles Navigation Script -->

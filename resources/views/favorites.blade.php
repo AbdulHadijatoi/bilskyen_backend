@@ -51,7 +51,7 @@
                 </div>
                 
                 <!-- Vehicle Details -->
-                <div class="p-3 space-y-4">
+                <div class="p-3 space-y-1">
                     <div class="flex flex-col gap-1">
                         <h3 class="flex items-center gap-2 text-xs">
                             {{ $vehicle->title }}
@@ -66,7 +66,7 @@
                         </p>
                     </div>
 
-                    <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                    <div class="flex flex-wrap gap-1 text-xs font-light">
                         @if($vehicle->mileage || $vehicle->km_driven)
                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
                         @endif
@@ -89,6 +89,21 @@
             
             <!-- Card Footer -->
             <div class="mt-auto" onclick="event.stopPropagation()">
+                @if($vehicle->seller_address || $vehicle->seller_postcode)
+                <div class="px-3 pt-3 pb-2">
+                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="truncate text-right">
+                            @if($vehicle->seller_address){{ $vehicle->seller_address }}@endif
+                            @if($vehicle->seller_address && $vehicle->seller_postcode), @endif
+                            @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif
+                        </span>
+                    </div>
+                </div>
+                @endif
                 <!-- Vehicle Actions -->
                 <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">

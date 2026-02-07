@@ -1,0 +1,1417 @@
+@extends('layouts.app')
+
+@section('title', ($dealer->owner?->name ?? 'Dealer') . ' | Bilskyen')
+
+@php
+    use App\Helpers\FormatHelper;
+@endphp
+
+@section('content')
+<div class="bg-muted min-h-screen">
+    <div class="container mx-auto space-y-4 py-6">
+        <!-- Top Section: Dealer Info + Filters (Full Row) -->
+        <div class="rounded-lg bg-card p-6">
+            <!-- Dealer Information -->
+            <div class="flex flex-col md:flex-row gap-6 items-start md:items-center mb-6">
+                <!-- Dealer Logo -->
+                @if($dealer->logo_url)
+                <div class="flex-shrink-0">
+                    <img src="{{ $dealer->logo_url }}" alt="{{ $dealer->owner?->name ?? 'Dealer' }}" class="h-32 w-auto object-contain rounded-md">
+                </div>
+                @endif
+                
+                <!-- Dealer Details -->
+                <div class="flex-1 space-y-2">
+                    <div class="flex items-start justify-between gap-4">
+                        <h1 class="text-3xl font-bold text-foreground">{{ $dealer->owner?->name ?? 'Dealer' }}</h1>
+                        <button 
+                            type="button"
+                            onclick="openDealerEnquiryDialog()"
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Send Enquiry
+                        </button>
+                    </div>
+                    @if($dealer->cvr)
+                    <p class="text-muted-foreground">CVR: {{ $dealer->cvr }}</p>
+                    @endif
+                    @if($dealer->address || $dealer->city || $dealer->postcode)
+                    <div class="flex items-center gap-2 text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>
+                            @if($dealer->address){{ $dealer->address }}, @endif
+                            @if($dealer->postcode){{ $dealer->postcode }} @endif
+                            @if($dealer->city){{ $dealer->city }}@endif
+                        </span>
+                    </div>
+                    @endif
+                    @if($dealer->owner && $dealer->owner->phone)
+                    <div class="flex items-center gap-2 text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <span>{{ $dealer->owner->phone }}</span>
+                    </div>
+                    @endif
+                    @if($dealer->owner && $dealer->owner->email)
+                    <div class="flex items-center gap-2 text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
+                        <span>{{ $dealer->owner->email }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Search/Filter Section -->
+            <div class="border-t border-border pt-4">
+            <form id="search-form" class="flex flex-col sm:flex-row gap-3 items-end">
+                <!-- Search Input -->
+                <div class="relative flex-1 w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search-input"
+                        value="{{ request()->query('search', '') }}"
+                        placeholder="Search by make, model..."
+                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="w-full sm:w-auto sm:min-w-[150px]">
+                    <select 
+                        name="brand_id"
+                        id="brand-select"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        <option value="">All Brands</option>
+                        @foreach($filterOptions['brands'] as $brand)
+                        <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Model Filter -->
+                <div class="w-full sm:w-auto sm:min-w-[150px]">
+                    <select 
+                        name="model_id" 
+                        id="model-select"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                        @if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) disabled @endif
+                    >
+                        <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) Model @else All Models @endif</option>
+                        @foreach($filterOptions['models'] as $model)
+                        <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Sort -->
+                <div class="w-full sm:w-auto sm:min-w-[150px]">
+                    <select 
+                        name="sort"
+                        id="sort-select"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        <option value="standard" @if(!isset($currentFilters['sort']) || $currentFilters['sort'] == 'standard') selected @endif>Newest First</option>
+                        <option value="price_asc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_asc') selected @endif>Price: Lowest First</option>
+                        <option value="price_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_desc') selected @endif>Price: Highest First</option>
+                        <option value="date_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'date_desc') selected @endif>Date: Newest First</option>
+                        <option value="year_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'year_desc') selected @endif>Year: Newest First</option>
+                    </select>
+                </div>
+
+                <button 
+                    type="submit"
+                    class="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
+                >
+                    Apply Filters
+                </button>
+            </form>
+            </div>
+        </div>
+
+        <!-- Vehicle Listings Section (Full Width) -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-md text-foreground">Our Vehicles</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-muted-foreground text-sm">{{ $vehicles->total() }} vehicles</span>
+                    <!-- View Toggle Buttons -->
+                    <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                        <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-white text-foreground font-semibold">
+                            <input 
+                                type="radio" 
+                                name="view-toggle" 
+                                value="card"
+                                class="sr-only peer view-toggle-radio"
+                                checked
+                            >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                                <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                                <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                                <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                            </svg>
+                        </label>
+                        <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-gray-150 text-muted-foreground hover:text-foreground">
+                            <input 
+                                type="radio" 
+                                name="view-toggle" 
+                                value="list"
+                                class="sr-only peer view-toggle-radio"
+                            >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <line x1="8" x2="21" y1="6" y2="6"></line>
+                                <line x1="8" x2="21" y1="12" y2="12"></line>
+                                <line x1="8" x2="21" y1="18" y2="18"></line>
+                                <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                                <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                                <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                            </svg>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Vehicle Grid/List -->
+        <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-view="card">
+                @forelse($vehicles as $vehicle)
+                <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full shadow-sm">
+                    <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
+                        <!-- Vehicle Image -->
+                        <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                            <img
+                                src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
+                                alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
+                                class="h-full w-full object-cover rounded-md"
+                            />
+                            <!-- Heart Icon - Top Right -->
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Vehicle Details -->
+                        <div class="p-3 space-y-4">
+                            <div class="flex flex-col gap-1">
+                                <h3 class="flex items-center gap-2 text-xs">
+                                    {{ $vehicle->title }}
+                                </h3>
+                                @if($vehicle->version)
+                                <p class="text-muted-foreground text-xs font-normal">
+                                    {{ $vehicle->version }}
+                                </p>
+                                @endif
+                                <p class="text-lg font-bold">
+                                    {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
+                                </p>
+                            </div>
+
+                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                @if($vehicle->mileage || $vehicle->km_driven)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
+                                @endif
+                                @if($vehicle->engine_power_hp)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
+                                @endif
+                                @if($vehicle->first_registration_date)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
+                                @endif
+                                @if($vehicle->fuel_type_name)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ $vehicle->fuel_type_name }}</span>
+                                @endif
+                                @if($vehicle->gear_type_name)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ $vehicle->gear_type_name }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Card Footer -->
+                    <div class="mt-auto" onclick="event.stopPropagation()">
+                        @if($vehicle->seller_address || $vehicle->seller_postcode)
+                        <div class="px-3 pt-3 pb-2">
+                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="truncate text-right">
+                                    @if($vehicle->seller_address){{ $vehicle->seller_address }}@endif
+                                    @if($vehicle->seller_address && $vehicle->seller_postcode), @endif
+                                    @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif
+                                </span>
+                            </div>
+                        </div>
+                        @endif
+                        <div class="p-3 pt-0">
+                            <div class="flex w-full flex-col gap-2 sm:flex-row">
+                                <a href="/vehicles/{{ $vehicle->id }}" class="flex-1">
+                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90">
+                                        View Details
+                                    </button>
+                                </a>
+                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }});">
+                                    Enquire
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-span-full flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center justify-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">No vehicles found</h3>
+                        <p class="text-muted-foreground mt-1">
+                            This dealer doesn't have any published vehicles yet.
+                        </p>
+                    </div>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($vehicles->hasPages())
+            <div class="flex items-center justify-center gap-2">
+                @if($vehicles->onFirstPage())
+                <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
+                    Previous
+                </button>
+                @else
+                <a href="{{ $vehicles->previousPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
+                    Previous
+                </a>
+                @endif
+
+                <span class="px-4 py-2 text-sm text-muted-foreground">
+                    Page {{ $vehicles->currentPage() }} of {{ $vehicles->lastPage() }}
+                </span>
+
+                @if($vehicles->hasMorePages())
+                <a href="{{ $vehicles->nextPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
+                    Next
+                </a>
+                @else
+                <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
+                    Next
+                </button>
+                @endif
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Dealer Enquiry Dialog -->
+<div id="dealer-enquiry-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="dealer-enquiry-dialog-title">
+    <!-- Backdrop -->
+    <div 
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onclick="closeDealerEnquiryDialog()"
+        aria-hidden="true"
+    ></div>
+    
+    <!-- Modal Container -->
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+                <div class="flex-1">
+                    <h2 id="dealer-enquiry-dialog-title" class="text-xl font-semibold text-foreground">
+                        Send Enquiry
+                    </h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        Submit your enquiry about {{ $dealer->owner?->name ?? 'this dealer' }}. We'll get back to you as soon as possible.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onclick="closeDealerEnquiryDialog()"
+                    class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Close dialog"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto flex-1 px-6 py-4">
+                <!-- Dealer Information Card -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <h3 class="text-foreground text-sm font-semibold mb-3">Dealer Information</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-xs text-muted-foreground">Dealer</span>
+                            <p class="text-foreground font-medium text-sm">{{ $dealer->owner?->name ?? 'Dealer' }}</p>
+                        </div>
+                        @if($dealer->cvr)
+                        <div>
+                            <span class="text-xs text-muted-foreground">CVR</span>
+                            <p class="text-foreground font-medium text-sm">{{ $dealer->cvr }}</p>
+                        </div>
+                        @endif
+                        @if($dealer->address || $dealer->city || $dealer->postcode)
+                        <div class="sm:col-span-2">
+                            <span class="text-xs text-muted-foreground">Address</span>
+                            <p class="text-foreground font-medium text-sm">
+                                @if($dealer->address){{ $dealer->address }}, @endif
+                                @if($dealer->postcode){{ $dealer->postcode }} @endif
+                                @if($dealer->city){{ $dealer->city }}@endif
+                            </p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-foreground text-sm font-semibold mb-4">Your Details</h3>
+                    <form id="dealer-enquiry-form" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="dealer_slug" value="{{ $dealer->slug }}">
+
+                        <!-- Error Display Container -->
+                        <div id="dealer-form-errors" class="hidden w-full rounded-md border border-red-200 bg-red-50 p-3 mb-4">
+                            <ul id="dealer-error-list" class="list-disc list-inside text-sm text-red-800"></ul>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div id="dealer-success-message" class="hidden w-full rounded-md border border-green-200 bg-green-50 p-3 mb-4">
+                            <p class="text-sm text-green-800"></p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="dealer-enquiry-name" class="text-sm font-medium leading-none">
+                                Full Name <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="dealer-enquiry-name" 
+                                name="name" 
+                                required
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your full name"
+                            >
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="dealer-enquiry-email" class="text-sm font-medium leading-none">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                id="dealer-enquiry-email" 
+                                name="email" 
+                                required
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your email address"
+                            >
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="dealer-enquiry-phone" class="text-sm font-medium leading-none">
+                                Phone Number
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="dealer-enquiry-phone" 
+                                name="phone" 
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your phone number (optional)"
+                            >
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="dealer-enquiry-message" class="text-sm font-medium leading-none">
+                                Message <span class="text-red-500">*</span>
+                            </label>
+                            <textarea 
+                                id="dealer-enquiry-message" 
+                                name="message" 
+                                required
+                                rows="5"
+                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Tell us about your enquiry..."
+                            ></textarea>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button 
+                                type="submit" 
+                                id="dealer-submit-btn"
+                                class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            >
+                                <span id="dealer-submit-text">Submit Enquiry</span>
+                                <svg id="dealer-submit-spinner" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                type="button"
+                                onclick="closeDealerEnquiryDialog()"
+                                class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dealer Enquiry Dialog Functions
+    window.openDealerEnquiryDialog = function() {
+        const dialog = document.getElementById('dealer-enquiry-dialog');
+        if (dialog) {
+            dialog.classList.remove('hidden');
+            dialog.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            // Focus on first input
+            const firstInput = dialog.querySelector('input[type="text"]');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+        }
+    };
+
+    window.closeDealerEnquiryDialog = function() {
+        const dialog = document.getElementById('dealer-enquiry-dialog');
+        if (dialog) {
+            dialog.classList.add('hidden');
+            dialog.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Handle ESC key to close dialog
+    const dialog = document.getElementById('dealer-enquiry-dialog');
+    if (dialog) {
+        dialog.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDealerEnquiryDialog();
+            }
+        });
+    }
+
+    // Dealer Enquiry Form
+    const enquiryForm = document.getElementById('dealer-enquiry-form');
+    if (enquiryForm) {
+        enquiryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('dealer-submit-btn');
+            const submitText = document.getElementById('dealer-submit-text');
+            const submitSpinner = document.getElementById('dealer-submit-spinner');
+            const errorContainer = document.getElementById('dealer-form-errors');
+            const errorList = document.getElementById('dealer-error-list');
+            const successMessage = document.getElementById('dealer-success-message');
+
+            // Hide previous messages
+            if (errorContainer) errorContainer.classList.add('hidden');
+            if (successMessage) successMessage.classList.add('hidden');
+            if (errorList) errorList.innerHTML = '';
+
+            // Disable submit button
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitText) submitText.textContent = 'Submitting...';
+            if (submitSpinner) submitSpinner.classList.remove('hidden');
+
+            // Get form data
+            const formData = new FormData(enquiryForm);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                message: formData.get('message'),
+            };
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const dealerSlug = formData.get('dealer_slug');
+
+            try {
+                const response = await fetch(`/dealer-${dealerSlug}/enquire`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data),
+                    credentials: 'same-origin'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Show validation errors
+                    if (result.errors && errorList) {
+                        const errors = result.errors;
+                        for (const field in errors) {
+                            const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                            fieldErrors.forEach(error => {
+                                const li = document.createElement('li');
+                                li.textContent = error;
+                                errorList.appendChild(li);
+                            });
+                        }
+                        if (errorContainer) errorContainer.classList.remove('hidden');
+                    } else {
+                        const errorMsg = result.message || 'Failed to submit enquiry. Please try again.';
+                        if (window.showSnackbar) {
+                            window.showSnackbar(errorMsg, 'error');
+                        } else if (errorList) {
+                            errorList.innerHTML = `<li>${errorMsg}</li>`;
+                            if (errorContainer) errorContainer.classList.remove('hidden');
+                        }
+                    }
+                } else {
+                    // Success
+                    const successMsg = result.message || 'Your enquiry has been submitted successfully!';
+                    if (successMessage) {
+                        successMessage.querySelector('p').textContent = successMsg;
+                        successMessage.classList.remove('hidden');
+                    }
+                    
+                    // Reset form
+                    enquiryForm.reset();
+                    
+                    // Show snackbar
+                    if (window.showSnackbar) {
+                        window.showSnackbar(successMsg, 'success');
+                    }
+
+                    // Close dialog after 2 seconds
+                    setTimeout(() => {
+                        closeDealerEnquiryDialog();
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error submitting enquiry:', error);
+                const errorMsg = 'An error occurred. Please try again.';
+                if (window.showSnackbar) {
+                    window.showSnackbar(errorMsg, 'error');
+                } else if (errorList) {
+                    errorList.innerHTML = `<li>${errorMsg}</li>`;
+                    if (errorContainer) errorContainer.classList.remove('hidden');
+                }
+            } finally {
+                // Re-enable submit button
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitText) submitText.textContent = 'Submit Enquiry';
+                if (submitSpinner) submitSpinner.classList.add('hidden');
+            }
+        });
+    }
+
+    // Search form - filter models by brand
+    const brandSelect = document.getElementById('brand-select');
+    const modelSelect = document.getElementById('model-select');
+    
+    if (brandSelect && modelSelect) {
+        function updateModelDropdown() {
+            const selectedBrandId = brandSelect.value;
+            const modelOptions = modelSelect.querySelectorAll('option[data-brand-id]');
+            const defaultOption = modelSelect.querySelector('option[value=""]');
+            
+            if (!selectedBrandId || selectedBrandId === '') {
+                // No brand selected - disable model dropdown
+                modelSelect.disabled = true;
+                if (defaultOption) {
+                    defaultOption.textContent = 'Model';
+                }
+                modelSelect.value = '';
+                // Hide all model options
+                modelOptions.forEach(option => {
+                    option.style.display = 'none';
+                });
+            } else {
+                // Brand selected - enable model dropdown
+                modelSelect.disabled = false;
+                if (defaultOption) {
+                    defaultOption.textContent = 'All Models';
+                }
+                
+                // Show/hide model options based on brand
+                modelOptions.forEach(option => {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    if (optionBrandId === selectedBrandId) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                
+                // Reset model selection if it doesn't match the brand
+                if (modelSelect.value) {
+                    const selectedModel = modelSelect.options[modelSelect.selectedIndex];
+                    if (selectedModel && selectedModel.getAttribute('data-brand-id') !== selectedBrandId) {
+                        modelSelect.value = '';
+                    }
+                }
+            }
+        }
+        
+        // Initialize on page load
+        updateModelDropdown();
+        
+        // Update on brand change
+        brandSelect.addEventListener('change', updateModelDropdown);
+    }
+
+    // Search form submission
+    const searchForm = document.getElementById('search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams();
+            
+            formData.forEach((value, key) => {
+                if (value) {
+                    params.append(key, value);
+                }
+            });
+            
+            window.location.href = `{{ route('dealer.show', $dealer->slug) }}?${params.toString()}`;
+        });
+    }
+
+    // Toggle favorite function (from layouts/app.blade.php)
+    if (typeof window.toggleFavorite === 'undefined') {
+        window.toggleFavorite = async function(vehicleId, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const heartIcon = event.currentTarget.querySelector('.heart-icon') || event.currentTarget;
+            const path = heartIcon.querySelector('path');
+            
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const response = await fetch(`/favorites/check/${vehicleId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    if (window.showSnackbar) {
+                        window.showSnackbar('Please login to save favorites', 'error');
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return false;
+                }
+
+                const data = await response.json();
+                const isFavorite = data.is_favorite || false;
+
+                if (isFavorite) {
+                    // Remove from favorites
+                    const deleteResponse = await fetch(`/favorites/${vehicleId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (deleteResponse.ok) {
+                        heartIcon.classList.remove('filled', 'text-red-500');
+                        heartIcon.classList.add('text-blue-600');
+                        if (path) path.removeAttribute('fill');
+                        if (window.showSnackbar) {
+                            window.showSnackbar('Removed from favorites', 'success');
+                        }
+                    }
+                } else {
+                    // Add to favorites
+                    const addResponse = await fetch('/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ vehicle_id: vehicleId }),
+                        credentials: 'same-origin'
+                    });
+
+                    if (addResponse.ok) {
+                        const data = await addResponse.json().catch(() => ({}));
+                        heartIcon.classList.add('filled');
+                        heartIcon.classList.remove('text-blue-600', 'text-orange-600');
+                        heartIcon.classList.add('text-red-500');
+                        if (path) path.setAttribute('fill', 'currentColor');
+                        if (window.showSnackbar) {
+                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                        }
+                    } else {
+                        if (addResponse.status === 401) {
+                            if (window.showSnackbar) {
+                                window.showSnackbar('Please login to save favorites', 'error');
+                            }
+                            setTimeout(() => {
+                                window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                            }, 1500);
+                            return false;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling favorite:', error);
+                if (window.showSnackbar) {
+                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                }
+            }
+            
+            return false;
+        };
+    }
+});
+</script>
+
+@push('styles')
+<style>
+    /* List view styles - Compact design matching card view styles */
+    #vehicle-container[data-view="list"] {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item {
+        display: flex;
+        flex-direction: row;
+        border: 1px solid hsl(var(--border));
+        overflow: hidden;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-dealer-label {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 20;
+        width: fit-content;
+        pointer-events: none;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container {
+        flex-shrink: 0;
+        width: 200px;
+        min-width: 200px;
+        height: 150px;
+        overflow: hidden;
+        background-color: hsl(var(--muted) / 0.3);
+        display: block;
+        position: relative;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item > a {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+        position: relative;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin: 0;
+        color: hsl(var(--foreground));
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-muted-foreground {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-top: -0.375rem;
+        font-weight: 400;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-primary {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+        color: hsl(var(--primary));
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+        margin-top: auto;
+        padding: 1rem;
+        padding-top: 0.5rem;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-actions-section {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-actions-section button,
+    #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+        height: 2.25rem;
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 10;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-image-container .absolute.top-2.left-2 {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+    
+    /* Tablet and up */
+    @media (min-width: 768px) {
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 240px;
+            min-width: 240px;
+            height: 180px;
+        }
+    }
+    
+    /* Large screens */
+    @media (min-width: 1024px) {
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 280px;
+            min-width: 280px;
+            height: 200px;
+        }
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        #vehicle-container[data-view="list"] {
+            gap: 0.75rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-item {
+            flex-direction: column;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-item > a {
+            flex-direction: column;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-image-container {
+            width: 100%;
+            min-width: 100%;
+            height: 200px;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+            padding: 1rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+            padding: 1rem;
+            padding-top: 0.5rem;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-actions-section {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        #vehicle-container[data-view="list"] .vehicle-actions-section button,
+        #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+            width: 100%;
+        }
+    }
+    
+    /* View Toggle filter pill-style tabs */
+    .view-toggle-label {
+        border: none !important;
+    }
+    
+    .view-toggle-label.bg-white {
+        background-color: rgb(255 255 255) !important;
+        color: hsl(var(--foreground)) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+        
+    .view-toggle-label.bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+        color: hsl(var(--muted-foreground)) !important;
+    }
+    
+    .view-toggle-label.bg-gray-150:hover {
+        color: hsl(var(--foreground)) !important;
+    }
+        
+    .bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+(function() {
+    const vehicleContainer = document.getElementById('vehicle-container');
+    const viewToggleRadios = document.querySelectorAll('input[name="view-toggle"]');
+    
+    // View state
+    let currentView = localStorage.getItem('dealerVehicleView') || 'card';
+    
+    // Check if device is mobile (screen width <= 640px)
+    function isMobile() {
+        return window.innerWidth <= 640;
+    }
+    
+    // Force card view on mobile
+    if (isMobile()) {
+        currentView = 'card';
+        localStorage.setItem('dealerVehicleView', 'card');
+    }
+    
+    // Format currency helper
+    function formatCurrency(amount) {
+        if (amount === null || amount === undefined) {
+            return 'N/A';
+        }
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).format(amount) + ' kr.';
+    }
+    
+    // Render single vehicle list item
+    function renderVehicleListItem(vehicle) {
+        const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
+        
+        // Build location string from seller_address and seller_postcode
+        let locationText = '';
+        if (vehicle.seller_address || vehicle.seller_postcode) {
+            const parts = [];
+            if (vehicle.seller_address) parts.push(vehicle.seller_address);
+            if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
+            locationText = parts.join(', ');
+        }
+        
+        // Build badges
+        const badges = [];
+        if (vehicle.mileage || vehicle.km_driven) {
+            badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
+        }
+        if (vehicle.engine_power_hp) {
+            badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
+        }
+        if (vehicle.first_registration_date) {
+            // Handle both date strings and Date objects
+            let dateStr = vehicle.first_registration_date;
+            if (typeof dateStr === 'string' && dateStr.match(/^[A-Z][a-z]{2} \d{4}$/)) {
+                badges.push(dateStr);
+            } else {
+                try {
+                    const regDate = new Date(dateStr);
+                    badges.push(regDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+                } catch (e) {
+                    badges.push(dateStr);
+                }
+            }
+        }
+        if (vehicle.fuel_type_name) {
+            badges.push(vehicle.fuel_type_name);
+        }
+        if (vehicle.gear_type_name) {
+            badges.push(vehicle.gear_type_name);
+        }
+        
+        return `
+            <div class="vehicle-item relative bg-card rounded-lg overflow-hidden">
+                <a href="/vehicles/${vehicle.id}" class="block flex-1">
+                    <!-- Vehicle Image -->
+                    <div class="vehicle-image-container relative">
+                        <img
+                            src="${imageUrl}"
+                            alt="${vehicle.title || ''}"
+                            class="h-full w-full object-cover"
+                        />
+                        
+                        <!-- Heart Icon - Top Right -->
+                        <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Vehicle Content -->
+                    <div class="vehicle-content-wrapper">
+                        <!-- Header Section -->
+                        <div class="flex flex-col gap-4">
+                            <span class="flex items-center gap-2 text-sm font-semibold">
+                                ${vehicle.title || ''}
+                            </span>
+                            
+                            ${badges.length > 0 ? `
+                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                                ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
+                            </div>
+                            ` : ''}
+
+                            <p class="text-sm font-semibold">
+                                ${formatCurrency(vehicle.price)}
+                            </p>
+
+                            ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>Version:</span> <strong>${vehicle.version}</strong></p>` : ''}
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Card Footer -->
+                <div class="mt-auto" onclick="event.stopPropagation()">
+                    <!-- Vehicle Actions -->
+                    <div class="vehicle-actions-section">
+                        <div class="flex w-full items-center gap-4 flex-col sm:flex-row">
+                            ${locationText ? `
+                            <div class="flex items-center gap-2 text-xs text-muted-foreground flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="truncate">${locationText}</span>
+                            </div>
+                            ` : ''}
+                            <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
+                                <a href="/vehicles/${vehicle.id}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
+                                    <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                        View Details
+                                    </button>
+                                </a>
+                                <button 
+                                    type="button"
+                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
+                                    class="flex-1 sm:flex-initial inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                                >
+                                    Enquire
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Store original card HTML for restoration
+    const originalCardHTML = new Map();
+    
+    // Convert existing cards to list view
+    function convertCardsToList() {
+        if (!vehicleContainer || currentView !== 'list') return;
+        
+        const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
+        cards.forEach(card => {
+            // Check if already converted
+            if (card.classList.contains('vehicle-item')) return;
+            
+            // Store original HTML before conversion
+            const vehicleId = card.querySelector('a[href^="/vehicles/"]')?.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1];
+            if (vehicleId && !originalCardHTML.has(vehicleId)) {
+                originalCardHTML.set(vehicleId, card.outerHTML);
+            }
+            
+            // Extract vehicle data from the card
+            const link = card.querySelector('a[href^="/vehicles/"]');
+            const img = card.querySelector('img');
+            const titleEl = card.querySelector('h3');
+            const versionEl = card.querySelector('.text-muted-foreground.text-xs.font-normal');
+            const priceEl = card.querySelector('.text-lg.font-bold');
+            const badgeElements = Array.from(card.querySelectorAll('.inline-flex.items-center.rounded-md.border'));
+            
+            if (!vehicleId) return;
+            
+            // Parse price
+            let price = null;
+            if (priceEl) {
+                const priceText = priceEl.textContent.trim();
+                price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+            }
+            
+            // Parse badges
+            let mileage = null, km_driven = null, engine_power_hp = null, first_registration_date = null, fuel_type_name = null, gear_type_name = null;
+            
+            badgeElements.forEach(badge => {
+                const badgeText = badge.textContent.trim();
+                if (badgeText.includes('km')) {
+                    const kmValue = parseFloat(badgeText.replace(/[^0-9.]/g, ''));
+                    mileage = kmValue;
+                    km_driven = kmValue;
+                } else if (badgeText.includes('HP')) {
+                    engine_power_hp = parseFloat(badgeText.replace(/[^0-9.]/g, ''));
+                } else if (badgeText.match(/^[A-Z][a-z]{2} \d{4}$/)) {
+                    first_registration_date = badgeText;
+                } else if (!badgeText.includes('km') && !badgeText.includes('HP') && !badgeText.match(/^[A-Z][a-z]{2} \d{4}$/)) {
+                    // Could be fuel type or gear type
+                    if (!fuel_type_name) {
+                        fuel_type_name = badgeText;
+                    } else if (!gear_type_name) {
+                        gear_type_name = badgeText;
+                    }
+                }
+            });
+            
+            // Create vehicle object
+            const vehicle = {
+                id: vehicleId,
+                title: titleEl ? titleEl.textContent.trim() : '',
+                version: versionEl ? versionEl.textContent.trim() : '',
+                price: price,
+                thumbnail_url: img ? img.src : '/placeholder-vehicle.jpg',
+                mileage: mileage,
+                km_driven: km_driven,
+                engine_power_hp: engine_power_hp,
+                first_registration_date: first_registration_date,
+                fuel_type_name: fuel_type_name,
+                gear_type_name: gear_type_name
+            };
+            
+            // Replace card with list item
+            const listItem = document.createElement('div');
+            listItem.innerHTML = renderVehicleListItem(vehicle);
+            const newElement = listItem.firstElementChild;
+            if (newElement) {
+                card.replaceWith(newElement);
+            }
+        });
+    }
+    
+    // Convert list items back to cards
+    function convertListToCards() {
+        if (!vehicleContainer || currentView !== 'card') return;
+        
+        const listItems = vehicleContainer.querySelectorAll('.vehicle-item');
+        listItems.forEach(listItem => {
+            // Extract vehicle ID from list item
+            const link = listItem.querySelector('a[href^="/vehicles/"]');
+            const vehicleId = link ? link.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1] : '';
+            
+            if (!vehicleId) return;
+            
+            // Restore original card HTML if available
+            if (originalCardHTML.has(vehicleId)) {
+                const originalHTML = originalCardHTML.get(vehicleId);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = originalHTML;
+                const restoredCard = tempDiv.firstElementChild;
+                if (restoredCard) {
+                    listItem.replaceWith(restoredCard);
+                }
+            } else {
+                // If original HTML not available, extract data and render card
+                const img = listItem.querySelector('img');
+                const titleEl = listItem.querySelector('.vehicle-content-wrapper h3, .vehicle-content-wrapper span');
+                const priceEl = listItem.querySelector('.text-sm.font-semibold');
+                const versionEl = listItem.querySelector('.text-muted-foreground');
+                const badgeElements = Array.from(listItem.querySelectorAll('.inline-flex.items-center.rounded-md.border'));
+                
+                // This is a fallback - ideally we should always have original HTML
+                // For now, just remove list-specific classes and restore card structure
+                listItem.classList.remove('vehicle-item', 'relative', 'bg-card', 'rounded-lg', 'overflow-hidden');
+                listItem.classList.add('flex', 'flex-col', 'rounded-2xl', 'bg-card', 'overflow-hidden', 'p-0', 'cursor-pointer', 'h-full', 'shadow-sm');
+            }
+        });
+    }
+    
+    // Update view toggle button styles
+    function updateViewToggleStyles() {
+        viewToggleRadios.forEach(radio => {
+            const label = radio.closest('.view-toggle-label');
+            if (label) {
+                if (radio.checked) {
+                    label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                    label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                } else {
+                    label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                    label.classList.add('bg-gray-150', 'text-muted-foreground');
+                }
+            }
+        });
+    }
+    
+    // View toggle functionality
+    function setView(view) {
+        if (!vehicleContainer || (view !== 'card' && view !== 'list')) return;
+        
+        // Force card view on mobile devices
+        if (isMobile() && view === 'list') {
+            view = 'card';
+        }
+        
+        currentView = view;
+        localStorage.setItem('dealerVehicleView', view);
+        
+        // Update radio button selection
+        viewToggleRadios.forEach(radio => {
+            radio.checked = radio.value === view;
+        });
+        
+        // Hide container during conversion to prevent visual transition
+        vehicleContainer.style.opacity = '0';
+        vehicleContainer.style.transition = 'opacity 0.1s';
+        
+        // Use requestAnimationFrame to ensure the hide happens before conversion
+        requestAnimationFrame(() => {
+            // Update container data attribute and classes
+            vehicleContainer.setAttribute('data-view', view);
+            if (view === 'list') {
+                vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
+                vehicleContainer.classList.add('flex', 'flex-col');
+                // Convert cards to list view synchronously
+                convertCardsToList();
+            } else {
+                vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
+                vehicleContainer.classList.remove('flex', 'flex-col');
+                // Convert list items back to cards synchronously
+                convertListToCards();
+            }
+            
+            // Show container after conversion is complete
+            requestAnimationFrame(() => {
+                vehicleContainer.style.opacity = '1';
+                // Remove transition after showing to prevent it from affecting future changes
+                setTimeout(() => {
+                    vehicleContainer.style.transition = '';
+                }, 100);
+            });
+        });
+        
+        // Update view toggle button styles
+        updateViewToggleStyles();
+    }
+    
+    // View toggle radio button change handlers
+    viewToggleRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            // Prevent switching to list view on mobile
+            if (isMobile() && radio.value === 'list') {
+                radio.checked = false;
+                const cardRadio = document.querySelector('input[name="view-toggle"][value="card"]');
+                if (cardRadio) cardRadio.checked = true;
+                updateViewToggleStyles();
+                return;
+            }
+            
+            if (radio.checked) {
+                const newView = radio.value;
+                setView(newView);
+            }
+        });
+    });
+    
+    // Handle window resize to force card view if switching to mobile
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (isMobile() && currentView === 'list') {
+                setView('card');
+            }
+        }, 250);
+    });
+    
+    // Store original card HTML on page load
+    function storeOriginalCards() {
+        if (!vehicleContainer) return;
+        const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
+        cards.forEach(card => {
+            const link = card.querySelector('a[href^="/vehicles/"]');
+            const vehicleId = link ? link.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1] : '';
+            if (vehicleId && !originalCardHTML.has(vehicleId)) {
+                originalCardHTML.set(vehicleId, card.outerHTML);
+            }
+        });
+    }
+    
+    // Initialize view on page load
+    if (currentView) {
+        // Store original cards first
+        storeOriginalCards();
+        
+        // Force card view on mobile
+        if (isMobile()) {
+            currentView = 'card';
+            localStorage.setItem('dealerVehicleView', 'card');
+        }
+        setView(currentView);
+    } else {
+        // Store original cards even if no view preference
+        storeOriginalCards();
+    }
+    
+    // Initialize view toggle styles
+    updateViewToggleStyles();
+})();
+</script>
+@endpush
+@endsection

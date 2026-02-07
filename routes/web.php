@@ -94,6 +94,11 @@ Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles
 // Vehicle Details Page
 Route::get('/vehicles/{id}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
+// Dealer Public Page
+Route::get('/dealer-{slug}', [\App\Http\Controllers\DealerController::class, 'show'])->name('dealer.show');
+Route::post('/dealer-{slug}/enquire', [\App\Http\Controllers\DealerController::class, 'submitEnquiry'])->name('dealer.enquire');
+Route::get('/dealer-{slug}/vehicles', [\App\Http\Controllers\DealerController::class, 'getVehicles'])->name('dealer.vehicles');
+
 
 // Route::get('/test-mail', function () {
 //     Mail::raw('Hello from Laravel + Gmail SMTP', function ($msg) {

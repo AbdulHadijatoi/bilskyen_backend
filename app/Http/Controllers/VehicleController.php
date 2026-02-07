@@ -195,6 +195,8 @@ class VehicleController extends Controller
                 'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                 'engine_power_hp' => $vehicle->engine_power_hp,
                 'seller_type' => $sellerType,
+                'seller_address' => $vehicle->seller_address,
+                'seller_postcode' => $vehicle->seller_postcode,
                 'image_url' => $imageUrl,
                 'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
                 'details' => $details ? [
@@ -1189,7 +1191,7 @@ class VehicleController extends Controller
                 'leasing_period_end', 'color_id', 'dispensations',
                 'permits', 'airbags', 'integrated_child_seats',
                 'seat_belt_alarms', 'condition_id', 'sales_type_id', 'servicebog',
-                'seller_phone', 'seller_address', 'seller_postcode', 'annual_tax', 'owners'
+                'seller_phone', 'annual_tax', 'owners'
             ];
 
             $vehicleDetailsData = [];

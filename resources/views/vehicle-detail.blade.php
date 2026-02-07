@@ -865,7 +865,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($details && $details->seller_address)
+                        @if($vehicle->seller_address)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
@@ -873,13 +873,13 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $details->seller_address }}
+                                        {{ $vehicle->seller_address }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">Address</p>
                                 </div>
                             </div>
                         @endif
-                        @if($details && $details->seller_postcode)
+                        @if($vehicle->seller_postcode)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -889,7 +889,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $details->seller_postcode }}
+                                        {{ $vehicle->seller_postcode }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">Postal Code</p>
                                 </div>
@@ -942,6 +942,37 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Dealer Page Link Card -->
+                @if($vehicle->dealer && $vehicle->dealer->slug)
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary">
+                                <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-foreground mb-1">
+                                View Dealer Page
+                            </h3>
+                            <p class="text-xs text-muted-foreground mb-3">
+                                See all vehicles from this dealer
+                            </p>
+                            <a 
+                                href="/dealer-{{ $vehicle->dealer->slug }}" 
+                                class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="M5 12h14"></path>
+                                    <path d="m12 5 7 7-7 7"></path>
+                                </svg>
+                                Visit Dealer Page
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endif
             @endif
 
             <!-- Seller Information (Private Seller) -->
@@ -971,7 +1002,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($details && $details->seller_address)
+                        @if($vehicle->seller_address)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
@@ -979,13 +1010,13 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $details->seller_address }}
+                                        {{ $vehicle->seller_address }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">Address</p>
                                 </div>
                             </div>
                         @endif
-                        @if($details && $details->seller_postcode)
+                        @if($vehicle->seller_postcode)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -995,7 +1026,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $details->seller_postcode }}
+                                        {{ $vehicle->seller_postcode }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">Postal Code</p>
                                 </div>

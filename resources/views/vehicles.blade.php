@@ -249,9 +249,10 @@
                     <select 
                         name="model_id" 
                         id="model-select"
-                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
+                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                        @if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) disabled @endif
                     >
-                            <option value="">All</option>
+                            <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) Model @else All @endif</option>
                         @foreach($filterOptions['models'] as $model)
                             <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
                         @endforeach
@@ -1284,7 +1285,7 @@
         </div>
                 
                 <!-- Vehicle Details -->
-                <div class="p-3 space-y-4">
+                <div class="p-3 space-y-1">
                     <div class="flex flex-col gap-1">
                         <h3 class="flex items-center gap-2 text-xs">
                             {{ $vehicle->title }}
@@ -1299,21 +1300,21 @@
                         </p>
     </div>
 
-                    <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                    <div class="flex flex-wrap gap-1 text-xs font-light">
                         @if($vehicle->mileage || $vehicle->km_driven)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
                         @endif
                         @if($vehicle->engine_power_hp)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
                         @endif
                         @if($vehicle->first_registration_date)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
                         @endif
                         @if($vehicle->fuel_type_name)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->fuel_type_name }}</span>
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->fuel_type_name }}</span>
                         @endif
                         @if($vehicle->gear_type_name)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
                         @endif
 </div>
 
@@ -1322,6 +1323,21 @@
             
             <!-- Card Footer -->
             <div class="mt-auto" onclick="event.stopPropagation()">
+                @if($vehicle->seller_address || $vehicle->seller_postcode)
+                <div class="px-3 pt-3 pb-2">
+                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="truncate text-right">
+                            @if($vehicle->seller_address){{ $vehicle->seller_address }}@endif
+                            @if($vehicle->seller_address && $vehicle->seller_postcode), @endif
+                            @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif
+                        </span>
+                    </div>
+                </div>
+                @endif
                 <!-- Vehicle Actions -->
                 <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
@@ -1769,16 +1785,13 @@
         function renderVehicleCard(vehicle) {
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
             
-            // Build location string
+            // Build location string from seller_address and seller_postcode
             let locationText = '';
-            if (vehicle.location) {
-                if (vehicle.location.city && vehicle.location.postcode) {
-                    locationText = `${vehicle.location.city}, ${vehicle.location.postcode}`;
-                } else if (vehicle.location.city) {
-                    locationText = vehicle.location.city;
-                } else if (vehicle.location.postcode) {
-                    locationText = vehicle.location.postcode;
-                }
+            if (vehicle.seller_address || vehicle.seller_postcode) {
+                const parts = [];
+                if (vehicle.seller_address) parts.push(vehicle.seller_address);
+                if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
+                locationText = parts.join(', ');
             }
             
             return `
@@ -1811,7 +1824,7 @@
                         </div>
                         
                         <!-- Vehicle Details -->
-                        <div class="p-3 space-y-4">
+                        <div class="p-3 space-y-1">
                             <div class="flex flex-col gap-1">
                                 <h3 class="flex items-center gap-2 text-xs">
                                     ${vehicle.title || ''}
@@ -1850,13 +1863,13 @@
                     <!-- Card Footer -->
                     <div class="mt-auto" onclick="event.stopPropagation()">
                         ${locationText ? `
-                        <div class="px-4 pt-3 pb-2">
-                            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div class="px-3 pt-3 pb-2">
+                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate">${locationText}</span>
+                                <span class="truncate text-right">${locationText}</span>
                             </div>
                         </div>
                         ` : ''}
@@ -1882,6 +1895,15 @@
         function renderVehicleListItem(vehicle) {
             const details = vehicle.details || {};
             const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
+            
+            // Build location string from seller_address and seller_postcode
+            let locationText = '';
+            if (vehicle.seller_address || vehicle.seller_postcode) {
+                const parts = [];
+                if (vehicle.seller_address) parts.push(vehicle.seller_address);
+                if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
+                locationText = parts.join(', ');
+            }
             
             // Build badges (same as card view)
             const badges = [];
@@ -1963,6 +1985,17 @@
                     
                     <!-- Card Footer -->
                     <div class="mt-auto" onclick="event.stopPropagation()">
+                        ${locationText ? `
+                        <div class="px-4 pt-3 pb-2">
+                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="truncate text-right">${locationText}</span>
+                            </div>
+                        </div>
+                        ` : ''}
                         <!-- Vehicle Actions -->
                         <div class="vehicle-actions-section">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
@@ -2897,24 +2930,48 @@
             
             const selectedBrandId = brandSelect.value;
             const modelOptions = modelSelect.querySelectorAll('option[data-brand-id]');
+            const defaultOption = modelSelect.querySelector('option[value=""]');
             
-            modelOptions.forEach(option => {
-                if (!selectedBrandId || option.getAttribute('data-brand-id') === selectedBrandId) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
+            if (!selectedBrandId || selectedBrandId === '') {
+                // No brand selected - disable model dropdown
+                modelSelect.disabled = true;
+                if (defaultOption) {
+                    defaultOption.textContent = 'Model';
                 }
-            });
-            
-            // Reset model selection if current model is not available for selected brand
-            const selectedModelOption = modelSelect.options[modelSelect.selectedIndex];
-            if (selectedModelOption && selectedModelOption.style.display === 'none') {
                 modelSelect.value = '';
+                // Hide all model options
+                modelOptions.forEach(option => {
+                    option.style.display = 'none';
+                });
+            } else {
+                // Brand selected - enable model dropdown
+                modelSelect.disabled = false;
+                if (defaultOption) {
+                    defaultOption.textContent = 'All';
+                }
+                
+                // Show/hide model options based on brand
+                modelOptions.forEach(option => {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    if (optionBrandId === selectedBrandId) {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                
+                // Reset model selection if current model is not available for selected brand
+                if (modelSelect.value) {
+                    const selectedModelOption = modelSelect.options[modelSelect.selectedIndex];
+                    if (selectedModelOption && selectedModelOption.getAttribute('data-brand-id') !== selectedBrandId) {
+                        modelSelect.value = '';
+                    }
+                }
             }
         }
         
         if (brandSelect) {
-        brandSelect.addEventListener('change', updateModelOptions);
+            brandSelect.addEventListener('change', updateModelOptions);
         }
         
         // Initialize model options on page load

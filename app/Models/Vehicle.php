@@ -50,6 +50,8 @@ class Vehicle extends Model
         'vehicle_list_status_id',
         'listing_type_id',
         'published_at',
+        'seller_address',
+        'seller_postcode',
     ];
 
     /**
