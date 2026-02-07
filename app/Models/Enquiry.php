@@ -21,6 +21,9 @@ class Enquiry extends Model
         'contact_id',
         'user_id',
         'vehicle_id',
+        'name',
+        'email',
+        'phone',
     ];
 
     protected $casts = [

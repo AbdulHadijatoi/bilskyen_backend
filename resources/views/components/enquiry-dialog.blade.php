@@ -154,6 +154,33 @@
                         </div>
 
                         <div class="space-y-2">
+                            <label for="{{ $type }}-email-{{ $id }}" class="text-sm font-medium leading-none">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                id="{{ $type }}-email-{{ $id }}" 
+                                name="email" 
+                                required
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your email address"
+                            >
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="{{ $type }}-phone-{{ $id }}" class="text-sm font-medium leading-none">
+                                Phone Number
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="{{ $type }}-phone-{{ $id }}" 
+                                name="phone" 
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your phone number (optional)"
+                            >
+                        </div>
+
+                        <div class="space-y-2">
                             <label for="{{ $type }}-message-{{ $id }}" class="text-sm font-medium leading-none">
                                 {{ $config['messageLabel'] }} <span class="text-red-500">*</span>
                             </label>
@@ -228,6 +255,8 @@
         const formData = new FormData(form);
         const data = {
             name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
             message: formData.get('message'),
         };
 

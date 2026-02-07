@@ -161,7 +161,7 @@
                                 min="0"
                                 max="1000000"
                                 value="{{ $currentFilters['price_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                                class="w-full h-10 rounded-sm border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                                 min="0"
                                 max="1000000"
                                 value="{{ $currentFilters['price_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                                class="w-full h-10 rounded-sm border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
                     </div>
@@ -218,15 +218,16 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-foreground">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6.75V8.25H8.25v10.5ZM6 10.5a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75a.75.75 0 0 1 .75.75ZM6 15a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75A.75.75 0 0 1 6 15Z" />
                     </svg>
-                    <h3 class="text-sm font-medium text-foreground">Type, Brand, Model</h3>
+                    <h3 class="text-sm text-foreground">Type, Brand, Model</h3>
                 </div>
+                
 
                 <!-- Brand Filter Row -->
                 <div class="flex items-center justify-between py-2">
                     <label class="text-sm text-muted-foreground">Brand</label>
                     <div class="relative inline-block">
                         <select 
-                            name="brand_id" 
+                            name="brand_id"
                             id="brand-select"
                             class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
                         >

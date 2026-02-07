@@ -185,6 +185,8 @@ class EnquiryController extends Controller
         // Validate form data
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'message' => 'required|string|max:5000',
         ]);
 
@@ -245,6 +247,9 @@ class EnquiryController extends Controller
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
             'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         // Log audit trail for lead (handles both authenticated and guest users)
@@ -325,6 +330,8 @@ class EnquiryController extends Controller
         // Validate form data
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'message' => 'required|string|max:5000',
         ]);
 
@@ -385,6 +392,9 @@ class EnquiryController extends Controller
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
             'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         // Log audit trail for lead (handles both authenticated and guest users)
@@ -465,6 +475,8 @@ class EnquiryController extends Controller
         // Validate form data
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'message' => 'required|string|max:5000',
         ]);
 
@@ -525,6 +537,9 @@ class EnquiryController extends Controller
             'source' => $sourceName, // Use dynamic source (Website or Mobile App)
             'user_id' => $user?->id,
             'vehicle_id' => $vehicle->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         // Log audit trail for lead (handles both authenticated and guest users)

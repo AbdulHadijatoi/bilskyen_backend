@@ -154,8 +154,12 @@
     
     if (!form || !dialog) return;
     
+    // Store callback for after login
+    let loginCallback = null;
+    
     // Global functions to open/close dialog
     window.openLoginDialog = function(callback) {
+        loginCallback = callback || null;
         dialog.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         // Focus on email field
@@ -169,6 +173,8 @@
         document.body.style.overflow = '';
         // Reset form
         form.reset();
+        // Clear callback
+        loginCallback = null;
     };
     
     // Toggle password visibility
@@ -192,6 +198,149 @@
     dialog.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             window.closeLoginDialog();
+        }
+    });
+    
+    // Handle form submission via AJAX
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('login-submit-btn');
+        const submitText = document.getElementById('login-submit-text');
+        const errorContainer = document.getElementById('login-errors');
+        const errorList = document.getElementById('login-error-list');
+        const successMessage = document.getElementById('login-success');
+        
+        // Hide previous messages
+        if (errorContainer) errorContainer.classList.add('hidden');
+        if (successMessage) successMessage.classList.add('hidden');
+        if (errorList) errorList.innerHTML = '';
+        
+        // Disable submit button
+        if (submitBtn) submitBtn.disabled = true;
+        if (submitText) submitText.textContent = 'Logging in...';
+        
+        // Get form data
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData,
+                credentials: 'same-origin'
+            });
+            
+            // Check content type to determine response format
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            
+            if (isJson) {
+                // JSON response
+                const result = await response.json();
+                
+                if (response.ok || response.status === 200) {
+                    // Success - show success message
+                    if (successMessage) {
+                        successMessage.querySelector('p').textContent = result.message || 'Login successful!';
+                        successMessage.classList.remove('hidden');
+                    }
+                    
+                    // Close dialog
+                    window.closeLoginDialog();
+                    
+                    // Show snackbar if available
+                    if (window.showSnackbar) {
+                        window.showSnackbar(result.message || 'Login successful!', 'success');
+                    }
+                    
+                    // Execute callback if provided (after a short delay to ensure auth state is updated)
+                    if (loginCallback && typeof loginCallback === 'function') {
+                        setTimeout(() => {
+                            try {
+                                loginCallback();
+                            } catch (error) {
+                                console.error('Error executing login callback:', error);
+                            }
+                        }, 500);
+                    } else {
+                        // If no callback, reload page to refresh authentication state
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                } else {
+                    // Error response
+                    if (result.errors && errorList) {
+                        const errors = result.errors;
+                        for (const field in errors) {
+                            const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                            fieldErrors.forEach(error => {
+                                const li = document.createElement('li');
+                                li.textContent = error;
+                                errorList.appendChild(li);
+                            });
+                        }
+                        if (errorContainer) errorContainer.classList.remove('hidden');
+                    } else {
+                        const errorMsgText = result.message || 'Login failed. Please try again.';
+                        if (errorList) {
+                            errorList.innerHTML = `<li>${errorMsgText}</li>`;
+                            if (errorContainer) errorContainer.classList.remove('hidden');
+                        }
+                    }
+                }
+            } else {
+                // HTML response (redirect) - Laravel redirects on successful login
+                // Reload page to get authenticated state
+                if (response.redirected || response.status === 302 || response.status === 200) {
+                    // If we have a callback, store it and execute after reload
+                    if (loginCallback && typeof loginCallback === 'function') {
+                        // Store callback info in sessionStorage
+                        sessionStorage.setItem('pendingLoginCallback', 'true');
+                    }
+                    window.location.reload();
+                } else {
+                    // Error - try to show error message
+                    const errorMsgText = 'Login failed. Please try again.';
+                    if (errorList) {
+                        errorList.innerHTML = `<li>${errorMsgText}</li>`;
+                        if (errorContainer) errorContainer.classList.remove('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting login form:', error);
+            if (errorList) {
+                errorList.innerHTML = '<li>An error occurred. Please try again.</li>';
+                if (errorContainer) errorContainer.classList.remove('hidden');
+            }
+        } finally {
+            // Re-enable submit button
+            if (submitBtn) submitBtn.disabled = false;
+            if (submitText) submitText.textContent = 'Login';
+        }
+    });
+    
+    // Check for pending callback after page load (for redirect-based login)
+    window.addEventListener('load', function() {
+        if (sessionStorage.getItem('pendingLoginCallback') === 'true') {
+            sessionStorage.removeItem('pendingLoginCallback');
+            // Execute callback if it was stored
+            if (loginCallback && typeof loginCallback === 'function') {
+                setTimeout(() => {
+                    try {
+                        loginCallback();
+                    } catch (error) {
+                        console.error('Error executing login callback:', error);
+                    }
+                }, 500);
+            }
         }
     });
 })();

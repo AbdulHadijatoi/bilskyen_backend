@@ -113,13 +113,6 @@
         white-space: nowrap;
     }
     
-    .equipment-chip:hover {
-        background: var(--accent);
-        border-color: var(--primary);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
     .equipment-chip svg {
         flex-shrink: 0;
         color: var(--primary);
@@ -157,58 +150,57 @@
         <div class="border-t border-border"></div>
     </div>
 
-    <!-- Images Carousel Section -->
-    @if($vehicle->images && $vehicle->images->count() > 0)
-    <div class="space-y-2">
-        <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground h-4 w-4">
-                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                <circle cx="9" cy="9" r="2"></circle>
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-            </svg>
-            <h2 class="text-foreground text-sm font-medium">
-                Photos ({{ $vehicle->images->count() }})
-            </h2>
-        </div>
-
-        <div class="relative">
-            <div class="embla overflow-hidden" id="vehicle-images-carousel">
-                <div class="embla__container flex">
-                    @foreach($vehicle->images as $index => $image)
-                    <div class="embla__slide flex-shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
-                        <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery">
-                            <div class="border-border bg-muted/50 relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
-                                <img
-                                    src="{{ $image->image_url }}"
-                                    alt="Vehicle photo {{ $index + 1 }}"
-                                    class="h-full w-full object-cover transition-transform hover:scale-105"
-                                />
-                            </div>
-                        </a>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @if($vehicle->images->count() > 3)
-            <button class="embla__prev absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Previous slide">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                    <path d="m15 18-6-6 6-6"></path>
-                </svg>
-            </button>
-            <button class="embla__next absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Next slide">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                    <path d="m9 18 6-6-6-6"></path>
-                </svg>
-            </button>
-            @endif
-        </div>
-    </div>
-    @endif
-
     <!-- Main Content Grid -->
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
         <div class="space-y-6 lg:col-span-2">
+            <!-- Images Carousel Section -->
+            @if($vehicle->images && $vehicle->images->count() > 0)
+            <div class="relative">
+                <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-white/70 px-2 py-2 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground h-4 w-4">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                        <circle cx="9" cy="9" r="2"></circle>
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                    </svg>
+                    <h2 class="text-foreground text-xs font-medium">
+                        Photos ({{ $vehicle->images->count() }})
+                    </h2>
+                </div>
+
+                <div class="relative">
+                    <div class="embla overflow-hidden" id="vehicle-images-carousel">
+                        <div class="embla__container flex">
+                            @foreach($vehicle->images as $index => $image)
+                            <div class="embla__slide flex-shrink-0 basis-full md:basis-1/2 lg:basis-1/2">
+                                <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery">
+                                    <div class="border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
+                                        <img
+                                            src="{{ $image->image_url }}"
+                                            alt="Vehicle photo {{ $index + 1 }}"
+                                            class="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                </a>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @if($vehicle->images->count() > 2)
+                    <button class="embla__prev absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Previous slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="m15 18-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                    <button class="embla__next absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Next slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="m9 18 6-6-6-6"></path>
+                        </svg>
+                    </button>
+                    @endif
+                </div>
+            </div>
+            @endif
         <!-- Basic Information Section -->
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">Basic Information</h2>
@@ -693,6 +685,151 @@
 
         <!-- Right Sidebar -->
         <div class="space-y-6">
+            @php
+                // Get contact information for dealer or private seller (needed for Contact Actions)
+                $contactUser = null;
+                $contactWhatsApp = null;
+                $contactEmail = null;
+                
+                if ($vehicle->dealer && $vehicle->dealer->owner) {
+                    $dealerOwner = $vehicle->dealer->owner;
+                    $contactUser = $dealerOwner;
+                    $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
+                    $contactEmail = $dealerOwner->email ?? null;
+                } elseif ($vehicle->user) {
+                    $contactUser = $vehicle->user;
+                    $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
+                    $contactEmail = $vehicle->user->email ?? null;
+                }
+            @endphp
+
+             <!-- Pricing -->
+             <div class="rounded-lg bg-primary p-6">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-foreground">
+                        <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold text-primary-foreground">
+                        Pricing
+                    </h2>
+                </div>
+                <div class="space-y-2">
+                    <p class="text-3xl font-bold text-primary-foreground">
+                        {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
+                    </p>
+                    <p class="text-sm text-primary-foreground">
+                        Listed Price
+                    </p>
+                </div>
+            </div>
+
+            <!-- Contact Actions -->
+            @if($contactUser)
+            <div class="rounded-lg bg-gray-50 p-6 border border-border">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold text-foreground">
+                        Contact Actions
+                    </h2>
+                </div>
+                <div class="space-y-3">
+                    <!-- Enquiry Form Button -->
+                    <button 
+                        type="button"
+                        onclick="openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Send Enquiry
+                    </button>
+
+                    <!-- WhatsApp Button -->
+                    @if($contactWhatsApp)
+                    <button 
+                        type="button"
+                        onclick="handleWhatsAppClick({{ $vehicle->id }}, event)"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                        id="whatsapp-btn-{{ $vehicle->id }}"
+                        data-whatsapp="{{ $contactWhatsApp }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        <span class="whatsapp-btn-text">Contact via WhatsApp</span>
+                    </button>
+                    @endif
+
+                    <!-- Test Drive Request Button -->
+                    <button 
+                        type="button"
+                        onclick="openEnquiryDialog('test-drive', {{ $vehicle->id }})"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <rect x="3" y="11" width="18" height="6" rx="2" />
+                            <path d="M5 17l1.5 2h11L19 17" />
+                            <circle cx="7.5" cy="16" r="1" />
+                            <circle cx="16.5" cy="16" r="1" />
+                            <path d="M7 11V7a3 3 0 0 1 6 0v4" />
+                            <path d="M9 11V7a1 1 0 1 1 2 0v4" />
+                            <path d="M4 11V8" />
+                            <path d="M20 11V8" />
+                        </svg>
+                        <span>Request Test Drive</span>
+                    </button>
+
+                    <!-- Price Negotiation Button -->
+                    <button 
+                        type="button"
+                        onclick="openEnquiryDialog('price-negotiation', {{ $vehicle->id }})"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Price Negotiation</span>
+                    </button>
+                </div>
+            </div>
+            @endif
+
+            @auth
+                @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
+                    <!-- Edit Action - Only for admin/dealer -->
+                    @php
+                        $editRoute = null;
+                        try {
+                            if (\Illuminate\Support\Facades\Route::has('dealer.vehicles.edit')) {
+                                $editRoute = route('dealer.vehicles.edit', $vehicle->serial_no);
+                            } elseif (\Illuminate\Support\Facades\Route::has('vehicles.edit')) {
+                                $editRoute = route('vehicles.edit', $vehicle->serial_no);
+                            }
+                        } catch (\Exception $e) {
+                            // Route doesn't exist
+                        }
+                    @endphp
+                    @if($editRoute)
+                        <div class="bg-muted/50 rounded-lg p-6">
+                            <h2 class="text-foreground mb-4 text-xl font-semibold">
+                                Actions
+                            </h2>
+                            <a href="{{ $editRoute }}" class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Edit Vehicle
+                            </a>
+                        </div>
+                    @endif
+                @endif
+            @endauth
+
             <!-- Dealer Information -->
             @if($vehicle->dealer)
                 @php
@@ -703,9 +840,6 @@
                     } elseif ($dealerOwner && $dealerOwner->phone) {
                         $dealerPhone = $dealerOwner->phone;
                     }
-                    
-                    // Get contact email for dealer (used later in dealer section)
-                    $contactEmail = $dealerOwner->email ?? null;
                 @endphp
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
@@ -812,10 +946,6 @@
 
             <!-- Seller Information (Private Seller) -->
             @if($vehicle->user && !$vehicle->dealer)
-                @php
-                    // Get contact email for private seller (used later in seller section)
-                    $contactEmail = $vehicle->user->email ?? null;
-                @endphp
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -926,124 +1056,6 @@
                 </div>
             @endif
 
-            <!-- Pricing -->
-            <div class="rounded-lg bg-primary p-6">
-                <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-foreground">
-                        <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold text-primary-foreground">
-                        Pricing
-                    </h2>
-                </div>
-                <div class="space-y-2">
-                    <p class="text-3xl font-bold text-primary-foreground">
-                        {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
-                    </p>
-                    <p class="text-sm text-primary-foreground">
-                        Listed Price
-                    </p>
-                </div>
-            </div>
-
-            <!-- Contact Actions -->
-            @php
-                // Get contact information for dealer or private seller
-                $contactUser = null;
-                $contactWhatsApp = null;
-                
-                // Contact email is already set above in dealer/seller sections, but ensure it's set here too
-                if ($vehicle->dealer && $vehicle->dealer->owner) {
-                    $dealerOwner = $vehicle->dealer->owner;
-                    $contactUser = $dealerOwner;
-                    $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
-                    // $contactEmail is already set in the dealer section above
-                    if (!isset($contactEmail)) {
-                        $contactEmail = $dealerOwner->email ?? null;
-                    }
-                } elseif ($vehicle->user) {
-                    $contactUser = $vehicle->user;
-                    $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
-                    // $contactEmail is already set in the seller section above
-                    if (!isset($contactEmail)) {
-                        $contactEmail = $vehicle->user->email ?? null;
-                    }
-                }
-            @endphp
-            
-            @if($contactUser)
-            <div class="rounded-lg bg-gray-50 p-6 border border-border">
-                <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold text-foreground">
-                        Contact Actions
-                    </h2>
-                </div>
-                <div class="space-y-3">
-                    <!-- Enquiry Form Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('enquiry', {{ $vehicle->id }})"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        Send Enquiry
-                    </button>
-
-                    <!-- WhatsApp Button -->
-                    @if($contactWhatsApp)
-                    <button 
-                        type="button"
-                        onclick="handleWhatsAppClick({{ $vehicle->id }}, event)"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-                        id="whatsapp-btn-{{ $vehicle->id }}"
-                        data-whatsapp="{{ $contactWhatsApp }}"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                        </svg>
-                        <span class="whatsapp-btn-text">Contact via WhatsApp</span>
-                    </button>
-                    @endif
-
-                    <!-- Test Drive Request Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('test-drive', {{ $vehicle->id }})"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <rect x="3" y="11" width="18" height="6" rx="2" />
-                            <path d="M5 17l1.5 2h11L19 17" />
-                            <circle cx="7.5" cy="16" r="1" />
-                            <circle cx="16.5" cy="16" r="1" />
-                            <path d="M7 11V7a3 3 0 0 1 6 0v4" />
-                            <path d="M9 11V7a1 1 0 1 1 2 0v4" />
-                            <path d="M4 11V8" />
-                            <path d="M20 11V8" />
-                        </svg>
-                        <span>Request Test Drive</span>
-                    </button>
-
-                    <!-- Price Negotiation Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('price-negotiation', {{ $vehicle->id }})"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <line x1="12" y1="2" x2="12" y2="22"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        <span>Price Negotiation</span>
-                    </button>
-                </div>
-            </div>
-            @endif
 
             @auth
                 @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
@@ -1218,6 +1230,9 @@
 <x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />
 <x-enquiry-dialog type="price-negotiation" :vehicle="$vehicle" />
 
+<!-- Login Dialog -->
+<x-login-dialog />
+
 <script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 <script>
@@ -1233,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             slidesToScroll: 1,
             breakpoints: {
                 '(min-width: 768px)': { slidesToScroll: 2 },
-                '(min-width: 1024px)': { slidesToScroll: 3 }
+                '(min-width: 1024px)': { slidesToScroll: 2 }
             }
         });
 
@@ -1291,6 +1306,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Get access token from cookie helper
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+    
+    // Check if user is authenticated
+    function isUserAuthenticated() {
+        return getCookie('access_token') !== null;
+    }
+    
     // Toggle phone number visibility
     function togglePhone() {
         const phoneDisplay = document.getElementById('phone-display');
@@ -1314,6 +1342,31 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+        }
+        
+        // Check if user is authenticated
+        if (!isUserAuthenticated()) {
+            // Store action for after login
+            sessionStorage.setItem('pendingAction', JSON.stringify({
+                type: 'showPhone',
+                vehicleId: vehicleId
+            }));
+            
+            // Open login dialog with callback to show phone after login
+            if (window.openLoginDialog) {
+                window.openLoginDialog(() => {
+                    // After successful login, automatically show phone
+                    window.showPhoneAndCreateLead(vehicleId, event);
+                });
+            } else {
+                if (window.showSnackbar) {
+                    window.showSnackbar('Please login to view phone number', 'error');
+                }
+                setTimeout(() => {
+                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                }, 1500);
+            }
+            return false;
         }
         
         // Get button element
@@ -1374,6 +1427,31 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+        }
+        
+        // Check if user is authenticated
+        if (!isUserAuthenticated()) {
+            // Store action for after login
+            sessionStorage.setItem('pendingAction', JSON.stringify({
+                type: 'showDealerPhone',
+                vehicleId: vehicleId
+            }));
+            
+            // Open login dialog with callback to show phone after login
+            if (window.openLoginDialog) {
+                window.openLoginDialog(() => {
+                    // After successful login, automatically show phone
+                    window.showDealerPhoneAndCreateLead(vehicleId, event);
+                });
+            } else {
+                if (window.showSnackbar) {
+                    window.showSnackbar('Please login to view phone number', 'error');
+                }
+                setTimeout(() => {
+                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                }, 1500);
+            }
+            return false;
         }
         
         // Get button element
@@ -1526,6 +1604,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle Email click
     window.handleEmailClick = async function(vehicleId, event) {
+        // Prevent any default behavior and stop propagation
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+        
+        // Check if user is authenticated
+        if (!isUserAuthenticated()) {
+            // Store action for after login
+            const button = event?.target?.closest('button');
+            const email = button?.dataset?.email;
+            sessionStorage.setItem('pendingAction', JSON.stringify({
+                type: 'handleEmail',
+                vehicleId: vehicleId,
+                email: email
+            }));
+            
+            // Open login dialog with callback to open email after login
+            if (window.openLoginDialog) {
+                window.openLoginDialog(() => {
+                    // After successful login, automatically open email
+                    window.handleEmailClick(vehicleId, event);
+                });
+            } else {
+                if (window.showSnackbar) {
+                    window.showSnackbar('Please login to contact via email', 'error');
+                }
+                setTimeout(() => {
+                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
+                }, 1500);
+            }
+            return false;
+        }
+        
         const button = event?.target?.closest('button');
         const email = button?.dataset?.email;
         
@@ -1569,6 +1682,37 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = `/vehicles/${vehicleId}/price-negotiation`;
         return false;
     };
+    
+    // Check for pending actions after page load (for redirect-based login)
+    window.addEventListener('load', function() {
+        const pendingAction = sessionStorage.getItem('pendingAction');
+        if (pendingAction && isUserAuthenticated()) {
+            try {
+                const action = JSON.parse(pendingAction);
+                sessionStorage.removeItem('pendingAction');
+                
+                // Execute the pending action
+                if (action.type === 'showPhone' && action.vehicleId) {
+                    // Create a synthetic event
+                    const syntheticEvent = { target: document.getElementById('show-phone-btn') };
+                    window.showPhoneAndCreateLead(action.vehicleId, syntheticEvent);
+                } else if (action.type === 'showDealerPhone' && action.vehicleId) {
+                    // Create a synthetic event
+                    const syntheticEvent = { target: document.getElementById('show-dealer-phone-btn') };
+                    window.showDealerPhoneAndCreateLead(action.vehicleId, syntheticEvent);
+                } else if (action.type === 'handleEmail' && action.vehicleId && action.email) {
+                    // Find the email button and create synthetic event
+                    const emailButton = document.querySelector(`[data-email="${action.email}"]`);
+                    if (emailButton) {
+                        const syntheticEvent = { target: emailButton };
+                        window.handleEmailClick(action.vehicleId, syntheticEvent);
+                    }
+                }
+            } catch (error) {
+                console.error('Error executing pending action:', error);
+            }
+        }
+    });
 });
 </script>
 @endsection
