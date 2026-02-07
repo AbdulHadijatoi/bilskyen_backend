@@ -11,9 +11,9 @@
 <div class="container mx-auto flex flex-col gap-6 py-8">
     <!-- Search Bar -->
     <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-none  focus:bg-none">
             <!-- Search Input -->
-            <form class="flex w-full sm:flex-1" method="GET" action="/vehicles" id="search-form">
+            <form class="flex w-full sm:flex-1 focus:bg-none bg-none" method="GET" action="/vehicles" id="search-form">
                 <!-- Preserve existing query parameters (including sort) -->
                 @foreach(request()->except('search') as $key => $value)
                     @if(is_array($value))
@@ -35,81 +35,1041 @@
                         id="search-input"
                         value="{{ request()->query('search', '') }}"
                         placeholder="Search by make, model, registration number, or keywords..."
-                        class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-2.5 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
                         autocomplete="off"
                     />
                 </div>
             </form>
             
-            <!-- Advanced Filters Button -->
+        </div>
+    </div>
+
+    <!-- Mobile Filter Toggle Button -->
             <button 
+        id="mobile-filter-toggle"
                 type="button" 
-                id="filter-button"
-                class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Toggle filters"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
+        <!-- Filter Icon (shown when sidebar is closed) -->
+        <svg id="mobile-filter-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
                     <line x1="4" x2="20" y1="21" y2="21"></line>
                     <line x1="4" x2="20" y1="7" y2="7"></line>
                     <line x1="4" x2="20" y1="3" y2="3"></line>
                     <line x1="4" x2="20" y1="11" y2="11"></line>
                     <line x1="4" x2="20" y1="15" y2="15"></line>
                 </svg>
-                More Filters
-                <span id="filter-count" class="ml-2 rounded-full bg-primary-foreground/20 px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-                    ({{ number_format($vehicles->total()) }})
-                </span>
+        <!-- Close Icon (shown when sidebar is open) -->
+        <svg id="mobile-close-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 hidden">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+        </svg>
             </button>
-        </div>
-    </div>
 
-    <!-- Sort and View Controls -->
-    <div id="sort-and-condition-controls" class="flex items-center justify-between gap-4">
-        <!-- Condition Filter -->
-        <div class="flex items-center gap-2">
-            <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
-                <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
-                    <input 
-                        type="radio" 
-                        name="condition_id" 
-                        value=""
-                        class="sr-only peer condition-radio"
-                        @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
-                    >
-                    <span>All</span>
-                </label>
-                @foreach($filterOptions['conditions'] as $condition)
-                    <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+    <!-- Filters + Sort/View/Layout -->
+    <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+        <!-- Filter Sidebar -->
+        <aside
+            id="filter-sidebar"
+            class="hidden lg:block fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-background lg:bg-card p-4 lg:p-4 shadow-lg lg:shadow-sm space-y-6 lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0"
+        >
+            <!-- Condition Filter -->
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Condition
+                </p>
+                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                    <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
                         <input 
                             type="radio" 
                             name="condition_id" 
-                            value="{{ $condition->id }}"
+                            value=""
                             class="sr-only peer condition-radio"
-                            @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
+                            @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
                         >
-                        <span>{{ $condition->name }}</span>
+                        <span>All</span>
                     </label>
-                @endforeach
+                    @foreach($filterOptions['conditions'] as $condition)
+                        <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                            <input 
+                                type="radio" 
+                                name="condition_id" 
+                                value="{{ $condition->id }}"
+                                class="sr-only peer condition-radio"
+                                @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
+                            >
+                            <span>{{ $condition->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Listing Type: Purchase / Leasing -->
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Listing Type
+                </p>
+                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                    @php
+                        $purchaseType = $filterOptions['listingTypes']->firstWhere('name', 'Purchase');
+                        $leasingType = $filterOptions['listingTypes']->firstWhere('name', 'Leasing');
+                        $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
+                        $isPurchaseActive = $purchaseType && in_array($purchaseType->id, $selectedListingTypes);
+                        $isLeasingActive = $leasingType && in_array($leasingType->id, $selectedListingTypes);
+                    @endphp
+                    @if($purchaseType)
+                        <label class="listing-type-checkbox-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if($isPurchaseActive) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                                <input 
+                                    type="checkbox" 
+                                name="listing_type_id[]" 
+                                    value="{{ $purchaseType->id }}"
+                                class="sr-only peer listing-type-checkbox"
+                                    @if($isPurchaseActive) checked @endif
+                                >
+                                <span>Purchase</span>
+                        </label>
+                    @endif
+                    @if($leasingType)
+                        <label class="listing-type-checkbox-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if($isLeasingActive) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                                <input 
+                                    type="checkbox" 
+                                name="listing_type_id[]" 
+                                    value="{{ $leasingType->id }}"
+                                class="sr-only peer listing-type-checkbox"
+                                    @if($isLeasingActive) checked @endif
+                                >
+                                <span>Leasing</span>
+                        </label>
+                    @endif
+                </div>
+            </div>
+            
+            <!-- Price Range -->
+            <div class="space-y-4">
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Price Range</label>
+                <!-- Input Fields -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="price-from" class="sr-only">Price From</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
+                            <input 
+                                type="number" 
+                                id="price-from"
+                                name="price_from" 
+                                placeholder="Min"
+                                min="0"
+                                max="1000000"
+                                value="{{ $currentFilters['price_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <div class="flex-1">
+                        <label for="price-to" class="sr-only">Price To</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
+                            <input 
+                                type="number" 
+                                id="price-to"
+                                name="price_to" 
+                                placeholder="Max"
+                                min="0"
+                                max="1000000"
+                                value="{{ $currentFilters['price_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                </div>
+                <!-- Range Slider -->
+                <div class="relative px-2 py-4">
+                    <div class="relative h-2 bg-muted rounded-full">
+                        <div id="price-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                        <input 
+                            type="range" 
+                            id="price-slider-min"
+                            min="0"
+                            max="1000000"
+                            step="1000"
+                            value="{{ $currentFilters['price_from'] ?? 0 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                        >
+                        <input 
+                            type="range" 
+                            id="price-slider-max"
+                            min="0"
+                            max="1000000"
+                            step="1000"
+                            value="{{ $currentFilters['price_to'] ?? 0 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        >
+                        <div id="price-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="price-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Type, Brand, Model Section -->
+                <div>
+                <!-- Section Heading -->
+                <div class="flex items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-foreground">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6.75V8.25H8.25v10.5ZM6 10.5a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75a.75.75 0 0 1 .75.75ZM6 15a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75A.75.75 0 0 1 6 15Z" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-foreground">Type, Brand, Model</h3>
+                </div>
+
+                <!-- Brand Filter Row -->
+                <div class="flex items-center justify-between py-2">
+                    <label class="text-sm text-muted-foreground">Brand</label>
+                    <div class="relative inline-block">
+                        <select 
+                            name="brand_id" 
+                            id="brand-select"
+                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
+                        >
+                            <option value="">All</option>
+                            @foreach($filterOptions['brands'] as $brand)
+                            <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
+                            @endforeach
+                        </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Model Filter Row -->
+                <div class="flex items-center justify-between py-2">
+                    <label class="text-sm text-muted-foreground">Model</label>
+                    <div class="relative inline-block">
+                    <select 
+                        name="model_id" 
+                        id="model-select"
+                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
+                    >
+                            <option value="">All</option>
+                        @foreach($filterOptions['models'] as $model)
+                            <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
+                        @endforeach
+                    </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                </div>
+            </div>
+
+                <!-- Body Style Filter Row -->
+                <div class="flex items-center justify-between py-2">
+                    <label class="text-sm text-muted-foreground">Body Style</label>
+                    <div class="relative inline-block">
+                <select 
+                    name="category_id" 
+                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
+                >
+                            <option value="">All</option>
+                    @foreach($filterOptions['categories'] as $category)
+                        <option value="{{ $category->id }}" @if(isset($currentFilters['category_id']) && $currentFilters['category_id'] == $category->id) selected @endif>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Tax Range -->
+            <div class="space-y-4">
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Owner Tax</label>
+                <!-- Input Fields -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="owner-tax-from" class="sr-only">Owner Tax From</label>
+                        <input 
+                            type="number" 
+                            id="owner-tax-from"
+                            name="ownership_tax_from" 
+                            placeholder="Min"
+                            min="0"
+                            max="100000"
+                            value="{{ $currentFilters['ownership_tax_from'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <div class="flex-1">
+                        <label for="owner-tax-to" class="sr-only">Owner Tax To</label>
+                        <input 
+                            type="number" 
+                            id="owner-tax-to"
+                            name="ownership_tax_to" 
+                            placeholder="Max"
+                            min="0"
+                            max="100000"
+                            value="{{ $currentFilters['ownership_tax_to'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+                </div>
+                <!-- Range Slider -->
+                <div class="relative px-2 py-4">
+                    <div class="relative h-2 bg-muted rounded-full">
+                        <div id="owner-tax-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                        <input 
+                            type="range" 
+                            id="owner-tax-slider-min"
+                            min="0"
+                            max="100000"
+                            step="100"
+                            value="{{ $currentFilters['ownership_tax_from'] ?? 0 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                        >
+                        <input 
+                            type="range" 
+                            id="owner-tax-slider-max"
+                            min="0"
+                            max="100000"
+                            step="100"
+                            value="{{ $currentFilters['ownership_tax_to'] ?? 0 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        >
+                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Year Range -->
+            <div class="space-y-4">
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Model Year</label>
+                <!-- Input Fields -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label for="year-from" class="sr-only">Year From</label>
+                        <input 
+                            type="number" 
+                            id="year-from"
+                            name="year_from" 
+                            placeholder="From"
+                            min="1975"
+                            max="{{ date('Y') }}"
+                            value="{{ $currentFilters['year_from'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <div class="flex-1">
+                        <label for="year-to" class="sr-only">Year To</label>
+                        <input 
+                            type="number" 
+                            id="year-to"
+                            name="year_to" 
+                            placeholder="To"
+                            min="1975"
+                            max="{{ date('Y') + 1 }}"
+                            value="{{ $currentFilters['year_to'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+                </div>
+                <!-- Range Slider -->
+                <div class="relative px-2 py-4">
+                    <div class="relative h-2 bg-muted rounded-full">
+                        <div id="year-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                        <input 
+                            type="range" 
+                            id="year-slider-min"
+                            min="1975"
+                            max="{{ date('Y') + 1 }}"
+                            step="1"
+                            value="{{ $currentFilters['year_from'] ?? 1975 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                        >
+                        <input 
+                            type="range" 
+                            id="year-slider-max"
+                            min="1975"
+                            max="{{ date('Y') + 1 }}"
+                            step="1"
+                            value="{{ $currentFilters['year_to'] ?? date('Y') + 1 }}"
+                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        >
+                        <div id="year-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        <div id="year-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Details -->
+            <div class="space-y-5">
+                <!-- Mileage Range -->
+                <div class="space-y-4">
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Mileage (km)</label>
+                    <!-- Input Fields -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="mileage-from" class="sr-only">Mileage From</label>
+                            <input 
+                                type="number" 
+                                id="mileage-from"
+                                name="mileage_from" 
+                                placeholder="Min"
+                                min="0"
+                                max="500000"
+                                value="{{ $currentFilters['mileage_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <div class="flex-1">
+                            <label for="mileage-to" class="sr-only">Mileage To</label>
+                            <input 
+                                type="number" 
+                                id="mileage-to"
+                                name="mileage_to" 
+                                placeholder="Max"
+                                min="0"
+                                max="500000"
+                                value="{{ $currentFilters['mileage_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <!-- Range Slider -->
+                    <div class="relative px-2 py-4">
+                        <div class="relative h-2 bg-muted rounded-full">
+                            <div id="mileage-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                            <input 
+                                type="range" 
+                                id="mileage-slider-min"
+                                min="0"
+                                max="500000"
+                                step="1000"
+                                value="{{ $currentFilters['mileage_from'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                            >
+                            <input 
+                                type="range" 
+                                id="mileage-slider-max"
+                                min="0"
+                                max="500000"
+                                step="1000"
+                                value="{{ $currentFilters['mileage_to'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                            >
+                            <div id="mileage-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="mileage-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Type -->
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Price Type</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($filterOptions['priceTypes'] as $priceType)
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-foreground @endif">
+                                <input 
+                                    type="checkbox" 
+                        name="price_type_id[]" 
+                                    value="{{ $priceType->id }}"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
+                                >
+                                <span>{{ $priceType->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Vehicle Body Type -->
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Body Type</label>
+                    <div class="flex flex-wrap gap-2">
+                        @php
+                            $bodyTypeMap = [
+                                'micro' => 'micro',
+                                'stationcar' => 'stationcar',
+                                'suv' => 'suv',
+                                'cuv' => 'cuv',
+                                'mpv' => 'mpv',
+                                'sedan' => 'sedan',
+                                'hatchback' => 'hatchback',
+                                'cabriolet' => 'cabriolet',
+                                'coupe' => 'coupe'
+                            ];
+                        @endphp
+                        @foreach($filterOptions['bodyTypes'] as $bodyType)
+                            @php
+                                $bodyTypeNameLower = strtolower($bodyType->name);
+                                $isRelevant = false;
+                                foreach($bodyTypeMap as $key => $value) {
+                                    if(str_contains($bodyTypeNameLower, $value) || str_contains($value, $bodyTypeNameLower)) {
+                                        $isRelevant = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            @if($isRelevant || in_array($bodyTypeNameLower, $bodyTypeMap))
+                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) bg-accent border-foreground @endif">
+                                    <input 
+                                        type="checkbox" 
+                                        name="body_type_id[]" 
+                                        value="{{ $bodyType->id }}"
+                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) checked @endif
+                                    >
+                                    <span>{{ $bodyType->name }}</span>
+                                </label>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fuel Type -->
+            <div>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Fuel Type</label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($filterOptions['fuelTypes'] as $fuelType)
+                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-foreground @endif">
+                            <input 
+                                type="checkbox" 
+                                name="fuel_type_id[]" 
+                                value="{{ $fuelType->id }}"
+                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) checked @endif
+                            >
+                            <span>{{ $fuelType->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Gear Type -->
+            <div>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Gear Type</label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($filterOptions['gearTypes'] as $gearType)
+                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-foreground @endif">
+                            <input 
+                                type="checkbox" 
+                                name="gear_type_id[]" 
+                                value="{{ $gearType->id }}"
+                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) checked @endif
+                            >
+                            <span>{{ $gearType->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Drive Wheels -->
+            <div>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Drive Wheels</label>
+                <div class="flex flex-wrap gap-2">
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-foreground @endif">
+                        <input 
+                            type="checkbox" 
+                            name="drive_axles[]" 
+                            value="fwd"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
+                        >
+                        <span>FWD</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-foreground @endif">
+                        <input 
+                            type="checkbox" 
+                            name="drive_axles[]" 
+                            value="rwd"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
+                        >
+                        <span>RWD</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-foreground @endif">
+                        <input 
+                            type="checkbox" 
+                            name="drive_axles[]" 
+                            value="awd"
+                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
+                        >
+                        <span>AWD</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Registration & Seller -->
+            <div class="space-y-5">
+                <!-- First Registration Year Range -->
+                <div class="space-y-4">
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">First Registration Year</label>
+                    <!-- Input Fields -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="first-reg-year-from" class="sr-only">Year From</label>
+                            <input 
+                                type="number" 
+                                id="first-reg-year-from"
+                                name="first_registration_year_from" 
+                                placeholder="From"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                value="{{ $currentFilters['first_registration_year_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <div class="flex-1">
+                            <label for="first-reg-year-to" class="sr-only">Year To</label>
+                            <input 
+                                type="number" 
+                                id="first-reg-year-to"
+                                name="first_registration_year_to" 
+                                placeholder="To"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                value="{{ $currentFilters['first_registration_year_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <!-- Range Slider -->
+                    <div class="relative px-2 py-4">
+                        <div class="relative h-2 bg-muted rounded-full">
+                            <div id="first-reg-year-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                            <input 
+                                type="range" 
+                                id="first-reg-year-slider-min"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                step="1"
+                                value="{{ $currentFilters['first_registration_year_from'] ?? 1975 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                            >
+                            <input 
+                                type="range" 
+                                id="first-reg-year-slider-max"
+                                min="1975"
+                                max="{{ date('Y') }}"
+                                step="1"
+                                value="{{ $currentFilters['first_registration_year_to'] ?? date('Y') }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                            >
+                            <div id="first-reg-year-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="first-reg-year-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Type & Sales Type -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Seller Type -->
+                    <div>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seller Type</label>
+                        <div class="flex flex-col gap-2">
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-foreground @endif">
+                                <input 
+                                    type="checkbox" 
+                                    name="seller_type[]" 
+                                    value="dealer"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
+                                >
+                                <span>Dealer</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-foreground @endif">
+                                <input 
+                                    type="checkbox" 
+                                    name="seller_type[]" 
+                                    value="private"
+                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
+                                >
+                                <span>Private</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Sales Type -->
+                    <div>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Sales Type</label>
+                        <div class="flex flex-col gap-2">
+                            @foreach($filterOptions['salesTypes'] as $salesType)
+                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-foreground @endif">
+                                    <input 
+                                        type="checkbox" 
+                                        name="sales_type_id[]" 
+                                        value="{{ $salesType->id }}"
+                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) checked @endif
+                                    >
+                                    <span>{{ $salesType->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Distance -->
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seller Distance (km)</label>
+                    <input 
+                        type="number" 
+                        name="seller_distance" 
+                        placeholder="Distance"
+                        min="0"
+                        value="{{ $currentFilters['seller_distance'] ?? '' }}"
+                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                    >
+                </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="space-y-5">
+                <!-- Horsepower Range -->
+                <div class="space-y-4">
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Horsepower (HP)</label>
+                    <!-- Input Fields -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="horsepower-min" class="sr-only">Horsepower Min</label>
+                            <input 
+                                type="number" 
+                                id="horsepower-min"
+                                name="engine_power_from" 
+                                placeholder="Min"
+                                min="0"
+                                max="1000"
+                                value="{{ $currentFilters['engine_power_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <div class="flex-1">
+                            <label for="horsepower-max" class="sr-only">Horsepower Max</label>
+                            <input 
+                                type="number" 
+                                id="horsepower-max"
+                                name="engine_power_to" 
+                                placeholder="Max"
+                                min="0"
+                                max="1000"
+                                value="{{ $currentFilters['engine_power_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <!-- Range Slider -->
+                    <div class="relative px-2 py-4">
+                        <div class="relative h-2 bg-muted rounded-full">
+                            <div id="horsepower-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                            <input 
+                                type="range" 
+                                id="horsepower-slider-min"
+                                min="0"
+                                max="1000"
+                                step="10"
+                                value="{{ $currentFilters['engine_power_from'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                            >
+                            <input 
+                                type="range" 
+                                id="horsepower-slider-max"
+                                min="0"
+                                max="1000"
+                                step="10"
+                                value="{{ $currentFilters['engine_power_to'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                            >
+                            <div id="horsepower-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="horsepower-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battery & Charging (EV) -->
+            <div class="space-y-5">
+                <!-- Battery Capacity -->
+                <div class="space-y-4">
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Battery Capacity (kWh)</label>
+                    <!-- Input Fields -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="battery-capacity-min" class="sr-only">Battery Capacity Min</label>
+                            <input 
+                                type="number" 
+                                id="battery-capacity-min"
+                                name="battery_capacity_from" 
+                                placeholder="Min"
+                                min="0"
+                                max="200"
+                                value="{{ $currentFilters['battery_capacity_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <div class="flex-1">
+                            <label for="battery-capacity-max" class="sr-only">Battery Capacity Max</label>
+                            <input 
+                                type="number" 
+                                id="battery-capacity-max"
+                                name="battery_capacity_to" 
+                                placeholder="Max"
+                                min="0"
+                                max="200"
+                                value="{{ $currentFilters['battery_capacity_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <!-- Range Slider -->
+                    <div class="relative px-2 py-4">
+                        <div class="relative h-2 bg-muted rounded-full">
+                            <div id="battery-capacity-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                            <input 
+                                type="range" 
+                                id="battery-capacity-slider-min"
+                                min="0"
+                                max="200"
+                                step="5"
+                                value="{{ $currentFilters['battery_capacity_from'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                            >
+                            <input 
+                                type="range" 
+                                id="battery-capacity-slider-max"
+                                min="0"
+                                max="200"
+                                step="5"
+                                value="{{ $currentFilters['battery_capacity_to'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                            >
+                            <div id="battery-capacity-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="battery-capacity-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Range (km) -->
+                <div class="space-y-4">
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Range (km)</label>
+                    <!-- Input Fields -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label for="range-km-from" class="sr-only">Range From</label>
+                            <input 
+                                type="number" 
+                                id="range-km-from"
+                                name="range_km_from" 
+                                placeholder="Min"
+                                min="0"
+                                max="1000"
+                                value="{{ $currentFilters['range_km_from'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <div class="flex-1">
+                            <label for="range-km-to" class="sr-only">Range To</label>
+                            <input 
+                                type="number" 
+                                id="range-km-to"
+                                name="range_km_to" 
+                                placeholder="Max"
+                                min="0"
+                                max="1000"
+                                value="{{ $currentFilters['range_km_to'] ?? '' }}"
+                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                            >
+                        </div>
+                    </div>
+                    <!-- Range Slider -->
+                    <div class="relative px-2 py-4">
+                        <div class="relative h-2 bg-muted rounded-full">
+                            <div id="range-km-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
+                            <input 
+                                type="range" 
+                                id="range-km-slider-min"
+                                min="0"
+                                max="1000"
+                                step="10"
+                                value="{{ $currentFilters['range_km_from'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                            >
+                            <input 
+                                type="range" 
+                                id="range-km-slider-max"
+                                min="0"
+                                max="1000"
+                                step="10"
+                                value="{{ $currentFilters['range_km_to'] ?? 0 }}"
+                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                            >
+                            <div id="range-km-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                            <div id="range-km-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charging Type -->
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Charging Type</label>
+                    <select 
+                        name="charging_type" 
+                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                    >
+                        <option value="">All</option>
+                        <option value="AC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC') selected @endif>AC</option>
+                        <option value="DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'DC') selected @endif>DC</option>
+                        <option value="AC/DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC/DC') selected @endif>AC/DC</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Economy & Environment -->
+            <div class="space-y-5">
+                <!-- Euro Norm -->
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Euro Norm</label>
+                    <select 
+                        name="euronorm" 
+                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                    >
+                        <option value="">All</option>
+                        <option value="Euro 1" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 1') selected @endif>Euro 1</option>
+                        <option value="Euro 2" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 2') selected @endif>Euro 2</option>
+                        <option value="Euro 3" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 3') selected @endif>Euro 3</option>
+                        <option value="Euro 4" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 4') selected @endif>Euro 4</option>
+                        <option value="Euro 5" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 5') selected @endif>Euro 5</option>
+                        <option value="Euro 6" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 6') selected @endif>Euro 6</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Physical Details -->
+            <div class="space-y-5">
+                <!-- Doors & Seats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Doors Min -->
+                    <div>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Doors (Min)</label>
+                        <input 
+                            type="number" 
+                            name="doors" 
+                            placeholder="Minimum"
+                            min="2"
+                            max="6"
+                            value="{{ $currentFilters['doors'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+
+                    <!-- Seats Min -->
+                    <div>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seats (Min)</label>
+                        <input 
+                            type="number" 
+                            name="seats_min" 
+                            placeholder="Minimum"
+                            min="2"
+                            max="9"
+                            value="{{ $currentFilters['seats_min'] ?? '' }}"
+                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="space-y-5">
+                <div>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Equipment</label>
+                            <div class="space-y-2">
+                        @foreach($filterOptions['equipmentTypes'] as $equipmentType)
+                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
+                                <button 
+                                    type="button"
+                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                                    data-type-id="{{ $equipmentType->id }}"
+                                >
+                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
+                                        <path d="m6 9 6 6 6-6"></path>
+                                    </svg>
+                                </button>
+                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($equipmentType->equipments as $equipment)
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-foreground @endif">
+                                            <input 
+                                                type="checkbox" 
+                                                name="equipment_ids[]" 
+                                                value="{{ $equipment->id }}"
+                                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) checked @endif
+                                            >
+                                            <span>{{ $equipment->name }}</span>
+                                        </label>
+                                    @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sort, view toggle and results -->
+        <div class="flex-1 flex flex-col gap-4">
+            <!-- Results count, filter chips, and reset button -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <!-- Applied Filters Chips -->
+                        <div id="applied-filters-container" class="flex flex-wrap gap-2">
+                            <!-- Filter chips will be rendered here via JavaScript -->
+                    <!-- Reset Button (only visible when filters are applied) -->
+                    <button
+                        id="filter-reset-button-main"
+                        type="button"
+                                class="hidden inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        Reset Filters
+                    </button>
+                        </div>
+                    </div>
             </div>
         </div>
-        
-        <!-- Sort and View Toggle -->
-        <div class="flex items-center gap-2">
-        <!-- Sort Dropdown -->
-        <div class="relative">
-            <button 
-                type="button" 
+
+            <div id="sort-and-condition-controls" class="flex items-center justify-between gap-4">
+            <div class="text-xs flex items-center gap-2">
+                <p id="results-count" class="text-xs text-foreground">
+                    <strong>{{ number_format($vehicles->total()) }}</strong> 
+                    results
+                </p>
+                <span>|</span>
+                <!-- Sort Dropdown Container -->
+                <div class="relative text-xs font-medium">
+            <button
+                type="button"
                 id="sort-button"
-                class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 h-3 w-3">
-                    <path d="M3 6h18"></path>
-                    <path d="M7 12h10"></path>
-                    <path d="M10 18h4"></path>
-                </svg>
+                        class="inline-flex h-8 items-center justify-center"
+                    >
+                        <span class="mr-2">Sort by</span>
+                        <strong>
                 <span id="sort-button-text">
                     @php
                         $sortLabels = [
-                            'standard' => 'Standard',
+                            'best_match' => 'Best Match',
                             'price_asc' => 'Price: (lowest first)',
                             'price_desc' => 'Price: (Highest first)',
                             'date_desc' => 'Date: (Newest first)',
@@ -139,10 +1099,11 @@
                             'distance_asc' => 'Distance to seller: (Shortest distance)',
                             'distance_desc' => 'Distance to seller: (Longest distance)'
                         ];
-                        $currentSort = request()->query('sort', 'standard');
+                        $currentSort = request()->query('sort', 'best_match');
                     @endphp
-                    {{ $sortLabels[$currentSort] ?? 'Standard' }}
+                    {{ $sortLabels[$currentSort] ?? 'Best Match' }}
                 </span>
+                        </strong>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5 h-3 w-3">
                     <path d="m6 9 6 6 6-6"></path>
                 </svg>
@@ -154,8 +1115,8 @@
                 class="absolute right-0 top-full mt-1 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
             >
                 <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'standard' || !request()->has('sort')) bg-accent @endif" data-sort="standard">
-                        Standard
+                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'best_match' || !request()->has('sort')) bg-accent @endif" data-sort="best_match">
+                        Best Match
                     </button>
                     <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
                         Price: (lowest first)
@@ -241,39 +1202,57 @@
                     <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
                         Distance to seller: (Longest distance)
                     </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- Sort and View Toggle -->
+            <div class="flex items-center gap-2">
+            <!-- Sort Dropdown -->
+            <div class="relative text-xs font-medium">
+                
+                
+                <!-- View Toggle Buttons -->
+                <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-white text-foreground font-semibold">
+                        <input 
+                            type="radio" 
+                            name="view-toggle" 
+                            value="card"
+                            class="sr-only peer view-toggle-radio"
+                            checked
+                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                </svg>
+                    </label>
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-gray-150 text-muted-foreground hover:text-foreground">
+                        <input 
+                            type="radio" 
+                            name="view-toggle" 
+                            value="list"
+                            class="sr-only peer view-toggle-radio"
+                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <line x1="8" x2="21" y1="6" y2="6"></line>
+                    <line x1="8" x2="21" y1="12" y2="12"></line>
+                    <line x1="8" x2="21" y1="18" y2="18"></line>
+                    <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                    <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                    <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                </svg>
+                    </label>
                 </div>
             </div>
         </div>
-        
-        <!-- View Toggle Button -->
-        <button 
-            type="button" 
-            id="view-toggle-button"
-            class="hidden sm:inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Toggle view style"
-        >
-            <!-- Card View Icon (shown when in card view) -->
-            <svg id="view-card-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                <rect width="7" height="7" x="3" y="3" rx="1"></rect>
-                <rect width="7" height="7" x="14" y="3" rx="1"></rect>
-                <rect width="7" height="7" x="3" y="14" rx="1"></rect>
-                <rect width="7" height="7" x="14" y="14" rx="1"></rect>
-            </svg>
-            <!-- List View Icon (shown when in list view) -->
-            <svg id="view-list-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 hidden">
-                <line x1="8" x2="21" y1="6" y2="6"></line>
-                <line x1="8" x2="21" y1="12" y2="12"></line>
-                <line x1="8" x2="21" y1="18" y2="18"></line>
-                <line x1="3" x2="3.01" y1="6" y2="6"></line>
-                <line x1="3" x2="3.01" y1="12" y2="12"></line>
-                <line x1="3" x2="3.01" y1="18" y2="18"></line>
-            </svg>
-        </button>
-        </div>
     </div>
-
+    
     <!-- Vehicle Grid/List -->
-    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" data-view="card">
+    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
         @forelse($vehicles as $vehicle)
         <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
             <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
@@ -288,7 +1267,7 @@
                     <!-- Dealer Label - Top Left -->
                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         Dealer
-                    </span>
+                </span>
                     @else
                     <!-- Private Label - Top Left -->
                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
@@ -300,8 +1279,8 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                         </svg>
-                    </button>
-                </div>
+            </button>
+        </div>
                 
                 <!-- Vehicle Details -->
                 <div class="p-3 space-y-4">
@@ -310,14 +1289,14 @@
                             {{ $vehicle->title }}
                         </h3>
                         @if($vehicle->version)
-                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                        <p class="text-muted-foreground text-xs font-normal">
                             {{ $vehicle->version }}
                         </p>
                         @endif
                         <p class="text-lg font-bold">
                             {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                         </p>
-                    </div>
+    </div>
 
                     <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
                         @if($vehicle->mileage || $vehicle->km_driven)
@@ -335,7 +1314,7 @@
                         @if($vehicle->gear_type_name)
                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
                         @endif
-                    </div>
+</div>
 
                 </div>
             </a>
@@ -405,975 +1384,9 @@
     </div>
 </div>
 
-<!-- Filter Drawer -->
-<div id="filter-drawer" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <!-- Backdrop -->
-    <div 
-        id="filter-backdrop"
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out opacity-0"
-        aria-hidden="true"
-    ></div>
-    
-    <!-- Drawer Panel -->
-    <div 
-        id="filter-panel"
-        class="absolute right-0 top-0 h-full w-full max-w-md bg-background shadow-2xl flex flex-col transform transition-transform duration-300 ease-out translate-x-full"
-        role="dialog"
-        aria-modal="true"
-    >
-       
-
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto overscroll-contain" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-            <div class="px-6 py-6 space-y-8">
-            <!-- Applied Filters Chips -->
-            <div id="applied-filters-container" class="flex flex-wrap gap-2 pb-2 border-b border-border">
-                <!-- Filter chips will be rendered here via JavaScript -->
-            </div>
-            
-            <!-- Tabs: Purchase/Leasing -->
-            <div class="space-y-3">
-                <label class="text-sm font-semibold text-foreground">Listing Type</label>
-                <div class="flex gap-2" role="tablist">
-                    @php
-                        $purchaseType = $filterOptions['listingTypes']->firstWhere('name', 'Purchase');
-                        $leasingType = $filterOptions['listingTypes']->firstWhere('name', 'Leasing');
-                        $defaultListingTypeId = $currentFilters['listing_type_id'] ?? ($purchaseType ? $purchaseType->id : '');
-                        $isPurchaseActive = !isset($currentFilters['listing_type_id']) || (isset($currentFilters['listing_type_id']) && $currentFilters['listing_type_id'] == ($purchaseType ? $purchaseType->id : ''));
-                        $isLeasingActive = isset($currentFilters['listing_type_id']) && $leasingType && $currentFilters['listing_type_id'] == $leasingType->id;
-                    @endphp
-                    @if($purchaseType)
-                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isPurchaseActive) bg-accent border-foreground @else border-input @endif" data-tab="purchase" data-listing-type-id="{{ $purchaseType->id }}">
-                            <input 
-                                type="radio" 
-                                name="listing_type_id_radio" 
-                                value="{{ $purchaseType->id }}"
-                                class="sr-only peer"
-                                @if($isPurchaseActive) checked @endif
-                            >
-                            <span class="peer-checked:font-semibold">Purchase</span>
-                        </label>
-                    @endif
-                    @if($leasingType)
-                        <label class="tab-button flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border @if($isLeasingActive) bg-accent border-foreground @else border-input @endif" data-tab="leasing" data-listing-type-id="{{ $leasingType->id }}">
-                            <input 
-                                type="radio" 
-                                name="listing_type_id_radio" 
-                                value="{{ $leasingType->id }}"
-                                class="sr-only peer"
-                                @if($isLeasingActive) checked @endif
-                            >
-                            <span class="peer-checked:font-semibold">Leasing</span>
-                        </label>
-                    @endif
-                </div>
-                <input type="hidden" name="listing_type_id" id="listing-type-input" value="{{ $defaultListingTypeId }}">
-            </div>
-
-            <!-- Price Range -->
-            <div class="space-y-4">
-                <label class="text-sm font-semibold text-foreground">Price Range</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="price-from" class="sr-only">Price From</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
-                            <input 
-                                type="number" 
-                                id="price-from"
-                                name="price_from" 
-                                placeholder="Min"
-                                min="0"
-                                max="1000000"
-                                value="{{ $currentFilters['price_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
-                    <div class="flex-1">
-                        <label for="price-to" class="sr-only">Price To</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
-                            <input 
-                                type="number" 
-                                id="price-to"
-                                name="price_to" 
-                                placeholder="Max"
-                                min="0"
-                                max="1000000"
-                                value="{{ $currentFilters['price_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="price-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="price-slider-min"
-                            min="0"
-                            max="1000000"
-                            step="1000"
-                            value="{{ $currentFilters['price_from'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="price-slider-max"
-                            min="0"
-                            max="1000000"
-                            step="1000"
-                            value="{{ $currentFilters['price_to'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="price-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="price-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Brand & Model -->
-            <div class="space-y-5">
-                <!-- Brand -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Brand</label>
-                        <select 
-                            name="brand_id" 
-                            id="brand-select"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                            <option value="">All Makes</option>
-                            @foreach($filterOptions['brands'] as $brand)
-                            <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
-                            @endforeach
-                        </select>
-                </div>
-
-                <!-- Model (filtered by brand) -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Model</label>
-                    <select 
-                        name="model_id" 
-                        id="model-select"
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                        <option value="">All Models</option>
-                        @foreach($filterOptions['models'] as $model)
-                            <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <!-- Vehicle Type (renamed from Category) -->
-            <div class="space-y-4">
-                <label class="text-sm font-semibold text-foreground">Vehicle Type</label>
-                <select 
-                    name="category_id" 
-                    class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                >
-                    <option value="">All Vehicle Types</option>
-                    @foreach($filterOptions['categories'] as $category)
-                        <option value="{{ $category->id }}" @if(isset($currentFilters['category_id']) && $currentFilters['category_id'] == $category->id) selected @endif>{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Owner Tax Range -->
-            <div class="space-y-4">
-                <label class="text-sm font-semibold text-foreground">Owner Tax</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="owner-tax-from" class="sr-only">Owner Tax From</label>
-                        <input 
-                            type="number" 
-                            id="owner-tax-from"
-                            name="ownership_tax_from" 
-                            placeholder="Min"
-                            min="0"
-                            max="100000"
-                            value="{{ $currentFilters['ownership_tax_from'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
-                    <div class="flex-1">
-                        <label for="owner-tax-to" class="sr-only">Owner Tax To</label>
-                        <input 
-                            type="number" 
-                            id="owner-tax-to"
-                            name="ownership_tax_to" 
-                            placeholder="Max"
-                            min="0"
-                            max="100000"
-                            value="{{ $currentFilters['ownership_tax_to'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="owner-tax-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="owner-tax-slider-min"
-                            min="0"
-                            max="100000"
-                            step="100"
-                            value="{{ $currentFilters['ownership_tax_from'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="owner-tax-slider-max"
-                            min="0"
-                            max="100000"
-                            step="100"
-                            value="{{ $currentFilters['ownership_tax_to'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Model Year Range -->
-            <div class="space-y-4">
-                <label class="text-sm font-semibold text-foreground">Model Year</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="year-from" class="sr-only">Year From</label>
-                        <input 
-                            type="number" 
-                            id="year-from"
-                            name="year_from" 
-                            placeholder="From"
-                            min="1975"
-                            max="{{ date('Y') }}"
-                            value="{{ $currentFilters['year_from'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
-                    <div class="flex-1">
-                        <label for="year-to" class="sr-only">Year To</label>
-                        <input 
-                            type="number" 
-                            id="year-to"
-                            name="year_to" 
-                            placeholder="To"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            value="{{ $currentFilters['year_to'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="year-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="year-slider-min"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            step="1"
-                            value="{{ $currentFilters['year_from'] ?? 1975 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="year-slider-max"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            step="1"
-                            value="{{ $currentFilters['year_to'] ?? date('Y') + 1 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="year-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="year-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vehicle Details -->
-            <div class="space-y-5">
-                <!-- Mileage Range -->
-                <div class="space-y-4">
-                    <label class="text-sm font-semibold text-foreground">Mileage (km)</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="mileage-from" class="sr-only">Mileage From</label>
-                            <input 
-                                type="number" 
-                                id="mileage-from"
-                                name="mileage_from" 
-                                placeholder="Min"
-                                min="0"
-                                max="500000"
-                                value="{{ $currentFilters['mileage_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
-                        <div class="flex-1">
-                            <label for="mileage-to" class="sr-only">Mileage To</label>
-                            <input 
-                                type="number" 
-                                id="mileage-to"
-                                name="mileage_to" 
-                                placeholder="Max"
-                                min="0"
-                                max="500000"
-                                value="{{ $currentFilters['mileage_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="mileage-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="mileage-slider-min"
-                                min="0"
-                                max="500000"
-                                step="1000"
-                                value="{{ $currentFilters['mileage_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="mileage-slider-max"
-                                min="0"
-                                max="500000"
-                                step="1000"
-                                value="{{ $currentFilters['mileage_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="mileage-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="mileage-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Price Type -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Price Type</label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($filterOptions['priceTypes'] as $priceType)
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                        name="price_type_id[]" 
-                                    value="{{ $priceType->id }}"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
-                                >
-                                <span>{{ $priceType->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Vehicle Body Type -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Body Type</label>
-                    <div class="flex flex-wrap gap-2">
-                        @php
-                            $bodyTypeMap = [
-                                'micro' => 'micro',
-                                'stationcar' => 'stationcar',
-                                'suv' => 'suv',
-                                'cuv' => 'cuv',
-                                'mpv' => 'mpv',
-                                'sedan' => 'sedan',
-                                'hatchback' => 'hatchback',
-                                'cabriolet' => 'cabriolet',
-                                'coupe' => 'coupe'
-                            ];
-                        @endphp
-                        @foreach($filterOptions['bodyTypes'] as $bodyType)
-                            @php
-                                $bodyTypeNameLower = strtolower($bodyType->name);
-                                $isRelevant = false;
-                                foreach($bodyTypeMap as $key => $value) {
-                                    if(str_contains($bodyTypeNameLower, $value) || str_contains($value, $bodyTypeNameLower)) {
-                                        $isRelevant = true;
-                                        break;
-                                    }
-                                }
-                            @endphp
-                            @if($isRelevant || in_array($bodyTypeNameLower, $bodyTypeMap))
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) bg-accent border-foreground @endif">
-                                    <input 
-                                        type="checkbox" 
-                                        name="body_type_id[]" 
-                                        value="{{ $bodyType->id }}"
-                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) checked @endif
-                                    >
-                                    <span>{{ $bodyType->name }}</span>
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fuel Type -->
-            <div>
-                <label class="text-sm font-semibold text-foreground mb-3 block">Fuel Type</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($filterOptions['fuelTypes'] as $fuelType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-foreground @endif">
-                            <input 
-                                type="checkbox" 
-                                name="fuel_type_id[]" 
-                                value="{{ $fuelType->id }}"
-                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) checked @endif
-                            >
-                            <span>{{ $fuelType->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Gear Type -->
-            <div>
-                <label class="text-sm font-semibold text-foreground mb-3 block">Gear Type</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($filterOptions['gearTypes'] as $gearType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-foreground @endif">
-                            <input 
-                                type="checkbox" 
-                                name="gear_type_id[]" 
-                                value="{{ $gearType->id }}"
-                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) checked @endif
-                            >
-                            <span>{{ $gearType->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Drive Wheels -->
-            <div>
-                <label class="text-sm font-semibold text-foreground mb-3 block">Drive Wheels</label>
-                <div class="flex flex-wrap gap-2">
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="fwd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
-                        >
-                        <span>FWD</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="rwd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
-                        >
-                        <span>RWD</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="awd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
-                        >
-                        <span>AWD</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Registration & Seller -->
-            <div class="space-y-5">
-                <!-- First Registration Year Range -->
-                <div class="space-y-4">
-                    <label class="text-sm font-semibold text-foreground">First Registration Year</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="first-reg-year-from" class="sr-only">Year From</label>
-                            <input 
-                                type="number" 
-                                id="first-reg-year-from"
-                                name="first_registration_year_from" 
-                                placeholder="From"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                value="{{ $currentFilters['first_registration_year_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
-                        <div class="flex-1">
-                            <label for="first-reg-year-to" class="sr-only">Year To</label>
-                            <input 
-                                type="number" 
-                                id="first-reg-year-to"
-                                name="first_registration_year_to" 
-                                placeholder="To"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                value="{{ $currentFilters['first_registration_year_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="first-reg-year-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="first-reg-year-slider-min"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                step="1"
-                                value="{{ $currentFilters['first_registration_year_from'] ?? 1975 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="first-reg-year-slider-max"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                step="1"
-                                value="{{ $currentFilters['first_registration_year_to'] ?? date('Y') }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="first-reg-year-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="first-reg-year-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Seller Type & Sales Type -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Seller Type -->
-                    <div>
-                        <label class="text-sm font-semibold text-foreground mb-3 block">Seller Type</label>
-                        <div class="flex flex-col gap-2">
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                                    name="seller_type[]" 
-                                    value="dealer"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
-                                >
-                                <span>Dealer</span>
-                            </label>
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                                    name="seller_type[]" 
-                                    value="private"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
-                                >
-                                <span>Private</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Sales Type -->
-                    <div>
-                        <label class="text-sm font-semibold text-foreground mb-3 block">Sales Type</label>
-                        <div class="flex flex-col gap-2">
-                            @foreach($filterOptions['salesTypes'] as $salesType)
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-foreground @endif">
-                                    <input 
-                                        type="checkbox" 
-                                        name="sales_type_id[]" 
-                                        value="{{ $salesType->id }}"
-                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) checked @endif
-                                    >
-                                    <span>{{ $salesType->name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Seller Distance -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Seller Distance (km)</label>
-                    <input 
-                        type="number" 
-                        name="seller_distance" 
-                        placeholder="Distance"
-                        min="0"
-                        value="{{ $currentFilters['seller_distance'] ?? '' }}"
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                </div>
-            </div>
-
-            <!-- Performance -->
-            <div class="space-y-5">
-                <!-- Horsepower Range -->
-                <div class="space-y-4">
-                    <label class="text-sm font-semibold text-foreground">Horsepower (HP)</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="horsepower-min" class="sr-only">Horsepower Min</label>
-                            <input 
-                                type="number" 
-                                id="horsepower-min"
-                                name="engine_power_from" 
-                                placeholder="Min"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['engine_power_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
-                        <div class="flex-1">
-                            <label for="horsepower-max" class="sr-only">Horsepower Max</label>
-                            <input 
-                                type="number" 
-                                id="horsepower-max"
-                                name="engine_power_to" 
-                                placeholder="Max"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['engine_power_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="horsepower-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="horsepower-slider-min"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['engine_power_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="horsepower-slider-max"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['engine_power_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="horsepower-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="horsepower-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Battery & Charging (EV) -->
-            <div class="space-y-5">
-                <!-- Battery Capacity -->
-                <div class="space-y-4">
-                    <label class="text-sm font-semibold text-foreground">Battery Capacity (kWh)</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="battery-capacity-min" class="sr-only">Battery Capacity Min</label>
-                            <input 
-                                type="number" 
-                                id="battery-capacity-min"
-                                name="battery_capacity_from" 
-                                placeholder="Min"
-                                min="0"
-                                max="200"
-                                value="{{ $currentFilters['battery_capacity_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
-                        <div class="flex-1">
-                            <label for="battery-capacity-max" class="sr-only">Battery Capacity Max</label>
-                            <input 
-                                type="number" 
-                                id="battery-capacity-max"
-                                name="battery_capacity_to" 
-                                placeholder="Max"
-                                min="0"
-                                max="200"
-                                value="{{ $currentFilters['battery_capacity_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="battery-capacity-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="battery-capacity-slider-min"
-                                min="0"
-                                max="200"
-                                step="5"
-                                value="{{ $currentFilters['battery_capacity_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="battery-capacity-slider-max"
-                                min="0"
-                                max="200"
-                                step="5"
-                                value="{{ $currentFilters['battery_capacity_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="battery-capacity-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="battery-capacity-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Range (km) -->
-                <div class="space-y-4">
-                    <label class="text-sm font-semibold text-foreground">Range (km)</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="range-km-from" class="sr-only">Range From</label>
-                            <input 
-                                type="number" 
-                                id="range-km-from"
-                                name="range_km_from" 
-                                placeholder="Min"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['range_km_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
-                        <div class="flex-1">
-                            <label for="range-km-to" class="sr-only">Range To</label>
-                            <input 
-                                type="number" 
-                                id="range-km-to"
-                                name="range_km_to" 
-                                placeholder="Max"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['range_km_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="range-km-range-track" class="absolute h-2 bg-foreground rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="range-km-slider-min"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['range_km_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="range-km-slider-max"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['range_km_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="range-km-handle-min" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="range-km-handle-max" class="absolute w-5 h-5 bg-foreground rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charging Type -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Charging Type</label>
-                    <select 
-                        name="charging_type" 
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                        <option value="">All</option>
-                        <option value="AC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC') selected @endif>AC</option>
-                        <option value="DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'DC') selected @endif>DC</option>
-                        <option value="AC/DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC/DC') selected @endif>AC/DC</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Economy & Environment -->
-            <div class="space-y-5">
-                <!-- Euro Norm -->
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Euro Norm</label>
-                    <select 
-                        name="euronorm" 
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                        <option value="">All</option>
-                        <option value="Euro 1" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 1') selected @endif>Euro 1</option>
-                        <option value="Euro 2" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 2') selected @endif>Euro 2</option>
-                        <option value="Euro 3" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 3') selected @endif>Euro 3</option>
-                        <option value="Euro 4" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 4') selected @endif>Euro 4</option>
-                        <option value="Euro 5" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 5') selected @endif>Euro 5</option>
-                        <option value="Euro 6" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 6') selected @endif>Euro 6</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Physical Details -->
-            <div class="space-y-5">
-                <!-- Doors & Seats -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Doors Min -->
-                    <div>
-                        <label class="text-sm font-semibold text-foreground mb-3 block">Doors (Min)</label>
-                        <input 
-                            type="number" 
-                            name="doors" 
-                            placeholder="Minimum"
-                            min="2"
-                            max="6"
-                            value="{{ $currentFilters['doors'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-
-                    <!-- Seats Min -->
-                    <div>
-                        <label class="text-sm font-semibold text-foreground mb-3 block">Seats (Min)</label>
-                        <input 
-                            type="number" 
-                            name="seats_min" 
-                            placeholder="Minimum"
-                            min="2"
-                            max="9"
-                            value="{{ $currentFilters['seats_min'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                </div>
-            </div>
-
-            <!-- Equipment -->
-            <div class="space-y-5">
-                <div>
-                    <label class="text-sm font-semibold text-foreground mb-3 block">Equipment</label>
-                            <div class="space-y-2">
-                        @foreach($filterOptions['equipmentTypes'] as $equipmentType)
-                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
-                                <button 
-                                    type="button"
-                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
-                                    data-type-id="{{ $equipmentType->id }}"
-                                >
-                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
-                                        <path d="m6 9 6 6 6-6"></path>
-                                    </svg>
-                                </button>
-                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentType->equipments as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-foreground @endif">
-                                            <input 
-                                                type="checkbox" 
-                                                name="equipment_ids[]" 
-                                                value="{{ $equipment->id }}"
-                                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) checked @endif
-                                            >
-                                            <span>{{ $equipment->name }}</span>
-                                        </label>
-                                    @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer Actions -->
-        <div class="sticky bottom-0 px-6 py-4 bg-background border-t border-border shrink-0 flex items-center justify-between gap-3 shadow-lg z-10">
-            <button
-                id="filter-reset-button"
-                type="button"
-                class="flex h-10 items-center justify-center rounded-lg border border-input bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-                Reset
-            </button>
-            <button
-                id="filter-apply-button"
-                type="button"
-                class="flex h-10 flex-1 items-center justify-center rounded-lg bg-primary text-primary-foreground px-6 text-sm font-semibold transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shadow-sm"
-            >
-                Apply Filters
-                <span id="filter-apply-count" class="ml-2 rounded-full bg-primary-foreground/20 px-2 py-0.5 text-xs font-semibold">
-                    ({{ number_format($vehicles->total()) }})
-                </span>
-            </button>
-        </div>
-    </div>
-</div>
 
 @push('styles')
 <style>
-    /* Custom scrollbar styling for filter drawer */
-    #filter-panel .overflow-y-auto::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    #filter-panel .overflow-y-auto::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    #filter-panel .overflow-y-auto::-webkit-scrollbar-thumb {
-        background-color: hsl(var(--muted));
-        border-radius: 4px;
-    }
-    
-    #filter-panel .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-        background-color: hsl(var(--muted-foreground) / 0.3);
-    }
-    
     /* Custom scrollbar styling for sort dropdown */
     #sort-dropdown .overflow-y-auto::-webkit-scrollbar {
         width: 6px;
@@ -1404,22 +1417,18 @@
         display: flex;
         flex-direction: row;
         border: 1px solid hsl(var(--border));
-        border-radius: 0.5rem;
-        background-color: hsl(var(--card));
         overflow: hidden;
         transition: all 0.2s ease;
         cursor: pointer;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-item:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
     
     #vehicle-container[data-view="list"] .vehicle-dealer-label {
         position: absolute;
         top: 0.5rem;
         right: 0.5rem;
         z-index: 20;
+        width: fit-content;
         pointer-events: none;
     }
     
@@ -1439,11 +1448,6 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        transition: transform 0.2s ease;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-item:hover .vehicle-image-container img {
-        transform: scale(1.05);
     }
     
     #vehicle-container[data-view="list"] .vehicle-item > a {
@@ -1599,6 +1603,48 @@
     .condition-radio-label.bg-gray-150:hover {
         color: hsl(var(--foreground)) !important;
         }
+    
+    /* Listing Type filter pill-style tabs */
+    .listing-type-checkbox-label {
+        border: none !important;
+    }
+    
+    .listing-type-checkbox-label.bg-white {
+        background-color: rgb(255 255 255) !important;
+        color: hsl(var(--foreground)) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+    .listing-type-checkbox-label.bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+        color: hsl(var(--muted-foreground)) !important;
+    }
+    
+    .listing-type-checkbox-label.bg-gray-150:hover {
+        color: hsl(var(--foreground)) !important;
+        }
+    
+    /* View Toggle filter pill-style tabs */
+    .view-toggle-label {
+        border: none !important;
+    }
+    
+    .view-toggle-label.bg-white {
+        background-color: rgb(255 255 255) !important;
+        color: hsl(var(--foreground)) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+    .view-toggle-label.bg-gray-150 {
+        background-color: rgb(236 237 240) !important;
+        color: hsl(var(--muted-foreground)) !important;
+    }
+    
+    .view-toggle-label.bg-gray-150:hover {
+        color: hsl(var(--foreground)) !important;
+        }
         
     .bg-gray-150 {
         background-color: rgb(236 237 240) !important;
@@ -1653,16 +1699,10 @@
         const sortDropdown = document.getElementById('sort-dropdown');
         const sortButtonText = document.getElementById('sort-button-text');
         const sortOptions = document.querySelectorAll('.sort-option');
-        const filterButton = document.getElementById('filter-button');
-        const filterDrawer = document.getElementById('filter-drawer');
-        const filterPanel = document.getElementById('filter-panel');
-        const filterCloseButton = document.getElementById('filter-close-button');
-        const filterBackdrop = document.getElementById('filter-backdrop');
-        const filterApplyButton = document.getElementById('filter-apply-button');
-        const filterResetButton = document.getElementById('filter-reset-button');
-        const viewToggleButton = document.getElementById('view-toggle-button');
-        const viewCardIcon = document.getElementById('view-card-icon');
-        const viewListIcon = document.getElementById('view-list-icon');
+        const filterSidebar = document.getElementById('filter-sidebar');
+        const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+        const filterResetButtonMain = document.getElementById('filter-reset-button-main');
+        const viewToggleRadios = document.querySelectorAll('input[name="view-toggle"]');
         
         // View state
         let currentView = localStorage.getItem('vehicleView') || 'card';
@@ -1679,7 +1719,7 @@
         }
         
         const sortLabels = {
-            'standard': 'Standard',
+            'best_match': 'Best Match',
             'price_asc': 'Price: (lowest first)',
             'price_desc': 'Price: (Highest first)',
             'date_desc': 'Date: (Newest first)',
@@ -1862,18 +1902,8 @@
             }
             
             return `
-                <div class="vehicle-item relative">
-                    ${vehicle.dealer_id ? `
-                    <!-- Dealer Label - Top Right of List Item -->
-                    <span class="vehicle-dealer-label absolute top-2 right-2 z-20 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        Dealer
-                    </span>
-                    ` : `
-                    <!-- Private Label - Top Right of List Item -->
-                    <span class="vehicle-dealer-label absolute top-2 right-2 z-20 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        Private
-                    </span>
-                    `}
+                <div class="vehicle-item relative bg-white rounded-lg">
+
                     <a href="/vehicles/${vehicle.id}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="vehicle-image-container relative">
@@ -1882,8 +1912,23 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover"
                             />
+                            
+                            <span>
+                            ${vehicle.dealer_id ? `
+                                <!-- Dealer Label - Top Left of List Item -->
+                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    Dealer
+                                </span>
+                                ` : `
+                                <!-- Private Label - Top Left of List Item -->
+                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    Private
+                                </span>
+                                `}
+                            </span>
+
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-blue-600' : 'text-orange-600'} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -1893,22 +1938,25 @@
                         <!-- Vehicle Content -->
                         <div class="vehicle-content-wrapper">
                             <!-- Header Section -->
-                            <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-sm">
+                            <div class="flex flex-col gap-4">
+                                <span class="flex items-center gap-2 text-sm font-semibold">
                                     ${vehicle.title || ''}
-                                </h3>
-                                ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal">${vehicle.version}</p>` : ''}
-                                <p class="text-lg font-bold">
-                                    ${formatCurrency(vehicle.price)}
-                                </p>
-                                    </div>
-                            
-                            <!-- Badges Section (same as card view) -->
+                                </span>
+                                
                                     ${badges.length > 0 ? `
                             <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
                                 ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
                             </div>
                             ` : ''}
+
+                                <p class="text-sm font-semibold">
+                                    Price: ${formatCurrency(vehicle.price)}
+                                </p>
+
+                                <span>
+                                    ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>Version:</span> <strong>${vehicle.version}</strong></p>` : ''}
+                                </span>
+                            </div>
                         </div>
                     </a>
                     
@@ -2232,21 +2280,24 @@
             if (filters.search) {
                 chips.push({
                     key: 'search',
-                    label: `Search: "${filters.search}"`,
+                    label: `"${filters.search}"`,
                     value: filters.search
                 });
             }
             
-            // Listing Type
-            if (filters.listing_type_id) {
-                const listingTypeName = getLabelText('listing_type_id_radio', filters.listing_type_id);
-                if (listingTypeName) {
+            // Listing Type (checkboxes - can have multiple)
+            if (filters.listing_type_id && Array.isArray(filters.listing_type_id)) {
+                filters.listing_type_id.forEach(id => {
+                    const name = getLabelText('listing_type_id[]', id);
+                    if (name) {
                     chips.push({
                         key: 'listing_type_id',
-                        label: `Type: ${listingTypeName}`,
-                        value: filters.listing_type_id
+                            label: name,
+                            value: id,
+                            isArray: true
                     });
                 }
+                });
             }
             
             // Brand
@@ -2255,7 +2306,7 @@
                 if (brandName) {
                     chips.push({
                         key: 'brand_id',
-                        label: `Brand: ${brandName}`,
+                        label: brandName,
                         value: filters.brand_id
                     });
                 }
@@ -2267,7 +2318,7 @@
                 if (modelName) {
                     chips.push({
                         key: 'model_id',
-                        label: `Model: ${modelName}`,
+                        label: modelName,
                         value: filters.model_id
                     });
                 }
@@ -2279,7 +2330,7 @@
                 if (categoryName) {
                     chips.push({
                         key: 'category_id',
-                        label: `Category: ${categoryName}`,
+                        label: categoryName,
                         value: filters.category_id
                     });
                 }
@@ -2292,19 +2343,19 @@
                 if (from && to) {
                     chips.push({
                         key: 'price_range',
-                        label: `Price: ${from} - ${to} kr.`,
+                        label: `${from} - ${to} kr.`,
                         value: { from: filters.price_from, to: filters.price_to }
                     });
                 } else if (from) {
                     chips.push({
                         key: 'price_from',
-                        label: `Price: From ${from} kr.`,
+                        label: `From ${from} kr.`,
                         value: filters.price_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'price_to',
-                        label: `Price: Up to ${to} kr.`,
+                        label: `Up to ${to} kr.`,
                         value: filters.price_to
                     });
                 }
@@ -2317,19 +2368,19 @@
                 if (from && to) {
                     chips.push({
                         key: 'year_range',
-                        label: `Year: ${from} - ${to}`,
+                        label: `${from} - ${to}`,
                         value: { from: filters.year_from, to: filters.year_to }
                     });
                 } else if (from) {
                     chips.push({
                         key: 'year_from',
-                        label: `Year: From ${from}`,
+                        label: `From ${from}`,
                         value: filters.year_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'year_to',
-                        label: `Year: Up to ${to}`,
+                        label: `Up to ${to}`,
                         value: filters.year_to
                     });
                 }
@@ -2342,19 +2393,19 @@
                 if (from && to) {
                     chips.push({
                         key: 'mileage_range',
-                        label: `Mileage: ${from} - ${to} km`,
+                        label: `${from} - ${to} km`,
                         value: { from: filters.mileage_from, to: filters.mileage_to }
                     });
                 } else if (from) {
                     chips.push({
                         key: 'mileage_from',
-                        label: `Mileage: From ${from} km`,
+                        label: `From ${from} km`,
                         value: filters.mileage_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'mileage_to',
-                        label: `Mileage: Up to ${to} km`,
+                        label: `Up to ${to} km`,
                         value: filters.mileage_to
                     });
                 }
@@ -2366,7 +2417,7 @@
                 if (conditionName) {
                     chips.push({
                         key: 'condition_id',
-                        label: `Condition: ${conditionName}`,
+                        label: conditionName,
                         value: filters.condition_id
                     });
                 }
@@ -2453,12 +2504,13 @@
                 return;
             }
             
-            container.innerHTML = chips.map(chip => `
-                <div class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary border border-primary/20">
+            // Render filter chips HTML
+            const chipsHTML = chips.map(chip => `
+                <div class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground">
                     <span>${chip.label}</span>
                     <button 
                         type="button"
-                        class="filter-chip-remove ml-0.5 rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                        class="filter-chip-remove ml-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors border border-foreground"
                         data-filter-key="${chip.key}"
                         data-filter-value="${typeof chip.value === 'object' ? JSON.stringify(chip.value) : chip.value}"
                         data-is-array="${chip.isArray || false}"
@@ -2470,6 +2522,17 @@
                     </button>
                 </div>
             `).join('');
+            
+            // Set container HTML with chips and reset button
+            container.innerHTML = chipsHTML + `
+                <button
+                    id="filter-reset-button-main"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                    Reset Filters
+                </button>
+            `;
             
             // Add click handlers to remove chips
             container.querySelectorAll('.filter-chip-remove').forEach(btn => {
@@ -2485,20 +2548,12 @@
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
                     } else if (key === 'listing_type_id') {
-                        // Reset to Purchase (default)
-                        const purchaseLabel = document.querySelector('label[data-tab="purchase"]');
-                        const listingTypeInput = document.getElementById('listing-type-input');
-                        if (purchaseLabel) {
-                            const purchaseRadio = purchaseLabel.querySelector('input[type="radio"]');
-                            if (purchaseRadio) {
-                                purchaseRadio.checked = true;
-                                const purchaseListingTypeId = purchaseLabel.getAttribute('data-listing-type-id');
-                                if (listingTypeInput && purchaseListingTypeId) {
-                                    listingTypeInput.value = purchaseListingTypeId;
-                                }
-                                if (typeof updateTabStyles === 'function') {
-                                    updateTabStyles();
-                                }
+                        // Uncheck the specific listing type checkbox
+                        const checkbox = document.querySelector(`[name="listing_type_id[]"][value="${value}"]`);
+                        if (checkbox) {
+                            checkbox.checked = false;
+                            if (typeof updateListingTypeStyles === 'function') {
+                                updateListingTypeStyles();
                             }
                         }
                     } else if (key === 'price_range') {
@@ -2531,6 +2586,26 @@
                     autoApplyFilters();
                 });
             });
+        }
+        
+        // Update reset button visibility based on active filters
+        function updateResetButtonVisibility() {
+            const resetButton = document.getElementById('filter-reset-button-main');
+            if (!resetButton) return;
+            
+            const filters = collectFilters();
+            const hasFilters = Object.keys(filters).some(key => {
+                if (key === 'sort') return false; // Don't count sort as a filter
+                const value = filters[key];
+                if (Array.isArray(value)) return value.length > 0;
+                return value !== null && value !== '' && value !== undefined;
+            });
+            
+            if (hasFilters) {
+                resetButton.classList.remove('hidden');
+            } else {
+                resetButton.classList.add('hidden');
+            }
         }
         
         // Centralized fetch vehicles function
@@ -2593,27 +2668,24 @@
                     console.warn('Pagination data missing from API response', data);
                 }
                 
-                // Update count badges
-                const filterCount = document.getElementById('filter-count');
-                const filterApplyCount = document.getElementById('filter-apply-count');
+                // Update results count
+                const resultsCount = document.getElementById('results-count');
                 const totalCount = data.pagination?.total || 0;
                 const formattedCount = new Intl.NumberFormat('en-US').format(totalCount);
                 
-                if (filterCount) {
-                    filterCount.textContent = formattedCount;
-                }
-                if (filterApplyCount) {
-                    filterApplyCount.textContent = formattedCount;
+                if (resultsCount) {
+                    resultsCount.textContent = `${formattedCount} results`;
                 }
                 
-                // Update filter chips
+                // Update filter chips and reset button visibility
                 renderFilterChips();
+                updateResetButtonVisibility();
                 
                 // Update sort button text if sort changed
                 if (params.sort !== undefined) {
-                    const sortValue = params.sort || 'standard';
+                    const sortValue = params.sort || 'best_match';
                     if (sortButtonText) {
-                        sortButtonText.textContent = sortLabels[sortValue] || 'Standard';
+                        sortButtonText.textContent = sortLabels[sortValue] || 'Best Match';
                     }
                     // Update active sort option
                     sortOptions.forEach(opt => {
@@ -2678,7 +2750,7 @@
             sortOptions.forEach(option => {
                 option.addEventListener('click', () => {
                     const sortValue = option.getAttribute('data-sort');
-                    const sortLabel = sortLabels[sortValue] || 'Standard';
+                    const sortLabel = sortLabels[sortValue] || 'Best Match';
                     
                     // Update button text
                     if (sortButtonText) {
@@ -2693,7 +2765,7 @@
                     sortDropdown.classList.add('hidden');
                     
                     // Fetch vehicles with new sort parameter
-                    fetchVehicles({ sort: sortValue === 'standard' ? null : sortValue, page: 1 });
+                    fetchVehicles({ sort: sortValue === 'best_match' ? null : sortValue, page: 1 });
                 });
             });
         }
@@ -2756,98 +2828,64 @@
             }
         });
         
-        // Filter drawer handlers
-        if (filterButton) {
-            filterButton.addEventListener('click', () => {
-                openDrawer();
-                setTimeout(() => {
-                    sliderConfigs.forEach(config => initRangeSlider(config));
-                    setupAutoApplyFilters();
-                    setupEquipmentCollapsible();
-                    updateConditionStyles();
-                }, 50);
-            });
-        }
-
-        if (filterCloseButton) {
-            filterCloseButton.addEventListener('click', closeDrawer);
-        }
-
-        if (filterBackdrop) {
-            filterBackdrop.addEventListener('click', closeDrawer);
-        }
-
-        // Close on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && filterDrawer && !filterDrawer.classList.contains('hidden')) {
-                closeDrawer();
-            }
-        });
-
-        function openDrawer() {
-            if (!filterDrawer || !filterPanel || !filterBackdrop) return;
+        // Mobile sidebar toggle
+        if (mobileFilterToggle && filterSidebar) {
+            const filterIcon = document.getElementById('mobile-filter-icon');
+            const closeIcon = document.getElementById('mobile-close-icon');
             
-            filterDrawer.classList.remove('hidden');
-            // Force reflow to ensure hidden class is removed before animation
-            filterDrawer.offsetHeight;
-            // Trigger animation
-            requestAnimationFrame(() => {
-                filterPanel.classList.remove('translate-x-full');
-                filterBackdrop.style.opacity = '1';
-            });
-            // Prevent body scroll
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeDrawer() {
-            if (!filterDrawer || !filterPanel || !filterBackdrop) return;
-            
-            filterPanel.classList.add('translate-x-full');
-            filterBackdrop.style.opacity = '0';
-            // Wait for animation to complete before hiding
-            setTimeout(() => {
-                filterDrawer.classList.add('hidden');
-                document.body.style.overflow = '';
-            }, 300);
-        }
-
-        // Tab functionality for Purchase/Leasing (radio buttons)
-        const tabRadios = document.querySelectorAll('input[name="listing_type_id_radio"]');
-        const listingTypeInput = document.getElementById('listing-type-input');
-        
-        function updateTabStyles() {
-            tabRadios.forEach(radio => {
-                const label = radio.closest('label.tab-button');
-                if (label) {
-                    if (radio.checked) {
-                        label.classList.add('bg-accent', 'border-primary');
-                        label.classList.remove('border-input');
+            function updateToggleIcon() {
+                const isOpen = !filterSidebar.classList.contains('hidden');
+                if (filterIcon && closeIcon) {
+                    if (isOpen) {
+                        filterIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                        mobileFilterToggle.setAttribute('aria-label', 'Close filters');
                     } else {
-                        label.classList.remove('bg-accent', 'border-primary');
-                        label.classList.add('border-input');
+                        filterIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileFilterToggle.setAttribute('aria-label', 'Open filters');
+                    }
+                }
+            }
+            
+            mobileFilterToggle.addEventListener('click', () => {
+                filterSidebar.classList.toggle('hidden');
+                updateToggleIcon();
+            });
+            
+            // Update icon on initial load
+            updateToggleIcon();
+        }
+
+        // Listing Type functionality for Purchase/Leasing (checkboxes)
+        const listingTypeCheckboxes = document.querySelectorAll('input[name="listing_type_id[]"]');
+        
+        function updateListingTypeStyles() {
+            listingTypeCheckboxes.forEach(checkbox => {
+                const label = checkbox.closest('.listing-type-checkbox-label');
+                if (label) {
+                    if (checkbox.checked) {
+                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                    } else {
+                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.add('bg-gray-150', 'text-muted-foreground');
                     }
                 }
             });
         }
         
-        tabRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (radio.checked) {
-                // Update hidden input
-                    const listingTypeId = radio.value;
-                if (listingTypeInput) {
-                    listingTypeInput.value = listingTypeId || '';
-                    }
-                    // Update tab styles
-                    updateTabStyles();
-                    // Auto-apply filters
-                    autoApplyFilters();
-                }
+        listingTypeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                // Update styles
+                updateListingTypeStyles();
+                // Auto-apply filters
+                autoApplyFilters();
             });
         });
 
-        // Initialize tab styles on page load
-        updateTabStyles();
+        // Initialize styles on page load
+        updateListingTypeStyles();
 
         // Brand-Model dependency: Filter models based on selected brand
         const brandSelect = document.getElementById('brand-select');
@@ -2913,9 +2951,9 @@
         
         // Equipment collapsible functionality
         function setupEquipmentCollapsible() {
-            if (!filterDrawer) return;
+            if (!filterSidebar) return;
             
-            const equipmentToggles = filterDrawer.querySelectorAll('.equipment-type-toggle');
+            const equipmentToggles = filterSidebar.querySelectorAll('.equipment-type-toggle');
             equipmentToggles.forEach(toggle => {
                 // Remove existing listeners by cloning
                 const newToggle = toggle.cloneNode(true);
@@ -3132,25 +3170,15 @@
             }
         ];
 
-        // Close drawer
-        if (filterCloseButton) {
-            filterCloseButton.addEventListener('click', closeDrawer);
-        }
-        if (filterBackdrop) {
-            filterBackdrop.addEventListener('click', closeDrawer);
-        }
-
-        // Close on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !filterDrawer.classList.contains('hidden')) {
-                closeDrawer();
+        // Reset filters function
+        function resetAllFilters() {
+            // Reset search input
+            if (searchInput) {
+                searchInput.value = '';
             }
-        });
-
-        // Reset filters
-        if (filterResetButton) {
-        filterResetButton.addEventListener('click', () => {
-            const inputs = filterDrawer.querySelectorAll('input, select');
+            
+            // Reset all inputs in filter sidebar
+            const inputs = filterSidebar.querySelectorAll('input, select');
             inputs.forEach(input => {
                 if (input.type === 'checkbox' || input.type === 'radio') {
                     input.checked = false;
@@ -3162,10 +3190,10 @@
                     if (config) {
                         if (input === config.minSlider) {
                             input.value = config.min;
-                            config.minInput.value = '';
+                            if (config.minInput) config.minInput.value = '';
                         } else {
                             input.value = config.max;
-                            config.maxInput.value = '';
+                            if (config.maxInput) config.maxInput.value = '';
                         }
                     }
                 } else if (input.tagName === 'SELECT' && input.multiple) {
@@ -3173,35 +3201,77 @@
                     Array.from(input.options).forEach(option => {
                         option.selected = false;
                     });
+                } else if (input.tagName === 'SELECT') {
+                    // Reset single select dropdowns to first option (usually "All")
+                    if (input.options.length > 0) {
+                        input.selectedIndex = 0;
+                    }
                 } else {
                     input.value = '';
                 }
             });
-            // Reset tabs to "Purchase" (default)
-            const purchaseLabel = document.querySelector('label[data-tab="purchase"]');
-            if (purchaseLabel) {
-                const purchaseRadio = purchaseLabel.querySelector('input[type="radio"]');
-                if (purchaseRadio) {
-                    purchaseRadio.checked = true;
-                    // Update hidden input
-                    const purchaseListingTypeId = purchaseLabel.getAttribute('data-listing-type-id');
-                    if (listingTypeInput && purchaseListingTypeId) {
-                        listingTypeInput.value = purchaseListingTypeId;
-                    }
-                    // Update tab styles
-                    if (typeof updateTabStyles === 'function') {
-                        updateTabStyles();
-                    }
-                }
+            
+            // Reset listing type checkboxes (uncheck all)
+            const listingTypeCheckboxes = document.querySelectorAll('input[name="listing_type_id[]"]');
+            listingTypeCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Reset condition to "All" (empty value)
+            const conditionAllRadio = document.querySelector('input[name="condition_id"][value=""]');
+            if (conditionAllRadio) {
+                conditionAllRadio.checked = true;
             }
+            
+            // Update listing type styles
+            if (typeof updateListingTypeStyles === 'function') {
+                updateListingTypeStyles();
+            }
+            
+            // Update condition styles
+            if (typeof updateConditionStyles === 'function') {
+                updateConditionStyles();
+            }
+            
             // Reset model options
             if (typeof updateModelOptions === 'function') {
             updateModelOptions();
             }
+            
             // Reinitialize sliders after reset
             setTimeout(() => {
                 sliderConfigs.forEach(config => initRangeSlider(config));
             }, 50);
+            
+            // Clear URL parameters and fetch vehicles with empty filters
+            const cleanUrl = window.location.pathname;
+            window.history.pushState({}, '', cleanUrl);
+            
+            // Apply the reset by fetching vehicles with no filters (only page 1)
+            // This will clear all filter parameters from the URL
+            fetchVehicles({ page: 1 });
+            
+            // Update filter chips (should be empty now) - delay slightly to ensure filters are cleared
+            setTimeout(() => {
+                renderFilterChips();
+                updateResetButtonVisibility();
+            }, 100);
+        }
+        
+        // Attach reset handler to initial button
+        if (filterResetButtonMain) {
+            filterResetButtonMain.addEventListener('click', resetAllFilters);
+        }
+        
+        // Also use event delegation on container for dynamically created buttons
+        const appliedFiltersContainer = document.getElementById('applied-filters-container');
+        if (appliedFiltersContainer) {
+            appliedFiltersContainer.addEventListener('click', (e) => {
+                const resetButton = e.target.closest('#filter-reset-button-main');
+                if (resetButton) {
+                    e.preventDefault();
+                    resetAllFilters();
+                }
         });
         }
 
@@ -3230,9 +3300,9 @@
             const sort = urlParams.get('sort');
             if (sort) filters.sort = sort;
             
-            // Basic filters
-            const listingTypeId = document.getElementById('listing-type-input')?.value;
-            if (listingTypeId) filters.listing_type_id = listingTypeId;
+            // Basic filters - Listing Type (checkboxes)
+            const listingTypeIds = Array.from(document.querySelectorAll('[name="listing_type_id[]"]:checked')).map(cb => cb.value);
+            if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
             
             const categoryId = document.querySelector('[name="category_id"]')?.value;
             if (categoryId) filters.category_id = categoryId;
@@ -3383,54 +3453,28 @@
             
             return params.toString();
         }
-
-        // Apply filters via AJAX (manual apply button - also closes drawer)
-        if (filterApplyButton) {
-        filterApplyButton.addEventListener('click', async () => {
-            const filters = collectFilters();
-            
-            // Show loading state
-            filterApplyButton.disabled = true;
-            filterApplyButton.textContent = 'Loading...';
-            
-            try {
-                    // Use centralized fetchVehicles function
-                    await fetchVehicles({ ...filters, page: 1 });
-                
-                // Close drawer
-            closeDrawer();
-            } catch (error) {
-                console.error('Error applying filters:', error);
-                alert('Failed to apply filters. Please try again.');
-            } finally {
-                // Reset button state
-                filterApplyButton.disabled = false;
-                filterApplyButton.textContent = 'Apply Filters';
-            }
-        });
-        }
         
         // Set up auto-apply listeners for all filter inputs
         function setupAutoApplyFilters() {
-            if (!filterDrawer) return;
+            if (!filterSidebar) return;
             
             // Radio buttons (listing type, condition)
-            filterDrawer.querySelectorAll('input[type="radio"]').forEach(radio => {
+            filterSidebar.querySelectorAll('input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', autoApplyFilters);
             });
             
             // Checkboxes (body type, fuel type, gear type, equipment, etc.)
-            filterDrawer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            filterSidebar.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', autoApplyFilters);
             });
             
             // Select dropdowns
-            filterDrawer.querySelectorAll('select').forEach(select => {
+            filterSidebar.querySelectorAll('select').forEach(select => {
                 select.addEventListener('change', autoApplyFilters);
             });
             
             // Number inputs (with debounce)
-            filterDrawer.querySelectorAll('input[type="number"]').forEach(input => {
+            filterSidebar.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('input', () => {
                     clearTimeout(filterDebounceTimer);
                     filterDebounceTimer = setTimeout(() => {
@@ -3440,7 +3484,7 @@
             });
             
             // Range sliders (with debounce)
-            filterDrawer.querySelectorAll('input[type="range"]').forEach(slider => {
+            filterSidebar.querySelectorAll('input[type="range"]').forEach(slider => {
                 slider.addEventListener('input', () => {
                     clearTimeout(filterDebounceTimer);
                     filterDebounceTimer = setTimeout(() => {
@@ -3450,6 +3494,22 @@
             });
         }
         
+        
+        // Update view toggle button styles
+        function updateViewToggleStyles() {
+            viewToggleRadios.forEach(radio => {
+                const label = radio.closest('.view-toggle-label');
+                if (label) {
+                    if (radio.checked) {
+                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                    } else {
+                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
+                        label.classList.add('bg-gray-150', 'text-muted-foreground');
+                    }
+                }
+            });
+        }
         
         // View toggle functionality
         function setView(view) {
@@ -3463,30 +3523,23 @@
             currentView = view;
             localStorage.setItem('vehicleView', view);
             
+            // Update radio button selection
+            viewToggleRadios.forEach(radio => {
+                radio.checked = radio.value === view;
+            });
+            
             // Update container data attribute and classes
             vehicleContainer.setAttribute('data-view', view);
             if (view === 'list') {
-                vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+                vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-3');
                 vehicleContainer.classList.add('flex', 'flex-col');
             } else {
-                vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+                vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-3');
                 vehicleContainer.classList.remove('flex', 'flex-col');
             }
             
-            // Update toggle button icon based on current view
-            if (viewCardIcon && viewListIcon) {
-                if (view === 'list') {
-                    // Show list icon (active state)
-                    viewCardIcon.classList.add('hidden');
-                    viewListIcon.classList.remove('hidden');
-                    viewToggleButton?.setAttribute('aria-label', 'Switch to card view');
-                } else {
-                    // Show card icon (default state)
-                    viewCardIcon.classList.remove('hidden');
-                    viewListIcon.classList.add('hidden');
-                    viewToggleButton?.setAttribute('aria-label', 'Switch to list view');
-                }
-            }
+            // Update view toggle button styles
+            updateViewToggleStyles();
         }
         
         // Convert existing card elements to list view (for initial page load)
@@ -3565,24 +3618,29 @@
             });
         }
         
-        // View toggle button handler
-        if (viewToggleButton) {
-            viewToggleButton.addEventListener('click', () => {
+        // View toggle radio button change handlers
+        viewToggleRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
                 // Prevent switching to list view on mobile
-                if (isMobile()) {
+                if (isMobile() && radio.value === 'list') {
+                    radio.checked = false;
+                    const cardRadio = document.querySelector('input[name="view-toggle"][value="card"]');
+                    if (cardRadio) cardRadio.checked = true;
+                    updateViewToggleStyles();
                     return;
                 }
                 
-                // Toggle between card and list view
-                const newView = currentView === 'card' ? 'list' : 'card';
+                if (radio.checked) {
+                    const newView = radio.value;
                 setView(newView);
                 // Preserve current page from URL to ensure pagination is maintained
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentPage = parseInt(urlParams.get('page')) || 1;
                 // Explicitly pass page parameter as number to ensure it's preserved
                 fetchVehicles({ page: currentPage });
-            });
         }
+            });
+        });
         
         // Handle window resize to force card view if switching to mobile
         let resizeTimeout;
@@ -3618,8 +3676,19 @@
             }
         }
         
-        // Initialize filter chips on page load
+        // Initialize filter chips and reset button visibility on page load
         renderFilterChips();
+        updateResetButtonVisibility();
+        
+        // Initialize auto-apply filters for sidebar
+        setupAutoApplyFilters();
+        
+        // Initialize all range sliders
+        setTimeout(() => {
+            sliderConfigs.forEach(config => initRangeSlider(config));
+            setupEquipmentCollapsible();
+            updateConditionStyles();
+        }, 100);
         
         // Get access token from cookie helper
         function getCookie(name) {
