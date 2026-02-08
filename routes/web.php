@@ -97,6 +97,12 @@ Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
 // Contact Page
 Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
 
+// Privacy Policy Page
+Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
+
+// Terms of Service Page
+Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
+
 // Vehicles Page
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 

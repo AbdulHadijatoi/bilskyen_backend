@@ -189,7 +189,16 @@ class HomeController extends Controller
      */
     public function showAbout()
     {
-        return view('about');
+        // Get about page content from cache
+        $aboutPageContent = $this->pageContentService->getHomePageContent('about');
+        
+        // Get about page images from cache
+        $aboutPageImages = $this->pageContentService->getPageImages('about');
+        
+        return view('about', [
+            'aboutPageContent' => $aboutPageContent,
+            'aboutPageImages' => $aboutPageImages,
+        ]);
     }
 
     /**
@@ -199,7 +208,54 @@ class HomeController extends Controller
      */
     public function showContact()
     {
-        return view('contact');
+        // Get contact page content from cache
+        $contactPageContent = $this->pageContentService->getHomePageContent('contact');
+        
+        // Get contact page images from cache
+        $contactPageImages = $this->pageContentService->getPageImages('contact');
+        
+        return view('contact', [
+            'contactPageContent' => $contactPageContent,
+            'contactPageImages' => $contactPageImages,
+        ]);
+    }
+
+    /**
+     * Show the privacy policy page
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showPrivacyPolicy()
+    {
+        // Get privacy policy page content from cache
+        $privacyPageContent = $this->pageContentService->getHomePageContent('privacy');
+        
+        // Get privacy policy page images from cache
+        $privacyPageImages = $this->pageContentService->getPageImages('privacy');
+        
+        return view('privacy-policy', [
+            'privacyPageContent' => $privacyPageContent,
+            'privacyPageImages' => $privacyPageImages,
+        ]);
+    }
+
+    /**
+     * Show the terms of service page
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showTermsOfService()
+    {
+        // Get terms of service page content from cache
+        $termsPageContent = $this->pageContentService->getHomePageContent('terms');
+        
+        // Get terms of service page images from cache
+        $termsPageImages = $this->pageContentService->getPageImages('terms');
+        
+        return view('terms-of-service', [
+            'termsPageContent' => $termsPageContent,
+            'termsPageImages' => $termsPageImages,
+        ]);
     }
 
     /**

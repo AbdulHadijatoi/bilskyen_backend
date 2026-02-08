@@ -73,18 +73,18 @@
                 <h3 class="mb-4 text-sm font-medium text-white">Vehicles</h3>
                 <ul class="space-y-2 text-sm">
                     <li><a href="/vehicles" class="text-white transition hover:text-white/80">Browse Vehicles</a></li>
-                    <li><a href="/vehicles/certified-pre-owned" class="text-white transition hover:text-white/80">Certified Pre-Owned</a></li>
-                    <li><a href="/vehicles/new-arrivals" class="text-white transition hover:text-white/80">New Arrivals</a></li>
-                    <li><a href="/vehicles/special-offers" class="text-white transition hover:text-white/80">Special Offers</a></li>
+                    <li><a href="/vehicles" class="text-white transition hover:text-white/80">Pre-Owned</a></li>
+                    <li><a href="/vehicles" class="text-white transition hover:text-white/80">New Arrivals</a></li>
+                    <li><a href="/vehicles" class="text-white transition hover:text-white/80">Special Offers</a></li>
                 </ul>
             </div>
             
             <div>
-                <h3 class="mb-4 text-sm font-medium text-white">Services</h3>
+                <h3 class="mb-4 text-sm font-medium text-white">Pages</h3>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="/services/vehicle-inspection" class="text-white transition hover:text-white/80">Vehicle Inspection</a></li>
-                    <li><a href="/services/maintenance" class="text-white transition hover:text-white/80">Maintenance</a></li>
-                    <li><a href="/services/warranty" class="text-white transition hover:text-white/80">Warranty Services</a></li>
+                    <li><a href="/privacy-policy" class="text-white transition hover:text-white/80">Privacy Policy</a></li>
+                    <li><a href="/terms-of-service" class="text-white transition hover:text-white/80">Terms of Service</a></li>
+                    <li><a href="/contact" class="text-white transition hover:text-white/80">Contact Us</a></li>
                     <li><a href="/about" class="text-white transition hover:text-white/80">About Us</a></li>
                 </ul>
             </div>
@@ -92,9 +92,9 @@
             <div>
                 <h3 class="mb-4 text-sm font-medium text-white">Contact Us</h3>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="mailto:info@bilskyen.dk" class="text-white transition hover:text-white/80">info@bilskyen.dk</a></li>
-                    <li><a href="tel:+4512345678" class="text-white transition hover:text-white/80">+45 12 34 56 78</a></li>
-                    <li class="text-white">Address: 123 Dealership Lane, Copenhagen, Denmark</li>
+                    <li><a href="mailto:{{ isset($homePageContent) && isset($homePageContent['footer_contact_email']) ? $homePageContent['footer_contact_email'] : 'info@bilskyen.dk' }}" class="text-white transition hover:text-white/80">{{ isset($homePageContent) && isset($homePageContent['footer_contact_email']) ? $homePageContent['footer_contact_email'] : 'info@bilskyen.dk' }}</a></li>
+                    <li><a href="tel:{{ isset($homePageContent) && isset($homePageContent['footer_contact_phone']) ? $homePageContent['footer_contact_phone'] : '+45 12 34 56 78' }}" class="text-white transition hover:text-white/80">{{ isset($homePageContent) && isset($homePageContent['footer_contact_phone']) ? $homePageContent['footer_contact_phone'] : '+45 12 34 56 78' }}</a></li>
+                    <li class="text-white">Address: {{ isset($homePageContent) && isset($homePageContent['footer_about_address']) ? $homePageContent['footer_about_address'] : '123 Dealership Lane, Copenhagen, Denmark' }}</li>
                 </ul>
             </div>
         </div>
@@ -103,8 +103,8 @@
                 © {{ date('Y') }} Bilskyen. All rights reserved.
             </p>
             <div class="flex items-center space-x-4">
-                <a href="/privacy" class="text-xs text-white transition hover:text-white/80">Privacy Policy</a>
-                <a href="/terms" class="text-xs text-white transition hover:text-white/80">Terms of Service</a>
+                <a href="/privacy-policy" class="text-xs text-white transition hover:text-white/80">Privacy Policy</a>
+                <a href="/terms-of-service" class="text-xs text-white transition hover:text-white/80">Terms of Service</a>
             </div>
         </div>
     </div>

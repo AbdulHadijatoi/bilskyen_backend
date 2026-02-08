@@ -35,6 +35,10 @@ use App\Http\Controllers\Admin\Constants\AdminEquipmentController;
 use App\Http\Controllers\Admin\Constants\AdminEquipmentTypeController;
 use App\Http\Controllers\AdminTranslationController;
 use App\Http\Controllers\AdminHomePageController;
+use App\Http\Controllers\AdminAboutPageController;
+use App\Http\Controllers\AdminContactPageController;
+use App\Http\Controllers\AdminPrivacyPageController;
+use App\Http\Controllers\AdminTermsPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -142,6 +146,38 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/', [AdminHomePageController::class, 'index']);
         Route::post('/bulk-update', [AdminHomePageController::class, 'updateBulk']);
         Route::post('/{sectionKey}', [AdminHomePageController::class, 'update']);
+    });
+    
+    // About Page Content Management
+    Route::prefix('about-page-content')->group(function () {
+        Route::get('/', [AdminAboutPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminAboutPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminAboutPageController::class, 'update']);
+        Route::post('/images/upload', [AdminAboutPageController::class, 'uploadImage']);
+        Route::delete('/images/{imageId}', [AdminAboutPageController::class, 'deleteImage']);
+    });
+    
+    // Contact Page Content Management
+    Route::prefix('contact-page-content')->group(function () {
+        Route::get('/', [AdminContactPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminContactPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminContactPageController::class, 'update']);
+        Route::post('/images/upload', [AdminContactPageController::class, 'uploadImage']);
+        Route::delete('/images/{imageId}', [AdminContactPageController::class, 'deleteImage']);
+    });
+    
+    // Privacy Page Content Management
+    Route::prefix('privacy-page-content')->group(function () {
+        Route::get('/', [AdminPrivacyPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminPrivacyPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminPrivacyPageController::class, 'update']);
+    });
+    
+    // Terms Page Content Management
+    Route::prefix('terms-page-content')->group(function () {
+        Route::get('/', [AdminTermsPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminTermsPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminTermsPageController::class, 'update']);
     });
     
     // Featured Vehicles Management

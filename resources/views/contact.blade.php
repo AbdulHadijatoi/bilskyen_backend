@@ -8,11 +8,10 @@
     <section class="bg-muted py-20 text-center">
         <div class="container mx-auto px-4 md:px-6">
             <h1 class="text-4xl font-bold tracking-tight md:text-5xl">
-                Get in Touch
+                {{ $contactPageContent['contact_header_title'] ?? 'Get in Touch' }}
             </h1>
             <p class="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
-                We're here to help with your questions about vehicles,
-                financing, and our services. Reach out to us anytime.
+                {{ $contactPageContent['contact_header_description'] ?? "We're here to help with your questions about vehicles, financing, and our services. Reach out to us anytime." }}
             </p>
         </div>
     </section>
@@ -24,10 +23,9 @@
                 <!-- Contact Form -->
                 <div class="rounded-lg border border-border bg-card">
                     <div class="p-6">
-                        <h2 class="text-2xl font-semibold tracking-tight">Send Us a Message</h2>
+                        <h2 class="text-2xl font-semibold tracking-tight">{{ $contactPageContent['contact_form_title'] ?? 'Send Us a Message' }}</h2>
                         <p class="text-muted-foreground mt-2">
-                            Fill out the form below, and we'll get back to you as
-                            soon as possible.
+                            {{ $contactPageContent['contact_form_description'] ?? "Fill out the form below, and we'll get back to you as soon as possible." }}
                         </p>
                     </div>
                     <div class="p-6 pt-0">
@@ -96,9 +94,9 @@
                 <!-- Contact Details -->
                 <div class="space-y-8">
                     <div class="space-y-2">
-                        <h2 class="text-2xl font-bold">Contact Information</h2>
+                        <h2 class="text-2xl font-bold">{{ $contactPageContent['contact_info_title'] ?? 'Contact Information' }}</h2>
                         <p class="text-muted-foreground">
-                            Find us at our dealership or reach out via phone or email.
+                            {{ $contactPageContent['contact_info_description'] ?? 'Find us at our dealership or reach out via phone or email.' }}
                         </p>
                     </div>
                     <div class="space-y-6">
@@ -113,7 +111,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Our Address</h3>
                                 <p class="text-muted-foreground">
-                                    123 Dealership Lane, Copenhagen, Denmark
+                                    {{ $contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark' }}
                                 </p>
                                 <a
                                     href="#"
@@ -132,7 +130,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Phone</h3>
                                 <p class="text-muted-foreground">
-                                    +45 12 34 56 78
+                                    {{ $contactPageContent['contact_phone'] ?? '+45 12 34 56 78' }}
                                 </p>
                             </div>
                         </div>
@@ -146,7 +144,7 @@
                             <div>
                                 <h3 class="text-base font-semibold">Email</h3>
                                 <p class="text-muted-foreground">
-                                    info@bilskyen.dk
+                                    {{ $contactPageContent['contact_email'] ?? 'info@bilskyen.dk' }}
                                 </p>
                             </div>
                         </div>
@@ -160,10 +158,10 @@
                             <div>
                                 <h3 class="text-base font-semibold">Business Hours</h3>
                                 <p class="text-muted-foreground">
-                                    Monday - Saturday: 9:00 AM - 7:00 PM
+                                    {{ $contactPageContent['contact_hours_weekdays'] ?? 'Monday - Saturday: 9:00 AM - 7:00 PM' }}
                                 </p>
                                 <p class="text-muted-foreground">
-                                    Sunday: 10:00 AM - 5:00 PM
+                                    {{ $contactPageContent['contact_hours_weekend'] ?? 'Sunday: 10:00 AM - 5:00 PM' }}
                                 </p>
                             </div>
                         </div>
@@ -176,16 +174,21 @@
     <!-- Map Section -->
     <section class="bg-muted">
         <div class="relative h-96 w-full">
+            @php
+                $mapImage = isset($contactPageImages['contact_map_image']) && count($contactPageImages['contact_map_image']) > 0 
+                    ? $contactPageImages['contact_map_image'][0] 
+                    : null;
+            @endphp
             <img
-                src="/images/showroom.jpg"
-                alt="Showroom"
+                src="{{ $mapImage && isset($mapImage['image_url']) ? $mapImage['image_url'] : '/images/showroom.jpg' }}"
+                alt="{{ $mapImage && isset($mapImage['alt_text']) ? $mapImage['alt_text'] : 'Showroom' }}"
                 class="h-full w-full object-cover"
                 onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'"
             />
             <div class="absolute inset-0 bg-black/50"></div>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-                <h2 class="text-3xl font-bold">Visit Our Showroom</h2>
-                <p class="mt-2 max-w-md">123 Dealership Lane, Copenhagen, Denmark</p>
+                <h2 class="text-3xl font-bold">{{ $contactPageContent['contact_map_title'] ?? 'Visit Our Showroom' }}</h2>
+                <p class="mt-2 max-w-md">{{ $contactPageContent['contact_map_address'] ?? ($contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark') }}</p>
             </div>
         </div>
     </section>
