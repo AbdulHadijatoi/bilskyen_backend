@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\UserStatus;
 use App\Models\User;
 use App\Models\DealerStaff;
 use App\Services\DealerContextService;
@@ -94,6 +95,7 @@ class DealerStaffController extends Controller
             'username' => $username,
             'phone' => $request->phone,
             'password' => $request->password, // Will be automatically hashed by the model cast
+            'status_id' => UserStatus::ACTIVE,
         ]);
 
         // Assign staff role to the newly created user

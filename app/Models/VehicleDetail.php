@@ -294,4 +294,9 @@ class VehicleDetail extends Model
     {
         return $this->belongsTo(Transmission::class);
     }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
+    }
 }

@@ -761,7 +761,7 @@ class SellYourCarController extends Controller
         $isFeatured = FeaturedListing::where('vehicle_id', $vehicleId)->exists();
         
         // Check if user has permission to feature vehicles
-        $canFeature = $user->can('vehicle.feature');
+        $canFeature = $user->can('vehicle.seller.feature');
 
         return view('sell-your-car-success', [
             'vehicle' => $vehicle,

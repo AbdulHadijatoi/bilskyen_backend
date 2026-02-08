@@ -126,37 +126,3 @@ Route::prefix('test/dmr')->group(function () {
     Route::get('/xmlstream', [DmrTestController::class, 'motorregisterXmlStream']);
 });
 
-Route::get('/test-vin', function () {
-
-    $vin = 'LSJW74099LZ040636';
-    $modelYear = 2020;
-
-    $response = Http::get(
-        "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{$vin}",
-        [
-            'format'    => 'json',
-            'modelyear' => $modelYear
-        ]
-    );
-
-    if (!$response->successful()) {
-        return response()->json(['error' => 'API request failed'], 500);
-    }
-
-    $data = $response->json()['Results'][0];
-
-    return response()->json([
-        'vin' => $vin,
-        'model_year' => $modelYear,
-        'make' => $data['Make'] ?? null,
-        'model' => $data['Model'] ?? null,
-        'body_class' => $data['BodyClass'] ?? null,
-        'engine_cylinders' => $data['EngineCylinders'] ?? null,
-        'fuel_type' => $data['FuelTypePrimary'] ?? null,
-        'vehicle_type' => $data['VehicleType'] ?? null,
-        'error_code' => $data['ErrorCode'] ?? null,
-        'error_text' => $data['ErrorText'] ?? null,
-    ]);
-});
-
-
