@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\Constants\AdminVehicleListStatusController;
 use App\Http\Controllers\Admin\Constants\AdminEquipmentController;
 use App\Http\Controllers\Admin\Constants\AdminEquipmentTypeController;
 use App\Http\Controllers\AdminTranslationController;
+use App\Http\Controllers\AdminHomePageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,6 +135,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::put('/{id}', [AdminPageController::class, 'update']);
         Route::delete('/{id}', [AdminPageController::class, 'destroy']);
         Route::put('/{id}/publish', [AdminPageController::class, 'publish']);
+    });
+    
+    // Home Page Content Management
+    Route::prefix('home-page-content')->group(function () {
+        Route::get('/', [AdminHomePageController::class, 'index']);
+        Route::post('/bulk-update', [AdminHomePageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminHomePageController::class, 'update']);
     });
     
     // Featured Vehicles Management

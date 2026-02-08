@@ -5,10 +5,10 @@
         <div class="flex flex-col items-center justify-between gap-8 lg:flex-row text-white">
             <div class="max-w-xl space-y-4">
                 <h2 class="text-3xl font-bold tracking-tight text-white">
-                    Ready to Find Your Next Vehicle?
+                    {{ isset($homePageContent) && isset($homePageContent['footer_cta_title']) ? $homePageContent['footer_cta_title'] : 'Ready to Find Your Next Vehicle?' }}
                 </h2>
                 <p class="text-white/90">
-                    Visit our showroom or browse our inventory online. Our team is ready to help you find the perfect vehicle that fits your needs and budget.
+                    {{ isset($homePageContent) && isset($homePageContent['footer_cta_description']) ? $homePageContent['footer_cta_description'] : 'Visit our showroom or browse our inventory online. Our team is ready to help you find the perfect vehicle that fits your needs and budget.' }}
                 </p>
             </div>
             <div class="flex flex-col gap-4 sm:flex-row">
@@ -30,7 +30,7 @@
                     <img src="/images/logo_white.png" alt="Bilskyen" class="h-8">
                 </a>
                 <p class="text-sm text-white">
-                    Bilskyen - Driving trust and value with quality pre-owned vehicles for every journey.
+                    {{ isset($homePageContent) && isset($homePageContent['footer_about_description']) ? $homePageContent['footer_about_description'] : 'Bilskyen - Driving trust and value with quality pre-owned vehicles for every journey.' }}
                 </p>
 
                 <ul class="flex items-center space-x-6 text-white">

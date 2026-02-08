@@ -187,12 +187,12 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-6">
                 <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">
-                    Find Your Perfect Vehicle at Bilskyen
+                    {{ $homePageContent['search_title'] ?? 'Find Your Perfect Vehicle at Bilskyen' }}
                 </h1>
             </div>
             <div class="rounded-lg bg-card p-4 md:p-6 shadow-lg">
                 <p class="text-muted-foreground text-base md:text-lg mb-4">
-                    Search our inventory to find the perfect match for your needs.
+                    {{ $homePageContent['search_description'] ?? 'Search our inventory to find the perfect match for your needs.' }}
                 </p>
 
                 <div class="flex flex-col gap-4">
@@ -401,7 +401,7 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="max-w-4xl space-y-8">
                 <p class="text-xl text-muted-foreground">
-                    Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.
+                    {{ $homePageContent['hero_description'] ?? 'Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.' }}
                 </p>
                 <div class="flex flex-col gap-4 sm:flex-row">
                     <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
@@ -421,10 +421,10 @@
             <div class="flex flex-col gap-8">
                 <div class="space-y-2">
                     <h2 class="text-3xl font-bold tracking-tight">
-                        Featured Vehicles
+                        {{ $homePageContent['featured_vehicles_title'] ?? 'Featured Vehicles' }}
                     </h2>
                     <p class="text-muted-foreground">
-                        Explore our selection of quality vehicles ready for you to drive home today.
+                        {{ $homePageContent['featured_vehicles_description'] ?? 'Explore our selection of quality vehicles ready for you to drive home today.' }}
                     </p>
                 </div>
                 
@@ -593,10 +593,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    Why Choose Bilskyen
+                    {{ $homePageContent['stats_title'] ?? 'Why Choose Bilskyen' }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    We're committed to providing exceptional service and quality vehicles to our customers.
+                    {{ $homePageContent['stats_description'] ?? "We're committed to providing exceptional service and quality vehicles to our customers." }}
                 </p>
             </div>
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -610,9 +610,9 @@
                                 <path d="M12 8v6M9 11h6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">100+</h3>
-                        <p class="mb-2 font-medium">Quality Vehicles</p>
-                        <p class="text-sm text-muted-foreground">Thoroughly inspected vehicles in our inventory</p>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_1_value'] ?? '100+' }}</h3>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_1_title'] ?? 'Quality Vehicles' }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? 'Thoroughly inspected vehicles in our inventory' }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -625,9 +625,9 @@
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">500+</h3>
-                        <p class="mb-2 font-medium">Happy Customers</p>
-                        <p class="text-sm text-muted-foreground">Satisfied customers who found their perfect vehicle</p>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_2_value'] ?? '500+' }}</h3>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_2_title'] ?? 'Happy Customers' }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? 'Satisfied customers who found their perfect vehicle' }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -640,9 +640,9 @@
                                 <line x1="3" x2="21" y1="10" y2="10"></line>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">15+</h3>
-                        <p class="mb-2 font-medium">Years of Experience</p>
-                        <p class="text-sm text-muted-foreground">Years serving our community with integrity</p>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_3_value'] ?? '15+' }}</h3>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_3_title'] ?? 'Years of Experience' }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? 'Years serving our community with integrity' }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -653,9 +653,9 @@
                                 <path d="M12 2v6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">98%</h3>
-                        <p class="mb-2 font-medium">Satisfaction Rate</p>
-                        <p class="text-sm text-muted-foreground">Customer satisfaction based on reviews</p>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_4_value'] ?? '98%' }}</h3>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_4_title'] ?? 'Satisfaction Rate' }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_4_description'] ?? 'Customer satisfaction based on reviews' }}</p>
                     </div>
                 </div>
             </div>
@@ -667,10 +667,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    Our Services
+                    {{ $homePageContent['features_title'] ?? 'Our Services' }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    We provide comprehensive services to make your vehicle purchase smooth and enjoyable.
+                    {{ $homePageContent['features_description'] ?? 'We provide comprehensive services to make your vehicle purchase smooth and enjoyable.' }}
                 </p>
             </div>
             <div class="grid gap-8 md:grid-cols-3">
@@ -681,9 +681,9 @@
                             <line x1="2" x2="22" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">Financing Options</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_1_title'] ?? 'Financing Options' }}</h3>
                     <p class="text-muted-foreground">
-                        We work with multiple lenders to find the best financing solutions for your budget.
+                        {{ $homePageContent['feature_1_description'] ?? 'We work with multiple lenders to find the best financing solutions for your budget.' }}
                     </p>
                 </div>
                 <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
@@ -692,9 +692,9 @@
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">Vehicle Warranty</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_2_title'] ?? 'Vehicle Warranty' }}</h3>
                     <p class="text-muted-foreground">
-                        Extended warranty options to protect your investment and give you peace of mind.
+                        {{ $homePageContent['feature_2_description'] ?? 'Extended warranty options to protect your investment and give you peace of mind.' }}
                     </p>
                 </div>
                 <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
@@ -706,9 +706,9 @@
                             <line x1="3" x2="21" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">Service Department</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_3_title'] ?? 'Service Department' }}</h3>
                     <p class="text-muted-foreground">
-                        Professional maintenance and repair services to keep your vehicle in top condition.
+                        {{ $homePageContent['feature_3_description'] ?? 'Professional maintenance and repair services to keep your vehicle in top condition.' }}
                     </p>
                 </div>
             </div>
@@ -720,32 +720,32 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    Customer Testimonials
+                    {{ $homePageContent['testimonials_title'] ?? 'Customer Testimonials' }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    Hear what our customers have to say about their experience with us.
+                    {{ $homePageContent['testimonials_description'] ?? 'Hear what our customers have to say about their experience with us.' }}
                 </p>
             </div>
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 @php
                     $testimonials = [
                         [
-                            'name' => 'John Davis',
-                            'location' => 'Copenhagen, Denmark',
-                            'quote' => 'The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
-                            'rating' => 5
+                            'name' => $homePageContent['testimonial_1_name'] ?? 'John Davis',
+                            'location' => $homePageContent['testimonial_1_location'] ?? 'Copenhagen, Denmark',
+                            'quote' => $homePageContent['testimonial_1_quote'] ?? 'The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
+                            'rating' => (int)($homePageContent['testimonial_1_rating'] ?? 5)
                         ],
                         [
-                            'name' => 'Priya Sharma',
-                            'location' => 'Aarhus, Denmark',
-                            'quote' => 'I was impressed with their knowledge and no-pressure approach. I got a great deal on my new car and would definitely recommend them.',
-                            'rating' => 5
+                            'name' => $homePageContent['testimonial_2_name'] ?? 'Priya Sharma',
+                            'location' => $homePageContent['testimonial_2_location'] ?? 'Aarhus, Denmark',
+                            'quote' => $homePageContent['testimonial_2_quote'] ?? 'I was impressed with their knowledge and no-pressure approach. I got a great deal on my new car and would definitely recommend them.',
+                            'rating' => (int)($homePageContent['testimonial_2_rating'] ?? 5)
                         ],
                         [
-                            'name' => 'Ahmed Khan',
-                            'location' => 'Odense, Denmark',
-                            'quote' => 'The financing options they provided were better than I expected. The entire process was smooth and I drove away very happy.',
-                            'rating' => 4
+                            'name' => $homePageContent['testimonial_3_name'] ?? 'Ahmed Khan',
+                            'location' => $homePageContent['testimonial_3_location'] ?? 'Odense, Denmark',
+                            'quote' => $homePageContent['testimonial_3_quote'] ?? 'The financing options they provided were better than I expected. The entire process was smooth and I drove away very happy.',
+                            'rating' => (int)($homePageContent['testimonial_3_rating'] ?? 4)
                         ],
                     ];
                 @endphp

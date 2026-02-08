@@ -21,6 +21,7 @@ use App\Models\ListingViewsLog;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
+use App\Services\PageContentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +30,8 @@ class HomeController extends Controller
     public function __construct(
         private AuthService $authService,
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private PageContentService $pageContentService
     ) {}
 
     /**
@@ -102,9 +104,13 @@ class HomeController extends Controller
             ->filter() // Remove null entries
             ->values(); // Re-index array
 
+        // Get home page content from cache
+        $homePageContent = $this->pageContentService->getHomePageContent('home');
+
         return view('home', [
             'filterOptions' => $filterOptions,
             'featuredVehicles' => $featuredVehicles,
+            'homePageContent' => $homePageContent,
         ]);
     }
 

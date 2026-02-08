@@ -6,6 +6,7 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VersionController;
 use App\Http\Controllers\NummerpladeController;
 use App\Http\Controllers\LookupController;
+use App\Http\Controllers\HomePageContentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,6 +42,9 @@ Route::prefix('v1')->group(function () {
     
     // Constants API - Get all lookup tables data
     Route::get('/constants', [LookupController::class, 'constants'])->name('constants');
+    
+    // Home Page Content API (public, uses cache)
+    Route::get('/home-page-content', [HomePageContentController::class, 'getHomePageContent'])->name('home-page-content');
     
     // Authentication routes
     Route::prefix('auth')->group(function () {
