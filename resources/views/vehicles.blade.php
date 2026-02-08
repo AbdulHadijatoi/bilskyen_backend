@@ -8,12 +8,12 @@
 @endphp
 
 @section('content')
-<div class="container mx-auto flex flex-col gap-6 py-8">
+<div class="container mx-auto flex flex-col gap-6 py-8 px-4 sm:px-6">
     <!-- Search Bar -->
-    <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm">
+    <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm w-full">
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-none  focus:bg-none">
             <!-- Search Input -->
-            <form class="flex w-full sm:flex-1 focus:bg-none bg-none" method="GET" action="/vehicles" id="search-form">
+            <form class="flex w-full sm:flex-1 focus:bg-none bg-none min-w-0" method="GET" action="/vehicles" id="search-form">
                 <!-- Preserve existing query parameters (including sort) -->
                 @foreach(request()->except('search') as $key => $value)
                     @if(is_array($value))
@@ -67,7 +67,7 @@
             </button>
 
     <!-- Filters + Sort/View/Layout -->
-    <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+    <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start w-full">
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
@@ -1031,13 +1031,13 @@
         </aside>
 
         <!-- Sort, view toggle and results -->
-        <div class="flex-1 flex flex-col gap-4">
+        <div class="flex-1 flex flex-col gap-4 w-full">
             <!-- Results count, filter chips, and reset button -->
             <div class="flex flex-col gap-3">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap w-full">
                         <!-- Applied Filters Chips -->
-                        <div id="applied-filters-container" class="flex flex-wrap gap-2">
+                        <div id="applied-filters-container" class="flex flex-wrap gap-2 w-full min-w-0">
                             <!-- Filter chips will be rendered here via JavaScript -->
                     <!-- Reset Button (only visible when filters are applied) -->
                     <button
@@ -1052,23 +1052,16 @@
             </div>
         </div>
 
-            <div id="sort-and-condition-controls" class="flex items-center justify-between gap-4">
-            <div class="text-xs flex items-center gap-2">
-                <p id="results-count" class="text-xs text-foreground">
-                    <strong>{{ number_format($vehicles->total()) }}</strong> 
-                    results
-                </p>
-                <span>|</span>
+            <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
+            <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
+                        <strong>{{ number_format($vehicles->total()) }}</strong> 
+                        results
+                    </p>
+                </div>
                 <!-- Sort Dropdown Container -->
                 <div class="relative text-xs font-medium">
-            <button
-                type="button"
-                id="sort-button"
-                        class="inline-flex h-8 items-center justify-center"
-                    >
-                        <span class="mr-2">Sort by</span>
-                        <strong>
-                <span id="sort-button-text">
                     @php
                         $sortLabels = [
                             'best_match' => 'Best Match',
@@ -1103,114 +1096,23 @@
                         ];
                         $currentSort = request()->query('sort', 'best_match');
                     @endphp
-                    {{ $sortLabels[$currentSort] ?? 'Best Match' }}
-                </span>
-                        </strong>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5 h-3 w-3">
-                    <path d="m6 9 6 6 6-6"></path>
-                </svg>
-            </button>
-            
-            <!-- Sort Dropdown Menu -->
-            <div 
-                id="sort-dropdown"
-                class="absolute right-0 top-full mt-1 w-64 rounded-md border border-input bg-background shadow-lg z-50 hidden"
-            >
-                <div class="max-h-96 overflow-y-auto py-1" style="scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent;">
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'best_match' || !request()->has('sort')) bg-accent @endif" data-sort="best_match">
-                        Best Match
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_asc') bg-accent @endif" data-sort="price_asc">
-                        Price: (lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'price_desc') bg-accent @endif" data-sort="price_desc">
-                        Price: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_desc') bg-accent @endif" data-sort="date_desc">
-                        Date: (Newest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'date_asc') bg-accent @endif" data-sort="date_asc">
-                        Date: (Oldest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_desc') bg-accent @endif" data-sort="year_desc">
-                        Model Year: (Newest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'year_asc') bg-accent @endif" data-sort="year_asc">
-                        Model Year: (Oldest First)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_desc') bg-accent @endif" data-sort="mileage_desc">
-                        Mileage: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'mileage_asc') bg-accent @endif" data-sort="mileage_asc">
-                        Mileage: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_desc') bg-accent @endif" data-sort="fuel_efficiency_desc">
-                        Km/l: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'fuel_efficiency_asc') bg-accent @endif" data-sort="fuel_efficiency_asc">
-                        Km/l: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_desc') bg-accent @endif" data-sort="range_desc">
-                        Range: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'range_asc') bg-accent @endif" data-sort="range_asc">
-                        Range: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_desc') bg-accent @endif" data-sort="battery_desc">
-                        Battery capacity: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'battery_asc') bg-accent @endif" data-sort="battery_asc">
-                        Battery capacity: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_asc') bg-accent @endif" data-sort="brand_asc">
-                        Brand: (Alphabetical)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'brand_desc') bg-accent @endif" data-sort="brand_desc">
-                        Brand: (Reverse alphabetical)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_desc') bg-accent @endif" data-sort="engine_power_desc">
-                        HK: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'engine_power_asc') bg-accent @endif" data-sort="engine_power_asc">
-                        HK: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_desc') bg-accent @endif" data-sort="towing_weight_desc">
-                        Trailer weight: (Heaviest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'towing_weight_asc') bg-accent @endif" data-sort="towing_weight_asc">
-                        Trailer weight: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_desc') bg-accent @endif" data-sort="top_speed_desc">
-                        0-100 km/h: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'top_speed_asc') bg-accent @endif" data-sort="top_speed_asc">
-                        0-100 km/h: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_desc') bg-accent @endif" data-sort="ownership_tax_desc">
-                        Owner tax: (Highest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'ownership_tax_asc') bg-accent @endif" data-sort="ownership_tax_asc">
-                        Owner tax: (Lowest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_desc') bg-accent @endif" data-sort="first_reg_desc">
-                        1st reg: (Newest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'first_reg_asc') bg-accent @endif" data-sort="first_reg_asc">
-                        1st reg: (Eldest first)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_asc') bg-accent @endif" data-sort="distance_asc">
-                        Distance to seller: (Shortest distance)
-                    </button>
-                    <button type="button" class="sort-option w-full px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors @if(request()->query('sort') == 'distance_desc') bg-accent @endif" data-sort="distance_desc">
-                        Distance to seller: (Longest distance)
-                    </button>
-                    </div>
-                </div>
+                    <select
+                        id="sort-select"
+                        name="sort"
+                        class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
+                    >
+                        @foreach($sortLabels as $value => $label)
+                            <option value="{{ $value }}" @if($currentSort == $value) selected @endif>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
                 </div>
             </div>
             
             <!-- Sort and View Toggle -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
             <!-- Sort Dropdown -->
             <div class="relative text-xs font-medium">
                 
@@ -1404,24 +1306,6 @@
 
 @push('styles')
 <style>
-    /* Custom scrollbar styling for sort dropdown */
-    #sort-dropdown .overflow-y-auto::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-thumb {
-        background-color: hsl(var(--muted));
-        border-radius: 3px;
-    }
-    
-    #sort-dropdown .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-        background-color: hsl(var(--muted-foreground) / 0.3);
-    }
-    
     /* List view styles - Compact design matching card view styles */
     #vehicle-container[data-view="list"] {
         display: flex;
@@ -1671,12 +1555,13 @@
     @media (max-width: 768px) {
         #sort-and-condition-controls {
             flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
+            align-items: stretch;
+            gap: 0.75rem;
         }
         
         #sort-and-condition-controls > div:first-child {
             width: 100%;
+            flex-wrap: wrap;
         }
         
         #sort-and-condition-controls > div:first-child > div {
@@ -1694,11 +1579,42 @@
         #sort-and-condition-controls {
             flex-direction: column;
             align-items: stretch;
+            gap: 0.75rem;
+        }
+        
+        #sort-and-condition-controls > div:first-child {
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
         
         #sort-and-condition-controls > div:last-child {
             width: 100%;
-            justify-content: space-between;
+            justify-content: flex-end;
+        }
+        
+        /* Results count mobile styles */
+        #results-count {
+            flex-shrink: 0;
+        }
+        
+        /* Mobile layout alignment fixes */
+        #search-bar-container {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        
+        #vehicle-container {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        
+        /* Ensure consistent padding in mobile */
+        .container.mx-auto {
+            padding-left: 1rem;
+            padding-right: 1rem;
         }
     }
 </style>
@@ -1712,10 +1628,7 @@
         const vehicleGrid = vehicleContainer; // Keep for backward compatibility
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
-        const sortButton = document.getElementById('sort-button');
-        const sortDropdown = document.getElementById('sort-dropdown');
-        const sortButtonText = document.getElementById('sort-button-text');
-        const sortOptions = document.querySelectorAll('.sort-option');
+        const sortSelect = document.getElementById('sort-select');
         const filterSidebar = document.getElementById('filter-sidebar');
         const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
         const filterResetButtonMain = document.getElementById('filter-reset-button-main');
@@ -2715,19 +2628,10 @@
                 renderFilterChips();
                 updateResetButtonVisibility();
                 
-                // Update sort button text if sort changed
-                if (params.sort !== undefined) {
+                // Update sort select if sort changed
+                if (params.sort !== undefined && sortSelect) {
                     const sortValue = params.sort || 'best_match';
-                    if (sortButtonText) {
-                        sortButtonText.textContent = sortLabels[sortValue] || 'Best Match';
-                    }
-                    // Update active sort option
-                    sortOptions.forEach(opt => {
-                        opt.classList.remove('bg-accent');
-                        if (opt.getAttribute('data-sort') === sortValue) {
-                            opt.classList.add('bg-accent');
-                        }
-                    });
+                    sortSelect.value = sortValue;
                 }
                 
                 isLoading = false;
@@ -2766,41 +2670,12 @@
             });
         }
         
-        // Sort dropdown functionality
-        if (sortButton && sortDropdown) {
-            sortButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                sortDropdown.classList.toggle('hidden');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!sortButton.contains(e.target) && !sortDropdown.contains(e.target)) {
-                    sortDropdown.classList.add('hidden');
-                }
-            });
-            
-            // Handle sort option selection
-            sortOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    const sortValue = option.getAttribute('data-sort');
-                    const sortLabel = sortLabels[sortValue] || 'Best Match';
-                    
-                    // Update button text
-                    if (sortButtonText) {
-                        sortButtonText.textContent = sortLabel;
-                    }
-                    
-                    // Update active state
-                    sortOptions.forEach(opt => opt.classList.remove('bg-accent'));
-                    option.classList.add('bg-accent');
-                    
-                    // Close dropdown
-                    sortDropdown.classList.add('hidden');
-                    
+        // Sort select functionality
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                const sortValue = e.target.value;
                     // Fetch vehicles with new sort parameter
                     fetchVehicles({ sort: sortValue === 'best_match' ? null : sortValue, page: 1 });
-                });
             });
         }
         
