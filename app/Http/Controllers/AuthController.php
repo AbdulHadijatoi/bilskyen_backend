@@ -130,4 +130,28 @@ class AuthController extends Controller
     {
         return $this->loginController->staffLogin($request);
     }
+
+    /**
+     * Forget password - delegate to AuthPasswordController
+     */
+    public function forgetPassword(Request $request): JsonResponse
+    {
+        return $this->passwordController->forgetPassword($request);
+    }
+
+    /**
+     * Reset password - delegate to AuthPasswordController
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        return $this->passwordController->resetPassword($request);
+    }
+
+    /**
+     * Delete account - delegate to AuthSessionController
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        return $this->sessionController->deleteAccount($request);
+    }
 }

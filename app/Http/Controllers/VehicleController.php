@@ -176,16 +176,40 @@ class VehicleController extends Controller
             $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
             $sellerType = $isDealer ? 'Dealer' : 'Private';
             
-            return [
+            // Build base vehicle data
+            $vehicleData = [
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
                 'vin' => $vehicle->vin,
-                'price' => $vehicle->price,
-                'mileage' => $vehicle->mileage,
+                'dealer_id' => $vehicle->dealer_id,
+                'user_id' => $vehicle->user_id,
+                'category_id' => $vehicle->category_id,
+                'brand_id' => $vehicle->brand_id,
+                'model_id' => $vehicle->model_id,
+                'model_year_id' => $vehicle->model_year_id,
+                'fuel_type_id' => $vehicle->fuel_type_id,
+                'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
+                'listing_type_id' => $vehicle->listing_type_id,
                 'km_driven' => $vehicle->km_driven,
+                'mileage' => $vehicle->km_driven, // Alias for km_driven
+                'price' => $vehicle->price,
+                'battery_capacity' => $vehicle->battery_capacity,
+                'range_km' => $vehicle->range_km,
+                'charging_type' => $vehicle->charging_type,
+                'engine_power' => $vehicle->engine_power,
+                'engine_power_hp' => $vehicle->engine_power_hp,
+                'towing_weight' => $vehicle->towing_weight,
+                'ownership_tax' => $vehicle->ownership_tax,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                 'version' => $vehicle->version,
+                'gear_type_id' => $vehicle->gear_type_id,
+                'fuel_efficiency' => $vehicle->fuel_efficiency,
+                'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
+                'seller_address' => $vehicle->seller_address,
+                'seller_postcode' => $vehicle->seller_postcode,
+                'created_at' => $vehicle->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $vehicle->updated_at->format('Y-m-d H:i:s'),
                 'brand_name' => $vehicle->brand_name,
                 'model_name' => $vehicle->model_name,
                 'category_name' => $vehicle->category_name,
@@ -193,18 +217,92 @@ class VehicleController extends Controller
                 'gear_type_name' => $vehicle->gear_type_name,
                 'model_year_name' => $vehicle->model_year_name,
                 'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
-                'engine_power_hp' => $vehicle->engine_power_hp,
+                'listing_type_name' => $vehicle->listing_type_name,
                 'seller_type' => $sellerType,
-                'seller_address' => $vehicle->seller_address,
-                'seller_postcode' => $vehicle->seller_postcode,
                 'image_url' => $imageUrl,
                 'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
-                'details' => $details ? [
-                    'color_name' => $details->color_name ?? null,
-                    'condition_name' => $details->condition_name ?? null,
-                    'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
-                ] : null,
             ];
+            
+            // Add vehicle_details fields if available
+            if ($details) {
+                $vehicleData['details'] = [
+                    'id' => $details->id,
+                    'vehicle_id' => $details->vehicle_id,
+                    'vehicle_external_id' => $details->vehicle_external_id,
+                    'description' => $details->description,
+                    'views_count' => $details->views_count,
+                    'vin_location' => $details->vin_location,
+                    'type_id' => $details->type_id,
+                    'type_name' => $details->type_name,
+                    'registration_status' => $details->registration_status,
+                    'registration_status_updated_date' => $details->registration_status_updated_date?->format('Y-m-d'),
+                    'expire_date' => $details->expire_date?->format('Y-m-d'),
+                    'status_updated_date' => $details->status_updated_date?->format('Y-m-d'),
+                    'total_weight' => $details->total_weight,
+                    'vehicle_weight' => $details->vehicle_weight,
+                    'technical_total_weight' => $details->technical_total_weight,
+                    'coupling' => $details->coupling,
+                    'towing_weight_brakes' => $details->towing_weight_brakes,
+                    'minimum_weight' => $details->minimum_weight,
+                    'gross_combination_weight' => $details->gross_combination_weight,
+                    'engine_displacement' => $details->engine_displacement,
+                    'engine_cylinders' => $details->engine_cylinders,
+                    'engine_code' => $details->engine_code,
+                    'category' => $details->category,
+                    'last_inspection_date' => $details->last_inspection_date?->format('Y-m-d'),
+                    'last_inspection_result' => $details->last_inspection_result,
+                    'last_inspection_odometer' => $details->last_inspection_odometer,
+                    'type_approval_code' => $details->type_approval_code,
+                    'top_speed' => $details->top_speed,
+                    'doors' => $details->doors,
+                    'minimum_seats' => $details->minimum_seats,
+                    'maximum_seats' => $details->maximum_seats,
+                    'wheels' => $details->wheels,
+                    'extra_equipment' => $details->extra_equipment,
+                    'axles' => $details->axles,
+                    'drive_axles' => $details->drive_axles,
+                    'wheelbase' => $details->wheelbase,
+                    'leasing_period_start' => $details->leasing_period_start?->format('Y-m-d'),
+                    'leasing_period_end' => $details->leasing_period_end?->format('Y-m-d'),
+                    'production_date' => $details->production_date?->format('Y-m-d'),
+                    'cover_image_index' => $details->cover_image_index,
+                    'fuel_consumption_wltp' => $details->fuel_consumption_wltp,
+                    'fuel_consumption_nedc' => $details->fuel_consumption_nedc,
+                    'co2_emissions' => $details->co2_emissions,
+                    'is_import' => $details->is_import,
+                    'is_factory_new' => $details->is_factory_new,
+                    'use_id' => $details->use_id,
+                    'color_id' => $details->color_id,
+                    'body_type_id' => $details->body_type_id,
+                    'transmission_id' => $details->transmission_id,
+                    'variant_id' => $details->variant_id,
+                    'dispensations' => $details->dispensations,
+                    'permits' => $details->permits,
+                    'ncap_five' => $details->ncap_five,
+                    'airbags' => $details->airbags,
+                    'integrated_child_seats' => $details->integrated_child_seats,
+                    'seat_belt_alarms' => $details->seat_belt_alarms,
+                    'euronom_id' => $details->euronom_id,
+                    'servicebog' => $details->servicebog,
+                    'price_type_id' => $details->price_type_id,
+                    'condition_id' => $details->condition_id,
+                    'sales_type_id' => $details->sales_type_id,
+                    'seller_phone' => $details->seller_phone,
+                    'annual_tax' => $details->annual_tax,
+                    'owners' => $details->owners,
+                    'color_name' => $details->color_name,
+                    'body_type_name' => $details->body_type_name,
+                    'condition_name' => $details->condition_name,
+                    'price_type_name' => $details->price_type_name,
+                    'sales_type_name' => $details->sales_type_name,
+                    'use_name' => $details->use_name,
+                    'transmission_name' => $details->transmission_name,
+                ];
+            } else {
+                $vehicleData['details'] = null;
+            }
+            
+            return $vehicleData;
         });
 
         // Create new paginator with formatted vehicles
@@ -256,18 +354,215 @@ class VehicleController extends Controller
 
     /**
      * Get vehicle details
+     * Returns all fields from both vehicles and vehicle_details tables
      */
     public function show(int $id): JsonResponse
     {
         $vehicle = Vehicle::with([
-            'dealer',
+            'dealer' => function ($q) {
+                $q->with('owner');
+            },
             'user',
-            'images',
-            'details',
-            'equipment'
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
+            'details' => function ($q) {
+                $q->with(['color', 'variant', 'euronom', 'transmission']);
+            },
+            'equipment',
+            'brand',
+            'model',
+            'modelYear',
+            'fuelType',
+            'gearType',
+            'category',
+            'listingType',
+            'vehicleListStatus'
         ])->findOrFail($id);
 
-        return $this->success($vehicle);
+        // Format response to include all fields from both tables
+        $firstImage = $vehicle->images->first();
+        $details = $vehicle->details;
+        
+        // Determine seller type
+        $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+        $sellerType = $isDealer ? 'Dealer' : 'Private';
+        
+        // Build comprehensive response
+        $response = [
+            // Vehicles table fields
+            'id' => $vehicle->id,
+            'title' => $vehicle->title,
+            'registration' => $vehicle->registration,
+            'vin' => $vehicle->vin,
+            'dealer_id' => $vehicle->dealer_id,
+            'user_id' => $vehicle->user_id,
+            'category_id' => $vehicle->category_id,
+            'brand_id' => $vehicle->brand_id,
+            'model_id' => $vehicle->model_id,
+            'model_year_id' => $vehicle->model_year_id,
+            'fuel_type_id' => $vehicle->fuel_type_id,
+            'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
+            'listing_type_id' => $vehicle->listing_type_id,
+            'km_driven' => $vehicle->km_driven,
+            'price' => $vehicle->price,
+            'battery_capacity' => $vehicle->battery_capacity,
+            'range_km' => $vehicle->range_km,
+            'charging_type' => $vehicle->charging_type,
+            'engine_power' => $vehicle->engine_power,
+            'engine_power_hp' => $vehicle->engine_power_hp,
+            'towing_weight' => $vehicle->towing_weight,
+            'ownership_tax' => $vehicle->ownership_tax,
+            'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+            'version' => $vehicle->version,
+            'gear_type_id' => $vehicle->gear_type_id,
+            'fuel_efficiency' => $vehicle->fuel_efficiency,
+            'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
+            'seller_address' => $vehicle->seller_address,
+            'seller_postcode' => $vehicle->seller_postcode,
+            'created_at' => $vehicle->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $vehicle->updated_at->format('Y-m-d H:i:s'),
+            'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
+            
+            // Accessor fields (names)
+            'brand_name' => $vehicle->brand_name,
+            'model_name' => $vehicle->model_name,
+            'category_name' => $vehicle->category_name,
+            'fuel_type_name' => $vehicle->fuel_type_name,
+            'gear_type_name' => $vehicle->gear_type_name,
+            'model_year_name' => $vehicle->model_year_name,
+            'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+            'listing_type_name' => $vehicle->listing_type_name,
+            
+            // Relationships
+            'images' => $vehicle->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'thumbnail_url' => $image->thumbnail_url,
+                    'sort_order' => $image->sort_order,
+                ];
+            }),
+            'equipment' => $vehicle->equipment->map(function ($equip) {
+                return [
+                    'id' => $equip->id,
+                    'name' => $equip->name,
+                ];
+            }),
+            'dealer' => $vehicle->dealer ? [
+                'id' => $vehicle->dealer->id,
+                'slug' => $vehicle->dealer->slug,
+                'cvr' => $vehicle->dealer->cvr,
+                'address' => $vehicle->dealer->address,
+                'city' => $vehicle->dealer->city,
+                'postcode' => $vehicle->dealer->postcode,
+                'logo_url' => $vehicle->dealer->logo_url,
+                'owner' => $vehicle->dealer->owner ? [
+                    'id' => $vehicle->dealer->owner->id,
+                    'name' => $vehicle->dealer->owner->name,
+                    'email' => $vehicle->dealer->owner->email,
+                    'phone' => $vehicle->dealer->owner->phone,
+                    'whatsapp_number' => $vehicle->dealer->owner->whatsapp_number,
+                ] : null,
+            ] : null,
+            'user' => $vehicle->user ? [
+                'id' => $vehicle->user->id,
+                'name' => $vehicle->user->name,
+                'email' => $vehicle->user->email,
+                'phone' => $vehicle->user->phone,
+            ] : null,
+            'seller_type' => $sellerType,
+        ];
+        
+        // Add vehicle_details fields if available
+        if ($details) {
+            $response['details'] = [
+                'id' => $details->id,
+                'vehicle_id' => $details->vehicle_id,
+                'vehicle_external_id' => $details->vehicle_external_id,
+                'description' => $details->description,
+                'views_count' => $details->views_count,
+                'vin_location' => $details->vin_location,
+                'type_id' => $details->type_id,
+                'type_name' => $details->type_name,
+                'registration_status' => $details->registration_status,
+                'registration_status_updated_date' => $details->registration_status_updated_date?->format('Y-m-d'),
+                'expire_date' => $details->expire_date?->format('Y-m-d'),
+                'status_updated_date' => $details->status_updated_date?->format('Y-m-d'),
+                'total_weight' => $details->total_weight,
+                'vehicle_weight' => $details->vehicle_weight,
+                'technical_total_weight' => $details->technical_total_weight,
+                'coupling' => $details->coupling,
+                'towing_weight_brakes' => $details->towing_weight_brakes,
+                'minimum_weight' => $details->minimum_weight,
+                'gross_combination_weight' => $details->gross_combination_weight,
+                'engine_displacement' => $details->engine_displacement,
+                'engine_cylinders' => $details->engine_cylinders,
+                'engine_code' => $details->engine_code,
+                'category' => $details->category,
+                'last_inspection_date' => $details->last_inspection_date?->format('Y-m-d'),
+                'last_inspection_result' => $details->last_inspection_result,
+                'last_inspection_odometer' => $details->last_inspection_odometer,
+                'type_approval_code' => $details->type_approval_code,
+                'top_speed' => $details->top_speed,
+                'doors' => $details->doors,
+                'minimum_seats' => $details->minimum_seats,
+                'maximum_seats' => $details->maximum_seats,
+                'wheels' => $details->wheels,
+                'extra_equipment' => $details->extra_equipment,
+                'axles' => $details->axles,
+                'drive_axles' => $details->drive_axles,
+                'wheelbase' => $details->wheelbase,
+                'leasing_period_start' => $details->leasing_period_start?->format('Y-m-d'),
+                'leasing_period_end' => $details->leasing_period_end?->format('Y-m-d'),
+                'production_date' => $details->production_date?->format('Y-m-d'),
+                'cover_image_index' => $details->cover_image_index,
+                'fuel_consumption_wltp' => $details->fuel_consumption_wltp,
+                'fuel_consumption_nedc' => $details->fuel_consumption_nedc,
+                'co2_emissions' => $details->co2_emissions,
+                'is_import' => $details->is_import,
+                'is_factory_new' => $details->is_factory_new,
+                'use_id' => $details->use_id,
+                'color_id' => $details->color_id,
+                'body_type_id' => $details->body_type_id,
+                'transmission_id' => $details->transmission_id,
+                'variant_id' => $details->variant_id,
+                'dispensations' => $details->dispensations,
+                'permits' => $details->permits,
+                'ncap_five' => $details->ncap_five,
+                'airbags' => $details->airbags,
+                'integrated_child_seats' => $details->integrated_child_seats,
+                'seat_belt_alarms' => $details->seat_belt_alarms,
+                'euronom_id' => $details->euronom_id,
+                'servicebog' => $details->servicebog,
+                'price_type_id' => $details->price_type_id,
+                'condition_id' => $details->condition_id,
+                'sales_type_id' => $details->sales_type_id,
+                'seller_phone' => $details->seller_phone,
+                'annual_tax' => $details->annual_tax,
+                'owners' => $details->owners,
+                'color_name' => $details->color_name,
+                'body_type_name' => $details->body_type_name,
+                'condition_name' => $details->condition_name,
+                'price_type_name' => $details->price_type_name,
+                'sales_type_name' => $details->sales_type_name,
+                'use_name' => $details->use_name,
+                'transmission_name' => $details->transmission_name,
+                'type_name_resolved' => $details->type_name_resolved,
+                'variant' => $details->variant ? [
+                    'id' => $details->variant->id,
+                    'name' => $details->variant->name,
+                ] : null,
+                'euronom' => $details->euronom ? [
+                    'id' => $details->euronom->id,
+                    'name' => $details->euronom->name,
+                ] : null,
+            ];
+        } else {
+            $response['details'] = null;
+        }
+
+        return $this->success($response);
     }
 
     /**

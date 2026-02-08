@@ -76,8 +76,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/sign-out', [AuthController::class, 'signOut']);
             Route::get('/get-session', [AuthController::class, 'getSession']);
             Route::post('/update-user', [AuthController::class, 'updateUser']);
+            Route::post('/profile', [AuthController::class, 'updateUser']); // Alias for update-user
             Route::post('/revoke-session', [AuthController::class, 'revokeSession']);
             Route::post('/change-password', [AuthController::class, 'changePassword']);
+            Route::delete('/account', [AuthController::class, 'deleteAccount']);
         });
         
         // TODO: Implement remaining endpoints
@@ -89,13 +91,11 @@ Route::prefix('v1')->group(function () {
             return response()->json(['message' => 'Verify magic link endpoint - to be implemented'], 501);
         });
         
-        Route::post('/forget-password', function () {
-            return response()->json(['message' => 'Forgot password endpoint - to be implemented'], 501);
-        });
+        Route::post('/forget-password', [AuthController::class, 'forgetPassword'])
+            ->middleware('throttle:auth.login'); // 10 requests per minute
         
-        Route::post('/reset-password', function () {
-            return response()->json(['message' => 'Reset password endpoint - to be implemented'], 501);
-        });
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+            ->middleware('throttle:auth.login'); // 10 requests per minute
         
         Route::get('/verify-email', function () {
             return response()->json(['message' => 'Verify email endpoint - to be implemented'], 501);
@@ -120,6 +120,26 @@ Route::prefix('v1')->group(function () {
         Route::post('/{id}/enquiries', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm']);
         Route::post('/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm']);
         Route::post('/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm']);
+    });
+    
+    // Seller Profile API routes (for authenticated sellers)
+    Route::middleware('auth:api')->prefix('seller')->group(function () {
+        Route::get('/vehicles', [\App\Http\Controllers\SellerProfileController::class, 'getVehicles']);
+        Route::get('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'getVehicle']);
+        Route::put('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicle']);
+        Route::patch('/vehicles/{id}/status', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicleStatus']);
+        Route::delete('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'deleteVehicle']);
+        Route::get('/inquiries', [\App\Http\Controllers\SellerProfileController::class, 'getInquiries']);
+        Route::get('/inquiries/{id}', [\App\Http\Controllers\SellerProfileController::class, 'getInquiry']);
+        Route::get('/statistics', [\App\Http\Controllers\SellerProfileController::class, 'getStatistics']);
+    });
+    
+    // Dealer Profile API routes (for authenticated dealers)
+    Route::middleware('auth:api')->prefix('dealer')->group(function () {
+        Route::get('/profile', [\App\Http\Controllers\DealerProfileApiController::class, 'getProfile']);
+        Route::get('/vehicles', [\App\Http\Controllers\DealerProfileApiController::class, 'getVehicles']);
+        Route::post('/enquiry', [\App\Http\Controllers\DealerProfileApiController::class, 'sendEnquiry']);
+        Route::get('/statistics', [\App\Http\Controllers\DealerProfileApiController::class, 'getStatistics']);
     });
     
     // Nummerplade API proxy routes (for Flutter/Vue.js)

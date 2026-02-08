@@ -7,6 +7,7 @@ use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -88,7 +89,8 @@ class AuthSessionController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|min:2|max:100',
             'phone' => 'nullable|string|max:15',
-            'address' => 'nullable|string',
+            'address' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string|max:10',
             'image' => 'nullable|string|max:500',
         ]);
 
@@ -97,14 +99,14 @@ class AuthSessionController extends Controller
         }
 
         // Capture before state for audit log
-        $beforeData = $user->only(['name', 'phone', 'address', 'image']);
+        $beforeData = $user->only(['name', 'phone', 'address', 'postcode', 'image']);
 
         $user->update($validator->validated());
         $user->load('roles');
 
         // Log audit trail
         try {
-            $afterData = $user->only(['name', 'phone', 'address', 'image']);
+            $afterData = $user->only(['name', 'phone', 'address', 'postcode', 'image']);
             $this->auditLogService->logUpdate(
                 $user,
                 'User',
@@ -135,9 +137,72 @@ class AuthSessionController extends Controller
                 'emailVerified' => $user->email_verified_at !== null,
                 'phone' => $user->phone,
                 'address' => $user->address,
+                'postcode' => $user->postcode,
                 'image' => $user->image ?? null,
             ],
         ]);
+    }
+
+    /**
+     * Delete user account
+     * Requires password confirmation for security
+     * Soft deletes the user account
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|max:128',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        // Verify password for security
+        if (!Hash::check($request->password, $user->password)) {
+            return $this->error('Password is incorrect', [
+                'password' => ['The password is incorrect.'],
+            ], 401);
+        }
+
+        // Store user data for audit log before deletion
+        $userData = $user->toArray();
+        $userId = $user->id;
+
+        // Soft delete the user
+        $user->delete();
+
+        // Invalidate JWT token
+        try {
+            JWTAuth::parseToken()->invalidate();
+        } catch (JWTException $e) {
+            // Token might already be invalid, continue anyway
+        }
+
+        // Log audit trail
+        try {
+            $this->auditLogService->logDelete(
+                $user, // Use the deleted user instance (still available in memory)
+                'User',
+                $userId,
+                $userData,
+                $request,
+                null,
+                null,
+                'User account deleted by user',
+                ['user', 'account', 'deletion'],
+                'warning'
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for account deletion', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $this->success(['message' => 'Account deleted successfully']);
     }
 }
 
