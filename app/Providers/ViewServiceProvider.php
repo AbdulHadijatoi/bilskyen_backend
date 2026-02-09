@@ -51,17 +51,6 @@ class ViewServiceProvider extends ServiceProvider
                 'sellerToken' => $sellerToken,
             ]);
         });
-
-        // Share authenticated user data to dealer sidebar component
-        // View::composer('components.dealer.sidebar', function ($view) {
-        //     $authService = app(AuthService::class);
-        //     $user = $authService->getAuthenticatedUser(request());
-            
-        //     $view->with([
-        //         'user' => $user,
-        //         'currentRoute' => request()->path(),
-        //     ]);
-        // });
     }
 }
 

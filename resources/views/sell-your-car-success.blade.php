@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vehicle Listed Successfully - Bilskyen')
+@section('title', __('messages.pages.sell_your_car_success.page_title') . ' - Bilskyen')
 
 @push('styles')
 <style>
@@ -255,10 +255,9 @@
         </div>
 
         <!-- Success Title -->
-        <h1 class="success-title">Vehicle Listed Successfully!</h1>
+        <h1 class="success-title">{{ __('messages.pages.sell_your_car_success.title') }}</h1>
         <p class="success-message">
-            Your vehicle has been published and is now live on Bilskyen. 
-            You can feature it to get more visibility or view it now.
+            {{ __('messages.pages.sell_your_car_success.message') }}
         </p>
 
         <!-- Featured Badge (if already featured) -->
@@ -267,7 +266,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
-                <span>Your vehicle is already featured</span>
+                <span>{{ __('messages.pages.sell_your_car_success.already_featured') }}</span>
             </div>
         @endif
 
@@ -322,7 +321,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    <span>Feature My Listing</span>
+                    <span>{{ __('messages.pages.sell_your_car_success.feature_button') }}</span>
                 </button>
             @endif
             <a 
@@ -333,7 +332,7 @@
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-                <span>View My Vehicle</span>
+                    <span>{{ __('messages.pages.sell_your_car_success.view_button') }}</span>
             </a>
         </div>
     </div>
@@ -347,7 +346,7 @@
 
         const originalContent = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spinner"></span><span>Featuring...</span>';
+        btn.innerHTML = '<span class="loading-spinner"></span><span>{{ __('messages.pages.sell_your_car_success.featuring') }}</span>';
 
         fetch('{{ route("sell-your-car.feature", ["token" => $token]) }}', {
             method: 'POST',
@@ -363,7 +362,7 @@
             if (data.status === 'success') {
                 // Show success message
                 if (window.showSnackbar) {
-                    window.showSnackbar('Vehicle featured successfully!', 'success');
+                    window.showSnackbar('{{ __('messages.pages.sell_your_car_success.feature_success') }}', 'success');
                 }
 
                 // Update UI
@@ -371,7 +370,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    <span>Featured</span>
+                    <span>{{ __('messages.pages.sell_your_car_success.featured') }}</span>
                 `;
                 btn.style.background = 'oklch(0.95 0.1 145)';
                 btn.style.color = 'oklch(0.4 0.2 145)';
@@ -387,12 +386,12 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
-                        <span>Your vehicle is now featured</span>
+                        <span>{{ __('messages.pages.sell_your_car_success.now_featured') }}</span>
                     `;
                     actionButtons.parentNode.insertBefore(badge, actionButtons);
                 }
             } else {
-                throw new Error(data.message || 'Failed to feature vehicle');
+                throw new Error(data.message || '{{ __('messages.pages.sell_your_car_success.feature_failed') }}');
             }
         })
         .catch(error => {
@@ -401,9 +400,9 @@
             btn.innerHTML = originalContent;
             
             if (window.showSnackbar) {
-                window.showSnackbar(error.message || 'Failed to feature vehicle. Please try again.', 'error');
+                window.showSnackbar(error.message || '{{ __('messages.pages.sell_your_car_success.feature_error') }}', 'error');
             } else {
-                alert(error.message || 'Failed to feature vehicle. Please try again.');
+                alert(error.message || '{{ __('messages.pages.sell_your_car_success.feature_error') }}');
             }
         });
     }

@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Set locale middleware - runs early on all web requests
+        $middleware->web(prepend: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+        
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\RequirePermission::class,

@@ -6,10 +6,10 @@
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">
     <div class="flex w-full flex-col space-y-2">
         <h1 class="text-2xl font-semibold tracking-tight">
-            Reset Password
+            {{ __('messages.pages.reset_password.title') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-            Create a new, secure password for your account. This link can only be used once. After resetting, you can login with your new password.
+            {{ __('messages.pages.reset_password.description') }}
         </p>
     </div>
 
@@ -22,7 +22,7 @@
                 <line x1="12" x2="12.01" y1="16" y2="16"></line>
             </svg>
             <div>
-                <h3 class="font-semibold">Error</h3>
+                <h3 class="font-semibold">{{ __('messages.messages.error') }}</h3>
                 <p class="text-sm">{{ session('error') }}</p>
             </div>
         </div>
@@ -38,8 +38,8 @@
                 <line x1="12" x2="12.01" y1="16" y2="16"></line>
             </svg>
             <div>
-                <h3 class="font-semibold">Token Error</h3>
-                <p class="text-sm">No token provided. Please check your link.</p>
+                <h3 class="font-semibold">{{ __('messages.pages.reset_password.token_error') }}</h3>
+                <p class="text-sm">{{ __('messages.pages.reset_password.no_token') }}</p>
             </div>
         </div>
     </div>
@@ -50,9 +50,9 @@
         <input type="hidden" name="email" value="{{ $email ?? '' }}">
 
         <div class="grid gap-2">
-            <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">New Password</label>
+            <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.pages.reset_password.new_password') }}</label>
             <div class="relative">
-                <input id="password" name="password" type="password" placeholder="New Password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                <input id="password" name="password" type="password" placeholder="{{ __('messages.pages.reset_password.new_password') }}" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <svg id="password-eye" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -66,13 +66,13 @@
                     </svg>
                 </button>
             </div>
-            <p class="text-xs text-muted-foreground">Enter your new password.</p>
+            <p class="text-xs text-muted-foreground">{{ __('messages.pages.reset_password.enter_new_password') }}</p>
         </div>
 
         <div class="grid gap-2">
-            <label for="confirmPassword" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Confirm Password</label>
+            <label for="confirmPassword" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.confirm_password') }}</label>
             <div class="relative">
-                <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm New Password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                <input id="confirmPassword" name="confirmPassword" type="password" placeholder="{{ __('messages.forms.placeholders.confirm_password') }}" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <svg id="confirmPassword-eye" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -86,11 +86,11 @@
                     </svg>
                 </button>
             </div>
-            <p class="text-xs text-muted-foreground">Retype the new password to confirm.</p>
+            <p class="text-xs text-muted-foreground">{{ __('messages.pages.reset_password.retype_password') }}</p>
         </div>
 
         <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Reset Password
+            {{ __('messages.pages.reset_password.reset_button') }}
         </button>
     </form>
     @endif
@@ -104,7 +104,7 @@
                     <line x1="12" x2="12.01" y1="16" y2="16"></line>
                 </svg>
                 <div>
-                    <h3 class="font-semibold">Validation Error</h3>
+                    <h3 class="font-semibold">{{ __('messages.pages.reset_password.validation_error') }}</h3>
                     <ul class="mt-1 text-sm list-disc list-inside">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>

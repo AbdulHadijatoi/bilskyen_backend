@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sell Your Car - Bilskyen')
+@section('title', __('messages.pages.sell_your_car.page_title') . ' - Bilskyen')
 
 @push('styles')
 <style>
@@ -1136,10 +1136,10 @@
 <div class="container py-3 md:py-6">
     <div class="mb-6">
         <h1 class="text-2xl font-bold tracking-tight mb-2">
-            Sell your car on Denmark's largest car market
+            {{ __('messages.pages.sell_your_car.title') }}
         </h1>
         <p class="text-muted-foreground">
-            Enter your car's license plate and we'll help you with the rest. All fields are visible.
+            {{ __('messages.pages.sell_your_car.description') }}
         </p>
     </div>
 
@@ -1158,7 +1158,7 @@
 
     @if($errors->any())
         <div class="w-full rounded-md border p-3 mb-4" style="border-color: oklch(0.8 0.2 27); background: oklch(0.95 0.1 27); color: oklch(0.4 0.2 27);">
-            <p class="text-sm font-medium mb-2">Please fix the following errors:</p>
+            <p class="text-sm font-medium mb-2">{{ __('messages.pages.sell_your_car.fix_errors') }}</p>
             <ul class="list-disc list-inside text-sm">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -1176,13 +1176,13 @@
 
     <!-- License Plate Lookup Section -->
     <div class="lookup-section bg-gray-50">
-        <h2 class="text-lg font-semibold">Find Your Vehicle</h2>
-        <p class="text-muted-foreground">Enter your car's license plate number and click Find or press Enter. We'll automatically fill in the vehicle information for you.</p>
+        <h2 class="text-lg font-semibold">{{ __('messages.pages.sell_your_car.find_vehicle_title') }}</h2>
+        <p class="text-muted-foreground">{{ __('messages.pages.sell_your_car.find_vehicle_description') }}</p>
         
         <div class="lookup-input-group">
             <div class="lookup-input-wrapper">
                 <label for="registration-lookup">
-                    License Plate Number
+                    {{ __('messages.pages.sell_your_car.license_plate_number') }}
                 </label>
                 <div class="lookup-input-button-container">
                     <div style="position: relative; flex: 1;">
@@ -1192,7 +1192,7 @@
                         <input
                             type="text"
                             id="registration-lookup"
-                            placeholder="Enter license plate (e.g., AB12345)"
+                            placeholder="{{ __('messages.pages.sell_your_car.license_plate_placeholder') }}"
                             autocomplete="off"
                             spellcheck="false"
                         />
@@ -1201,7 +1201,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="lookup-button-icon">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        <span class="lookup-button-text">Find A Vehicle</span>
+                        <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.find_vehicle_button') }}</span>
                     </button>
                 </div>
                 <p class="text-xs mt-2" id="lookup-error" style="opacity: 0.8; min-height: 1.25rem;"></p>
@@ -1214,7 +1214,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Loading vehicle information...</span>
+                <span>{{ __('messages.pages.sell_your_car.loading_vehicle_info') }}</span>
             </div>
         </div>
     </div>
@@ -1232,14 +1232,14 @@
                 <div class="section-title-group">
                     <div class="section-number">1</div>
                     <div>
-                        <div class="section-title">Basic Vehicle Information</div>
-                        <div class="section-subtitle">Title, variant, and color</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_basic_info_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_basic_info_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
-                    Basic information about your vehicle.
+                    {{ __('messages.pages.sell_your_car.section_basic_info_description') }}
                 </div>
                 
                 <!-- Vehicle Info Display -->
@@ -1249,7 +1249,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div class="vehicle-info-content">
-                            <div class="vehicle-info-label">Brand</div>
+                            <div class="vehicle-info-label">{{ __('messages.forms.brand') }}</div>
                             <div class="vehicle-info-value" id="vehicle-brand-display"></div>
                         </div>
                     </div>
@@ -1258,7 +1258,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <div class="vehicle-info-content">
-                            <div class="vehicle-info-label">Model</div>
+                            <div class="vehicle-info-label">{{ __('messages.forms.model') }}</div>
                             <div class="vehicle-info-value" id="vehicle-model-display"></div>
                         </div>
                     </div>
@@ -1267,7 +1267,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <div class="vehicle-info-content">
-                            <div class="vehicle-info-label">Year</div>
+                            <div class="vehicle-info-label">{{ __('messages.pages.sell_your_car.year') }}</div>
                             <div class="vehicle-info-value" id="vehicle-year-display"></div>
                         </div>
                     </div>
@@ -1276,7 +1276,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         <div class="vehicle-info-content">
-                            <div class="vehicle-info-label">Fuel Type</div>
+                            <div class="vehicle-info-label">{{ __('messages.forms.fuel_type') }}</div>
                             <div class="vehicle-info-value" id="vehicle-fuel-display"></div>
                         </div>
                     </div>
@@ -1284,39 +1284,39 @@
                 
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Title</label>
+                        <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.title_label') }}</label>
                         <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground">
                             
                     </div>
                         <input type="hidden" id="title" name="title" value="">
                         <p class="field-help">
-                            Vehicle title automatically generated from vehicle information.
+                            {{ __('messages.pages.sell_your_car.title_help') }}
                         </p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="variant_id" class="text-sm font-medium">Variant</label>
+                        <label for="variant_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.variant_label') }}</label>
                         <select id="variant_id" disabled
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm opacity-60 cursor-not-allowed">
-                            <option value="">Select Variant</option>
+                            <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                             @foreach($lookupData['variants'] as $variant)
                                 <option value="{{ $variant->id }}">{{ $variant->name }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
-                        <p class="field-help">Vehicle variant/trim level (automatically set based on model)</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.variant_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="color_id" class="text-sm font-medium">Color</label>
+                        <label for="color_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
                         <select id="color_id" name="color_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Color</option>
+                            <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
                             @foreach($lookupData['colors'] as $color)
                                 <option value="{{ $color->id }}">{{ $color->name }}</option>
                             @endforeach
                         </select>
-                        <p class="field-help">Vehicle exterior color</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.color_help') }}</p>
                     </div>
                 </div>
             </div>
@@ -1328,31 +1328,31 @@
                 <div class="section-title-group">
                     <div class="section-number">2</div>
                     <div>
-                        <div class="section-title">Vehicle Specifications</div>
-                        <div class="section-subtitle">Kilometer driven, registration, inspection, and technical details</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_specifications_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_specifications_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
-                    Technical specifications and registration details.
+                    {{ __('messages.pages.sell_your_car.section_specifications_description') }}
                     </div>
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="km_driven" class="text-sm font-medium required-field">Kilometer Driven</label>
+                        <label for="km_driven" class="text-sm font-medium required-field">{{ __('messages.forms.km_driven') }}</label>
                         <input type="number" id="km_driven" name="km_driven" min="0" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
-                        <p class="field-help">How far car has driven</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.km_driven_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">First Registration</label>
+                        <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.first_registration') }}</label>
                         <div class="field-pair-inner">
                             <div>
                                 <select id="first_registration_month" name="first_registration_month"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Select Month</option>
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
                                     @endfor
@@ -1361,23 +1361,23 @@
                             <div>
                                 <select id="first_registration_year" name="first_registration_year"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Select Year</option>
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_year') }}</option>
                                     @for($i = date('Y'); $i >= 1900; $i--)
                                         <option value="{{ $i }}">{{ $i }}</option>
                                     @endfor
                                 </select>
                             </div>
                         </div>
-                        <p class="field-help">Month and year of first registration</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.first_registration_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Last Inspection</label>
+                        <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.last_inspection') }}</label>
                         <div class="field-pair-inner">
                             <div>
                                 <select id="last_inspection_month" name="last_inspection_month"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Select Month</option>
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
                                     @endfor
@@ -1386,42 +1386,42 @@
                             <div>
                                 <select id="last_inspection_year" name="last_inspection_year"
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="">Select Year</option>
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_year') }}</option>
                                     @for($i = date('Y'); $i >= 1900; $i--)
                                         <option value="{{ $i }}">{{ $i }}</option>
                                     @endfor
                                 </select>
                             </div>
                         </div>
-                        <p class="field-help">Month and year of last inspection</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.last_inspection_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">KM/L</label>
+                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
                         <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help" id="fuel_efficiency_help">Fuel efficiency in kilometers per liter</p>
+                        <p class="field-help" id="fuel_efficiency_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">Total Technical Weight (kg)</label>
+                        <label for="technical_total_weight" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
                         <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
-                        <p class="field-help">Total technical weight in kg</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.technical_total_weight_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="euronom_id" class="text-sm font-medium">Euronom</label>
+                        <label for="euronom_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
                         <select id="euronom_id" name="euronom_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Select Euronom</option>
+                            <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
                             @foreach($lookupData['euronorms'] as $euronom)
                                 <option value="{{ $euronom->id }}">{{ $euronom->name }}</option>
                             @endforeach
                         </select>
-                        <p class="field-help">Euro emission standard</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.euronom_help') }}</p>
                     </div>
                     </div>
                     </div>
@@ -1433,14 +1433,14 @@
                 <div class="section-title-group">
                     <div class="section-number">3</div>
                     <div>
-                        <div class="section-title">Equipment & Features</div>
-                        <div class="section-subtitle">Select the equipment your vehicle has</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_equipment_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_equipment_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
-                    Select the equipment and features your vehicle has. This helps buyers find exactly what they're looking for.
+                    {{ __('messages.pages.sell_your_car.section_equipment_description') }}
                 </div>
                 
                 <!-- Equipment by Category -->
@@ -1475,7 +1475,7 @@
                     @endphp
                     @if($equipmentWithoutType->count() > 0)
                         <div class="equipment-type-group">
-                            <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">Other</h4>
+                            <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">{{ __('messages.pages.sell_your_car.equipment_other') }}</h4>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($equipmentWithoutType as $equipment)
                                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
@@ -1500,22 +1500,22 @@
                 
                 <!-- Servicebog -->
                 <div class="mb-4">
-                    <label class="text-sm font-medium mb-2 block">Servicebog</label>
+                    <label class="text-sm font-medium mb-2 block">{{ __('messages.pages.sell_your_car.servicebog') }}</label>
                     <div class="flex gap-2 md:gap-3">
                         <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
                             <input type="radio" name="servicebog" value="Yes" class="h-3 w-3 md:h-4 md:w-4 text-primary">
-                            <span>Yes</span>
+                            <span>{{ __('messages.common.yes') }}</span>
                         </label>
                         <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
                             <input type="radio" name="servicebog" value="No" class="h-3 w-3 md:h-4 md:w-4 text-primary">
-                            <span>No</span>
+                            <span>{{ __('messages.common.no') }}</span>
                         </label>
                         <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
                             <input type="radio" name="servicebog" value="Default" checked class="h-3 w-3 md:h-4 md:w-4 text-primary">
-                            <span>Default</span>
+                            <span>{{ __('messages.pages.sell_your_car.default') }}</span>
                         </label>
                     </div>
-                    <p class="field-help mt-2">Does the vehicle have a service book?</p>
+                    <p class="field-help mt-2">{{ __('messages.pages.sell_your_car.servicebog_help') }}</p>
                 </div>
 
         <!-- Section 4: Pricing & Tax -->
@@ -1524,22 +1524,22 @@
                 <div class="section-title-group">
                     <div class="section-number">4</div>
                     <div>
-                        <div class="section-title">Pricing & Tax</div>
-                        <div class="section-subtitle">Price and tax information</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_pricing_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_pricing_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="price" class="text-sm font-medium required-field">Price (DKK)</label>
+                        <label for="price" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.price_label') }}</label>
                         <input type="number" id="price" name="price" required min="0"
                             class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
-                        <p class="field-help">Selling price in DKK</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.price_help') }}</p>
                     </div>
 
                     </div>
@@ -1548,13 +1548,13 @@
                 <div class="mt-4 border border-input rounded-lg overflow-hidden">
                     <button type="button" class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
                         onclick="toggleTaxInfo()">
-                        <span>Tax Information Based on Mileage</span>
+                        <span>{{ __('messages.pages.sell_your_car.tax_info_title') }}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform" id="tax-info-icon">
                             <path d="m6 9 6 6 6-6"></path>
                         </svg>
                     </button>
                     <div id="tax-info-content" class="equipment-type-content hidden px-4 pb-3 pt-2">
-                        <p class="text-sm text-muted-foreground">Tax information based on mileage - To be implemented after consulting with Berken.</p>
+                        <p class="text-sm text-muted-foreground">{{ __('messages.pages.sell_your_car.tax_info_description') }}</p>
                     </div>
                 </div>
             </div>
@@ -1566,14 +1566,14 @@
                 <div class="section-title-group">
                     <div class="section-number">5</div>
                     <div>
-                        <div class="section-title">Photos</div>
-                        <div class="section-subtitle">Add photos of your vehicle</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_photos_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_photos_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="section-description">
-                    Add photos of your vehicle. Good photos help your listing sell faster! You can select multiple images. Drag and drop or click to upload.
+                    {{ __('messages.pages.sell_your_car.section_photos_description') }}
                 </div>
                 
                 <!-- Image Upload Area -->
@@ -1593,8 +1593,8 @@
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            <p class="upload-text">Click to upload or drag and drop</p>
-                            <p class="upload-hint">PNG, JPG, GIF up to 20MB each</p>
+                            <p class="upload-text">{{ __('messages.pages.sell_your_car.upload_text') }}</p>
+                            <p class="upload-hint">{{ __('messages.pages.sell_your_car.upload_hint') }}</p>
                         </div>
                     </div>
                 </div>
@@ -1603,10 +1603,10 @@
                 <div id="image-preview-container" class="image-preview-container hidden">
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-semibold">
-                            Selected Images (<span id="image-count">0</span>)
+                            {{ __('messages.pages.sell_your_car.selected_images') }} (<span id="image-count">0</span>)
                         </h4>
                         <button type="button" onclick="clearAllImages()" class="text-xs text-muted-foreground hover:text-foreground">
-                            Clear All
+                            {{ __('messages.pages.sell_your_car.clear_all') }}
                         </button>
                     </div>
                     <div id="image-preview-grid" class="image-preview-grid">
@@ -1622,18 +1622,18 @@
                 <div class="section-title-group">
                     <div class="section-number">6</div>
                     <div>
-                        <div class="section-title">Description</div>
-                        <div class="section-subtitle">Vehicle description</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_description_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_description_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                     <div class="space-y-2">
-                    <label for="description" class="text-sm font-medium">Description</label>
+                    <label for="description" class="text-sm font-medium">{{ __('messages.forms.message') }}</label>
                     <textarea id="description" name="description" rows="6"
                         class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="Enter vehicle description..."></textarea>
-                    <p class="field-help">Describe your vehicle</p>
+                        placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}"></textarea>
+                    <p class="field-help">{{ __('messages.pages.sell_your_car.description_help') }}</p>
                 </div>
             </div>
                     </div>
@@ -1644,41 +1644,41 @@
                 <div class="section-title-group">
                     <div class="section-number">7</div>
                     <div>
-                        <div class="section-title">Seller Information</div>
-                        <div class="section-subtitle">Your contact details</div>
+                        <div class="section-title">{{ __('messages.pages.sell_your_car.section_seller_title') }}</div>
+                        <div class="section-subtitle">{{ __('messages.pages.sell_your_car.section_seller_subtitle') }}</div>
                     </div>
                 </div>
             </div>
             <div class="section-content expanded">
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="seller_phone" class="text-sm font-medium">Phone</label>
+                        <label for="seller_phone" class="text-sm font-medium">{{ __('messages.forms.phone') }}</label>
                         <input type="text" id="seller_phone" name="seller_phone" value="{{ $user->phone ?? '' }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="Your phone number">
-                        <p class="field-help">Your contact phone number</p>
+                            placeholder="{{ __('messages.pages.sell_your_car.phone_placeholder') }}">
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.phone_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="seller_address" class="text-sm font-medium">Location</label>
+                        <label for="seller_address" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.location_label') }}</label>
                         <div class="relative">
                             <input type="text" id="seller_address" name="seller_address" value="{{ $user->address ?? '' }}"
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="Your address">
+                                placeholder="{{ __('messages.pages.sell_your_car.address_placeholder') }}">
                             <div id="location-autocomplete" class="location-autocomplete-dropdown"></div>
                         </div>
-                        <p class="field-help">Your location</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.location_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="seller_postcode" class="text-sm font-medium">Postal Code</label>
+                        <label for="seller_postcode" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.postal_code_label') }}</label>
                         <div class="relative">
                             <input type="text" id="seller_postcode" name="seller_postcode" value="{{ $user->postcode ?? '' }}"
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="Postal code">
+                                placeholder="{{ __('messages.pages.sell_your_car.postal_code_placeholder') }}">
                             <div id="postcode-autocomplete" class="location-autocomplete-dropdown"></div>
                         </div>
-                        <p class="field-help">Your postal code</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.postal_code_help') }}</p>
                     </div>
                 </div>
             </div>
@@ -1700,10 +1700,10 @@
 
         <!-- Submit Section -->
         <div class="submit-section">
-            <h3>Ready to publish your listing?</h3>
-            <p>Review your information and click the button below to publish your vehicle listing.</p>
+            <h3>{{ __('messages.pages.sell_your_car.ready_to_publish') }}</h3>
+            <p>{{ __('messages.pages.sell_your_car.ready_to_publish_description') }}</p>
             <button type="submit" class="btn btn-submit">
-                Publish Vehicle Listing
+                {{ __('messages.pages.sell_your_car.publish_button') }}
             </button>
         </div>
     </form>

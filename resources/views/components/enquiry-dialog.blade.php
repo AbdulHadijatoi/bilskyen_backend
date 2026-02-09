@@ -12,34 +12,34 @@
     // Get form configuration based on type
     $formConfig = [
         'enquiry' => [
-            'title' => 'Enquiry Form',
-            'description' => 'Submit your enquiry about this vehicle. We\'ll get back to you as soon as possible.',
-            'formTitle' => 'Your Details',
-            'messageLabel' => 'Message',
-            'messagePlaceholder' => 'Tell us about your enquiry...',
-            'submitText' => 'Submit Enquiry',
+            'title' => __('messages.dialogs.enquiry_form'),
+            'description' => __('messages.dialogs.enquiry_description'),
+            'formTitle' => __('messages.forms.your_details'),
+            'messageLabel' => __('messages.forms.message'),
+            'messagePlaceholder' => __('messages.forms.enter_message'),
+            'submitText' => __('messages.dialogs.submit_enquiry'),
             'endpoint' => "/vehicles/{$id}/enquire/submit",
-            'errorMessage' => 'Please login to submit an enquiry',
+            'errorMessage' => __('messages.dialogs.please_login_enquiry'),
         ],
         'test-drive' => [
-            'title' => 'Test Drive Request',
-            'description' => 'Request a test drive for this vehicle. We\'ll get back to you as soon as possible to schedule your test drive.',
-            'formTitle' => 'Your Details',
-            'messageLabel' => 'Message',
-            'messagePlaceholder' => 'Tell us about your preferred test drive date and time, or any specific questions you have...',
-            'submitText' => 'Submit Test Drive Request',
+            'title' => __('messages.dialogs.test_drive_request'),
+            'description' => __('messages.dialogs.test_drive_description'),
+            'formTitle' => __('messages.forms.your_details'),
+            'messageLabel' => __('messages.forms.message'),
+            'messagePlaceholder' => __('messages.dialogs.test_drive_message_placeholder'),
+            'submitText' => __('messages.dialogs.submit_test_drive'),
             'endpoint' => "/vehicles/{$id}/test-drive/submit",
-            'errorMessage' => 'Please login to request a test drive',
+            'errorMessage' => __('messages.dialogs.please_login_test_drive'),
         ],
         'price-negotiation' => [
-            'title' => 'Price Negotiation',
-            'description' => 'Make an offer or negotiate the price for this vehicle. We\'ll get back to you as soon as possible.',
-            'formTitle' => 'Your Offer',
-            'messageLabel' => 'Your Offer / Message',
-            'messagePlaceholder' => 'Enter your offer price or negotiation message. For example: \'I would like to offer DKK 250,000 for this vehicle\' or \'Is there any room for negotiation on the price?\'',
-            'submitText' => 'Submit Offer',
+            'title' => __('messages.dialogs.price_negotiation'),
+            'description' => __('messages.dialogs.price_negotiation_description'),
+            'formTitle' => __('messages.forms.your_offer'),
+            'messageLabel' => __('messages.dialogs.your_offer_message'),
+            'messagePlaceholder' => __('messages.dialogs.price_negotiation_message_placeholder'),
+            'submitText' => __('messages.dialogs.submit_offer'),
             'endpoint' => "/vehicles/{$id}/price-negotiation/submit",
-            'errorMessage' => 'Please login to submit a price negotiation',
+            'errorMessage' => __('messages.dialogs.please_login_price_negotiation'),
         ],
     ];
     
@@ -57,7 +57,7 @@
         $vehicleBrand = $vehicle->brand_name ?? null;
         $vehicleModel = $vehicle->model_name ?? null;
     }
-    $priceLabel = $type === 'price-negotiation' ? 'Current Price' : 'Price';
+    $priceLabel = $type === 'price-negotiation' ? __('messages.forms.current_price') : __('messages.forms.price');
 @endphp
 
 <div id="{{ $type }}-dialog-{{ $id }}" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="{{ $type }}-dialog-title">
@@ -85,7 +85,7 @@
                     type="button"
                     onclick="closeEnquiryDialog('{{ $type }}', {{ $id }})"
                     class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Close dialog"
+                    aria-label="{{ __('messages.dialogs.close_dialog') }}"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6L6 18M6 6l12 12"></path>
@@ -97,10 +97,10 @@
             <div class="overflow-y-auto flex-1 px-6 py-4">
                 <!-- Vehicle Information Card -->
                 <div class="bg-gray-50 rounded-lg p-4 border border-border mb-4">
-                    <h3 class="text-foreground text-sm font-semibold mb-3">Vehicle Information</h3>
+                    <h3 class="text-foreground text-sm font-semibold mb-3">{{ __('messages.forms.vehicle_information') }}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <span class="text-xs text-muted-foreground">Vehicle</span>
+                            <span class="text-xs text-muted-foreground">{{ __('messages.forms.vehicle') }}</span>
                             <p class="text-foreground font-medium text-sm">{{ $vehicleTitle }}</p>
                         </div>
                         <div>
@@ -109,13 +109,13 @@
                         </div>
                         @if($vehicleBrand)
                         <div>
-                            <span class="text-xs text-muted-foreground">Brand</span>
+                            <span class="text-xs text-muted-foreground">{{ __('messages.forms.brand') }}</span>
                             <p class="text-foreground font-medium text-sm">{{ $vehicleBrand }}</p>
                         </div>
                         @endif
                         @if($vehicleModel)
                         <div>
-                            <span class="text-xs text-muted-foreground">Model</span>
+                            <span class="text-xs text-muted-foreground">{{ __('messages.forms.model') }}</span>
                             <p class="text-foreground font-medium text-sm">{{ $vehicleModel }}</p>
                         </div>
                         @endif
@@ -141,7 +141,7 @@
 
                         <div class="space-y-2">
                             <label for="{{ $type }}-name-{{ $id }}" class="text-sm font-medium leading-none">
-                                Full Name <span class="text-red-500">*</span>
+                                {{ __('messages.forms.full_name') }} <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="text" 
@@ -149,13 +149,13 @@
                                 name="name" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your full name"
+                                placeholder="{{ __('messages.forms.enter_full_name') }}"
                             >
                         </div>
 
                         <div class="space-y-2">
                             <label for="{{ $type }}-email-{{ $id }}" class="text-sm font-medium leading-none">
-                                Email <span class="text-red-500">*</span>
+                                {{ __('messages.forms.email') }} <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="email" 
@@ -163,20 +163,20 @@
                                 name="email" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your email address"
+                                placeholder="{{ __('messages.forms.enter_email') }}"
                             >
                         </div>
 
                         <div class="space-y-2">
                             <label for="{{ $type }}-phone-{{ $id }}" class="text-sm font-medium leading-none">
-                                Phone Number
+                                {{ __('messages.forms.phone_number') }}
                             </label>
                             <input 
                                 type="tel" 
                                 id="{{ $type }}-phone-{{ $id }}" 
                                 name="phone" 
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your phone number (optional)"
+                                placeholder="{{ __('messages.forms.enter_phone') }}"
                             >
                         </div>
 
@@ -211,7 +211,7 @@
                                 onclick="closeEnquiryDialog('{{ $type }}', {{ $id }})"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             >
-                                Cancel
+                                {{ __('messages.common.cancel') }}
                             </button>
                         </div>
                     </form>
@@ -248,7 +248,7 @@
 
         // Disable submit button
         if (submitBtn) submitBtn.disabled = true;
-        if (submitText) submitText.textContent = 'Submitting...';
+        if (submitText) submitText.textContent = '{{ __('messages.dialogs.submitting') }}';
         if (submitSpinner) submitSpinner.classList.remove('hidden');
 
         // Get form data
@@ -303,7 +303,7 @@
                     }
                     if (errorContainer) errorContainer.classList.remove('hidden');
                 } else {
-                    const errorMsgText = result.message || 'Failed to submit. Please try again.';
+                    const errorMsgText = result.message || '{{ __('messages.dialogs.failed_to_submit') }}';
                     if (window.showSnackbar) {
                         window.showSnackbar(errorMsgText, 'error');
                     } else if (errorList) {
@@ -313,7 +313,7 @@
                 }
             } else {
                 // Success
-                const successMsg = result.message || 'Your request has been submitted successfully!';
+                const successMsg = result.message || '{{ __('messages.dialogs.request_submitted') }}';
                 if (successMessage) {
                     successMessage.querySelector('p').textContent = successMsg;
                     successMessage.classList.remove('hidden');
@@ -334,7 +334,7 @@
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            const errorMsgText = 'An error occurred. Please try again.';
+            const errorMsgText = '{{ __('messages.dialogs.error_occurred') }}';
             if (window.showSnackbar) {
                 window.showSnackbar(errorMsgText, 'error');
             } else if (errorList) {

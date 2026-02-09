@@ -13,13 +13,13 @@
                     <line x1="12" x2="12.01" y1="16" y2="16"></line>
                 </svg>
                 <div>
-                    <h3 class="font-semibold">Error</h3>
+                    <h3 class="font-semibold">{{ __('messages.messages.error') }}</h3>
                     <p class="text-sm">{{ session('error') }}</p>
                 </div>
             </div>
         </div>
         <a href="/auth/login" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Go to Login
+            {{ __('messages.pages.magic_link.verify.go_to_login') }}
         </a>
     @elseif(!isset($token) || empty($token))
         <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive w-full">
@@ -30,13 +30,13 @@
                     <line x1="12" x2="12.01" y1="16" y2="16"></line>
                 </svg>
                 <div>
-                    <h3 class="font-semibold">Token Error</h3>
-                    <p class="text-sm">No token provided. Please check your link.</p>
+                    <h3 class="font-semibold">{{ __('messages.pages.magic_link.verify.token_error') }}</h3>
+                    <p class="text-sm">{{ __('messages.pages.magic_link.verify.no_token') }}</p>
                 </div>
             </div>
         </div>
         <a href="/auth/login" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Go to Login
+            {{ __('messages.pages.magic_link.verify.go_to_login') }}
         </a>
     @else
     <form method="POST" action="{{ route('magic-link.verify.post') }}" class="w-full">
@@ -46,7 +46,7 @@
         
         <div class="flex flex-col items-center gap-4">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p class="text-muted-foreground">Verifying magic link...</p>
+            <p class="text-muted-foreground">{{ __('messages.pages.magic_link.verify.verifying') }}</p>
             <button type="submit" class="hidden">Verify</button>
         </div>
     </form>

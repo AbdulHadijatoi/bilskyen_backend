@@ -34,7 +34,7 @@
                         name="search"
                         id="search-input"
                         value="{{ request()->query('search', '') }}"
-                        placeholder="Search by make, model, registration number, or keywords..."
+                        placeholder="{{ __('messages.forms.search_placeholder') }}"
                         class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
                         autocomplete="off"
                     />
@@ -49,7 +49,7 @@
         id="mobile-filter-toggle"
                 type="button" 
         class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Toggle filters"
+        aria-label="{{ __('messages.pages.vehicles.toggle_filters') }}"
             >
         <!-- Filter Icon (shown when sidebar is closed) -->
         <svg id="mobile-filter-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
@@ -76,7 +76,7 @@
             <!-- Condition Filter -->
             <div class="space-y-3">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Condition
+                    {{ __('messages.forms.condition') }}
                 </p>
                 <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
                     <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
@@ -87,7 +87,7 @@
                             class="sr-only peer condition-radio"
                             @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif
                         >
-                        <span>All</span>
+                        <span>{{ __('messages.common.all') }}</span>
                     </label>
                     @foreach($filterOptions['conditions'] as $condition)
                         <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
@@ -107,7 +107,7 @@
             <!-- Listing Type: Purchase / Leasing -->
             <div class="space-y-3">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Listing Type
+                    {{ __('messages.forms.listing_type') }}
                 </p>
                 <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
                     @php
@@ -126,7 +126,7 @@
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isPurchaseActive) checked @endif
                                 >
-                                <span>Purchase</span>
+                                <span>{{ __('messages.forms.purchase') }}</span>
                         </label>
                     @endif
                     @if($leasingType)
@@ -138,7 +138,7 @@
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isLeasingActive) checked @endif
                                 >
-                                <span>Leasing</span>
+                                <span>{{ __('messages.forms.leasing') }}</span>
                         </label>
                     @endif
                 </div>
@@ -146,18 +146,18 @@
             
             <!-- Price Range -->
             <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Price Range</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }}</label>
                 <!-- Input Fields -->
                 <div class="flex items-center gap-3">
                     <div class="flex-1">
-                        <label for="price-from" class="sr-only">Price From</label>
+                        <label for="price-from" class="sr-only">{{ __('messages.forms.price_from') }}</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
                             <input 
                                 type="number" 
                                 id="price-from"
                                 name="price_from" 
-                                placeholder="Min"
+                                placeholder="{{ __('messages.forms.min') }}"
                                 min="0"
                                 max="1000000"
                                 value="{{ $currentFilters['price_from'] ?? '' }}"
@@ -165,16 +165,16 @@
                             >
                         </div>
                     </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                     <div class="flex-1">
-                        <label for="price-to" class="sr-only">Price To</label>
+                        <label for="price-to" class="sr-only">{{ __('messages.forms.price') }} {{ __('messages.forms.to') }}</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
                             <input 
                                 type="number" 
                                 id="price-to"
                                 name="price_to" 
-                                placeholder="Max"
+                                placeholder="{{ __('messages.forms.max') }}"
                                 min="0"
                                 max="1000000"
                                 value="{{ $currentFilters['price_to'] ?? '' }}"
@@ -218,20 +218,20 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-foreground">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6.75V8.25H8.25v10.5ZM6 10.5a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75a.75.75 0 0 1 .75.75ZM6 15a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75A.75.75 0 0 1 6 15Z" />
                     </svg>
-                    <h3 class="text-sm text-foreground">Type, Brand, Model</h3>
+                    <h3 class="text-sm text-foreground">{{ __('messages.forms.type_brand_model') }}</h3>
                 </div>
                 
 
                 <!-- Brand Filter Row -->
                 <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-muted-foreground">Brand</label>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.brand') }}</label>
                     <div class="relative inline-block">
                         <select 
                             name="brand_id"
                             id="brand-select"
                             class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
                         >
-                            <option value="">All</option>
+                            <option value="">{{ __('messages.common.all') }}</option>
                             @foreach($filterOptions['brands'] as $brand)
                             <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
                             @endforeach
@@ -244,7 +244,7 @@
 
                 <!-- Model Filter Row -->
                 <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-muted-foreground">Model</label>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.model') }}</label>
                     <div class="relative inline-block">
                     <select 
                         name="model_id" 
@@ -252,7 +252,7 @@
                             class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
                         @if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) disabled @endif
                     >
-                            <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) Model @else All @endif</option>
+                            <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) {{ __('messages.forms.model') }} @else {{ __('messages.common.all') }} @endif</option>
                         @foreach($filterOptions['models'] as $model)
                             <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
                         @endforeach
@@ -265,13 +265,13 @@
 
                 <!-- Body Style Filter Row -->
                 <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-muted-foreground">Body Style</label>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.body_style') }}</label>
                     <div class="relative inline-block">
                 <select 
                     name="category_id" 
                             class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
                 >
-                            <option value="">All</option>
+                            <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($filterOptions['categories'] as $category)
                         <option value="{{ $category->id }}" @if(isset($currentFilters['category_id']) && $currentFilters['category_id'] == $category->id) selected @endif>{{ $category->name }}</option>
                     @endforeach
@@ -285,30 +285,30 @@
 
             <!-- Owner Tax Range -->
             <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Owner Tax</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.owner_tax') }}</label>
                 <!-- Input Fields -->
                 <div class="flex items-center gap-3">
                     <div class="flex-1">
-                        <label for="owner-tax-from" class="sr-only">Owner Tax From</label>
+                        <label for="owner-tax-from" class="sr-only">{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.from') }}</label>
                         <input 
                             type="number" 
                             id="owner-tax-from"
                             name="ownership_tax_from" 
-                            placeholder="Min"
+                            placeholder="{{ __('messages.forms.min') }}"
                             min="0"
                             max="100000"
                             value="{{ $currentFilters['ownership_tax_from'] ?? '' }}"
                             class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                         >
                     </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                     <div class="flex-1">
-                        <label for="owner-tax-to" class="sr-only">Owner Tax To</label>
+                        <label for="owner-tax-to" class="sr-only">{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.to') }}</label>
                         <input 
                             type="number" 
                             id="owner-tax-to"
                             name="ownership_tax_to" 
-                            placeholder="Max"
+                            placeholder="{{ __('messages.forms.max') }}"
                             min="0"
                             max="100000"
                             value="{{ $currentFilters['ownership_tax_to'] ?? '' }}"
@@ -346,30 +346,30 @@
 
             <!-- Model Year Range -->
             <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Model Year</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.model_year') }}</label>
                 <!-- Input Fields -->
                 <div class="flex items-center gap-3">
                     <div class="flex-1">
-                        <label for="year-from" class="sr-only">Year From</label>
+                            <label for="year-from" class="sr-only">{{ __('messages.forms.model_year') }} {{ __('messages.forms.from') }}</label>
                         <input 
                             type="number" 
                             id="year-from"
                             name="year_from" 
-                            placeholder="From"
+                            placeholder="{{ __('messages.forms.from') }}"
                             min="1975"
                             max="{{ date('Y') }}"
                             value="{{ $currentFilters['year_from'] ?? '' }}"
                             class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                         >
                     </div>
-                    <span class="text-muted-foreground text-sm font-medium">to</span>
+                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                     <div class="flex-1">
-                        <label for="year-to" class="sr-only">Year To</label>
+                            <label for="year-to" class="sr-only">{{ __('messages.forms.model_year') }} {{ __('messages.forms.to') }}</label>
                         <input 
                             type="number" 
                             id="year-to"
                             name="year_to" 
-                            placeholder="To"
+                            placeholder="{{ __('messages.forms.to') }}"
                             min="1975"
                             max="{{ date('Y') + 1 }}"
                             value="{{ $currentFilters['year_to'] ?? '' }}"
@@ -409,30 +409,30 @@
             <div class="space-y-5">
                 <!-- Mileage Range -->
                 <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Mileage (km)</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.mileage_km') }}</label>
                     <!-- Input Fields -->
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <label for="mileage-from" class="sr-only">Mileage From</label>
+                            <label for="mileage-from" class="sr-only">{{ __('messages.forms.mileage_km') }} {{ __('messages.forms.from') }}</label>
                             <input 
                                 type="number" 
                                 id="mileage-from"
                                 name="mileage_from" 
-                                placeholder="Min"
+                                placeholder="{{ __('messages.forms.min') }}"
                                 min="0"
                                 max="500000"
                                 value="{{ $currentFilters['mileage_from'] ?? '' }}"
                                 class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                         <div class="flex-1">
-                            <label for="mileage-to" class="sr-only">Mileage To</label>
+                            <label for="mileage-to" class="sr-only">{{ __('messages.forms.mileage_km') }} {{ __('messages.forms.to') }}</label>
                             <input 
                                 type="number" 
                                 id="mileage-to"
                                 name="mileage_to" 
-                                placeholder="Max"
+                                placeholder="{{ __('messages.forms.max') }}"
                                 min="0"
                                 max="500000"
                                 value="{{ $currentFilters['mileage_to'] ?? '' }}"
@@ -470,7 +470,7 @@
 
                 <!-- Price Type -->
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Price Type</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.price_type') }}</label>
                     <div class="flex flex-wrap gap-2">
                         @foreach($filterOptions['priceTypes'] as $priceType)
                             <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-foreground @endif">
@@ -489,7 +489,7 @@
 
                 <!-- Vehicle Body Type -->
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Body Type</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.body_type') }}</label>
                     <div class="flex flex-wrap gap-2">
                         @php
                             $bodyTypeMap = [
@@ -534,7 +534,7 @@
 
             <!-- Fuel Type -->
             <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Fuel Type</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.fuel_type') }}</label>
                 <div class="flex flex-wrap gap-2">
                     @foreach($filterOptions['fuelTypes'] as $fuelType)
                         <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-foreground @endif">
@@ -553,7 +553,7 @@
 
             <!-- Gear Type -->
             <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Gear Type</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.gear_type') }}</label>
                 <div class="flex flex-wrap gap-2">
                     @foreach($filterOptions['gearTypes'] as $gearType)
                         <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-foreground @endif">
@@ -572,7 +572,7 @@
 
             <!-- Drive Wheels -->
             <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Drive Wheels</label>
+                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.drive_wheels') }}</label>
                 <div class="flex flex-wrap gap-2">
                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-foreground @endif">
                         <input 
@@ -582,7 +582,7 @@
                             class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
                         >
-                        <span>FWD</span>
+                        <span>{{ __('messages.forms.fwd') }}</span>
                     </label>
                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-foreground @endif">
                         <input 
@@ -592,7 +592,7 @@
                             class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
                         >
-                        <span>RWD</span>
+                        <span>{{ __('messages.forms.rwd') }}</span>
                     </label>
                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-foreground @endif">
                         <input 
@@ -602,7 +602,7 @@
                             class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
                         >
-                        <span>AWD</span>
+                        <span>{{ __('messages.forms.awd') }}</span>
                     </label>
                 </div>
             </div>
@@ -611,30 +611,30 @@
             <div class="space-y-5">
                 <!-- First Registration Year Range -->
                 <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">First Registration Year</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.first_registration_year') }}</label>
                     <!-- Input Fields -->
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <label for="first-reg-year-from" class="sr-only">Year From</label>
+                            <label for="first-reg-year-from" class="sr-only">{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.from') }}</label>
                             <input 
                                 type="number" 
                                 id="first-reg-year-from"
                                 name="first_registration_year_from" 
-                                placeholder="From"
+                                placeholder="{{ __('messages.forms.from') }}"
                                 min="1975"
                                 max="{{ date('Y') }}"
                                 value="{{ $currentFilters['first_registration_year_from'] ?? '' }}"
                                 class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                         <div class="flex-1">
-                            <label for="first-reg-year-to" class="sr-only">Year To</label>
+                            <label for="first-reg-year-to" class="sr-only">{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.to') }}</label>
                             <input 
                                 type="number" 
                                 id="first-reg-year-to"
                                 name="first_registration_year_to" 
-                                placeholder="To"
+                                placeholder="{{ __('messages.common.next') }}"
                                 min="1975"
                                 max="{{ date('Y') }}"
                                 value="{{ $currentFilters['first_registration_year_to'] ?? '' }}"
@@ -674,7 +674,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Seller Type -->
                     <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seller Type</label>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seller_type') }}</label>
                         <div class="flex flex-col gap-2">
                             <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-foreground @endif">
                                 <input 
@@ -684,7 +684,7 @@
                                     class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
                                 >
-                                <span>Dealer</span>
+                                <span>{{ __('messages.pages.vehicles.dealer') }}</span>
                             </label>
                             <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-foreground @endif">
                                 <input 
@@ -694,14 +694,14 @@
                                     class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
                                 >
-                                <span>Private</span>
+                                <span>{{ __('messages.pages.vehicles.private') }}</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Sales Type -->
                     <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Sales Type</label>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.sales_type') }}</label>
                         <div class="flex flex-col gap-2">
                             @foreach($filterOptions['salesTypes'] as $salesType)
                                 <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-foreground @endif">
@@ -721,11 +721,11 @@
 
                 <!-- Seller Distance -->
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seller Distance (km)</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seller_distance_km') }}</label>
                     <input 
                         type="number" 
                         name="seller_distance" 
-                        placeholder="Distance"
+                        placeholder="{{ __('messages.forms.distance') }}"
                         min="0"
                         value="{{ $currentFilters['seller_distance'] ?? '' }}"
                         class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
@@ -737,30 +737,30 @@
             <div class="space-y-5">
                 <!-- Horsepower Range -->
                 <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Horsepower (HP)</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.horsepower_hp') }}</label>
                     <!-- Input Fields -->
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <label for="horsepower-min" class="sr-only">Horsepower Min</label>
+                            <label for="horsepower-min" class="sr-only">{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.min') }}</label>
                             <input 
                                 type="number" 
                                 id="horsepower-min"
                                 name="engine_power_from" 
-                                placeholder="Min"
+                                placeholder="{{ __('messages.forms.min') }}"
                                 min="0"
                                 max="1000"
                                 value="{{ $currentFilters['engine_power_from'] ?? '' }}"
                                 class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                         <div class="flex-1">
-                            <label for="horsepower-max" class="sr-only">Horsepower Max</label>
+                            <label for="horsepower-max" class="sr-only">{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.max') }}</label>
                             <input 
                                 type="number" 
                                 id="horsepower-max"
                                 name="engine_power_to" 
-                                placeholder="Max"
+                                placeholder="{{ __('messages.forms.max') }}"
                                 min="0"
                                 max="1000"
                                 value="{{ $currentFilters['engine_power_to'] ?? '' }}"
@@ -801,30 +801,30 @@
             <div class="space-y-5">
                 <!-- Battery Capacity -->
                 <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Battery Capacity (kWh)</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.battery_capacity_kwh') }}</label>
                     <!-- Input Fields -->
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <label for="battery-capacity-min" class="sr-only">Battery Capacity Min</label>
+                            <label for="battery-capacity-min" class="sr-only">{{ __('messages.forms.battery_capacity_kwh') }} {{ __('messages.forms.min') }}</label>
                             <input 
                                 type="number" 
                                 id="battery-capacity-min"
                                 name="battery_capacity_from" 
-                                placeholder="Min"
+                                placeholder="{{ __('messages.forms.min') }}"
                                 min="0"
                                 max="200"
                                 value="{{ $currentFilters['battery_capacity_from'] ?? '' }}"
                                 class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                         <div class="flex-1">
-                            <label for="battery-capacity-max" class="sr-only">Battery Capacity Max</label>
+                            <label for="battery-capacity-max" class="sr-only">{{ __('messages.forms.battery_capacity_kwh') }} {{ __('messages.forms.max') }}</label>
                             <input 
                                 type="number" 
                                 id="battery-capacity-max"
                                 name="battery_capacity_to" 
-                                placeholder="Max"
+                                placeholder="{{ __('messages.forms.max') }}"
                                 min="0"
                                 max="200"
                                 value="{{ $currentFilters['battery_capacity_to'] ?? '' }}"
@@ -862,30 +862,30 @@
 
                 <!-- Range (km) -->
                 <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Range (km)</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.range_km') }}</label>
                     <!-- Input Fields -->
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <label for="range-km-from" class="sr-only">Range From</label>
+                            <label for="range-km-from" class="sr-only">{{ __('messages.forms.range_km') }} {{ __('messages.forms.from') }}</label>
                             <input 
                                 type="number" 
                                 id="range-km-from"
                                 name="range_km_from" 
-                                placeholder="Min"
+                                placeholder="{{ __('messages.forms.min') }}"
                                 min="0"
                                 max="1000"
                                 value="{{ $currentFilters['range_km_from'] ?? '' }}"
                                 class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                             >
                         </div>
-                        <span class="text-muted-foreground text-sm font-medium">to</span>
+                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
                         <div class="flex-1">
-                            <label for="range-km-to" class="sr-only">Range To</label>
+                            <label for="range-km-to" class="sr-only">{{ __('messages.forms.range_km') }} {{ __('messages.forms.to') }}</label>
                             <input 
                                 type="number" 
                                 id="range-km-to"
                                 name="range_km_to" 
-                                placeholder="Max"
+                                placeholder="{{ __('messages.forms.max') }}"
                                 min="0"
                                 max="1000"
                                 value="{{ $currentFilters['range_km_to'] ?? '' }}"
@@ -923,12 +923,12 @@
 
                 <!-- Charging Type -->
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Charging Type</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.charging_type') }}</label>
                     <select 
                         name="charging_type" 
                         class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                     >
-                        <option value="">All</option>
+                        <option value="">{{ __('messages.common.all') }}</option>
                         <option value="AC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC') selected @endif>AC</option>
                         <option value="DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'DC') selected @endif>DC</option>
                         <option value="AC/DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC/DC') selected @endif>AC/DC</option>
@@ -940,12 +940,12 @@
             <div class="space-y-5">
                 <!-- Euro Norm -->
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Euro Norm</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.euro_norm') }}</label>
                     <select 
                         name="euronorm" 
                         class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
                     >
-                        <option value="">All</option>
+                        <option value="">{{ __('messages.common.all') }}</option>
                         <option value="Euro 1" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 1') selected @endif>Euro 1</option>
                         <option value="Euro 2" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 2') selected @endif>Euro 2</option>
                         <option value="Euro 3" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 3') selected @endif>Euro 3</option>
@@ -962,11 +962,11 @@
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Doors Min -->
                     <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Doors (Min)</label>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.doors_min') }}</label>
                         <input 
                             type="number" 
                             name="doors" 
-                            placeholder="Minimum"
+                            placeholder="{{ __('messages.forms.minimum') }}"
                             min="2"
                             max="6"
                             value="{{ $currentFilters['doors'] ?? '' }}"
@@ -976,11 +976,11 @@
 
                     <!-- Seats Min -->
                     <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Seats (Min)</label>
+                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seats_min') }}</label>
                         <input 
                             type="number" 
                             name="seats_min" 
-                            placeholder="Minimum"
+                            placeholder="{{ __('messages.forms.minimum') }}"
                             min="2"
                             max="9"
                             value="{{ $currentFilters['seats_min'] ?? '' }}"
@@ -993,7 +993,7 @@
             <!-- Equipment -->
             <div class="space-y-5">
                 <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">Equipment</label>
+                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.equipment') }}</label>
                             <div class="space-y-2">
                         @foreach($filterOptions['equipmentTypes'] as $equipmentType)
                             <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
@@ -1045,7 +1045,7 @@
                         type="button"
                                 class="hidden inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        Reset Filters
+                        {{ __('messages.pages.vehicles.reset_filters') }}
                     </button>
                         </div>
                     </div>
@@ -1057,42 +1057,42 @@
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
                         <strong>{{ number_format($vehicles->total()) }}</strong> 
-                        results
+                        {{ __('messages.forms.results') }}
                     </p>
                 </div>
                 <!-- Sort Dropdown Container -->
                 <div class="relative text-xs font-medium">
                     @php
                         $sortLabels = [
-                            'best_match' => 'Best Match',
-                            'price_asc' => 'Price: (lowest first)',
-                            'price_desc' => 'Price: (Highest first)',
-                            'date_desc' => 'Date: (Newest first)',
-                            'date_asc' => 'Date: (Oldest first)',
-                            'year_desc' => 'Model Year: (Newest first)',
-                            'year_asc' => 'Model Year: (Oldest First)',
-                            'mileage_desc' => 'Mileage: (Highest first)',
-                            'mileage_asc' => 'Mileage: (Lowest first)',
-                            'fuel_efficiency_desc' => 'Km/l: (Highest first)',
-                            'fuel_efficiency_asc' => 'Km/l: (Lowest first)',
-                            'range_desc' => 'Range: (Highest first)',
-                            'range_asc' => 'Range: (Lowest first)',
-                            'battery_desc' => 'Battery capacity: (Highest first)',
-                            'battery_asc' => 'Battery capacity: (Lowest first)',
-                            'brand_asc' => 'Brand: (Alphabetical)',
-                            'brand_desc' => 'Brand: (Reverse alphabetical)',
-                            'engine_power_desc' => 'HK: (Highest first)',
-                            'engine_power_asc' => 'HK: (Lowest first)',
-                            'towing_weight_desc' => 'Trailer weight: (Heaviest first)',
-                            'towing_weight_asc' => 'Trailer weight: (Lowest first)',
-                            'top_speed_desc' => '0-100 km/h: (Highest first)',
-                            'top_speed_asc' => '0-100 km/h: (Lowest first)',
-                            'ownership_tax_desc' => 'Owner tax: (Highest first)',
-                            'ownership_tax_asc' => 'Owner tax: (Lowest first)',
-                            'first_reg_desc' => '1st reg: (Newest first)',
-                            'first_reg_asc' => '1st reg: (Eldest first)',
-                            'distance_asc' => 'Distance to seller: (Shortest distance)',
-                            'distance_desc' => 'Distance to seller: (Longest distance)'
+                            'best_match' => __('messages.pages.vehicles.sort.best_match'),
+                            'price_asc' => __('messages.pages.vehicles.sort.price_asc'),
+                            'price_desc' => __('messages.pages.vehicles.sort.price_desc'),
+                            'date_desc' => __('messages.pages.vehicles.sort.date_desc'),
+                            'date_asc' => __('messages.pages.vehicles.sort.date_asc'),
+                            'year_desc' => __('messages.pages.vehicles.sort.year_desc'),
+                            'year_asc' => __('messages.pages.vehicles.sort.year_asc'),
+                            'mileage_desc' => __('messages.pages.vehicles.sort.mileage_desc'),
+                            'mileage_asc' => __('messages.pages.vehicles.sort.mileage_asc'),
+                            'fuel_efficiency_desc' => __('messages.pages.vehicles.sort.fuel_efficiency_desc'),
+                            'fuel_efficiency_asc' => __('messages.pages.vehicles.sort.fuel_efficiency_asc'),
+                            'range_desc' => __('messages.pages.vehicles.sort.range_desc'),
+                            'range_asc' => __('messages.pages.vehicles.sort.range_asc'),
+                            'battery_desc' => __('messages.pages.vehicles.sort.battery_desc'),
+                            'battery_asc' => __('messages.pages.vehicles.sort.battery_asc'),
+                            'brand_asc' => __('messages.pages.vehicles.sort.brand_asc'),
+                            'brand_desc' => __('messages.pages.vehicles.sort.brand_desc'),
+                            'engine_power_desc' => __('messages.pages.vehicles.sort.engine_power_desc'),
+                            'engine_power_asc' => __('messages.pages.vehicles.sort.engine_power_asc'),
+                            'towing_weight_desc' => __('messages.pages.vehicles.sort.towing_weight_desc'),
+                            'towing_weight_asc' => __('messages.pages.vehicles.sort.towing_weight_asc'),
+                            'top_speed_desc' => __('messages.pages.vehicles.sort.top_speed_desc'),
+                            'top_speed_asc' => __('messages.pages.vehicles.sort.top_speed_asc'),
+                            'ownership_tax_desc' => __('messages.pages.vehicles.sort.ownership_tax_desc'),
+                            'ownership_tax_asc' => __('messages.pages.vehicles.sort.ownership_tax_asc'),
+                            'first_reg_desc' => __('messages.pages.vehicles.sort.first_reg_desc'),
+                            'first_reg_asc' => __('messages.pages.vehicles.sort.first_reg_asc'),
+                            'distance_asc' => __('messages.pages.vehicles.sort.distance_asc'),
+                            'distance_desc' => __('messages.pages.vehicles.sort.distance_desc')
                         ];
                         $currentSort = request()->query('sort', 'best_match');
                     @endphp
@@ -1170,12 +1170,12 @@
                     @if($vehicle->dealer_id)
                     <!-- Dealer Label - Top Left -->
                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        Dealer
+                        {{ __('messages.pages.vehicles.dealer') }}
                 </span>
                     @else
                     <!-- Private Label - Top Left -->
                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        Private
+                        {{ __('messages.pages.vehicles.private') }}
                     </span>
                     @endif
                     <!-- Heart Icon - Top Right -->
@@ -1245,7 +1245,7 @@
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                         <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                View Details
+                                {{ __('messages.pages.vehicles.view_details') }}
                             </button>
                         </a>
                         <button 
@@ -1253,7 +1253,7 @@
                             onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }})"
                             class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                         >
-                            Enquire
+                            {{ __('messages.pages.vehicles.enquire') }}
                         </button>
                     </div>
                 </div>
@@ -1266,9 +1266,9 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.3-4.3"></path>
                 </svg>
-                <h3 class="text-lg font-semibold">No vehicles found</h3>
+                <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
                 <p class="text-muted-foreground mt-1">
-                    Try adjusting your search or filter criteria.
+                    {{ __('messages.forms.try_adjusting_filters') }}
                 </p>
             </div>
         </div>
@@ -1289,13 +1289,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                 <path d="m15 18-6-6 6-6"></path>
             </svg>
-            Previous
+            {{ __('messages.common.previous') }}
         </button>
         <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
             1
         </button>
         <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Next
+            {{ __('messages.common.next') }}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
                 <path d="m9 18 6-6-6-6"></path>
             </svg>
@@ -1649,35 +1649,35 @@
         }
         
         const sortLabels = {
-            'best_match': 'Best Match',
-            'price_asc': 'Price: (lowest first)',
-            'price_desc': 'Price: (Highest first)',
-            'date_desc': 'Date: (Newest first)',
-            'date_asc': 'Date: (Oldest first)',
-            'year_desc': 'Model Year: (Newest first)',
-            'year_asc': 'Model Year: (Oldest First)',
-            'mileage_desc': 'Mileage: (Highest first)',
-            'mileage_asc': 'Mileage: (Lowest first)',
-            'fuel_efficiency_desc': 'Km/l: (Highest first)',
-            'fuel_efficiency_asc': 'Km/l: (Lowest first)',
-            'range_desc': 'Range: (Highest first)',
-            'range_asc': 'Range: (Lowest first)',
-            'battery_desc': 'Battery capacity: (Highest first)',
-            'battery_asc': 'Battery capacity: (Lowest first)',
-            'brand_asc': 'Brand: (Alphabetical)',
-            'brand_desc': 'Brand: (Reverse alphabetical)',
-            'engine_power_desc': 'HK: (Highest first)',
-            'engine_power_asc': 'HK: (Lowest first)',
-            'towing_weight_desc': 'Trailer weight: (Heaviest first)',
-            'towing_weight_asc': 'Trailer weight: (Lowest first)',
-            'top_speed_desc': '0-100 km/h: (Highest first)',
-            'top_speed_asc': '0-100 km/h: (Lowest first)',
-            'ownership_tax_desc': 'Owner tax: (Highest first)',
-            'ownership_tax_asc': 'Owner tax: (Lowest first)',
-            'first_reg_desc': '1st reg: (Newest first)',
-            'first_reg_asc': '1st reg: (Eldest first)',
-            'distance_asc': 'Distance to seller: (Shortest distance)',
-            'distance_desc': 'Distance to seller: (Longest distance)'
+            'best_match': '{{ __('messages.pages.vehicles.sort.best_match') }}',
+            'price_asc': '{{ __('messages.pages.vehicles.sort.price_asc') }}',
+            'price_desc': '{{ __('messages.pages.vehicles.sort.price_desc') }}',
+            'date_desc': '{{ __('messages.pages.vehicles.sort.date_desc') }}',
+            'date_asc': '{{ __('messages.pages.vehicles.sort.date_asc') }}',
+            'year_desc': '{{ __('messages.pages.vehicles.sort.year_desc') }}',
+            'year_asc': '{{ __('messages.pages.vehicles.sort.year_asc') }}',
+            'mileage_desc': '{{ __('messages.pages.vehicles.sort.mileage_desc') }}',
+            'mileage_asc': '{{ __('messages.pages.vehicles.sort.mileage_asc') }}',
+            'fuel_efficiency_desc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_desc') }}',
+            'fuel_efficiency_asc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_asc') }}',
+            'range_desc': '{{ __('messages.pages.vehicles.sort.range_desc') }}',
+            'range_asc': '{{ __('messages.pages.vehicles.sort.range_asc') }}',
+            'battery_desc': '{{ __('messages.pages.vehicles.sort.battery_desc') }}',
+            'battery_asc': '{{ __('messages.pages.vehicles.sort.battery_asc') }}',
+            'brand_asc': '{{ __('messages.pages.vehicles.sort.brand_asc') }}',
+            'brand_desc': '{{ __('messages.pages.vehicles.sort.brand_desc') }}',
+            'engine_power_desc': '{{ __('messages.pages.vehicles.sort.engine_power_desc') }}',
+            'engine_power_asc': '{{ __('messages.pages.vehicles.sort.engine_power_asc') }}',
+            'towing_weight_desc': '{{ __('messages.pages.vehicles.sort.towing_weight_desc') }}',
+            'towing_weight_asc': '{{ __('messages.pages.vehicles.sort.towing_weight_asc') }}',
+            'top_speed_desc': '{{ __('messages.pages.vehicles.sort.top_speed_desc') }}',
+            'top_speed_asc': '{{ __('messages.pages.vehicles.sort.top_speed_asc') }}',
+            'ownership_tax_desc': '{{ __('messages.pages.vehicles.sort.ownership_tax_desc') }}',
+            'ownership_tax_asc': '{{ __('messages.pages.vehicles.sort.ownership_tax_asc') }}',
+            'first_reg_desc': '{{ __('messages.pages.vehicles.sort.first_reg_desc') }}',
+            'first_reg_asc': '{{ __('messages.pages.vehicles.sort.first_reg_asc') }}',
+            'distance_asc': '{{ __('messages.pages.vehicles.sort.distance_asc') }}',
+            'distance_desc': '{{ __('messages.pages.vehicles.sort.distance_desc') }}'
         };
         
         let searchDebounceTimer = null;
@@ -1720,12 +1720,12 @@
                             ${vehicle.dealer_id ? `
                             <!-- Dealer Label - Top Left -->
                             <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                Dealer
+                                {{ __('messages.pages.vehicles.dealer') }}
                             </span>
                             ` : `
                             <!-- Private Label - Top Left -->
                             <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                Private
+                                {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
                             <!-- Heart Icon - Top Right -->
@@ -1791,11 +1791,11 @@
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        View Details
+                                        {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
                                 <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); handleEnquire(${vehicle.id}, event);">
-                                    Enquire
+                                    {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
                         </div>
@@ -1853,12 +1853,12 @@
                             ${vehicle.dealer_id ? `
                                 <!-- Dealer Label - Top Left of List Item -->
                                 <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                    Dealer
+                                    {{ __('messages.pages.vehicles.dealer') }}
                                 </span>
                                 ` : `
                                 <!-- Private Label - Top Left of List Item -->
                                 <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                    Private
+                                    {{ __('messages.pages.vehicles.private') }}
                                 </span>
                                 `}
                             </span>
@@ -1886,11 +1886,11 @@
                             ` : ''}
 
                                 <p class="text-sm font-semibold">
-                                    Price: ${formatCurrency(vehicle.price)}
+                                    {{ __('messages.forms.price') }}: ${formatCurrency(vehicle.price)}
                                 </p>
 
                                 <span>
-                                    ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>Version:</span> <strong>${vehicle.version}</strong></p>` : ''}
+                                    ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>{{ __('messages.forms.model') }}:</span> <strong>${vehicle.version}</strong></p>` : ''}
                                 </span>
                             </div>
                         </div>
@@ -1914,7 +1914,7 @@
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        View Details
+                                        {{ __('messages.pages.vehicles.view_details') }}
                             </button>
                         </a>
                                 <button 
@@ -1922,7 +1922,7 @@
                                     onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
                                     class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                 >
-                                Enquire
+                                {{ __('messages.pages.vehicles.enquire') }}
                             </button>
                             </div>
                         </div>
@@ -1943,9 +1943,9 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </svg>
-                            <h3 class="text-lg font-semibold">No vehicles found</h3>
+                            <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
                             <p class="text-muted-foreground mt-1">
-                                Try adjusting your search or filter criteria.
+                                {{ __('messages.forms.try_adjusting_filters') }}
                             </p>
                         </div>
                     </div>
@@ -2082,7 +2082,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                         <path d="m15 18-6-6 6-6"></path>
                     </svg>
-                    Previous
+                    {{ __('messages.common.previous') }}
                 </button>
             `;
             
@@ -2135,7 +2135,7 @@
                     data-page="${currentPageNum + 1}"
                     class="pagination-btn inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 >
-                    Next
+                    {{ __('messages.common.next') }}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
                         <path d="m9 18 6-6-6-6"></path>
                     </svg>
@@ -2167,7 +2167,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12 h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-muted-foreground">Loading vehicles...</p>
+                        <p class="text-muted-foreground">{{ __('messages.forms.loading_vehicles') }}</p>
                     </div>
                 </div>
             `;
@@ -2185,8 +2185,8 @@
                             <line x1="12" y2="12" y1="8"></line>
                             <line x1="12" y1="16" x2="12" y2="16"></line>
                         </svg>
-                        <h3 class="text-lg font-semibold">Error loading vehicles</h3>
-                        <p class="text-muted-foreground mt-1">${message || 'Please try again later.'}</p>
+                        <h3 class="text-lg font-semibold">{{ __('messages.forms.error_loading_vehicles') }}</h3>
+                        <p class="text-muted-foreground mt-1">${message || '{{ __('messages.forms.please_try_again') }}'}</p>
                     </div>
                 </div>
             `;
@@ -2296,13 +2296,13 @@
                 } else if (from) {
                     chips.push({
                         key: 'price_from',
-                        label: `From ${from} kr.`,
+                        label: `{{ __('messages.forms.price_from') }} ${from} kr.`,
                         value: filters.price_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'price_to',
-                        label: `Up to ${to} kr.`,
+                        label: `{{ __('messages.forms.price_up_to') }} ${to} kr.`,
                         value: filters.price_to
                     });
                 }
@@ -2321,13 +2321,13 @@
                 } else if (from) {
                     chips.push({
                         key: 'year_from',
-                        label: `From ${from}`,
+                        label: `{{ __('messages.forms.price_from') }} ${from}`,
                         value: filters.year_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'year_to',
-                        label: `Up to ${to}`,
+                        label: `{{ __('messages.forms.price_up_to') }} ${to}`,
                         value: filters.year_to
                     });
                 }
@@ -2346,13 +2346,13 @@
                 } else if (from) {
                     chips.push({
                         key: 'mileage_from',
-                        label: `From ${from} km`,
+                        label: `{{ __('messages.forms.price_from') }} ${from} km`,
                         value: filters.mileage_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'mileage_to',
-                        label: `Up to ${to} km`,
+                        label: `{{ __('messages.forms.price_up_to') }} ${to} km`,
                         value: filters.mileage_to
                     });
                 }
@@ -2461,7 +2461,7 @@
                         data-filter-key="${chip.key}"
                         data-filter-value="${typeof chip.value === 'object' ? JSON.stringify(chip.value) : chip.value}"
                         data-is-array="${chip.isArray || false}"
-                        aria-label="Remove filter"
+                        aria-label="{{ __('messages.forms.remove_filter') }}"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 6 6 18M6 6l12 12"></path>
@@ -2477,7 +2477,7 @@
                     type="button"
                     class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                    Reset Filters
+                    {{ __('messages.pages.vehicles.reset_filters') }}
                 </button>
             `;
             
@@ -2621,7 +2621,7 @@
                 const formattedCount = new Intl.NumberFormat('en-US').format(totalCount);
                 
                 if (resultsCount) {
-                    resultsCount.textContent = `${formattedCount} results`;
+                    resultsCount.innerHTML = `<strong>${formattedCount}</strong> {{ __('messages.forms.results') }}`;
                 }
                 
                 // Update filter chips and reset button visibility
@@ -2811,7 +2811,7 @@
                 // No brand selected - disable model dropdown
                 modelSelect.disabled = true;
                 if (defaultOption) {
-                    defaultOption.textContent = 'Model';
+                    defaultOption.textContent = '{{ __('messages.forms.model') }}';
                 }
                 modelSelect.value = '';
                 // Hide all model options
@@ -2822,7 +2822,7 @@
                 // Brand selected - enable model dropdown
                 modelSelect.disabled = false;
                 if (defaultOption) {
-                    defaultOption.textContent = 'All';
+                    defaultOption.textContent = '{{ __('messages.common.all') }}';
                 }
                 
                 // Show/hide model options based on brand
@@ -3697,12 +3697,12 @@
                         }
                         if (path) path.setAttribute('fill', 'none');
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Removed from favorites', 'success');
+                            window.showSnackbar(data.message || '{{ __('messages.messages.removed_from_favorites') }}', 'success');
                         }
                     } else {
                         if (response.status === 401) {
                             if (window.showSnackbar) {
-                                window.showSnackbar('Please login to manage favorites', 'error');
+                                window.showSnackbar('{{ __('messages.errors.please_login') }}', 'error');
                             }
                             // Open login dialog instead of redirecting
                             if (window.openLoginDialog) {
@@ -3718,7 +3718,7 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Failed to remove from favorites', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_remove_favorites') }}', 'error');
                         }
                     }
                 } else {
@@ -3742,12 +3742,12 @@
                         heartIcon.classList.add('text-red-500');
                         if (path) path.setAttribute('fill', 'currentColor');
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                            window.showSnackbar(data.message || '{{ __('messages.messages.saved_to_favorites') }}', 'success');
                         }
                     } else {
                         if (response.status === 401) {
                             if (window.showSnackbar) {
-                                window.showSnackbar('Please login to save favorites', 'error');
+                                window.showSnackbar('{{ __('messages.errors.please_login_to_save') }}', 'error');
                             }
                             // Open login dialog instead of redirecting
                             if (window.openLoginDialog) {
@@ -3763,14 +3763,14 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Failed to save to favorites', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_save_favorites') }}', 'error');
                         }
                     }
                 }
             } catch (error) {
                 console.error('Error toggling favorite:', error);
                 if (window.showSnackbar) {
-                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                    window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
                 }
             }
             

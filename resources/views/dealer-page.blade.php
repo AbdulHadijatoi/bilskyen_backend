@@ -32,7 +32,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            Send Enquiry
+                            {{ __('messages.pages.dealer_page.send_enquiry') }}
                         </button>
                     </div>
                     @if($dealer->cvr)
@@ -85,7 +85,7 @@
                         name="search"
                         id="search-input"
                         value="{{ request()->query('search', '') }}"
-                        placeholder="Search by make, model..."
+                        placeholder="{{ __('messages.pages.dealer_page.search_placeholder') }}"
                         class="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                 </div>
@@ -97,7 +97,7 @@
                         id="brand-select"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                        <option value="">All Brands</option>
+                        <option value="">{{ __('messages.pages.dealer_page.all_brands') }}</option>
                         @foreach($filterOptions['brands'] as $brand)
                         <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
                         @endforeach
@@ -112,7 +112,7 @@
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
                         @if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) disabled @endif
                     >
-                        <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) Model @else All Models @endif</option>
+                        <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) {{ __('messages.pages.dealer_page.model') }} @else {{ __('messages.pages.dealer_page.all_models') }} @endif</option>
                         @foreach($filterOptions['models'] as $model)
                         <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
                         @endforeach
@@ -126,11 +126,11 @@
                         id="sort-select"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                        <option value="standard" @if(!isset($currentFilters['sort']) || $currentFilters['sort'] == 'standard') selected @endif>Newest First</option>
-                        <option value="price_asc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_asc') selected @endif>Price: Lowest First</option>
-                        <option value="price_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_desc') selected @endif>Price: Highest First</option>
-                        <option value="date_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'date_desc') selected @endif>Date: Newest First</option>
-                        <option value="year_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'year_desc') selected @endif>Year: Newest First</option>
+                        <option value="standard" @if(!isset($currentFilters['sort']) || $currentFilters['sort'] == 'standard') selected @endif>{{ __('messages.pages.dealer_page.newest_first') }}</option>
+                        <option value="price_asc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_asc') selected @endif>{{ __('messages.pages.dealer_page.price_lowest_first') }}</option>
+                        <option value="price_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'price_desc') selected @endif>{{ __('messages.pages.dealer_page.price_highest_first') }}</option>
+                        <option value="date_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'date_desc') selected @endif>{{ __('messages.pages.dealer_page.date_newest_first') }}</option>
+                        <option value="year_desc" @if(isset($currentFilters['sort']) && $currentFilters['sort'] == 'year_desc') selected @endif>{{ __('messages.pages.dealer_page.year_newest_first') }}</option>
                     </select>
                 </div>
 
@@ -138,7 +138,7 @@
                     type="submit"
                     class="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
                 >
-                    Apply Filters
+                    {{ __('messages.pages.dealer_page.apply_filters') }}
                 </button>
             </form>
             </div>
@@ -147,9 +147,9 @@
         <!-- Vehicle Listings Section (Full Width) -->
         <div class="space-y-4">
             <div class="flex items-center justify-between">
-                <h2 class="text-md text-foreground">Our Vehicles</h2>
+                <h2 class="text-md text-foreground">{{ __('messages.pages.dealer_page.our_vehicles') }}</h2>
                 <div class="flex items-center gap-4">
-                    <span class="text-muted-foreground text-sm">{{ $vehicles->total() }} vehicles</span>
+                    <span class="text-muted-foreground text-sm">{{ $vehicles->total() }} {{ __('messages.pages.dealer_page.vehicles_count') }}</span>
                     <!-- View Toggle Buttons -->
                     <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
                         <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-white text-foreground font-semibold">
@@ -281,9 +281,9 @@
                             <circle cx="11" cy="11" r="8"></circle>
                             <path d="m21 21-4.3-4.3"></path>
                         </svg>
-                        <h3 class="text-lg font-semibold">No vehicles found</h3>
+                        <h3 class="text-lg font-semibold">{{ __('messages.pages.dealer_page.no_vehicles_found') }}</h3>
                         <p class="text-muted-foreground mt-1">
-                            This dealer doesn't have any published vehicles yet.
+                            {{ __('messages.pages.dealer_page.no_vehicles_description') }}
                         </p>
                     </div>
                 </div>
@@ -295,11 +295,11 @@
             <div class="flex items-center justify-center gap-2">
                 @if($vehicles->onFirstPage())
                 <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
-                    Previous
+                    {{ __('messages.common.previous') }}
                 </button>
                 @else
                 <a href="{{ $vehicles->previousPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
-                    Previous
+                    {{ __('messages.common.previous') }}
                 </a>
                 @endif
 
@@ -309,11 +309,11 @@
 
                 @if($vehicles->hasMorePages())
                 <a href="{{ $vehicles->nextPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
-                    Next
+                    {{ __('messages.common.next') }}
                 </a>
                 @else
                 <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
-                    Next
+                    {{ __('messages.common.next') }}
                 </button>
                 @endif
             </div>
@@ -338,10 +338,10 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
                 <div class="flex-1">
                     <h2 id="dealer-enquiry-dialog-title" class="text-xl font-semibold text-foreground">
-                        Send Enquiry
+                        {{ __('messages.pages.dealer_page.dealer_enquiry_title') }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Submit your enquiry about {{ $dealer->owner?->name ?? 'this dealer' }}. We'll get back to you as soon as possible.
+                        {{ __('messages.pages.dealer_page.dealer_enquiry_description', ['dealer' => $dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label')]) }}
                     </p>
                 </div>
                 <button
@@ -360,11 +360,11 @@
             <div class="overflow-y-auto flex-1 px-6 py-4">
                 <!-- Dealer Information Card -->
                 <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h3 class="text-foreground text-sm font-semibold mb-3">Dealer Information</h3>
+                    <h3 class="text-foreground text-sm font-semibold mb-3">{{ __('messages.pages.dealer_page.dealer_information') }}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <span class="text-xs text-muted-foreground">Dealer</span>
-                            <p class="text-foreground font-medium text-sm">{{ $dealer->owner?->name ?? 'Dealer' }}</p>
+                            <span class="text-xs text-muted-foreground">{{ __('messages.pages.dealer_page.dealer_label') }}</span>
+                            <p class="text-foreground font-medium text-sm">{{ $dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label') }}</p>
                         </div>
                         @if($dealer->cvr)
                         <div>
@@ -387,7 +387,7 @@
 
                 <!-- Form -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="text-foreground text-sm font-semibold mb-4">Your Details</h3>
+                    <h3 class="text-foreground text-sm font-semibold mb-4">{{ __('messages.pages.dealer_page.your_details') }}</h3>
                     <form id="dealer-enquiry-form" class="space-y-4">
                         @csrf
                         <input type="hidden" name="dealer_slug" value="{{ $dealer->slug }}">
@@ -404,7 +404,7 @@
 
                         <div class="space-y-2">
                             <label for="dealer-enquiry-name" class="text-sm font-medium leading-none">
-                                Full Name <span class="text-red-500">*</span>
+                                {{ __('messages.pages.dealer_page.full_name') }} <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="text" 
@@ -412,7 +412,7 @@
                                 name="name" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your full name"
+                                placeholder="{{ __('messages.forms.name') }}"
                             >
                         </div>
 
@@ -432,14 +432,14 @@
 
                         <div class="space-y-2">
                             <label for="dealer-enquiry-phone" class="text-sm font-medium leading-none">
-                                Phone Number
+                                {{ __('messages.pages.dealer_page.phone_number') }}
                             </label>
                             <input 
                                 type="tel" 
                                 id="dealer-enquiry-phone" 
                                 name="phone" 
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your phone number (optional)"
+                                placeholder="{{ __('messages.pages.dealer_page.phone_optional') }}"
                             >
                         </div>
 
@@ -453,7 +453,7 @@
                                 required
                                 rows="5"
                                 class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Tell us about your enquiry..."
+                                placeholder="{{ __('messages.pages.dealer_page.tell_us_enquiry') }}"
                             ></textarea>
                         </div>
 
@@ -463,7 +463,7 @@
                                 id="dealer-submit-btn"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                             >
-                                <span id="dealer-submit-text">Submit Enquiry</span>
+                                <span id="dealer-submit-text">{{ __('messages.pages.dealer_page.send_enquiry') }}</span>
                                 <svg id="dealer-submit-spinner" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -474,7 +474,7 @@
                                 onclick="closeDealerEnquiryDialog()"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             >
-                                Cancel
+                                {{ __('messages.common.cancel') }}
                             </button>
                         </div>
                     </form>
@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Disable submit button
             if (submitBtn) submitBtn.disabled = true;
-            if (submitText) submitText.textContent = 'Submitting...';
+            if (submitText) submitText.textContent = '{{ __('messages.pages.dealer_page.submitting') }}';
             if (submitSpinner) submitSpinner.classList.remove('hidden');
 
             // Get form data
@@ -585,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         if (errorContainer) errorContainer.classList.remove('hidden');
                     } else {
-                        const errorMsg = result.message || 'Failed to submit enquiry. Please try again.';
+                        const errorMsg = result.message || '{{ __('messages.pages.dealer_page.failed_to_submit_enquiry') }}';
                         if (window.showSnackbar) {
                             window.showSnackbar(errorMsg, 'error');
                         } else if (errorList) {
@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     // Success
-                    const successMsg = result.message || 'Your enquiry has been submitted successfully!';
+                    const successMsg = result.message || '{{ __('messages.pages.dealer_page.enquiry_submitted_successfully') }}';
                     if (successMessage) {
                         successMessage.querySelector('p').textContent = successMsg;
                         successMessage.classList.remove('hidden');
@@ -626,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } finally {
                 // Re-enable submit button
                 if (submitBtn) submitBtn.disabled = false;
-                if (submitText) submitText.textContent = 'Submit Enquiry';
+                if (submitText) submitText.textContent = '{{ __('messages.pages.dealer_page.send_enquiry') }}';
                 if (submitSpinner) submitSpinner.classList.add('hidden');
             }
         });
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // No brand selected - disable model dropdown
                 modelSelect.disabled = true;
                 if (defaultOption) {
-                    defaultOption.textContent = 'Model';
+                    defaultOption.textContent = '{{ __('messages.pages.dealer_page.model') }}';
                 }
                 modelSelect.value = '';
                 // Hide all model options
@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Brand selected - enable model dropdown
                 modelSelect.disabled = false;
                 if (defaultOption) {
-                    defaultOption.textContent = 'All Models';
+                    defaultOption.textContent = '{{ __('messages.pages.dealer_page.all_models') }}';
                 }
                 
                 // Show/hide model options based on brand
@@ -728,7 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.status === 401) {
                     if (window.showSnackbar) {
-                        window.showSnackbar('Please login to save favorites', 'error');
+                        window.showSnackbar('{{ __('messages.favorites.login_to_save_favorites') }}', 'error');
                     }
                     setTimeout(() => {
                         window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
@@ -756,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         heartIcon.classList.add('text-blue-600');
                         if (path) path.removeAttribute('fill');
                         if (window.showSnackbar) {
-                            window.showSnackbar('Removed from favorites', 'success');
+                            window.showSnackbar('{{ __('messages.favorites.removed_from_favorites') }}', 'success');
                         }
                     }
                 } else {
@@ -785,7 +785,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         if (addResponse.status === 401) {
                             if (window.showSnackbar) {
-                                window.showSnackbar('Please login to save favorites', 'error');
+                                window.showSnackbar('{{ __('messages.favorites.login_to_save_favorites') }}', 'error');
                             }
                             setTimeout(() => {
                                 window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error toggling favorite:', error);
                 if (window.showSnackbar) {
-                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                        window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
                 }
             }
             
@@ -1145,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
                                 <a href="/vehicles/${vehicle.id}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        View Details
+                                        {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
                                 <button 
@@ -1153,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
                                     class="flex-1 sm:flex-initial inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                 >
-                                    Enquire
+                                    {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
                         </div>

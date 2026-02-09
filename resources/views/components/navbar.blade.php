@@ -9,14 +9,50 @@
             <div class="flex items-center gap-2 md:gap-4">
                 <!-- Desktop Navigation -->
                 <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                    <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
-                    <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">About Us</a>
-                    <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Contact</a>
+                    <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.vehicles') }}</a>
+                    <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.about_us') }}</a>
+                    <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.contact') }}</a>
                     @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
-                    <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">My Listings</a>
+                    <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.my_listings') }}</a>
                     @endif
                 </nav>
                 <div class="flex items-center gap-2">
+                    <!-- Language Switcher -->
+                    <div class="relative">
+                        <button id="language-menu-toggle" class="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md border border-primary-foreground/20 bg-transparent text-primary-foreground transition-colors hover:bg-primary-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Language menu">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <path d="M5 8l6 6"></path>
+                                <path d="M4 14l6-6 2-3"></path>
+                                <path d="M2 5h12"></path>
+                                <path d="M7 2h1"></path>
+                                <path d="M22 22l-5-10-5 10"></path>
+                                <path d="M14 18h6"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Language Dropdown Menu -->
+                        <div id="language-menu" class="hidden absolute right-0 mt-2 w-40 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
+                            <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground {{ app()->getLocale() === 'en' ? 'bg-accent' : '' }}">
+                                <span class="mr-2 text-xs font-semibold">🇬🇧</span>
+                                <span>English</span>
+                                @if(app()->getLocale() === 'en')
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                @endif
+                            </a>
+                            <a href="{{ request()->fullUrlWithQuery(['lang' => 'da']) }}" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground {{ app()->getLocale() === 'da' ? 'bg-accent' : '' }}">
+                                <span class="mr-2 text-xs font-semibold">🇩🇰</span>
+                                <span>Dansk</span>
+                                @if(app()->getLocale() === 'da')
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                @endif
+                            </a>
+                        </div>
+                    </div>
+                    
                     @include('components.user-auth-status')
                     <!-- Mobile Menu Button -->
                     <button id="mobile-menu-toggle" class="md:hidden p-1.5 rounded-md bg-muted transition-colors" aria-label="Toggle menu">
@@ -31,12 +67,34 @@
         <!-- Mobile Navigation Menu -->
         <nav id="mobile-menu" class="hidden md:hidden border-t border-primary-foreground/20 py-4">
             <div class="flex flex-col space-y-4">
-                <a href="/vehicles" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Vehicles</a>
-                <a href="/about" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">About Us</a>
-                <a href="/contact" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">Contact</a>
+                <a href="/vehicles" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">{{ __('messages.navigation.vehicles') }}</a>
+                <a href="/about" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">{{ __('messages.navigation.about_us') }}</a>
+                <a href="/contact" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">{{ __('messages.navigation.contact') }}</a>
                 @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
-                <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">My Listings</a>
+                <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2">{{ __('messages.navigation.my_listings') }}</a>
                 @endif
+                <!-- Mobile Language Switcher -->
+                <div class="border-t border-primary-foreground/20 pt-4 mt-2">
+                    <div class="text-xs font-medium text-primary-foreground/60 mb-2 px-2">{{ __('messages.navigation.language') }}</div>
+                    <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="flex items-center text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2 px-2 {{ app()->getLocale() === 'en' ? 'bg-primary-foreground/10 rounded-md' : '' }}">
+                        <span class="mr-2">🇬🇧</span>
+                        <span>English</span>
+                        @if(app()->getLocale() === 'en')
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        @endif
+                    </a>
+                    <a href="{{ request()->fullUrlWithQuery(['lang' => 'da']) }}" class="flex items-center text-sm font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors py-2 px-2 {{ app()->getLocale() === 'da' ? 'bg-primary-foreground/10 rounded-md' : '' }}">
+                        <span class="mr-2">🇩🇰</span>
+                        <span>Dansk</span>
+                        @if(app()->getLocale() === 'da')
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto h-4 w-4">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        @endif
+                    </a>
+                </div>
             </div>
         </nav>
     </div>
@@ -64,6 +122,37 @@
                 }
             });
         }
+        
+        // Initialize language menu
+        (function() {
+            function initLanguageMenu() {
+                const languageMenuToggle = document.getElementById('language-menu-toggle');
+                const languageMenu = document.getElementById('language-menu');
+                
+                if (!languageMenuToggle || !languageMenu) {
+                    return;
+                }
+                
+                // Toggle menu
+                languageMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    languageMenu.classList.toggle('hidden');
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!languageMenuToggle.contains(e.target) && !languageMenu.contains(e.target)) {
+                        languageMenu.classList.add('hidden');
+                    }
+                });
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initLanguageMenu);
+            } else {
+                initLanguageMenu();
+            }
+        })();
         
         // Function to update navbar auth status after login
         window.updateNavbarAuthStatus = async function(userData) {
@@ -125,7 +214,7 @@
             const hasAdminRole = roles.some(r => (r.name || r) === 'admin');
             const hasDealerRole = roles.some(r => (r.name || r) === 'dealer');
             const showPanelButton = hasAdminRole || hasDealerRole;
-            const panelButtonText = hasAdminRole ? 'Admin Panel' : 'Dealer Panel';
+            const panelButtonText = hasAdminRole ? '{{ __('messages.navigation.admin_panel') }}' : '{{ __('messages.navigation.dealer_panel') }}';
             const panelUrl = '{{ env("VUE_PANEL_URL", "http://localhost:5173") }}';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
             
@@ -134,8 +223,8 @@
                 <div class="flex items-center gap-2 md:gap-3">
                     <a href="/sell-your-car">
                         <button class="inline-flex h-7 md:h-10 items-center justify-center rounded-md border border-border bg-background px-2 md:px-4 text-xs md:text-sm font-medium text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
-                            <span class="hidden sm:inline">Sell Your Car</span>
-                            <span class="sm:hidden">Sell</span>
+                            <span class="hidden sm:inline">{{ __('messages.navigation.sell_your_car') }}</span>
+                            <span class="sm:hidden">{{ __('messages.navigation.sell') }}</span>
                         </button>
                     </a>
                 </div>
@@ -159,13 +248,13 @@
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
-                            Profile
+                            {{ __('messages.navigation.profile') }}
                         </a>
                         <a href="/favorites" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path>
                             </svg>
-                            My Favorites
+                            {{ __('messages.navigation.my_favorites') }}
                         </a>
                         ${showPanelButton ? `
                         <a href="${panelUrl}" target="_blank" rel="noopener noreferrer" class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
@@ -185,7 +274,7 @@
                                     <polyline points="16 17 21 12 16 7"></polyline>
                                     <line x1="21" x2="9" y1="12" y2="12"></line>
                                 </svg>
-                                Logout
+                                {{ __('messages.navigation.logout') }}
                             </button>
                         </form>
                     </div>

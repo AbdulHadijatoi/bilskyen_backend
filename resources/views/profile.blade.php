@@ -5,10 +5,9 @@
 @section('content')
 <div class="container py-4 md:py-8">
     <div>
-        <h2 class="text-xl font-bold">Profile</h2>
+        <h2 class="text-xl font-bold">{{ __('messages.pages.profile.title') }}</h2>
         <p class="text-muted-foreground max-w-xl">
-            Update your personal details below. This information helps us contact
-            you and verify your identity when needed.
+            {{ __('messages.pages.profile.description') }}
         </p>
     </div>
 
@@ -29,7 +28,7 @@
 
         @if($errors->any())
             <div class="w-full rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-                <p class="text-sm font-medium mb-2">Please fix the following errors:</p>
+                <p class="text-sm font-medium mb-2">{{ __('messages.pages.profile.fix_errors') }}</p>
                 <ul class="list-disc list-inside text-sm">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -44,7 +43,7 @@
             <!-- Full Name Field -->
             <div class="space-y-2">
                 <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Full Name
+                    {{ __('messages.pages.profile.full_name_label') }}
                 </label>
                 <input
                     id="name"
@@ -58,15 +57,14 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 <p class="text-muted-foreground text-sm">
-                    Enter your legal full name as it appears on official
-                    documents.
+                    {{ __('messages.pages.profile.full_name_help') }}
                 </p>
             </div>
 
             <!-- Email Field -->
             <div class="space-y-2">
                 <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Email
+                    {{ __('messages.pages.profile.email_label') }}
                 </label>
                 <input
                     id="email"
@@ -80,15 +78,14 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 <p class="text-muted-foreground text-sm">
-                    Provide a valid email address for account notifications and
-                    recovery.
+                    {{ __('messages.pages.profile.email_help') }}
                 </p>
             </div>
 
             <!-- Phone Field -->
             <div class="space-y-2 flex flex-col items-start">
                 <label for="phone" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Phone number
+                    {{ __('messages.pages.profile.phone_label') }}
                 </label>
                 <input
                     id="phone"
@@ -102,19 +99,19 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 <p class="text-muted-foreground text-sm">
-                    Enter your active phone number including country code.
+                    {{ __('messages.pages.profile.phone_help') }}
                 </p>
             </div>
 
             <!-- Address Field -->
             <div class="space-y-2">
                 <label for="address" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Address
+                    {{ __('messages.pages.profile.address_label') }}
                 </label>
                 <textarea
                     id="address"
                     name="address"
-                    placeholder="Address"
+                    placeholder="{{ __('messages.forms.address') }}"
                     rows="3"
                     class="flex min-h-[80px] w-full rounded-md border {{ $errors->has('address') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                 >{{ old('address', $user?->address ?? '') }}</textarea>
@@ -122,7 +119,7 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 <p class="text-muted-foreground text-sm">
-                    Enter your current residential or business address.
+                    {{ __('messages.pages.profile.address_help') }}
                 </p>
             </div>
 
@@ -132,7 +129,7 @@
                     type="submit"
                     class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 >
-                    Update Profile
+                    {{ __('messages.pages.profile.update_profile') }}
                 </button>
             </div>
         </form>

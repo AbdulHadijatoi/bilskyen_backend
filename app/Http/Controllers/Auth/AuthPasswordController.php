@@ -55,8 +55,8 @@ class AuthPasswordController extends Controller
 
         // Verify current password
         if (!Hash::check($request->current_password, $user->password)) {
-            return $this->error('Current password is incorrect', [
-                'current_password' => ['The current password is incorrect.'],
+            return $this->error(__('messages.errors.current_password_incorrect'), [
+                'current_password' => [__('messages.errors.current_password_incorrect')],
             ], 401);
         }
 
@@ -86,7 +86,7 @@ class AuthPasswordController extends Controller
             ]);
         }
 
-        return $this->success(['message' => 'Password changed successfully']);
+        return $this->success(['message' => __('messages.messages.password_changed_successfully')]);
     }
 
     /**
@@ -193,15 +193,15 @@ class AuthPasswordController extends Controller
             ->first();
 
         if (!$resetRecord || !Hash::check($token, $resetRecord->value)) {
-            return $this->error('Invalid or expired reset token.', [
-                'token' => ['The reset token is invalid or has expired.'],
+            return $this->error(__('messages.errors.invalid_reset_token'), [
+                'token' => [__('messages.errors.invalid_reset_token')],
             ], 400);
         }
 
         // Update user password
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return $this->error('User not found.', [
+            return $this->error(__('messages.errors.user_not_found'), [
                 'email' => ['The email address was not found.'],
             ], 404);
         }
@@ -237,7 +237,7 @@ class AuthPasswordController extends Controller
             ]);
         }
 
-        return $this->success(['message' => 'Password has been reset successfully. You can now login with your new password.']);
+        return $this->success(['message' => __('messages.messages.password_reset_successfully')]);
     }
 }
 

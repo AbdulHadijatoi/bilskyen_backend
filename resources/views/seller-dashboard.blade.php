@@ -12,14 +12,14 @@
     <div class="container mx-auto space-y-4 py-6">
         <!-- Statistics Section -->
         <div class="rounded-lg bg-card p-6">
-            <h1 class="text-3xl font-bold text-foreground mb-6">My Listings Dashboard</h1>
+            <h1 class="text-3xl font-bold text-foreground mb-6">{{ __('messages.pages.seller_dashboard.title') }}</h1>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Total Vehicles -->
                 <div class="rounded-lg border border-border bg-background p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-muted-foreground">Total Vehicles</p>
+                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_vehicles') }}</p>
                             <p class="text-2xl font-bold text-foreground mt-1">{{ $statistics['total_vehicles'] }}</p>
                         </div>
                         <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -35,7 +35,7 @@
                 <div class="rounded-lg border border-border bg-background p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-muted-foreground">Total Worth</p>
+                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_worth') }}</p>
                             <p class="text-2xl font-bold text-foreground mt-1">{{ FormatHelper::formatCurrency($statistics['total_worth']) }}</p>
                         </div>
                         <div class="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -51,7 +51,7 @@
                 <div class="rounded-lg border border-border bg-background p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-muted-foreground">Total Inquiries</p>
+                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_inquiries') }}</p>
                             <p class="text-2xl font-bold text-foreground mt-1">{{ $statistics['total_inquiries'] }}</p>
                         </div>
                         <div class="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -66,7 +66,7 @@
                 <div class="rounded-lg border border-border bg-background p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-muted-foreground">Total Views</p>
+                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_views') }}</p>
                             <p class="text-2xl font-bold text-foreground mt-1">{{ number_format($statistics['total_views']) }}</p>
                         </div>
                         <div class="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center">
@@ -83,8 +83,8 @@
         <!-- Vehicle Listings Section -->
         <div class="space-y-4">
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-foreground">My Vehicles</h2>
-                <span id="vehicle-count" class="text-muted-foreground text-sm">{{ $vehicles->total() }} vehicles</span>
+                <h2 class="text-xl font-semibold text-foreground">{{ __('messages.pages.seller_dashboard.my_vehicles') }}</h2>
+                <span id="vehicle-count" class="text-muted-foreground text-sm">{{ $vehicles->total() }} {{ __('messages.pages.seller_dashboard.vehicles_count') }}</span>
             </div>
 
             <!-- Status Tabs -->
@@ -96,7 +96,7 @@
                         class="status-tab active inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:text-foreground hover:border-border transition-colors"
                         data-status="all"
                     >
-                        All
+                        {{ __('messages.pages.seller_dashboard.all') }}
                         <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-muted text-muted-foreground">{{ $statistics['total_vehicles'] }}</span>
                     </button>
                     <button
@@ -105,7 +105,7 @@
                         class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                         data-status="{{ VehicleListStatus::PUBLISHED }}"
                     >
-                        Published
+                        {{ __('messages.pages.seller_dashboard.published') }}
                         <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700" id="count-published">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count() }}</span>
                     </button>
                     <button
@@ -114,7 +114,7 @@
                         class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                         data-status="{{ VehicleListStatus::DRAFT }}"
                     >
-                        Draft
+                        {{ __('messages.pages.seller_dashboard.draft') }}
                         <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700" id="count-draft">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count() }}</span>
                     </button>
                     <button
@@ -123,7 +123,7 @@
                         class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                         data-status="{{ VehicleListStatus::SOLD }}"
                     >
-                        Sold
+                        {{ __('messages.pages.seller_dashboard.sold') }}
                         <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700" id="count-sold">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count() }}</span>
                     </button>
                     <button
@@ -132,7 +132,7 @@
                         class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                         data-status="{{ VehicleListStatus::ARCHIVED }}"
                     >
-                        Archived
+                        {{ __('messages.pages.seller_dashboard.archived') }}
                         <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700" id="count-archived">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count() }}</span>
                     </button>
                 </nav>
@@ -204,13 +204,13 @@
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                <span>{{ $vehicle->views_count ?? 0 }} views</span>
+                                <span>{{ $vehicle->views_count ?? 0 }} {{ __('messages.pages.seller_dashboard.views') }}</span>
                             </div>
                             <div class="flex items-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                 </svg>
-                                <span>{{ $vehicle->enquiries_count ?? 0 }} inquiries</span>
+                                <span>{{ $vehicle->enquiries_count ?? 0 }} {{ __('messages.pages.seller_dashboard.inquiries_label') }}</span>
                             </div>
                         </div>
 
@@ -223,7 +223,7 @@
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                         </svg>
-                                        Edit
+                                        {{ __('messages.pages.seller_dashboard.edit') }}
                                     </button>
                                 </a>
                                 <button 
@@ -231,7 +231,7 @@
                                     onclick="toggleInquiries({{ $vehicle->id }}, '{{ $token }}')"
                                     class="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
                                 >
-                                    Inquiries ({{ $vehicle->enquiries_count ?? 0 }})
+                                    {{ __('messages.pages.seller_dashboard.inquiries') }} ({{ $vehicle->enquiries_count ?? 0 }})
                                 </button>
                             </div>
                             <div class="flex gap-2">
@@ -241,7 +241,7 @@
                                     onclick="unpublishVehicle({{ $vehicle->id }}, '{{ $token }}')"
                                     class="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-orange-500 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 transition-colors"
                                 >
-                                    Unpublish
+                                    {{ __('messages.pages.seller_dashboard.unpublish') }}
                                 </button>
                                 @else
                                 <button 
@@ -249,7 +249,7 @@
                                     onclick="updateStatus({{ $vehicle->id }}, {{ VehicleListStatus::PUBLISHED }}, '{{ $token }}')"
                                     class="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-green-500 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors"
                                 >
-                                    Publish
+                                    {{ __('messages.pages.seller_dashboard.publish') }}
                                 </button>
                                 @endif
                                 <button 
@@ -261,7 +261,7 @@
                                         <polyline points="3 6 5 6 21 6"></polyline>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                     </svg>
-                                    Delete
+                                    {{ __('messages.pages.seller_dashboard.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -274,12 +274,12 @@
                             <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
                             <polygon points="12 15 17 21 7 21 12 15"></polygon>
                         </svg>
-                        <h3 class="text-lg font-semibold">No vehicles found</h3>
+                        <h3 class="text-lg font-semibold">{{ __('messages.pages.seller_dashboard.no_vehicles_found') }}</h3>
                         <p class="text-muted-foreground mt-1">
-                            You haven't listed any vehicles yet.
+                            {{ __('messages.pages.seller_dashboard.no_vehicles_description') }}
                         </p>
                         <a href="/sell-your-car" class="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                            List Your First Vehicle
+                            {{ __('messages.pages.seller_dashboard.list_first_vehicle') }}
                         </a>
                     </div>
                 </div>
@@ -291,11 +291,11 @@
             <div class="flex items-center justify-center gap-2">
                 @if($vehicles->onFirstPage())
                 <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
-                    Previous
+                    {{ __('messages.common.previous') }}
                 </button>
                 @else
                 <a href="{{ $vehicles->previousPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
-                    Previous
+                    {{ __('messages.common.previous') }}
                 </a>
                 @endif
 
@@ -305,11 +305,11 @@
 
                 @if($vehicles->hasMorePages())
                 <a href="{{ $vehicles->nextPageUrl() }}" class="px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent">
-                    Next
+                    {{ __('messages.common.next') }}
                 </a>
                 @else
                 <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
-                    Next
+                    {{ __('messages.common.next') }}
                 </button>
                 @endif
             </div>
@@ -334,10 +334,10 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
                 <div class="flex-1">
                     <h2 id="inquiries-modal-title" class="text-xl font-semibold text-foreground">
-                        Vehicle Inquiries
+                        {{ __('messages.pages.seller_dashboard.vehicle_inquiries') }}
                     </h2>
                     <p id="inquiries-modal-subtitle" class="text-sm text-muted-foreground mt-1">
-                        Loading inquiries...
+                        {{ __('messages.pages.seller_dashboard.loading_inquiries') }}
                     </p>
                 </div>
                 <button
@@ -360,7 +360,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-sm text-muted-foreground">Loading inquiries...</p>
+                        <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.loading_inquiries') }}</p>
                     </div>
                 </div>
             </div>
@@ -403,7 +403,7 @@ window.openInquiriesModal = function(vehicleId, token) {
             </div>
         </div>
     `;
-    subtitle.textContent = 'Loading inquiries...';
+            subtitle.textContent = '{{ __('messages.pages.seller_dashboard.loading_inquiries') }}';
     
     // Fetch inquiries
     fetch(`/seller-dashboard/${token}/vehicle/${vehicleId}/inquiries`, {
@@ -419,7 +419,10 @@ window.openInquiriesModal = function(vehicleId, token) {
     .then(data => {
         if (data.status === 'success' && data.inquiries) {
             const inquiries = data.inquiries;
-            subtitle.textContent = `${inquiries.length} ${inquiries.length === 1 ? 'inquiry' : 'inquiries'} for this vehicle`;
+            const inquiryText = inquiries.length === 1 
+                ? '{{ __('messages.pages.seller_dashboard.inquiry_count', ['count' => '']) }}'.replace(':count', inquiries.length)
+                : '{{ __('messages.pages.seller_dashboard.inquiries_count', ['count' => '']) }}'.replace(':count', inquiries.length);
+            subtitle.textContent = `${inquiries.length} ${inquiryText} {{ __('messages.pages.seller_dashboard.for_this_vehicle') }}`;
             
             if (inquiries.length === 0) {
                 content.innerHTML = `
@@ -428,8 +431,8 @@ window.openInquiriesModal = function(vehicleId, token) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-muted-foreground">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            <p class="text-lg font-semibold text-foreground">No inquiries yet</p>
-                            <p class="text-sm text-muted-foreground mt-2">This vehicle hasn't received any inquiries.</p>
+                            <p class="text-lg font-semibold text-foreground">{{ __('messages.pages.seller_dashboard.no_inquiries_yet') }}</p>
+                            <p class="text-sm text-muted-foreground mt-2">{{ __('messages.pages.seller_dashboard.no_inquiries_description') }}</p>
                         </div>
                     </div>
                 `;
@@ -443,8 +446,8 @@ window.openInquiriesModal = function(vehicleId, token) {
                         <div class="rounded-lg border border-border bg-card p-4">
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex-1">
-                                    <p class="text-sm font-semibold text-foreground">${enquiry.name || 'Anonymous'}</p>
-                                    <p class="text-xs text-muted-foreground mt-1">${enquiry.email || 'No email'}</p>
+                                    <p class="text-sm font-semibold text-foreground">${enquiry.name || '{{ __('messages.pages.seller_dashboard.anonymous') }}'}</p>
+                                    <p class="text-xs text-muted-foreground mt-1">${enquiry.email || '{{ __('messages.pages.seller_dashboard.no_email') }}'}</p>
                                     ${enquiry.phone ? `<p class="text-xs text-muted-foreground">${enquiry.phone}</p>` : ''}
                                 </div>
                                 <div class="text-right">
@@ -457,7 +460,7 @@ window.openInquiriesModal = function(vehicleId, token) {
                                 </div>
                             </div>
                             ${enquiry.subject ? `<p class="text-sm font-medium text-foreground mb-2">${enquiry.subject}</p>` : ''}
-                            <p class="text-sm text-foreground whitespace-pre-wrap">${enquiry.message || 'No message provided'}</p>
+                            <p class="text-sm text-foreground whitespace-pre-wrap">${enquiry.message || '{{ __('messages.pages.seller_dashboard.no_message_provided') }}'}</p>
                         </div>
                     `;
                 });
@@ -468,11 +471,11 @@ window.openInquiriesModal = function(vehicleId, token) {
             content.innerHTML = `
                 <div class="flex items-center justify-center py-12">
                     <div class="text-center">
-                        <p class="text-sm text-red-600">Failed to load inquiries. Please try again.</p>
+                        <p class="text-sm text-red-600">{{ __('messages.pages.seller_dashboard.failed_to_load_inquiries') }}</p>
                     </div>
                 </div>
             `;
-            subtitle.textContent = 'Error loading inquiries';
+            subtitle.textContent = '{{ __('messages.pages.seller_dashboard.error_loading_inquiries') }}';
         }
     })
     .catch(error => {
@@ -480,7 +483,7 @@ window.openInquiriesModal = function(vehicleId, token) {
         content.innerHTML = `
             <div class="flex items-center justify-center py-12">
                 <div class="text-center">
-                    <p class="text-sm text-red-600">An error occurred while loading inquiries. Please try again.</p>
+                    <p class="text-sm text-red-600">{{ __('messages.pages.seller_dashboard.error_occurred_loading') }}</p>
                 </div>
             </div>
         `;
@@ -507,7 +510,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 window.unpublishVehicle = function(vehicleId, token) {
-    if (!confirm('Are you sure you want to unpublish this vehicle? It will be removed from public listings.')) {
+    if (!confirm('{{ __('messages.pages.seller_dashboard.confirm_unpublish') }}')) {
         return;
     }
 
@@ -525,19 +528,19 @@ window.unpublishVehicle = function(vehicleId, token) {
     .then(data => {
         if (data.status === 'success') {
             if (window.showSnackbar) {
-                window.showSnackbar('Vehicle unpublished successfully', 'success');
+                window.showSnackbar('{{ __('messages.pages.seller_dashboard.vehicle_unpublished_successfully') }}', 'success');
             }
             setTimeout(() => window.location.reload(), 1000);
         } else {
             if (window.showSnackbar) {
-                window.showSnackbar(data.message || 'Failed to unpublish vehicle', 'error');
+                window.showSnackbar(data.message || '{{ __('messages.pages.seller_dashboard.failed_to_unpublish') }}', 'error');
             }
         }
     })
     .catch(error => {
         console.error('Error:', error);
         if (window.showSnackbar) {
-            window.showSnackbar('An error occurred. Please try again.', 'error');
+                window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
         }
     });
 }
@@ -558,25 +561,25 @@ window.updateStatus = function(vehicleId, statusId, token) {
     .then(data => {
         if (data.status === 'success') {
             if (window.showSnackbar) {
-                window.showSnackbar('Vehicle status updated successfully', 'success');
+                window.showSnackbar('{{ __('messages.pages.seller_dashboard.vehicle_status_updated') }}', 'success');
             }
             setTimeout(() => window.location.reload(), 1000);
         } else {
             if (window.showSnackbar) {
-                window.showSnackbar(data.message || 'Failed to update vehicle status', 'error');
+                window.showSnackbar(data.message || '{{ __('messages.pages.seller_dashboard.failed_to_update_status') }}', 'error');
             }
         }
     })
     .catch(error => {
         console.error('Error:', error);
         if (window.showSnackbar) {
-            window.showSnackbar('An error occurred. Please try again.', 'error');
+                window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
         }
     });
 }
 
 window.deleteVehicle = function(vehicleId, token) {
-    if (!confirm('Are you sure you want to delete this vehicle? This action cannot be undone.')) {
+    if (!confirm('{{ __('messages.pages.seller_dashboard.confirm_delete') }}')) {
         return;
     }
 
@@ -593,19 +596,19 @@ window.deleteVehicle = function(vehicleId, token) {
     .then(data => {
         if (data.status === 'success') {
             if (window.showSnackbar) {
-                window.showSnackbar('Vehicle deleted successfully', 'success');
+                window.showSnackbar('{{ __('messages.pages.seller_dashboard.vehicle_deleted_successfully') }}', 'success');
             }
             setTimeout(() => window.location.reload(), 1000);
         } else {
             if (window.showSnackbar) {
-                window.showSnackbar(data.message || 'Failed to delete vehicle', 'error');
+                window.showSnackbar(data.message || '{{ __('messages.pages.seller_dashboard.failed_to_delete') }}', 'error');
             }
         }
     })
     .catch(error => {
         console.error('Error:', error);
         if (window.showSnackbar) {
-            window.showSnackbar('An error occurred. Please try again.', 'error');
+                window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
         }
     });
 }
@@ -645,7 +648,7 @@ window.filterByStatus = function(statusId, token) {
     // Update vehicle count
     const countElement = document.getElementById('vehicle-count');
     if (countElement) {
-        countElement.textContent = `${visibleCount} ${visibleCount === 1 ? 'vehicle' : 'vehicles'}`;
+        countElement.textContent = `${visibleCount} {{ __('messages.pages.seller_dashboard.vehicles_count') }}`;
     }
     
     // Hide pagination when filtering (since we're filtering client-side)

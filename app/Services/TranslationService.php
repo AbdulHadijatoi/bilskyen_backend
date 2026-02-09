@@ -13,7 +13,7 @@ class TranslationService
 {
     private const CACHE_PREFIX = 'translations';
     private const CACHE_TTL = 86400; // 24 hours
-    private const DEFAULT_LOCALE = 'en';
+    private const DEFAULT_LOCALE = 'da';
     private const SUPPORTED_LOCALES = ['en', 'da'];
 
     /**

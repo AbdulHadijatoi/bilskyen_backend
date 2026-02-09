@@ -3,6 +3,8 @@
 if (!function_exists('trans')) {
     /**
      * Get translation for a key
+     * Uses Laravel's native file-based translation system for 'messages' namespace
+     * Falls back to database TranslationService for other keys
      * 
      * @param string $key Translation key
      * @param array $replace Placeholder replacements
@@ -11,6 +13,12 @@ if (!function_exists('trans')) {
      */
     function trans(string $key, array $replace = [], ?string $locale = null): string
     {
+        // Use Laravel's native translation for 'messages' namespace (file-based)
+        if (str_starts_with($key, 'messages.')) {
+            return \Illuminate\Support\Facades\Lang::get($key, $replace, $locale);
+        }
+        
+        // Fall back to database TranslationService for other keys
         $translationService = app(\App\Services\TranslationService::class);
         return $translationService->get($key, $locale, $replace);
     }

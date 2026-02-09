@@ -539,7 +539,7 @@ class SellYourCarController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Vehicle listed successfully!',
+                    'message' => __('messages.messages.vehicle_listed_successfully'),
                     'vehicle_id' => $vehicle->id,
                     'token' => $token,
                     'redirect_url' => route('sell-your-car.success', ['token' => $token])
@@ -547,19 +547,19 @@ class SellYourCarController extends Controller
             }
 
             return redirect()->route('sell-your-car.success', ['token' => $token])
-                ->with('success', 'Vehicle listed successfully!');
+                ->with('success', __('messages.messages.vehicle_listed_successfully'));
         } catch (\Exception $e) {
             // Handle AJAX requests
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to create vehicle: ' . $e->getMessage(),
+                    'message' => __('messages.errors.failed_to_create_vehicle') . ': ' . $e->getMessage(),
                     'errors' => ['error' => [$e->getMessage()]]
                 ], 500);
             }
             
             return back()
-                ->withErrors(['error' => 'Failed to create vehicle: ' . $e->getMessage()])
+                ->withErrors(['error' => __('messages.errors.failed_to_create_vehicle') . ': ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -781,7 +781,7 @@ class SellYourCarController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You must be logged in to feature a vehicle.'
+                'message' => __('messages.errors.must_be_logged_in')
             ], 401);
         }
 
@@ -789,7 +789,7 @@ class SellYourCarController extends Controller
         if (!$user->can('vehicle.feature')) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to feature vehicles. Please contact your administrator.'
+                'message' => __('messages.errors.permission_denied')
             ], 403);
         }
 
@@ -799,7 +799,7 @@ class SellYourCarController extends Controller
         if (!$tokenData) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid or expired access token.'
+                'message' => __('messages.errors.invalid_access_token')
             ], 403);
         }
 
@@ -810,7 +810,7 @@ class SellYourCarController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Vehicle not found. It may have been deleted.'
+                'message' => __('messages.errors.vehicle_not_found')
             ], 404);
         }
 
@@ -818,7 +818,7 @@ class SellYourCarController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to feature this vehicle.'
+                'message' => __('messages.errors.permission_denied')
             ], 403);
         }
 
@@ -826,7 +826,7 @@ class SellYourCarController extends Controller
         if ($vehicle->trashed()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cannot feature a deleted vehicle listing.'
+                'message' => __('messages.errors.cannot_feature_deleted')
             ], 400);
         }
 
@@ -835,7 +835,7 @@ class SellYourCarController extends Controller
         if ($existingFeatured) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Vehicle is already featured.',
+                'message' => __('messages.errors.already_featured'),
                 'already_featured' => true
             ]);
         }
@@ -854,7 +854,7 @@ class SellYourCarController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Vehicle featured successfully!',
+                'message' => __('messages.messages.vehicle_featured_successfully'),
                 'featured_listing' => $featuredListing
             ]);
         }

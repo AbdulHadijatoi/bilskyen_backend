@@ -4,14 +4,14 @@
 
 @section('content')
 <div class="flex h-full w-full flex-col items-start gap-4">
-    <h2 class="text-2xl font-semibold">Verify Your Email</h2>
+    <h2 class="text-2xl font-semibold">{{ __('messages.pages.verify_email.title') }}</h2>
 
     <p>
-        We've sent a verification email to your inbox when you signed up. Please check your email and follow the instructions to verify your account. The email might be further down in your inbox depending on when you signed up, so be sure to look carefully.
+        {{ __('messages.pages.verify_email.description') }}
     </p>
 
     <p class="text-muted-foreground">
-        Didn't receive the email? Please check your spam or junk folder. If it has expired or hasn't arrived yet, you can request a new one <span id="timerText">now</span>.
+        {{ __('messages.pages.verify_email.no_email_received') }} <span id="timerText">{{ __('messages.pages.verify_email.now') }}</span>.
     </p>
 
     @if (session('status'))
@@ -46,7 +46,7 @@
     <form method="POST" action="{{ route('verification.send') }}">
         @csrf
         <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Resend Verification Email
+            {{ __('messages.pages.verify_email.resend_button') }}
         </button>
     </form>
 </div>

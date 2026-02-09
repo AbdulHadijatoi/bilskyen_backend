@@ -164,7 +164,7 @@
                         <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
                     </svg>
                     <h2 class="text-foreground text-xs font-medium">
-                        Photos ({{ $vehicle->images->count() }})
+                        {{ __('messages.pages.vehicles.detail.photos') }} ({{ $vehicle->images->count() }})
                     </h2>
                 </div>
 
@@ -177,7 +177,7 @@
                                     <div class="border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
                                         <img
                                             src="{{ $image->image_url }}"
-                                            alt="Vehicle photo {{ $index + 1 }}"
+                                            alt="{{ __('messages.pages.vehicles.detail.photos') }} {{ $index + 1 }}"
                                             class="h-full w-full object-cover"
                                         />
                                     </div>
@@ -187,12 +187,12 @@
                         </div>
                     </div>
                     @if($vehicle->images->count() > 2)
-                    <button class="embla__prev absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Previous slide">
+                    <button class="embla__prev absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="{{ __('messages.pages.vehicles.detail.previous_slide') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="m15 18-6-6 6-6"></path>
                         </svg>
                     </button>
-                    <button class="embla__next absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="Next slide">
+                    <button class="embla__next absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="{{ __('messages.pages.vehicles.detail.next_slide') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="m9 18 6-6-6-6"></path>
                         </svg>
@@ -203,19 +203,19 @@
             @endif
         <!-- Basic Information Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Basic Information</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.basic_information') }}</h2>
             <div class="detail-grid">
                 <div class="detail-item">
-                    <span class="detail-label">Title</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.title_label') }}</span>
                     <span class="detail-value">{{ $vehicle->title }}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Price</span>
+                    <span class="detail-label">{{ __('messages.forms.price') }}</span>
                     <span class="detail-value text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
                     </div>
                 @if($vehicle->listing_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Listing Type</span>
+                    <span class="detail-label">{{ __('messages.forms.listing_type') }}</span>
                     <span class="detail-value">{{ $vehicle->listing_type_name }}</span>
                 </div>
                 @endif
@@ -224,89 +224,89 @@
 
         <!-- Vehicle Specifications Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Vehicle Specifications</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.vehicle_specifications') }}</h2>
             <div class="detail-grid">
                 @if($vehicle->brand_name)
                 <div class="detail-item">
-                    <span class="detail-label">Brand</span>
+                    <span class="detail-label">{{ __('messages.forms.brand') }}</span>
                     <span class="detail-value">{{ $vehicle->brand_name }}</span>
                 </div>
                 @endif
                 @if($vehicle->model_name)
                 <div class="detail-item">
-                    <span class="detail-label">Model</span>
+                    <span class="detail-label">{{ __('messages.forms.model') }}</span>
                     <span class="detail-value">{{ $vehicle->model_name }}</span>
                 </div>
                 @endif
                 @if($vehicle->model_year_name)
                 <div class="detail-item">
-                    <span class="detail-label">Model Year</span>
+                    <span class="detail-label">{{ __('messages.forms.model_year') }}</span>
                     <span class="detail-value">{{ $vehicle->model_year_name }}</span>
                 </div>
                 @endif
                 @if($vehicle->fuel_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Fuel Type</span>
+                    <span class="detail-label">{{ __('messages.forms.fuel_type') }}</span>
                     <span class="detail-value">{{ $vehicle->fuel_type_name }}</span>
                 </div>
                 @endif
                 @if($vehicle->engine_power_hp)
                 <div class="detail-item">
-                    <span class="detail-label">Engine Power</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_power') }}</span>
                     <span class="detail-value">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
                 </div>
                 @endif
                 @if($vehicle->mileage)
                 <div class="detail-item">
-                    <span class="detail-label">Mileage</span>
+                    <span class="detail-label">{{ __('messages.forms.mileage_km') }}</span>
                     <span class="detail-value">{{ number_format($vehicle->mileage) }} km</span>
                     </div>
                 @endif
                 @if($vehicle->km_driven)
                 <div class="detail-item">
-                    <span class="detail-label">Kilometers Driven</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.kilometers_driven') }}</span>
                     <span class="detail-value">{{ number_format($vehicle->km_driven) }} km</span>
                     </div>
                     @endif
                 @if($vehicle->battery_capacity)
                 <div class="detail-item">
-                    <span class="detail-label">Battery Capacity</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.battery_capacity') }}</span>
                     <span class="detail-value">{{ $vehicle->battery_capacity }} kWh</span>
                     </div>
                 @endif
                 @if($vehicle->range_km)
                 <div class="detail-item">
-                    <span class="detail-label">Range</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.range') }}</span>
                     <span class="detail-value">{{ number_format($vehicle->range_km) }} km</span>
                 </div>
                 @endif
                 @if($vehicle->charging_type)
                 <div class="detail-item">
-                    <span class="detail-label">Charging Type</span>
+                    <span class="detail-label">{{ __('messages.forms.charging_type') }}</span>
                     <span class="detail-value">{{ $vehicle->charging_type }}</span>
                 </div>
                 @endif
                 @if($vehicle->towing_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Towing Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.towing_weight') }}</span>
                     <span class="detail-value">{{ number_format($vehicle->towing_weight) }} kg</span>
                     </div>
                 @endif
                 @if($vehicle->ownership_tax)
                 <div class="detail-item">
-                    <span class="detail-label">Ownership Tax</span>
+                    <span class="detail-label">{{ __('messages.forms.owner_tax') }}</span>
                     <span class="detail-value">{{ FormatHelper::formatCurrency($vehicle->ownership_tax ?? null) }}</span>
                     </div>
                 @endif
                 @if($details && $details->annual_tax)
                 <div class="detail-item">
-                    <span class="detail-label">Annual Tax</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.annual_tax') }}</span>
                     <span class="detail-value">{{ FormatHelper::formatCurrency($details->annual_tax ?? null) }}</span>
                 </div>
                 @endif
                 @if($vehicle->first_registration_date)
                 <div class="detail-item">
-                    <span class="detail-label">First Registration Date</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.first_registration_date') }}</span>
                     <span class="detail-value">{{ $vehicle->first_registration_date->format('F j, Y') }}</span>
                 </div>
                 @endif
@@ -316,167 +316,167 @@
         @if($details)
         <!-- Detailed Specifications Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Detailed Specifications</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.detailed_specifications') }}</h2>
             <div class="detail-grid">
                 @if($details->description)
                 <div class="detail-item md:col-span-2">
-                    <span class="detail-label">Description</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.description') }}</span>
                     <p class="detail-value whitespace-pre-wrap text-sm">{{ $details->description }}</p>
                 </div>
                 @endif
                 @if($details->type_name_resolved)
                 <div class="detail-item">
-                    <span class="detail-label">Type</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.type') }}</span>
                     <span class="detail-value">{{ $details->type_name_resolved }}</span>
                 </div>
                 @endif
                 @if($details->use_name)
                 <div class="detail-item">
-                    <span class="detail-label">Use</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.use') }}</span>
                     <span class="detail-value">{{ $details->use_name }}</span>
                 </div>
                 @endif
                 @if($details->color_name)
                 <div class="detail-item">
-                    <span class="detail-label">Color</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.color') }}</span>
                     <span class="detail-value">{{ $details->color_name }}</span>
                 </div>
                 @endif
                 @if($details->body_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Body Type</span>
+                    <span class="detail-label">{{ __('messages.forms.body_type') }}</span>
                     <span class="detail-value">{{ $details->body_type_name }}</span>
                 </div>
                 @endif
                 @if($details->variant && $details->variant->name)
                 <div class="detail-item">
-                    <span class="detail-label">Variant</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.variant') }}</span>
                     <span class="detail-value">{{ $details->variant->name }}</span>
                 </div>
                 @endif
                 @if($details->price_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Price Type</span>
+                    <span class="detail-label">{{ __('messages.forms.price_type') }}</span>
                     <span class="detail-value">{{ $details->price_type_name }}</span>
                 </div>
                 @endif
                 @if($details->condition_name)
                 <div class="detail-item">
-                    <span class="detail-label">Condition</span>
+                    <span class="detail-label">{{ __('messages.forms.condition') }}</span>
                     <span class="detail-value">{{ $details->condition_name }}</span>
                 </div>
                 @endif
                 @if($details->gear_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Gear Type</span>
+                    <span class="detail-label">{{ __('messages.forms.gear_type') }}</span>
                     <span class="detail-value">{{ $details->gear_type_name }}</span>
                 </div>
                 @endif
                 @if($details->transmission_name)
                 <div class="detail-item">
-                    <span class="detail-label">Transmission</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.transmission') }}</span>
                     <span class="detail-value">{{ $details->transmission_name }}</span>
                 </div>
                 @endif
                 @if($details->sales_type_name)
                 <div class="detail-item">
-                    <span class="detail-label">Sales Type</span>
+                    <span class="detail-label">{{ __('messages.forms.sales_type') }}</span>
                     <span class="detail-value">{{ $details->sales_type_name }}</span>
                 </div>
                 @endif
                 @if($details->servicebog && $details->servicebog !== 'Default')
                 <div class="detail-item">
-                    <span class="detail-label">Service Book</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.service_book') }}</span>
                     <span class="detail-value">{{ $details->servicebog }}</span>
                 </div>
                 @endif
                 @if($vehicle->version)
                 <div class="detail-item">
-                    <span class="detail-label">Version</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.version') }}</span>
                     <span class="detail-value">{{ $vehicle->version }}</span>
                 </div>
                 @endif
                 @if($details->vin_location)
                 <div class="detail-item">
-                    <span class="detail-label">VIN Location</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.vin_location') }}</span>
                     <span class="detail-value">{{ $details->vin_location }}</span>
                 </div>
                 @endif
                 @if($details->total_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Total Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.total_weight') }}</span>
                     <span class="detail-value">{{ number_format($details->total_weight) }} kg</span>
                 </div>
                 @endif
                 @if($details->vehicle_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Vehicle Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.vehicle_weight') }}</span>
                     <span class="detail-value">{{ number_format($details->vehicle_weight) }} kg</span>
                 </div>
                 @endif
                 @if($details->technical_total_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Technical Total Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.technical_total_weight') }}</span>
                     <span class="detail-value">{{ number_format($details->technical_total_weight) }} kg</span>
                 </div>
                 @endif
                 @if($details->minimum_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Minimum Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.minimum_weight') }}</span>
                     <span class="detail-value">{{ number_format($details->minimum_weight) }} kg</span>
                 </div>
                 @endif
                 @if($details->gross_combination_weight)
                 <div class="detail-item">
-                    <span class="detail-label">Gross Combination Weight</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.gross_combination_weight') }}</span>
                     <span class="detail-value">{{ number_format($details->gross_combination_weight) }} kg</span>
                 </div>
                 @endif
                 @if($details->towing_weight_brakes)
                 <div class="detail-item">
-                    <span class="detail-label">Towing Weight with Brakes</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.towing_weight_brakes') }}</span>
                     <span class="detail-value">{{ number_format($details->towing_weight_brakes) }} kg</span>
                 </div>
                 @endif
                 @if($details->engine_displacement)
                 <div class="detail-item">
-                    <span class="detail-label">Engine Displacement</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_displacement') }}</span>
                     <span class="detail-value">{{ number_format($details->engine_displacement) }} cc</span>
                 </div>
                 @endif
                 @if($details->engine_code)
                 <div class="detail-item">
-                    <span class="detail-label">Engine Code</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_code') }}</span>
                     <span class="detail-value font-mono text-sm">{{ $details->engine_code }}</span>
                 </div>
                 @endif
                 @if($details->engine_cylinders)
                 <div class="detail-item">
-                    <span class="detail-label">Engine Cylinders</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_cylinders') }}</span>
                     <span class="detail-value">{{ $details->engine_cylinders }}</span>
                 </div>
                 @endif
                 @if($details->doors)
                 <div class="detail-item">
-                    <span class="detail-label">Doors</span>
+                    <span class="detail-label">{{ __('messages.forms.doors_min') }}</span>
                     <span class="detail-value">{{ $details->doors }}</span>
                 </div>
                 @endif
                 @if($details->minimum_seats)
                 <div class="detail-item">
-                    <span class="detail-label">Minimum Seats</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.minimum_seats') }}</span>
                     <span class="detail-value">{{ $details->minimum_seats }}</span>
                 </div>
                 @endif
                 @if($details->maximum_seats)
                 <div class="detail-item">
-                    <span class="detail-label">Maximum Seats</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.maximum_seats') }}</span>
                     <span class="detail-value">{{ $details->maximum_seats }}</span>
                 </div>
                 @endif
                 @if($details->top_speed)
                 <div class="detail-item">
-                    <span class="detail-label">Top Speed</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.top_speed') }}</span>
                     <span class="detail-value">{{ number_format($details->top_speed) }} km/h</span>
                 </div>
                 @endif
@@ -488,15 +488,15 @@
                         $hybridFuelTypes = [4, 5]; // Hybrid, Plug-in Hybrid
                         
                         if ($fuelTypeId && in_array($fuelTypeId, $electricFuelTypes)) {
-                            $label = 'Electric Range';
+                            $label = __('messages.pages.vehicles.detail.electric_range');
                             $unit = 'km';
                             $value = number_format($vehicle->fuel_efficiency, 0);
                         } elseif ($fuelTypeId && in_array($fuelTypeId, $hybridFuelTypes)) {
-                            $label = 'Electric Range / KM/L';
+                            $label = __('messages.pages.vehicles.detail.electric_range_km_l');
                             $unit = 'km';
                             $value = number_format($vehicle->fuel_efficiency, 2);
                         } else {
-                            $label = 'Fuel Efficiency';
+                            $label = __('messages.pages.vehicles.detail.fuel_efficiency');
                             $unit = 'km/l';
                             $value = number_format($vehicle->fuel_efficiency, 2);
                         }
@@ -507,79 +507,79 @@
                 @endif
                 @if($details->airbags)
                 <div class="detail-item">
-                    <span class="detail-label">Airbags</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.airbags') }}</span>
                     <span class="detail-value">{{ $details->airbags }}</span>
                 </div>
                 @endif
                 @if($details->ncap_five !== null)
                 <div class="detail-item">
-                    <span class="detail-label">NCAP 5-Star</span>
-                    <span class="detail-value">{{ $details->ncap_five ? 'Yes' : 'No' }}</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.ncap_five_star') }}</span>
+                    <span class="detail-value">{{ $details->ncap_five ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
                 </div>
                 @endif
                 @if($details->integrated_child_seats)
                 <div class="detail-item">
-                    <span class="detail-label">Integrated Child Seats</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.integrated_child_seats') }}</span>
                     <span class="detail-value">{{ $details->integrated_child_seats }}</span>
                 </div>
                 @endif
                 @if($details->seat_belt_alarms)
                 <div class="detail-item">
-                    <span class="detail-label">Seat Belt Alarms</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.seat_belt_alarms') }}</span>
                     <span class="detail-value">{{ $details->seat_belt_alarms }}</span>
                 </div>
                 @endif
                 @if($details->euronom && $details->euronom->name)
                 <div class="detail-item">
-                    <span class="detail-label">Euro Norm</span>
+                    <span class="detail-label">{{ __('messages.forms.euro_norm') }}</span>
                     <span class="detail-value">{{ $details->euronom->name }}</span>
                     </div>
                 @endif
                 @if($details->wheels)
                 <div class="detail-item">
-                    <span class="detail-label">Wheels</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.wheels') }}</span>
                     <span class="detail-value">{{ $details->wheels }}</span>
                     </div>
                 @endif
                 @if($details->axles)
                 <div class="detail-item">
-                    <span class="detail-label">Axles</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.axles') }}</span>
                     <span class="detail-value">{{ $details->axles }}</span>
                         </div>
                 @endif
                 @if($details->drive_axles)
                 <div class="detail-item">
-                    <span class="detail-label">Drive Axles</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.drive_axles') }}</span>
                     <span class="detail-value">{{ $details->drive_axles }}</span>
                     </div>
                     @endif
                 @if($details->wheelbase)
                 <div class="detail-item">
-                    <span class="detail-label">Wheelbase</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.wheelbase') }}</span>
                     <span class="detail-value">{{ number_format($details->wheelbase) }} mm</span>
                 </div>
                 @endif
                 @if($details->category)
                 <div class="detail-item">
-                    <span class="detail-label">Category (String)</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.category_string') }}</span>
                     <span class="detail-value">{{ $details->category }}</span>
                 </div>
                 @endif
                 @if($details->extra_equipment)
                 <div class="detail-item md:col-span-2">
-                    <span class="detail-label">Extra Equipment</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.extra_equipment') }}</span>
                     <p class="detail-value whitespace-pre-wrap">{{ $details->extra_equipment }}</p>
                     </div>
                 @endif
                 @if($details->dispensations)
                 <div class="detail-item md:col-span-2">
-                    <span class="detail-label">Dispensations</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.dispensations') }}</span>
                     <p class="detail-value whitespace-pre-wrap">{{ $details->dispensations }}</p>
                 </div>
                 @endif
                 @if($details->permits)
                 <div class="detail-item md:col-span-2">
-                    <span class="detail-label">Permits</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.permits') }}</span>
                     <p class="detail-value whitespace-pre-wrap">{{ $details->permits }}</p>
             </div>
             @endif
@@ -588,29 +588,29 @@
 
         <!-- Registration & Status Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Registration & Status</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.registration_status') }}</h2>
             <div class="detail-grid">
                 @if($details->registration_status)
                 <div class="detail-item">
-                    <span class="detail-label">Registration Status</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.registration_status_label') }}</span>
                     <span class="detail-value">{{ $details->registration_status }}</span>
                 </div>
                 @endif
                 @if($details->registration_status_updated_date)
                 <div class="detail-item">
-                    <span class="detail-label">Registration Status Updated Date</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.registration_status_updated_date') }}</span>
                     <span class="detail-value">{{ $details->registration_status_updated_date->format('F j, Y') }}</span>
                 </div>
                 @endif
                 @if($details->expire_date)
                 <div class="detail-item">
-                    <span class="detail-label">Expire Date</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.expire_date') }}</span>
                     <span class="detail-value">{{ $details->expire_date->format('F j, Y') }}</span>
                 </div>
                 @endif
                 @if($details->status_updated_date)
                 <div class="detail-item">
-                    <span class="detail-label">Status Updated Date</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.status_updated_date') }}</span>
                     <span class="detail-value">{{ $details->status_updated_date->format('F j, Y') }}</span>
                 </div>
                 @endif
@@ -619,23 +619,23 @@
 
         <!-- Inspection Details Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Inspection Details</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.inspection_details') }}</h2>
             <div class="detail-grid">
                 @if($details->last_inspection_date)
                 <div class="detail-item">
-                    <span class="detail-label">Last Inspection Date</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_date') }}</span>
                     <span class="detail-value">{{ $details->last_inspection_date->format('F j, Y') }}</span>
             </div>
             @endif
                 @if($details->last_inspection_result)
                 <div class="detail-item">
-                    <span class="detail-label">Last Inspection Result</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_result') }}</span>
                     <span class="detail-value">{{ $details->last_inspection_result }}</span>
                 </div>
                 @endif
                 @if($details->last_inspection_odometer)
                 <div class="detail-item">
-                    <span class="detail-label">Last Inspection Odometer</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_odometer') }}</span>
                     <span class="detail-value">{{ number_format($details->last_inspection_odometer) }} km</span>
                     </div>
                     @endif
@@ -645,17 +645,17 @@
         <!-- Leasing Information Section -->
         @if($details->leasing_period_start || $details->leasing_period_end)
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Leasing Information</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.leasing_information') }}</h2>
             <div class="detail-grid">
                 @if($details->leasing_period_start)
                 <div class="detail-item">
-                    <span class="detail-label">Leasing Period Start</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_period_start') }}</span>
                     <span class="detail-value">{{ $details->leasing_period_start->format('F j, Y') }}</span>
                 </div>
                 @endif
                 @if($details->leasing_period_end)
                 <div class="detail-item">
-                    <span class="detail-label">Leasing Period End</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_period_end') }}</span>
                     <span class="detail-value">{{ $details->leasing_period_end->format('F j, Y') }}</span>
                 </div>
                 @endif
@@ -667,7 +667,7 @@
         <!-- Equipment & Features Section -->
         @if($vehicle->equipment && $vehicle->equipment->count() > 0)
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">Equipment & Features</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.equipment_features') }}</h2>
             <div class="flex flex-wrap gap-2">
                 @foreach($vehicle->equipment as $equip)
                 <div class="equipment-chip">
@@ -710,7 +710,7 @@
                         <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                     </svg>
                     <h2 class="text-xl font-semibold text-primary-foreground">
-                        Pricing
+                        {{ __('messages.pages.vehicles.detail.pricing') }}
                     </h2>
                 </div>
                 <div class="space-y-2">
@@ -718,7 +718,7 @@
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
                     <p class="text-sm text-primary-foreground">
-                        Listed Price
+                        {{ __('messages.pages.vehicles.detail.listed_price') }}
                     </p>
                 </div>
             </div>
@@ -731,7 +731,7 @@
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
                     <h2 class="text-xl font-semibold text-foreground">
-                        Contact Actions
+                        {{ __('messages.pages.vehicles.detail.contact_actions') }}
                     </h2>
                 </div>
                 <div class="space-y-3">
@@ -744,7 +744,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        Send Enquiry
+                        {{ __('messages.pages.vehicles.detail.send_enquiry') }}
                     </button>
 
                     <!-- WhatsApp Button -->
@@ -759,7 +759,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                         </svg>
-                        <span class="whatsapp-btn-text">Contact via WhatsApp</span>
+                        <span class="whatsapp-btn-text">{{ __('messages.pages.vehicles.detail.contact_via_whatsapp') }}</span>
                     </button>
                     @endif
 
@@ -779,7 +779,7 @@
                             <path d="M4 11V8" />
                             <path d="M20 11V8" />
                         </svg>
-                        <span>Request Test Drive</span>
+                        <span>{{ __('messages.pages.vehicles.detail.request_test_drive') }}</span>
                     </button>
 
                     <!-- Price Negotiation Button -->
@@ -792,7 +792,7 @@
                             <line x1="12" y1="2" x2="12" y2="22"></line>
                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
-                        <span>Price Negotiation</span>
+                        <span>{{ __('messages.pages.vehicles.detail.price_negotiation') }}</span>
                     </button>
                 </div>
             </div>
@@ -816,14 +816,14 @@
                     @if($editRoute)
                         <div class="bg-muted/50 rounded-lg p-6">
                             <h2 class="text-foreground mb-4 text-xl font-semibold">
-                                Actions
+                                {{ __('messages.pages.vehicles.detail.actions') }}
                             </h2>
                             <a href="{{ $editRoute }}" class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
-                                Edit Vehicle
+                                {{ __('messages.pages.vehicles.detail.edit_vehicle') }}
                             </a>
                         </div>
                     @endif
@@ -847,7 +847,7 @@
                             <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"></path>
                         </svg>
                         <h2 class="text-xl font-semibold text-foreground">
-                            Dealer Information
+                            {{ __('messages.pages.vehicles.detail.dealer_information') }}
                         </h2>
                     </div>
                     <div class="space-y-3">
@@ -861,7 +861,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ ucfirst($dealerOwner->name) }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Contact Name</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.contact_name') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -875,7 +875,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ $vehicle->seller_address }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Address</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -891,7 +891,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ $vehicle->seller_postcode }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Postal Code</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -914,9 +914,9 @@
                                         onclick="showDealerPhoneAndCreateLead({{ $vehicle->id }}, event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                     >
-                                        Show Phone Number
+                                        {{ __('messages.pages.vehicles.detail.show_phone_number') }}
                                     </button>
-                                    <p class="text-xs text-muted-foreground">Phone</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.phone') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -934,9 +934,9 @@
                                         id="dealer-email-btn-{{ $vehicle->id }}"
                                         data-email="{{ $contactEmail }}"
                                     >
-                                        Send Email
+                                        {{ __('messages.pages.vehicles.detail.send_email') }}
                                     </button>
-                                    <p class="text-xs text-muted-foreground">Email</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.email') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -954,10 +954,10 @@
                         </div>
                         <div class="flex-1">
                             <h3 class="text-sm font-semibold text-foreground mb-1">
-                                View Dealer Page
+                                {{ __('messages.pages.vehicles.detail.view_dealer_page') }}
                             </h3>
                             <p class="text-xs text-muted-foreground mb-3">
-                                See all vehicles from this dealer
+                                {{ __('messages.pages.vehicles.detail.see_all_vehicles') }}
                             </p>
                             <a 
                                 href="/dealer-{{ $vehicle->dealer->slug }}" 
@@ -967,7 +967,7 @@
                                     <path d="M5 12h14"></path>
                                     <path d="m12 5 7 7-7 7"></path>
                                 </svg>
-                                Visit Dealer Page
+                                {{ __('messages.pages.vehicles.detail.visit_dealer_page') }}
                             </a>
                         </div>
                     </div>
@@ -984,7 +984,7 @@
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                         <h2 class="text-xl font-semibold text-foreground">
-                            Seller Information
+                            {{ __('messages.pages.vehicles.detail.seller_information') }}
                         </h2>
                     </div>
                     <div class="space-y-3">
@@ -998,7 +998,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ ucfirst($vehicle->user->name) }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Name</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.forms.name') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1012,7 +1012,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ $vehicle->seller_address }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Address</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1028,7 +1028,7 @@
                                     <p class="text-sm font-medium text-foreground">
                                         {{ $vehicle->seller_postcode }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground">Postal Code</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1057,9 +1057,9 @@
                                         onclick="showPhoneAndCreateLead({{ $vehicle->id }}, event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                     >
-                                        Show Phone Number
+                                        {{ __('messages.pages.vehicles.detail.show_phone_number') }}
                                     </button>
-                                    <p class="text-xs text-muted-foreground">Phone</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.phone') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1077,9 +1077,9 @@
                                         id="seller-email-btn-{{ $vehicle->id }}"
                                         data-email="{{ $contactEmail }}"
                                     >
-                                        Send Email
+                                        {{ __('messages.pages.vehicles.detail.send_email') }}
                                     </button>
-                                    <p class="text-xs text-muted-foreground">Email</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.email') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1106,14 +1106,14 @@
                     @if($editRoute)
                         <div class="bg-muted/50 rounded-lg p-6">
                             <h2 class="text-foreground mb-4 text-xl font-semibold">
-                                Actions
+                                {{ __('messages.pages.vehicles.detail.actions') }}
                             </h2>
                             <a href="{{ $editRoute }}" class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
-                                Edit Vehicle
+                                {{ __('messages.pages.vehicles.detail.edit_vehicle') }}
                             </a>
                         </div>
                     @endif
@@ -1130,14 +1130,14 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     <h2 class="text-xl font-semibold">
-                        @auth
+                            @auth
                             @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
-                                Inventory Information
+                                {{ __('messages.pages.vehicles.detail.inventory_information') }}
                             @else
-                                Listing Information
+                                {{ __('messages.pages.vehicles.detail.listing_information') }}
                             @endif
                         @else
-                            Listing Information
+                            {{ __('messages.pages.vehicles.detail.listing_information') }}
                         @endauth
                     </h2>
                 </div>
@@ -1146,12 +1146,12 @@
                         <label class="text-sm font-medium">
                             @auth
                                 @if(auth()->user()->hasAnyRole(['admin', 'dealer']))
-                                    Added to Inventory
+                                    {{ __('messages.pages.vehicles.detail.added_to_inventory') }}
                                 @else
-                                    Added to Listing
+                                    {{ __('messages.pages.vehicles.detail.added_to_listing') }}
                                 @endif
                             @else
-                                Added to Listing
+                                {{ __('messages.pages.vehicles.detail.added_to_listing') }}
                             @endauth
                         </label>
                         @if($vehicle->published_at)
@@ -1168,10 +1168,10 @@
                         @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && $vehicle->published_at)
                             <div class="space-y-1">
                                 <label class="text-sm font-medium">
-                                    Days in Inventory
+                                    {{ __('messages.pages.vehicles.detail.days_in_inventory') }}
                                 </label>
                                 <p class="font-semibold">
-                                    {{ floor($vehicle->published_at->diffInDays(now(), false)) }} days
+                                    {{ floor($vehicle->published_at->diffInDays(now(), false)) }} {{ __('messages.pages.vehicles.detail.days') }}
                                 </p>
                             </div>
                         @endif
@@ -1198,11 +1198,11 @@
                                     <path d="M12 17h.01"></path>
                                 </svg>
                                 <h2 class="text-xl font-semibold text-yellow-800">
-                                    Pending Works
+                                    {{ __('messages.pages.vehicles.detail.pending_works') }}
                                 </h2>
                             </div>
                             <p class="mb-4 text-sm text-yellow-700">
-                                Items that require attention
+                                {{ __('messages.pages.vehicles.detail.items_require_attention') }}
                             </p>
                             <ul class="space-y-3">
                                 @foreach($pendingWorks as $work)
@@ -1225,7 +1225,7 @@
                         <!-- Internal Remarks - Only for admin/dealer -->
                         <div class="bg-muted/50 rounded-lg p-6">
                             <h2 class="text-foreground mb-4 text-xl font-semibold">
-                                Internal Remarks
+                                {{ __('messages.pages.vehicles.detail.internal_remarks') }}
                             </h2>
                             <p class="text-foreground text-sm leading-relaxed">
                                 {{ $vehicle->details->extra_equipment }}
@@ -1239,16 +1239,15 @@
             @guest
                 <div class="rounded-lg bg-gray-50 p-6">
                     <h2 class="text-foreground mb-4 text-xl font-semibold">
-                        Interested?
+                        {{ __('messages.pages.vehicles.detail.interested') }}
                     </h2>
                     <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
-                        Contact us for more information about this vehicle, including
-                        pricing and scheduling a test drive.
+                        {{ __('messages.pages.vehicles.detail.contact_message') }}
                     </p>
                     <div class="text-muted-foreground text-sm">
-                        <p>• Request detailed vehicle history</p>
-                        <p>• Schedule inspection</p>
-                        <p>• Arrange test drive</p>
+                        <p>• {{ __('messages.pages.vehicles.detail.request_detailed_history') }}</p>
+                        <p>• {{ __('messages.pages.vehicles.detail.schedule_inspection') }}</p>
+                        <p>• {{ __('messages.pages.vehicles.detail.arrange_test_drive') }}</p>
                     </div>
                 </div>
             @endguest
@@ -1311,7 +1310,7 @@ document.addEventListener('DOMContentLoaded', function() {
             openEffect: 'fade',
             closeEffect: 'fade',
             slideEffect: 'fade', // Use fade instead of slide to show one image at a time
-            moreText: 'See more',
+            moreText: '{{ __('messages.common.see_more') }}',
             moreLength: 60,
             closeOnOutsideClick: true,
             preload: false, // Disable preload to ensure only current image loads
@@ -1390,9 +1389,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.showPhoneAndCreateLead(vehicleId, event);
                 });
             } else {
-                if (window.showSnackbar) {
-                    window.showSnackbar('Please login to view phone number', 'error');
-                }
+                    if (window.showSnackbar) {
+                        window.showSnackbar('{{ __('messages.forms.please_login_view_phone') }}', 'error');
+                    }
                 setTimeout(() => {
                     window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
                 }, 1500);
@@ -1424,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                category: 'Phone Number Revealed'
+                category: '{{ __('messages.forms.phone_number_revealed') }}'
             }),
             credentials: 'same-origin'
         }).catch(error => {
@@ -1475,9 +1474,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.showDealerPhoneAndCreateLead(vehicleId, event);
                 });
             } else {
-                if (window.showSnackbar) {
-                    window.showSnackbar('Please login to view phone number', 'error');
-                }
+                    if (window.showSnackbar) {
+                        window.showSnackbar('{{ __('messages.forms.please_login_view_phone') }}', 'error');
+                    }
                 setTimeout(() => {
                     window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
                 }, 1500);
@@ -1509,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                category: 'Phone Number Revealed'
+                category: '{{ __('messages.forms.phone_number_revealed') }}'
             }),
             credentials: 'same-origin'
         }).catch(error => {
@@ -1541,9 +1540,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.disabled = true;
                 const textSpan = button.querySelector('span');
                 if (textSpan) {
-                    textSpan.textContent = 'Loading...';
+                    textSpan.textContent = '{{ __('messages.forms.loading') }}';
                 } else {
-                    button.textContent = 'Loading...';
+                    button.textContent = '{{ __('messages.forms.loading') }}';
                 }
             }
 
@@ -1562,7 +1561,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 if (response.status === 401) {
                     if (window.showSnackbar) {
-                        window.showSnackbar('Please login to continue', 'error');
+                        window.showSnackbar('{{ __('messages.forms.please_login_continue') }}', 'error');
                     }
                     setTimeout(() => {
                         window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
@@ -1571,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const errorData = await response.json().catch(() => ({}));
-                const errorMessage = errorData.message || 'Failed to process request. Please try again.';
+                const errorMessage = errorData.message || '{{ __('messages.forms.failed_to_process') }}';
                 
                 if (window.showSnackbar) {
                     window.showSnackbar(errorMessage, 'error');
@@ -1586,9 +1585,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error creating lead:', error);
             if (window.showSnackbar) {
-                window.showSnackbar('An error occurred. Please try again.', 'error');
+                window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
             } else {
-                alert('An error occurred. Please try again.');
+                alert('{{ __('messages.dialogs.error_occurred') }}');
             }
             return false;
         } finally {
@@ -1611,13 +1610,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!whatsappNumber) {
             if (window.showSnackbar) {
-                window.showSnackbar('WhatsApp number not available', 'error');
+                window.showSnackbar('{{ __('messages.forms.whatsapp_not_available') }}', 'error');
             }
             return false;
         }
 
         // Create lead first
-        const leadResult = await createLead(vehicleId, 'WhatsApp Clicked', event);
+        const leadResult = await createLead(vehicleId, '{{ __('messages.forms.whatsapp_clicked') }}', event);
         
         if (leadResult) {
             // Format phone number for WhatsApp (remove spaces, dashes, etc.)
@@ -1626,7 +1625,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open(`https://wa.me/${formattedNumber}`, '_blank');
             
             if (window.showSnackbar) {
-                window.showSnackbar('Opening WhatsApp...', 'success');
+                window.showSnackbar('{{ __('messages.forms.opening_whatsapp') }}', 'success');
             }
         }
         
@@ -1661,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else {
                 if (window.showSnackbar) {
-                    window.showSnackbar('Please login to contact via email', 'error');
+                    window.showSnackbar('{{ __('messages.forms.please_login_contact_email') }}', 'error');
                 }
                 setTimeout(() => {
                     window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
@@ -1675,25 +1674,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!email) {
             if (window.showSnackbar) {
-                window.showSnackbar('Email address not available', 'error');
+                window.showSnackbar('{{ __('messages.forms.email_not_available') }}', 'error');
             }
             return false;
         }
 
         // Create lead first
-        const leadResult = await createLead(vehicleId, 'Email Clicked', event);
+        const leadResult = await createLead(vehicleId, '{{ __('messages.forms.email_clicked') }}', event);
         
         if (leadResult) {
             // Get vehicle title for email subject
-            const vehicleTitle = document.querySelector('h1')?.textContent?.trim() || 'Vehicle Enquiry';
-            const subject = encodeURIComponent(`Enquiry about: ${vehicleTitle}`);
-            const body = encodeURIComponent(`Hello,\n\nI am interested in this vehicle: ${vehicleTitle}\n\nPlease contact me with more information.\n\nThank you!`);
+            const vehicleTitle = document.querySelector('h1')?.textContent?.trim() || '{{ __('messages.forms.vehicle_enquiry') }}';
+            const subject = encodeURIComponent(`{{ __('messages.forms.enquiry_about') }}: ${vehicleTitle}`);
+            const body = encodeURIComponent(`{{ __('messages.forms.enquiry_email_body') }}: ${vehicleTitle}\n\n{{ __('messages.forms.enquiry_email_body_end') }}`);
             
             // Open email client
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
             
             if (window.showSnackbar) {
-                window.showSnackbar('Opening email client...', 'success');
+                window.showSnackbar('{{ __('messages.forms.opening_email_client') }}', 'success');
             }
         }
         

@@ -35,7 +35,7 @@ class AuthSessionController extends Controller
             // Token might already be invalid, continue anyway
         }
 
-        return $this->success(['message' => 'Signed out successfully']);
+        return $this->success(['message' => __('messages.messages.signed_out_successfully')]);
     }
 
     /**
@@ -76,7 +76,7 @@ class AuthSessionController extends Controller
             // Token might already be invalid, continue anyway
         }
 
-        return $this->success(['message' => 'Session revoked successfully']);
+        return $this->success(['message' => __('messages.messages.session_revoked_successfully')]);
     }
 
     /**
@@ -162,7 +162,7 @@ class AuthSessionController extends Controller
 
         // Verify password for security
         if (!Hash::check($request->password, $user->password)) {
-            return $this->error('Password is incorrect', [
+            return $this->error(__('messages.errors.current_password_incorrect'), [
                 'password' => ['The password is incorrect.'],
             ], 401);
         }
@@ -202,7 +202,7 @@ class AuthSessionController extends Controller
             ]);
         }
 
-        return $this->success(['message' => 'Account deleted successfully']);
+        return $this->success(['message' => __('messages.messages.account_deleted_successfully')]);
     }
 }
 

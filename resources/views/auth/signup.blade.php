@@ -6,29 +6,29 @@
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">
     <div class="flex w-full flex-col space-y-2">
         <h1 class="text-2xl font-semibold tracking-tight">
-            Create an account
+            {{ __('messages.pages.signup.title') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-            Enter your information to create your account.
+            {{ __('messages.pages.signup.description') }}
         </p>
     </div>
 
     <form method="POST" action="{{ route('signup.post') }}" class="grid w-full gap-4">
         @csrf
         <div class="grid gap-2">
-            <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Full Name</label>
-            <input id="name" name="name" type="text" placeholder="John Doe" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+            <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.full_name') }}</label>
+            <input id="name" name="name" type="text" placeholder="{{ __('messages.forms.placeholders.full_name') }}" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
         </div>
 
         <div class="grid gap-2">
-            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email</label>
-            <input id="email" name="email" type="email" placeholder="johndoe@mail.com" autocomplete="email" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }}</label>
+            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
         </div>
 
         <div class="grid gap-2">
-            <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Password</label>
+            <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.password') }}</label>
             <div class="relative">
-                <input id="password" name="password" type="password" placeholder="Your Password" autocomplete="new-password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                <input id="password" name="password" type="password" placeholder="{{ __('messages.forms.placeholders.password') }}" autocomplete="new-password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <svg id="password-eye" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -45,9 +45,9 @@
         </div>
 
         <div class="grid gap-2">
-            <label for="confirmPassword" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Confirm Password</label>
+            <label for="confirmPassword" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.confirm_password') }}</label>
             <div class="relative">
-                <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm Your Password" autocomplete="new-password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                <input id="confirmPassword" name="confirmPassword" type="password" placeholder="{{ __('messages.forms.placeholders.confirm_password') }}" autocomplete="new-password" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <svg id="confirmPassword-eye" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -72,7 +72,7 @@
                         <line x1="12" x2="12.01" y1="16" y2="16"></line>
                     </svg>
                     <div>
-                        <h3 class="font-semibold">Validation Error</h3>
+                        <h3 class="font-semibold">{{ __('messages.pages.signup.validation_error') }}</h3>
                         <ul class="mt-1 text-sm list-disc list-inside">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -84,20 +84,20 @@
         @endif
 
         <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Sign Up
+            {{ __('messages.navigation.signup') }}
         </button>
     </form>
 
     <div class="relative my-4 w-full text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-        <span class="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
+        <span class="relative z-10 bg-background px-2 text-muted-foreground">{{ __('messages.forms.or_continue_with') }}</span>
     </div>
 
     <a href="/auth/magic-link/signup" class="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-        Magic Link Signup
+        {{ __('messages.pages.signup.magic_link_signup') }}
     </a>
 
     <div class="mt-4 text-center text-sm">
-        Already have an account? <a href="/auth/login" class="underline">Login</a>
+        {{ __('messages.pages.signup.already_have_account') }} <a href="/auth/login" class="underline">{{ __('messages.navigation.login') }}</a>
     </div>
 </div>
 

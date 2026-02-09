@@ -41,7 +41,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found. This account is not associated with a dealer.', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         // Load dealer relationships
@@ -224,7 +224,7 @@ class DealerProfileApiController extends Controller
         }
 
         return $this->success([
-            'message' => 'Your enquiry has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.messages.enquiry_submitted_successfully'),
             'enquiry_id' => $enquiry->id,
             'lead_id' => $lead->id,
         ], 201);

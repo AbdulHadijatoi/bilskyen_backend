@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Enquiry Form | Bilskyen')
+@section('title', __('messages.pages.vehicle_enquiry.page_title') . ' | Bilskyen')
 
 @php
     use App\Helpers\FormatHelper;
@@ -12,10 +12,10 @@
     <div class="space-y-4">
         <div class="flex flex-col gap-4">
             <h1 class="text-foreground text-3xl font-bold tracking-tight">
-                Enquiry Form
+                {{ __('messages.pages.vehicle_enquiry.title') }}
             </h1>
             <p class="text-muted-foreground">
-                Submit your enquiry about this vehicle. We'll get back to you as soon as possible.
+                {{ __('messages.pages.vehicle_enquiry.description') }}
             </p>
         </div>
         <div class="border-t border-border"></div>
@@ -23,25 +23,25 @@
 
     <!-- Vehicle Information Card -->
     <div class="bg-gray-50 rounded-lg p-6 border border-border">
-        <h2 class="text-foreground text-xl font-semibold mb-4">Vehicle Information</h2>
+        <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicle_enquiry.vehicle_information') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <span class="text-sm text-muted-foreground">Vehicle</span>
+                <span class="text-sm text-muted-foreground">{{ __('messages.pages.vehicle_enquiry.vehicle') }}</span>
                 <p class="text-foreground font-medium">{{ $vehicle->title }}</p>
             </div>
             <div>
-                <span class="text-sm text-muted-foreground">Price</span>
+                <span class="text-sm text-muted-foreground">{{ __('messages.pages.vehicle_enquiry.price') }}</span>
                 <p class="text-foreground font-medium text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</p>
             </div>
             @if($vehicle->brand_name)
             <div>
-                <span class="text-sm text-muted-foreground">Brand</span>
+                <span class="text-sm text-muted-foreground">{{ __('messages.pages.vehicle_enquiry.brand') }}</span>
                 <p class="text-foreground font-medium">{{ $vehicle->brand_name }}</p>
             </div>
             @endif
             @if($vehicle->model_name)
             <div>
-                <span class="text-sm text-muted-foreground">Model</span>
+                <span class="text-sm text-muted-foreground">{{ __('messages.pages.vehicle_enquiry.model') }}</span>
                 <p class="text-foreground font-medium">{{ $vehicle->model_name }}</p>
             </div>
             @endif
@@ -50,7 +50,7 @@
 
     <!-- Enquiry Form -->
     <div class="bg-gray-50 rounded-lg p-6 border border-border">
-        <h2 class="text-foreground text-xl font-semibold mb-4">Your Details</h2>
+        <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicle_enquiry.your_details') }}</h2>
         <form id="enquiry-form" class="space-y-4">
             @csrf
             <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
@@ -67,7 +67,7 @@
 
             <div class="space-y-2">
                 <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Full Name <span class="text-red-500">*</span>
+                    {{ __('messages.forms.full_name') }} <span class="text-red-500">*</span>
                 </label>
                 <input 
                     type="text" 
@@ -75,13 +75,13 @@
                     name="name" 
                     required
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter your full name"
+                    placeholder="{{ __('messages.forms.placeholders.full_name') }}"
                 >
             </div>
 
             <div class="space-y-2">
                 <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Message <span class="text-red-500">*</span>
+                    {{ __('messages.forms.message') }} <span class="text-red-500">*</span>
                 </label>
                 <textarea 
                     id="message" 
@@ -89,7 +89,7 @@
                     required
                     rows="6"
                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Tell us about your enquiry..."
+                    placeholder="{{ __('messages.pages.vehicle_enquiry.message_placeholder') }}"
                 ></textarea>
             </div>
 
@@ -99,7 +99,7 @@
                     id="submit-btn"
                     class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    <span id="submit-text">Submit Enquiry</span>
+                    <span id="submit-text">{{ __('messages.pages.vehicle_enquiry.submit') }}</span>
                     <svg id="submit-spinner" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -109,7 +109,7 @@
                     href="{{ route('vehicle.detail', $vehicle->id) }}" 
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                    Cancel
+                    {{ __('messages.common.cancel') }}
                 </a>
             </div>
         </form>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Disable submit button
         submitBtn.disabled = true;
-        submitText.textContent = 'Submitting...';
+        submitText.textContent = '{{ __('messages.pages.vehicle_enquiry.submitting') }}';
         submitSpinner.classList.remove('hidden');
 
         // Get form data
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.status === 401) {
                     // Redirect to login
                     if (window.showSnackbar) {
-                        window.showSnackbar('Please login to submit an enquiry', 'error');
+                        window.showSnackbar('{{ __('messages.pages.vehicle_enquiry.login_required') }}', 'error');
                     }
                     setTimeout(() => {
                         window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     errorContainer.classList.remove('hidden');
                 } else {
-                    const errorMsg = result.message || 'Failed to submit enquiry. Please try again.';
+                    const errorMsg = result.message || '{{ __('messages.pages.vehicle_enquiry.submit_error') }}';
                     if (window.showSnackbar) {
                         window.showSnackbar(errorMsg, 'error');
                     } else {
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 // Success
-                const successMsg = result.message || 'Your enquiry has been submitted successfully!';
+                const successMsg = result.message || '{{ __('messages.pages.vehicle_enquiry.submit_success') }}';
                 successMessage.querySelector('p').textContent = successMsg;
                 successMessage.classList.remove('hidden');
                 
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error submitting enquiry:', error);
-            const errorMsg = 'An error occurred. Please try again.';
+            const errorMsg = '{{ __('messages.pages.vehicle_enquiry.generic_error') }}';
             if (window.showSnackbar) {
                 window.showSnackbar(errorMsg, 'error');
             } else {
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             // Re-enable submit button
             submitBtn.disabled = false;
-            submitText.textContent = 'Submit Enquiry';
+            submitText.textContent = '{{ __('messages.pages.vehicle_enquiry.submit') }}';
             submitSpinner.classList.add('hidden');
         }
     });

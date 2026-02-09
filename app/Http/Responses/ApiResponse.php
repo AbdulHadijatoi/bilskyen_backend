@@ -31,7 +31,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.operation_completed_successfully'),
+            'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => $data,
             'errors' => [],
         ], $statusCode);
@@ -89,7 +89,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.data_retrieved_successfully'),
+            'message' => $message ?? __('messages.api.data_retrieved_successfully'),
             'data' => $paginationData,
             'errors' => [],
         ], $statusCode);
@@ -103,7 +103,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.resource_created_successfully'),
+            'message' => $message ?? __('messages.api.resource_created_successfully'),
             'data' => $data,
             'errors' => [],
         ], ApiStatusCode::CREATED);
@@ -117,7 +117,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.operation_completed_successfully'),
+            'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => null,
             'errors' => [],
         ], ApiStatusCode::NO_CONTENT);
@@ -128,7 +128,7 @@ trait ApiResponse
      */
     protected function unauthorized(?string $message = null, string $errorCode = 'UNAUTHORIZED'): JsonResponse
     {
-        return $this->error($message ?? trans('api.unauthorized'), [], ApiStatusCode::UNAUTHORIZED, $errorCode);
+        return $this->error($message ?? __('messages.api.unauthorized'), [], ApiStatusCode::UNAUTHORIZED, $errorCode);
     }
 
     /**
@@ -136,7 +136,7 @@ trait ApiResponse
      */
     protected function forbidden(?string $message = null, string $errorCode = 'FORBIDDEN'): JsonResponse
     {
-        return $this->error($message ?? trans('api.forbidden'), [], ApiStatusCode::FORBIDDEN, $errorCode);
+        return $this->error($message ?? __('messages.api.forbidden'), [], ApiStatusCode::FORBIDDEN, $errorCode);
     }
 
     /**
@@ -144,7 +144,7 @@ trait ApiResponse
      */
     protected function notFound(?string $message = null): JsonResponse
     {
-        return $this->error($message ?? trans('api.resource_not_found'), [], ApiStatusCode::NOT_FOUND);
+        return $this->error($message ?? __('messages.api.resource_not_found'), [], ApiStatusCode::NOT_FOUND);
     }
 
     /**
@@ -152,7 +152,7 @@ trait ApiResponse
      */
     protected function validationError($errors, ?string $message = null): JsonResponse
     {
-        return $this->error($message ?? trans('api.validation_failed'), $this->normalizeErrors($errors), ApiStatusCode::UNPROCESSABLE_ENTITY);
+        return $this->error($message ?? __('messages.api.validation_failed'), $this->normalizeErrors($errors), ApiStatusCode::UNPROCESSABLE_ENTITY);
     }
 
     /**
@@ -164,7 +164,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.operation_completed_successfully'),
+            'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => $data,
             'meta' => $meta,
             'errors' => [],
@@ -179,7 +179,7 @@ trait ApiResponse
         return response()->json([
             'success' => true,
             'failed' => false,
-            'message' => $message ?? trans('api.operation_completed_successfully'),
+            'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => null,
             'meta' => $meta,
             'errors' => [],

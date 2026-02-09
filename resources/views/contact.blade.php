@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Contact | Bilskyen')
+@section('title', __('messages.pages.contact.page_title'))
 
 @section('content')
 <div class="flex min-h-screen flex-col">
@@ -8,10 +8,10 @@
     <section class="bg-muted py-20 text-center">
         <div class="container mx-auto px-4 md:px-6">
             <h1 class="text-4xl font-bold tracking-tight md:text-5xl">
-                {{ $contactPageContent['contact_header_title'] ?? 'Get in Touch' }}
+                {{ $contactPageContent['contact_header_title'] ?? __('messages.pages.contact.title') }}
             </h1>
             <p class="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
-                {{ $contactPageContent['contact_header_description'] ?? "We're here to help with your questions about vehicles, financing, and our services. Reach out to us anytime." }}
+                {{ $contactPageContent['contact_header_description'] ?? __('messages.pages.contact.description') }}
             </p>
         </div>
     </section>
@@ -23,9 +23,9 @@
                 <!-- Contact Form -->
                 <div class="rounded-lg border border-border bg-card">
                     <div class="p-6">
-                        <h2 class="text-2xl font-semibold tracking-tight">{{ $contactPageContent['contact_form_title'] ?? 'Send Us a Message' }}</h2>
+                        <h2 class="text-2xl font-semibold tracking-tight">{{ $contactPageContent['contact_form_title'] ?? __('messages.pages.contact.form_title') }}</h2>
                         <p class="text-muted-foreground mt-2">
-                            {{ $contactPageContent['contact_form_description'] ?? "Fill out the form below, and we'll get back to you as soon as possible." }}
+                            {{ $contactPageContent['contact_form_description'] ?? __('messages.pages.contact.form_description') }}
                         </p>
                     </div>
                     <div class="p-6 pt-0">
@@ -33,48 +33,48 @@
                             @csrf
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div class="space-y-2">
-                                    <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Full Name</label>
+                                    <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.full_name') }}</label>
                                     <input
                                         id="name"
                                         name="name"
                                         type="text"
-                                        placeholder="Enter your full name"
+                                        placeholder="{{ __('messages.forms.enter_full_name') }}"
                                         required
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div class="space-y-2">
-                                    <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email Address</label>
+                                    <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }}</label>
                                     <input
                                         id="email"
                                         name="email"
                                         type="email"
-                                        placeholder="Enter your email"
+                                        placeholder="{{ __('messages.forms.enter_email') }}"
                                         required
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <label for="subject" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Subject</label>
+                                <label for="subject" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.subject') }}</label>
                                 <select
                                     id="subject"
                                     name="subject"
                                     class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    <option value="">Select a subject</option>
-                                    <option value="vehicle-inquiry">Vehicle Inquiry</option>
-                                    <option value="financing">Financing Question</option>
-                                    <option value="service-appointment">Service Appointment</option>
-                                    <option value="general">General Question</option>
+                                    <option value="">{{ __('messages.pages.contact.select_subject') }}</option>
+                                    <option value="vehicle-inquiry">{{ __('messages.pages.contact.vehicle_inquiry') }}</option>
+                                    <option value="financing">{{ __('messages.pages.contact.financing_question') }}</option>
+                                    <option value="service-appointment">{{ __('messages.pages.contact.service_appointment') }}</option>
+                                    <option value="general">{{ __('messages.pages.contact.general_question') }}</option>
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Message</label>
+                                <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.message') }}</label>
                                 <textarea
                                     id="message"
                                     name="message"
-                                    placeholder="Write your message here..."
+                                    placeholder="{{ __('messages.pages.contact.write_message_here') }}"
                                     rows="6"
                                     required
                                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -85,7 +85,7 @@
                                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                                     <path d="M22 2 11 13"></path>
                                 </svg>
-                                Send Message
+                                {{ __('messages.pages.contact.send_message') }}
                             </button>
                         </form>
                     </div>
@@ -94,9 +94,9 @@
                 <!-- Contact Details -->
                 <div class="space-y-8">
                     <div class="space-y-2">
-                        <h2 class="text-2xl font-bold">{{ $contactPageContent['contact_info_title'] ?? 'Contact Information' }}</h2>
+                        <h2 class="text-2xl font-bold">{{ $contactPageContent['contact_info_title'] ?? __('messages.pages.contact.info_title') }}</h2>
                         <p class="text-muted-foreground">
-                            {{ $contactPageContent['contact_info_description'] ?? 'Find us at our dealership or reach out via phone or email.' }}
+                            {{ $contactPageContent['contact_info_description'] ?? __('messages.pages.contact.info_description') }}
                         </p>
                     </div>
                     <div class="space-y-6">
@@ -109,7 +109,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold">Our Address</h3>
+                                <h3 class="text-base font-semibold">{{ __('messages.pages.contact.our_address') }}</h3>
                                 <p class="text-muted-foreground">
                                     {{ $contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark' }}
                                 </p>
@@ -117,7 +117,7 @@
                                     href="#"
                                     class="text-primary mt-1 inline-block text-sm font-medium hover:underline"
                                 >
-                                    Get Directions
+                                    {{ __('messages.pages.contact.get_directions') }}
                                 </a>
                             </div>
                         </div>
@@ -128,7 +128,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold">Phone</h3>
+                                <h3 class="text-base font-semibold">{{ __('messages.pages.contact.phone') }}</h3>
                                 <p class="text-muted-foreground">
                                     {{ $contactPageContent['contact_phone'] ?? '+45 12 34 56 78' }}
                                 </p>
@@ -142,7 +142,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold">Email</h3>
+                                <h3 class="text-base font-semibold">{{ __('messages.pages.contact.email') }}</h3>
                                 <p class="text-muted-foreground">
                                     {{ $contactPageContent['contact_email'] ?? 'info@bilskyen.dk' }}
                                 </p>
@@ -156,7 +156,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold">Business Hours</h3>
+                                <h3 class="text-base font-semibold">{{ __('messages.pages.contact.business_hours') }}</h3>
                                 <p class="text-muted-foreground">
                                     {{ $contactPageContent['contact_hours_weekdays'] ?? 'Monday - Saturday: 9:00 AM - 7:00 PM' }}
                                 </p>
@@ -181,13 +181,13 @@
             @endphp
             <img
                 src="{{ $mapImage && isset($mapImage['image_url']) ? $mapImage['image_url'] : '/images/showroom.jpg' }}"
-                alt="{{ $mapImage && isset($mapImage['alt_text']) ? $mapImage['alt_text'] : 'Showroom' }}"
+                alt="{{ $mapImage && isset($mapImage['alt_text']) ? $mapImage['alt_text'] : __('messages.pages.contact.showroom') }}"
                 class="h-full w-full object-cover"
                 onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'"
             />
             <div class="absolute inset-0 bg-black/50"></div>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-                <h2 class="text-3xl font-bold">{{ $contactPageContent['contact_map_title'] ?? 'Visit Our Showroom' }}</h2>
+                <h2 class="text-3xl font-bold">{{ $contactPageContent['contact_map_title'] ?? __('messages.pages.contact.visit_showroom') }}</h2>
                 <p class="mt-2 max-w-md">{{ $contactPageContent['contact_map_address'] ?? ($contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark') }}</p>
             </div>
         </div>

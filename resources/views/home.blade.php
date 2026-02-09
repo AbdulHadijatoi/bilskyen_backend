@@ -187,12 +187,12 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-6">
                 <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">
-                    {{ $homePageContent['search_title'] ?? 'Find Your Perfect Vehicle at Bilskyen' }}
+                    {{ $homePageContent['search_title'] ?? __('messages.pages.home.title') }}
                 </h1>
             </div>
             <div class="rounded-lg bg-card p-4 md:p-6 shadow-lg">
                 <p class="text-muted-foreground text-base md:text-lg mb-4">
-                    {{ $homePageContent['search_description'] ?? 'Search our inventory to find the perfect match for your needs.' }}
+                    {{ $homePageContent['search_description'] ?? __('messages.pages.home.description') }}
                 </p>
 
                 <div class="flex flex-col gap-4">
@@ -201,17 +201,17 @@
                     <!-- Brand Dropdown -->
                     <div class="relative flex-1" data-dropdown="brand">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">Brand</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.brand') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                             <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="Search brand..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Brands</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_brands') }}</button>
                                 @foreach($filterOptions['brands'] as $brand)
                                     <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}">{{ $brand->name }}</button>
                                 @endforeach
@@ -223,17 +223,17 @@
                     <!-- Model Dropdown -->
                     <div class="relative flex-1" data-dropdown="model">
                         <button type="button" id="model-dropdown-button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <span class="dropdown-selected">Model</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.model') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                             <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="Search model..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Models</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_models') }}</button>
                                 @foreach($filterOptions['models'] as $model)
                                     <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}">{{ $model->name }}</button>
                                 @endforeach
@@ -245,17 +245,17 @@
                     <!-- Model Year Dropdown -->
                     <div class="relative flex-1" data-dropdown="model_year">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">Model Year</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.model_year') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                             <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="Search year..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                <input type="text" placeholder="{{ __('messages.forms.search_year') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Years</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_years') }}</button>
                                 @foreach($filterOptions['modelYears'] as $modelYear)
                                     <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}">{{ $modelYear->name }}</button>
                                 @endforeach
@@ -267,17 +267,17 @@
                     <!-- Fuel Type Dropdown -->
                     <div class="relative flex-1" data-dropdown="fuel_type">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">Fuel Type</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.fuel_type') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                             <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="Search fuel type..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Fuel Types</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_fuel_types') }}</button>
                                 @foreach($filterOptions['fuelTypes'] as $fuelType)
                                     <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}">{{ $fuelType->name }}</button>
                                 @endforeach
@@ -292,17 +292,17 @@
                     <!-- Category Dropdown -->
                     <div class="relative flex-1" data-dropdown="category">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">Category</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.category') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
                             <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="Search category..." class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                <input type="text" placeholder="{{ __('messages.forms.search_category') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">All Categories</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_categories') }}</button>
                                 @foreach($filterOptions['categories'] as $category)
                                     <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $category->id }}" data-text="{{ $category->name }}">{{ $category->name }}</button>
                                 @endforeach
@@ -314,20 +314,20 @@
                     <!-- Price Dropdown (with range slider) -->
                     <div class="relative flex-1" data-dropdown="price">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">Price</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.price') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
-                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">Price Range</label>
+                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.price_range') }}</label>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="flex-1">
-                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="Min" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                                 <span class="text-muted-foreground/60 text-sm">–</span>
                                 <div class="flex-1">
-                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="Max" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                             </div>
                             <div class="relative px-1">
@@ -345,20 +345,20 @@
                     <!-- KM Driven Dropdown (with range slider) -->
                     <div class="relative flex-1" data-dropdown="km_driven">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">KM Driven</span>
+                            <span class="dropdown-selected">{{ __('messages.forms.km_driven') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                         <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
-                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">KM Driven Range</label>
+                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.km_driven_range') }}</label>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="flex-1">
-                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="Min" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                                 <span class="text-muted-foreground/60 text-sm">–</span>
                                 <div class="flex-1">
-                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="Max" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                             </div>
                             <div class="relative px-1">
@@ -380,7 +380,7 @@
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.3-4.3"></path>
                                 </svg>
-                                Search
+                                {{ __('messages.common.search') }}
                         </button>
                     </form>
                 </div>
@@ -388,7 +388,7 @@
                 <!-- Third Row: Reset Filters Link -->
                 <div class="flex flex-col sm:flex-row justify-start sm:justify-end gap-3 sm:gap-4">
                     <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
-                        Reset Filters
+                        {{ __('messages.pages.vehicles.reset_filters') }}
                             </button>
                         </div>
                     </div>
@@ -401,14 +401,14 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="max-w-4xl space-y-8">
                 <p class="text-xl text-muted-foreground">
-                    {{ $homePageContent['hero_description'] ?? 'Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.' }}
+                    {{ $homePageContent['hero_description'] ?? __('messages.pages.home.hero_description') }}
                 </p>
                 <div class="flex flex-col gap-4 sm:flex-row">
                     <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                        Browse Vehicles
+                        {{ __('messages.pages.home.browse_vehicles') }}
                     </a>
                     <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                        Contact Us
+                        {{ __('messages.pages.footer.contact_us') }}
                     </a>
                 </div>
             </div>
@@ -421,10 +421,10 @@
             <div class="flex flex-col gap-8">
                 <div class="space-y-2">
                     <h2 class="text-3xl font-bold tracking-tight">
-                        {{ $homePageContent['featured_vehicles_title'] ?? 'Featured Vehicles' }}
+                        {{ $homePageContent['featured_vehicles_title'] ?? __('messages.pages.home.featured_vehicles_title') }}
                     </h2>
                     <p class="text-muted-foreground">
-                        {{ $homePageContent['featured_vehicles_description'] ?? 'Explore our selection of quality vehicles ready for you to drive home today.' }}
+                        {{ $homePageContent['featured_vehicles_description'] ?? __('messages.pages.home.featured_vehicles_description') }}
                     </p>
                 </div>
                 
@@ -435,7 +435,7 @@
                     <button 
                         id="featured-vehicles-prev" 
                         class="featured-vehicles-nav-btn featured-vehicles-nav-btn-left hidden md:flex"
-                        aria-label="Previous vehicles"
+                        aria-label="{{ __('messages.pages.vehicles.detail.previous_vehicles') }}"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 18l-6-6 6-6"></path>
@@ -444,7 +444,7 @@
                     <button 
                         id="featured-vehicles-next" 
                         class="featured-vehicles-nav-btn featured-vehicles-nav-btn-right hidden md:flex"
-                        aria-label="Next vehicles"
+                        aria-label="{{ __('messages.pages.vehicles.detail.next_vehicles') }}"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 18l6-6-6-6"></path>
@@ -466,16 +466,16 @@
                                     @if(isset($vehicle['dealer_id']) && $vehicle['dealer_id'])
                                     <!-- Dealer Label - Top Left -->
                                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                        Dealer
+                                        {{ __('messages.pages.vehicles.dealer') }}
                                     </span>
                                     @else
                                     <!-- Private Label - Top Left -->
                                     <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                        Private
+                                        {{ __('messages.pages.vehicles.private') }}
                                     </span>
                                     @endif
                                     <!-- Heart Icon - Top Right -->
-                                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle['id'] }}, event); return false;" aria-label="Add to favorites">
+                                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle['id'] }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ isset($vehicle['dealer_id']) && $vehicle['dealer_id'] ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle['id'] }}" data-dealer-id="{{ $vehicle['dealer_id'] ?? '' }}">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                         </svg>
@@ -544,7 +544,7 @@
                                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                                         <a href="/vehicles/{{ $vehicle['id'] }}" class="flex-1" onclick="event.stopPropagation()">
                                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                                View Details
+                                                {{ __('messages.pages.vehicles.view_details') }}
                                             </button>
                                         </a>
                                         <button 
@@ -552,7 +552,7 @@
                                             onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle['id'] }})"
                                             class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                         >
-                                            Enquire
+                                            {{ __('messages.pages.vehicles.enquire') }}
                                         </button>
                                     </div>
                                 </div>
@@ -570,7 +570,7 @@
                     <x-login-dialog />
                     <div class="mt-4 flex justify-center">
                         <a href="/vehicles" class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                            View All Vehicles
+                            {{ __('messages.pages.home.view_all_vehicles') }}
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
                                 <path d="M5 12h14M12 5l7 7-7 7"></path>
                             </svg>
@@ -579,7 +579,7 @@
                     @else
                     <div class="flex items-center justify-center py-12">
                         <div class="text-center">
-                            <p class="text-muted-foreground">No featured vehicles available at this time.</p>
+                            <p class="text-muted-foreground">{{ __('messages.pages.home.no_featured_vehicles') }}</p>
                         </div>
                     </div>
                     @endif
@@ -593,10 +593,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    {{ $homePageContent['stats_title'] ?? 'Why Choose Bilskyen' }}
+                    {{ $homePageContent['stats_title'] ?? __('messages.pages.home.why_choose_title') }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    {{ $homePageContent['stats_description'] ?? "We're committed to providing exceptional service and quality vehicles to our customers." }}
+                    {{ $homePageContent['stats_description'] ?? __('messages.pages.home.why_choose_description') }}
                 </p>
             </div>
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -667,10 +667,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    {{ $homePageContent['features_title'] ?? 'Our Services' }}
+                    {{ $homePageContent['features_title'] ?? __('messages.pages.home.our_services_title') }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    {{ $homePageContent['features_description'] ?? 'We provide comprehensive services to make your vehicle purchase smooth and enjoyable.' }}
+                    {{ $homePageContent['features_description'] ?? __('messages.pages.home.our_services_description') }}
                 </p>
             </div>
             <div class="grid gap-8 md:grid-cols-3">
@@ -720,10 +720,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-12 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
-                    {{ $homePageContent['testimonials_title'] ?? 'Customer Testimonials' }}
+                    {{ $homePageContent['testimonials_title'] ?? __('messages.pages.home.testimonials_title') }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
-                    {{ $homePageContent['testimonials_description'] ?? 'Hear what our customers have to say about their experience with us.' }}
+                    {{ $homePageContent['testimonials_description'] ?? __('messages.pages.home.testimonials_description') }}
                 </p>
             </div>
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -913,13 +913,13 @@
                         if (value === '') {
                             // Reset to default text
                             const defaultTexts = {
-                                'category': 'Category',
-                                'brand': 'Brand',
-                                'model': 'Model',
-                                'model_year': 'Model Year',
-                                'fuel_type': 'Fuel Type'
+                                'category': '{{ __('messages.forms.category') }}',
+                                'brand': '{{ __('messages.forms.brand') }}',
+                                'model': '{{ __('messages.forms.model') }}',
+                                'model_year': '{{ __('messages.forms.model_year') }}',
+                                'fuel_type': '{{ __('messages.forms.fuel_type') }}'
                             };
-                            selectedText.textContent = defaultTexts[dropdownType] || 'Select';
+                            selectedText.textContent = defaultTexts[dropdownType] || '{{ __('messages.common.select') }}';
                         } else {
                             selectedText.textContent = text;
                         }
@@ -947,7 +947,7 @@
                         const toText = to ? new Intl.NumberFormat().format(to) : '∞';
                         selectedText.textContent = `${fromText} - ${toText}`;
                     } else {
-                        selectedText.textContent = 'Price';
+                        selectedText.textContent = '{{ __('messages.forms.price') }}';
                     }
                 };
                 
@@ -968,7 +968,7 @@
                         const toText = to ? new Intl.NumberFormat().format(to) : '∞';
                         selectedText.textContent = `${fromText} - ${toText} km`;
                     } else {
-                        selectedText.textContent = 'KM Driven';
+                        selectedText.textContent = '{{ __('messages.forms.km_driven') }}';
                     }
                 };
                 
@@ -1005,7 +1005,7 @@
                 modelButton.disabled = true;
             }
             if (selectedText) {
-                selectedText.textContent = 'Model';
+                selectedText.textContent = '{{ __('messages.forms.model') }}';
             }
             if (modelInput) {
                 modelInput.value = '';
@@ -1027,7 +1027,7 @@
                 modelButton.disabled = false;
             }
             if (selectedText && !modelInput?.value) {
-                selectedText.textContent = 'Model';
+                selectedText.textContent = '{{ __('messages.forms.model') }}';
             }
             
             // Show only models for selected brand (respecting search if any)
@@ -1053,7 +1053,7 @@
                     const optionBrandId = selectedModelOption.getAttribute('data-brand-id');
                     if (optionBrandId !== brandId) {
                         if (modelInput) modelInput.value = '';
-                        if (selectedText) selectedText.textContent = 'Model';
+                        if (selectedText) selectedText.textContent = '{{ __('messages.forms.model') }}';
                     }
                 }
             }
@@ -1135,7 +1135,7 @@
                             config.selectedText.textContent = `${fromText} - ${toText} km`;
                         }
                     } else {
-                        config.selectedText.textContent = config === priceConfig ? 'Price' : 'KM Driven';
+                        config.selectedText.textContent = config === priceConfig ? '{{ __('messages.forms.price') }}' : '{{ __('messages.forms.km_driven') }}';
                     }
                 }
             }
@@ -1241,11 +1241,11 @@
         
         // Reset all dropdown selected text to default values
         const defaultTexts = {
-            'category': 'Category',
-            'brand': 'Brand',
-            'model': 'Model',
-            'model_year': 'Model Year',
-            'fuel_type': 'Fuel Type'
+            'category': '{{ __('messages.forms.category') }}',
+            'brand': '{{ __('messages.forms.brand') }}',
+            'model': '{{ __('messages.forms.model') }}',
+            'model_year': '{{ __('messages.forms.model_year') }}',
+            'fuel_type': '{{ __('messages.forms.fuel_type') }}'
         };
         
         document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
@@ -1267,7 +1267,7 @@
         if (priceToInput) priceToInput.value = '';
         if (priceMinSlider) priceMinSlider.value = '0';
         if (priceMaxSlider) priceMaxSlider.value = '1000000';
-        if (priceSelectedText) priceSelectedText.textContent = 'Price';
+        if (priceSelectedText) priceSelectedText.textContent = '{{ __('messages.forms.price') }}';
         
         // Reset KM driven range
         const kmFromInput = document.getElementById('km-driven-from');
@@ -1280,7 +1280,7 @@
         if (kmToInput) kmToInput.value = '';
         if (kmMinSlider) kmMinSlider.value = '0';
         if (kmMaxSlider) kmMaxSlider.value = '500000';
-        if (kmSelectedText) kmSelectedText.textContent = 'KM Driven';
+        if (kmSelectedText) kmSelectedText.textContent = '{{ __('messages.forms.km_driven') }}';
         
         // Update range slider visuals
         if (priceMinSlider && priceMaxSlider) {
@@ -1581,12 +1581,12 @@
                         }
                         if (path) path.setAttribute('fill', 'none');
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Removed from favorites', 'success');
+                            window.showSnackbar(data.message || '{{ __('messages.messages.removed_from_favorites') }}', 'success');
                         }
                     } else {
                         if (response.status === 401) {
                             if (window.showSnackbar) {
-                                window.showSnackbar('Please login to manage favorites', 'error');
+                                window.showSnackbar('{{ __('messages.errors.please_login') }}', 'error');
                             }
                             // Open login dialog instead of redirecting
                             if (window.openLoginDialog) {
@@ -1602,7 +1602,7 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Failed to remove from favorites', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
                         }
                     }
                 } else {
@@ -1626,12 +1626,12 @@
                         heartIcon.classList.add('text-red-500');
                         if (path) path.setAttribute('fill', 'currentColor');
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                            window.showSnackbar(data.message || '{{ __('messages.messages.saved_to_favorites') }}', 'success');
                         }
                     } else {
                         if (response.status === 401) {
                             if (window.showSnackbar) {
-                                window.showSnackbar('Please login to save favorites', 'error');
+                                window.showSnackbar('{{ __('messages.errors.please_login_to_save') }}', 'error');
                             }
                             // Open login dialog instead of redirecting
                             if (window.openLoginDialog) {
@@ -1647,14 +1647,14 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Failed to save to favorites', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
                         }
                     }
                 }
             } catch (error) {
                 console.error('Error toggling favorite:', error);
                 if (window.showSnackbar) {
-                    window.showSnackbar('An error occurred. Please try again.', 'error');
+                    window.showSnackbar('{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
                 }
             }
             

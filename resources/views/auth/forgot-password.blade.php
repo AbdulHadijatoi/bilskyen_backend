@@ -6,10 +6,10 @@
 <div class="flex w-full flex-col items-center justify-center gap-4">
     <div class="flex w-full flex-col space-y-2">
         <h1 class="text-2xl font-semibold tracking-tight">
-            Forgot Password
+            {{ __('messages.pages.forgot_password.title') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-            Enter your email address to receive a password reset link.
+            {{ __('messages.pages.forgot_password.description') }}
         </p>
     </div>
 
@@ -36,7 +36,7 @@
                     <line x1="12" x2="12.01" y1="16" y2="16"></line>
                 </svg>
                 <div>
-                    <h3 class="font-semibold">Error</h3>
+                    <h3 class="font-semibold">{{ __('messages.messages.error') }}</h3>
                     <ul class="mt-1 text-sm">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -50,17 +50,17 @@
     <form method="POST" action="{{ route('password.email') }}" class="grid w-full gap-3.5">
         @csrf
         <div class="grid gap-2">
-            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email</label>
-            <input id="email" name="email" type="email" placeholder="johndoe@mail.com" autocomplete="email" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }}</label>
+            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
         </div>
 
         <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            Send Password Reset Email
+            {{ __('messages.pages.forgot_password.send_reset_email') }}
         </button>
     </form>
 
     <div class="mt-4 text-center text-sm">
-        Remember your password? <a href="/auth/login" class="underline">Login</a>
+        {{ __('messages.pages.forgot_password.remember_password') }} <a href="/auth/login" class="underline">{{ __('messages.navigation.login') }}</a>
     </div>
 </div>
 @endsection

@@ -13,17 +13,17 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
                 <div class="flex-1">
                     <h2 id="login-dialog-title" class="text-xl font-semibold text-foreground">
-                        Login to Your Account
+                        {{ __('messages.dialogs.login_to_account') }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Enter your email and password to continue
+                        {{ __('messages.dialogs.login_description') }}
                     </p>
                 </div>
                 <button
                     type="button"
                     onclick="closeLoginDialog()"
                     class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Close dialog"
+                    aria-label="{{ __('messages.dialogs.close_dialog') }}"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6L6 18M6 6l12 12"></path>
@@ -59,7 +59,7 @@
                     
                     <div class="space-y-2">
                         <label for="login-email" class="text-sm font-medium leading-none">
-                            Email <span class="text-red-500">*</span>
+                            {{ __('messages.forms.email') }} <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="email" 
@@ -76,10 +76,10 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <label for="login-password" class="text-sm font-medium leading-none">
-                                Password <span class="text-red-500">*</span>
+                                {{ __('messages.forms.password') }} <span class="text-red-500">*</span>
                             </label>
                             <a href="/auth/forgot-password" class="text-xs text-muted-foreground hover:text-foreground underline" onclick="event.stopPropagation(); closeLoginDialog();">
-                                Forgot password?
+                                {{ __('messages.forms.forgot_password') }}
                             </a>
                         </div>
                         <div class="relative">
@@ -90,7 +90,7 @@
                                 required
                                 autocomplete="current-password"
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Your Password"
+                                placeholder="{{ __('messages.forms.password') }}"
                             >
                             <button 
                                 type="button" 
@@ -117,28 +117,28 @@
                             id="login-submit-btn"
                             class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                         >
-                            <span id="login-submit-text">Login</span>
+                            <span id="login-submit-text">{{ __('messages.navigation.login') }}</span>
                         </button>
                         <button 
                             type="button"
                             onclick="closeLoginDialog()"
                             class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            Cancel
+                            {{ __('messages.common.cancel') }}
                         </button>
                     </div>
                 </form>
 
                 <div class="relative my-4 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                    <span class="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
+                    <span class="relative z-10 bg-background px-2 text-muted-foreground">{{ __('messages.forms.or_continue_with') }}</span>
                 </div>
 
                 <a href="/auth/magic-link/login" onclick="event.stopPropagation(); closeLoginDialog();" class="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                    Magic Link Login
+                    {{ __('messages.pages.login.magic_link_login') }}
                 </a>
 
                 <div class="mt-4 text-center text-sm text-muted-foreground">
-                    Don't have an account? <a href="/auth/signup" onclick="event.stopPropagation(); closeLoginDialog();" class="text-foreground underline hover:text-primary">Sign up</a>
+                    {{ __('messages.pages.login.no_account') }} <a href="/auth/signup" onclick="event.stopPropagation(); closeLoginDialog();" class="text-foreground underline hover:text-primary">{{ __('messages.navigation.signup') }}</a>
                 </div>
             </div>
         </div>
@@ -218,7 +218,7 @@
         
         // Disable submit button
         if (submitBtn) submitBtn.disabled = true;
-        if (submitText) submitText.textContent = 'Logging in...';
+        if (submitText) submitText.textContent = '{{ __('messages.dialogs.logging_in') }}';
         
         // Get form data
         const formData = new FormData(form);
@@ -247,7 +247,7 @@
                 if (response.ok || response.status === 200) {
                     // Success - show success message
                     if (successMessage) {
-                        successMessage.querySelector('p').textContent = result.message || 'Login successful!';
+                        successMessage.querySelector('p').textContent = result.message || '{{ __('messages.dialogs.login_successful') }}';
                         successMessage.classList.remove('hidden');
                     }
                     
@@ -256,7 +256,7 @@
                     
                     // Show snackbar if available
                     if (window.showSnackbar) {
-                        window.showSnackbar(result.message || 'Login successful!', 'success');
+                        window.showSnackbar(result.message || '{{ __('messages.dialogs.login_successful') }}', 'success');
                     }
                     
                     // Execute callback if provided (after a short delay to ensure auth state is updated)
@@ -288,7 +288,7 @@
                         }
                         if (errorContainer) errorContainer.classList.remove('hidden');
                     } else {
-                        const errorMsgText = result.message || 'Login failed. Please try again.';
+                        const errorMsgText = result.message || '{{ __('messages.dialogs.login_failed') }}';
                         if (errorList) {
                             errorList.innerHTML = `<li>${errorMsgText}</li>`;
                             if (errorContainer) errorContainer.classList.remove('hidden');
@@ -307,7 +307,7 @@
                     window.location.reload();
                 } else {
                     // Error - try to show error message
-                    const errorMsgText = 'Login failed. Please try again.';
+                    const errorMsgText = '{{ __('messages.dialogs.login_failed') }}';
                     if (errorList) {
                         errorList.innerHTML = `<li>${errorMsgText}</li>`;
                         if (errorContainer) errorContainer.classList.remove('hidden');
@@ -317,13 +317,13 @@
         } catch (error) {
             console.error('Error submitting login form:', error);
             if (errorList) {
-                errorList.innerHTML = '<li>An error occurred. Please try again.</li>';
+                errorList.innerHTML = '<li>{{ __('messages.dialogs.error_occurred') }}</li>';
                 if (errorContainer) errorContainer.classList.remove('hidden');
             }
         } finally {
             // Re-enable submit button
             if (submitBtn) submitBtn.disabled = false;
-            if (submitText) submitText.textContent = 'Login';
+            if (submitText) submitText.textContent = '{{ __('messages.navigation.login') }}';
         }
     });
     

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Revolutionizing Dealership Management with quality vehicles and exceptional customer service.">
-    <title>@yield('title', 'Bilskyen | Revolutionizing Dealership Management')</title>
+    <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
+    <title>@yield('title', __('messages.layouts.default_title'))</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -131,14 +131,14 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center gap-2">
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="/images/logo.png" alt="Bilskyen" class="h-8">
+                        <img src="/images/logo.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-8">
                     </a>
                 </div>
                 <div class="flex items-center gap-4">
                     <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                        <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Vehicles</a>
-                        <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">About Us</a>
-                        <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Contact</a>
+                        <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.vehicles') }}</a>
+                        <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.about_us') }}</a>
+                        <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.contact') }}</a>
                     </nav>
                     <div class="flex items-center gap-2">
                         @include('components.user-auth-status')
@@ -154,7 +154,7 @@
             <div class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">
                     <p class="text-foreground text-lg">
-                        &ldquo;Bilskyen has revolutionized the way we manage our dealership operations, making everything simple and efficient.&rdquo;
+                        &ldquo;{{ __('messages.layouts.testimonial_quote') }}&rdquo;
                     </p>
                     <footer class="text-foreground text-sm">
                         Rahif
