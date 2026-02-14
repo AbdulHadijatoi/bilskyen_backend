@@ -47,7 +47,7 @@
                 <form id="login-form" method="POST" action="{{ route('login.post') }}" class="space-y-4">
                     @csrf
                     
-                    @if ($errors->any())
+                    @if (isset($errors) && $errors->any())
                         <div id="login-errors" class="w-full rounded-md border border-red-200 bg-red-50 p-3 mb-4">
                             <ul id="login-error-list" class="list-disc list-inside text-sm text-red-800">
                                 @foreach ($errors->all() as $error)

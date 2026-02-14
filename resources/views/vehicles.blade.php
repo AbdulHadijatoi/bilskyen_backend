@@ -13,17 +13,7 @@
     <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm w-full">
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-none  focus:bg-none">
             <!-- Search Input -->
-            <form class="flex w-full sm:flex-1 focus:bg-none bg-none min-w-0" method="GET" action="/vehicles" id="search-form">
-                <!-- Preserve existing query parameters (including sort) -->
-                @foreach(request()->except('search') as $key => $value)
-                    @if(is_array($value))
-                        @foreach($value as $v)
-                            <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
-                        @endforeach
-                    @else
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endif
-                @endforeach
+            <form class="flex w-full sm:flex-1 focus:bg-none bg-none min-w-0" id="search-form">
                 <div class="relative w-full">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -33,7 +23,7 @@
                         type="text"
                         name="search"
                         id="search-input"
-                        value="{{ request()->query('search', '') }}"
+                        value="{{ $currentFilters['search'] ?? '' }}"
                         placeholder="{{ __('messages.forms.search_placeholder') }}"
                         class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
                         autocomplete="off"
@@ -89,16 +79,16 @@
                         >
                         <span>{{ __('messages.common.all') }}</span>
                     </label>
-                    @foreach($filterOptions['conditions'] as $condition)
-                        <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                    @foreach($constants['conditions'] as $condition)
+                        <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && (string)($currentFilters['condition_id']) === (string)($condition['id'] ?? '')) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
                             <input 
                                 type="radio" 
                                 name="condition_id" 
-                                value="{{ $condition->id }}"
+                                value="{{ $condition['id'] }}"
                                 class="sr-only peer condition-radio"
-                                @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition->id) checked @endif
+                                @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition['id']) checked @endif
                             >
-                            <span>{{ $condition->name }}</span>
+                            <span>{{ $condition['name'] }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -111,18 +101,21 @@
                 </p>
                 <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
                     @php
-                        $purchaseType = $filterOptions['listingTypes']->firstWhere('name', 'Purchase');
-                        $leasingType = $filterOptions['listingTypes']->firstWhere('name', 'Leasing');
+                        $listingTypes = $constants['listing_types'] ?? collect();
+                        $purchaseType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Purchase') : $listingTypes->firstWhere('name', 'Purchase');
+                        $leasingType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Leasing') : $listingTypes->firstWhere('name', 'Leasing');
                         $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
-                        $isPurchaseActive = $purchaseType && in_array($purchaseType->id, $selectedListingTypes);
-                        $isLeasingActive = $leasingType && in_array($leasingType->id, $selectedListingTypes);
+                        $purchaseId = is_array($purchaseType ?? null) ? ($purchaseType['id'] ?? null) : ($purchaseType->id ?? null);
+                        $leasingId = is_array($leasingType ?? null) ? ($leasingType['id'] ?? null) : ($leasingType->id ?? null);
+                        $isPurchaseActive = $purchaseId !== null && in_array($purchaseId, $selectedListingTypes);
+                        $isLeasingActive = $leasingId !== null && in_array($leasingId, $selectedListingTypes);
                     @endphp
                     @if($purchaseType)
                         <label class="listing-type-checkbox-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if($isPurchaseActive) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
                                 <input 
                                     type="checkbox" 
                                 name="listing_type_id[]" 
-                                    value="{{ $purchaseType->id }}"
+                                    value="{{ $purchaseId }}"
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isPurchaseActive) checked @endif
                                 >
@@ -134,7 +127,7 @@
                                 <input 
                                     type="checkbox" 
                                 name="listing_type_id[]" 
-                                    value="{{ $leasingType->id }}"
+                                    value="{{ $leasingId }}"
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isLeasingActive) checked @endif
                                 >
@@ -143,889 +136,226 @@
                     @endif
                 </div>
             </div>
-            
-            <!-- Price Range -->
-            <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }}</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="price-from" class="sr-only">{{ __('messages.forms.price_from') }}</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
-                            <input 
-                                type="number" 
-                                id="price-from"
-                                name="price_from" 
-                                placeholder="{{ __('messages.forms.min') }}"
-                                min="0"
-                                max="1000000"
-                                value="{{ $currentFilters['price_from'] ?? '' }}"
-                                class="w-full h-10 rounded-sm border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                    <div class="flex-1">
-                        <label for="price-to" class="sr-only">{{ __('messages.forms.price') }} {{ __('messages.forms.to') }}</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">kr</span>
-                            <input 
-                                type="number" 
-                                id="price-to"
-                                name="price_to" 
-                                placeholder="{{ __('messages.forms.max') }}"
-                                min="0"
-                                max="1000000"
-                                value="{{ $currentFilters['price_to'] ?? '' }}"
-                                class="w-full h-10 rounded-sm border border-input bg-background pl-12 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="price-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="price-slider-min"
-                            min="0"
-                            max="1000000"
-                            step="1000"
-                            value="{{ $currentFilters['price_from'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="price-slider-max"
-                            min="0"
-                            max="1000000"
-                            step="1000"
-                            value="{{ $currentFilters['price_to'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="price-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="price-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Type, Brand, Model Section -->
-                <div>
-                <!-- Section Heading -->
-                <div class="flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-foreground">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6.75V8.25H8.25v10.5ZM6 10.5a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75a.75.75 0 0 1 .75.75ZM6 15a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1 0-1.5h.75A.75.75 0 0 1 6 15Z" />
-                    </svg>
-                    <h3 class="text-sm text-foreground">{{ __('messages.forms.type_brand_model') }}</h3>
-                </div>
-                
+            @php $cf = $currentFilters ?? []; @endphp
 
-                <!-- Brand Filter Row -->
-                <div class="flex items-center justify-between py-2">
+            <!-- Brand, Model, Model Year, Category -->
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.type_brand_model') }}</p>
+                <div class="space-y-2">
                     <label class="text-sm text-muted-foreground">{{ __('messages.forms.brand') }}</label>
-                    <div class="relative inline-block">
-                        <select 
-                            name="brand_id"
-                            id="brand-select"
-                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
-                        >
-                            <option value="">{{ __('messages.common.all') }}</option>
-                            @foreach($filterOptions['brands'] as $brand)
-                            <option value="{{ $brand->id }}" @if(isset($currentFilters['brand_id']) && $currentFilters['brand_id'] == $brand->id) selected @endif>{{ $brand->name }}</option>
-                            @endforeach
-                        </select>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Model Filter Row -->
-                <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.model') }}</label>
-                    <div class="relative inline-block">
-                    <select 
-                        name="model_id" 
-                        id="model-select"
-                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
-                        @if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) disabled @endif
-                    >
-                            <option value="">@if(!isset($currentFilters['brand_id']) || empty($currentFilters['brand_id'])) {{ __('messages.forms.model') }} @else {{ __('messages.common.all') }} @endif</option>
-                        @foreach($filterOptions['models'] as $model)
-                            <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id }}" @if(isset($currentFilters['model_id']) && $currentFilters['model_id'] == $model->id) selected @endif>{{ $model->name }}</option>
+                    <select name="brand_id" id="brand-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach($constants['brands'] ?? [] as $b)
+                        <option value="{{ is_array($b) ? $b['id'] : $b->id }}" @if(isset($cf['brand_id']) && (is_array($b) ? $b['id'] : $b->id) == $cf['brand_id']) selected @endif>{{ is_array($b) ? $b['name'] : $b->name }}</option>
                         @endforeach
                     </select>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                        </svg>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.model') }}</label>
+                    <select name="model_id" id="model-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach($constants['models'] ?? [] as $m)
+                        <option value="{{ is_array($m) ? $m['id'] : $m->id }}" data-brand-id="{{ is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id }}" @if(isset($cf['model_id']) && (is_array($m) ? $m['id'] : $m->id) == $cf['model_id']) selected @endif>{{ is_array($m) ? $m['name'] : $m->name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
+                    <select name="model_year_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach($constants['model_years'] ?? [] as $my)
+                        <option value="{{ is_array($my) ? $my['id'] : $my->id }}" @if(isset($cf['model_year_id']) && (is_array($my) ? $my['id'] : $my->id) == $cf['model_year_id']) selected @endif>{{ is_array($my) ? $my['name'] : $my->name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.category') }}</label>
+                    <select name="category_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach($constants['categories'] ?? [] as $c)
+                        <option value="{{ is_array($c) ? $c['id'] : $c->id }}" @if(isset($cf['category_id']) && (is_array($c) ? $c['id'] : $c->id) == $cf['category_id']) selected @endif>{{ is_array($c) ? $c['name'] : $c->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
-                <!-- Body Style Filter Row -->
-                <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-muted-foreground">{{ __('messages.forms.body_style') }}</label>
-                    <div class="relative inline-block">
-                <select 
-                    name="category_id" 
-                            class="appearance-none bg-transparent border-none text-sm text-foreground font-medium pr-7 pl-4 py-1.5 text-right cursor-pointer focus:outline-none focus:ring-0 rounded-md transition-colors min-w-[120px]"
-                >
-                            <option value="">{{ __('messages.common.all') }}</option>
-                    @foreach($filterOptions['categories'] as $category)
-                        <option value="{{ $category->id }}" @if(isset($currentFilters['category_id']) && $currentFilters['category_id'] == $category->id) selected @endif>{{ $category->name }}</option>
+            <!-- Price & KM driven -->
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }} / {{ __('messages.forms.km_driven') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" value="{{ $cf['price_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="price_to" placeholder="{{ __('messages.forms.price') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['price_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="km_driven_from" placeholder="{{ __('messages.forms.min') }} km" min="0" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="km_driven_to" placeholder="{{ __('messages.forms.max') }} km" min="0" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+            </div>
+
+            <!-- Fuel, Gear, Body type -->
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }}</p>
+                <select name="fuel_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['fuel_types'] ?? [] as $ft)
+                    <option value="{{ is_array($ft) ? $ft['id'] : $ft->id }}" @if(isset($cf['fuel_type_id']) && (is_array($cf['fuel_type_id']) ? in_array(is_array($ft) ? $ft['id'] : $ft->id, $cf['fuel_type_id']) : (is_array($ft) ? $ft['id'] : $ft->id) == $cf['fuel_type_id'])) selected @endif>{{ is_array($ft) ? $ft['name'] : $ft->name }}</option>
                     @endforeach
                 </select>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Owner Tax Range -->
-            <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.owner_tax') }}</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <label for="owner-tax-from" class="sr-only">{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.from') }}</label>
-                        <input 
-                            type="number" 
-                            id="owner-tax-from"
-                            name="ownership_tax_from" 
-                            placeholder="{{ __('messages.forms.min') }}"
-                            min="0"
-                            max="100000"
-                            value="{{ $currentFilters['ownership_tax_from'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                    <div class="flex-1">
-                        <label for="owner-tax-to" class="sr-only">{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.to') }}</label>
-                        <input 
-                            type="number" 
-                            id="owner-tax-to"
-                            name="ownership_tax_to" 
-                            placeholder="{{ __('messages.forms.max') }}"
-                            min="0"
-                            max="100000"
-                            value="{{ $currentFilters['ownership_tax_to'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="owner-tax-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="owner-tax-slider-min"
-                            min="0"
-                            max="100000"
-                            step="100"
-                            value="{{ $currentFilters['ownership_tax_from'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="owner-tax-slider-max"
-                            min="0"
-                            max="100000"
-                            step="100"
-                            value="{{ $currentFilters['ownership_tax_to'] ?? 0 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Model Year Range -->
-            <div class="space-y-4">
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.model_year') }}</label>
-                <!-- Input Fields -->
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                            <label for="year-from" class="sr-only">{{ __('messages.forms.model_year') }} {{ __('messages.forms.from') }}</label>
-                        <input 
-                            type="number" 
-                            id="year-from"
-                            name="year_from" 
-                            placeholder="{{ __('messages.forms.from') }}"
-                            min="1975"
-                            max="{{ date('Y') }}"
-                            value="{{ $currentFilters['year_from'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                    <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                    <div class="flex-1">
-                            <label for="year-to" class="sr-only">{{ __('messages.forms.model_year') }} {{ __('messages.forms.to') }}</label>
-                        <input 
-                            type="number" 
-                            id="year-to"
-                            name="year_to" 
-                            placeholder="{{ __('messages.forms.to') }}"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            value="{{ $currentFilters['year_to'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-                </div>
-                <!-- Range Slider -->
-                <div class="relative px-2 py-4">
-                    <div class="relative h-2 bg-muted rounded-full">
-                        <div id="year-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                        <input 
-                            type="range" 
-                            id="year-slider-min"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            step="1"
-                            value="{{ $currentFilters['year_from'] ?? 1975 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                        >
-                        <input 
-                            type="range" 
-                            id="year-slider-max"
-                            min="1975"
-                            max="{{ date('Y') + 1 }}"
-                            step="1"
-                            value="{{ $currentFilters['year_to'] ?? date('Y') + 1 }}"
-                            class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        >
-                        <div id="year-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        <div id="year-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vehicle Details -->
-            <div class="space-y-5">
-                <!-- Mileage Range -->
-                <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.mileage_km') }}</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="mileage-from" class="sr-only">{{ __('messages.forms.mileage_km') }} {{ __('messages.forms.from') }}</label>
-                            <input 
-                                type="number" 
-                                id="mileage-from"
-                                name="mileage_from" 
-                                placeholder="{{ __('messages.forms.min') }}"
-                                min="0"
-                                max="500000"
-                                value="{{ $currentFilters['mileage_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                        <div class="flex-1">
-                            <label for="mileage-to" class="sr-only">{{ __('messages.forms.mileage_km') }} {{ __('messages.forms.to') }}</label>
-                            <input 
-                                type="number" 
-                                id="mileage-to"
-                                name="mileage_to" 
-                                placeholder="{{ __('messages.forms.max') }}"
-                                min="0"
-                                max="500000"
-                                value="{{ $currentFilters['mileage_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="mileage-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="mileage-slider-min"
-                                min="0"
-                                max="500000"
-                                step="1000"
-                                value="{{ $currentFilters['mileage_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="mileage-slider-max"
-                                min="0"
-                                max="500000"
-                                step="1000"
-                                value="{{ $currentFilters['mileage_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="mileage-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="mileage-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Price Type -->
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.price_type') }}</label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($filterOptions['priceTypes'] as $priceType)
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                        name="price_type_id[]" 
-                                    value="{{ $priceType->id }}"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['price_type_id']) && (is_array($currentFilters['price_type_id']) ? in_array($priceType->id, $currentFilters['price_type_id']) : $currentFilters['price_type_id'] == $priceType->id)) checked @endif
-                                >
-                                <span>{{ $priceType->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Vehicle Body Type -->
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.body_type') }}</label>
-                    <div class="flex flex-wrap gap-2">
-                        @php
-                            $bodyTypeMap = [
-                                'micro' => 'micro',
-                                'stationcar' => 'stationcar',
-                                'suv' => 'suv',
-                                'cuv' => 'cuv',
-                                'mpv' => 'mpv',
-                                'sedan' => 'sedan',
-                                'hatchback' => 'hatchback',
-                                'cabriolet' => 'cabriolet',
-                                'coupe' => 'coupe'
-                            ];
-                        @endphp
-                        @foreach($filterOptions['bodyTypes'] as $bodyType)
-                            @php
-                                $bodyTypeNameLower = strtolower($bodyType->name);
-                                $isRelevant = false;
-                                foreach($bodyTypeMap as $key => $value) {
-                                    if(str_contains($bodyTypeNameLower, $value) || str_contains($value, $bodyTypeNameLower)) {
-                                        $isRelevant = true;
-                                        break;
-                                    }
-                                }
-                            @endphp
-                            @if($isRelevant || in_array($bodyTypeNameLower, $bodyTypeMap))
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) bg-accent border-foreground @endif">
-                                    <input 
-                                        type="checkbox" 
-                                        name="body_type_id[]" 
-                                        value="{{ $bodyType->id }}"
-                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        @if(isset($currentFilters['body_type_id']) && (is_array($currentFilters['body_type_id']) ? in_array($bodyType->id, $currentFilters['body_type_id']) : $currentFilters['body_type_id'] == $bodyType->id)) checked @endif
-                                    >
-                                    <span>{{ $bodyType->name }}</span>
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fuel Type -->
-            <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.fuel_type') }}</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($filterOptions['fuelTypes'] as $fuelType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) bg-accent border-foreground @endif">
-                            <input 
-                                type="checkbox" 
-                                name="fuel_type_id[]" 
-                                value="{{ $fuelType->id }}"
-                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                @if(isset($currentFilters['fuel_type_id']) && (is_array($currentFilters['fuel_type_id']) ? in_array($fuelType->id, $currentFilters['fuel_type_id']) : $currentFilters['fuel_type_id'] == $fuelType->id)) checked @endif
-                            >
-                            <span>{{ $fuelType->name }}</span>
-                        </label>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.gear_type') }}</p>
+                <select name="gear_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['gear_types'] ?? [] as $gt)
+                    <option value="{{ is_array($gt) ? $gt['id'] : $gt->id }}" @if(isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array(is_array($gt) ? $gt['id'] : $gt->id, $cf['gear_type_id']) : (is_array($gt) ? $gt['id'] : $gt->id) == $cf['gear_type_id'])) selected @endif>{{ is_array($gt) ? $gt['name'] : $gt->name }}</option>
                     @endforeach
-                </div>
-            </div>
-
-            <!-- Gear Type -->
-            <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.gear_type') }}</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($filterOptions['gearTypes'] as $gearType)
-                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) bg-accent border-foreground @endif">
-                            <input 
-                                type="checkbox" 
-                                name="gear_type_id[]" 
-                                value="{{ $gearType->id }}"
-                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                @if(isset($currentFilters['gear_type_id']) && (is_array($currentFilters['gear_type_id']) ? in_array($gearType->id, $currentFilters['gear_type_id']) : $currentFilters['gear_type_id'] == $gearType->id)) checked @endif
-                            >
-                            <span>{{ $gearType->name }}</span>
-                        </label>
+                </select>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.body_type') }}</p>
+                <select name="body_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['body_types'] ?? [] as $bt)
+                    <option value="{{ is_array($bt) ? $bt['id'] : $bt->id }}" @if(isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array(is_array($bt) ? $bt['id'] : $bt->id, $cf['body_type_id']) : (is_array($bt) ? $bt['id'] : $bt->id) == $cf['body_type_id'])) selected @endif>{{ is_array($bt) ? $bt['name'] : $bt->name }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            <!-- Color, Variant, Type, Sales, Price type, Euronom, Use, Transmission -->
+            <div class="space-y-2">
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.color') }}</label>
+                <select name="color_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['colors'] ?? [] as $cl)
+                    <option value="{{ is_array($cl) ? $cl['id'] : $cl->id }}" @if(isset($cf['color_id']) && (is_array($cl) ? $cl['id'] : $cl->id) == $cf['color_id']) selected @endif>{{ is_array($cl) ? $cl['name'] : $cl->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.variant') }}</label>
+                <select name="variant_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['variants'] ?? [] as $v)
+                    <option value="{{ is_array($v) ? $v['id'] : $v->id }}" @if(isset($cf['variant_id']) && (is_array($v) ? $v['id'] : $v->id) == $cf['variant_id']) selected @endif>{{ is_array($v) ? $v['name'] : $v->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.type') }}</label>
+                <select name="type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['types'] ?? [] as $t)
+                    <option value="{{ is_array($t) ? $t['id'] : $t->id }}" @if(isset($cf['type_id']) && (is_array($t) ? $t['id'] : $t->id) == $cf['type_id']) selected @endif>{{ is_array($t) ? $t['name'] : $t->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.sales_type') }}</label>
+                <select name="sales_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['sales_types'] ?? [] as $st)
+                    <option value="{{ is_array($st) ? $st['id'] : $st->id }}" @if(isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array(is_array($st) ? $st['id'] : $st->id, $cf['sales_type_id']) : (is_array($st) ? $st['id'] : $st->id) == $cf['sales_type_id'])) selected @endif>{{ is_array($st) ? $st['name'] : $st->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.price_type') }}</label>
+                <select name="price_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['price_types'] ?? [] as $pt)
+                    <option value="{{ is_array($pt) ? $pt['id'] : $pt->id }}" @if(isset($cf['price_type_id']) && (is_array($cf['price_type_id']) ? in_array(is_array($pt) ? $pt['id'] : $pt->id, $cf['price_type_id']) : (is_array($pt) ? $pt['id'] : $pt->id) == $cf['price_type_id'])) selected @endif>{{ is_array($pt) ? $pt['name'] : $pt->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.euro_norm') }}</label>
+                <select name="euronom_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['euronorms'] ?? [] as $en)
+                    <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['euronom_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['euronom_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.use') }}</label>
+                <select name="use_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['vehicle_uses'] ?? [] as $uu)
+                    <option value="{{ is_array($uu) ? $uu['id'] : $uu->id }}" @if(isset($cf['use_id']) && (is_array($uu) ? $uu['id'] : $uu->id) == $cf['use_id']) selected @endif>{{ is_array($uu) ? $uu['name'] : $uu->name }}</option>
+                    @endforeach
+                </select>
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.transmission') }}</label>
+                <select name="transmission_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    @foreach($constants['transmissions'] ?? [] as $tr)
+                    <option value="{{ is_array($tr) ? $tr['id'] : $tr->id }}" @if(isset($cf['transmission_id']) && (is_array($tr) ? $tr['id'] : $tr->id) == $cf['transmission_id']) selected @endif>{{ is_array($tr) ? $tr['name'] : $tr->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Range filters: year, first reg, ownership tax, engine power, battery, range km, fuel efficiency -->
+            <div class="space-y-2">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.model_year') }} / {{ __('messages.forms.first_registration_year') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="year_from" placeholder="{{ __('messages.forms.year') }} {{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="year_to" placeholder="{{ __('messages.forms.year') }} {{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="first_registration_year_from" placeholder="{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.from') }}" min="1975" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="first_registration_year_to" placeholder="{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.to') }}" min="1975" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.owner_tax') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.horsepower_hp') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="engine_power_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="engine_power_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.battery_capacity_kwh') }} / {{ __('messages.forms.range_km') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="battery_capacity_from" placeholder="{{ __('messages.forms.battery') }} {{ __('messages.forms.min') }}" min="0" value="{{ $cf['battery_capacity_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="battery_capacity_to" placeholder="{{ __('messages.forms.battery') }} {{ __('messages.forms.max') }}" min="0" value="{{ $cf['battery_capacity_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="range_km_from" placeholder="{{ __('messages.forms.range') }} {{ __('messages.forms.min') }}" min="0" value="{{ $cf['range_km_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="range_km_to" placeholder="{{ __('messages.forms.range') }} {{ __('messages.forms.max') }}" min="0" value="{{ $cf['range_km_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_efficiency') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="fuel_efficiency_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['fuel_efficiency_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="fuel_efficiency_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['fuel_efficiency_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
                 </div>
             </div>
 
-            <!-- Drive Wheels -->
-            <div>
-                <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.drive_wheels') }}</label>
+            <!-- vehicle_details: top_speed, weight, engine_displacement, cylinders, doors, seats, wheels, axles, drive_axles, airbags -->
+            <div class="space-y-2">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.physical_details') }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="top_speed_from" placeholder="{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['top_speed_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="top_speed_to" placeholder="{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['top_speed_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="weight_from" placeholder="{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['weight_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="weight_to" placeholder="{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['weight_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="engine_displacement_from" placeholder="{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['engine_displacement_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="engine_displacement_to" placeholder="{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['engine_displacement_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="engine_cylinders" placeholder="{{ __('messages.forms.engine_cylinders') }}" min="0" value="{{ $cf['engine_cylinders'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="doors" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['doors'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="wheels" placeholder="{{ __('messages.forms.wheels') }}" min="0" value="{{ $cf['wheels'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="axles" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axles'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['airbags'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                </div>
+                <p class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.drive_wheels') }}</p>
                 <div class="flex flex-wrap gap-2">
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="fwd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('fwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'fwd')) checked @endif
-                        >
-                        <span>{{ __('messages.forms.fwd') }}</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="rwd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('rwd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'rwd')) checked @endif
-                        >
-                        <span>{{ __('messages.forms.rwd') }}</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) bg-accent border-foreground @endif">
-                        <input 
-                            type="checkbox" 
-                            name="drive_axles[]" 
-                            value="awd"
-                            class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            @if(isset($currentFilters['drive_axles']) && (is_array($currentFilters['drive_axles']) ? in_array('awd', $currentFilters['drive_axles']) : $currentFilters['drive_axles'] == 'awd')) checked @endif
-                        >
-                        <span>{{ __('messages.forms.awd') }}</span>
-                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="fwd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('fwd', $cf['drive_axles']) : $cf['drive_axles'] == 'fwd')) checked @endif> {{ __('messages.forms.fwd') }}</label>
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="rwd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('rwd', $cf['drive_axles']) : $cf['drive_axles'] == 'rwd')) checked @endif> {{ __('messages.forms.rwd') }}</label>
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="awd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('awd', $cf['drive_axles']) : $cf['drive_axles'] == 'awd')) checked @endif> {{ __('messages.forms.awd') }}</label>
                 </div>
+                <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
             </div>
 
-            <!-- Registration & Seller -->
-            <div class="space-y-5">
-                <!-- First Registration Year Range -->
-                <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.first_registration_year') }}</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="first-reg-year-from" class="sr-only">{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.from') }}</label>
-                            <input 
-                                type="number" 
-                                id="first-reg-year-from"
-                                name="first_registration_year_from" 
-                                placeholder="{{ __('messages.forms.from') }}"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                value="{{ $currentFilters['first_registration_year_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                        <div class="flex-1">
-                            <label for="first-reg-year-to" class="sr-only">{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.to') }}</label>
-                            <input 
-                                type="number" 
-                                id="first-reg-year-to"
-                                name="first_registration_year_to" 
-                                placeholder="{{ __('messages.common.next') }}"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                value="{{ $currentFilters['first_registration_year_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="first-reg-year-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="first-reg-year-slider-min"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                step="1"
-                                value="{{ $currentFilters['first_registration_year_from'] ?? 1975 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="first-reg-year-slider-max"
-                                min="1975"
-                                max="{{ date('Y') }}"
-                                step="1"
-                                value="{{ $currentFilters['first_registration_year_to'] ?? date('Y') }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="first-reg-year-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="first-reg-year-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Seller Type & Sales Type -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Seller Type -->
-                    <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seller_type') }}</label>
-                        <div class="flex flex-col gap-2">
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                                    name="seller_type[]" 
-                                    value="dealer"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('dealer', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'dealer')) checked @endif
-                                >
-                                <span>{{ __('messages.pages.vehicles.dealer') }}</span>
-                            </label>
-                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) bg-accent border-foreground @endif">
-                                <input 
-                                    type="checkbox" 
-                                    name="seller_type[]" 
-                                    value="private"
-                                    class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    @if(isset($currentFilters['seller_type']) && (is_array($currentFilters['seller_type']) ? in_array('private', $currentFilters['seller_type']) : $currentFilters['seller_type'] == 'private')) checked @endif
-                                >
-                                <span>{{ __('messages.pages.vehicles.private') }}</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Sales Type -->
-                    <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.sales_type') }}</label>
-                        <div class="flex flex-col gap-2">
-                            @foreach($filterOptions['salesTypes'] as $salesType)
-                                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) bg-accent border-foreground @endif">
-                                    <input 
-                                        type="checkbox" 
-                                        name="sales_type_id[]" 
-                                        value="{{ $salesType->id }}"
-                                        class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        @if(isset($currentFilters['sales_type_id']) && (is_array($currentFilters['sales_type_id']) ? in_array($salesType->id, $currentFilters['sales_type_id']) : $currentFilters['sales_type_id'] == $salesType->id)) checked @endif
-                                    >
-                                    <span>{{ $salesType->name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Seller Distance -->
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seller_distance_km') }}</label>
-                    <input 
-                        type="number" 
-                        name="seller_distance" 
-                        placeholder="{{ __('messages.forms.distance') }}"
-                        min="0"
-                        value="{{ $currentFilters['seller_distance'] ?? '' }}"
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                </div>
-            </div>
-
-            <!-- Performance -->
-            <div class="space-y-5">
-                <!-- Horsepower Range -->
-                <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.horsepower_hp') }}</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="horsepower-min" class="sr-only">{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.min') }}</label>
-                            <input 
-                                type="number" 
-                                id="horsepower-min"
-                                name="engine_power_from" 
-                                placeholder="{{ __('messages.forms.min') }}"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['engine_power_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                        <div class="flex-1">
-                            <label for="horsepower-max" class="sr-only">{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.max') }}</label>
-                            <input 
-                                type="number" 
-                                id="horsepower-max"
-                                name="engine_power_to" 
-                                placeholder="{{ __('messages.forms.max') }}"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['engine_power_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="horsepower-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="horsepower-slider-min"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['engine_power_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="horsepower-slider-max"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['engine_power_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="horsepower-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="horsepower-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Battery & Charging (EV) -->
-            <div class="space-y-5">
-                <!-- Battery Capacity -->
-                <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.battery_capacity_kwh') }}</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="battery-capacity-min" class="sr-only">{{ __('messages.forms.battery_capacity_kwh') }} {{ __('messages.forms.min') }}</label>
-                            <input 
-                                type="number" 
-                                id="battery-capacity-min"
-                                name="battery_capacity_from" 
-                                placeholder="{{ __('messages.forms.min') }}"
-                                min="0"
-                                max="200"
-                                value="{{ $currentFilters['battery_capacity_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                        <div class="flex-1">
-                            <label for="battery-capacity-max" class="sr-only">{{ __('messages.forms.battery_capacity_kwh') }} {{ __('messages.forms.max') }}</label>
-                            <input 
-                                type="number" 
-                                id="battery-capacity-max"
-                                name="battery_capacity_to" 
-                                placeholder="{{ __('messages.forms.max') }}"
-                                min="0"
-                                max="200"
-                                value="{{ $currentFilters['battery_capacity_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="battery-capacity-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="battery-capacity-slider-min"
-                                min="0"
-                                max="200"
-                                step="5"
-                                value="{{ $currentFilters['battery_capacity_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="battery-capacity-slider-max"
-                                min="0"
-                                max="200"
-                                step="5"
-                                value="{{ $currentFilters['battery_capacity_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="battery-capacity-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="battery-capacity-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Range (km) -->
-                <div class="space-y-4">
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.range_km') }}</label>
-                    <!-- Input Fields -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <label for="range-km-from" class="sr-only">{{ __('messages.forms.range_km') }} {{ __('messages.forms.from') }}</label>
-                            <input 
-                                type="number" 
-                                id="range-km-from"
-                                name="range_km_from" 
-                                placeholder="{{ __('messages.forms.min') }}"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['range_km_from'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                        <span class="text-muted-foreground text-sm font-medium">{{ __('messages.forms.to') }}</span>
-                        <div class="flex-1">
-                            <label for="range-km-to" class="sr-only">{{ __('messages.forms.range_km') }} {{ __('messages.forms.to') }}</label>
-                            <input 
-                                type="number" 
-                                id="range-km-to"
-                                name="range_km_to" 
-                                placeholder="{{ __('messages.forms.max') }}"
-                                min="0"
-                                max="1000"
-                                value="{{ $currentFilters['range_km_to'] ?? '' }}"
-                                class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                            >
-                        </div>
-                    </div>
-                    <!-- Range Slider -->
-                    <div class="relative px-2 py-4">
-                        <div class="relative h-2 bg-muted rounded-full">
-                            <div id="range-km-range-track" class="absolute h-2 bg-gray-600 rounded-full"></div>
-                            <input 
-                                type="range" 
-                                id="range-km-slider-min"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['range_km_from'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-10"
-                            >
-                            <input 
-                                type="range" 
-                                id="range-km-slider-max"
-                                min="0"
-                                max="1000"
-                                step="10"
-                                value="{{ $currentFilters['range_km_to'] ?? 0 }}"
-                                class="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                            >
-                            <div id="range-km-handle-min" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                            <div id="range-km-handle-max" class="absolute w-5 h-5 bg-gray-600 rounded-full border-2 border-background shadow-lg -top-1.5 cursor-grab active:cursor-grabbing z-30 transition-transform hover:scale-110"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charging Type -->
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.charging_type') }}</label>
-                    <select 
-                        name="charging_type" 
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                        <option value="">{{ __('messages.common.all') }}</option>
-                        <option value="AC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC') selected @endif>AC</option>
-                        <option value="DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'DC') selected @endif>DC</option>
-                        <option value="AC/DC" @if(isset($currentFilters['charging_type']) && $currentFilters['charging_type'] == 'AC/DC') selected @endif>AC/DC</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Economy & Environment -->
-            <div class="space-y-5">
-                <!-- Euro Norm -->
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.euro_norm') }}</label>
-                    <select 
-                        name="euronorm" 
-                        class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                    >
-                        <option value="">{{ __('messages.common.all') }}</option>
-                        <option value="Euro 1" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 1') selected @endif>Euro 1</option>
-                        <option value="Euro 2" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 2') selected @endif>Euro 2</option>
-                        <option value="Euro 3" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 3') selected @endif>Euro 3</option>
-                        <option value="Euro 4" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 4') selected @endif>Euro 4</option>
-                        <option value="Euro 5" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 5') selected @endif>Euro 5</option>
-                        <option value="Euro 6" @if(isset($currentFilters['euronorm']) && $currentFilters['euronorm'] == 'Euro 6') selected @endif>Euro 6</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Physical Details -->
-            <div class="space-y-5">
-                <!-- Doors & Seats -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Doors Min -->
-                    <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.doors_min') }}</label>
-                        <input 
-                            type="number" 
-                            name="doors" 
-                            placeholder="{{ __('messages.forms.minimum') }}"
-                            min="2"
-                            max="6"
-                            value="{{ $currentFilters['doors'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
-
-                    <!-- Seats Min -->
-                    <div>
-                        <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.seats_min') }}</label>
-                        <input 
-                            type="number" 
-                            name="seats_min" 
-                            placeholder="{{ __('messages.forms.minimum') }}"
-                            min="2"
-                            max="9"
-                            value="{{ $currentFilters['seats_min'] ?? '' }}"
-                            class="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-                        >
-                    </div>
+            <!-- Charging type, NCAP, Import, Factory new -->
+            <div class="space-y-2">
+                <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.charging_type') }}</label>
+                <select name="charging_type" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">{{ __('messages.common.all') }}</option>
+                    <option value="AC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC') selected @endif>{{ __('messages.forms.charging_ac') }}</option>
+                    <option value="DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'DC') selected @endif>{{ __('messages.forms.charging_dc') }}</option>
+                    <option value="AC/DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC/DC') selected @endif>{{ __('messages.forms.charging_ac_dc') }}</option>
+                </select>
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="ncap_five" value="1" @if(isset($cf['ncap_five']) && $cf['ncap_five']) checked @endif> {{ __('messages.forms.ncap_five') }}</label>
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="is_import" value="1" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif> {{ __('messages.forms.is_import') }}</label>
+                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="is_factory_new" value="1" @if(isset($cf['is_factory_new']) && $cf['is_factory_new']) checked @endif> {{ __('messages.forms.is_factory_new') }}</label>
                 </div>
             </div>
 
             <!-- Equipment -->
-            <div class="space-y-5">
-                <div>
-                    <label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-3 block">{{ __('messages.forms.equipment') }}</label>
-                            <div class="space-y-2">
-                        @foreach($filterOptions['equipmentTypes'] as $equipmentType)
-                            <div class="equipment-type-group border border-input rounded-lg overflow-hidden">
-                                <button 
-                                    type="button"
-                                    class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
-                                    data-type-id="{{ $equipmentType->id }}"
-                                >
-                                    <span class="uppercase tracking-wide">{{ $equipmentType->name }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform">
-                                        <path d="m6 9 6 6 6-6"></path>
-                                    </svg>
-                                </button>
-                                <div class="equipment-type-content hidden px-4 pb-3 pt-2">
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentType->equipments as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) bg-accent border-foreground @endif">
-                                            <input 
-                                                type="checkbox" 
-                                                name="equipment_ids[]" 
-                                                value="{{ $equipment->id }}"
-                                                class="h-4 w-4 rounded border-input text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                @if(isset($currentFilters['equipment_ids']) && (is_array($currentFilters['equipment_ids']) ? in_array($equipment->id, $currentFilters['equipment_ids']) : $currentFilters['equipment_ids'] == $equipment->id)) checked @endif
-                                            >
-                                            <span>{{ $equipment->name }}</span>
-                                        </label>
-                                    @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+            <div class="space-y-2">
+                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.equipment') }}</p>
+                <div class="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    @foreach($constants['equipments'] ?? [] as $eq)
+                    <label class="inline-flex items-center gap-1.5 text-sm">
+                        <input type="checkbox" name="equipment_ids[]" value="{{ is_array($eq) ? $eq['id'] : $eq->id }}" @if(isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array(is_array($eq) ? $eq['id'] : $eq->id, $cf['equipment_ids'])) checked @endif>
+                        <span>{{ is_array($eq) ? $eq['name'] : $eq->name }}</span>
+                    </label>
+                    @endforeach
                 </div>
             </div>
         </aside>
@@ -2321,43 +1651,234 @@
                 } else if (from) {
                     chips.push({
                         key: 'year_from',
-                        label: `{{ __('messages.forms.price_from') }} ${from}`,
+                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.from') }} ${from}`,
                         value: filters.year_from
                     });
                 } else if (to) {
                     chips.push({
                         key: 'year_to',
-                        label: `{{ __('messages.forms.price_up_to') }} ${to}`,
+                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.to') }} ${to}`,
                         value: filters.year_to
                     });
                 }
             }
-            
-            // Mileage range
-            if (filters.mileage_from || filters.mileage_to) {
-                const from = filters.mileage_from ? new Intl.NumberFormat('en-US').format(filters.mileage_from) : '';
-                const to = filters.mileage_to ? new Intl.NumberFormat('en-US').format(filters.mileage_to) : '';
+
+            // First registration year range
+            if (filters.first_registration_year_from || filters.first_registration_year_to) {
+                const from = filters.first_registration_year_from || '';
+                const to = filters.first_registration_year_to || '';
                 if (from && to) {
                     chips.push({
-                        key: 'mileage_range',
-                        label: `${from} - ${to} km`,
-                        value: { from: filters.mileage_from, to: filters.mileage_to }
+                        key: 'first_registration_year_range',
+                        label: `{{ __('messages.forms.first_registration_year') }}: ${from} - ${to}`,
+                        value: 'range'
                     });
                 } else if (from) {
-                    chips.push({
-                        key: 'mileage_from',
-                        label: `{{ __('messages.forms.price_from') }} ${from} km`,
-                        value: filters.mileage_from
-                    });
+                    chips.push({ key: 'first_registration_year_from', label: `{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.from') }} ${from}`, value: filters.first_registration_year_from });
                 } else if (to) {
-                    chips.push({
-                        key: 'mileage_to',
-                        label: `{{ __('messages.forms.price_up_to') }} ${to} km`,
-                        value: filters.mileage_to
-                    });
+                    chips.push({ key: 'first_registration_year_to', label: `{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.to') }} ${to}`, value: filters.first_registration_year_to });
                 }
             }
+
+            // Ownership tax range
+            if (filters.ownership_tax_from || filters.ownership_tax_to) {
+                const from = filters.ownership_tax_from || '';
+                const to = filters.ownership_tax_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'ownership_tax_range',
+                        label: `{{ __('messages.forms.owner_tax') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'ownership_tax_from', label: `{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.from') }} ${from}`, value: filters.ownership_tax_from });
+                } else if (to) {
+                    chips.push({ key: 'ownership_tax_to', label: `{{ __('messages.forms.owner_tax') }} {{ __('messages.forms.to') }} ${to}`, value: filters.ownership_tax_to });
+                }
+            }
+
+            // Engine power range
+            if (filters.engine_power_from || filters.engine_power_to) {
+                const from = filters.engine_power_from || '';
+                const to = filters.engine_power_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'engine_power_range',
+                        label: `{{ __('messages.forms.horsepower_hp') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'engine_power_from', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_power_from });
+                } else if (to) {
+                    chips.push({ key: 'engine_power_to', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_power_to });
+                }
+            }
+
+            // Battery capacity range
+            if (filters.battery_capacity_from || filters.battery_capacity_to) {
+                const from = filters.battery_capacity_from || '';
+                const to = filters.battery_capacity_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'battery_capacity_range',
+                        label: `{{ __('messages.forms.battery_capacity_kwh') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'battery_capacity_from', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.from') }} ${from}`, value: filters.battery_capacity_from });
+                } else if (to) {
+                    chips.push({ key: 'battery_capacity_to', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.to') }} ${to}`, value: filters.battery_capacity_to });
+                }
+            }
+
+            // Range (km) range
+            if (filters.range_km_from || filters.range_km_to) {
+                const from = filters.range_km_from || '';
+                const to = filters.range_km_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'range_km_range',
+                        label: `{{ __('messages.forms.range_km') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'range_km_from', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.from') }} ${from}`, value: filters.range_km_from });
+                } else if (to) {
+                    chips.push({ key: 'range_km_to', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.to') }} ${to}`, value: filters.range_km_to });
+                }
+            }
+
+            // Fuel efficiency range
+            if (filters.fuel_efficiency_from || filters.fuel_efficiency_to) {
+                const from = filters.fuel_efficiency_from || '';
+                const to = filters.fuel_efficiency_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'fuel_efficiency_range',
+                        label: `{{ __('messages.forms.fuel_efficiency') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'fuel_efficiency_from', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.from') }} ${from}`, value: filters.fuel_efficiency_from });
+                } else if (to) {
+                    chips.push({ key: 'fuel_efficiency_to', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.to') }} ${to}`, value: filters.fuel_efficiency_to });
+                }
+            }
+
+            // Top speed range
+            if (filters.top_speed_from || filters.top_speed_to) {
+                const from = filters.top_speed_from || '';
+                const to = filters.top_speed_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'top_speed_range',
+                        label: `{{ __('messages.forms.top_speed') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'top_speed_from', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }} ${from}`, value: filters.top_speed_from });
+                } else if (to) {
+                    chips.push({ key: 'top_speed_to', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }} ${to}`, value: filters.top_speed_to });
+                }
+            }
+
+            // Weight range
+            if (filters.weight_from || filters.weight_to) {
+                const from = filters.weight_from || '';
+                const to = filters.weight_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'weight_range',
+                        label: `{{ __('messages.forms.weight') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'weight_from', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }} ${from}`, value: filters.weight_from });
+                } else if (to) {
+                    chips.push({ key: 'weight_to', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }} ${to}`, value: filters.weight_to });
+                }
+            }
+
+            // Engine displacement range
+            if (filters.engine_displacement_from || filters.engine_displacement_to) {
+                const from = filters.engine_displacement_from || '';
+                const to = filters.engine_displacement_to || '';
+                if (from && to) {
+                    chips.push({
+                        key: 'engine_displacement_range',
+                        label: `{{ __('messages.forms.engine_displacement') }}: ${from} - ${to}`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'engine_displacement_from', label: `{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_displacement_from });
+                } else if (to) {
+                    chips.push({ key: 'engine_displacement_to', label: `{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_displacement_to });
+                }
+            }
+
+            // Single numeric filters (engine_cylinders, doors, seats_min, seats_max, wheels, axles, airbags, towing_weight)
+            const singleNumChips = [
+                ['engine_cylinders', '{{ __('messages.forms.engine_cylinders') }}'],
+                ['doors', '{{ __('messages.forms.doors') }}'],
+                ['seats_min', '{{ __('messages.forms.seats_min') }}'],
+                ['seats_max', '{{ __('messages.forms.seats_max') }}'],
+                ['wheels', '{{ __('messages.forms.wheels') }}'],
+                ['axles', '{{ __('messages.forms.axles') }}'],
+                ['airbags', '{{ __('messages.forms.airbags') }}'],
+                ['towing_weight', '{{ __('messages.forms.towing_weight_min') }}']
+            ];
+            singleNumChips.forEach(([key, labelPrefix]) => {
+                if (filters[key]) {
+                    chips.push({ key, label: `${labelPrefix}: ${filters[key]}`, value: filters[key] });
+                }
+            });
+
+            // Charging type
+            if (filters.charging_type) {
+                const name = getOptionText('charging_type', filters.charging_type);
+                if (name) {
+                    chips.push({ key: 'charging_type', label: name, value: filters.charging_type });
+                }
+            }
+
+            // Checkboxes: ncap_five, is_import, is_factory_new
+            if (filters.ncap_five) {
+                chips.push({ key: 'ncap_five', label: '{{ __('messages.forms.ncap_five') }}', value: '1' });
+            }
+            if (filters.is_import) {
+                chips.push({ key: 'is_import', label: '{{ __('messages.forms.is_import') }}', value: '1' });
+            }
+            if (filters.is_factory_new) {
+                chips.push({ key: 'is_factory_new', label: '{{ __('messages.forms.is_factory_new') }}', value: '1' });
+            }
+
+            // Drive axles (checkboxes)
+            if (filters.drive_axles && Array.isArray(filters.drive_axles)) {
+                filters.drive_axles.forEach(axle => {
+                    const name = getLabelText('drive_axles[]', axle);
+                    if (name) {
+                        chips.push({ key: 'drive_axles', label: name, value: axle, isArray: true });
+                    }
+                });
+            }
             
+            // KM driven range
+            if (filters.km_driven_from || filters.km_driven_to) {
+                const from = filters.km_driven_from ? new Intl.NumberFormat('en-US').format(filters.km_driven_from) : '';
+                const to = filters.km_driven_to ? new Intl.NumberFormat('en-US').format(filters.km_driven_to) : '';
+                if (from && to) {
+                    chips.push({
+                        key: 'km_driven_range',
+                        label: `${from} - ${to} km`,
+                        value: 'range'
+                    });
+                } else if (from) {
+                    chips.push({ key: 'km_driven_from', label: `{{ __('messages.forms.min') }} ${from} km`, value: filters.km_driven_from });
+                } else if (to) {
+                    chips.push({ key: 'km_driven_to', label: `{{ __('messages.forms.max') }} ${to} km`, value: filters.km_driven_to });
+                }
+            }
+
             // Condition
             if (filters.condition_id) {
                 const conditionName = getLabelText('condition_id', filters.condition_id);
@@ -2370,66 +1891,29 @@
                 }
             }
             
-            // Body types
-            if (filters.body_type_id && Array.isArray(filters.body_type_id)) {
-                filters.body_type_id.forEach(id => {
-                    const name = getLabelText('body_type_id[]', id);
-                    if (name) {
-                        chips.push({
-                            key: 'body_type_id',
-                            label: name,
-                            value: id,
-                            isArray: true
-                        });
-                    }
-                });
-            }
-            
-            // Fuel types
-            if (filters.fuel_type_id && Array.isArray(filters.fuel_type_id)) {
-                filters.fuel_type_id.forEach(id => {
-                    const name = getLabelText('fuel_type_id[]', id);
-                    if (name) {
-                        chips.push({
-                            key: 'fuel_type_id',
-                            label: name,
-                            value: id,
-                            isArray: true
-                        });
-                    }
-                });
-            }
-            
-            // Gear types
-            if (filters.gear_type_id && Array.isArray(filters.gear_type_id)) {
-                filters.gear_type_id.forEach(id => {
-                    const name = getLabelText('gear_type_id[]', id);
-                    if (name) {
-                        chips.push({
-                            key: 'gear_type_id',
-                            label: name,
-                            value: id,
-                            isArray: true
-                        });
-                    }
-                });
-            }
-            
-            // Price types
-            if (filters.price_type_id && Array.isArray(filters.price_type_id)) {
-                filters.price_type_id.forEach(id => {
-                    const name = getLabelText('price_type_id[]', id);
-                    if (name) {
-                        chips.push({
-                            key: 'price_type_id',
-                            label: name,
-                            value: id,
-                            isArray: true
-                        });
-                    }
-                });
-            }
-            
+            // Single-value selects (model_year, body_type, fuel_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
+            const selectChips = [
+                ['model_year_id', '{{ __('messages.forms.model_year') }}'],
+                ['body_type_id', '{{ __('messages.forms.body_type') }}'],
+                ['fuel_type_id', '{{ __('messages.forms.fuel_type') }}'],
+                ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
+                ['color_id', '{{ __('messages.forms.color') }}'],
+                ['variant_id', '{{ __('messages.forms.variant') }}'],
+                ['type_id', '{{ __('messages.forms.type') }}'],
+                ['sales_type_id', '{{ __('messages.forms.sales_type') }}'],
+                ['price_type_id', '{{ __('messages.forms.price_type') }}'],
+                ['euronom_id', '{{ __('messages.forms.euro_norm') }}'],
+                ['use_id', '{{ __('messages.forms.use') }}'],
+                ['transmission_id', '{{ __('messages.forms.transmission') }}']
+            ];
+            selectChips.forEach(([key, labelPrefix]) => {
+                const val = filters[key];
+                if (!val) return;
+                const id = Array.isArray(val) ? val[0] : val;
+                const name = getOptionText(key, id);
+                if (name) chips.push({ key, label: name, value: id });
+            });
+
             // Equipment
             if (filters.equipment_ids && Array.isArray(filters.equipment_ids)) {
                 filters.equipment_ids.forEach(id => {
@@ -2445,14 +1929,8 @@
                 });
             }
             
-            // Render chips
-            if (chips.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-            
-            // Render filter chips HTML
-            const chipsHTML = chips.map(chip => `
+            // Render chips (always keep reset button in DOM for updateResetButtonVisibility)
+            const chipsHTML = chips.length === 0 ? '' : chips.map(chip => `
                 <div class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground">
                     <span>${chip.label}</span>
                     <button 
@@ -2469,19 +1947,9 @@
                     </button>
                 </div>
             `).join('');
-            
-            // Set container HTML with chips and reset button
-            container.innerHTML = chipsHTML + `
-                <button
-                    id="filter-reset-button-main"
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                    {{ __('messages.pages.vehicles.reset_filters') }}
-                </button>
-            `;
-            
-            // Add click handlers to remove chips
+            const resetBtnHtml = `<button id="filter-reset-button-main" type="button" class="hidden inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">{{ __('messages.pages.vehicles.reset_filters') }}</button>`;
+            container.innerHTML = chipsHTML + resetBtnHtml;
+            updateResetButtonVisibility();
             container.querySelectorAll('.filter-chip-remove').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const key = btn.getAttribute('data-filter-key');
@@ -2513,11 +1981,50 @@
                         const yearTo = document.querySelector('[name="year_to"]');
                         if (yearFrom) yearFrom.value = '';
                         if (yearTo) yearTo.value = '';
-                    } else if (key === 'mileage_range') {
-                        const mileageFrom = document.querySelector('[name="mileage_from"]');
-                        const mileageTo = document.querySelector('[name="mileage_to"]');
-                        if (mileageFrom) mileageFrom.value = '';
-                        if (mileageTo) mileageTo.value = '';
+                    } else if (key === 'mileage_range' || key === 'km_driven_range') {
+                        const from = document.querySelector('[name="km_driven_from"]');
+                        const to = document.querySelector('[name="km_driven_to"]');
+                        if (from) from.value = '';
+                        if (to) to.value = '';
+                    } else if (key === 'first_registration_year_range') {
+                        const a = document.querySelector('[name="first_registration_year_from"]');
+                        const b = document.querySelector('[name="first_registration_year_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'ownership_tax_range') {
+                        const a = document.querySelector('[name="ownership_tax_from"]');
+                        const b = document.querySelector('[name="ownership_tax_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'engine_power_range') {
+                        const a = document.querySelector('[name="engine_power_from"]');
+                        const b = document.querySelector('[name="engine_power_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'battery_capacity_range') {
+                        const a = document.querySelector('[name="battery_capacity_from"]');
+                        const b = document.querySelector('[name="battery_capacity_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'range_km_range') {
+                        const a = document.querySelector('[name="range_km_from"]');
+                        const b = document.querySelector('[name="range_km_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'fuel_efficiency_range') {
+                        const a = document.querySelector('[name="fuel_efficiency_from"]');
+                        const b = document.querySelector('[name="fuel_efficiency_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'top_speed_range') {
+                        const a = document.querySelector('[name="top_speed_from"]');
+                        const b = document.querySelector('[name="top_speed_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'weight_range') {
+                        const a = document.querySelector('[name="weight_from"]');
+                        const b = document.querySelector('[name="weight_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'engine_displacement_range') {
+                        const a = document.querySelector('[name="engine_displacement_from"]');
+                        const b = document.querySelector('[name="engine_displacement_to"]');
+                        if (a) a.value = ''; if (b) b.value = '';
+                    } else if (key === 'drive_axles' && isArray) {
+                        const checkbox = document.querySelector(`[name="drive_axles[]"][value="${value}"]`);
+                        if (checkbox) checkbox.checked = false;
                     } else {
                         const input = document.querySelector(`[name="${key}"]`);
                         if (input) {
@@ -2542,7 +2049,7 @@
             
             const filters = collectFilters();
             const hasFilters = Object.keys(filters).some(key => {
-                if (key === 'sort') return false; // Don't count sort as a filter
+                if (key === 'sort' || key === 'limit') return false;
                 const value = filters[key];
                 if (Array.isArray(value)) return value.length > 0;
                 return value !== null && value !== '' && value !== undefined;
@@ -2555,89 +2062,51 @@
             }
         }
         
-        // Centralized fetch vehicles function
+        // POST search-vehicles: single source of truth is sidebar state (collectFilters).
         async function fetchVehicles(params = {}) {
             if (isLoading) return;
-            
-            // Get current URL parameters
-            const url = new URL(window.location.href);
-            const currentParams = new URLSearchParams(url.search);
-            
-            // Update with new parameters
-            Object.keys(params).forEach(key => {
-                if (params[key] === null || params[key] === '' || params[key] === undefined) {
-                    currentParams.delete(key);
-                } else if (Array.isArray(params[key])) {
-                    currentParams.delete(key);
-                    params[key].forEach(val => currentParams.append(key + '[]', val));
-                } else {
-                    currentParams.set(key, params[key]);
-                }
+            const payload = { ...collectFilters(), ...params };
+            // Prune empty
+            Object.keys(payload).forEach(k => {
+                if (payload[k] === '' || payload[k] === null || payload[k] === undefined) delete payload[k];
+                if (Array.isArray(payload[k]) && payload[k].length === 0) delete payload[k];
             });
-            
-            // Build query string
-            const queryString = currentParams.toString();
-            const requestUrl = '/vehicles' + (queryString ? '?' + queryString : '');
-            
-            // Show loading
             showLoading();
-            
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            
             try {
-                const response = await fetch(requestUrl, {
-                    method: 'GET',
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const response = await fetch('{{ url("/api/v1/search-vehicles") }}', {
+                    method: 'POST',
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
                     },
+                    body: JSON.stringify(payload),
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Render vehicles and pagination
-                renderVehicleGrid(data.vehicles || []);
-                
-                // Check favorites for rendered vehicles
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const json = await response.json();
+                const data = json.data || {};
+                const vehicles = data.docs || [];
+                const totalDocs = data.totalDocs ?? 0;
+                const page = data.page ?? 1;
+                const totalPages = data.totalPages ?? 1;
+                renderVehicleGrid(vehicles);
                 await checkFavoritesBatch();
-                
-                // Always try to render pagination if it exists - let renderPagination handle validation
-                if (data.pagination) {
-                    console.log('Rendering pagination:', data.pagination);
-                    renderPagination(data.pagination);
-                } else {
-                    // If pagination is completely missing, log a warning but don't clear existing
-                    console.warn('Pagination data missing from API response', data);
-                }
-                
-                // Update results count
+                renderPagination({ current_page: page, last_page: totalPages, total: totalDocs });
                 const resultsCount = document.getElementById('results-count');
-                const totalCount = data.pagination?.total || 0;
-                const formattedCount = new Intl.NumberFormat('en-US').format(totalCount);
-                
                 if (resultsCount) {
-                    resultsCount.innerHTML = `<strong>${formattedCount}</strong> {{ __('messages.forms.results') }}`;
+                    resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('en-US').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
                 }
-                
-                // Update filter chips and reset button visibility
                 renderFilterChips();
                 updateResetButtonVisibility();
-                
-                // Update sort select if sort changed
-                if (params.sort !== undefined && sortSelect) {
-                    const sortValue = params.sort || 'best_match';
-                    sortSelect.value = sortValue;
-                }
-                
+                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || 'best_match';
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
                 showError('Failed to load vehicles. Please try again.');
+                isLoading = false;
             }
         }
         
@@ -3220,143 +2689,78 @@
             return true;
         }
         
-        // Collect all filter values
+        // Single source of truth: read all filter values from sidebar (and search/sort).
         function collectFilters() {
             const filters = {};
-            const currentYear = new Date().getFullYear(); // Declare once at the top
-            
-            // Preserve search and sort parameters from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const search = urlParams.get('search');
-            if (search) filters.search = search;
-            
-            const sort = urlParams.get('sort');
-            if (sort) filters.sort = sort;
-            
-            // Basic filters - Listing Type (checkboxes)
+            const currentYear = new Date().getFullYear();
+            const v = (name) => document.querySelector(`[name="${name}"]`)?.value?.trim();
+            const vNum = (name, max) => { const val = v(name); if (!val) return null; const n = parseFloat(val); if (isNaN(n)) return null; if (max != null && n >= max) return null; return val; };
+
+            if (searchInput?.value?.trim()) filters.search = searchInput.value.trim();
+            if (sortSelect?.value && sortSelect.value !== 'best_match') filters.sort = sortSelect.value;
+
             const listingTypeIds = Array.from(document.querySelectorAll('[name="listing_type_id[]"]:checked')).map(cb => cb.value);
             if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
-            
-            const categoryId = document.querySelector('[name="category_id"]')?.value;
-            if (categoryId) filters.category_id = categoryId;
-            
-            const brandId = document.querySelector('[name="brand_id"]')?.value;
-            if (brandId) filters.brand_id = brandId;
-            
-            const modelId = document.querySelector('[name="model_id"]')?.value;
-            if (modelId) filters.model_id = modelId;
-            
-            // Price range (exclude 0 and max value 1000000)
-            const priceFrom = document.querySelector('[name="price_from"]')?.value;
-            if (shouldIncludeFilterValue(priceFrom)) filters.price_from = priceFrom;
-            
-            const priceTo = document.querySelector('[name="price_to"]')?.value;
-            if (shouldIncludeFilterValue(priceTo, 1000000)) filters.price_to = priceTo;
-            
-            // Owner tax range (exclude 0 and max value 100000)
-            const ownershipTaxFrom = document.querySelector('[name="ownership_tax_from"]')?.value;
-            if (shouldIncludeFilterValue(ownershipTaxFrom)) filters.ownership_tax_from = ownershipTaxFrom;
-            
-            const ownershipTaxTo = document.querySelector('[name="ownership_tax_to"]')?.value;
-            if (shouldIncludeFilterValue(ownershipTaxTo, 100000)) filters.ownership_tax_to = ownershipTaxTo;
-            
-            // Year range (exclude default min 1975 and max year)
-            const yearFrom = document.querySelector('[name="year_from"]')?.value;
-            const yearFromNum = parseFloat(yearFrom);
-            if (yearFrom && !isNaN(yearFromNum) && yearFromNum > 1975) {
-                filters.year_from = yearFrom;
-            }
-            
-            const yearTo = document.querySelector('[name="year_to"]')?.value;
-            const yearToNum = parseFloat(yearTo);
-            if (yearTo && !isNaN(yearToNum) && yearToNum < (currentYear + 1)) {
-                filters.year_to = yearTo;
-            }
-            
-            // Mileage range (exclude 0 and max value 500000)
-            const mileageFrom = document.querySelector('[name="mileage_from"]')?.value;
-            if (shouldIncludeFilterValue(mileageFrom)) filters.mileage_from = mileageFrom;
-            
-            const mileageTo = document.querySelector('[name="mileage_to"]')?.value;
-            if (shouldIncludeFilterValue(mileageTo, 500000)) filters.mileage_to = mileageTo;
-            
-            // Price Type (checkboxes)
-            const priceTypeIds = Array.from(document.querySelectorAll('[name="price_type_id[]"]:checked')).map(cb => cb.value);
-                if (priceTypeIds.length > 0) filters.price_type_id = priceTypeIds;
-            
+
             const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
-            if (conditionId && conditionId !== '') filters.condition_id = conditionId;
-            
-            const bodyTypeIds = Array.from(document.querySelectorAll('[name="body_type_id[]"]:checked')).map(cb => cb.value);
-            if (bodyTypeIds.length > 0) filters.body_type_id = bodyTypeIds;
-            
-            const fuelTypeIds = Array.from(document.querySelectorAll('[name="fuel_type_id[]"]:checked')).map(cb => cb.value);
-            if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
-            
-            const gearTypeIds = Array.from(document.querySelectorAll('[name="gear_type_id[]"]:checked')).map(cb => cb.value);
-            if (gearTypeIds.length > 0) filters.gear_type_id = gearTypeIds;
-            
+            if (conditionId) filters.condition_id = conditionId;
+
+            if (v('brand_id')) filters.brand_id = v('brand_id');
+            if (v('model_id')) filters.model_id = v('model_id');
+            if (v('model_year_id')) filters.model_year_id = v('model_year_id');
+            if (v('category_id')) filters.category_id = v('category_id');
+            if (vNum('price_from')) filters.price_from = v('price_from');
+            if (vNum('price_to', 1000000)) filters.price_to = v('price_to');
+            if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');
+            if (vNum('km_driven_to', 500001)) filters.km_driven_to = v('km_driven_to');
+            if (v('fuel_type_id')) filters.fuel_type_id = v('fuel_type_id');
+            if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
+            if (v('body_type_id')) filters.body_type_id = v('body_type_id');
+            if (v('color_id')) filters.color_id = v('color_id');
+            if (v('variant_id')) filters.variant_id = v('variant_id');
+            if (v('type_id')) filters.type_id = v('type_id');
+            if (v('sales_type_id')) filters.sales_type_id = v('sales_type_id');
+            if (v('price_type_id')) filters.price_type_id = v('price_type_id');
+            if (v('euronom_id')) filters.euronom_id = v('euronom_id');
+            if (v('use_id')) filters.use_id = v('use_id');
+            if (v('transmission_id')) filters.transmission_id = v('transmission_id');
+            if (vNum('year_from')) filters.year_from = v('year_from');
+            if (vNum('year_to', currentYear + 2)) filters.year_to = v('year_to');
+            if (vNum('first_registration_year_from', 1976)) filters.first_registration_year_from = v('first_registration_year_from');
+            if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
+            if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');
+            if (vNum('ownership_tax_to', 100001)) filters.ownership_tax_to = v('ownership_tax_to');
+            if (vNum('engine_power_from')) filters.engine_power_from = v('engine_power_from');
+            if (vNum('engine_power_to', 1001)) filters.engine_power_to = v('engine_power_to');
+            if (vNum('battery_capacity_from')) filters.battery_capacity_from = v('battery_capacity_from');
+            if (vNum('battery_capacity_to', 201)) filters.battery_capacity_to = v('battery_capacity_to');
+            if (vNum('range_km_from')) filters.range_km_from = v('range_km_from');
+            if (vNum('range_km_to', 1001)) filters.range_km_to = v('range_km_to');
+            if (vNum('fuel_efficiency_from')) filters.fuel_efficiency_from = v('fuel_efficiency_from');
+            if (vNum('fuel_efficiency_to')) filters.fuel_efficiency_to = v('fuel_efficiency_to');
+            if (v('charging_type')) filters.charging_type = v('charging_type');
+            if (v('top_speed_from')) filters.top_speed_from = v('top_speed_from');
+            if (v('top_speed_to')) filters.top_speed_to = v('top_speed_to');
+            if (v('weight_from')) filters.weight_from = v('weight_from');
+            if (v('weight_to')) filters.weight_to = v('weight_to');
+            if (v('engine_displacement_from')) filters.engine_displacement_from = v('engine_displacement_from');
+            if (v('engine_displacement_to')) filters.engine_displacement_to = v('engine_displacement_to');
+            if (v('engine_cylinders')) filters.engine_cylinders = v('engine_cylinders');
+            if (v('doors')) filters.doors = v('doors');
+            if (v('seats_min')) filters.seats_min = v('seats_min');
+            if (v('seats_max')) filters.seats_max = v('seats_max');
+            if (v('wheels')) filters.wheels = v('wheels');
+            if (v('axles')) filters.axles = v('axles');
+            if (v('airbags')) filters.airbags = v('airbags');
+            if (v('towing_weight')) filters.towing_weight = v('towing_weight');
             const driveAxles = Array.from(document.querySelectorAll('[name="drive_axles[]"]:checked')).map(cb => cb.value);
             if (driveAxles.length > 0) filters.drive_axles = driveAxles;
-            
-            // First registration year (exclude 0 and max year)
-            const firstRegYearFrom = document.querySelector('[name="first_registration_year_from"]')?.value;
-            if (shouldIncludeFilterValue(firstRegYearFrom, 1975)) filters.first_registration_year_from = firstRegYearFrom;
-            
-            const firstRegYearTo = document.querySelector('[name="first_registration_year_to"]')?.value;
-            if (shouldIncludeFilterValue(firstRegYearTo, currentYear)) filters.first_registration_year_to = firstRegYearTo;
-            
-            // Seller type
-            const sellerTypes = Array.from(document.querySelectorAll('[name="seller_type[]"]:checked')).map(cb => cb.value);
-            if (sellerTypes.length > 0) filters.seller_type = sellerTypes;
-            
-            // Sales type
-            const salesTypeIds = Array.from(document.querySelectorAll('[name="sales_type_id[]"]:checked')).map(cb => cb.value);
-            if (salesTypeIds.length > 0) filters.sales_type_id = salesTypeIds;
-            
-            // Seller distance (exclude 0)
-            const sellerDistance = document.querySelector('[name="seller_distance"]')?.value;
-            if (shouldIncludeFilterValue(sellerDistance)) filters.seller_distance = sellerDistance;
-            
-            // Performance (exclude 0 and max value 1000)
-            const enginePowerFrom = document.querySelector('[name="engine_power_from"]')?.value;
-            if (shouldIncludeFilterValue(enginePowerFrom)) filters.engine_power_from = enginePowerFrom;
-            
-            const enginePowerTo = document.querySelector('[name="engine_power_to"]')?.value;
-            if (shouldIncludeFilterValue(enginePowerTo, 1000)) filters.engine_power_to = enginePowerTo;
-            
-            // Battery & Charging (exclude 0 and max value 200)
-            const batteryCapacityFrom = document.querySelector('[name="battery_capacity_from"]')?.value;
-            if (shouldIncludeFilterValue(batteryCapacityFrom)) filters.battery_capacity_from = batteryCapacityFrom;
-            
-            const batteryCapacityTo = document.querySelector('[name="battery_capacity_to"]')?.value;
-            if (shouldIncludeFilterValue(batteryCapacityTo, 200)) filters.battery_capacity_to = batteryCapacityTo;
-            
-            // Range km (exclude 0 and max value 1000)
-            const rangeKmFrom = document.querySelector('[name="range_km_from"]')?.value;
-            if (shouldIncludeFilterValue(rangeKmFrom)) filters.range_km_from = rangeKmFrom;
-            
-            const rangeKmTo = document.querySelector('[name="range_km_to"]')?.value;
-            if (shouldIncludeFilterValue(rangeKmTo, 1000)) filters.range_km_to = rangeKmTo;
-            
-            const chargingType = document.querySelector('[name="charging_type"]')?.value;
-            if (chargingType) filters.charging_type = chargingType;
-            
-            // Economy & Environment
-            const euronorm = document.querySelector('[name="euronorm"]')?.value;
-            if (euronorm) filters.euronorm = euronorm;
-            
-            // Physical Details
-            const doors = document.querySelector('[name="doors"]')?.value;
-            if (doors) filters.doors = doors;
-            
-            const seatsMin = document.querySelector('[name="seats_min"]')?.value;
-            if (seatsMin) filters.seats_min = seatsMin;
-            
-            // Equipment
+            if (document.querySelector('[name="ncap_five"]:checked')) filters.ncap_five = 1;
+            if (document.querySelector('[name="is_import"]:checked')) filters.is_import = 1;
+            if (document.querySelector('[name="is_factory_new"]:checked')) filters.is_factory_new = 1;
             const equipmentIds = Array.from(document.querySelectorAll('[name="equipment_ids[]"]:checked')).map(cb => cb.value);
             if (equipmentIds.length > 0) filters.equipment_ids = equipmentIds;
-            
+            filters.limit = 15;
             return filters;
         }
         
@@ -3365,28 +2769,9 @@
         
         function autoApplyFilters() {
             clearTimeout(filterDebounceTimer);
-            filterDebounceTimer = setTimeout(() => {
-                const filters = collectFilters();
-                fetchVehicles({ ...filters, page: 1 });
-            }, 500); // 500ms debounce for better UX
+            filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
         }
 
-        // Build query string from filters
-        function buildQueryString(filters) {
-            const params = new URLSearchParams();
-            
-            Object.keys(filters).forEach(key => {
-                const value = filters[key];
-                if (Array.isArray(value)) {
-                    value.forEach(v => params.append(key + '[]', v));
-                } else {
-                    params.append(key, value);
-                }
-            });
-            
-            return params.toString();
-        }
-        
         // Set up auto-apply listeners for all filter inputs
         function setupAutoApplyFilters() {
             if (!filterSidebar) return;
@@ -3612,6 +2997,12 @@
         // Initialize filter chips and reset button visibility on page load
         renderFilterChips();
         updateResetButtonVisibility();
+
+        // Clear filter params from URL (state lives in sidebar + POST only) then run first search
+        if (window.location.search) {
+            history.replaceState({}, '', window.location.pathname || '/vehicles');
+        }
+        fetchVehicles({ page: 1 });
         
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();

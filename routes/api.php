@@ -27,6 +27,8 @@ Route::prefix('v1')->group(function () {
     
     // Public vehicle listings (uses database data)
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::post('/search-vehicles', [VehicleController::class, 'searchVehicles'])->name('vehicles.search');
+
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::get('/featured-vehicles', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');
     
@@ -35,10 +37,6 @@ Route::prefix('v1')->group(function () {
         ->middleware(['auth:api', 'idempotency'])
         ->name('api.sell-your-car');
     
-    // Lookup routes
-    Route::get('/fuel-types', [LookupController::class, 'fuelTypes']);
-    Route::get('/transmissions', [LookupController::class, 'transmissions']);
-    Route::get('/models', [LookupController::class, 'models']);
     
     // Constants API - Get all lookup tables data
     Route::get('/constants', [LookupController::class, 'constants'])->name('constants');

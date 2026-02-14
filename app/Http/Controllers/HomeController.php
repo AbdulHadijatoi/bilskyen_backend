@@ -21,6 +21,7 @@ use App\Models\ListingViewsLog;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
+use App\Services\LookupService;
 use App\Services\PageContentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,8 @@ class HomeController extends Controller
         private AuthService $authService,
         private VehicleService $vehicleService,
         private AuditLogService $auditLogService,
-        private PageContentService $pageContentService
+        private PageContentService $pageContentService,
+        private LookupService $lookupService
     ) {}
 
     /**
@@ -44,22 +46,11 @@ class HomeController extends Controller
         // Fetch filter options for the view
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
-            'listingTypes' => ListingType::orderBy('name')->get(),
-            'priceTypes' => PriceType::orderBy('name')->get(),
-            'bodyTypes' => BodyType::orderBy('name')->get(),
-            'gearTypes' => GearType::orderBy('name')->get(),
             'fuelTypes' => FuelType::orderBy('name')->get(),
-            'equipment' => Equipment::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
             'models' => VehicleModel::orderBy('name')->get(),
             'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
-            'conditions' => Condition::orderBy('name')->get(),
-            'salesTypes' => SalesType::orderBy('name')->get(),
         ];
-
-        // Popular brands (most common brands - can be customized)
-        $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
-        $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
 
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
@@ -258,172 +249,94 @@ class HomeController extends Controller
         ]);
     }
 
+    /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
+    private const VEHICLE_FILTER_KEYS = [
+        'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'category_id', 'listing_type_id',
+        'gear_type_id', 'body_type_id', 'color_id', 'variant_id', 'type_id', 'condition_id',
+        'sales_type_id', 'price_type_id', 'euronom_id', 'euronorm', 'use_id', 'transmission_id',
+        'equipment_id', 'equipment_ids',
+        'km_driven_from', 'km_driven_to', 'price_from', 'price_to', 'battery_capacity_from', 'battery_capacity_to',
+        'range_km_from', 'range_km_to', 'engine_power_from', 'engine_power_to', 'towing_weight',
+        'ownership_tax_from', 'ownership_tax_to', 'first_registration_year_from', 'first_registration_year_to',
+        'fuel_efficiency_from', 'fuel_efficiency_to', 'year_from', 'year_to',
+        'top_speed_from', 'top_speed_to', 'weight_from', 'weight_to', 'engine_displacement_from', 'engine_displacement_to',
+        'engine_cylinders', 'doors', 'seats_min', 'seats_max', 'wheels', 'axles', 'drive_axles', 'airbags',
+        'charging_type', 'ncap_five', 'is_import', 'is_factory_new', 'search', 'sort',
+    ];
+
     /**
-     * Show the vehicles listing page
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * Build currentFilters from request for the vehicles view (sidebar pre-fill). Normalizes arrays.
+     */
+    private function buildCurrentFilters(Request $request): array
+    {
+        $currentFilters = [];
+        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'seller_type'];
+        foreach (self::VEHICLE_FILTER_KEYS as $key) {
+            $value = $request->input($key);
+            if ($value === null || $value === '') {
+                continue;
+            }
+            if (in_array($key, $arrayKeys, true)) {
+                $currentFilters[$key] = is_array($value) ? $value : [$value];
+            } else {
+                $currentFilters[$key] = $value;
+            }
+        }
+        return $currentFilters;
+    }
+
+    /**
+     * Show the vehicles listing page. GET params populate sidebar (currentFilters); initial list uses same filters.
      */
     public function showVehicles(Request $request)
     {
-        // Define advanced filter keys (vehicles and vehicle_details table attributes)
-        $advancedFilterKeys = [
-            // Price, Make, Model, Model Year, Mileage, Listing Type, Category
-            'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
-            'year_from', 'year_to', 'mileage_from', 'mileage_to', 
-            'odometer_from', 'odometer_to', 'listing_type_id', 'vehicle_list_status_id',
-            'category_id', 'price_type_id', 'condition_id',
-            // Vehicle Body Type, Fuel Type, Gear Type, Drive Wheels
-            'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
-            // First Registration Year, Seller Type, Sales Type, Seller Distance
-            'first_registration_year_from', 'first_registration_year_to',
-            'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
-            // Performance
+        $currentFilters = $this->buildCurrentFilters($request);
+
+        $limit = (int) $request->input('limit', 15);
+        $page = (int) $request->input('page', 1);
+
+        $advancedKeys = [
+            'price_from', 'price_to', 'brand_id', 'model_id', 'model_year_id', 'year_from', 'year_to',
+            'mileage_from', 'mileage_to', 'km_driven_from', 'km_driven_to', 'listing_type_id', 'category_id',
+            'price_type_id', 'condition_id', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
+            'first_registration_year_from', 'first_registration_year_to', 'sales_type_id',
             'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
-            // Owner Tax
-            'ownership_tax_from', 'ownership_tax_to',
-            // Battery & Charging (EV)
-            'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
-            // Economy & Environment
-            'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm',
-            // Physical Details
-            'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 
-            'engine_displacement_to', 'airbags', 'ncap_five',
-            // Equipment
-            'equipment_ids', 'equipment_id'
+            'ownership_tax_from', 'ownership_tax_to', 'battery_capacity_from', 'battery_capacity_to',
+            'range_km_from', 'range_km_to', 'charging_type', 'fuel_efficiency_from', 'fuel_efficiency_to',
+            'euronorm', 'euronom_id', 'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
+            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 'engine_displacement_to',
+            'airbags', 'ncap_five', 'equipment_ids', 'equipment_id', 'variant_id', 'type_id', 'use_id', 'transmission_id', 'towing_weight', 'is_import', 'is_factory_new',
         ];
-        
-        // Check if any advanced filters are present
-        $hasAdvancedFilters = $request->hasAny($advancedFilterKeys);
-        
-        // Basic filter keys (vehicles table attributes)
-        $basicFilterKeys = [
-            'search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 
-            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort'
-        ];
-        
-        if ($hasAdvancedFilters) {
-            // Use advanced filtering method
-            $basicFilters = $request->only($basicFilterKeys);
-            $advancedFilters = $request->only($advancedFilterKeys);
-            
-            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters(
-                $basicFilters,
-                $advancedFilters,
-                $request->input('limit', 15),
-                $request->input('page', 1)
-            );
+        $basicKeys = ['search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'price_from', 'price_to', 'listing_type_id', 'sort'];
+        $hasAdvanced = !empty(array_intersect_key($currentFilters, array_flip($advancedKeys)));
+
+        if ($hasAdvanced) {
+            $input = $currentFilters;
+            if (isset($input['km_driven_from'])) {
+                $input['mileage_from'] = $input['km_driven_from'];
+            }
+            if (isset($input['km_driven_to'])) {
+                $input['mileage_to'] = $input['km_driven_to'];
+            }
+            // Accept both euronorm (name) and euronom_id; normalize to euronom_id for backend filter (DB column is euronom_id)
+            if (!empty($input['euronorm']) && empty($input['euronom_id'])) {
+                $euronom = \App\Models\Euronom::where('name', trim($input['euronorm']))->first();
+                if ($euronom) {
+                    $input['euronom_id'] = $euronom->id;
+                }
+                unset($input['euronorm']);
+            }
+            $basicFilters = array_intersect_key($input, array_flip($basicKeys));
+            $advancedFilters = array_intersect_key($input, array_flip($advancedKeys));
+            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters($basicFilters, $advancedFilters, $limit, $page);
         } else {
-            // Use basic filtering method (faster, most common)
-            $filters = $request->only($basicFilterKeys);
-            
-            $vehicles = $this->vehicleService->getPublicVehicles(
-                $filters,
-                $request->input('limit', 15),
-                $request->input('page', 1)
-            );
+            $filters = array_intersect_key($currentFilters, array_flip(array_merge($basicKeys, ['km_driven_from', 'km_driven_to'])));
+            $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
         }
 
-        // If AJAX request, return JSON
-        if ($request->ajax() || $request->wantsJson()) {
-            // Format vehicles for JSON response
-            $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
-                // Get first image
-                $firstImage = $vehicle->images->first();
-                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->url ?? '/placeholder-vehicle.jpg';
-                
-                // Get details
-                $details = $vehicle->details;
-                
-                // Determine seller type (dealer or private)
-                $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
-                $sellerType = $isDealer ? 'Dealer' : 'Private';
-                
-                return [
-                    'id' => $vehicle->id,
-                    'title' => $vehicle->title,
-                    'registration' => $vehicle->registration,
-                    'vin' => $vehicle->vin,
-                    'price' => $vehicle->price,
-                    'mileage' => $vehicle->mileage,
-                    'km_driven' => $vehicle->km_driven,
-                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-                    'version' => $vehicle->version,
-                    'brand_name' => $vehicle->brand_name,
-                    'model_name' => $vehicle->model_name,
-                    'category_name' => $vehicle->category_name,
-                    'fuel_type_name' => $vehicle->fuel_type_name,
-                    'gear_type_name' => $vehicle->gear_type_name,
-                    'model_year_name' => $vehicle->model_year_name,
-                    'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
-                    'engine_power_hp' => $vehicle->engine_power_hp,
-                    'seller_type' => $sellerType,
-                    'seller_address' => $vehicle->seller_address,
-                    'seller_postcode' => $vehicle->seller_postcode,
-                    'dealer_id' => $vehicle->dealer_id,
-                    'image_url' => $imageUrl,
-                    'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
-                    'details' => $details ? [
-                        'color_name' => $details->color_name ?? null,
-                        'condition_name' => $details->condition_name ?? null,
-                        'fuel_efficiency' => $vehicle->fuel_efficiency ?? null,
-                    ] : null,
-                ];
-            });
+        $constants = $this->lookupService->getPublicConstants();
 
-            return response()->json([
-                'vehicles' => $formattedVehicles,
-                'pagination' => [
-                    'current_page' => $vehicles->currentPage(),
-                    'last_page' => $vehicles->lastPage(),
-                    'per_page' => $vehicles->perPage(),
-                    'total' => $vehicles->total(),
-                    'from' => $vehicles->firstItem(),
-                    'to' => $vehicles->lastItem(),
-                ],
-                'filters' => $request->all(),
-            ]);
-        }
-
-        // Fetch filter options for the view
-        $filterOptions = [
-            'categories' => Category::orderBy('name')->get(),
-            'listingTypes' => ListingType::orderBy('name')->get(),
-            'priceTypes' => PriceType::orderBy('name')->get(),
-            'bodyTypes' => BodyType::orderBy('name')->get(),
-            'gearTypes' => GearType::orderBy('name')->get(),
-            'fuelTypes' => FuelType::orderBy('name')->get(),
-            'brands' => Brand::orderBy('name')->get(),
-            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
-            'conditions' => Condition::orderBy('name')->get(),
-            'salesTypes' => SalesType::orderBy('name')->get(),
-        ];
-
-        // Popular brands (most common brands - can be customized)
-        $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
-        $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
-
-        // Filter models by selected brand if provided
-        $selectedBrandId = $request->input('brand_id');
-        if ($selectedBrandId) {
-            $filterOptions['models'] = VehicleModel::where('brand_id', $selectedBrandId)->orderBy('name')->get();
-        } else {
-            $filterOptions['models'] = VehicleModel::orderBy('name')->get();
-        }
-
-        // Group equipment by equipment type
-        $equipmentTypes = EquipmentType::with(['equipments' => function ($query) {
-            $query->orderBy('name');
-        }])->orderBy('name')->get();
-        
-        $filterOptions['equipmentTypes'] = $equipmentTypes;
-
-        return view('vehicles', [
-            'vehicles' => $vehicles,
-            'filterOptions' => $filterOptions,
-            'currentFilters' => $request->all(),
-        ]);
+        return view('vehicles', compact('vehicles', 'constants', 'currentFilters'));
     }
 
     /**

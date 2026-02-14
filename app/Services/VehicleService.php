@@ -573,53 +573,74 @@ class VehicleService
 
         // Category filter
         if (!empty($filters['category_id'])) {
-            $query->where('category_id', $filters['category_id']);
+            // where null or match the category_id
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('category_id')
+                  ->orWhere('category_id', $filters['category_id']);
+            });
         }
 
         // Brand filter
         if (!empty($filters['brand_id'])) {
-            $query->where('brand_id', $filters['brand_id']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('brand_id')
+                  ->orWhere('brand_id', $filters['brand_id']);
+            });
         }
 
         // Model filter
         if (!empty($filters['model_id'])) {
-            $query->where('model_id', $filters['model_id']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('model_id')
+                  ->orWhere('model_id', $filters['model_id']);
+            });
         }
 
         // Model Year filter
         if (!empty($filters['model_year_id'])) {
-            $query->where('model_year_id', $filters['model_year_id']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('model_year_id')
+                  ->orWhere('model_year_id', $filters['model_year_id']);
+            });
         }
 
         // Fuel Type filter (supports array for multiple values)
         if (!empty($filters['fuel_type_id'])) {
-            if (is_array($filters['fuel_type_id'])) {
-                $query->whereIn('fuel_type_id', $filters['fuel_type_id']);
-            } else {
-                $query->where('fuel_type_id', $filters['fuel_type_id']);
-            }
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('fuel_type_id')
+                  ->orWhere('fuel_type_id', $filters['fuel_type_id']);
+            });
         }
 
         // Kilometers Driven filter
-        if (!empty($filters['km_driven'])) {
-            $query->where('km_driven', $filters['km_driven']);
+        if (!empty($filters['km_driven_from']) && !empty($filters['km_driven_to'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('km_driven')
+                  ->orWhereBetween('km_driven', [$filters['km_driven_from'], $filters['km_driven_to']]);
+            });
         }
 
         // Price range filter (exclude 0 values)
         if (!empty($filters['price_from']) && $filters['price_from'] > 0) {
-            $query->where('price', '>=', $filters['price_from']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('price')
+                  ->orWhere('price', '>=', $filters['price_from']);
+            });
         }
         if (!empty($filters['price_to']) && $filters['price_to'] > 0) {
-            $query->where('price', '<=', $filters['price_to']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('price')
+                  ->orWhere('price', '<=', $filters['price_to']);
+            });
         }
 
         // Listing Type filter
         if (!empty($filters['listing_type_id'])) {
-            $query->where('listing_type_id', $filters['listing_type_id']);
+            $query->where(function ($q) use ($filters) {
+                $q->whereNull('listing_type_id')
+                  ->orWhere('listing_type_id', $filters['listing_type_id']);
+            });
         }
-
-        // Apply sorting
-        $this->applySorting($query, $filters['sort'] ?? 'standard');
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -1117,8 +1138,9 @@ class VehicleService
         if (!empty($advancedFilters['fuel_efficiency_to'])) {
             $query->where('vehicles.fuel_efficiency', '<=', $advancedFilters['fuel_efficiency_to']);
         }
-        if (!empty($advancedFilters['euronorm'])) {
-            $query->where('vehicle_details.euronorm', $advancedFilters['euronorm']);
+        // Euro norm: DB column is euronom_id (FK to euronorms); accept euronom_id from normalized input
+        if (!empty($advancedFilters['euronom_id'])) {
+            $query->where('vehicle_details.euronom_id', $advancedFilters['euronom_id']);
         }
 
         // Physical Details
@@ -1176,6 +1198,33 @@ class VehicleService
                     $q->whereIn('equipments.id', $equipmentIds);
                 });
             }
+        }
+
+        // Variant, Type, Use, Transmission (vehicle_details)
+        if (!empty($advancedFilters['variant_id'])) {
+            $query->where('vehicle_details.variant_id', $advancedFilters['variant_id']);
+        }
+        if (!empty($advancedFilters['type_id'])) {
+            $query->where('vehicle_details.type_id', $advancedFilters['type_id']);
+        }
+        if (!empty($advancedFilters['use_id'])) {
+            $query->where('vehicle_details.use_id', $advancedFilters['use_id']);
+        }
+        if (!empty($advancedFilters['transmission_id'])) {
+            $query->where('vehicle_details.transmission_id', $advancedFilters['transmission_id']);
+        }
+
+        // Towing weight (vehicles table - minimum value)
+        if (!empty($advancedFilters['towing_weight']) && $advancedFilters['towing_weight'] > 0) {
+            $query->where('vehicles.towing_weight', '>=', $advancedFilters['towing_weight']);
+        }
+
+        // Import / Factory new (vehicle_details)
+        if (isset($advancedFilters['is_import'])) {
+            $query->where('vehicle_details.is_import', (bool) $advancedFilters['is_import']);
+        }
+        if (isset($advancedFilters['is_factory_new'])) {
+            $query->where('vehicle_details.is_factory_new', (bool) $advancedFilters['is_factory_new']);
         }
 
         // Select distinct vehicles to avoid duplicates from joins

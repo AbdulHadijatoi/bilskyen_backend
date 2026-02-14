@@ -98,72 +98,83 @@ class VehicleController extends Controller
         ]);
     }
 
+    /** @var array<int, string> Advanced filter keys for vehicle search */
+    private const ADVANCED_FILTER_KEYS = [
+        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
+        'year_from', 'year_to', 'mileage_from', 'mileage_to',
+        'odometer_from', 'odometer_to', 'listing_type_id', 'vehicle_list_status_id',
+        'category_id', 'price_type_id', 'condition_id',
+        'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
+        'first_registration_year_from', 'first_registration_year_to',
+        'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
+        'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
+        'ownership_tax_from', 'ownership_tax_to',
+        'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
+        'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm', 'euronom_id',
+        'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
+        'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from',
+        'engine_displacement_to', 'airbags', 'ncap_five',
+        'equipment_ids', 'equipment_id',
+        'variant_id', 'type_id', 'use_id', 'transmission_id', 'towing_weight',
+        'is_import', 'is_factory_new', 'km_driven_from', 'km_driven_to',
+    ];
+
+    /** @var array<int, string> Basic filter keys for vehicle search */
+    private const BASIC_FILTER_KEYS = [
+        'search', 'category_id', 'brand_id', 'model_id', 'model_year_id',
+        'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort',
+    ];
+
     /**
-     * Get vehicles list (public or dealer)
-     * Uses the same filtering logic as HomeController::showVehicles
+     * Normalize search input: map km_driven_* to mileage_*, accept both euronorm (name) and euronom_id and normalize to euronom_id for DB filter.
      */
-    public function index(Request $request): JsonResponse
+    private function normalizeVehicleSearchInput(array $input): array
     {
-        // Define advanced filter keys (vehicles and vehicle_details table attributes)
-        $advancedFilterKeys = [
-            // Price, Make, Model, Model Year, Mileage, Listing Type, Category
-            'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
-            'year_from', 'year_to', 'mileage_from', 'mileage_to', 
-            'odometer_from', 'odometer_to', 'listing_type_id', 'vehicle_list_status_id',
-            'category_id', 'price_type_id', 'condition_id',
-            // Vehicle Body Type, Fuel Type, Gear Type, Drive Wheels
-            'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
-            // First Registration Year, Seller Type, Sales Type, Seller Distance
-            'first_registration_year_from', 'first_registration_year_to',
-            'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
-            // Performance
-            'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
-            // Owner Tax
-            'ownership_tax_from', 'ownership_tax_to',
-            // Battery & Charging (EV)
-            'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
-            // Economy & Environment
-            'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm',
-            // Physical Details
-            'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 
-            'engine_displacement_to', 'airbags', 'ncap_five',
-            // Equipment
-            'equipment_ids', 'equipment_id'
-        ];
-        
-        // Check if any advanced filters are present
-        $hasAdvancedFilters = $request->hasAny($advancedFilterKeys);
-        
-        // Basic filter keys (vehicles table attributes)
-        $basicFilterKeys = [
-            'search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 
-            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort'
-        ];
-        
+        if (isset($input['km_driven_from'])) {
+            $input['mileage_from'] = $input['km_driven_from'];
+        }
+        if (isset($input['km_driven_to'])) {
+            $input['mileage_to'] = $input['km_driven_to'];
+        }
+        // Accept both euronorm (string name) and euronom_id; normalize to euronom_id for filtering (DB column is euronom_id)
+        if (!empty($input['euronom_id'])) {
+            $input['euronom_id'] = (int) $input['euronom_id'];
+        } elseif (!empty($input['euronorm'])) {
+            $euronom = Euronom::where('name', trim($input['euronorm']))->first();
+            if ($euronom) {
+                $input['euronom_id'] = $euronom->id;
+            }
+            unset($input['euronorm']);
+        }
+        return $input;
+    }
+
+    /**
+     * Build JSON response for vehicle list from normalized input (shared by index and searchVehicles).
+     */
+    private function getVehiclesListResponse(array $input, string $path = '', array $query = []): JsonResponse
+    {
+        $advancedFilterKeys = self::ADVANCED_FILTER_KEYS;
+        $basicFilterKeys = self::BASIC_FILTER_KEYS;
+        $hasAdvancedFilters = !empty(array_intersect_key(array_flip($advancedFilterKeys), $input));
+
+        $limit = (int) ($input['limit'] ?? 15);
+        $page = (int) ($input['page'] ?? 1);
+
         if ($hasAdvancedFilters) {
-            // Use advanced filtering method
-            $basicFilters = $request->only($basicFilterKeys);
-            $advancedFilters = $request->only($advancedFilterKeys);
-            
+            $basicFilters = array_intersect_key($input, array_flip($basicFilterKeys));
+            $advancedFilters = array_intersect_key($input, array_flip($advancedFilterKeys));
             $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters(
                 $basicFilters,
                 $advancedFilters,
-                $request->input('limit', 15),
-                $request->input('page', 1)
+                $limit,
+                $page
             );
         } else {
-            // Use basic filtering method (faster, most common)
-            $filters = $request->only($basicFilterKeys);
-            
-            $vehicles = $this->vehicleService->getPublicVehicles(
-                $filters,
-                $request->input('limit', 15),
-                $request->input('page', 1)
-            );
+            $filters = array_intersect_key($input, array_flip($basicFilterKeys));
+            $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
         }
 
-        // Format vehicles for JSON response
         $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
             // Get first image
             $firstImage = $vehicle->images->first();
@@ -305,16 +316,39 @@ class VehicleController extends Controller
             return $vehicleData;
         });
 
-        // Create new paginator with formatted vehicles
         $formattedPaginator = new LengthAwarePaginator(
             $formattedVehicles,
             $vehicles->total(),
             $vehicles->perPage(),
             $vehicles->currentPage(),
-            ['path' => $request->url(), 'query' => $request->query()]
+            ['path' => $path ?: url('/api/v1/vehicles'), 'query' => $query]
         );
 
         return $this->paginated($formattedPaginator);
+    }
+
+    /**
+     * Get vehicles list (public) - GET with query params
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $input = $this->normalizeVehicleSearchInput($request->query());
+        return $this->getVehiclesListResponse($input, $request->url(), $request->query());
+    }
+
+    /**
+     * Search vehicles - POST with body (same filter set as index, same response shape)
+     */
+    public function searchVehicles(Request $request): JsonResponse
+    {
+        $allowed = array_merge(
+            self::BASIC_FILTER_KEYS,
+            self::ADVANCED_FILTER_KEYS,
+            ['page', 'limit']
+        );
+        $input = array_intersect_key($request->all(), array_flip($allowed));
+        $input = $this->normalizeVehicleSearchInput($input);
+        return $this->getVehiclesListResponse($input);
     }
 
     /**
