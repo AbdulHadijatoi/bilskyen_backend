@@ -71,17 +71,11 @@ class AdminSubscriptionController extends Controller
             return $this->error('This dealer is not allowed to subscribe to this plan', 403);
         }
 
-        // Check for existing active subscription
-        $existingActive = DealerSubscription::where('dealer_id', $request->dealer_id)
-            ->where('subscription_status_id', SubscriptionStatus::ACTIVE)
-            ->exists();
-
-        if ($existingActive) {
-            return $this->error('Dealer already has an active subscription', 422);
-        }
-
         DB::beginTransaction();
         try {
+            // Override any existing subscriptions for this dealer
+            DealerSubscription::where('dealer_id', $request->dealer_id)->delete();
+
             // Auto-calculate ends_at if not provided and billing_cycle is set
             $endsAt = $request->ends_at;
             if (!$endsAt && $request->has('billing_cycle')) {

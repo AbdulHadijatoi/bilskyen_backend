@@ -34,6 +34,29 @@ class AdminDealerController extends Controller
     }
 
     /**
+     * List dealers for dropdowns (id, name, email).
+     * Name = owner name, or slug, or cvr. Email = owner email.
+     */
+    public function list(Request $request): JsonResponse
+    {
+        $dealers = Dealer::with('owner')
+            ->orderBy('id')
+            ->get();
+
+        $items = $dealers->map(function (Dealer $dealer) {
+            $name = $dealer->owner?->name ?? $dealer->slug ?? $dealer->cvr ?? 'Dealer #' . $dealer->id;
+            $email = $dealer->owner?->email ?? '';
+            return [
+                'id' => $dealer->id,
+                'name' => $name,
+                'email' => $email,
+            ];
+        });
+
+        return $this->success($items->values()->all());
+    }
+
+    /**
      * Get dealer details
      */
     public function show(int $id): JsonResponse

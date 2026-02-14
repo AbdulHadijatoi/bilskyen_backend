@@ -119,6 +119,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     // Dealer Management
     Route::prefix('dealers')->group(function () {
         Route::get('/', [AdminDealerController::class, 'index']);
+        Route::get('/list', [AdminDealerController::class, 'list']);
         Route::get('/{id}', [AdminDealerController::class, 'show']);
     });
     

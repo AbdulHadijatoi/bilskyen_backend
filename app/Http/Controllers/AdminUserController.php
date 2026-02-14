@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Dealer;
 use App\Constants\UserStatus;
 use App\Services\RolePermissionService;
 use App\Services\AuditLogService;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class AdminUserController extends Controller
@@ -107,6 +109,30 @@ class AdminUserController extends Controller
         $role = Role::findOrFail($request->role_id);
         $user->assignRole($role);
 
+        // If dealer role, create dealer record and link to user
+        if (strtolower($role->name) === 'dealer') {
+            DB::transaction(function () use ($user) {
+                // Make a unique slug
+                $baseSlug = \Illuminate\Support\Str::slug($user->name . '-' . $user->id);
+                $slug = $baseSlug;
+                $count = 1;
+                while (\App\Models\Dealer::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug . '-' . $count;
+                    $count++;
+                }
+
+                Dealer::create([
+                    'user_id' => $user->id,
+                    'slug' => $slug,
+                    'cvr' => 'PENDING-' . $user->id,
+                    'address' => '',
+                    'city' => '',
+                    'postcode' => '',
+                    'country_code' => 'DK',
+                ]);
+            });
+        }
+
         // Audit log
         $this->auditLogService->log(
             $request->user()->id,
@@ -119,7 +145,7 @@ class AdminUserController extends Controller
             $request
         );
 
-        return $this->created($user->load('roles', 'userStatus'));
+        return $this->created($user->load('roles', 'userStatus', 'dealer'));
     }
 
     /**
