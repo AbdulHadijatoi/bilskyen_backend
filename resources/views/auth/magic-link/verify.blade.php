@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Verify Magic Link - Bilskyen')
+@section('title', __('messages.pages.magic_link.verify.page_title') . ' - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">

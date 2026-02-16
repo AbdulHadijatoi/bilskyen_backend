@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Verify Email - Bilskyen')
+@section('title', __('messages.pages.verify_email.title') . ' - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-start gap-4">

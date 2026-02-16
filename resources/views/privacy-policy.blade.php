@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Privacy Policy | Bilskyen')
+@section('title', __('messages.pages.privacy_policy.header_title') . ' | Bilskyen')
 
 @section('content')
 <div class="flex min-h-screen flex-col">

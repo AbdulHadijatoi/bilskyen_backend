@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profile - Bilskyen')
+@section('title', __('messages.pages.profile.title') . ' | Bilskyen')
 
 @section('content')
 <div class="container py-4 md:py-8">
@@ -49,7 +49,7 @@
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="{{ __('messages.forms.placeholders.full_name') }}"
                     value="{{ old('name', $user?->name ?? '') }}"
                     class="flex h-10 w-full rounded-md border {{ $errors->has('name') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
@@ -70,7 +70,7 @@
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="email@mail.com"
+                    placeholder="{{ __('messages.forms.placeholders.email') }}"
                     value="{{ old('email', $user?->email ?? '') }}"
                     class="flex h-10 w-full rounded-md border {{ $errors->has('email') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />

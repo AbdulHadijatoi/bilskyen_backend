@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Magic Link Login - Bilskyen')
+@section('title', __('messages.pages.login.magic_link_login') . ' - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">

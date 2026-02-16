@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'My Favorites | Bilskyen')
+@section('title', __('messages.pages.favorites.title') . ' | Bilskyen')
 
 @php
     use App\Helpers\FormatHelper;

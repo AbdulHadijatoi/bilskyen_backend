@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bilskyen | Home')
+@section('title', __('messages.navigation.home') . ' | Bilskyen')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />

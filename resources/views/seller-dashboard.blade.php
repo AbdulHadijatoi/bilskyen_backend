@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'My Listings | Bilskyen')
+@section('title', __('messages.pages.seller_dashboard.title') . ' | Bilskyen')
 
 @php
     use App\Helpers\FormatHelper;
@@ -89,7 +89,7 @@
 
             <!-- Status Tabs -->
             <div class="border-b border-border">
-                <nav class="flex space-x-1" aria-label="Status tabs">
+                <nav class="flex space-x-1" aria-label="{{ __('messages.pages.seller_dashboard.status_tabs') }}">
                     <button
                         type="button"
                         onclick="filterByStatus(null, '{{ $token }}')"
@@ -344,7 +344,7 @@
                     type="button"
                     onclick="closeInquiriesModal()"
                     class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Close dialog"
+                    aria-label="{{ __('messages.dialogs.close_dialog') }}"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6L6 18M6 6l12 12"></path>
@@ -399,7 +399,7 @@ window.openInquiriesModal = function(vehicleId, token) {
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="text-sm text-muted-foreground">Loading inquiries...</p>
+                <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.loading_inquiries') }}</p>
             </div>
         </div>
     `;
@@ -487,7 +487,7 @@ window.openInquiriesModal = function(vehicleId, token) {
                 </div>
             </div>
         `;
-        subtitle.textContent = 'Error loading inquiries';
+        subtitle.textContent = '{{ __('messages.pages.seller_dashboard.error_loading_inquiries') }}';
     });
 }
 

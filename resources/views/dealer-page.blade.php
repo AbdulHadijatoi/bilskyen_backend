@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($dealer->owner?->name ?? 'Dealer') . ' | Bilskyen')
+@section('title', ($dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label')) . ' | Bilskyen')
 
 @php
     use App\Helpers\FormatHelper;
@@ -200,7 +200,7 @@
                                 class="h-full w-full object-cover rounded-md"
                             />
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -264,11 +264,11 @@
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/{{ $vehicle->id }}" class="flex-1">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90">
-                                        View Details
+                                        {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
                                 <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }});">
-                                    Enquire
+                                    {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
                         </div>
@@ -348,7 +348,7 @@
                     type="button"
                     onclick="closeDealerEnquiryDialog()"
                     class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Close dialog"
+                    aria-label="{{ __('messages.dialogs.close_dialog') }}"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6L6 18M6 6l12 12"></path>
@@ -426,7 +426,7 @@
                                 name="email" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your email address"
+                                placeholder="{{ __('messages.forms.enter_email') }}"
                             >
                         </div>
 
@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Error submitting enquiry:', error);
-                const errorMsg = 'An error occurred. Please try again.';
+                const errorMsg = '{{ __('messages.dialogs.error_occurred') }}';
                 if (window.showSnackbar) {
                     window.showSnackbar(errorMsg, 'error');
                 } else if (errorList) {
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         heartIcon.classList.add('text-red-500');
                         if (path) path.setAttribute('fill', 'currentColor');
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || 'Saved to favorites', 'success');
+                            window.showSnackbar(data.message || '{{ __('messages.messages.saved_to_favorites') }}', 'success');
                         }
                     } else {
                         if (addResponse.status === 401) {
@@ -1098,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         />
                         
                         <!-- Heart Icon - Top Right -->
-                        <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                        <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                             </svg>

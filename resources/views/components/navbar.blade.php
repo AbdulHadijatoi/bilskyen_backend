@@ -3,7 +3,7 @@
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-2">
                 <a href="/" class="flex items-center space-x-2">
-                    <img src="/images/logo_white.png" alt="Bilskyen" class="h-6 md:h-8">
+                    <img src="/images/logo_white.png" alt="{{ __('messages.common.site_name') }}" class="h-6 md:h-8">
                 </a>
             </div>
             <div class="flex items-center gap-2 md:gap-4">
@@ -19,7 +19,7 @@
                 <div class="flex items-center gap-2">
                     <!-- Language Switcher -->
                     <div class="relative">
-                        <button id="language-menu-toggle" class="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md border border-primary-foreground/20 bg-transparent text-primary-foreground transition-colors hover:bg-primary-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Language menu">
+                        <button id="language-menu-toggle" class="inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md border border-primary-foreground/20 bg-transparent text-primary-foreground transition-colors hover:bg-primary-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="{{ __('messages.common.language_menu') }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                 <path d="M5 8l6 6"></path>
                                 <path d="M4 14l6-6 2-3"></path>
@@ -55,7 +55,7 @@
                     
                     @include('components.user-auth-status')
                     <!-- Mobile Menu Button -->
-                    <button id="mobile-menu-toggle" class="md:hidden p-1.5 rounded-md bg-muted transition-colors" aria-label="Toggle menu">
+                    <button id="mobile-menu-toggle" class="md:hidden p-1.5 rounded-md bg-muted transition-colors" aria-label="{{ __('messages.common.toggle_menu') }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -229,7 +229,7 @@
                     </a>
                 </div>
                 <div class="relative">
-                    <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="User menu">
+                    <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="{{ __('messages.common.user_menu') }}">
                         <div class="flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md bg-[#002d6b]">
                             <span class="text-xs md:text-sm font-medium text-white">${initials}</span>
                         </div>
@@ -239,7 +239,7 @@
                         <div class="px-2 py-1.5">
                             <div class="flex flex-col space-y-1">
                                 <p class="text-sm leading-none font-medium">${name}</p>
-                                <p class="text-muted-foreground text-xs leading-none" aria-label="User email">${email}</p>
+                                <p class="text-muted-foreground text-xs leading-none" aria-label="{{ __('messages.common.user_email') }}">${email}</p>
                             </div>
                         </div>
                         <div class="my-1 h-px bg-border"></div>

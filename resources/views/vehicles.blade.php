@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vehicles | Bilskyen')
+@section('title', __('messages.pages.vehicles.title') . ' | Bilskyen')
 
 @php
     use App\Helpers\FormatHelper;
@@ -509,7 +509,7 @@
                     </span>
                     @endif
                     <!-- Heart Icon - Top Right -->
-                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="Add to favorites">
+                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                         </svg>
@@ -1059,7 +1059,7 @@
                             </span>
                             `}
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-blue-600' : 'text-orange-600'} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -1194,7 +1194,7 @@
                             </span>
 
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-blue-600' : 'text-orange-600'} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
@@ -2105,7 +2105,7 @@
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
-                showError('Failed to load vehicles. Please try again.');
+                showError('{{ __('messages.pages.vehicles.failed_to_load_vehicles') }}');
                 isLoading = false;
             }
         }
@@ -2217,11 +2217,11 @@
                     if (isOpen) {
                         filterIcon.classList.add('hidden');
                         closeIcon.classList.remove('hidden');
-                        mobileFilterToggle.setAttribute('aria-label', 'Close filters');
+                        mobileFilterToggle.setAttribute('aria-label', '{{ __("messages.pages.vehicles.close_filters") }}');
                     } else {
                         filterIcon.classList.remove('hidden');
                         closeIcon.classList.add('hidden');
-                        mobileFilterToggle.setAttribute('aria-label', 'Open filters');
+                        mobileFilterToggle.setAttribute('aria-label', '{{ __("messages.pages.vehicles.open_filters") }}');
                     }
                 }
             }
@@ -2893,7 +2893,7 @@
                         <div class="vehicle-image-container relative">
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
                             <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="Add to favorites">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-orange-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicleId}" data-dealer-id="">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>

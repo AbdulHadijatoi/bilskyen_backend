@@ -158,10 +158,10 @@
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.business_hours') }}</h3>
                                 <p class="text-muted-foreground">
-                                    {{ $contactPageContent['contact_hours_weekdays'] ?? 'Monday - Saturday: 9:00 AM - 7:00 PM' }}
+                                    {{ $contactPageContent['contact_hours_weekdays'] ?? __('messages.pages.contact.default_hours_weekdays') }}
                                 </p>
                                 <p class="text-muted-foreground">
-                                    {{ $contactPageContent['contact_hours_weekend'] ?? 'Sunday: 10:00 AM - 5:00 PM' }}
+                                    {{ $contactPageContent['contact_hours_weekend'] ?? __('messages.pages.contact.default_hours_weekend') }}
                                 </p>
                             </div>
                         </div>

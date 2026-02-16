@@ -45,7 +45,7 @@
 @if($showUserMenu)
     <!-- User dropdown menu -->
     <div class="relative">
-        <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="User menu">
+        <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="{{ __('messages.common.user_menu') }}">
             <div class="flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md bg-[#002d6b]">
                 <span class="text-xs md:text-sm font-medium text-white">{{ $initials }}</span>
             </div>
@@ -58,7 +58,7 @@
                     <p class="text-sm leading-none font-medium">
                         {{ $userName }}
                     </p>
-                    <p class="text-muted-foreground text-xs leading-none" aria-label="User email">
+                    <p class="text-muted-foreground text-xs leading-none" aria-label="{{ __('messages.common.user_email') }}">
                         {{ $userEmail }}
                     </p>
                 </div>

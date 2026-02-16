@@ -19,7 +19,7 @@ class AdminSubscriptionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = DealerSubscription::with(['dealer', 'plan', 'subscriptionStatus']);
+        $query = DealerSubscription::with(['dealer.owner', 'plan', 'subscriptionStatus']);
 
         // Apply filters
         if ($request->has('dealer_id')) {
@@ -97,7 +97,7 @@ class AdminSubscriptionController extends Controller
 
             DB::commit();
 
-            $subscription->load(['dealer', 'plan', 'subscriptionStatus']);
+            $subscription->load(['dealer.owner', 'plan', 'subscriptionStatus']);
             return $this->created($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -107,7 +107,7 @@ class AdminSubscriptionController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $subscription = DealerSubscription::with(['dealer', 'plan.features', 'plan.priceHistory', 'subscriptionStatus'])
+        $subscription = DealerSubscription::with(['dealer.owner', 'plan.features', 'plan.priceHistory', 'subscriptionStatus'])
             ->findOrFail($id);
 
         return $this->success($subscription);
@@ -135,7 +135,7 @@ class AdminSubscriptionController extends Controller
 
             DB::commit();
 
-            $subscription->load(['dealer', 'plan', 'subscriptionStatus']);
+            $subscription->load(['dealer.owner', 'plan', 'subscriptionStatus']);
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -168,7 +168,7 @@ class AdminSubscriptionController extends Controller
 
             DB::commit();
 
-            $subscription->load(['dealer', 'plan', 'subscriptionStatus']);
+            $subscription->load(['dealer.owner', 'plan', 'subscriptionStatus']);
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -205,7 +205,7 @@ class AdminSubscriptionController extends Controller
 
             DB::commit();
 
-            $subscription->load(['dealer', 'plan', 'subscriptionStatus']);
+            $subscription->load(['dealer.owner', 'plan', 'subscriptionStatus']);
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();

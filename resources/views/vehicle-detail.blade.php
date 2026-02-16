@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vehicle Details | Bilskyen')
+@section('title', __('messages.pages.vehicles.detail.page_title') . ' | Bilskyen')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
@@ -151,6 +151,28 @@
     </div>
 
     <!-- Main Content Grid -->
+    @php
+        $contactUser = null;
+        $contactWhatsApp = null;
+        $contactEmail = null;
+        $dealerOwner = null;
+        $dealerPhone = null;
+        if ($vehicle->dealer && $vehicle->dealer->owner) {
+            $dealerOwner = $vehicle->dealer->owner;
+            $contactUser = $dealerOwner;
+            $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
+            $contactEmail = $dealerOwner->email ?? null;
+            if ($details && $details->seller_phone) {
+                $dealerPhone = $details->seller_phone;
+            } elseif ($dealerOwner && $dealerOwner->phone) {
+                $dealerPhone = $dealerOwner->phone;
+            }
+        } elseif ($vehicle->user) {
+            $contactUser = $vehicle->user;
+            $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
+            $contactEmail = $vehicle->user->email ?? null;
+        }
+    @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
         <div class="space-y-6 lg:col-span-2">
@@ -201,6 +223,114 @@
                 </div>
             </div>
             @endif
+
+            <!-- Dealer Information (mobile only - below photos) -->
+            @if($vehicle->dealer)
+            <div class="block lg:hidden">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                            <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"></path>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-foreground">
+                            {{ __('messages.pages.vehicles.detail.dealer_information') }}
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        @if($dealerOwner && $dealerOwner->name)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ ucfirst($dealerOwner->name) }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.contact_name') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($vehicle->seller_address)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $vehicle->seller_address }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($vehicle->seller_postcode)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ $vehicle->seller_postcode }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($dealerPhone)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <div class="dealer-phone-display-mobile hidden">
+                                        <p class="text-sm font-medium text-foreground">
+                                            <a href="tel:{{ $dealerPhone }}" class="hover:underline">
+                                                {{ $dealerPhone }}
+                                            </a>
+                                        </p>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onclick="showDealerPhoneAndCreateLead({{ $vehicle->id }}, event)"
+                                        class="show-dealer-phone-btn-mobile text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                                        data-vehicle-id="{{ $vehicle->id }}"
+                                        data-phone="{{ $dealerPhone }}"
+                                    >
+                                        {{ __('messages.pages.vehicles.detail.show_phone_number') }}
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.phone') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($contactEmail && $vehicle->dealer)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <button 
+                                        type="button"
+                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded dealer-email-btn-mobile"
+                                        data-email="{{ $contactEmail }}"
+                                    >
+                                        {{ __('messages.pages.vehicles.detail.send_email') }}
+                                    </button>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.email') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
         <!-- Basic Information Section -->
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.basic_information') }}</h2>
@@ -622,11 +752,11 @@
             <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.inspection_details') }}</h2>
             <div class="detail-grid">
                 @if($details->last_inspection_date)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_date') }}</span>
-                    <span class="detail-value">{{ $details->last_inspection_date->format('F j, Y') }}</span>
-            </div>
-            @endif
+                    <div class="detail-item">
+                        <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_date') }}</span>
+                        <span class="detail-value">{{ $details->last_inspection_date->format('F j, Y') }}</span>
+                    </div>
+                @endif
                 @if($details->last_inspection_result)
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.last_inspection_result') }}</span>
@@ -685,23 +815,6 @@
 
         <!-- Right Sidebar -->
         <div class="space-y-6">
-            @php
-                // Get contact information for dealer or private seller (needed for Contact Actions)
-                $contactUser = null;
-                $contactWhatsApp = null;
-                $contactEmail = null;
-                
-                if ($vehicle->dealer && $vehicle->dealer->owner) {
-                    $dealerOwner = $vehicle->dealer->owner;
-                    $contactUser = $dealerOwner;
-                    $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
-                    $contactEmail = $dealerOwner->email ?? null;
-                } elseif ($vehicle->user) {
-                    $contactUser = $vehicle->user;
-                    $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
-                    $contactEmail = $vehicle->user->email ?? null;
-                }
-            @endphp
 
              <!-- Pricing -->
              <div class="rounded-lg bg-primary p-6">
@@ -830,17 +943,9 @@
                 @endif
             @endauth
 
-            <!-- Dealer Information -->
+            <!-- Dealer Information (desktop sidebar only) -->
             @if($vehicle->dealer)
-                @php
-                    $dealerOwner = $vehicle->dealer->owner;
-                    $dealerPhone = null;
-                    if ($details && $details->seller_phone) {
-                        $dealerPhone = $details->seller_phone;
-                    } elseif ($dealerOwner && $dealerOwner->phone) {
-                        $dealerPhone = $dealerOwner->phone;
-                    }
-                @endphp
+                <div class="hidden lg:block">
                 <div class="bg-gray-50 rounded-lg p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -941,6 +1046,7 @@
                             </div>
                         @endif
                     </div>
+                </div>
                 </div>
 
                 <!-- Dealer Page Link Card -->
@@ -1434,11 +1540,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
     };
     
-    // Toggle dealer phone number visibility
-    function toggleDealerPhone() {
-        const phoneDisplay = document.getElementById('dealer-phone-display');
-        const showPhoneBtn = document.getElementById('show-dealer-phone-btn');
-        
+    // Toggle dealer phone number visibility (supports desktop sidebar and mobile block)
+    function toggleDealerPhone(clickedButton) {
+        let phoneDisplay, showPhoneBtn;
+        if (clickedButton && clickedButton.classList.contains('show-dealer-phone-btn-mobile')) {
+            const block = clickedButton.closest('.bg-gray-50');
+            phoneDisplay = block ? block.querySelector('.dealer-phone-display-mobile') : null;
+            showPhoneBtn = clickedButton;
+        } else {
+            phoneDisplay = document.getElementById('dealer-phone-display');
+            showPhoneBtn = document.getElementById('show-dealer-phone-btn');
+        }
         if (phoneDisplay && showPhoneBtn) {
             if (phoneDisplay.classList.contains('hidden')) {
                 phoneDisplay.classList.remove('hidden');
@@ -1488,7 +1600,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const button = event?.target?.closest('button') || event?.target;
         
         // Show phone number immediately (before creating lead)
-        toggleDealerPhone();
+        toggleDealerPhone(button);
         
         // Hide the button after showing phone
         if (button) {

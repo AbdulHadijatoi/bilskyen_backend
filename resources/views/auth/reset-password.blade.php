@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Reset Password - Bilskyen')
+@section('title', __('messages.pages.reset_password.title') . ' - Bilskyen')
 
 @section('content')
 <div class="flex h-full w-full flex-col items-center justify-center gap-4">
