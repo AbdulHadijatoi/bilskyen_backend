@@ -7,6 +7,7 @@ use App\Http\Controllers\VersionController;
 use App\Http\Controllers\NummerpladeController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
+use App\Http\Controllers\PageContentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -43,7 +44,11 @@ Route::prefix('v1')->group(function () {
     
     // Home Page Content API (public, uses cache)
     Route::get('/home-page-content', [HomePageContentController::class, 'getHomePageContent'])->name('home-page-content');
-    
+
+    // Privacy & Terms page content (public, cached)
+    Route::get('/privacy-policy', [PageContentController::class, 'getPrivacyContent']);
+    Route::get('/terms-and-conditions', [PageContentController::class, 'getTermsContent']);
+
     // Authentication routes
     Route::prefix('auth')->group(function () {
         // Public auth routes with isolated rate limiting (named limiters prevent cross-endpoint interference)
