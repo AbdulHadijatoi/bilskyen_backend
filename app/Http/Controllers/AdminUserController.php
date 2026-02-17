@@ -13,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class AdminUserController extends Controller
@@ -95,6 +97,7 @@ class AdminUserController extends Controller
             'phone' => 'nullable|string|max:15',
             'status_id' => ['required', Rule::in(UserStatus::values())],
             'role_id' => 'required|integer|exists:roles,id',
+            'logo' => 'nullable|image|max:2048',
         ]);
 
         $user = User::create([
@@ -111,12 +114,19 @@ class AdminUserController extends Controller
 
         // If dealer role, create dealer record and link to user
         if (strtolower($role->name) === 'dealer') {
-            DB::transaction(function () use ($user) {
+            $logoPath = null;
+            if ($request->hasFile('logo')) {
+                $file = $request->file('logo');
+                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $logoPath = $file->storeAs('dealer-logos', $filename, 'public');
+            }
+
+            DB::transaction(function () use ($user, $logoPath) {
                 // Make a unique slug
-                $baseSlug = \Illuminate\Support\Str::slug($user->name . '-' . $user->id);
+                $baseSlug = Str::slug($user->name . '-' . $user->id);
                 $slug = $baseSlug;
                 $count = 1;
-                while (\App\Models\Dealer::where('slug', $slug)->exists()) {
+                while (Dealer::where('slug', $slug)->exists()) {
                     $slug = $baseSlug . '-' . $count;
                     $count++;
                 }
@@ -129,6 +139,7 @@ class AdminUserController extends Controller
                     'city' => '',
                     'postcode' => '',
                     'country_code' => 'DK',
+                    'logo_path' => $logoPath,
                 ]);
             });
         }

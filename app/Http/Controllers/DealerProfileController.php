@@ -8,6 +8,8 @@ use App\Services\DealerContextService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Dealer Profile Controller
@@ -121,6 +123,41 @@ class DealerProfileController extends Controller
         }
 
         // Include updated user data in response
+        $response = $dealer->toArray();
+        $response['user'] = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+        ];
+
+        return $this->success($response);
+    }
+
+    /**
+     * Upload dealer logo
+     */
+    public function uploadLogo(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $dealer = $this->dealerContextService->requireDealer($user);
+
+        $request->validate([
+            'logo' => 'required|image|max:2048',
+        ]);
+
+        $file = $request->file('logo');
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $newPath = $file->storeAs('dealer-logos', $filename, 'public');
+
+        // Delete old logo file if present
+        if ($dealer->logo_path && Storage::disk('public')->exists($dealer->logo_path)) {
+            Storage::disk('public')->delete($dealer->logo_path);
+        }
+
+        $dealer->update(['logo_path' => $newPath]);
+        $dealer->refresh();
+
         $response = $dealer->toArray();
         $response['user'] = [
             'id' => $user->id,

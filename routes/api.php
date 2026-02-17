@@ -45,9 +45,9 @@ Route::prefix('v1')->group(function () {
     // Home Page Content API (public, uses cache)
     Route::get('/home-page-content', [HomePageContentController::class, 'getHomePageContent'])->name('home-page-content');
 
-    // Privacy & Terms page content (public, cached)
+    // Privacy & Terms page content (public, cached; same content as Blade views: privacy_body / terms_body)
     Route::get('/privacy-policy', [PageContentController::class, 'getPrivacyContent']);
-    Route::get('/terms-and-conditions', [PageContentController::class, 'getTermsContent']);
+    Route::get('/terms-of-service', [PageContentController::class, 'getTermsContent']);
 
     // Authentication routes
     Route::prefix('auth')->group(function () {

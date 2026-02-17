@@ -33,7 +33,7 @@ class AdminTermsPageController extends Controller
     public function update(Request $request, string $sectionKey): JsonResponse
     {
         $request->validate([
-            'content' => 'nullable|string',
+            'content' => 'nullable|string|max:65535',
             'page_name' => 'sometimes|string|max:100',
         ]);
 
@@ -56,7 +56,7 @@ class AdminTermsPageController extends Controller
     {
         $request->validate([
             'sections' => 'required|array',
-            'sections.*' => 'nullable|string',
+            'sections.*' => 'nullable|string|max:65535',
             'page_name' => 'sometimes|string|max:100',
         ]);
 

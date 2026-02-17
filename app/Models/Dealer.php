@@ -29,6 +29,8 @@ class Dealer extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = ['logo_url'];
+
     /**
      * Get logo URL attribute
      */

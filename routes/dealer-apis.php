@@ -119,6 +119,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('/', [DealerProfileController::class, 'show']);
         Route::post('/update', [DealerProfileController::class, 'update']);
+        Route::post('/logo', [DealerProfileController::class, 'uploadLogo']);
     });
     
     // Dealer Staff
