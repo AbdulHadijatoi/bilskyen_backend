@@ -15,6 +15,7 @@ use App\Models\Color;
 use App\Models\Type;
 use App\Models\VehicleUse;
 use App\Models\Variant;
+use App\Models\Transmission;
 use App\Models\Euronom;
 use App\Constants\VehicleListStatus;
 use App\Services\FileService;
@@ -137,6 +138,13 @@ class VehicleService
             if (isset($vehicleData[$field])) {
                 $vehicleDetailsData[$field] = $vehicleData[$field];
                 unset($vehicleData[$field]);
+            }
+        }
+
+        // Ensure transmission_id exists in transmissions table (column is FK); if not, set to null
+        if (array_key_exists('transmission_id', $vehicleDetailsData) && $vehicleDetailsData['transmission_id'] !== null) {
+            if (!Transmission::where('id', $vehicleDetailsData['transmission_id'])->exists()) {
+                $vehicleDetailsData['transmission_id'] = null;
             }
         }
 
@@ -404,6 +412,13 @@ class VehicleService
                 if (isset($vehicleData[$field])) {
                     $vehicleDetailsData[$field] = $vehicleData[$field];
                     unset($vehicleData[$field]);
+                }
+            }
+
+            // Ensure transmission_id exists in transmissions table (column is FK); if not, set to null
+            if (array_key_exists('transmission_id', $vehicleDetailsData) && $vehicleDetailsData['transmission_id'] !== null) {
+                if (!Transmission::where('id', $vehicleDetailsData['transmission_id'])->exists()) {
+                    $vehicleDetailsData['transmission_id'] = null;
                 }
             }
 
