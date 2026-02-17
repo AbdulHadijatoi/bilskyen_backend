@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             UserStatusSeeder::class,
             FuelTypeSeeder::class,
             TransmissionSeeder::class,
+            ModelYearSeeder::class,
             EquipmentSeeder::class,
             BrandAndModelSeeder::class,
             VehicleListStatusSeeder::class,

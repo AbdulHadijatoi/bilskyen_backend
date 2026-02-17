@@ -61,15 +61,15 @@
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
-            class="hidden lg:block fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-background lg:bg-card p-4 lg:p-4 shadow-lg lg:shadow-sm space-y-6 lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0"
+            class="hidden lg:block fixed lg:relative inset-0 lg:inset-auto lg:sticky lg:top-4 z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-background lg:bg-card p-4 lg:p-4 shadow-lg lg:shadow-sm space-y-6 lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0 border-t border-border lg:border-t-0 pt-4 lg:pt-0"
         >
             <!-- Condition Filter -->
-            <div class="space-y-3">
+            <div class="space-y-3 border-b border-border py-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {{ __('messages.forms.condition') }}
                 </p>
-                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
-                    <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-input">
+                    <label class="condition-radio-label filter-pill inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-transparent @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
                         <input 
                             type="radio" 
                             name="condition_id" 
@@ -80,7 +80,7 @@
                         <span>{{ __('messages.common.all') }}</span>
                     </label>
                     @foreach($constants['conditions'] as $condition)
-                        <label class="condition-radio-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if(isset($currentFilters['condition_id']) && (string)($currentFilters['condition_id']) === (string)($condition['id'] ?? '')) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                        <label class="condition-radio-label filter-pill inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-transparent @if(isset($currentFilters['condition_id']) && (string)($currentFilters['condition_id']) === (string)($condition['id'] ?? '')) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
                             <input 
                                 type="radio" 
                                 name="condition_id" 
@@ -95,11 +95,11 @@
             </div>
 
             <!-- Listing Type: Purchase / Leasing -->
-            <div class="space-y-3">
+            <div class="space-y-3 border-b border-border pb-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {{ __('messages.forms.listing_type') }}
                 </p>
-                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
+                <div class="inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-input">
                     @php
                         $listingTypes = $constants['listing_types'] ?? collect();
                         $purchaseType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Purchase') : $listingTypes->firstWhere('name', 'Purchase');
@@ -111,7 +111,7 @@
                         $isLeasingActive = $leasingId !== null && in_array($leasingId, $selectedListingTypes);
                     @endphp
                     @if($purchaseType)
-                        <label class="listing-type-checkbox-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if($isPurchaseActive) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                        <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-transparent @if($isPurchaseActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
                                 <input 
                                     type="checkbox" 
                                 name="listing_type_id[]" 
@@ -119,11 +119,12 @@
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isPurchaseActive) checked @endif
                                 >
+                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                 <span>{{ __('messages.forms.purchase') }}</span>
                         </label>
                     @endif
                     @if($leasingType)
-                        <label class="listing-type-checkbox-label inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all @if($isLeasingActive) bg-white text-foreground font-semibold shadow-sm @else bg-gray-150 text-muted-foreground hover:text-foreground @endif">
+                        <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-transparent @if($isLeasingActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
                                 <input 
                                     type="checkbox" 
                                 name="listing_type_id[]" 
@@ -131,6 +132,7 @@
                                 class="sr-only peer listing-type-checkbox"
                                     @if($isLeasingActive) checked @endif
                                 >
+                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                 <span>{{ __('messages.forms.leasing') }}</span>
                         </label>
                     @endif
@@ -140,32 +142,32 @@
             @php $cf = $currentFilters ?? []; @endphp
 
             <!-- Brand, Model, Model Year, Category -->
-            <div class="space-y-3">
+            <div class="space-y-3 border-b border-border pb-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.type_brand_model') }}</p>
                 <div class="space-y-2">
                     <label class="text-sm text-muted-foreground">{{ __('messages.forms.brand') }}</label>
-                    <select name="brand_id" id="brand-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <select name="brand_id" id="brand-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         <option value="">{{ __('messages.common.all') }}</option>
                         @foreach($constants['brands'] ?? [] as $b)
                         <option value="{{ is_array($b) ? $b['id'] : $b->id }}" @if(isset($cf['brand_id']) && (is_array($b) ? $b['id'] : $b->id) == $cf['brand_id']) selected @endif>{{ is_array($b) ? $b['name'] : $b->name }}</option>
                         @endforeach
                     </select>
                     <label class="text-sm text-muted-foreground">{{ __('messages.forms.model') }}</label>
-                    <select name="model_id" id="model-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <select name="model_id" id="model-select" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         <option value="">{{ __('messages.common.all') }}</option>
                         @foreach($constants['models'] ?? [] as $m)
                         <option value="{{ is_array($m) ? $m['id'] : $m->id }}" data-brand-id="{{ is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id }}" @if(isset($cf['model_id']) && (is_array($m) ? $m['id'] : $m->id) == $cf['model_id']) selected @endif>{{ is_array($m) ? $m['name'] : $m->name }}</option>
                         @endforeach
                     </select>
                     <label class="text-sm text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
-                    <select name="model_year_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <select name="model_year_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         <option value="">{{ __('messages.common.all') }}</option>
                         @foreach($constants['model_years'] ?? [] as $my)
                         <option value="{{ is_array($my) ? $my['id'] : $my->id }}" @if(isset($cf['model_year_id']) && (is_array($my) ? $my['id'] : $my->id) == $cf['model_year_id']) selected @endif>{{ is_array($my) ? $my['name'] : $my->name }}</option>
                         @endforeach
                     </select>
                     <label class="text-sm text-muted-foreground">{{ __('messages.forms.category') }}</label>
-                    <select name="category_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <select name="category_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         <option value="">{{ __('messages.common.all') }}</option>
                         @foreach($constants['categories'] ?? [] as $c)
                         <option value="{{ is_array($c) ? $c['id'] : $c->id }}" @if(isset($cf['category_id']) && (is_array($c) ? $c['id'] : $c->id) == $cf['category_id']) selected @endif>{{ is_array($c) ? $c['name'] : $c->name }}</option>
@@ -174,35 +176,65 @@
                 </div>
             </div>
 
-            <!-- Price & KM driven -->
-            <div class="space-y-3">
+            <!-- Price & KM driven (with dual-handle range sliders) -->
+            <div class="space-y-4 pt-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }} / {{ __('messages.forms.km_driven') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" value="{{ $cf['price_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="price_to" placeholder="{{ __('messages.forms.price') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['price_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="km_driven_from" placeholder="{{ __('messages.forms.min') }} km" min="0" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="km_driven_to" placeholder="{{ __('messages.forms.max') }} km" min="0" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- Price range -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="price-slider-min" min="0" max="1000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="price-slider-max" min="0" max="1000000" step="1000" value="1000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="price-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="price-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- KM driven range -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="mileage-slider-min" min="0" max="500000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="mileage-slider-max" min="0" max="500000" step="1000" value="500000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="mileage-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="mileage-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Fuel, Gear, Body type -->
-            <div class="space-y-3">
+            <div class="space-y-3 border-b border-border pb-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }}</p>
-                <select name="fuel_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="fuel_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['fuel_types'] ?? [] as $ft)
                     <option value="{{ is_array($ft) ? $ft['id'] : $ft->id }}" @if(isset($cf['fuel_type_id']) && (is_array($cf['fuel_type_id']) ? in_array(is_array($ft) ? $ft['id'] : $ft->id, $cf['fuel_type_id']) : (is_array($ft) ? $ft['id'] : $ft->id) == $cf['fuel_type_id'])) selected @endif>{{ is_array($ft) ? $ft['name'] : $ft->name }}</option>
                     @endforeach
                 </select>
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.gear_type') }}</p>
-                <select name="gear_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="gear_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['gear_types'] ?? [] as $gt)
                     <option value="{{ is_array($gt) ? $gt['id'] : $gt->id }}" @if(isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array(is_array($gt) ? $gt['id'] : $gt->id, $cf['gear_type_id']) : (is_array($gt) ? $gt['id'] : $gt->id) == $cf['gear_type_id'])) selected @endif>{{ is_array($gt) ? $gt['name'] : $gt->name }}</option>
                     @endforeach
                 </select>
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.body_type') }}</p>
-                <select name="body_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="body_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['body_types'] ?? [] as $bt)
                     <option value="{{ is_array($bt) ? $bt['id'] : $bt->id }}" @if(isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array(is_array($bt) ? $bt['id'] : $bt->id, $cf['body_type_id']) : (is_array($bt) ? $bt['id'] : $bt->id) == $cf['body_type_id'])) selected @endif>{{ is_array($bt) ? $bt['name'] : $bt->name }}</option>
@@ -211,58 +243,58 @@
             </div>
 
             <!-- Color, Variant, Type, Sales, Price type, Euronom, Use, Transmission -->
-            <div class="space-y-2">
+            <div class="space-y-2 border-b border-border pb-4">
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.color') }}</label>
-                <select name="color_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="color_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['colors'] ?? [] as $cl)
                     <option value="{{ is_array($cl) ? $cl['id'] : $cl->id }}" @if(isset($cf['color_id']) && (is_array($cl) ? $cl['id'] : $cl->id) == $cf['color_id']) selected @endif>{{ is_array($cl) ? $cl['name'] : $cl->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.variant') }}</label>
-                <select name="variant_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="variant_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['variants'] ?? [] as $v)
                     <option value="{{ is_array($v) ? $v['id'] : $v->id }}" @if(isset($cf['variant_id']) && (is_array($v) ? $v['id'] : $v->id) == $cf['variant_id']) selected @endif>{{ is_array($v) ? $v['name'] : $v->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.type') }}</label>
-                <select name="type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['types'] ?? [] as $t)
                     <option value="{{ is_array($t) ? $t['id'] : $t->id }}" @if(isset($cf['type_id']) && (is_array($t) ? $t['id'] : $t->id) == $cf['type_id']) selected @endif>{{ is_array($t) ? $t['name'] : $t->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.sales_type') }}</label>
-                <select name="sales_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="sales_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['sales_types'] ?? [] as $st)
                     <option value="{{ is_array($st) ? $st['id'] : $st->id }}" @if(isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array(is_array($st) ? $st['id'] : $st->id, $cf['sales_type_id']) : (is_array($st) ? $st['id'] : $st->id) == $cf['sales_type_id'])) selected @endif>{{ is_array($st) ? $st['name'] : $st->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.price_type') }}</label>
-                <select name="price_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="price_type_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['price_types'] ?? [] as $pt)
                     <option value="{{ is_array($pt) ? $pt['id'] : $pt->id }}" @if(isset($cf['price_type_id']) && (is_array($cf['price_type_id']) ? in_array(is_array($pt) ? $pt['id'] : $pt->id, $cf['price_type_id']) : (is_array($pt) ? $pt['id'] : $pt->id) == $cf['price_type_id'])) selected @endif>{{ is_array($pt) ? $pt['name'] : $pt->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.euro_norm') }}</label>
-                <select name="euronom_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="euronom_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['euronorms'] ?? [] as $en)
                     <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['euronom_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['euronom_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.use') }}</label>
-                <select name="use_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="use_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['vehicle_uses'] ?? [] as $uu)
                     <option value="{{ is_array($uu) ? $uu['id'] : $uu->id }}" @if(isset($cf['use_id']) && (is_array($uu) ? $uu['id'] : $uu->id) == $cf['use_id']) selected @endif>{{ is_array($uu) ? $uu['name'] : $uu->name }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.transmission') }}</label>
-                <select name="transmission_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="transmission_id" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     @foreach($constants['transmissions'] ?? [] as $tr)
                     <option value="{{ is_array($tr) ? $tr['id'] : $tr->id }}" @if(isset($cf['transmission_id']) && (is_array($tr) ? $tr['id'] : $tr->id) == $cf['transmission_id']) selected @endif>{{ is_array($tr) ? $tr['name'] : $tr->name }}</option>
@@ -270,92 +302,313 @@
                 </select>
             </div>
 
-            <!-- Range filters: year, first reg, ownership tax, engine power, battery, range km, fuel efficiency -->
-            <div class="space-y-2">
+            <!-- Range filters: year, first reg, ownership tax, engine power, battery, range km, fuel efficiency (dual-handle sliders) -->
+            <div class="space-y-4 border-t border-border pt-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.model_year') }} / {{ __('messages.forms.first_registration_year') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="year_from" placeholder="{{ __('messages.forms.year') }} {{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="year_to" placeholder="{{ __('messages.forms.year') }} {{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="first_registration_year_from" placeholder="{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.from') }}" min="1975" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="first_registration_year_to" placeholder="{{ __('messages.forms.first_registration_year') }} {{ __('messages.forms.to') }}" min="1975" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- Year -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="year-slider-min" min="1975" max="{{ date('Y') + 1 }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="year-slider-max" min="1975" max="{{ date('Y') + 1 }}" step="1" value="{{ date('Y') + 1 }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.owner_tax') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- First registration year -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.first_registration_year') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="first-reg-year-from" name="first_registration_year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="first-reg-year-to" name="first_registration_year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="first-reg-year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="first-reg-year-slider-min" min="1975" max="{{ date('Y') }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="first-reg-year-slider-max" min="1975" max="{{ date('Y') }}" step="1" value="{{ date('Y') }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="first-reg-year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="first-reg-year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.horsepower_hp') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="engine_power_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="engine_power_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- Ownership tax -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.owner_tax') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="owner-tax-from" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="owner-tax-to" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="owner-tax-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="owner-tax-slider-min" min="0" max="100000" step="100" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="owner-tax-slider-max" min="0" max="100000" step="100" value="100000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="owner-tax-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="owner-tax-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.battery_capacity_kwh') }} / {{ __('messages.forms.range_km') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="battery_capacity_from" placeholder="{{ __('messages.forms.battery') }} {{ __('messages.forms.min') }}" min="0" value="{{ $cf['battery_capacity_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="battery_capacity_to" placeholder="{{ __('messages.forms.battery') }} {{ __('messages.forms.max') }}" min="0" value="{{ $cf['battery_capacity_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="range_km_from" placeholder="{{ __('messages.forms.range') }} {{ __('messages.forms.min') }}" min="0" value="{{ $cf['range_km_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="range_km_to" placeholder="{{ __('messages.forms.range') }} {{ __('messages.forms.max') }}" min="0" value="{{ $cf['range_km_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- Horsepower -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.horsepower_hp') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="horsepower-min" name="engine_power_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="horsepower-max" name="engine_power_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="horsepower-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="horsepower-slider-min" min="0" max="1000" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="horsepower-slider-max" min="0" max="1000" step="10" value="1000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="horsepower-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="horsepower-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_efficiency') }}</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="fuel_efficiency_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['fuel_efficiency_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="fuel_efficiency_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['fuel_efficiency_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <!-- Battery capacity -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.battery_capacity_kwh') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="battery-capacity-min" name="battery_capacity_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['battery_capacity_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="battery-capacity-max" name="battery_capacity_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['battery_capacity_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="battery-capacity-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="battery-capacity-slider-min" min="0" max="200" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="battery-capacity-slider-max" min="0" max="200" step="5" value="200" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="battery-capacity-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="battery-capacity-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Range km -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.range_km') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="range-km-from" name="range_km_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['range_km_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="range-km-to" name="range_km_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['range_km_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="range-km-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="range-km-slider-min" min="0" max="1000" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="range-km-slider-max" min="0" max="1000" step="10" value="1000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="range-km-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="range-km-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fuel efficiency -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.fuel_efficiency') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="fuel-efficiency-from" name="fuel_efficiency_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['fuel_efficiency_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="fuel-efficiency-to" name="fuel_efficiency_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['fuel_efficiency_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="fuel-efficiency-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="fuel-efficiency-slider-min" min="0" max="50" step="0.5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="fuel-efficiency-slider-max" min="0" max="50" step="0.5" value="50" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="fuel-efficiency-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="fuel-efficiency-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- vehicle_details: top_speed, weight, engine_displacement, cylinders, doors, seats, wheels, axles, drive_axles, airbags -->
-            <div class="space-y-2">
+            <!-- vehicle_details: top_speed, weight, engine_displacement (sliders) + single inputs -->
+            <div class="space-y-4 border-t border-border pt-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.physical_details') }}</p>
+                <!-- Top speed -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.top_speed') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="top-speed-from" name="top_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['top_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="top-speed-to" name="top_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['top_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="top-speed-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="top-speed-slider-min" min="0" max="350" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="top-speed-slider-max" min="0" max="350" step="5" value="350" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="top-speed-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="top-speed-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Weight -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.weight') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="weight-from" name="weight_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['weight_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="weight-to" name="weight_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['weight_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="weight-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="weight-slider-min" min="0" max="5000" step="50" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="weight-slider-max" min="0" max="5000" step="50" value="5000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="weight-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="weight-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Engine displacement -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-muted-foreground">{{ __('messages.forms.engine_displacement_short') }}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="engine-displacement-from" name="engine_displacement_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['engine_displacement_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" id="engine-displacement-to" name="engine_displacement_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['engine_displacement_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
+                    <div class="relative h-6">
+                        <div class="slider-track-area relative h-full mx-3">
+                        <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                        <div id="engine-displacement-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                        <input type="range" id="engine-displacement-slider-min" min="0" max="8000" step="100" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <input type="range" id="engine-displacement-slider-max" min="0" max="8000" step="100" value="8000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                        <div id="engine-displacement-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        <div id="engine-displacement-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top: 50%; transform: translateY(-50%);"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Single number inputs -->
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="top_speed_from" placeholder="{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['top_speed_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="top_speed_to" placeholder="{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['top_speed_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="weight_from" placeholder="{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['weight_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="weight_to" placeholder="{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['weight_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="engine_displacement_from" placeholder="{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.from') }}" min="0" value="{{ $cf['engine_displacement_from'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="engine_displacement_to" placeholder="{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.to') }}" min="0" value="{{ $cf['engine_displacement_to'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="engine_cylinders" placeholder="{{ __('messages.forms.engine_cylinders') }}" min="0" value="{{ $cf['engine_cylinders'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="doors" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['doors'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="wheels" placeholder="{{ __('messages.forms.wheels') }}" min="0" value="{{ $cf['wheels'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="axles" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axles'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <input type="number" name="airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['airbags'] ?? '' }}" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <input type="number" name="engine_cylinders" placeholder="{{ __('messages.forms.engine_cylinders') }}" min="0" value="{{ $cf['engine_cylinders'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="doors" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['doors'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="wheels" placeholder="{{ __('messages.forms.wheels') }}" min="0" value="{{ $cf['wheels'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="axles" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axles'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                    <input type="number" name="airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                 </div>
                 <p class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.drive_wheels') }}</p>
                 <div class="flex flex-wrap gap-2">
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="fwd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('fwd', $cf['drive_axles']) : $cf['drive_axles'] == 'fwd')) checked @endif> {{ __('messages.forms.fwd') }}</label>
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="rwd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('rwd', $cf['drive_axles']) : $cf['drive_axles'] == 'rwd')) checked @endif> {{ __('messages.forms.rwd') }}</label>
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="drive_axles[]" value="awd" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('awd', $cf['drive_axles']) : $cf['drive_axles'] == 'awd')) checked @endif> {{ __('messages.forms.awd') }}</label>
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="drive_axles[]" value="fwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('fwd', $cf['drive_axles']) : $cf['drive_axles'] == 'fwd')) checked @endif>
+                        <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.fwd') }}</span>
+                    </label>
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="drive_axles[]" value="rwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('rwd', $cf['drive_axles']) : $cf['drive_axles'] == 'rwd')) checked @endif>
+                        <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.rwd') }}</span>
+                    </label>
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="drive_axles[]" value="awd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('awd', $cf['drive_axles']) : $cf['drive_axles'] == 'awd')) checked @endif>
+                        <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.awd') }}</span>
+                    </label>
                 </div>
-                <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             </div>
 
             <!-- Charging type, NCAP, Import, Factory new -->
-            <div class="space-y-2">
+            <div class="space-y-2 border-b border-border pb-4">
                 <label class="text-xs font-semibold text-muted-foreground uppercase">{{ __('messages.forms.charging_type') }}</label>
-                <select name="charging_type" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="charging_type" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <option value="">{{ __('messages.common.all') }}</option>
                     <option value="AC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC') selected @endif>{{ __('messages.forms.charging_ac') }}</option>
                     <option value="DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'DC') selected @endif>{{ __('messages.forms.charging_dc') }}</option>
                     <option value="AC/DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC/DC') selected @endif>{{ __('messages.forms.charging_ac_dc') }}</option>
                 </select>
-                <div class="flex flex-wrap gap-3 pt-2">
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="ncap_five" value="1" @if(isset($cf['ncap_five']) && $cf['ncap_five']) checked @endif> {{ __('messages.forms.ncap_five') }}</label>
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="is_import" value="1" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif> {{ __('messages.forms.is_import') }}</label>
-                    <label class="inline-flex items-center gap-1.5 text-sm"><input type="checkbox" name="is_factory_new" value="1" @if(isset($cf['is_factory_new']) && $cf['is_factory_new']) checked @endif> {{ __('messages.forms.is_factory_new') }}</label>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="ncap_five" value="1" class="sr-only peer" @if(isset($cf['ncap_five']) && $cf['ncap_five']) checked @endif>
+                        <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.ncap_five') }}</span>
+                    </label>
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="is_import" value="1" class="sr-only peer" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif>
+                        <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.is_import') }}</span>
+                    </label>
+                    <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary">
+                        <input type="checkbox" name="is_factory_new" value="1" class="sr-only peer" @if(isset($cf['is_factory_new']) && $cf['is_factory_new']) checked @endif>
+                        <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span>{{ __('messages.forms.is_factory_new') }}</span>
+                    </label>
                 </div>
             </div>
 
-            <!-- Equipment -->
-            <div class="space-y-2">
+            <!-- Equipment (grouped by type, collapsible, button-style with check icon) -->
+            <div class="space-y-2 border-t border-border pt-4">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.equipment') }}</p>
-                <div class="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                    @foreach($constants['equipments'] ?? [] as $eq)
-                    <label class="inline-flex items-center gap-1.5 text-sm">
-                        <input type="checkbox" name="equipment_ids[]" value="{{ is_array($eq) ? $eq['id'] : $eq->id }}" @if(isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array(is_array($eq) ? $eq['id'] : $eq->id, $cf['equipment_ids'])) checked @endif>
-                        <span>{{ is_array($eq) ? $eq['name'] : $eq->name }}</span>
-                    </label>
+                <div class="space-y-1">
+                    @php
+                        $equipmentTypes = $constants['equipment_types'] ?? [];
+                        $equipmentsList = $constants['equipments'] ?? [];
+                        $equipmentsByType = [];
+                        foreach ($equipmentsList as $eq) {
+                            $eid = is_array($eq) ? $eq['id'] : $eq->id;
+                            $ename = is_array($eq) ? $eq['name'] : $eq->name;
+                            $typeId = is_array($eq) ? ($eq['equipment_type_id'] ?? null) : ($eq->equipment_type_id ?? null);
+                            if (!isset($equipmentsByType[$typeId])) $equipmentsByType[$typeId] = [];
+                            $equipmentsByType[$typeId][] = ['id' => $eid, 'name' => $ename];
+                        }
+                    @endphp
+                    @foreach($equipmentTypes as $et)
+                        @php
+                            $typeId = is_array($et) ? $et['id'] : $et->id;
+                            $typeName = is_array($et) ? $et['name'] : $et->name;
+                            $items = $equipmentsByType[$typeId] ?? [];
+                        @endphp
+                        @if(count($items) > 0)
+                            <div class="equipment-type-group border-b border-border pb-2 last:border-0">
+                                <button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+                                    <span>{{ $typeName }}</span>
+                                    <svg class="equipment-type-icon w-4 h-4 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div class="equipment-type-content hidden flex flex-wrap gap-2 mt-2">
+                                    @foreach($items as $eq)
+                                        @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
+                                        <label class="equipment-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
+                                            <input type="checkbox" name="equipment_ids[]" value="{{ $eq['id'] }}" class="sr-only peer" @if($checked) checked @endif>
+                                            <span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                            <span>{{ $eq['name'] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @endforeach
+                    @php $otherItems = array_merge($equipmentsByType[null] ?? [], $equipmentsByType[''] ?? []); @endphp
+                    @if(count($otherItems) > 0)
+                        <div class="equipment-type-group border-b border-border pb-2 last:border-0">
+                                <button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+                                    <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
+                                    <svg class="equipment-type-icon w-4 h-4 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div class="equipment-type-content hidden flex flex-wrap gap-2 mt-2">
+                                    @foreach($otherItems as $eq)
+                                        @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
+                                        <label class="equipment-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
+                                            <input type="checkbox" name="equipment_ids[]" value="{{ $eq['id'] }}" class="sr-only peer" @if($checked) checked @endif>
+                                            <span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                            <span>{{ $eq['name'] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                 </div>
             </div>
         </aside>
@@ -373,7 +626,7 @@
                     <button
                         id="filter-reset-button-main"
                         type="button"
-                                class="hidden inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         {{ __('messages.pages.vehicles.reset_filters') }}
                     </button>
@@ -448,8 +701,8 @@
                 
                 
                 <!-- View Toggle Buttons -->
-                <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-gray-150">
-                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-white text-foreground font-semibold">
+                <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-input">
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-primary text-primary-foreground font-semibold">
                         <input 
                             type="radio" 
                             name="view-toggle" 
@@ -464,7 +717,7 @@
                     <rect width="7" height="7" x="14" y="14" rx="1"></rect>
                 </svg>
                     </label>
-                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-gray-150 text-muted-foreground hover:text-foreground">
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-card text-muted-foreground hover:text-foreground border border-transparent border-input">
                         <input 
                             type="radio" 
                             name="view-toggle" 
@@ -499,18 +752,18 @@
                     />
                     @if($vehicle->dealer_id)
                     <!-- Dealer Label - Top Left -->
-                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         {{ __('messages.pages.vehicles.dealer') }}
                 </span>
                     @else
                     <!-- Private Label - Top Left -->
-                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm">
                         {{ __('messages.pages.vehicles.private') }}
                     </span>
                     @endif
                     <!-- Heart Icon - Top Right -->
                     <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                         </svg>
             </button>
@@ -814,71 +1067,32 @@
         }
     }
     
-    /* Condition filter pill-style tabs */
-    .condition-radio-label {
-        border: none !important;
-    }
-    
-    .condition-radio-label.bg-white {
-        background-color: rgb(255 255 255) !important;
-        color: hsl(var(--foreground)) !important;
-        font-weight: 600 !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        
-    .condition-radio-label.bg-gray-150 {
-        background-color: rgb(236 237 240) !important;
-        color: hsl(var(--muted-foreground)) !important;
-    }
-    
-    .condition-radio-label.bg-gray-150:hover {
-        color: hsl(var(--foreground)) !important;
-        }
-    
-    /* Listing Type filter pill-style tabs */
-    .listing-type-checkbox-label {
-        border: none !important;
-    }
-    
-    .listing-type-checkbox-label.bg-white {
-        background-color: rgb(255 255 255) !important;
-        color: hsl(var(--foreground)) !important;
-        font-weight: 600 !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        
-    .listing-type-checkbox-label.bg-gray-150 {
-        background-color: rgb(236 237 240) !important;
-        color: hsl(var(--muted-foreground)) !important;
-    }
-    
-    .listing-type-checkbox-label.bg-gray-150:hover {
-        color: hsl(var(--foreground)) !important;
-        }
-    
-    /* View Toggle filter pill-style tabs */
+    /* Filter pill-style tabs (condition, listing type, view) - primary + neutral */
+    .condition-radio-label,
+    .listing-type-checkbox-label,
     .view-toggle-label {
-        border: none !important;
+        transition: background-color 0.15s, color 0.15s;
     }
     
-    .view-toggle-label.bg-white {
-        background-color: rgb(255 255 255) !important;
-        color: hsl(var(--foreground)) !important;
+    .condition-radio-label.bg-primary,
+    .listing-type-checkbox-label.bg-primary,
+    .view-toggle-label.bg-primary {
+        background-color: var(--primary) !important;
+        color: var(--primary-foreground) !important;
         font-weight: 600 !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        
-    .view-toggle-label.bg-gray-150 {
-        background-color: rgb(236 237 240) !important;
+    }
+    
+    .condition-radio-label.bg-card,
+    .listing-type-checkbox-label.bg-card,
+    .view-toggle-label.bg-card {
+        background-color: var(--card) !important;
         color: hsl(var(--muted-foreground)) !important;
     }
     
-    .view-toggle-label.bg-gray-150:hover {
+    .condition-radio-label.bg-card:hover,
+    .listing-type-checkbox-label.bg-card:hover,
+    .view-toggle-label.bg-card:hover {
         color: hsl(var(--foreground)) !important;
-        }
-        
-    .bg-gray-150 {
-        background-color: rgb(236 237 240) !important;
     }
     
     /* Condition filter responsive styles */
@@ -1049,18 +1263,18 @@
                             />
                             ${vehicle.dealer_id ? `
                             <!-- Dealer Label - Top Left -->
-                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 {{ __('messages.pages.vehicles.dealer') }}
                             </span>
                             ` : `
                             <!-- Private Label - Top Left -->
-                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm">
                                 {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-blue-600' : 'text-orange-600'} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
                             </button>
@@ -1182,12 +1396,12 @@
                             <span>
                             ${vehicle.dealer_id ? `
                                 <!-- Dealer Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                     {{ __('messages.pages.vehicles.dealer') }}
                                 </span>
                                 ` : `
                                 <!-- Private Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm">
                                     {{ __('messages.pages.vehicles.private') }}
                                 </span>
                                 `}
@@ -1195,7 +1409,7 @@
 
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-blue-600' : 'text-orange-600'} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
                             </button>
@@ -1931,7 +2145,7 @@
             
             // Render chips (always keep reset button in DOM for updateResetButtonVisibility)
             const chipsHTML = chips.length === 0 ? '' : chips.map(chip => `
-                <div class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground">
+                <div class="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground">
                     <span>${chip.label}</span>
                     <button 
                         type="button"
@@ -1947,7 +2161,7 @@
                     </button>
                 </div>
             `).join('');
-            const resetBtnHtml = `<button id="filter-reset-button-main" type="button" class="hidden inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">{{ __('messages.pages.vehicles.reset_filters') }}</button>`;
+            const resetBtnHtml = `<button id="filter-reset-button-main" type="button" class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">{{ __('messages.pages.vehicles.reset_filters') }}</button>`;
             container.innerHTML = chipsHTML + resetBtnHtml;
             updateResetButtonVisibility();
             container.querySelectorAll('.filter-chip-remove').forEach(btn => {
@@ -2072,7 +2286,6 @@
                 if (Array.isArray(payload[k]) && payload[k].length === 0) delete payload[k];
             });
             showLoading();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 const response = await fetch('{{ url("/api/v1/search-vehicles") }}', {
@@ -2243,11 +2456,11 @@
                 const label = checkbox.closest('.listing-type-checkbox-label');
                 if (label) {
                     if (checkbox.checked) {
-                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                        label.classList.add('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.remove('bg-card', 'text-muted-foreground', 'border-input');
                     } else {
-                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.add('bg-gray-150', 'text-muted-foreground');
+                        label.classList.remove('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.add('bg-card', 'text-muted-foreground', 'border-input');
                     }
                 }
             });
@@ -2255,10 +2468,7 @@
         
         listingTypeCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                // Update styles
                 updateListingTypeStyles();
-                // Auto-apply filters
-                autoApplyFilters();
             });
         });
 
@@ -2328,23 +2538,20 @@
                 const label = radio.closest('.condition-radio-label');
                 if (label) {
                     if (radio.checked) {
-                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                        label.classList.add('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.remove('bg-card', 'text-muted-foreground', 'border-input');
                     } else {
-                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.add('bg-gray-150', 'text-muted-foreground');
+                        label.classList.remove('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.add('bg-card', 'text-muted-foreground', 'border-input');
                     }
                 }
             });
         }
         
-        // Set up condition radio listeners - apply filter when changed
+        // Set up condition radio listeners - only update UI; filter apply is handled by setupAutoApplyFilters
         document.querySelectorAll('input[name="condition_id"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 updateConditionStyles();
-                // Apply filter immediately
-                const filters = collectFilters();
-                fetchVehicles({ ...filters, page: 1 });
             });
         });
         
@@ -2381,6 +2588,12 @@
             const { minSlider, maxSlider, minInput, maxInput, minHandle, maxHandle, track, min, max } = config;
             
             if (!minSlider || !maxSlider || !minInput || !maxInput || !minHandle || !maxHandle || !track) return;
+            
+            // Sync from server-rendered number inputs to sliders on init
+            const minVal = parseFloat(minInput.value);
+            const maxVal = parseFloat(maxInput.value);
+            if (!isNaN(minVal) && minVal > min) minSlider.value = Math.min(max, minVal);
+            if (!isNaN(maxVal) && maxVal < max) maxSlider.value = Math.max(min, maxVal);
             
             function updateSlider() {
                 const minVal = parseFloat(minSlider.value) || min;
@@ -2462,7 +2675,7 @@
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging || !activeHandle) return;
                 
-                const sliderContainer = activeHandle.closest('.relative');
+                const sliderContainer = activeHandle.closest('.slider-track-area') || activeHandle.closest('.relative');
                 const rect = sliderContainer.getBoundingClientRect();
                 const percent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
                 const value = min + (percent / 100) * (max - min);
@@ -2475,8 +2688,12 @@
             });
             
             document.addEventListener('mouseup', () => {
+                const wasDragging = isDragging;
                 isDragging = false;
                 activeHandle = null;
+                if (wasDragging && typeof autoApplyFilters === 'function') {
+                    autoApplyFilters();
+                }
             });
         }
         
@@ -2569,6 +2786,50 @@
                 track: document.getElementById('range-km-range-track'),
                 min: 0,
                 max: 1000
+            },
+            {
+                minSlider: document.getElementById('fuel-efficiency-slider-min'),
+                maxSlider: document.getElementById('fuel-efficiency-slider-max'),
+                minInput: document.getElementById('fuel-efficiency-from'),
+                maxInput: document.getElementById('fuel-efficiency-to'),
+                minHandle: document.getElementById('fuel-efficiency-handle-min'),
+                maxHandle: document.getElementById('fuel-efficiency-handle-max'),
+                track: document.getElementById('fuel-efficiency-range-track'),
+                min: 0,
+                max: 50
+            },
+            {
+                minSlider: document.getElementById('top-speed-slider-min'),
+                maxSlider: document.getElementById('top-speed-slider-max'),
+                minInput: document.getElementById('top-speed-from'),
+                maxInput: document.getElementById('top-speed-to'),
+                minHandle: document.getElementById('top-speed-handle-min'),
+                maxHandle: document.getElementById('top-speed-handle-max'),
+                track: document.getElementById('top-speed-range-track'),
+                min: 0,
+                max: 350
+            },
+            {
+                minSlider: document.getElementById('weight-slider-min'),
+                maxSlider: document.getElementById('weight-slider-max'),
+                minInput: document.getElementById('weight-from'),
+                maxInput: document.getElementById('weight-to'),
+                minHandle: document.getElementById('weight-handle-min'),
+                maxHandle: document.getElementById('weight-handle-max'),
+                track: document.getElementById('weight-range-track'),
+                min: 0,
+                max: 5000
+            },
+            {
+                minSlider: document.getElementById('engine-displacement-slider-min'),
+                maxSlider: document.getElementById('engine-displacement-slider-max'),
+                minInput: document.getElementById('engine-displacement-from'),
+                maxInput: document.getElementById('engine-displacement-to'),
+                minHandle: document.getElementById('engine-displacement-handle-min'),
+                maxHandle: document.getElementById('engine-displacement-handle-max'),
+                track: document.getElementById('engine-displacement-range-track'),
+                min: 0,
+                max: 8000
             }
         ];
 
@@ -2589,14 +2850,15 @@
                     const config = sliderConfigs.find(c => 
                         c.minSlider === input || c.maxSlider === input
                     );
-                    if (config) {
-                        if (input === config.minSlider) {
+if (config) {
+                    if (input === config.minSlider) {
                             input.value = config.min;
                             if (config.minInput) config.minInput.value = '';
                         } else {
                             input.value = config.max;
                             if (config.maxInput) config.maxInput.value = '';
                         }
+                        if (config.minSlider) config.minSlider.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                 } else if (input.tagName === 'SELECT' && input.multiple) {
                     // Reset multi-select dropdowns
@@ -2801,15 +3063,7 @@
                 });
             });
             
-            // Range sliders (with debounce)
-            filterSidebar.querySelectorAll('input[type="range"]').forEach(slider => {
-                slider.addEventListener('input', () => {
-                    clearTimeout(filterDebounceTimer);
-                    filterDebounceTimer = setTimeout(() => {
-                        autoApplyFilters();
-                    }, 500);
-                });
-            });
+            // Range sliders: no input listener here; filter is applied on handle release in initRangeSlider
         }
         
         
@@ -2819,11 +3073,11 @@
                 const label = radio.closest('.view-toggle-label');
                 if (label) {
                     if (radio.checked) {
-                        label.classList.add('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.remove('bg-gray-150', 'text-muted-foreground');
+                        label.classList.add('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.remove('bg-card', 'text-muted-foreground', 'border-input');
                     } else {
-                        label.classList.remove('bg-white', 'text-foreground', 'font-semibold', 'shadow-sm');
-                        label.classList.add('bg-gray-150', 'text-muted-foreground');
+                        label.classList.remove('bg-primary', 'text-primary-foreground', 'font-semibold');
+                        label.classList.add('bg-card', 'text-muted-foreground', 'border-input');
                     }
                 }
             });
@@ -2894,7 +3148,7 @@
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-orange-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicleId}" data-dealer-id="">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-foreground hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicleId}" data-dealer-id="">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
                             </button>
@@ -3080,11 +3334,11 @@
                         // Restore original color based on dealer status
                         const dealerId = heartIcon.getAttribute('data-dealer-id');
                         if (dealerId && dealerId !== '') {
-                            heartIcon.classList.add('text-blue-600');
-                            heartIcon.classList.remove('text-orange-600');
+                            heartIcon.classList.add('text-primary');
+                            heartIcon.classList.remove('text-foreground');
                         } else {
-                            heartIcon.classList.add('text-orange-600');
-                            heartIcon.classList.remove('text-blue-600');
+                            heartIcon.classList.add('text-foreground');
+                            heartIcon.classList.remove('text-primary');
                         }
                         if (path) path.setAttribute('fill', 'none');
                         if (window.showSnackbar) {
@@ -3129,7 +3383,7 @@
                     if (response.ok) {
                         const data = await response.json().catch(() => ({}));
                         heartIcon.classList.add('filled');
-                        heartIcon.classList.remove('text-blue-600', 'text-orange-600');
+                        heartIcon.classList.remove('text-primary', 'text-foreground');
                         heartIcon.classList.add('text-red-500');
                         if (path) path.setAttribute('fill', 'currentColor');
                         if (window.showSnackbar) {
