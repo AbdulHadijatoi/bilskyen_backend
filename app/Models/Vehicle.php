@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use App\Models\Enquiry;
 
 class Vehicle extends Model
@@ -27,6 +28,7 @@ class Vehicle extends Model
      */
     protected $fillable = [
         'title',
+        'slug',
         'registration',
         'vin',
         'dealer_id',
@@ -99,6 +101,57 @@ class Vehicle extends Model
                 $query->orderBy('id', 'desc');
             }
         });
+
+        static::creating(function (Vehicle $vehicle) {
+            if (empty($vehicle->slug)) {
+                $vehicle->slug = $vehicle->generateUniqueSlug();
+            }
+        });
+
+        static::saving(function (Vehicle $vehicle) {
+            if ($vehicle->isDirty('title') && $vehicle->exists) {
+                $vehicle->slug = $vehicle->generateUniqueSlug();
+            }
+        });
+    }
+
+    /**
+     * Get the route key for the model (used in URL route model binding).
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
+     * Generate a unique slug from the vehicle title.
+     * If the base slug exists for another vehicle, appends -2, -3, etc.
+     */
+    public function generateUniqueSlug(): string
+    {
+        $title = $this->title ?? '';
+        if (empty($title)) {
+            $title = 'vehicle';
+        }
+        $slug = Str::slug($title);
+        if (empty($slug)) {
+            $slug = 'vehicle';
+        }
+        $base = $slug;
+        $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+        if ($this->id !== null) {
+            $query->where('id', '!=', $this->id);
+        }
+        $counter = 1;
+        while ($query->exists()) {
+            $slug = $base . '-' . $counter;
+            $counter++;
+            $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+            if ($this->id !== null) {
+                $query->where('id', '!=', $this->id);
+            }
+        }
+        return $slug;
     }
 
     /**

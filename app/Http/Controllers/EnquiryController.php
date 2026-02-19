@@ -60,20 +60,12 @@ class EnquiryController extends Controller
      * Create a lead/enquiry for a vehicle
      * Allows both authenticated and guest users
      */
-    public function enquire(Request $request, int $id): JsonResponse
+    public function enquire(Request $request, Vehicle $vehicle): JsonResponse
     {
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
-        // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
-        
-        if (!$vehicle) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Vehicle not found',
-            ], 404);
-        }
+        $vehicle->load(['details', 'dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -164,10 +156,10 @@ class EnquiryController extends Controller
     /**
      * Show enquiry form page for a vehicle
      */
-    public function showEnquiryForm(int $id): View
+    public function showEnquiryForm(Vehicle $vehicle): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
-        
+        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+
         return view('vehicle-enquiry-form', [
             'vehicle' => $vehicle,
         ]);
@@ -177,7 +169,7 @@ class EnquiryController extends Controller
      * Submit enquiry form and create lead
      * Allows both authenticated and guest users
      */
-    public function submitEnquiryForm(Request $request, int $id): JsonResponse
+    public function submitEnquiryForm(Request $request, Vehicle $vehicle): JsonResponse
     {
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
@@ -190,15 +182,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
-        
-        if (!$vehicle) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Vehicle not found',
-            ], 404);
-        }
+        $vehicle->load(['details', 'dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -308,9 +292,9 @@ class EnquiryController extends Controller
     /**
      * Show test drive request form
      */
-    public function showTestDriveForm(int $id): View
+    public function showTestDriveForm(Vehicle $vehicle): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
+        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-test-drive-form', [
             'vehicle' => $vehicle,
@@ -322,7 +306,7 @@ class EnquiryController extends Controller
      * Submit test drive request form and create lead + enquiry
      * Allows both authenticated and guest users
      */
-    public function submitTestDriveForm(Request $request, int $id): JsonResponse
+    public function submitTestDriveForm(Request $request, Vehicle $vehicle): JsonResponse
     {
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
@@ -335,15 +319,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
-        
-        if (!$vehicle) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Vehicle not found',
-            ], 404);
-        }
+        $vehicle->load(['details', 'dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -453,9 +429,9 @@ class EnquiryController extends Controller
     /**
      * Show price negotiation form
      */
-    public function showPriceNegotiationForm(int $id): View
+    public function showPriceNegotiationForm(Vehicle $vehicle): View
     {
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user', 'images', 'brand', 'model'])->findOrFail($id);
+        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-price-negotiation-form', [
             'vehicle' => $vehicle,
@@ -467,7 +443,7 @@ class EnquiryController extends Controller
      * Submit price negotiation form and create lead + enquiry
      * Allows both authenticated and guest users
      */
-    public function submitPriceNegotiationForm(Request $request, int $id): JsonResponse
+    public function submitPriceNegotiationForm(Request $request, Vehicle $vehicle): JsonResponse
     {
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
@@ -480,15 +456,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        // Find vehicle
-        $vehicle = Vehicle::with(['details', 'dealer.owner', 'user'])->find($id);
-        
-        if (!$vehicle) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Vehicle not found',
-            ], 404);
-        }
+        $vehicle->load(['details', 'dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;

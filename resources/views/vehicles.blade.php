@@ -742,7 +742,7 @@
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
         @forelse($vehicles as $vehicle)
         <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-            <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
+            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
                 <!-- Vehicle Image -->
                 <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                     <img
@@ -826,14 +826,14 @@
                 <!-- Vehicle Actions -->
                 <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
+                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                 {{ __('messages.pages.vehicles.view_details') }}
                             </button>
                         </a>
                         <button 
                             type="button"
-                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
                             class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                         >
                             {{ __('messages.pages.vehicles.enquire') }}
@@ -1253,7 +1253,7 @@
             
             return `
                 <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-                    <a href="/vehicles/${vehicle.id}" class="block flex-1">
+                    <a href="/vehicles/${vehicle.slug}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
@@ -1333,12 +1333,12 @@
                         <!-- Vehicle Actions -->
                         <div class="p-3 pt-0">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
+                                <a href="/vehicles/${vehicle.slug}" class="flex-1" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
-                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); handleEnquire(${vehicle.id}, event);">
+                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}');">
                                     {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
@@ -1384,7 +1384,7 @@
             return `
                 <div class="vehicle-item relative bg-white rounded-lg">
 
-                    <a href="/vehicles/${vehicle.id}" class="block flex-1">
+                    <a href="/vehicles/${vehicle.slug}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="vehicle-image-container relative">
                             <img
@@ -1456,14 +1456,14 @@
                         <!-- Vehicle Actions -->
                         <div class="vehicle-actions-section">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/${vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
+                                <a href="/vehicles/${vehicle.slug}" class="flex-1" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                             </button>
                         </a>
                                 <button 
                                     type="button"
-                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
+                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}')"
                                     class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                 >
                                 {{ __('messages.pages.vehicles.enquire') }}
@@ -3137,13 +3137,14 @@ if (config) {
                 const badges = Array.from(detailsDiv.querySelectorAll('.rounded-md.border')).map(b => b.textContent);
                 const specs = Array.from(detailsDiv.querySelectorAll('.grid.grid-cols-2 > div')).map(s => s.innerHTML);
                 const viewLink = actionsDiv?.querySelector('a[href^="/vehicles/"]')?.getAttribute('href') || '';
-                const vehicleId = viewLink.match(/\/vehicles\/(\d+)/)?.[1] || '';
+                const vehicleSlug = viewLink.match(/\/vehicles\/([^/]+)/)?.[1] || '';
+                const vehicleId = card?.querySelector('.heart-icon')?.getAttribute('data-vehicle-id') || '';
                 
                 // Create list item structure - Fixed height compact design
                 const listItem = document.createElement('div');
                 listItem.className = 'vehicle-item';
                 listItem.innerHTML = `
-                    <a href="/vehicles/${vehicleId}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
+                    <a href="/vehicles/${vehicleSlug}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
                         <div class="vehicle-image-container relative">
                             ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
                             <!-- Heart Icon - Top Right -->
@@ -3178,8 +3179,8 @@ if (config) {
                         </div>
                     </a>
                     <div class="vehicle-actions-section" onclick="event.stopPropagation()">
-                        ${vehicleId ? `<a href="/vehicles/${vehicleId}" onclick="event.stopPropagation()"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
-                        <a href="/vehicles/${vehicleId}/enquire" onclick="event.stopPropagation()">
+                        ${vehicleSlug ? `<a href="/vehicles/${vehicleSlug}" onclick="event.stopPropagation()"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
+                        <a href="/vehicles/${vehicleSlug}/enquire" onclick="event.stopPropagation()">
                             <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Enquire</button>
                         </a>
                     </div>

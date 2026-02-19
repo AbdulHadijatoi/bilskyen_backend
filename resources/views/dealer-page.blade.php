@@ -191,7 +191,7 @@
         <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-view="card">
                 @forelse($vehicles as $vehicle)
                 <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full shadow-sm">
-                    <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
+                    <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
@@ -262,12 +262,12 @@
                         @endif
                         <div class="p-3 pt-0">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/{{ $vehicle->id }}" class="flex-1">
+                                <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
-                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }});">
+                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}');">
                                     {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
@@ -1088,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `
             <div class="vehicle-item relative bg-card rounded-lg overflow-hidden">
-                <a href="/vehicles/${vehicle.id}" class="block flex-1">
+                <a href="/vehicles/${vehicle.slug}" class="block flex-1">
                     <!-- Vehicle Image -->
                     <div class="vehicle-image-container relative">
                         <img
@@ -1143,14 +1143,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             ` : ''}
                             <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
-                                <a href="/vehicles/${vehicle.id}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
+                                <a href="/vehicles/${vehicle.slug}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
                                 <button 
                                     type="button"
-                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', ${vehicle.id})"
+                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}')"
                                     class="flex-1 sm:flex-initial inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                 >
                                     {{ __('messages.pages.vehicles.enquire') }}
@@ -1175,21 +1175,22 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if already converted
             if (card.classList.contains('vehicle-item')) return;
             
-            // Store original HTML before conversion
-            const vehicleId = card.querySelector('a[href^="/vehicles/"]')?.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1];
-            if (vehicleId && !originalCardHTML.has(vehicleId)) {
-                originalCardHTML.set(vehicleId, card.outerHTML);
+            // Store original HTML before conversion (use slug as key; link now contains slug)
+            const link = card.querySelector('a[href^="/vehicles/"]');
+            const vehicleSlug = link?.getAttribute('href')?.match(/\/vehicles\/([^/]+)/)?.[1] || '';
+            const vehicleId = card.querySelector('[data-vehicle-id]')?.getAttribute('data-vehicle-id') || '';
+            if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
+                originalCardHTML.set(vehicleSlug, card.outerHTML);
             }
             
             // Extract vehicle data from the card
-            const link = card.querySelector('a[href^="/vehicles/"]');
             const img = card.querySelector('img');
             const titleEl = card.querySelector('h3');
             const versionEl = card.querySelector('.text-muted-foreground.text-xs.font-normal');
             const priceEl = card.querySelector('.text-lg.font-bold');
             const badgeElements = Array.from(card.querySelectorAll('.inline-flex.items-center.rounded-md.border'));
             
-            if (!vehicleId) return;
+            if (!vehicleSlug) return;
             
             // Parse price
             let price = null;
@@ -1224,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create vehicle object
             const vehicle = {
                 id: vehicleId,
+                slug: vehicleSlug,
                 title: titleEl ? titleEl.textContent.trim() : '',
                 version: versionEl ? versionEl.textContent.trim() : '',
                 price: price,
@@ -1252,15 +1254,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const listItems = vehicleContainer.querySelectorAll('.vehicle-item');
         listItems.forEach(listItem => {
-            // Extract vehicle ID from list item
+            // Extract vehicle slug from list item (link now contains slug)
             const link = listItem.querySelector('a[href^="/vehicles/"]');
-            const vehicleId = link ? link.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1] : '';
+            const vehicleSlug = link ? link.getAttribute('href').match(/\/vehicles\/([^/]+)/)?.[1] : '';
             
-            if (!vehicleId) return;
+            if (!vehicleSlug) return;
             
             // Restore original card HTML if available
-            if (originalCardHTML.has(vehicleId)) {
-                const originalHTML = originalCardHTML.get(vehicleId);
+            if (originalCardHTML.has(vehicleSlug)) {
+                const originalHTML = originalCardHTML.get(vehicleSlug);
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = originalHTML;
                 const restoredCard = tempDiv.firstElementChild;
@@ -1386,9 +1388,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
         cards.forEach(card => {
             const link = card.querySelector('a[href^="/vehicles/"]');
-            const vehicleId = link ? link.getAttribute('href').match(/\/vehicles\/(\d+)/)?.[1] : '';
-            if (vehicleId && !originalCardHTML.has(vehicleId)) {
-                originalCardHTML.set(vehicleId, card.outerHTML);
+            const vehicleSlug = link ? link.getAttribute('href').match(/\/vehicles\/([^/]+)/)?.[1] : '';
+            if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
+                originalCardHTML.set(vehicleSlug, card.outerHTML);
             }
         });
     }

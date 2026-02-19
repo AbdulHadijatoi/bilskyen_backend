@@ -296,7 +296,7 @@
                                     </div>
                                     <button 
                                         type="button"
-                                        onclick="showDealerPhoneAndCreateLead({{ $vehicle->id }}, event)"
+                                        onclick="showDealerPhoneAndCreateLead('{{ $vehicle->slug }}', event)"
                                         class="show-dealer-phone-btn-mobile text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                         data-vehicle-id="{{ $vehicle->id }}"
                                         data-phone="{{ $dealerPhone }}"
@@ -316,7 +316,7 @@
                                 <div class="flex-1">
                                     <button 
                                         type="button"
-                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        onclick="handleEmailClick('{{ $vehicle->slug }}', event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded dealer-email-btn-mobile"
                                         data-email="{{ $contactEmail }}"
                                     >
@@ -851,7 +851,7 @@
                     <!-- Enquiry Form Button -->
                     <button 
                         type="button"
-                        onclick="openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                        onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -864,9 +864,9 @@
                     @if($contactWhatsApp)
                     <button 
                         type="button"
-                        onclick="handleWhatsAppClick({{ $vehicle->id }}, event)"
+                        onclick="handleWhatsAppClick('{{ $vehicle->slug }}', event)"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-                        id="whatsapp-btn-{{ $vehicle->id }}"
+                        id="whatsapp-btn-{{ $vehicle->slug }}"
                         data-whatsapp="{{ $contactWhatsApp }}"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
@@ -879,7 +879,7 @@
                     <!-- Test Drive Request Button -->
                     <button 
                         type="button"
-                        onclick="openEnquiryDialog('test-drive', {{ $vehicle->id }})"
+                        onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -898,7 +898,7 @@
                     <!-- Price Negotiation Button -->
                     <button 
                         type="button"
-                        onclick="openEnquiryDialog('price-negotiation', {{ $vehicle->id }})"
+                        onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
                         class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -1016,7 +1016,7 @@
                                     <button 
                                         type="button"
                                         id="show-dealer-phone-btn"
-                                        onclick="showDealerPhoneAndCreateLead({{ $vehicle->id }}, event)"
+                                        onclick="showDealerPhoneAndCreateLead('{{ $vehicle->slug }}', event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                     >
                                         {{ __('messages.pages.vehicles.detail.show_phone_number') }}
@@ -1034,7 +1034,7 @@
                                 <div class="flex-1">
                                     <button 
                                         type="button"
-                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        onclick="handleEmailClick('{{ $vehicle->slug }}', event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                         id="dealer-email-btn-{{ $vehicle->id }}"
                                         data-email="{{ $contactEmail }}"
@@ -1178,7 +1178,7 @@
                                 <div class="flex-1">
                                     <button 
                                         type="button"
-                                        onclick="handleEmailClick({{ $vehicle->id }}, event)"
+                                        onclick="handleEmailClick('{{ $vehicle->slug }}', event)"
                                         class="text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                         id="seller-email-btn-{{ $vehicle->id }}"
                                         data-email="{{ $contactEmail }}"

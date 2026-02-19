@@ -50,17 +50,17 @@ Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout
 Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
 // Enquiry Routes - Public (guests can submit enquiries)
-Route::post('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
-Route::get('/vehicles/{id}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
-Route::post('/vehicles/{id}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])->name('vehicles.enquire.submit');
+Route::post('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
+Route::get('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
+Route::post('/vehicles/{vehicle}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])->name('vehicles.enquire.submit');
 
 // Test Drive Routes - Public (guests can submit test drive requests)
-Route::get('/vehicles/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
-Route::post('/vehicles/{id}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])->name('vehicles.test-drive.submit');
+Route::get('/vehicles/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
+Route::post('/vehicles/{vehicle}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])->name('vehicles.test-drive.submit');
 
 // Price Negotiation Routes - Public (guests can submit price negotiations)
-Route::get('/vehicles/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
-Route::post('/vehicles/{id}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
+Route::get('/vehicles/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
+Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
 
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
@@ -107,7 +107,7 @@ Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 
 // Vehicle Details Page
-Route::get('/vehicles/{id}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
+Route::get('/vehicles/{vehicle}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
 // Dealer Public Page
 Route::get('/dealer-{slug}', [\App\Http\Controllers\DealerController::class, 'show'])->name('dealer.show');

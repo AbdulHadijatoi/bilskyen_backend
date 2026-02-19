@@ -23,7 +23,7 @@
         @endphp
         @if($vehicle)
         <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-            <a href="/vehicles/{{ $vehicle->id }}" class="block flex-1">
+            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
                 <!-- Vehicle Image -->
                 <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                     <img
@@ -107,14 +107,14 @@
                 <!-- Vehicle Actions -->
                 <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <a href="/vehicles/{{ $vehicle->id }}" class="flex-1" onclick="event.stopPropagation()">
+                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                 {{ __('messages.pages.vehicles.view_details') }}
                             </button>
                         </a>
                         <button 
                             type="button"
-                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', {{ $vehicle->id }})"
+                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
                             class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                         >
                             {{ __('messages.pages.vehicles.enquire') }}

@@ -77,6 +77,7 @@ class HomeController extends Controller
                 
                 return [
                     'id' => $vehicle->id,
+                    'slug' => $vehicle->slug,
                     'title' => $title,
                     'version' => $vehicle->version ?? '',
                     'price' => $vehicle->price ?? 0,
@@ -343,19 +344,19 @@ class HomeController extends Controller
      * Show the vehicle detail page
      *
      * @param Request $request
-     * @param int $serialNo
+     * @param \App\Models\Vehicle $vehicle
      * @return \Illuminate\View\View
      */
-    public function showVehicleDetail(Request $request, $serialNo)
+    public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
-        $vehicle = Vehicle::with([
+        $vehicle->load([
             'details',
             'equipment',
             'listingType',
             'images',
             'user',
             'dealer.owner'
-        ])->findOrFail($serialNo);
+        ]);
 
         // Get authenticated user (if any)
         $user = $this->authService->getAuthenticatedUser($request);

@@ -2,13 +2,14 @@
 
 @php
     use App\Helpers\FormatHelper;
-    
-    // Determine vehicle ID - handle both objects and arrays
-    $id = $vehicleId ?? null;
-    if (!$id && $vehicle) {
-        $id = is_array($vehicle) ? ($vehicle['id'] ?? null) : ($vehicle->id ?? null);
+
+    // Determine vehicle slug for URLs (and dialog id); fallback to id for backward compatibility
+    $slug = $vehicleId ?? null;
+    if (!$slug && $vehicle) {
+        $slug = is_array($vehicle) ? ($vehicle['slug'] ?? $vehicle['id'] ?? null) : ($vehicle->slug ?? $vehicle->id ?? null);
     }
-    
+    $slug = $slug ? (is_string($slug) ? $slug : (string) $slug) : null;
+
     // Get form configuration based on type
     $formConfig = [
         'enquiry' => [
@@ -18,7 +19,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.forms.enter_message'),
             'submitText' => __('messages.dialogs.submit_enquiry'),
-            'endpoint' => "/vehicles/{$id}/enquire/submit",
+            'endpoint' => "/vehicles/{$slug}/enquire/submit",
             'errorMessage' => __('messages.dialogs.please_login_enquiry'),
         ],
         'test-drive' => [
@@ -28,7 +29,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.dialogs.test_drive_message_placeholder'),
             'submitText' => __('messages.dialogs.submit_test_drive'),
-            'endpoint' => "/vehicles/{$id}/test-drive/submit",
+            'endpoint' => "/vehicles/{$slug}/test-drive/submit",
             'errorMessage' => __('messages.dialogs.please_login_test_drive'),
         ],
         'price-negotiation' => [
@@ -38,7 +39,7 @@
             'messageLabel' => __('messages.dialogs.your_offer_message'),
             'messagePlaceholder' => __('messages.dialogs.price_negotiation_message_placeholder'),
             'submitText' => __('messages.dialogs.submit_offer'),
-            'endpoint' => "/vehicles/{$id}/price-negotiation/submit",
+            'endpoint' => "/vehicles/{$slug}/price-negotiation/submit",
             'errorMessage' => __('messages.dialogs.please_login_price_negotiation'),
         ],
     ];
@@ -60,11 +61,11 @@
     $priceLabel = $type === 'price-negotiation' ? __('messages.forms.current_price') : __('messages.forms.price');
 @endphp
 
-<div id="{{ $type }}-dialog-{{ $id }}" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="{{ $type }}-dialog-title">
+<div id="{{ $type }}-dialog-{{ $slug }}" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="{{ $type }}-dialog-title">
     <!-- Backdrop -->
     <div 
         class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-        onclick="closeEnquiryDialog('{{ $type }}', {{ $id }})"
+        onclick="closeEnquiryDialog('{{ $type }}', '{{ $slug }}')"
         aria-hidden="true"
     ></div>
     
@@ -83,7 +84,7 @@
                 </div>
                 <button
                     type="button"
-                    onclick="closeEnquiryDialog('{{ $type }}', {{ $id }})"
+                    onclick="closeEnquiryDialog('{{ $type }}', '{{ $slug }}')"
                     class="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="{{ __('messages.dialogs.close_dialog') }}"
                 >
@@ -125,27 +126,27 @@
                 <!-- Form -->
                 <div class="bg-gray-50 rounded-lg p-4 border border-border">
                     <h3 class="text-foreground text-sm font-semibold mb-4">{{ $config['formTitle'] }}</h3>
-                    <form id="{{ $type }}-form-{{ $id }}" class="space-y-4">
+                    <form id="{{ $type }}-form-{{ $slug }}" class="space-y-4">
                         @csrf
-                        <input type="hidden" name="vehicle_id" value="{{ $id }}">
+                        <input type="hidden" name="vehicle_id" value="{{ $slug }}">
 
                         <!-- Error Display Container -->
-                        <div id="{{ $type }}-errors-{{ $id }}" class="hidden w-full rounded-md border border-red-200 bg-red-50 p-3 mb-4">
-                            <ul id="{{ $type }}-error-list-{{ $id }}" class="list-disc list-inside text-sm text-red-800"></ul>
+                        <div id="{{ $type }}-errors-{{ $slug }}" class="hidden w-full rounded-md border border-red-200 bg-red-50 p-3 mb-4">
+                            <ul id="{{ $type }}-error-list-{{ $slug }}" class="list-disc list-inside text-sm text-red-800"></ul>
                         </div>
 
                         <!-- Success Message -->
-                        <div id="{{ $type }}-success-{{ $id }}" class="hidden w-full rounded-md border border-green-200 bg-green-50 p-3 mb-4">
+                        <div id="{{ $type }}-success-{{ $slug }}" class="hidden w-full rounded-md border border-green-200 bg-green-50 p-3 mb-4">
                             <p class="text-sm text-green-800"></p>
                         </div>
 
                         <div class="space-y-2">
-                            <label for="{{ $type }}-name-{{ $id }}" class="text-sm font-medium leading-none">
+                            <label for="{{ $type }}-name-{{ $slug }}" class="text-sm font-medium leading-none">
                                 {{ __('messages.forms.full_name') }} <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="text" 
-                                id="{{ $type }}-name-{{ $id }}" 
+                                id="{{ $type }}-name-{{ $slug }}" 
                                 name="name" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -154,12 +155,12 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label for="{{ $type }}-email-{{ $id }}" class="text-sm font-medium leading-none">
+                            <label for="{{ $type }}-email-{{ $slug }}" class="text-sm font-medium leading-none">
                                 {{ __('messages.forms.email') }} <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="email" 
-                                id="{{ $type }}-email-{{ $id }}" 
+                                id="{{ $type }}-email-{{ $slug }}" 
                                 name="email" 
                                 required
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -168,12 +169,12 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label for="{{ $type }}-phone-{{ $id }}" class="text-sm font-medium leading-none">
+                            <label for="{{ $type }}-phone-{{ $slug }}" class="text-sm font-medium leading-none">
                                 {{ __('messages.forms.phone_number') }}
                             </label>
                             <input 
                                 type="tel" 
-                                id="{{ $type }}-phone-{{ $id }}" 
+                                id="{{ $type }}-phone-{{ $slug }}" 
                                 name="phone" 
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="{{ __('messages.forms.enter_phone') }}"
@@ -181,11 +182,11 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label for="{{ $type }}-message-{{ $id }}" class="text-sm font-medium leading-none">
+                            <label for="{{ $type }}-message-{{ $slug }}" class="text-sm font-medium leading-none">
                                 {{ $config['messageLabel'] }} <span class="text-red-500">*</span>
                             </label>
                             <textarea 
-                                id="{{ $type }}-message-{{ $id }}" 
+                                id="{{ $type }}-message-{{ $slug }}" 
                                 name="message" 
                                 required
                                 rows="5"
@@ -197,18 +198,18 @@
                         <div class="flex flex-col sm:flex-row gap-3 pt-2">
                             <button 
                                 type="submit" 
-                                id="{{ $type }}-submit-btn-{{ $id }}"
+                                id="{{ $type }}-submit-btn-{{ $slug }}"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                             >
-                                <span id="{{ $type }}-submit-text-{{ $id }}">{{ $config['submitText'] }}</span>
-                                <svg id="{{ $type }}-submit-spinner-{{ $id }}" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <span id="{{ $type }}-submit-text-{{ $slug }}">{{ $config['submitText'] }}</span>
+                                <svg id="{{ $type }}-submit-spinner-{{ $slug }}" class="hidden h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </button>
                             <button 
                                 type="button"
-                                onclick="closeEnquiryDialog('{{ $type }}', {{ $id }})"
+                                onclick="closeEnquiryDialog('{{ $type }}', '{{ $slug }}')"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             >
                                 {{ __('messages.common.cancel') }}
@@ -223,18 +224,18 @@
 
 <script>
 (function() {
-    const dialogId = '{{ $type }}-dialog-{{ $id }}';
-    const formId = '{{ $type }}-form-{{ $id }}';
+    const dialogId = '{{ $type }}-dialog-{{ $slug }}';
+    const formId = '{{ $type }}-form-{{ $slug }}';
     const form = document.getElementById(formId);
     
     if (!form) return;
     
-    const submitBtn = document.getElementById('{{ $type }}-submit-btn-{{ $id }}');
-    const submitText = document.getElementById('{{ $type }}-submit-text-{{ $id }}');
-    const submitSpinner = document.getElementById('{{ $type }}-submit-spinner-{{ $id }}');
-    const errorContainer = document.getElementById('{{ $type }}-errors-{{ $id }}');
-    const errorList = document.getElementById('{{ $type }}-error-list-{{ $id }}');
-    const successMessage = document.getElementById('{{ $type }}-success-{{ $id }}');
+    const submitBtn = document.getElementById('{{ $type }}-submit-btn-{{ $slug }}');
+    const submitText = document.getElementById('{{ $type }}-submit-text-{{ $slug }}');
+    const submitSpinner = document.getElementById('{{ $type }}-submit-spinner-{{ $slug }}');
+    const errorContainer = document.getElementById('{{ $type }}-errors-{{ $slug }}');
+    const errorList = document.getElementById('{{ $type }}-error-list-{{ $slug }}');
+    const successMessage = document.getElementById('{{ $type }}-success-{{ $slug }}');
     const endpoint = '{{ $config['endpoint'] }}';
     const errorMsg = '{{ $config['errorMessage'] }}';
     
@@ -329,7 +330,7 @@
 
                 // Close dialog after 2 seconds
                 setTimeout(() => {
-                    closeEnquiryDialog('{{ $type }}', {{ $id }});
+                    closeEnquiryDialog('{{ $type }}', {{ $slug }});
                 }, 2000);
             }
         } catch (error) {
@@ -354,7 +355,7 @@
     if (dialog) {
         dialog.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeEnquiryDialog('{{ $type }}', {{ $id }});
+                closeEnquiryDialog('{{ $type }}', {{ $slug }});
             }
         });
     }

@@ -190,6 +190,7 @@ class VehicleController extends Controller
             // Build base vehicle data
             $vehicleData = [
                 'id' => $vehicle->id,
+                'slug' => $vehicle->slug,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
                 'vin' => $vehicle->vin,

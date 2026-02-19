@@ -106,7 +106,7 @@
                     </svg>
                 </button>
                 <a 
-                    href="{{ route('vehicle.detail', $vehicle->id) }}" 
+                    href="{{ route('vehicle.detail', $vehicle) }}" 
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                     {{ __('messages.common.cancel') }}
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
         try {
-            const response = await fetch(`/vehicles/{{ $vehicle->id }}/price-negotiation/submit`, {
+            const response = await fetch(`/vehicles/{{ $vehicle->slug }}/price-negotiation/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Redirect after 3 seconds
                 setTimeout(() => {
-                    window.location.href = '{{ route("vehicle.detail", $vehicle->id) }}';
+                    window.location.href = '{{ route("vehicle.detail", $vehicle) }}';
                 }, 3000);
             }
         } catch (error) {

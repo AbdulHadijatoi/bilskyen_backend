@@ -162,6 +162,7 @@ class DealerController extends Controller
             
             return [
                 'id' => $vehicle->id,
+                'slug' => $vehicle->slug,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
                 'vin' => $vehicle->vin,
