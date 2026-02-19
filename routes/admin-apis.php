@@ -39,6 +39,7 @@ use App\Http\Controllers\AdminAboutPageController;
 use App\Http\Controllers\AdminContactPageController;
 use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminTermsPageController;
+use App\Http\Controllers\AdminSeoPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -179,6 +180,16 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/', [AdminTermsPageController::class, 'index']);
         Route::post('/bulk-update', [AdminTermsPageController::class, 'updateBulk']);
         Route::post('/{sectionKey}', [AdminTermsPageController::class, 'update']);
+    });
+
+    // SEO Pages Management
+    Route::prefix('seo-pages')->group(function () {
+        Route::get('/page-key-options', [AdminSeoPageController::class, 'pageKeyOptions']);
+        Route::get('/', [AdminSeoPageController::class, 'index']);
+        Route::get('/{id}', [AdminSeoPageController::class, 'show']);
+        Route::post('/', [AdminSeoPageController::class, 'store']);
+        Route::put('/{id}', [AdminSeoPageController::class, 'update']);
+        Route::delete('/{id}', [AdminSeoPageController::class, 'destroy']);
     });
     
     // Featured Vehicles Management

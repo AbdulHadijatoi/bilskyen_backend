@@ -23,6 +23,7 @@ use App\Services\VehicleService;
 use App\Services\AuditLogService;
 use App\Services\LookupService;
 use App\Services\PageContentService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,7 +34,8 @@ class HomeController extends Controller
         private VehicleService $vehicleService,
         private AuditLogService $auditLogService,
         private PageContentService $pageContentService,
-        private LookupService $lookupService
+        private LookupService $lookupService,
+        private SeoService $seoService
     ) {}
 
     /**
@@ -98,11 +100,13 @@ class HomeController extends Controller
 
         // Get home page content from cache
         $homePageContent = $this->pageContentService->getHomePageContent('home');
+        $seo = $this->seoService->getForPage('home', 'home');
 
         return view('home', [
             'filterOptions' => $filterOptions,
             'featuredVehicles' => $featuredVehicles,
             'homePageContent' => $homePageContent,
+            'seo' => $seo,
         ]);
     }
 
@@ -187,9 +191,12 @@ class HomeController extends Controller
         // Get about page images from cache
         $aboutPageImages = $this->pageContentService->getPageImages('about');
         
+        $seo = $this->seoService->getForPage('static', 'about');
+
         return view('about', [
             'aboutPageContent' => $aboutPageContent,
             'aboutPageImages' => $aboutPageImages,
+            'seo' => $seo,
         ]);
     }
 
@@ -206,9 +213,12 @@ class HomeController extends Controller
         // Get contact page images from cache
         $contactPageImages = $this->pageContentService->getPageImages('contact');
         
+        $seo = $this->seoService->getForPage('static', 'contact');
+
         return view('contact', [
             'contactPageContent' => $contactPageContent,
             'contactPageImages' => $contactPageImages,
+            'seo' => $seo,
         ]);
     }
 
@@ -225,9 +235,12 @@ class HomeController extends Controller
         // Get privacy policy page images from cache
         $privacyPageImages = $this->pageContentService->getPageImages('privacy');
         
+        $seo = $this->seoService->getForPage('static', 'privacy-policy');
+
         return view('privacy-policy', [
             'privacyPageContent' => $privacyPageContent,
             'privacyPageImages' => $privacyPageImages,
+            'seo' => $seo,
         ]);
     }
 
@@ -244,9 +257,12 @@ class HomeController extends Controller
         // Get terms of service page images from cache
         $termsPageImages = $this->pageContentService->getPageImages('terms');
         
+        $seo = $this->seoService->getForPage('static', 'terms-of-service');
+
         return view('terms-of-service', [
             'termsPageContent' => $termsPageContent,
             'termsPageImages' => $termsPageImages,
+            'seo' => $seo,
         ]);
     }
 
@@ -336,8 +352,9 @@ class HomeController extends Controller
         }
 
         $constants = $this->lookupService->getPublicConstants();
+        $seo = $this->seoService->getForPage('listing', 'vehicles');
 
-        return view('vehicles', compact('vehicles', 'constants', 'currentFilters'));
+        return view('vehicles', compact('vehicles', 'constants', 'currentFilters', 'seo'));
     }
 
     /**
@@ -389,9 +406,11 @@ class HomeController extends Controller
 
         // Reload vehicle with updated details
         $vehicle->load('details');
+        $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
+            'seo' => $seo,
         ]);
     }
 

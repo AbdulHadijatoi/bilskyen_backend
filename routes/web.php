@@ -4,7 +4,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AuthPageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\DmrTestController;
+
+// Sitemap and robots (public, cached)
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
+Route::get('/robots.txt', [SeoController::class, 'robots']);
 
 // Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home');

@@ -3,9 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @isset($seo)
+    <title>{{ $seo['meta_title'] ?? $seo['title'] ?? __('messages.layouts.default_title') }}</title>
+    <meta name="description" content="{{ $seo['meta_description'] ?? __('messages.layouts.meta_description') }}">
+    @if(!empty($seo['meta_keywords']))
+    <meta name="keywords" content="{{ $seo['meta_keywords'] }}">
+    @endif
+    @if(!empty($seo['canonical_url']))
+    <link rel="canonical" href="{{ $seo['canonical_url'] }}">
+    @else
+    <link rel="canonical" href="{{ url()->current() }}">
+    @endif
+    <meta name="robots" content="{{ $seo['robots'] ?? 'index, follow' }}">
+    @if(!empty($seo['og_title']))<meta property="og:title" content="{{ $seo['og_title'] }}">@endif
+    @if(!empty($seo['og_description']))<meta property="og:description" content="{{ $seo['og_description'] }}">@endif
+    @if(!empty($seo['og_image']))<meta property="og:image" content="{{ str_starts_with($seo['og_image'], 'http') ? $seo['og_image'] : asset($seo['og_image']) }}">@endif
+    <meta property="og:url" content="{{ url()->current() }}">
+    @if(!empty($seo['twitter_title']))<meta name="twitter:title" content="{{ $seo['twitter_title'] }}">@endif
+    @if(!empty($seo['twitter_description']))<meta name="twitter:description" content="{{ $seo['twitter_description'] }}">@endif
+    @if(!empty($seo['twitter_image']))<meta name="twitter:image" content="{{ str_starts_with($seo['twitter_image'], 'http') ? $seo['twitter_image'] : asset($seo['twitter_image']) }}">@endif
+    @if(!empty($seo['schema_json']))
+    <script type="application/ld+json">{!! is_array($seo['schema_json']) ? json_encode($seo['schema_json']) : $seo['schema_json'] !!}</script>
+    @endif
+    @else
     <title>@yield('title', __('messages.layouts.default_title'))</title>
+    <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta name="robots" content="index, follow">
+    @endisset
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">

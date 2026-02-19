@@ -22,6 +22,7 @@ use App\Models\EquipmentType;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
+use App\Services\SeoService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -34,7 +35,8 @@ class DealerController extends Controller
     public function __construct(
         private AuthService $authService,
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private SeoService $seoService
     ) {}
 
     /**
@@ -109,11 +111,14 @@ class DealerController extends Controller
         
         $filterOptions['equipmentTypes'] = $equipmentTypes;
 
+        $seo = $this->seoService->getForPage('dealer', $dealer->slug);
+
         return view('dealer-page', [
             'dealer' => $dealer,
             'vehicles' => $vehicles,
             'filterOptions' => $filterOptions,
             'currentFilters' => $request->all(),
+            'seo' => $seo,
         ]);
     }
 

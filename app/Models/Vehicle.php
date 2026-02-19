@@ -113,6 +113,22 @@ class Vehicle extends Model
                 $vehicle->slug = $vehicle->generateUniqueSlug();
             }
         });
+
+        static::created(function () {
+            Cache::forget('sitemap_xml');
+        });
+        static::updated(function () {
+            Cache::forget('sitemap_xml');
+        });
+        static::deleted(function () {
+            Cache::forget('sitemap_xml');
+        });
+        static::restored(function () {
+            Cache::forget('sitemap_xml');
+        });
+        static::forceDeleted(function () {
+            Cache::forget('sitemap_xml');
+        });
     }
 
     /**
