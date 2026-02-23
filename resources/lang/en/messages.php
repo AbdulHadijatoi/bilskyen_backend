@@ -65,6 +65,7 @@ return [
         'address' => 'Address',
         'message' => 'Message',
         'subject' => 'Subject',
+        'filters' => 'Filters',
         'brand' => 'Brand',
         'model' => 'Model',
         'model_year' => 'Model Year',

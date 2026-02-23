@@ -6,67 +6,19 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
 <style>
-    /* Fix GLightbox z-index and description issues */
+    /* Fix GLightbox description issues */
     .gslide-description {
         display: none !important;
     }
-    
-    /* Ensure only one image is visible at a time */
-    .gslide {
-        opacity: 0;
-        visibility: hidden;
-        z-index: 1;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    
-    .gslide.current {
-        opacity: 1;
-        visibility: visible;
-        z-index: 10;
-    }
-    
-    .gslide.prev,
-    .gslide.next {
-        opacity: 0;
-        visibility: hidden;
-        z-index: 1;
-    }
-    
-    .gslide-image {
-        z-index: 1;
-        position: relative;
-    }
-    
-    .gslide-inner {
-        z-index: 1;
-        position: relative;
-    }
-    
-    /* Ensure proper stacking during transitions */
-    .glightbox-container {
-        z-index: 9999;
-    }
-    
-    .glightbox-opened .gslide {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-    }
-    
-    .glightbox-opened .gslide.current {
-        opacity: 1;
-        visibility: visible;
-        z-index: 100;
-        position: relative;
-    }
-    
-    /* Hide all slides except current during navigation */
-    .glightbox-opened .gslide:not(.current) {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
+
+    /* Remove all slide transition animations */
+    .gcontainer,
+    .gslide,
+    .gslide-inner,
+    .gslide-image,
+    .gslide-image img {
+        transition: none !important;
+        animation: none !important;
     }
     .detail-section {
         /* border: 1px solid var(--border); */
@@ -1381,6 +1333,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const emblaApi = EmblaCarousel(emblaNode, { 
             loop: false, 
             align: 'start',
+            duration: 0,
             slidesToScroll: 1,
             breakpoints: {
                 '(min-width: 768px)': { slidesToScroll: 2 },
@@ -1413,33 +1366,16 @@ document.addEventListener('DOMContentLoaded', function() {
             closeButton: true,
             zoomable: true,
             draggable: true,
-            openEffect: 'fade',
-            closeEffect: 'fade',
-            slideEffect: 'fade', // Use fade instead of slide to show one image at a time
+            openEffect: 'none',
+            closeEffect: 'none',
+            slideEffect: 'none',
             moreText: '{{ __('messages.common.see_more') }}',
             moreLength: 60,
             closeOnOutsideClick: true,
-            preload: false, // Disable preload to ensure only current image loads
-            description: false, // Disable description section
-            cssEfects: {
-                fade: { in: 'fadeIn', out: 'fadeOut' }
-            }
+            preload: false,
+            description: false
         });
         
-        // Ensure only current slide is visible
-        lightbox.on('slide_changed', ({ prev, current }) => {
-            // Hide all slides except current
-            const slides = document.querySelectorAll('.gslide');
-            slides.forEach(slide => {
-                if (!slide.classList.contains('current')) {
-                    slide.style.opacity = '0';
-                    slide.style.visibility = 'hidden';
-                } else {
-                    slide.style.opacity = '1';
-                    slide.style.visibility = 'visible';
-                }
-            });
-        });
     }
 
     // Get access token from cookie helper

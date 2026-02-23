@@ -65,6 +65,7 @@ return [
         'address' => 'Adresse',
         'message' => 'Besked',
         'subject' => 'Emne',
+        'filters' => 'Filtre',
         'brand' => 'Mærke',
         'model' => 'Model',
         'model_year' => 'Modelår',
