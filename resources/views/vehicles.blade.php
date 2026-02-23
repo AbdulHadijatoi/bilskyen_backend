@@ -38,7 +38,7 @@
             <button 
         id="mobile-filter-toggle"
                 type="button" 
-        class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl ring-2 ring-white/80 transition-all hover:bg-primary/90 hover:ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-white shadow-xl ring-2 ring-white/80 transition-all hover:bg-green-700 hover:ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
         aria-label="{{ __('messages.pages.vehicles.toggle_filters') }}"
             >
         <!-- Filter Icon (shown when sidebar is closed) — SlidersHorizontal -->
@@ -254,9 +254,9 @@
                 </div>
             </details>
 
-            <!-- More Details: Color, Variant, Type, Sales, Price type, Euronom, Use, Transmission (collapsed, 2-col grid) -->
+            <!-- More Details: Color, Variant, Type, Sales, Price type, Euronom, Use (collapsed, 2-col grid) -->
             @php
-                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['sales_type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']) || isset($cf['transmission_id']);
+                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['sales_type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']);
             @endphp
             <details @if($moreDetailsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -316,15 +316,6 @@
                                 <option value="">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['vehicle_uses'] ?? [] as $uu)
                                 <option value="{{ is_array($uu) ? $uu['id'] : $uu->id }}" @if(isset($cf['use_id']) && (is_array($uu) ? $uu['id'] : $uu->id) == $cf['use_id']) selected @endif>{{ is_array($uu) ? $uu['name'] : $uu->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.transmission') }}</label>
-                            <select name="transmission_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['transmissions'] ?? [] as $tr)
-                                <option value="{{ is_array($tr) ? $tr['id'] : $tr->id }}" @if(isset($cf['transmission_id']) && (is_array($tr) ? $tr['id'] : $tr->id) == $cf['transmission_id']) selected @endif>{{ is_array($tr) ? $tr['name'] : $tr->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -2137,8 +2128,7 @@
                 ['sales_type_id', '{{ __('messages.forms.sales_type') }}'],
                 ['price_type_id', '{{ __('messages.forms.price_type') }}'],
                 ['euronom_id', '{{ __('messages.forms.euro_norm') }}'],
-                ['use_id', '{{ __('messages.forms.use') }}'],
-                ['transmission_id', '{{ __('messages.forms.transmission') }}']
+                ['use_id', '{{ __('messages.forms.use') }}']
             ];
             selectChips.forEach(([key, labelPrefix]) => {
                 const val = filters[key];
@@ -2654,18 +2644,31 @@
                 track.style.width = `${maxPercent - minPercent}%`;
             }
             
+            // Update only the visual track and handles without touching input values
+            function updateTrackOnly() {
+                const minVal = parseFloat(minSlider.value) || min;
+                const maxVal = parseFloat(maxSlider.value) || max;
+                const finalMin = Math.min(minVal, maxVal);
+                const finalMax = Math.max(minVal, maxVal);
+                const minPercent = ((finalMin - min) / (max - min)) * 100;
+                const maxPercent = ((finalMax - min) / (max - min)) * 100;
+                minHandle.style.left = `calc(${minPercent}% - 10px)`;
+                maxHandle.style.left = `calc(${maxPercent}% - 10px)`;
+                track.style.left = `${minPercent}%`;
+                track.style.width = `${maxPercent - minPercent}%`;
+            }
+
             function updateFromInput(input, slider) {
                 const value = parseFloat(input.value);
-                if (!isNaN(value) && value > 0) {
+                if (!isNaN(value) && value >= 0) {
+                    // Move the slider to match what's typed without overwriting the input,
+                    // so the user can continue typing freely
                     const clampedValue = Math.max(min, Math.min(max, value));
                     slider.value = clampedValue;
-                    input.value = clampedValue;
-                    updateSlider();
-                } else if (input.value === '' || input.value === '0') {
-                    // Clear slider to default: min for min slider, max for max slider
+                    updateTrackOnly();
+                } else if (input.value === '') {
                     slider.value = (slider === minSlider) ? min : max;
-                    input.value = '';
-                    updateSlider();
+                    updateTrackOnly();
                 }
             }
             
@@ -2676,9 +2679,13 @@
             minSlider.addEventListener('input', updateSlider);
             maxSlider.addEventListener('input', updateSlider);
             
-            // Input events
+            // Input events — update slider position while typing but never overwrite the input
             minInput.addEventListener('input', () => updateFromInput(minInput, minSlider));
             maxInput.addEventListener('input', () => updateFromInput(maxInput, maxSlider));
+
+            // On blur, clamp and sync the input value with the slider state
+            minInput.addEventListener('blur', () => updateSlider());
+            maxInput.addEventListener('blur', () => updateSlider());
             
             // Handle drag events for visual handles
             let isDragging = false;
@@ -3003,7 +3010,6 @@ if (config) {
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
             if (v('euronom_id')) filters.euronom_id = v('euronom_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            if (v('transmission_id')) filters.transmission_id = v('transmission_id');
             if (v('year_from') && parseInt(v('year_from')) > 1975) filters.year_from = v('year_from');
             if (vNum('year_to', currentYear + 2)) filters.year_to = v('year_to');
             if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1975) filters.first_registration_year_from = v('first_registration_year_from');

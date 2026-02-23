@@ -59,6 +59,11 @@
         $vehicleModel = $vehicle->model_name ?? null;
     }
     $priceLabel = $type === 'price-negotiation' ? __('messages.forms.current_price') : __('messages.forms.price');
+
+    // Prefill auth user data if logged in via JWT cookie
+    $jwtUser   = app(\App\Services\AuthService::class)->getAuthenticatedUser(request());
+    $authName  = $jwtUser?->name  ?? '';
+    $authEmail = $jwtUser?->email ?? '';
 @endphp
 
 <div id="{{ $type }}-dialog-{{ $slug }}" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="{{ $type }}-dialog-title">
@@ -149,6 +154,7 @@
                                 id="{{ $type }}-name-{{ $slug }}" 
                                 name="name" 
                                 required
+                                value="{{ $authName }}"
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="{{ __('messages.forms.enter_full_name') }}"
                             >
@@ -163,6 +169,7 @@
                                 id="{{ $type }}-email-{{ $slug }}" 
                                 name="email" 
                                 required
+                                value="{{ $authEmail }}"
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="{{ __('messages.forms.enter_email') }}"
                             >
@@ -328,10 +335,8 @@
                     window.showSnackbar(successMsg, 'success');
                 }
 
-                // Close dialog after 2 seconds
-                setTimeout(() => {
-                    closeEnquiryDialog('{{ $type }}', {{ $slug }});
-                }, 2000);
+                // Close dialog immediately after submit
+                closeEnquiryDialog('{{ $type }}', '{{ $slug }}');
             }
         } catch (error) {
             console.error('Error submitting form:', error);
@@ -355,7 +360,7 @@
     if (dialog) {
         dialog.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeEnquiryDialog('{{ $type }}', {{ $slug }});
+                closeEnquiryDialog('{{ $type }}', '{{ $slug }}');
             }
         });
     }

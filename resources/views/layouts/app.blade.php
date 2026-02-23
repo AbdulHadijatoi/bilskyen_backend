@@ -227,7 +227,7 @@
 
             const snackbar = document.createElement('div');
             snackbar.id = 'snackbar';
-            snackbar.className = `fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all transform translate-y-0 opacity-100 ${
+            snackbar.className = `fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all transform translate-y-0 opacity-100 ${
                 type === 'success' 
                     ? 'bg-green-50 border-green-200 text-green-900'
                     : 'bg-red-50 border-red-200 text-red-900'
@@ -245,12 +245,12 @@
             
             document.body.appendChild(snackbar);
             
-            // Auto remove after 3 seconds
+            // Auto remove after 5 seconds
             setTimeout(() => {
                 snackbar.style.transform = 'translateY(100%)';
                 snackbar.style.opacity = '0';
                 setTimeout(() => snackbar.remove(), 300);
-            }, 3000);
+            }, 5000);
         };
         
         // Enquiry Dialog Management
