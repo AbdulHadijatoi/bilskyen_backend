@@ -209,14 +209,13 @@ class SellYourCarController extends Controller
             'leasing_period_end' => 'nullable|date',
             'use_id' => 'nullable|exists:uses,id',
             'body_type_id' => 'nullable|exists:body_types,id',
+            'gear_type_id' => 'nullable|integer|exists:gear_types,id',
             'dispensations' => 'nullable|string',
             'permits' => 'nullable|string',
             'ncap_five' => 'nullable|boolean',
             'airbags' => 'nullable|integer|min:0',
             'integrated_child_seats' => 'nullable|integer|min:0',
             'seat_belt_alarms' => 'nullable|integer|min:0',
-            'transmission_id' => 'nullable|exists:transmissions,id',
-            'transmission_name' => 'nullable|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -322,7 +321,8 @@ class SellYourCarController extends Controller
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'fuel_efficiency', 'seller_address', 'seller_postcode'
+                'ownership_tax', 'fuel_efficiency', 'seller_address', 'seller_postcode',
+                'gear_type_id'
             ]);
             
             // Set vehicle_list_status_id automatically to 2 (ignore any value from frontend)

@@ -23,7 +23,6 @@ use App\Models\Permit;
 use App\Models\Transmission;
 use App\Models\Variant;
 use App\Models\Euronom;
-use App\Constants\Transmission as TransmissionConstants;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -118,14 +117,14 @@ class NummerpladeApiService
             
             $processedData = $this->processLookupData($data);
             
-            // Fetch annual_tax and transmission from DMR API if vehicle_id is available
+            // Fetch annual_tax and gear_type_id from DMR API if vehicle_id is available
             $dmrData = $this->fetchAnnualTaxFromDmr($processedData);
             if ($dmrData !== null) {
                 if (isset($dmrData['annual_tax']) && $dmrData['annual_tax'] !== null) {
                     $processedData['annual_tax'] = $dmrData['annual_tax'];
                 }
-                if (isset($dmrData['transmission']) && $dmrData['transmission'] !== null) {
-                    $processedData['transmission'] = $dmrData['transmission'];
+                if (isset($dmrData['gear_type_id']) && $dmrData['gear_type_id'] !== null) {
+                    $processedData['gear_type_id'] = $dmrData['gear_type_id'];
                 }
             }
             
@@ -140,7 +139,7 @@ class NummerpladeApiService
                 'memory_after_mb' => round($memoryAfter / 1024 / 1024, 2),
                 'data_keys_count' => count($processedData),
                 'annual_tax' => $dmrData['annual_tax'] ?? null,
-                'transmission' => $dmrData['transmission'] ?? null,
+                'gear_type_id' => $dmrData['gear_type_id'] ?? null,
             ]);
             
             return $processedData;
@@ -1718,8 +1717,8 @@ class NummerpladeApiService
     }
 
     /**
-     * Fetch annual tax and transmission from DMR API using vehicle_id
-     * Returns array with 'annual_tax' and 'transmission' keys, or null if vehicle_id not found
+     * Fetch annual tax and gear_type_id from DMR API using vehicle_id
+     * DMR automatic field is always true or false: false => gear_type_id=1 (Manual), true => gear_type_id=2 (Automatic)
      */
     protected function fetchAnnualTaxFromDmr(array $vehicleData): ?array
     {
@@ -1742,67 +1741,38 @@ class NummerpladeApiService
 
             $result = [
                 'annual_tax' => null,
-                'transmission' => null,
+                'gear_type_id' => null,
             ];
 
             // Extract annual_tax from the response
-            // The structure is: data.calculated_tax.details[year].fee
-            // We need to get the last year's fee
-            if (isset($dmrData['calculated_tax']['details']) && 
+            if (isset($dmrData['calculated_tax']['details']) &&
                 is_array($dmrData['calculated_tax']['details'])) {
-                
                 $details = $dmrData['calculated_tax']['details'];
-
-                // Get all years and find the highest (last) year
                 $years = array_keys($details);
                 if (!empty($years)) {
-                    // Sort years in descending order to get the latest year
                     rsort($years, SORT_NUMERIC);
                     $latestYear = $years[0];
-                    
                     if (isset($details[$latestYear]['fee'])) {
-                        $annualTax = (float) $details[$latestYear]['fee'];
-                        $result['annual_tax'] = $annualTax;
-                        
-                        Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - Annual tax found', [
-                            'vehicle_id' => $vehicleId,
-                            'latest_year' => $latestYear,
-                            'annual_tax' => $annualTax,
-                        ]);
+                        $result['annual_tax'] = (float) $details[$latestYear]['fee'];
                     }
                 }
             }
 
-            // Extract automatic field and map to transmission
+            // DMR automatic is always true or false - map directly to gear_type_id
             if (isset($dmrData['automatic']) && is_bool($dmrData['automatic'])) {
-                $automatic = $dmrData['automatic'];
-                
-                // Map boolean to transmission constants
-                $transmissionId = $automatic 
-                    ? TransmissionConstants::AUTOMATIC  // 2
-                    : TransmissionConstants::MANUAL;    // 1
-                
-                $transmissionName = $automatic ? 'Automatic' : 'Manual';
-                
-                $result['transmission'] = [
-                    'id' => $transmissionId,
-                    'name' => $transmissionName,
-                ];
-                
-                Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - Transmission found', [
+                $result['gear_type_id'] = $dmrData['automatic'] ? 2 : 1;
+                Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - Gear type from DMR automatic', [
                     'vehicle_id' => $vehicleId,
-                    'automatic' => $automatic,
-                    'transmission_id' => $transmissionId,
-                    'transmission_name' => $transmissionName,
+                    'automatic' => $dmrData['automatic'],
+                    'gear_type_id' => $result['gear_type_id'],
                 ]);
             }
 
-            // Return result if we have at least one value, otherwise return null
-            if ($result['annual_tax'] !== null || $result['transmission'] !== null) {
+            if ($result['annual_tax'] !== null || $result['gear_type_id'] !== null) {
                 return $result;
             }
 
-            Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - No annual tax or transmission found in DMR data', [
+            Log::info('NummerpladeApiService::fetchAnnualTaxFromDmr - No annual tax or gear type found in DMR data', [
                 'vehicle_id' => $vehicleId,
             ]);
             

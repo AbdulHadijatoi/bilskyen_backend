@@ -448,10 +448,10 @@
                     <span class="detail-value">{{ $details->condition_name }}</span>
                 </div>
                 @endif
-                @if($details->gear_type_name)
+                @if($vehicle->gear_type_name)
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.gear_type') }}</span>
-                    <span class="detail-value">{{ $details->gear_type_name }}</span>
+                    <span class="detail-value">{{ $vehicle->gear_type_name }}</span>
                 </div>
                 @endif
                 @if($details->transmission_name)
