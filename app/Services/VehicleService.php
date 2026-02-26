@@ -595,20 +595,16 @@ class VehicleService
             });
         }
 
-        // Brand filter
+        // Brand filter (supports array for multiple brands)
         if (!empty($filters['brand_id'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereNull('brand_id')
-                  ->orWhere('brand_id', $filters['brand_id']);
-            });
+            $brandIds = is_array($filters['brand_id']) ? $filters['brand_id'] : [$filters['brand_id']];
+            $query->whereIn('brand_id', $brandIds);
         }
 
-        // Model filter
+        // Model filter (supports array for multiple models)
         if (!empty($filters['model_id'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereNull('model_id')
-                  ->orWhere('model_id', $filters['model_id']);
-            });
+            $modelIds = is_array($filters['model_id']) ? $filters['model_id'] : [$filters['model_id']];
+            $query->whereIn('model_id', $modelIds);
         }
 
         // Model Year filter
@@ -965,11 +961,13 @@ class VehicleService
         }
 
         if (!empty($basicFilters['brand_id'])) {
-            $query->where('vehicles.brand_id', $basicFilters['brand_id']);
+            $brandIds = is_array($basicFilters['brand_id']) ? $basicFilters['brand_id'] : [$basicFilters['brand_id']];
+            $query->whereIn('vehicles.brand_id', $brandIds);
         }
 
         if (!empty($basicFilters['model_id'])) {
-            $query->where('vehicles.model_id', $basicFilters['model_id']);
+            $modelIds = is_array($basicFilters['model_id']) ? $basicFilters['model_id'] : [$basicFilters['model_id']];
+            $query->whereIn('vehicles.model_id', $modelIds);
         }
 
         if (!empty($basicFilters['model_year_id'])) {

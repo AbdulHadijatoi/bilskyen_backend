@@ -31,6 +31,7 @@
     <link rel="canonical" href="{{ url()->current() }}">
     <meta name="robots" content="index, follow">
     @endisset
+    <meta name="google-site-verification" content="UJCmMpdQRdTthyDk_rvdfCvGYIv7OETj5CYKgKtWoPc">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

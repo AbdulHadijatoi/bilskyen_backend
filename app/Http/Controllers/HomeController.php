@@ -93,6 +93,7 @@ class HomeController extends Controller
                     'dealer_id' => $vehicle->dealer_id,
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
+                    'sales_type_name' => $details?->sales_type_name ?? $details?->salesType?->name,
                 ];
             })
             ->filter() // Remove null entries
@@ -287,7 +288,7 @@ class HomeController extends Controller
     private function buildCurrentFilters(Request $request): array
     {
         $currentFilters = [];
-        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'seller_type'];
+        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'seller_type', 'brand_id', 'model_id'];
         foreach (self::VEHICLE_FILTER_KEYS as $key) {
             $value = $request->input($key);
             if ($value === null || $value === '') {

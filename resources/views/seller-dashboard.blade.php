@@ -149,8 +149,8 @@
                             alt="{{ $vehicle->title }}"
                             class="h-full w-full object-cover"
                         />
-                        <!-- Status Badge -->
-                        <div class="absolute top-2 left-2">
+                        <!-- Status & Sales Type Badges -->
+                        <div class="absolute top-2 left-2 z-10 flex flex-row flex-wrap items-center gap-1.5">
                             @php
                                 $statusColors = [
                                     VehicleListStatus::DRAFT => 'bg-gray-500',
@@ -163,6 +163,11 @@
                             <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-white {{ $statusColor }}">
                                 {{ $vehicle->vehicle_list_status_name }}
                             </span>
+                            @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                            <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
+                            </span>
+                            @endif
                         </div>
                     </div>
                     

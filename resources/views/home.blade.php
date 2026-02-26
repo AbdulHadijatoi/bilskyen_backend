@@ -463,17 +463,24 @@
                                         alt="{{ $vehicle['title'] }}"
                                         class="h-full w-full object-cover rounded-md"
                                     />
+                                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                                     @if(isset($vehicle['dealer_id']) && $vehicle['dealer_id'])
                                     <!-- Dealer Label - Top Left -->
-                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                         {{ __('messages.pages.vehicles.dealer') }}
                                     </span>
                                     @else
                                     <!-- Private Label - Top Left -->
-                                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                         {{ __('messages.pages.vehicles.private') }}
                                     </span>
                                     @endif
+                                    @if(!empty($vehicle['sales_type_name']))
+                                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                        {{ $vehicle['sales_type_name'] }}
+                                    </span>
+                                    @endif
+                                    </div>
                                     <!-- Heart Icon - Top Right -->
                                     <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle['id'] }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ isset($vehicle['dealer_id']) && $vehicle['dealer_id'] ? 'text-blue-600' : 'text-orange-600' }} hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle['id'] }}" data-dealer-id="{{ $vehicle['dealer_id'] ?? '' }}">

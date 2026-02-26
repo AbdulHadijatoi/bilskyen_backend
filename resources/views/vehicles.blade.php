@@ -139,36 +139,66 @@
             </div>
 
             <!-- Brand & Model (open by default) -->
+            @php
+                $selectedBrandIds = isset($cf['brand_id']) ? (is_array($cf['brand_id']) ? $cf['brand_id'] : [$cf['brand_id']]) : [];
+                $selectedModelIds = isset($cf['model_id']) ? (is_array($cf['model_id']) ? $cf['model_id'] : [$cf['model_id']]) : [];
+                $brandsList = $constants['brands'] ?? [];
+                $modelsList = $constants['models'] ?? [];
+                $selectedBrandNames = collect($brandsList)->filter(fn($b) => in_array(is_array($b) ? $b['id'] : $b->id, $selectedBrandIds))->map(fn($b) => is_array($b) ? $b['name'] : $b->name)->values()->all();
+                $selectedModelNames = collect($modelsList)->filter(fn($m) => in_array(is_array($m) ? $m['id'] : $m->id, $selectedModelIds))->map(fn($m) => is_array($m) ? $m['name'] : $m->name)->values()->all();
+            @endphp
             <details open class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.type_brand_model') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
                 <div class="px-4 pb-3 space-y-2">
-                    <div>
+                    <div class="relative" data-multiselect-dropdown>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.brand') }}</label>
-                        <select name="brand_id" id="brand-select" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                            <option value="">{{ __('messages.common.all') }}</option>
-                            @foreach($constants['brands'] ?? [] as $b)
-                            <option value="{{ is_array($b) ? $b['id'] : $b->id }}" @if(isset($cf['brand_id']) && (is_array($b) ? $b['id'] : $b->id) == $cf['brand_id']) selected @endif>{{ is_array($b) ? $b['name'] : $b->name }}</option>
-                            @endforeach
-                        </select>
+                        <button type="button" id="brand-dropdown-trigger" class="brand-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="brand-dropdown-label">
+                            <span id="brand-dropdown-label" class="truncate">
+                                @if(count($selectedBrandNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedBrandNames) === 1){{ $selectedBrandNames[0] }}@else{{ count($selectedBrandNames) }} {{ __('messages.forms.selected') }}@endif
+                            </span>
+                            <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                        </button>
+                        <div id="brand-dropdown-panel" class="brand-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                            <div id="brand-checkbox-list" class="p-2 space-y-0.5">
+                                @foreach($constants['brands'] ?? [] as $b)
+                                @php $bid = is_array($b) ? $b['id'] : $b->id; $bname = is_array($b) ? $b['name'] : $b->name; @endphp
+                                <label class="brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
+                                    <input type="checkbox" name="brand_id[]" value="{{ $bid }}" class="brand-checkbox rounded border-input" @if(in_array($bid, $selectedBrandIds)) checked @endif>
+                                    <span>{{ $bname }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                    <div>
+                    <div class="relative" data-multiselect-dropdown>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.model') }}</label>
-                        <select name="model_id" id="model-select" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                            <option value="">{{ __('messages.common.all') }}</option>
-                            @foreach($constants['models'] ?? [] as $m)
-                            <option value="{{ is_array($m) ? $m['id'] : $m->id }}" data-brand-id="{{ is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id }}" @if(isset($cf['model_id']) && (is_array($m) ? $m['id'] : $m->id) == $cf['model_id']) selected @endif>{{ is_array($m) ? $m['name'] : $m->name }}</option>
-                            @endforeach
-                        </select>
+                        <button type="button" id="model-dropdown-trigger" class="model-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-dropdown-label">
+                            <span id="model-dropdown-label" class="truncate">
+                                @if(count($selectedModelNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedModelNames) === 1){{ $selectedModelNames[0] }}@else{{ count($selectedModelNames) }} {{ __('messages.forms.selected') }}@endif
+                            </span>
+                            <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                        </button>
+                        <div id="model-dropdown-panel" class="model-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                            <div id="model-checkbox-list" class="p-2 space-y-0.5">
+                                @foreach($constants['models'] ?? [] as $m)
+                                @php $mid = is_array($m) ? $m['id'] : $m->id; $mname = is_array($m) ? $m['name'] : $m->name; $mBrandId = is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id; @endphp
+                                <label class="model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-brand-id="{{ $mBrandId }}">
+                                    <input type="checkbox" name="model_id[]" value="{{ $mid }}" class="model-checkbox rounded border-input" @if(in_array($mid, $selectedModelIds)) checked @endif>
+                                    <span class="model-checkbox-name">{{ $mname }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.model_year') }}</label>
                         <select name="model_year_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                             <option value="">{{ __('messages.common.all') }}</option>
                             @foreach($constants['model_years'] ?? [] as $my)
-                            <option value="{{ is_array($my) ? $my['id'] : $my->id }}" @if(isset($cf['model_year_id']) && (is_array($my) ? $my['id'] : $my->id) == $cf['model_year_id']) selected @endif>{{ is_array($my) ? $my['name'] : $my->name }}</option>
+                            <option value="{{ is_array($my) ? $my['id'] : $my->id }}" @if(isset($cf['model_year_id']) && (is_array($cf['model_year_id']) ? in_array(is_array($my) ? $my['id'] : $my->id, $cf['model_year_id']) : (is_array($my) ? $my['id'] : $my->id) == $cf['model_year_id'])) selected @endif>{{ is_array($my) ? $my['name'] : $my->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -770,17 +800,24 @@
                         alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                         class="h-full w-full object-cover rounded-md"
                     />
+                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                     @if($vehicle->dealer_id)
                     <!-- Dealer Label - Top Left -->
-                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         {{ __('messages.pages.vehicles.dealer') }}
-                </span>
+                    </span>
                     @else
                     <!-- Private Label - Top Left -->
-                    <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         {{ __('messages.pages.vehicles.private') }}
                     </span>
                     @endif
+                    @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                        {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
+                    </span>
+                    @endif
+                    </div>
                     <!-- Heart Icon - Top Right -->
                     <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
@@ -1261,6 +1298,7 @@
         // Render single vehicle card
         function renderVehicleCard(vehicle) {
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
+            const details = vehicle.details || {};
             
             // Build location string from seller_address and seller_postcode
             let locationText = '';
@@ -1281,17 +1319,24 @@
                                 alt="${vehicle.title || ''}"
                                 class="h-full w-full object-cover rounded-md"
                             />
+                            <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                             ${vehicle.dealer_id ? `
                             <!-- Dealer Label - Top Left -->
-                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                            <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 {{ __('messages.pages.vehicles.dealer') }}
                             </span>
                             ` : `
                             <!-- Private Label - Top Left -->
-                            <span class="absolute top-4 left-4 z-10 inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                            <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
+                            ${(details && details.sales_type_name) ? `
+                            <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                ${details.sales_type_name}
+                            </span>
+                            ` : ''}
+                            </div>
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
@@ -1413,18 +1458,21 @@
                                 class="h-full w-full object-cover"
                             />
                             
-                            <span>
+                            <span class="flex flex-row flex-wrap items-center gap-1.5 absolute top-2 left-2 z-20">
                             ${vehicle.dealer_id ? `
                                 <!-- Dealer Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                <span class="vehicle-dealer-label inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">
                                     {{ __('messages.pages.vehicles.dealer') }}
                                 </span>
                                 ` : `
                                 <!-- Private Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label absolute top-2 left-2 z-20 inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm">
+                                <span class="vehicle-dealer-label inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm w-fit">
                                     {{ __('messages.pages.vehicles.private') }}
                                 </span>
                                 `}
+                            ${(details && details.sales_type_name) ? `
+                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">${details.sales_type_name}</span>
+                            ` : ''}
                             </span>
 
                             <!-- Heart Icon - Top Right -->
@@ -1814,28 +1862,36 @@
                 });
             }
             
-            // Brand
+            // Brand (multi-select: one chip per selected brand)
             if (filters.brand_id) {
-                const brandName = getOptionText('brand_id', filters.brand_id);
-                if (brandName) {
-                    chips.push({
-                        key: 'brand_id',
-                        label: brandName,
-                        value: filters.brand_id
-                    });
-                }
+                const ids = Array.isArray(filters.brand_id) ? filters.brand_id : [filters.brand_id];
+                ids.forEach(id => {
+                    const brandName = getLabelText('brand_id[]', id);
+                    if (brandName) {
+                        chips.push({
+                            key: 'brand_id',
+                            label: brandName,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
             }
             
-            // Model
+            // Model (multi-select: one chip per selected model)
             if (filters.model_id) {
-                const modelName = getOptionText('model_id', filters.model_id);
-                if (modelName) {
-                    chips.push({
-                        key: 'model_id',
-                        label: modelName,
-                        value: filters.model_id
-                    });
-                }
+                const ids = Array.isArray(filters.model_id) ? filters.model_id : [filters.model_id];
+                ids.forEach(id => {
+                    const modelName = getLabelText('model_id[]', id);
+                    if (modelName) {
+                        chips.push({
+                            key: 'model_id',
+                            label: modelName,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
             }
             
             
@@ -2182,8 +2238,14 @@
                     
                     // Remove filter from DOM
                     if (isArray) {
-                        const checkbox = document.querySelector(`[name="${key}[]"][value="${value}"]`);
+                        const inputs = document.getElementsByName(key + '[]');
+                        const checkbox = Array.from(inputs).find(inp => inp.value == value);
                         if (checkbox) checkbox.checked = false;
+                        if (key === 'brand_id' && typeof updateBrandDropdownLabel === 'function') {
+                            updateBrandDropdownLabel();
+                            if (typeof filterModelListByBrands === 'function') filterModelListByBrands();
+                        }
+                        if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
                     } else if (key === 'listing_type_id') {
@@ -2994,8 +3056,10 @@ if (config) {
             const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
             if (conditionId) filters.condition_id = conditionId;
 
-            if (v('brand_id')) filters.brand_id = v('brand_id');
-            if (v('model_id')) filters.model_id = v('model_id');
+            const brandIds = Array.from(document.getElementsByName('brand_id[]')).filter(cb => cb.checked).map(cb => cb.value);
+            if (brandIds.length > 0) filters.brand_id = brandIds;
+            const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
+            if (modelIds.length > 0) filters.model_id = modelIds;
             if (v('model_year_id')) filters.model_year_id = v('model_year_id');
             if (vNum('price_from')) filters.price_from = v('price_from');
             if (vNum('price_to', 1000000)) filters.price_to = v('price_to');
@@ -3058,6 +3122,97 @@ if (config) {
             filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
         }
 
+        // Show/hide model checkboxes based on selected brand(s). If no brand selected, show all models.
+        function filterModelListByBrands() {
+            const modelList = document.getElementById('model-checkbox-list');
+            if (!modelList) return;
+            // Use getElementsByName to avoid CSS selector issues with "brand_id[]"
+            const brandInputs = document.getElementsByName('brand_id[]');
+            const selectedBrandIds = new Set(
+                Array.from(brandInputs).filter(cb => cb.checked).map(cb => String(cb.value).trim())
+            );
+            modelList.querySelectorAll('.model-checkbox-label').forEach(label => {
+                const brandId = String(label.getAttribute('data-brand-id') || '').trim();
+                const show = selectedBrandIds.size === 0 || (brandId !== '' && selectedBrandIds.has(brandId));
+                label.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Update brand dropdown trigger label from checked checkboxes
+        function updateBrandDropdownLabel() {
+            const labelEl = document.getElementById('brand-dropdown-label');
+            if (!labelEl) return;
+            const checked = Array.from(document.getElementsByName('brand_id[]')).filter(cb => cb.checked);
+            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('span:last-child')) ? cb.closest('label').querySelector('span:last-child').textContent.trim() : '').filter(Boolean);
+            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
+            else if (names.length === 1) labelEl.textContent = names[0];
+            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
+        }
+
+        // Update model dropdown trigger label from checked checkboxes
+        function updateModelDropdownLabel() {
+            const labelEl = document.getElementById('model-dropdown-label');
+            if (!labelEl) return;
+            const checked = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked);
+            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.model-checkbox-name')) ? cb.closest('label').querySelector('.model-checkbox-name').textContent.trim() : '').filter(Boolean);
+            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
+            else if (names.length === 1) labelEl.textContent = names[0];
+            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
+        }
+
+        // Initialize dropdown toggle and outside-click close for brand/model multiselects
+        function initBrandModelDropdowns() {
+            const brandTrigger = document.getElementById('brand-dropdown-trigger');
+            const brandPanel = document.getElementById('brand-dropdown-panel');
+            const modelTrigger = document.getElementById('model-dropdown-trigger');
+            const modelPanel = document.getElementById('model-dropdown-panel');
+
+            function closeAll() {
+                if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
+                if (modelPanel) { modelPanel.classList.add('hidden'); if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false'); }
+                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
+            }
+
+            if (brandTrigger && brandPanel) {
+                brandTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = !brandPanel.classList.contains('hidden');
+                    closeAll();
+                    if (!isOpen) {
+                        brandPanel.classList.remove('hidden');
+                        brandTrigger.setAttribute('aria-expanded', 'true');
+                        const chev = brandTrigger.querySelector('.dropdown-chevron');
+                        if (chev) chev.style.transform = 'rotate(180deg)';
+                    }
+                });
+            }
+            if (modelTrigger && modelPanel) {
+                modelTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = !modelPanel.classList.contains('hidden');
+                    closeAll();
+                    if (!isOpen) {
+                        modelPanel.classList.remove('hidden');
+                        modelTrigger.setAttribute('aria-expanded', 'true');
+                        const chev = modelTrigger.querySelector('.dropdown-chevron');
+                        if (chev) chev.style.transform = 'rotate(180deg)';
+                    }
+                });
+            }
+            document.addEventListener('click', () => closeAll());
+
+            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel').forEach(panel => {
+                panel.addEventListener('click', (e) => e.stopPropagation());
+            });
+
+            document.querySelectorAll('.brand-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateBrandDropdownLabel);
+            });
+            document.querySelectorAll('.model-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateModelDropdownLabel);
+            });
+        }
+
         // Set up auto-apply listeners for all filter inputs
         function setupAutoApplyFilters() {
             if (!filterSidebar) return;
@@ -3070,6 +3225,14 @@ if (config) {
             // Checkboxes (body type, fuel type, gear type, equipment, etc.)
             filterSidebar.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', autoApplyFilters);
+            });
+            
+            // Brand checkboxes: filter visible models by selected brands
+            filterSidebar.querySelectorAll('.brand-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    filterModelListByBrands();
+                    autoApplyFilters();
+                });
             });
             
             // Select dropdowns
@@ -3285,6 +3448,12 @@ if (config) {
         
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();
+        
+        // Filter model list by selected brands on load
+        filterModelListByBrands();
+        
+        // Initialize brand/model dropdown toggles and label updates
+        initBrandModelDropdowns();
         
         // Initialize all range sliders
         setTimeout(() => {

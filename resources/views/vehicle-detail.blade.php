@@ -92,11 +92,13 @@
                     Registration: <span class="text-foreground font-mono">{{ $vehicle->registration }}</span>
                 </p> --}}
             </div>
-            <div class="flex flex-col items-start gap-3 lg:items-end">
+            <div class="flex flex-col items-start lg:items-end">
                 <p class="text-3xl font-bold text-primary">
                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
-                
+                @if($details && $details->salesType && $details->salesType->name)
+                <p class="text-sm font-medium text-muted-foreground">{{ $details->salesType->name }}</p>
+                @endif
             </div>
         </div>
         <div class="border-t border-border"></div>
@@ -396,9 +398,9 @@
             </div>
 
         @if($details)
-        <!-- Detailed Specifications Section -->
+        <!-- Condition & History Section -->
         <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.detailed_specifications') }}</h2>
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.condition_history_heading') }}</h2>
             <div class="detail-grid">
                 @if($details->description)
                 <div class="detail-item md:col-span-2">
@@ -418,24 +420,6 @@
                     <span class="detail-value">{{ $details->use_name }}</span>
                 </div>
                 @endif
-                @if($details->color_name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.color') }}</span>
-                    <span class="detail-value">{{ $details->color_name }}</span>
-                </div>
-                @endif
-                @if($details->body_type_name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.forms.body_type') }}</span>
-                    <span class="detail-value">{{ $details->body_type_name }}</span>
-                </div>
-                @endif
-                @if($details->variant && $details->variant->name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.variant') }}</span>
-                    <span class="detail-value">{{ $details->variant->name }}</span>
-                </div>
-                @endif
                 @if($details->price_type_name)
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.price_type') }}</span>
@@ -446,24 +430,6 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.condition') }}</span>
                     <span class="detail-value">{{ $details->condition_name }}</span>
-                </div>
-                @endif
-                @if($vehicle->gear_type_name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.forms.gear_type') }}</span>
-                    <span class="detail-value">{{ $vehicle->gear_type_name }}</span>
-                </div>
-                @endif
-                @if($details->transmission_name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.transmission') }}</span>
-                    <span class="detail-value">{{ $details->transmission_name }}</span>
-                </div>
-                @endif
-                @if($details->sales_type_name)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.forms.sales_type') }}</span>
-                    <span class="detail-value">{{ $details->sales_type_name }}</span>
                 </div>
                 @endif
                 @if($details->servicebog && $details->servicebog !== 'Default')
@@ -482,6 +448,43 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.vin_location') }}</span>
                     <span class="detail-value">{{ $details->vin_location }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Technical specs Section -->
+        <div class="detail-section bg-gray-50">
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.technical_specs_heading') }}</h2>
+            <div class="detail-grid">
+                @if($details->color_name)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.color') }}</span>
+                    <span class="detail-value">{{ $details->color_name }}</span>
+                </div>
+                @endif
+                @if($details->body_type_name)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.forms.body_type') }}</span>
+                    <span class="detail-value">{{ $details->body_type_name }}</span>
+                </div>
+                @endif
+                @if($details->variant && $details->variant->name)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.variant') }}</span>
+                    <span class="detail-value">{{ $details->variant->name }}</span>
+                </div>
+                @endif
+                @if($vehicle->gear_type_name)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.forms.gear_type') }}</span>
+                    <span class="detail-value">{{ $vehicle->gear_type_name }}</span>
+                </div>
+                @endif
+                @if($details->transmission_name)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.transmission') }}</span>
+                    <span class="detail-value">{{ $details->transmission_name }}</span>
                 </div>
                 @endif
                 @if($details->total_weight)

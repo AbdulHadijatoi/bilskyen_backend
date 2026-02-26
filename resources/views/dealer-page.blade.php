@@ -199,6 +199,17 @@
                                 alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
                                 class="h-full w-full object-cover rounded-md"
                             />
+                            <!-- Badges - Top Left -->
+                            <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
+                                <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    {{ __('messages.pages.vehicles.dealer') }}
+                                </span>
+                                @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                                    {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
+                                </span>
+                                @endif
+                            </div>
                             <!-- Heart Icon - Top Right -->
                             <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
