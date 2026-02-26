@@ -22,7 +22,7 @@ class TransmissionSeeder extends Seeder
             ];
 
             foreach ($transmissions as $transmission) {
-                Transmission::firstOrCreate(['name' => $transmission['name']]);
+                Transmission::firstOrCreateInsensitive(['name' => $transmission['name']]);
             }
         });
     }

@@ -292,7 +292,7 @@ $variantId = null;
 if ($request->has('variant_id') && $request->input('variant_id')) {
     $variantId = $request->input('variant_id');
 } elseif ($request->has('variant_name') && $request->input('variant_name')) {
-    $variant = Variant::firstOrCreate(['name' => $request->input('variant_name')]);
+    $variant = Variant::firstOrCreateInsensitive(['name' => $request->input('variant_name')]);
     $variantId = $variant->id;
 }
 ```
@@ -303,7 +303,7 @@ $euronomId = null;
 if ($request->has('euronom_id') && $request->input('euronom_id')) {
     $euronomId = $request->input('euronom_id');
 } elseif ($request->has('euronom_name') && $request->input('euronom_name')) {
-    $euronom = Euronom::firstOrCreate(['name' => $request->input('euronom_name')]);
+    $euronom = Euronom::firstOrCreateInsensitive(['name' => $request->input('euronom_name')]);
     $euronomId = $euronom->id;
 }
 ```
@@ -510,7 +510,7 @@ use App\Models\Euronom;
 // Lookup variant_id from variants table
 if (isset($apiData['variant'])) {
     $variantName = $apiData['variant'];
-    $variant = Variant::firstOrCreate(['name' => $variantName]);
+    $variant = Variant::firstOrCreateInsensitive(['name' => $variantName]);
     $transformed['variant_id'] = $variant->id;
 }
 ```
@@ -520,7 +520,7 @@ if (isset($apiData['variant'])) {
 // Lookup euronom_id from euronorms table
 if (isset($apiData['euronorm'])) {
     $euronomName = $apiData['euronorm'];
-    $euronom = Euronom::firstOrCreate(['name' => $euronomName]);
+    $euronom = Euronom::firstOrCreateInsensitive(['name' => $euronomName]);
     $transformed['euronom_id'] = $euronom->id;
 }
 ```

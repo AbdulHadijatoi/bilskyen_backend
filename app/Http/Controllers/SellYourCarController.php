@@ -239,7 +239,7 @@ class SellYourCarController extends Controller
             if ($request->has('variant_id') && $request->input('variant_id')) {
                 $variantId = $request->input('variant_id');
             } elseif ($request->has('variant_name') && $request->input('variant_name')) {
-                $variant = Variant::firstOrCreate(['name' => $request->input('variant_name')]);
+                $variant = Variant::firstOrCreateInsensitive(['name' => $request->input('variant_name')]);
                 $variantId = $variant->id;
             }
 
@@ -248,7 +248,7 @@ class SellYourCarController extends Controller
             if ($request->has('euronom_id') && $request->input('euronom_id')) {
                 $euronomId = $request->input('euronom_id');
             } elseif ($request->has('euronom_name') && $request->input('euronom_name')) {
-                $euronom = Euronom::firstOrCreate(['name' => $request->input('euronom_name')]);
+                $euronom = Euronom::firstOrCreateInsensitive(['name' => $request->input('euronom_name')]);
                 $euronomId = $euronom->id;
             }
 
@@ -257,10 +257,10 @@ class SellYourCarController extends Controller
             if ($request->has('type_id') && $request->input('type_id')) {
                 $typeId = $request->input('type_id');
             } elseif ($request->has('type_name') && $request->input('type_name')) {
-                $type = \App\Models\Type::firstOrCreate(['name' => $request->input('type_name')]);
+                $type = \App\Models\Type::firstOrCreateInsensitive(['name' => $request->input('type_name')]);
                 $typeId = $type->id;
             } elseif ($request->has('type') && is_array($request->input('type')) && isset($request->input('type')['name'])) {
-                $type = \App\Models\Type::firstOrCreate(['name' => $request->input('type')['name']]);
+                $type = \App\Models\Type::firstOrCreateInsensitive(['name' => $request->input('type')['name']]);
                 $typeId = $type->id;
             }
 
@@ -269,7 +269,7 @@ class SellYourCarController extends Controller
             if ($request->has('use_id') && $request->input('use_id')) {
                 $useId = $request->input('use_id');
             } elseif ($request->has('use') && is_array($request->input('use')) && isset($request->input('use')['name'])) {
-                $use = \App\Models\VehicleUse::firstOrCreate(['name' => $request->input('use')['name']]);
+                $use = \App\Models\VehicleUse::firstOrCreateInsensitive(['name' => $request->input('use')['name']]);
                 $useId = $use->id;
             }
 
@@ -278,7 +278,7 @@ class SellYourCarController extends Controller
             if ($request->has('body_type_id') && $request->input('body_type_id')) {
                 $bodyTypeId = $request->input('body_type_id');
             } elseif ($request->has('body_type') && is_array($request->input('body_type')) && isset($request->input('body_type')['name'])) {
-                $bodyType = \App\Models\BodyType::firstOrCreate(['name' => $request->input('body_type')['name']]);
+                $bodyType = \App\Models\BodyType::firstOrCreateInsensitive(['name' => $request->input('body_type')['name']]);
                 $bodyTypeId = $bodyType->id;
             }
 
@@ -372,7 +372,7 @@ class SellYourCarController extends Controller
             // Handle price type
             $priceTypeId = null;
             if ($request->has('without_tax') && $request->boolean('without_tax')) {
-                $withoutTaxPriceType = PriceType::firstOrCreate(['name' => 'Without tax']);
+                $withoutTaxPriceType = PriceType::firstOrCreateInsensitive(['name' => 'Without tax']);
                 $priceTypeId = $withoutTaxPriceType->id;
             } elseif ($request->has('price_type_id')) {
                 $priceTypeId = $request->input('price_type_id');

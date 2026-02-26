@@ -19,7 +19,7 @@ class ModelYearSeeder extends Seeder
             $endYear = 2026; // Danish vehicle model years through 2026
 
             for ($year = $startYear; $year <= $endYear; $year++) {
-                ModelYear::firstOrCreate(['name' => (string) $year]);
+                ModelYear::firstOrCreateInsensitive(['name' => (string) $year]);
             }
         });
     }

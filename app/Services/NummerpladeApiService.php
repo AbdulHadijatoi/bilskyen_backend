@@ -1010,7 +1010,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it (only happens for new brands)
-        $brand = Brand::firstOrCreate(['name' => trim($name)]);
+        $brand = Brand::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['brands'][$nameKey] = $brand->id;
         return $brand->id;
     }
@@ -1042,7 +1042,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $model = VehicleModel::firstOrCreate([
+        $model = VehicleModel::firstOrCreateInsensitive([
             'name' => trim($name),
             'brand_id' => $brandId
         ]);
@@ -1115,7 +1115,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - look up or create by name (not by ID)
-        $modelYear = ModelYear::firstOrCreate(['name' => $yearKey]);
+        $modelYear = ModelYear::firstOrCreateInsensitive(['name' => $yearKey]);
         self::$lookupCache['model_years'][$yearKey] = $modelYear->id;
         return $modelYear->id;
     }
@@ -1143,7 +1143,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $category = Category::firstOrCreate(['name' => trim($name)]);
+        $category = Category::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['categories'][$nameKey] = $category->id;
         return $category->id;
     }
@@ -1171,7 +1171,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $fuelType = FuelType::firstOrCreate(['name' => trim($name)]);
+        $fuelType = FuelType::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['fuel_types'][$nameKey] = $fuelType->id;
         return $fuelType->id;
     }
@@ -1317,7 +1317,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $bodyType = BodyType::firstOrCreate(['name' => trim($name)]);
+        $bodyType = BodyType::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['body_types'][$nameKey] = $bodyType->id;
         return ['id' => $bodyType->id, 'name' => $bodyType->name];
     }
@@ -1368,7 +1368,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $color = Color::firstOrCreate(['name' => trim($name)]);
+        $color = Color::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['colors'][$nameKey] = $color->id;
         return ['id' => $color->id, 'name' => $color->name];
     }
@@ -1398,7 +1398,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $variant = Variant::firstOrCreate(['name' => trim($name)]);
+        $variant = Variant::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['variants'][$nameKey] = $variant->id;
         return ['id' => $variant->id, 'name' => $variant->name];
     }
@@ -1428,7 +1428,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $euronom = Euronom::firstOrCreate(['name' => trim($name)]);
+        $euronom = Euronom::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['euronorms'][$nameKey] = $euronom->id;
         return ['id' => $euronom->id, 'name' => $euronom->name];
     }
@@ -1456,7 +1456,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $condition = Condition::firstOrCreate(['name' => trim($name)]);
+        $condition = Condition::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['conditions'][$nameKey] = $condition->id;
         return $condition->id;
     }
@@ -1484,7 +1484,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $gearType = GearType::firstOrCreate(['name' => trim($name)]);
+        $gearType = GearType::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['gear_types'][$nameKey] = $gearType->id;
         return $gearType->id;
     }
@@ -1512,7 +1512,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it
-        $transmission = Transmission::firstOrCreate(['name' => trim($name)]);
+        $transmission = Transmission::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['transmissions'][$nameKey] = $transmission->id;
         return $transmission->id;
     }
@@ -1562,7 +1562,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $type = Type::firstOrCreate(['name' => trim($name)]);
+        $type = Type::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['types'][$nameKey] = $type->id;
         return ['id' => $type->id, 'name' => $type->name];
     }
@@ -1612,7 +1612,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $use = VehicleUse::firstOrCreate(['name' => trim($name)]);
+        $use = VehicleUse::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['uses'][$nameKey] = $use->id;
         return ['id' => $use->id, 'name' => $use->name];
     }
@@ -1680,7 +1680,7 @@ class NummerpladeApiService
         }
         
         // Not in cache - create it using firstOrCreate
-        $equipment = Equipment::firstOrCreate(['name' => trim($name)]);
+        $equipment = Equipment::firstOrCreateInsensitive(['name' => trim($name)]);
         self::$lookupCache['equipment'][$nameKey] = $equipment->id;
         return [
             'id' => $equipment->id, 

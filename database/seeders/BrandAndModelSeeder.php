@@ -125,7 +125,7 @@ class BrandAndModelSeeder extends Seeder
 
         DB::transaction(function () use ($brands, $modelsByBrand) {
             foreach ($brands as $name) {
-                Brand::firstOrCreate(['name' => $name]);
+                Brand::firstOrCreateInsensitive(['name' => $name]);
             }
 
             foreach ($modelsByBrand as $brandName => $modelNames) {
@@ -134,7 +134,7 @@ class BrandAndModelSeeder extends Seeder
                     continue;
                 }
                 foreach ($modelNames as $modelName) {
-                    VehicleModel::firstOrCreate(
+                    VehicleModel::firstOrCreateInsensitive(
                         [
                             'brand_id' => $brand->id,
                             'name' => $modelName,

@@ -200,10 +200,10 @@ class EquipmentSeeder extends Seeder
 
         DB::transaction(function () use ($data) {
             foreach ($data as $typeName => $equipmentNames) {
-                $type = EquipmentType::firstOrCreate(['name' => $typeName]);
+                $type = EquipmentType::firstOrCreateInsensitive(['name' => $typeName]);
 
                 foreach ($equipmentNames as $name) {
-                    Equipment::firstOrCreate(
+                    Equipment::firstOrCreateInsensitive(
                         [
                             'name' => $name,
                             'equipment_type_id' => $type->id,

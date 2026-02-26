@@ -23,7 +23,7 @@ class FuelTypeSeeder extends Seeder
             ];
 
             foreach ($fuelTypes as $fuelType) {
-                FuelType::firstOrCreate(['name' => $fuelType['name']]);
+                FuelType::firstOrCreateInsensitive(['name' => $fuelType['name']]);
             }
         });
     }

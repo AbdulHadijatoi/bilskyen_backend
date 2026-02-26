@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\FirstOrCreateInsensitive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Equipment extends Model
 {
+    use FirstOrCreateInsensitive;
     public $timestamps = false;
 
     protected $table = 'equipments';

@@ -42,7 +42,7 @@ class VehicleService
 
         // Handle Brand creation if brand name is provided but brand_id is not
         if (isset($vehicleData['brand_name']) && !isset($vehicleData['brand_id'])) {
-            $brand = Brand::firstOrCreate(
+            $brand = Brand::firstOrCreateInsensitive(
                 ['name' => $vehicleData['brand_name']]
             );
             $vehicleData['brand_id'] = $brand->id;
@@ -56,7 +56,7 @@ class VehicleService
                 throw new \InvalidArgumentException('brand_id is required when creating a model');
             }
             
-            $model = VehicleModel::firstOrCreate(
+            $model = VehicleModel::firstOrCreateInsensitive(
                 [
                     'brand_id' => $vehicleData['brand_id'],
                     'name' => $vehicleData['model_name']
@@ -68,7 +68,7 @@ class VehicleService
 
         // Handle ModelYear creation if model year name is provided but model_year_id is not
         if (isset($vehicleData['model_year_name']) && !isset($vehicleData['model_year_id'])) {
-            $modelYear = ModelYear::firstOrCreate(
+            $modelYear = ModelYear::firstOrCreateInsensitive(
                 ['name' => (string) $vehicleData['model_year_name']]
             );
             $vehicleData['model_year_id'] = $modelYear->id;
@@ -77,7 +77,7 @@ class VehicleService
 
         // Also handle if model_year is provided as a number
         if (isset($vehicleData['model_year']) && !isset($vehicleData['model_year_id'])) {
-            $modelYear = ModelYear::firstOrCreate(
+            $modelYear = ModelYear::firstOrCreateInsensitive(
                 ['name' => (string) $vehicleData['model_year']]
             );
             $vehicleData['model_year_id'] = $modelYear->id;
@@ -86,7 +86,7 @@ class VehicleService
 
         // Handle Euronom creation if euronorm name is provided but euronom_id is not
         if (isset($vehicleData['euronorm']) && !isset($vehicleData['euronom_id'])) {
-            $euronom = Euronom::firstOrCreate(
+            $euronom = Euronom::firstOrCreateInsensitive(
                 ['name' => trim($vehicleData['euronorm'])]
             );
             $vehicleData['euronom_id'] = $euronom->id;
@@ -108,7 +108,7 @@ class VehicleService
         if (empty($vehicleData['variant_id']) && (isset($vehicleData['variant']) || isset($vehicleData['variantName']))) {
             $variantName = $vehicleData['variant'] ?? $vehicleData['variantName'];
             if (!empty($variantName)) {
-                $variant = Variant::firstOrCreate(['name' => $variantName]);
+                $variant = Variant::firstOrCreateInsensitive(['name' => $variantName]);
                 $vehicleData['variant_id'] = $variant->id;
             }
             unset($vehicleData['variant'], $vehicleData['variantName']);
@@ -344,7 +344,7 @@ class VehicleService
         if (isset($apiData['variant']) || isset($apiData['variantName'])) {
             $variantName = $apiData['variant'] ?? $apiData['variantName'];
             if ($variantName) {
-                $variant = Variant::firstOrCreate(['name' => $variantName]);
+                $variant = Variant::firstOrCreateInsensitive(['name' => $variantName]);
                 $transformed['variant_id'] = $variant->id;
             }
         }
@@ -353,7 +353,7 @@ class VehicleService
         if (isset($apiData['euronorm']) || isset($apiData['euronom']) || isset($apiData['euroNorm'])) {
             $euronomName = $apiData['euronorm'] ?? $apiData['euronom'] ?? $apiData['euroNorm'];
             if ($euronomName) {
-                $euronom = Euronom::firstOrCreate(['name' => $euronomName]);
+                $euronom = Euronom::firstOrCreateInsensitive(['name' => $euronomName]);
                 $transformed['euronom_id'] = $euronom->id;
             }
         }
