@@ -41,7 +41,7 @@ class LeadController extends Controller
             );
         }
 
-        $query = Lead::with(['vehicle', 'buyerUser', 'assignedUser', 'leadStage', 'source'])
+        $query = Lead::with(['vehicle', 'buyerUser', 'assignedUser', 'leadStage', 'source', 'enquiry'])
             ->where('dealer_id', $dealer->id);
 
         // Apply filters
@@ -81,7 +81,8 @@ class LeadController extends Controller
             'assignedUser',
             'leadStage',
             'source',
-            'stageHistory.changedByUser'
+            'stageHistory.changedByUser',
+            'enquiry'
         ])
         ->where('dealer_id', $dealer->id)
         ->findOrFail($id);

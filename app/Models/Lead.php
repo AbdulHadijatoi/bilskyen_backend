@@ -106,8 +106,21 @@ class Lead extends Model
     /**
      * Get chat threads for this lead
      */
+    /**
+     * Get chat threads for this lead
+     */
     public function chatThreads(): HasMany
     {
         return $this->hasMany(ChatThread::class);
     }
+
+    /**
+     * Get the initial enquiry for this lead
+     */
+    public function enquiry(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Enquiry::class);
+    }
 }
+
+

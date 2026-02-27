@@ -12,6 +12,7 @@ class Enquiry extends Model
     use HasFactory, HasSerialNumber;
 
     protected $fillable = [
+        'lead_id',
         'serial_no',
         'subject',
         'message',
@@ -25,6 +26,15 @@ class Enquiry extends Model
         'email',
         'phone',
     ];
+
+    /**
+     * Get lead for this enquiry
+     */
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
 
     protected $casts = [
         'serial_no' => 'integer',

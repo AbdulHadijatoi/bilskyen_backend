@@ -224,6 +224,7 @@ class EnquiryController extends Controller
         // Create enquiry record with the message details (user_id can be null for guest users)
         $enquirySubject = 'Enquiry about ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
             'subject' => $enquirySubject,
             'message' => $validated['message'],
             'type' => Enquiries::TYPES[0], // 'General' as default
@@ -361,6 +362,7 @@ class EnquiryController extends Controller
         // Create enquiry record with type "Test Drive" (user_id can be null for guest users)
         $enquirySubject = 'Test Drive Request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
             'subject' => $enquirySubject,
             'message' => $validated['message'],
             'type' => 'Test Drive', // Use Test Drive type
@@ -498,6 +500,7 @@ class EnquiryController extends Controller
         // Create enquiry record with type "Price Enquiry" (user_id can be null for guest users)
         $enquirySubject = 'Price Negotiation for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
         $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
             'subject' => $enquirySubject,
             'message' => $validated['message'],
             'type' => 'Price Enquiry', // Use Price Enquiry type
