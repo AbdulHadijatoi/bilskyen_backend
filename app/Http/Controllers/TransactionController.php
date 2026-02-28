@@ -165,7 +165,7 @@ class TransactionController extends Controller
 
         $this->transactionService->deleteTransaction($transaction);
 
-        return response()->json(['message' => 'Transaction deleted successfully']);
+        return response()->json(['message' => __('messages.errors.transaction_deleted_success')]);
     }
 
     /**

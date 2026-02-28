@@ -130,7 +130,7 @@ class NotificationController extends Controller
         $notification = Notification::findOrFail($request->input('id'));
         $this->notificationService->deleteNotification($notification);
 
-        return response()->json(['message' => 'Notification deleted successfully']);
+        return response()->json(['message' => __('messages.errors.notification_deleted_success')]);
     }
 
     /**

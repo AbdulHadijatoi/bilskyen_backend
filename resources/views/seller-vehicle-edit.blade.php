@@ -226,9 +226,54 @@
         margin-top: 0.25rem;
     }
     
-    /* Equipment Section Styles */
-    .equipment-type-group {
+    /* Equipment Section Styles - Matching sell-your-car.blade.php */
+    .equipment-type-details {
         margin-bottom: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background: var(--card);
+    }
+    
+    .equipment-type-details:not([open]) .equipment-type-content {
+        display: none;
+    }
+    
+    .equipment-type-details[open] .equipment-type-icon {
+        transform: rotate(180deg);
+    }
+    
+    .equipment-type-details .equipment-type-toggle {
+        list-style: none;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--foreground);
+        background: var(--muted);
+        transition: background 0.2s;
+        user-select: none;
+    }
+    
+    .equipment-type-details .equipment-type-toggle::-webkit-details-marker,
+    .equipment-type-details .equipment-type-toggle::marker {
+        display: none;
+    }
+    
+    .equipment-type-details .equipment-type-toggle:hover {
+        background: var(--accent);
+    }
+    
+    .equipment-type-details .equipment-type-content {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        transition: all 0.3s ease;
     }
     
     .equipment-type-toggle {
@@ -237,6 +282,7 @@
     
     .equipment-type-icon {
         transition: transform 0.2s ease;
+        flex-shrink: 0;
     }
     
     .equipment-type-icon.rotate-180 {
@@ -776,17 +822,63 @@
                 </div>
                 
                 <!-- Equipment by Category -->
-                <div class="space-y-4">
+                <div class="space-y-2">
                     @php
                         $selectedEquipmentIds = $vehicle->equipment->pluck('id')->toArray();
                     @endphp
                     @foreach($lookupData['equipmentTypes'] as $equipmentType)
                         @if($equipmentType->equipments->count() > 0)
-                            <div class="equipment-type-group">
-                                <h4 class="text-xs font-medium uppercase tracking-wide mb-3 text-muted-foreground">{{ $equipmentType->name }}</h4>
+                            @php
+                                $typeSelectedCount = $equipmentType->equipments->whereIn('id', $selectedEquipmentIds)->count();
+                            @endphp
+                            <details class="equipment-type-details">
+                                <summary class="equipment-type-toggle">
+                                    <span>{{ $equipmentType->name }} ({{ $typeSelectedCount }})</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </summary>
+                                <div class="equipment-type-content">
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($equipmentType->equipments as $equipment)
+                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="equipment_ids[]" 
+                                                    value="{{ $equipment->id }}"
+                                                    {{ in_array($equipment->id, $selectedEquipmentIds) ? 'checked' : '' }}
+                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                >
+                                                <span>{{ $equipment->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </details>
+                        @endif
+                    @endforeach
+                    
+                    <!-- Equipment without category -->
+                    @php
+                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
+                            return !$equip->equipment_type_id;
+                        });
+                    @endphp
+                    @if($equipmentWithoutType->count() > 0)
+                        @php
+                            $otherSelectedCount = $equipmentWithoutType->whereIn('id', $selectedEquipmentIds)->count();
+                        @endphp
+                        <details class="equipment-type-details">
+                            <summary class="equipment-type-toggle">
+                                <span>{{ __('messages.pages.sell_your_car.equipment_other') }} ({{ $otherSelectedCount }})</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </summary>
+                            <div class="equipment-type-content">
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentType->equipments as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                    @foreach($equipmentWithoutType as $equipment)
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
                                             <input 
                                                 type="checkbox" 
                                                 name="equipment_ids[]" 
@@ -799,33 +891,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                        @endif
-                    @endforeach
-                    
-                    <!-- Equipment without category -->
-                    @php
-                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
-                            return !$equip->equipment_type_id;
-                        });
-                    @endphp
-                    @if($equipmentWithoutType->count() > 0)
-                        <div class="equipment-type-group">
-                            <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">{{ __('messages.pages.sell_your_car.equipment_other') }}</h4>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($equipmentWithoutType as $equipment)
-                                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                        <input 
-                                            type="checkbox" 
-                                            name="equipment_ids[]" 
-                                            value="{{ $equipment->id }}"
-                                            {{ in_array($equipment->id, $selectedEquipmentIds) ? 'checked' : '' }}
-                                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        >
-                                        <span>{{ $equipment->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
+                        </details>
                     @endif
                 </div>
             </div>

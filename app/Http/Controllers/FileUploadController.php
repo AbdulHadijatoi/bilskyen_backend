@@ -45,7 +45,7 @@ class FileUploadController extends Controller
         $this->fileService->deleteFiles($request->input('files'));
 
         return response()->json([
-            'message' => 'Files deleted successfully',
+            'message' => __('messages.errors.files_deleted_success'),
         ]);
     }
 }

@@ -136,7 +136,7 @@ class DealerStaffController extends Controller
         }
 
         return $this->created([
-            'message' => 'Staff member created successfully',
+            'message' => __('messages.errors.staff_created_success'),
             'dealer_staff' => $dealerStaff->load('user'),
             'username' => $username,
         ]);

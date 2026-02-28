@@ -120,7 +120,7 @@ class ExpenseController extends Controller
 
         $this->expenseService->deleteExpense($expense);
 
-        return response()->json(['message' => 'Expense deleted successfully']);
+        return response()->json(['message' => __('messages.errors.expense_deleted_success')]);
     }
 
     /**

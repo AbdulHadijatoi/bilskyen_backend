@@ -149,7 +149,7 @@ class AdminTranslationController extends Controller
             $results = $this->translationService->importFromFile($filePath, $fileType);
 
             return $this->success([
-                'message' => 'Import completed',
+                'message' => __('messages.errors.import_completed'),
                 'created' => $results['created'],
                 'updated' => $results['updated'],
                 'errors' => $results['errors'],

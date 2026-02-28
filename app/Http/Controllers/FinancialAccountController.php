@@ -98,7 +98,7 @@ class FinancialAccountController extends Controller
 
         $financialAccount->delete();
 
-        return response()->json(['message' => 'Financial account deleted successfully']);
+        return response()->json(['message' => __('messages.errors.financial_account_deleted_success')]);
     }
 
     /**

@@ -601,8 +601,53 @@
     }
     
     /* Equipment Section Styles - Matching vehicles.blade.php */
-    .equipment-type-group {
+    .equipment-type-details {
         margin-bottom: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background: var(--card);
+    }
+    
+    .equipment-type-details:not([open]) .equipment-type-content {
+        display: none;
+    }
+    
+    .equipment-type-details[open] .equipment-type-icon {
+        transform: rotate(180deg);
+    }
+    
+    .equipment-type-details .equipment-type-toggle {
+        list-style: none;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--foreground);
+        background: var(--muted);
+        transition: background 0.2s;
+        user-select: none;
+    }
+    
+    .equipment-type-details .equipment-type-toggle::-webkit-details-marker,
+    .equipment-type-details .equipment-type-toggle::marker {
+        display: none;
+    }
+    
+    .equipment-type-details .equipment-type-toggle:hover {
+        background: var(--accent);
+    }
+    
+    .equipment-type-details .equipment-type-content {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        transition: all 0.3s ease;
     }
     
     .equipment-type-toggle {
@@ -611,6 +656,7 @@
     
     .equipment-type-icon {
         transition: transform 0.2s ease;
+        flex-shrink: 0;
     }
     
     .equipment-type-icon.rotate-180 {
@@ -1203,7 +1249,11 @@
                         </svg>
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.find_vehicle_button') }}</span>
                     </button>
+                    <button type="button" id="enter-manually-button" class="lookup-button btn-secondary text-primary border border-primary" style="margin-left: 0;">
+                        <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.enter_manually') }}</span>
+                    </button>
                 </div>
+                <p class="text-xs mt-2 text-muted-foreground">{{ __('messages.pages.sell_your_car.enter_manually_lead') }}</p>
                 <p class="text-xs mt-2" id="lookup-error" style="opacity: 0.8; min-height: 1.25rem;"></p>
             </div>
         </div>
@@ -1225,6 +1275,10 @@
 
         <!-- Error Display Container -->
         <div id="form-errors-top" class="hidden w-full rounded-md border p-3 mb-4 error-container"></div>
+        <div id="start-over-container" class="hidden mb-4">
+            <a href="#" id="start-over-link" class="text-sm text-primary hover:underline">{{ __('messages.pages.sell_your_car.start_over') }}</a>
+            <span class="text-sm text-muted-foreground ml-2">— {{ __('messages.pages.sell_your_car.start_over_lead') }}</span>
+        </div>
 
         <!-- Section 1: Basic Vehicle Information -->
         <div class="expandable-section" data-section="basic-info">
@@ -1282,6 +1336,49 @@
                     </div>
                 </div>
                 
+                <!-- Manual entry fields (shown when seller has no registration number) -->
+                <div id="manual-entry-fields" class="hidden mb-4">
+                    <p class="text-sm text-muted-foreground mb-3">{{ __('messages.pages.sell_your_car.enter_manually_lead') }}</p>
+                    <div class="form-grid">
+                        <div class="space-y-2">
+                            <label for="manual_brand_id" class="text-sm font-medium required-field">{{ __('messages.forms.brand') }}</label>
+                            <select id="manual_brand_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
+                                @foreach($lookupData['brands'] as $brand)
+                                    <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="manual_model_id" class="text-sm font-medium required-field">{{ __('messages.forms.model') }}</label>
+                            <select id="manual_model_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
+                                @foreach($lookupData['models'] as $model)
+                                    <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id ?? '' }}">{{ $model->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="manual_model_year_id" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.year') }}</label>
+                            <select id="manual_model_year_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
+                                @foreach($lookupData['modelYears'] as $year)
+                                    <option value="{{ $year->id }}">{{ $year->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="manual_fuel_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
+                            <select id="manual_fuel_type_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
+                                @foreach($lookupData['fuelTypes'] as $fuel)
+                                    <option value="{{ $fuel->id }}">{{ $fuel->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.title_label') }}</label>
@@ -1289,6 +1386,10 @@
                             
                     </div>
                         <input type="hidden" id="title" name="title" value="">
+                        <input type="hidden" id="brand_id" name="brand_id" value="">
+                        <input type="hidden" id="model_id" name="model_id" value="">
+                        <input type="hidden" id="model_year_id" name="model_year_id" value="">
+                        <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="">
                         <p class="field-help">
                             {{ __('messages.pages.sell_your_car.title_help') }}
                         </p>
@@ -1444,14 +1545,54 @@
                 </div>
                 
                 <!-- Equipment by Category -->
-                <div class="space-y-4">
+                <div class="space-y-2">
                     @foreach($lookupData['equipmentTypes'] as $equipmentType)
                         @if($equipmentType->equipments->count() > 0)
-                            <div class="equipment-type-group">
-                                <h4 class="text-xs font-medium uppercase tracking-wide mb-3 text-muted-foreground">{{ $equipmentType->name }}</h4>
+                            <details class="equipment-type-details">
+                                <summary class="equipment-type-toggle">
+                                    <span>{{ $equipmentType->name }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </summary>
+                                <div class="equipment-type-content">
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($equipmentType->equipments as $equipment)
+                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="equipment_ids[]" 
+                                                    value="{{ $equipment->id }}"
+                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                    onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
+                                                >
+                                                <span>{{ $equipment->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </details>
+                        @endif
+                    @endforeach
+                    
+                    <!-- Equipment without category -->
+                    @php
+                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
+                            return !$equip->equipment_type_id;
+                        });
+                    @endphp
+                    @if($equipmentWithoutType->count() > 0)
+                        <details class="equipment-type-details">
+                            <summary class="equipment-type-toggle">
+                                <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </summary>
+                            <div class="equipment-type-content">
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentType->equipments as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
+                                    @foreach($equipmentWithoutType as $equipment)
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
                                             <input 
                                                 type="checkbox" 
                                                 name="equipment_ids[]" 
@@ -1464,33 +1605,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                        @endif
-                    @endforeach
-                    
-                    <!-- Equipment without category -->
-                    @php
-                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
-                            return !$equip->equipment_type_id;
-                        });
-                    @endphp
-                    @if($equipmentWithoutType->count() > 0)
-                        <div class="equipment-type-group">
-                            <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">{{ __('messages.pages.sell_your_car.equipment_other') }}</h4>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($equipmentWithoutType as $equipment)
-                                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                        <input 
-                                            type="checkbox" 
-                                            name="equipment_ids[]" 
-                                            value="{{ $equipment->id }}"
-                                            class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                            onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                        >
-                                        <span>{{ $equipment->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
+                        </details>
                     @endif
                 </div>
             </div>

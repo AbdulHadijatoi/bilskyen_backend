@@ -196,7 +196,7 @@ class PermissionManagementController extends Controller
                 if ($model->hasPermissionTo($permission)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Permission is already assigned to this role'
+                        'message' => __('messages.errors.permission_already_assigned_role')
                     ], 400);
                 }
                 
@@ -208,7 +208,7 @@ class PermissionManagementController extends Controller
                 if ($model->hasDirectPermission($permission->name)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Permission is already directly assigned to this user'
+                        'message' => __('messages.errors.permission_already_assigned_user')
                     ], 400);
                 }
                 
@@ -222,13 +222,13 @@ class PermissionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permission assigned successfully'
+                'message' => __('messages.errors.permission_assigned_success')
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to assign permission: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign permission: ' . $e->getMessage()
+                'message' => __('messages.errors.permission_assign_failed', ['message' => $e->getMessage()])
             ], 500);
         }
     }
@@ -262,7 +262,7 @@ class PermissionManagementController extends Controller
                 } else {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Permission is not directly assigned to this user (it may be inherited from a role)'
+                        'message' => __('messages.errors.permission_not_direct')
                     ], 400);
                 }
             }
@@ -274,13 +274,13 @@ class PermissionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permission revoked successfully'
+                'message' => __('messages.errors.permission_revoked_success')
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to revoke permission: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to revoke permission: ' . $e->getMessage()
+                'message' => __('messages.errors.permission_revoke_failed', ['message' => $e->getMessage()])
             ], 500);
         }
     }
@@ -297,13 +297,13 @@ class PermissionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permissions and roles cache cleared successfully'
+                'message' => __('messages.errors.permissions_cache_cleared_success')
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to clear cache: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clear cache: ' . $e->getMessage()
+                'message' => __('messages.errors.permissions_cache_clear_failed', ['message' => $e->getMessage()])
             ], 500);
         }
     }

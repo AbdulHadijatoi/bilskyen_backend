@@ -141,7 +141,7 @@ class PurchaseController extends Controller
 
         $this->purchaseService->deletePurchase($purchase);
 
-        return response()->json(['message' => 'Purchase deleted successfully']);
+        return response()->json(['message' => __('messages.errors.purchase_deleted_success')]);
     }
 
     /**

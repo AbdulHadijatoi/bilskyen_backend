@@ -22,7 +22,7 @@ class CronAuth
             if ($authHeader !== "Bearer {$cronSecret}") {
                 return response()->json([
                     'error' => 'Unauthorized',
-                    'message' => 'Invalid cron secret',
+                    'message' => __('messages.errors.invalid_cron_secret'),
                 ], 401);
             }
         }

@@ -46,14 +46,14 @@ class UpdateVehicleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'fuel_type_id.exists' => 'Please select a valid fuel type.',
-            'price.min' => 'Price must be a positive number.',
-            'vehicle_list_status_id.exists' => 'Please select a valid vehicle status.',
-            'vin.size' => 'VIN must be exactly 17 characters.',
-            'vin.regex' => 'VIN can only contain letters (except I, O, Q) and numbers.',
-            'category_id.exists' => 'Please select a valid category.',
-            'brand_id.exists' => 'Please select a valid brand.',
-            'model_year_id.exists' => 'Please select a valid model year.',
+            'fuel_type_id.exists' => __('messages.validation.update_vehicle.fuel_type_exists'),
+            'price.min' => __('messages.validation.update_vehicle.price_min'),
+            'vehicle_list_status_id.exists' => __('messages.validation.update_vehicle.vehicle_list_status_exists'),
+            'vin.size' => __('messages.validation.update_vehicle.vin_size'),
+            'vin.regex' => __('messages.validation.update_vehicle.vin_regex'),
+            'category_id.exists' => __('messages.validation.update_vehicle.category_exists'),
+            'brand_id.exists' => __('messages.validation.update_vehicle.brand_exists'),
+            'model_year_id.exists' => __('messages.validation.update_vehicle.model_year_exists'),
         ];
     }
 }

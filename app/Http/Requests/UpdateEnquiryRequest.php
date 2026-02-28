@@ -75,12 +75,12 @@ class UpdateEnquiryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.in' => 'Enquiry type must be one of the predefined values.',
-            'status.in' => 'Enquiry status must be one of the predefined values.',
-            'source.in' => 'Enquiry source must be one of the predefined values.',
-            'contact_id.exists' => 'Please provide a valid contact reference.',
-            'user_id.exists' => 'Please provide a valid user reference.',
-            'vehicle_id.exists' => 'Please provide a valid vehicle reference.',
+            'type.in' => __('messages.validation.enquiry.type_in'),
+            'status.in' => __('messages.validation.enquiry.status_in'),
+            'source.in' => __('messages.validation.enquiry.source_in'),
+            'contact_id.exists' => __('messages.validation.enquiry.contact_id_exists'),
+            'user_id.exists' => __('messages.validation.enquiry.user_id_exists'),
+            'vehicle_id.exists' => __('messages.validation.enquiry.vehicle_id_exists'),
         ];
     }
 }

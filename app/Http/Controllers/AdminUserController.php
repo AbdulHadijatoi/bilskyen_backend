@@ -346,7 +346,7 @@ class AdminUserController extends Controller
             $request
         );
 
-        return $this->success(['message' => 'Password changed successfully']);
+        return $this->success(['message' => __('messages.errors.password_changed_success')]);
     }
 
     /**
@@ -403,6 +403,6 @@ class AdminUserController extends Controller
             $request
         );
 
-        return $this->success(['message' => 'Password changed successfully']);
+        return $this->success(['message' => __('messages.errors.password_changed_success')]);
     }
 }

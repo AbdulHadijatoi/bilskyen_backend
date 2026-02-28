@@ -367,7 +367,7 @@ class AdminVehicleController extends Controller
 
         $image->delete();
 
-        return $this->success(['message' => 'Image deleted successfully']);
+        return $this->success(['message' => __('messages.messages.image_deleted_successfully')]);
     }
 
     public function updateEquipment(Request $request, int $id): JsonResponse

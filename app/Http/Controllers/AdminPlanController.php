@@ -277,7 +277,7 @@ class AdminPlanController extends Controller
             $request->feature_id => ['value' => $request->value ?? null]
         ]);
 
-        return $this->success(['message' => 'Feature assigned successfully']);
+        return $this->success(['message' => __('messages.errors.feature_assigned_success')]);
     }
 
     public function removeFeature(int $id, int $featureId): JsonResponse
@@ -449,7 +449,7 @@ class AdminPlanController extends Controller
 
             DB::commit();
             
-            return $this->success(['message' => 'Plan pricing updated successfully']);
+            return $this->success(['message' => __('messages.errors.plan_pricing_updated_success')]);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error('Failed to update plan pricing: ' . $e->getMessage(), 500);

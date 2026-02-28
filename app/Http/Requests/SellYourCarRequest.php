@@ -115,16 +115,16 @@ class SellYourCarRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Please provide a vehicle title.',
-            'registration.required' => 'Please provide a registration number.',
-            'fuel_type_id.required' => 'Please select a fuel type.',
-            'fuel_type_id.exists' => 'Please select a valid fuel type.',
-            'price.required' => 'Please provide a price.',
-            'price.min' => 'Price must be a positive number.',
-            'vehicle_list_status_id.required' => 'Please select a vehicle status.',
-            'vehicle_list_status_id.exists' => 'Please select a valid vehicle status.',
-            'images.*.image' => 'All uploaded files must be images.',
-            'images.*.max' => 'Each image must be less than 10MB.',
+            'title.required' => __('messages.validation.sell_your_car.title_required'),
+            'registration.required' => __('messages.validation.sell_your_car.registration_required'),
+            'fuel_type_id.required' => __('messages.validation.sell_your_car.fuel_type_required'),
+            'fuel_type_id.exists' => __('messages.validation.sell_your_car.fuel_type_exists'),
+            'price.required' => __('messages.validation.sell_your_car.price_required'),
+            'price.min' => __('messages.validation.sell_your_car.price_min'),
+            'vehicle_list_status_id.required' => __('messages.validation.sell_your_car.vehicle_list_status_required'),
+            'vehicle_list_status_id.exists' => __('messages.validation.sell_your_car.vehicle_list_status_exists'),
+            'images.*.image' => __('messages.validation.sell_your_car.images_image'),
+            'images.*.max' => __('messages.validation.sell_your_car.images_max'),
         ];
     }
 }

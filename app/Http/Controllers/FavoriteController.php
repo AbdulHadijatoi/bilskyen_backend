@@ -173,7 +173,7 @@ class FavoriteController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized',
+                'message' => __('messages.errors.unauthorized'),
             ], 401);
         }
 
@@ -212,7 +212,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Saved to favorites',
+            'message' => __('messages.messages.saved_to_favorites'),
             'data' => $favorite,
         ], 201);
     }
@@ -227,7 +227,7 @@ class FavoriteController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized',
+                'message' => __('messages.errors.unauthorized'),
             ], 401);
         }
 
@@ -263,7 +263,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Removed from favorites',
+            'message' => __('messages.messages.removed_from_favorites'),
         ], 200);
     }
     
@@ -277,7 +277,7 @@ class FavoriteController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized',
+                'message' => __('messages.errors.unauthorized'),
             ], 401);
         }
 
@@ -301,7 +301,7 @@ class FavoriteController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized',
+                'message' => __('messages.errors.unauthorized'),
             ], 401);
         }
 

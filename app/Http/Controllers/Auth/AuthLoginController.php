@@ -155,12 +155,12 @@ class AuthLoginController extends Controller
             // Clear refresh token cookie
             $cookie = cookie()->forget('refresh_token');
 
-            return $this->success(['message' => 'Logged out successfully'])->cookie($cookie);
+            return $this->success(['message' => __('messages.errors.logged_out_success')])->cookie($cookie);
         } catch (JWTException $e) {
             // Token might already be invalid, but we still want to clear the cookie
             $cookie = cookie()->forget('refresh_token');
             
-            return $this->success(['message' => 'Logged out successfully'])->cookie($cookie);
+            return $this->success(['message' => __('messages.errors.logged_out_success')])->cookie($cookie);
         } catch (\Exception $e) {
             return $this->error('Failed to logout', null, 500);
         }

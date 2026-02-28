@@ -25,7 +25,7 @@ class JwtAuthMiddleware
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not found',
+                    'message' => __('messages.errors.user_not_found'),
                     'error_code' => 'UNAUTHENTICATED',
                 ], 404);
             }
@@ -34,26 +34,26 @@ class JwtAuthMiddleware
             if ($user->banned) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Account is banned',
+                    'message' => __('messages.errors.account_banned_short'),
                     'error_code' => 'FORBIDDEN',
                 ], 403);
             }
         } catch (TokenExpiredException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Token expired',
+                'message' => __('messages.errors.token_expired'),
                 'error_code' => 'TOKEN_EXPIRED',
             ], 401);
         } catch (TokenInvalidException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Token invalid',
+                'message' => __('messages.errors.token_invalid'),
                 'error_code' => 'TOKEN_INVALID',
             ], 401);
         } catch (JWTException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Token not provided',
+                'message' => __('messages.errors.token_not_provided'),
                 'error_code' => 'UNAUTHENTICATED',
             ], 401);
         }

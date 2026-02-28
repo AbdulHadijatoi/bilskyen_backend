@@ -131,7 +131,8 @@ class VehicleService
             'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
             'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
             'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
-            'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
+            'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name',
+            'wholesale_price', 'internal_cost_price', 'engine_type'
         ];
 
         foreach ($detailsFields as $field) {
@@ -405,7 +406,8 @@ class VehicleService
                 'seat_belt_alarms', 'euronom_id', 'servicebog', 'price_type_id', 'condition_id',
                 'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
                 'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
-                'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name'
+                'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name',
+                'wholesale_price', 'internal_cost_price', 'engine_type'
             ];
 
             foreach ($detailsFields as $field) {

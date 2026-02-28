@@ -111,6 +111,10 @@
         $contactEmail = null;
         $dealerOwner = null;
         $dealerPhone = null;
+        $dealerDisplayAddress = null;
+        $dealerDisplayPostcode = null;
+        $dealerDisplayCity = null;
+
         if ($vehicle->dealer && $vehicle->dealer->owner) {
             $dealerOwner = $vehicle->dealer->owner;
             $contactUser = $dealerOwner;
@@ -121,6 +125,10 @@
             } elseif ($dealerOwner && $dealerOwner->phone) {
                 $dealerPhone = $dealerOwner->phone;
             }
+            // From dealers table: address, city, postcode (vehicle seller_* overrides when set)
+            $dealerDisplayAddress = $vehicle->seller_address ? trim($vehicle->seller_address) : trim($vehicle->dealer->address ?? '');
+            $dealerDisplayCity = trim($vehicle->dealer->city ?? '') ?: null;
+            $dealerDisplayPostcode = $vehicle->seller_postcode ? trim($vehicle->seller_postcode) : (trim($vehicle->dealer->postcode ?? '') ?: null);
         } elseif ($vehicle->user) {
             $contactUser = $vehicle->user;
             $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
@@ -205,7 +213,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_address)
+                        @if($dealerDisplayAddress)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
@@ -213,13 +221,25 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_address }}
+                                        {{ $dealerDisplayAddress }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_postcode)
+                        @if($dealerDisplayCity)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">{{ $dealerDisplayCity }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.city') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($dealerDisplayPostcode)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -229,7 +249,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_postcode }}
+                                        {{ $dealerDisplayPostcode }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>
@@ -277,6 +297,18 @@
                                         {{ __('messages.pages.vehicles.detail.send_email') }}
                                     </button>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.email') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($vehicle->dealer && $vehicle->dealer->cvr)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">{{ $vehicle->dealer->cvr }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.cvr') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -925,7 +957,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_address)
+                        @if($dealerDisplayAddress)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
@@ -933,13 +965,25 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_address }}
+                                        {{ $dealerDisplayAddress }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_postcode)
+                        @if($dealerDisplayCity)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">{{ $dealerDisplayCity }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.city') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($dealerDisplayPostcode)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -949,7 +993,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_postcode }}
+                                        {{ $dealerDisplayPostcode }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>
@@ -997,6 +1041,18 @@
                                         {{ __('messages.pages.vehicles.detail.send_email') }}
                                     </button>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.email') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($vehicle->dealer && $vehicle->dealer->cvr)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">{{ $vehicle->dealer->cvr }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.cvr') }}</p>
                                 </div>
                             </div>
                         @endif
@@ -1063,7 +1119,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_address)
+                        @if($dealerDisplayAddress)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
@@ -1071,13 +1127,25 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_address }}
+                                        {{ $dealerDisplayAddress }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->seller_postcode)
+                        @if($dealerDisplayCity)
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-foreground">{{ $dealerDisplayCity }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.city') }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($dealerDisplayPostcode)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -1087,7 +1155,7 @@
                                 </svg>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-foreground">
-                                        {{ $vehicle->seller_postcode }}
+                                        {{ $dealerDisplayPostcode }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>

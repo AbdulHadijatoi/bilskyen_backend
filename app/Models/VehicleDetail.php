@@ -35,6 +35,7 @@ class VehicleDetail extends Model
         'engine_displacement',
         'engine_cylinders',
         'engine_code',
+        'engine_type',
         'category',
         'last_inspection_date',
         'last_inspection_result',
@@ -77,6 +78,8 @@ class VehicleDetail extends Model
         'co2_emissions',
         'is_import',
         'is_factory_new',
+        'wholesale_price',
+        'internal_cost_price',
     ];
 
     protected $casts = [
@@ -117,6 +120,8 @@ class VehicleDetail extends Model
         'co2_emissions' => 'integer',
         'is_import' => 'boolean',
         'is_factory_new' => 'boolean',
+        'wholesale_price' => 'decimal:2',
+        'internal_cost_price' => 'decimal:2',
     ];
 
     /**

@@ -293,7 +293,7 @@ class SellerProfileController extends Controller
             ]);
         }
 
-        return $this->success(['message' => 'Vehicle deleted successfully']);
+        return $this->success(['message' => __('messages.messages.vehicle_deleted_successfully')]);
     }
 
     /**

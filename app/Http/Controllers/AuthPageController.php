@@ -191,14 +191,14 @@ class AuthPageController extends Controller
         if (!$token = auth('api')->attempt($credentials)) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'message' => 'These credentials do not match our records.',
+                    'message' => __('messages.errors.credentials_mismatch'),
                     'errors' => [
-                        'email' => ['These credentials do not match our records.'],
+                        'email' => [__('messages.errors.credentials_mismatch')],
                     ]
                 ], 422);
             }
             return back()->withErrors([
-                'email' => 'These credentials do not match our records.',
+                'email' => __('messages.errors.credentials_mismatch'),
             ])->withInput($request->only('email'));
         }
 
@@ -210,14 +210,14 @@ class AuthPageController extends Controller
             auth('api')->logout();
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'message' => 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''),
+                    'message' => __('messages.errors.account_banned') . ($user->ban_reason ? ' ' . __('messages.errors.ban_reason', ['reason' => $user->ban_reason]) : ''),
                     'errors' => [
-                        'email' => ['Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : '')],
+                        'email' => [__('messages.errors.account_banned') . ($user->ban_reason ? ' ' . __('messages.errors.ban_reason', ['reason' => $user->ban_reason]) : '')],
                     ]
                 ], 403);
             }
             return back()->withErrors([
-                'email' => 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''),
+                'email' => __('messages.errors.account_banned') . ($user->ban_reason ? ' ' . __('messages.errors.ban_reason', ['reason' => $user->ban_reason]) : ''),
             ])->withInput($request->only('email'));
         }
 
@@ -251,7 +251,7 @@ class AuthPageController extends Controller
         // If AJAX request, return JSON response
         if ($request->expectsJson() || $request->ajax()) {
             $response = response()->json([
-                'message' => 'Login successful!',
+                'message' => __('messages.errors.login_successful'),
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,

@@ -51,7 +51,7 @@ class RequirePermission
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You must be signed in to access this resource.',
+                'message' => __('messages.errors.must_be_signed_in'),
                 'error_code' => 'UNAUTHORIZED',
             ], 401);
         }
@@ -69,12 +69,12 @@ class RequirePermission
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json([
                 'status' => 'error',
-                'message' => "You do not have the required permission(s): {$permissionsString}. Please contact your administrator if you believe this is an error.",
+                'message' => __('messages.errors.no_required_permissions', ['permissions' => $permissionsString]),
                 'error_code' => 'FORBIDDEN',
             ], 403);
         }
 
-        abort(403, "You do not have the required permission(s): {$permissionsString}");
+        abort(403, __('messages.errors.no_required_permissions', ['permissions' => $permissionsString]));
     }
 }
 

@@ -148,7 +148,7 @@ class SellerController extends Controller
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized access',
+                'message' => __('messages.errors.unauthorized_access'),
             ], 403);
         }
 
@@ -158,7 +158,7 @@ class SellerController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to update this vehicle',
+                'message' => __('messages.errors.no_permission_update_vehicle'),
             ], 403);
         }
 
@@ -431,13 +431,13 @@ class SellerController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Vehicle updated successfully',
+                'message' => __('messages.errors.vehicle_updated_success'),
                 'vehicle' => $updatedVehicle->load(['images', 'details', 'equipment']),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Validation failed',
+                'message' => __('messages.api.validation_failed'),
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
@@ -449,7 +449,7 @@ class SellerController extends Controller
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to update vehicle: ' . $e->getMessage(),
+                'message' => __('messages.errors.failed_to_update_vehicle', ['message' => $e->getMessage()]),
             ], 500);
         }
     }
@@ -466,7 +466,7 @@ class SellerController extends Controller
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized access',
+                'message' => __('messages.errors.unauthorized_access'),
             ], 403);
         }
 
@@ -476,7 +476,7 @@ class SellerController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to unpublish this vehicle',
+                'message' => __('messages.errors.no_permission_unpublish_vehicle'),
             ], 403);
         }
 
@@ -510,7 +510,7 @@ class SellerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Vehicle unpublished successfully',
+            'message' => __('messages.errors.vehicle_unpublished_success'),
         ]);
     }
 
@@ -526,7 +526,7 @@ class SellerController extends Controller
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized access',
+                'message' => __('messages.errors.unauthorized_access'),
             ], 403);
         }
 
@@ -536,7 +536,7 @@ class SellerController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to delete this vehicle',
+                'message' => __('messages.errors.no_permission_delete_vehicle'),
             ], 403);
         }
 
@@ -568,7 +568,7 @@ class SellerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Vehicle deleted successfully',
+            'message' => __('messages.errors.vehicle_deleted_success'),
         ]);
     }
 
@@ -584,7 +584,7 @@ class SellerController extends Controller
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized access',
+                'message' => __('messages.errors.unauthorized_access'),
             ], 403);
         }
 
@@ -599,7 +599,7 @@ class SellerController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to update this vehicle',
+                'message' => __('messages.errors.no_permission_update_vehicle'),
             ], 403);
         }
 
@@ -633,7 +633,7 @@ class SellerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Vehicle status updated successfully',
+            'message' => __('messages.errors.vehicle_status_updated_success'),
             'vehicle' => $vehicle->fresh(),
         ]);
     }
@@ -650,7 +650,7 @@ class SellerController extends Controller
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized access',
+                'message' => __('messages.errors.unauthorized_access'),
             ], 403);
         }
 
@@ -660,7 +660,7 @@ class SellerController extends Controller
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to view inquiries for this vehicle',
+                'message' => __('messages.errors.no_permission_view_inquiries'),
             ], 403);
         }
 

@@ -223,7 +223,7 @@ class SellYourCarController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Validation failed',
+                    'message' => __('messages.api.validation_failed'),
                     'errors' => $validator->errors()
                 ], 422);
             }

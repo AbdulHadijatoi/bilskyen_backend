@@ -209,7 +209,7 @@ class SaleController extends Controller
 
         $this->saleService->deleteSale($sale);
 
-        return response()->json(['message' => 'Sale deleted successfully']);
+        return response()->json(['message' => __('messages.errors.sale_deleted_success')]);
     }
 
     /**

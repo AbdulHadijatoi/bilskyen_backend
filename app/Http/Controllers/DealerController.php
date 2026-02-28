@@ -136,7 +136,7 @@ class DealerController extends Controller
         if (!$dealer) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Dealer not found',
+                'message' => __('messages.errors.dealer_not_found'),
             ], 404);
         }
 
@@ -237,7 +237,7 @@ class DealerController extends Controller
         if (!$dealer) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Dealer not found',
+                'message' => __('messages.errors.dealer_not_found'),
             ], 404);
         }
 
@@ -335,7 +335,7 @@ class DealerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Your enquiry has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.errors.enquiry_submitted'),
         ]);
     }
 

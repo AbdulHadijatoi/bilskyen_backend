@@ -109,6 +109,6 @@ class AdminAboutPageController extends Controller
     {
         $this->pageContentService->deletePageImage($imageId);
 
-        return $this->success(['message' => 'Image deleted successfully']);
+        return $this->success(['message' => __('messages.messages.image_deleted_successfully')]);
     }
 }
