@@ -118,11 +118,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
     });
     
-    Route::middleware('auth:api')->prefix('vehicles')->group(function () {
-        Route::post('/{id}/leads', [\App\Http\Controllers\EnquiryController::class, 'enquire']);
-        Route::post('/{id}/enquiries', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm']);
-        Route::post('/{id}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm']);
-        Route::post('/{id}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm']);
+    // Vehicle enquiry routes - Public (guests and auth users can submit, same as web)
+    Route::prefix('vehicles')->group(function () {
+        Route::post('/{vehicle}/leads', [\App\Http\Controllers\EnquiryController::class, 'enquire']);
+        Route::post('/{vehicle}/enquiries', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm']);
+        Route::post('/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm']);
+        Route::post('/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm']);
     });
     
     // Seller Profile API routes (for authenticated sellers)

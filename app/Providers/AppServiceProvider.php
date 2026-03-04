@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Vehicle;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)
+        Route::bind('vehicle', function (string $value) {
+            return is_numeric($value)
+                ? Vehicle::findOrFail((int) $value)
+                : Vehicle::where('slug', $value)->firstOrFail();
+        });
+
         // Validate JWT_SECRET is set, especially in production
         $jwtSecret = config('jwt.secret');
         if (empty($jwtSecret)) {

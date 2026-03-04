@@ -379,7 +379,7 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 
 #### Lead Tracking
 
-All lead tracking endpoints require `auth:api` middleware.
+Lead tracking endpoints are **public** (guests and authenticated users can submit, same as web).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
