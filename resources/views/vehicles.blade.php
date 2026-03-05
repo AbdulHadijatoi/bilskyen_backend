@@ -69,6 +69,19 @@
             #filter-sidebar details > summary::marker { display: none; }
             #filter-sidebar details[open] .filter-chevron { transform: rotate(180deg); }
             #filter-sidebar .filter-chevron { transition: transform 0.2s ease; }
+            /* Expanded section: make heading stand out so content below is clearly tied to it */
+            #filter-sidebar details[open] > summary {
+                background: hsl(var(--muted) / 0.5);
+                border-left: 3px solid hsl(var(--primary));
+                font-weight: 700;
+            }
+            #filter-sidebar details[open] > summary span {
+                color: hsl(var(--foreground));
+                font-weight: 700;
+            }
+            #filter-sidebar details[open] > summary .filter-chevron {
+                color: hsl(var(--foreground) / 0.8);
+            }
         </style>
 
         <!-- Filter Sidebar -->
@@ -194,13 +207,28 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.model_year') }}</label>
-                        <select name="model_year_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
+                        <select name="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                             <option value="">{{ __('messages.common.all') }}</option>
-                            @foreach($constants['model_years'] ?? [] as $my)
-                            <option value="{{ is_array($my) ? $my['id'] : $my->id }}" @if(isset($cf['model_year_id']) && (is_array($cf['model_year_id']) ? in_array(is_array($my) ? $my['id'] : $my->id, $cf['model_year_id']) : (is_array($my) ? $my['id'] : $my->id) == $cf['model_year_id'])) selected @endif>{{ is_array($my) ? $my['name'] : $my->name }}</option>
+                            @foreach($constants['gear_types'] ?? [] as $gt)
+                            <option value="{{ is_array($gt) ? $gt['id'] : $gt->id }}" @if(isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array(is_array($gt) ? $gt['id'] : $gt->id, $cf['gear_type_id']) : (is_array($gt) ? $gt['id'] : $gt->id) == $cf['gear_type_id'])) selected @endif>{{ is_array($gt) ? $gt['name'] : $gt->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
+                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
+                            <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
+                            <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                            <input type="range" id="year-slider-min" min="1975" max="{{ date('Y') + 1 }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="year-slider-max" min="1975" max="{{ date('Y') + 1 }}" step="1" value="{{ date('Y') + 1 }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <div id="year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
+                            <div id="year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
+                        </div></div>
                     </div>
                 </div>
             </details>
@@ -245,8 +273,8 @@
                 </div>
             </details>
 
-            <!-- Fuel, Gear & Body (collapsed by default) -->
-            <details @if(isset($cf['fuel_type_id']) || isset($cf['gear_type_id']) || isset($cf['body_type_id'])) open @endif class="border-b border-border">
+            <!-- Fuel & Body (collapsed by default) -->
+            <details @if(isset($cf['fuel_type_id']) || isset($cf['body_type_id'])) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -263,23 +291,14 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
-                            <select name="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
+                            <select name="body_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['gear_types'] ?? [] as $gt)
-                                <option value="{{ is_array($gt) ? $gt['id'] : $gt->id }}" @if(isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array(is_array($gt) ? $gt['id'] : $gt->id, $cf['gear_type_id']) : (is_array($gt) ? $gt['id'] : $gt->id) == $cf['gear_type_id'])) selected @endif>{{ is_array($gt) ? $gt['name'] : $gt->name }}</option>
+                                @foreach($constants['body_types'] ?? [] as $bt)
+                                <option value="{{ is_array($bt) ? $bt['id'] : $bt->id }}" @if(isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array(is_array($bt) ? $bt['id'] : $bt->id, $cf['body_type_id']) : (is_array($bt) ? $bt['id'] : $bt->id) == $cf['body_type_id'])) selected @endif>{{ is_array($bt) ? $bt['name'] : $bt->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
-                        <select name="body_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                            <option value="">{{ __('messages.common.all') }}</option>
-                            @foreach($constants['body_types'] ?? [] as $bt)
-                            <option value="{{ is_array($bt) ? $bt['id'] : $bt->id }}" @if(isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array(is_array($bt) ? $bt['id'] : $bt->id, $cf['body_type_id']) : (is_array($bt) ? $bt['id'] : $bt->id) == $cf['body_type_id'])) selected @endif>{{ is_array($bt) ? $bt['name'] : $bt->name }}</option>
-                            @endforeach
-                        </select>
                     </div>
                 </div>
             </details>
@@ -353,31 +372,16 @@
                 </div>
             </details>
 
-            <!-- Year & Specs: model year, first reg, owner tax, HP, battery, range, fuel efficiency (collapsed) -->
+            <!-- Year & Specs: first reg, owner tax, HP, battery, range, fuel efficiency (collapsed) -->
             @php
-                $yearSpecsOpen = isset($cf['year_from']) || isset($cf['year_to']) || isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_from']) || isset($cf['engine_power_to']) || isset($cf['battery_capacity_from']) || isset($cf['battery_capacity_to']) || isset($cf['range_km_from']) || isset($cf['range_km_to']) || isset($cf['fuel_efficiency_from']) || isset($cf['fuel_efficiency_to']);
+                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_from']) || isset($cf['engine_power_to']) || isset($cf['battery_capacity_from']) || isset($cf['battery_capacity_to']) || isset($cf['range_km_from']) || isset($cf['range_km_to']) || isset($cf['fuel_efficiency_from']) || isset($cf['fuel_efficiency_to']);
             @endphp
             <details @if($yearSpecsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.model_year') }} / {{ __('messages.forms.horsepower_hp') }}</span>
+                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.first_registration_year') }} / {{ __('messages.forms.horsepower_hp') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
                 <div class="px-4 pb-3 space-y-3">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        </div>
-                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
-                            <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="year-slider-min" min="1975" max="{{ date('Y') + 1 }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="year-slider-max" min="1975" max="{{ date('Y') + 1 }}" step="1" value="{{ date('Y') + 1 }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <div id="year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                            <div id="year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                        </div></div>
-                    </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.first_registration_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
@@ -627,7 +631,7 @@
                                     <span>{{ $typeName }}</span>
                                     <svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                                 </button>
-                                <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5">
+                                <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">
                                     @foreach($items as $eq)
                                         @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
                                         <label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
@@ -647,7 +651,7 @@
                                 <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
                                 <svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                             </button>
-                            <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5">
+                            <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">
                                 @foreach($otherItems as $eq)
                                     @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
                                     <label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
@@ -2173,9 +2177,8 @@
                 }
             }
             
-            // Single-value selects (model_year, body_type, fuel_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
+            // Single-value selects (body_type, fuel_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
             const selectChips = [
-                ['model_year_id', '{{ __('messages.forms.model_year') }}'],
                 ['body_type_id', '{{ __('messages.forms.body_type') }}'],
                 ['fuel_type_id', '{{ __('messages.forms.fuel_type') }}'],
                 ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
@@ -2311,6 +2314,12 @@
                     } else if (key === 'drive_axles' && isArray) {
                         const checkbox = document.querySelector(`[name="drive_axles[]"][value="${value}"]`);
                         if (checkbox) checkbox.checked = false;
+                    } else if (key === 'condition_id') {
+                        const selectedRadio = document.querySelector(`[name="condition_id"][value="${value}"]`);
+                        const allRadio = document.querySelector('[name="condition_id"][value=""]');
+                        if (selectedRadio) selectedRadio.checked = false;
+                        if (allRadio) allRadio.checked = true;
+                        if (typeof updateConditionStyles === 'function') updateConditionStyles();
                     } else {
                         const input = document.querySelector(`[name="${key}"]`);
                         if (input) {
@@ -3054,13 +3063,12 @@ if (config) {
             if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
 
             const conditionId = document.querySelector('[name="condition_id"]:checked')?.value;
-            if (conditionId) filters.condition_id = conditionId;
+            if (conditionId) filters.condition_id = parseInt(conditionId, 10);
 
             const brandIds = Array.from(document.getElementsByName('brand_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (brandIds.length > 0) filters.brand_id = brandIds;
             const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (modelIds.length > 0) filters.model_id = modelIds;
-            if (v('model_year_id')) filters.model_year_id = v('model_year_id');
             if (vNum('price_from')) filters.price_from = v('price_from');
             if (vNum('price_to', 1000000)) filters.price_to = v('price_to');
             if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');

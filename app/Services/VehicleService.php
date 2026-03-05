@@ -1082,9 +1082,9 @@ class VehicleService
             }
         }
 
-        // Condition
+        // Condition (ensure integer for correct match with vehicle_details.condition_id)
         if (!empty($advancedFilters['condition_id'])) {
-            $query->where('vehicle_details.condition_id', $advancedFilters['condition_id']);
+            $query->where('vehicle_details.condition_id', (int) $advancedFilters['condition_id']);
         }
 
         // Gear Type (supports array for multiple values)

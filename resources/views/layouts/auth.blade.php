@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/favicon.jpeg') }}">
     <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
     <title>@yield('title', __('messages.layouts.default_title'))</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -131,7 +132,7 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center gap-2">
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="/images/logo.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-8">
+                        <img src="/images/logo_white.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-6 md:h-8">
                     </a>
                 </div>
                 <div class="flex items-center gap-4">
@@ -154,10 +155,10 @@
             <div class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">
                     <p class="text-foreground text-lg">
-                        &ldquo;{{ __('messages.layouts.testimonial_quote') }}&rdquo;
+                        &ldquo;{{ $loginPageContent['testimonial_quote'] ?? __('messages.layouts.testimonial_quote') }}&rdquo;
                     </p>
                     <footer class="text-foreground text-sm">
-                        Rahif
+                        {{ $loginPageContent['testimonial_author'] ?? 'Rahif' }}
                     </footer>
                 </blockquote>
             </div>

@@ -136,6 +136,10 @@ class VehicleController extends Controller
         if (isset($input['km_driven_to'])) {
             $input['mileage_to'] = $input['km_driven_to'];
         }
+        // Ensure condition_id is integer so filter matches vehicle_details.condition_id correctly
+        if (isset($input['condition_id']) && $input['condition_id'] !== '' && $input['condition_id'] !== null) {
+            $input['condition_id'] = (int) $input['condition_id'];
+        }
         // Accept both euronorm (string name) and euronom_id; normalize to euronom_id for filtering (DB column is euronom_id)
         if (!empty($input['euronom_id'])) {
             $input['euronom_id'] = (int) $input['euronom_id'];
@@ -1310,7 +1314,8 @@ class VehicleController extends Controller
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'fuel_efficiency'
+                'ownership_tax', 'fuel_efficiency', 'gear_type_id',
+                'seller_address', 'seller_postcode'
             ]);
             
             // Set vehicle_list_status_id automatically to 2 (ignore any value from frontend)

@@ -39,6 +39,7 @@ use App\Http\Controllers\AdminAboutPageController;
 use App\Http\Controllers\AdminContactPageController;
 use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminTermsPageController;
+use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
 
 /*
@@ -180,6 +181,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/', [AdminTermsPageController::class, 'index']);
         Route::post('/bulk-update', [AdminTermsPageController::class, 'updateBulk']);
         Route::post('/{sectionKey}', [AdminTermsPageController::class, 'update']);
+    });
+
+    // Login Page Content Management (auth layout sidebar testimonial)
+    Route::prefix('login-page-content')->group(function () {
+        Route::get('/', [AdminLoginPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminLoginPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminLoginPageController::class, 'update']);
     });
 
     // SEO Pages Management

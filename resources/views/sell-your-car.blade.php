@@ -1448,6 +1448,16 @@
                     </div>
 
                     <div class="space-y-2">
+                        <label for="gear_type_id" class="text-sm font-medium">{{ __('messages.forms.gear_type') }}</label>
+                        <select id="gear_type_id" name="gear_type_id"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            @foreach($lookupData['gearTypes'] ?? [] as $gt)
+                                <option value="{{ $gt->id }}" @if(strtolower($gt->name ?? '') === 'automatic') selected @endif>{{ $gt->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
                         <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.first_registration') }}</label>
                         <div class="field-pair-inner">
                             <div>

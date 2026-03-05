@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Vehicle;
+use App\Services\PageContentService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +26,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Login (auth) layout: inject page content for sidebar testimonial
+        View::composer('layouts.auth', function ($view) {
+            $pageContentService = app(PageContentService::class);
+            $loginPageContent = $pageContentService->getHomePageContent('login');
+            $view->with('loginPageContent', $loginPageContent);
+        });
+
         // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)
         Route::bind('vehicle', function (string $value) {
             return is_numeric($value)

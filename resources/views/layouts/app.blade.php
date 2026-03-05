@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/favicon.jpeg') }}">
     @isset($seo)
     <title>{{ $seo['meta_title'] ?? $seo['title'] ?? __('messages.layouts.default_title') }}</title>
     <meta name="description" content="{{ $seo['meta_description'] ?? __('messages.layouts.meta_description') }}">

@@ -720,6 +720,10 @@
                 if (key === 'equipment' || key === 'color' || key === 'variant' || key === 'euronorm') {
                     return;
                 }
+                // Do not overwrite gear_type_id from API - keep user's choice (or prefill from form)
+                if (key === 'gear_type_id') {
+                    return;
+                }
                 
                 const value = apiData[key];
                 
@@ -1580,6 +1584,11 @@
                 addOptionIfNotExists('euronom_id', euronomId, euronomName);
                 setSelectByIdOrText('euronom_id', euronomId);
             }
+        }
+        
+        // Gear type - prefill from API so user can change it before submit
+        if (apiData.gear_type_id !== null && apiData.gear_type_id !== undefined && apiData.gear_type_id !== '') {
+            setSelectByIdOrText('gear_type_id', apiData.gear_type_id);
         }
         
         // Map fuel_type - update label based on fuel type
