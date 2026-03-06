@@ -190,6 +190,8 @@ class VehicleController extends Controller
 
             return [
                 'id' => $vehicle->id,
+                'slug' => $vehicle->slug,
+                'dealer_id' => $vehicle->dealer_id,
                 'title' => $vehicle->title,
                 'price' => $vehicle->price,
                 'thumbnail_url' => $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? $imageUrl,
