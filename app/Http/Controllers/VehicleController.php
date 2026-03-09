@@ -207,6 +207,7 @@ class VehicleController extends Controller
                 'seller_address' => $vehicle->seller_address,
                 'seller_postcode' => $vehicle->seller_postcode,
                 'user_id' => $vehicle->user_id,
+                'sales_type_name' => $vehicle->details?->sales_type_name ?? $vehicle->details?->salesType?->name ?? null,
             ];
         });
 
@@ -217,6 +218,61 @@ class VehicleController extends Controller
             $vehicles->currentPage(),
             ['path' => $path ?: url('/api/v1/vehicles'), 'query' => $query]
         );
+
+        // When no results, include fallback list (all vehicles, first page) for better UX
+        if ($vehicles->total() === 0) {
+            $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
+            $fallbackFormatted = collect($fallbackVehicles->items())->map(function ($vehicle) {
+                $firstImage = $vehicle->images->first();
+                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+                $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+                $sellerType = $isDealer ? 'Dealer' : 'Private';
+                return [
+                    'id' => $vehicle->id,
+                    'slug' => $vehicle->slug,
+                    'dealer_id' => $vehicle->dealer_id,
+                    'title' => $vehicle->title,
+                    'price' => $vehicle->price,
+                    'thumbnail_url' => $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? $imageUrl,
+                    'km_driven' => $vehicle->km_driven,
+                    'engine_power_hp' => $vehicle->engine_power_hp,
+                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
+                    'gear_type_name' => $vehicle->gear_type_name,
+                    'fuel_type_name' => $vehicle->fuel_type_name,
+                    'model_year_name' => $vehicle->model_year_name,
+                    'brand_name' => $vehicle->brand_name,
+                    'model_name' => $vehicle->model_name,
+                    'seller_type' => $sellerType,
+                    'seller_address' => $vehicle->seller_address,
+                    'seller_postcode' => $vehicle->seller_postcode,
+                    'user_id' => $vehicle->user_id,
+                    'sales_type_name' => $vehicle->details?->sales_type_name ?? $vehicle->details?->salesType?->name ?? null,
+                ];
+            });
+            $paginationData = [
+                'docs' => $formattedPaginator->items(),
+                'limit' => $formattedPaginator->perPage(),
+                'page' => $formattedPaginator->currentPage(),
+                'hasPrevPage' => false,
+                'hasNextPage' => false,
+                'prevPage' => null,
+                'nextPage' => null,
+                'totalDocs' => 0,
+                'totalPages' => 0,
+                'no_results' => true,
+                'fallback_docs' => $fallbackFormatted->values()->all(),
+                'fallback_totalDocs' => $fallbackVehicles->total(),
+                'fallback_page' => 1,
+                'fallback_totalPages' => $fallbackVehicles->lastPage(),
+            ];
+            return response()->json([
+                'success' => true,
+                'failed' => false,
+                'message' => __('messages.api.data_retrieved_successfully'),
+                'data' => $paginationData,
+                'errors' => [],
+            ], 200);
+        }
 
         return $this->paginated($formattedPaginator);
     }

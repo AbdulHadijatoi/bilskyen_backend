@@ -44,6 +44,11 @@
         }
     }
     
+    /* Multi-select dropdown: show checkmark when option is selected */
+    .dropdown-option.selected .dropdown-option-check {
+        opacity: 1;
+    }
+    
     /* Navigation buttons */
     .featured-vehicles-nav-btn {
         position: absolute;
@@ -198,8 +203,8 @@
                 <div class="flex flex-col gap-4">
                 <!-- First Row: 4 Dropdown Fields (equal width) -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <!-- Brand Dropdown -->
-                    <div class="relative flex-1" data-dropdown="brand">
+                    <!-- Brand Dropdown (multi-select) -->
+                    <div class="relative flex-1" data-dropdown="brand" data-multiselect="true">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <span class="dropdown-selected">{{ __('messages.forms.brand') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
@@ -211,17 +216,17 @@
                                 <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_brands') }}</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
                                 @foreach($filterOptions['brands'] as $brand)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}">{{ $brand->name }}</button>
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $brand->name }}</button>
                                 @endforeach
                             </div>
                         </div>
-                        <input type="hidden" name="brand_id" value="" class="dropdown-input">
+                        <div class="dropdown-values-container" data-name="brand_id[]"></div>
                         </div>
 
-                    <!-- Model Dropdown -->
-                    <div class="relative flex-1" data-dropdown="model">
+                    <!-- Model Dropdown (multi-select) -->
+                    <div class="relative flex-1" data-dropdown="model" data-multiselect="true">
                         <button type="button" id="model-dropdown-button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                             <span class="dropdown-selected">{{ __('messages.forms.model') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
@@ -233,17 +238,17 @@
                                 <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_models') }}</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
                                 @foreach($filterOptions['models'] as $model)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}">{{ $model->name }}</button>
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $model->name }}</button>
                                 @endforeach
                             </div>
                         </div>
-                        <input type="hidden" name="model_id" value="" class="dropdown-input">
+                        <div class="dropdown-values-container" data-name="model_id[]"></div>
                         </div>
 
-                    <!-- Model Year Dropdown -->
-                    <div class="relative flex-1" data-dropdown="model_year">
+                    <!-- Model Year Dropdown (multi-select) -->
+                    <div class="relative flex-1" data-dropdown="model_year" data-multiselect="true">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <span class="dropdown-selected">{{ __('messages.forms.model_year') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
@@ -255,17 +260,17 @@
                                 <input type="text" placeholder="{{ __('messages.forms.search_year') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_years') }}</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_years') }}</button>
                                 @foreach($filterOptions['modelYears'] as $modelYear)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}">{{ $modelYear->name }}</button>
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $modelYear->name }}</button>
                                 @endforeach
                             </div>
                         </div>
-                        <input type="hidden" name="model_year_id" value="" class="dropdown-input">
+                        <div class="dropdown-values-container" data-name="model_year_id[]"></div>
                         </div>
 
-                    <!-- Fuel Type Dropdown -->
-                    <div class="relative flex-1" data-dropdown="fuel_type">
+                    <!-- Fuel Type Dropdown (multi-select) -->
+                    <div class="relative flex-1" data-dropdown="fuel_type" data-multiselect="true">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <span class="dropdown-selected">{{ __('messages.forms.fuel_type') }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
@@ -277,40 +282,18 @@
                                 <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_fuel_types') }}</button>
+                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_fuel_types') }}</button>
                                 @foreach($filterOptions['fuelTypes'] as $fuelType)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}">{{ $fuelType->name }}</button>
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $fuelType->name }}</button>
                                 @endforeach
                             </div>
                         </div>
-                        <input type="hidden" name="fuel_type_id" value="" class="dropdown-input">
+                        <div class="dropdown-values-container" data-name="fuel_type_id[]"></div>
                     </div>
                         </div>
 
-                <!-- Second Row: 3 Dropdown Fields + Search Button (equal width) -->
+                <!-- Second Row: Price, KM Driven + Search Button (equal width) -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <!-- Category Dropdown -->
-                    <div class="relative flex-1" data-dropdown="category">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.category') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
-                            <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="{{ __('messages.forms.search_category') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                            </div>
-                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="">{{ __('messages.forms.all_categories') }}</button>
-                                @foreach($filterOptions['categories'] as $category)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground" data-value="{{ $category->id }}" data-text="{{ $category->name }}">{{ $category->name }}</button>
-                                @endforeach
-                            </div>
-                        </div>
-                        <input type="hidden" name="category_id" value="" class="dropdown-input">
-                        </div>
-
                     <!-- Price Dropdown (with range slider) -->
                     <div class="relative flex-1" data-dropdown="price">
                         <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -323,18 +306,18 @@
                             <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.price_range') }}</label>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="flex-1">
-                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="5000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                                 <span class="text-muted-foreground/60 text-sm">–</span>
                                 <div class="flex-1">
-                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="1000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="5000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                             </div>
                             <div class="relative px-1">
                                 <div class="relative h-0.5 bg-muted rounded-full">
                                     <div id="price-range-track-dropdown" class="absolute h-0.5 bg-primary rounded-full"></div>
-                                    <input type="range" id="price-slider-min-dropdown" min="0" max="1000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
-                                    <input type="range" id="price-slider-max-dropdown" min="0" max="1000000" step="1000" value="1000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                                    <input type="range" id="price-slider-min-dropdown" min="0" max="5000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                                    <input type="range" id="price-slider-max-dropdown" min="0" max="5000000" step="1000" value="5000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
                                     <div id="price-handle-min-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
                                     <div id="price-handle-max-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
                                 </div>
@@ -354,18 +337,18 @@
                             <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.km_driven_range') }}</label>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="flex-1">
-                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="2000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                                 <span class="text-muted-foreground/60 text-sm">–</span>
                                 <div class="flex-1">
-                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="500000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
+                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="2000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
                                 </div>
                             </div>
                             <div class="relative px-1">
                                 <div class="relative h-0.5 bg-muted rounded-full">
                                     <div id="km-driven-range-track" class="absolute h-0.5 bg-primary rounded-full"></div>
-                                    <input type="range" id="km-driven-slider-min" min="0" max="500000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
-                                    <input type="range" id="km-driven-slider-max" min="0" max="500000" step="1000" value="500000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
+                                    <input type="range" id="km-driven-slider-min" min="0" max="2000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
+                                    <input type="range" id="km-driven-slider-max" min="0" max="2000000" step="1000" value="2000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
                                     <div id="km-driven-handle-min" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
                                     <div id="km-driven-handle-max" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
                                 </div>
@@ -385,12 +368,15 @@
                     </form>
                 </div>
 
-                <!-- Third Row: Reset Filters Link -->
-                <div class="flex flex-col sm:flex-row justify-start sm:justify-end gap-3 sm:gap-4">
+                <!-- Third Row: Reset Filters + Advanced Filters -->
+                <div class="flex flex-col sm:flex-row justify-start sm:justify-end items-center gap-3 sm:gap-4">
                     <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
                         {{ __('messages.pages.vehicles.reset_filters') }}
-                            </button>
-                        </div>
+                    </button>
+                    <a href="/vehicles" class="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        {{ __('messages.pages.vehicles.advanced_filters') }}
+                    </a>
+                </div>
                     </div>
             </div>
         </div>
@@ -845,6 +831,49 @@
     });
 
     // Searchable Dropdowns Functionality
+    const DEFAULT_DROPDOWN_LABELS = {
+        'brand': '{{ __('messages.forms.brand') }}',
+        'model': '{{ __('messages.forms.model') }}',
+        'model_year': '{{ __('messages.forms.model_year') }}',
+        'fuel_type': '{{ __('messages.forms.fuel_type') }}'
+    };
+
+    function getMultiSelectValues(dropdown) {
+        const options = dropdown.querySelectorAll('.dropdown-option[data-value]:not([data-value=""])');
+        return Array.from(options).filter(opt => opt.classList.contains('selected')).map(opt => opt.getAttribute('data-value'));
+    }
+
+    function syncMultiSelectInputs(dropdown) {
+        const container = dropdown.querySelector('.dropdown-values-container');
+        if (!container) return;
+        const name = container.getAttribute('data-name');
+        const values = getMultiSelectValues(dropdown);
+        container.innerHTML = '';
+        values.forEach(v => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = v;
+            container.appendChild(input);
+        });
+    }
+
+    function updateMultiSelectButtonText(dropdown) {
+        const selectedText = dropdown.querySelector('.dropdown-selected');
+        const dropdownType = dropdown.getAttribute('data-dropdown');
+        const options = dropdown.querySelectorAll('.dropdown-option[data-value]:not([data-value=""])');
+        const selected = Array.from(options).filter(opt => opt.classList.contains('selected'));
+        const labels = selected.map(opt => opt.getAttribute('data-text') || opt.textContent.trim());
+        const defaultLabel = DEFAULT_DROPDOWN_LABELS[dropdownType] || '{{ __('messages.common.select') }}';
+        if (labels.length === 0) {
+            selectedText.textContent = defaultLabel;
+        } else if (labels.length <= 2) {
+            selectedText.textContent = labels.join(', ');
+        } else {
+            selectedText.textContent = defaultLabel + ' (' + labels.length + ')';
+        }
+    }
+
     function initSearchableDropdowns() {
         const dropdowns = document.querySelectorAll('[data-dropdown]');
         
@@ -853,89 +882,92 @@
             const menu = dropdown.querySelector('.dropdown-menu');
             const searchInput = dropdown.querySelector('.dropdown-search');
             const options = dropdown.querySelectorAll('.dropdown-option');
-            const hiddenInput = dropdown.querySelector('.dropdown-input');
+            const valuesContainer = dropdown.querySelector('.dropdown-values-container');
             const selectedText = dropdown.querySelector('.dropdown-selected');
             const dropdownType = dropdown.getAttribute('data-dropdown');
+            const isMultiSelect = dropdown.getAttribute('data-multiselect') === 'true';
             
             // Toggle menu
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Don't open if button is disabled (for model dropdown)
-                if (button.disabled) {
-                    return;
-                }
-                // Close all other dropdowns
+                if (button.disabled) return;
                 dropdowns.forEach(d => {
-                    if (d !== dropdown) {
-                        d.querySelector('.dropdown-menu').classList.add('hidden');
-                    }
+                    if (d !== dropdown) d.querySelector('.dropdown-menu').classList.add('hidden');
                 });
                 menu.classList.toggle('hidden');
                 if (!menu.classList.contains('hidden')) {
-                    // If opening model dropdown, apply brand filter
                     if (dropdownType === 'model') {
-                        const selectedBrandId = document.querySelector('[data-dropdown="brand"] .dropdown-input')?.value || '';
-                        filterModelsByBrand(selectedBrandId);
+                        const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+                        const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
+                        filterModelsByBrand(brandIds);
                     }
-                    // Clear search input and focus
                     if (searchInput) {
                         searchInput.value = '';
-                        // Trigger input event to refresh visible options
                         searchInput.dispatchEvent(new Event('input'));
                         setTimeout(() => searchInput.focus(), 50);
                     }
                 }
             });
             
-            // Search functionality
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
                     const searchTerm = e.target.value.toLowerCase();
-                    
-                    // For model dropdown, use the filterModelsByBrand function to respect brand filter
                     if (dropdownType === 'model') {
-                        const selectedBrandId = document.querySelector('[data-dropdown="brand"] .dropdown-input')?.value || '';
-                        filterModelsByBrand(selectedBrandId);
+                        const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+                        const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
+                        filterModelsByBrand(brandIds);
                     } else {
-                        // For other dropdowns, just filter by search term
                         options.forEach(option => {
-                            const text = option.textContent.toLowerCase();
+                            const text = (option.getAttribute('data-text') || option.textContent).toLowerCase();
                             option.style.display = text.includes(searchTerm) ? '' : 'none';
                         });
                     }
                 });
             }
             
-            // Option selection (only for regular dropdowns, not range sliders)
             if (dropdownType !== 'price' && dropdownType !== 'km_driven') {
                 options.forEach(option => {
                     option.addEventListener('click', () => {
                         const value = option.getAttribute('data-value');
                         const text = option.getAttribute('data-text') || option.textContent.trim();
                         
-                        if (hiddenInput) {
-                            hiddenInput.value = value;
+                        if (isMultiSelect) {
+                            if (value === '') {
+                                options.forEach(opt => opt.classList.remove('selected'));
+                                syncMultiSelectInputs(dropdown);
+                                updateMultiSelectButtonText(dropdown);
+                                if (dropdownType === 'brand') filterModelsByBrand([]);
+                                menu.classList.add('hidden');
+                                return;
+                            }
+                            option.classList.toggle('selected');
+                            syncMultiSelectInputs(dropdown);
+                            updateMultiSelectButtonText(dropdown);
+                            if (dropdownType === 'brand') {
+                                const brandIds = getMultiSelectValues(dropdown);
+                                filterModelsByBrand(brandIds);
+                            }
+                            return;
+                        }
+                        
+                        if (valuesContainer) {
+                            valuesContainer.innerHTML = '';
+                            if (value) {
+                                const name = valuesContainer.getAttribute('data-name');
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = name;
+                                input.value = value;
+                                valuesContainer.appendChild(input);
+                            }
                         }
                         
                         if (value === '') {
-                            // Reset to default text
-                            const defaultTexts = {
-                                'category': '{{ __('messages.forms.category') }}',
-                                'brand': '{{ __('messages.forms.brand') }}',
-                                'model': '{{ __('messages.forms.model') }}',
-                                'model_year': '{{ __('messages.forms.model_year') }}',
-                                'fuel_type': '{{ __('messages.forms.fuel_type') }}'
-                            };
-                            selectedText.textContent = defaultTexts[dropdownType] || '{{ __('messages.common.select') }}';
+                            selectedText.textContent = DEFAULT_DROPDOWN_LABELS[dropdownType] || '{{ __('messages.common.select') }}';
                         } else {
                             selectedText.textContent = text;
                         }
-                        
-                        // Filter models based on selected brand
-                        if (dropdownType === 'brand') {
-                            filterModelsByBrand(value);
-                        }
-                        
+                        if (dropdownType === 'brand') filterModelsByBrand(value);
                         menu.classList.add('hidden');
                     });
                 });
@@ -993,8 +1025,8 @@
         });
     }
     
-    // Filter models by brand
-    function filterModelsByBrand(brandId) {
+    // Filter models by brand(s)
+    function filterModelsByBrand(brandIds) {
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (!modelDropdown) return;
         
@@ -1004,71 +1036,50 @@
         const selectedText = modelDropdown.querySelector('.dropdown-selected');
         const searchInput = modelDropdown.querySelector('.dropdown-search');
         const searchTerm = searchInput?.value.toLowerCase() || '';
-        const modelInput = modelDropdown.querySelector('.dropdown-input');
+        const ids = Array.isArray(brandIds) ? brandIds : (brandIds === '' || !brandIds ? [] : [String(brandIds)]);
         
-        if (brandId === '' || !brandId) {
-            // No brand selected - disable model dropdown
-            if (modelButton) {
-                modelButton.disabled = true;
-            }
-            if (selectedText) {
-                selectedText.textContent = '{{ __('messages.forms.model') }}';
-            }
-            if (modelInput) {
-                modelInput.value = '';
-            }
-            
-            // Hide all model options
-            modelOptions.forEach(option => {
-                option.style.display = 'none';
-            });
-            
-            // Close dropdown if open
+        if (ids.length === 0) {
+            if (modelButton) modelButton.disabled = true;
+            if (selectedText) selectedText.textContent = '{{ __('messages.forms.model') }}';
+            syncMultiSelectInputs(modelDropdown);
+            modelDropdown.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+            updateMultiSelectButtonText(modelDropdown);
+            modelOptions.forEach(option => option.style.display = 'none');
             const menu = modelDropdown.querySelector('.dropdown-menu');
-            if (menu) {
-                menu.classList.add('hidden');
-            }
-        } else {
-            // Brand selected - enable model dropdown
-            if (modelButton) {
-                modelButton.disabled = false;
-            }
-            if (selectedText && !modelInput?.value) {
-                selectedText.textContent = '{{ __('messages.forms.model') }}';
-            }
-            
-            // Show only models for selected brand (respecting search if any)
-            modelOptions.forEach(option => {
-                const optionBrandId = option.getAttribute('data-brand-id');
-                const text = option.textContent.toLowerCase();
-                const matchesBrand = optionBrandId === brandId;
-                const matchesSearch = !searchTerm || text.includes(searchTerm);
-                
-                if (matchesBrand && matchesSearch) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-            
-            // Reset model selection if current selection doesn't match brand
-            if (modelInput?.value) {
-                const selectedModelOption = Array.from(modelOptions).find(opt => 
-                    opt.getAttribute('data-value') === modelInput.value
-                );
-                if (selectedModelOption) {
-                    const optionBrandId = selectedModelOption.getAttribute('data-brand-id');
-                    if (optionBrandId !== brandId) {
-                        if (modelInput) modelInput.value = '';
-                        if (selectedText) selectedText.textContent = '{{ __('messages.forms.model') }}';
-                    }
-                }
-            }
+            if (menu) menu.classList.add('hidden');
+            return;
         }
         
-        // Always show the default "All Models" option when brand is selected
-        if (defaultOption && brandId) {
-            defaultOption.style.display = '';
+        if (modelButton) modelButton.disabled = false;
+        if (selectedText && getMultiSelectValues(modelDropdown).length === 0) {
+            selectedText.textContent = '{{ __('messages.forms.model') }}';
+        }
+        
+        const idSet = new Set(ids.map(String));
+        modelOptions.forEach(option => {
+            const optionBrandId = option.getAttribute('data-brand-id');
+            const text = (option.getAttribute('data-text') || option.textContent).toLowerCase();
+            const matchesBrand = idSet.has(optionBrandId);
+            const matchesSearch = !searchTerm || text.includes(searchTerm);
+            option.style.display = (matchesBrand && matchesSearch) ? '' : 'none';
+        });
+        
+        if (defaultOption) defaultOption.style.display = '';
+        
+        const currentValues = getMultiSelectValues(modelDropdown);
+        if (currentValues.length > 0) {
+            const toRemove = [];
+            modelOptions.forEach(opt => {
+                if (opt.classList.contains('selected')) {
+                    const optionBrandId = opt.getAttribute('data-brand-id');
+                    if (!idSet.has(optionBrandId)) toRemove.push(opt);
+                }
+            });
+            toRemove.forEach(opt => opt.classList.remove('selected'));
+            if (toRemove.length) {
+                syncMultiSelectInputs(modelDropdown);
+                updateMultiSelectButtonText(modelDropdown);
+            }
         }
     }
     
@@ -1085,7 +1096,7 @@
             track: document.getElementById('price-range-track-dropdown'),
             selectedText: document.querySelector('[data-dropdown="price"] .dropdown-selected'),
             min: 0,
-            max: 1000000
+            max: 5000000
         };
         
         // KM Driven range slider
@@ -1099,7 +1110,7 @@
             track: document.getElementById('km-driven-range-track'),
             selectedText: document.querySelector('[data-dropdown="km_driven"] .dropdown-selected'),
             min: 0,
-            max: 500000
+            max: 2000000
         };
         
         [priceConfig, kmDrivenConfig].forEach(config => {
@@ -1206,64 +1217,55 @@
     if (filterForm) {
         filterForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const params = new URLSearchParams();
             
-            // Collect all filter values
-            const formData = new FormData();
-            
-            // Get all hidden inputs from dropdowns
-            document.querySelectorAll('.dropdown-input').forEach(input => {
-                if (input.value) {
-                    formData.append(input.name, input.value);
+            document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
+                const valuesContainer = dropdown.querySelector('.dropdown-values-container');
+                if (valuesContainer) {
+                    valuesContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
+                        if (input.name && input.value) params.append(input.name, input.value);
+                    });
                 }
             });
             
-            // Get price and km_driven values
             const priceFrom = document.getElementById('price-from-dropdown')?.value;
             const priceTo = document.getElementById('price-to-dropdown')?.value;
             const kmFrom = document.getElementById('km-driven-from')?.value;
             const kmTo = document.getElementById('km-driven-to')?.value;
+            if (priceFrom) params.append('price_from', priceFrom);
+            if (priceTo) params.append('price_to', priceTo);
+            if (kmFrom) params.append('km_driven_from', kmFrom);
+            if (kmTo) params.append('km_driven_to', kmTo);
             
-            if (priceFrom) formData.append('price_from', priceFrom);
-            if (priceTo) formData.append('price_to', priceTo);
-            if (kmFrom) formData.append('km_driven_from', kmFrom);
-            if (kmTo) formData.append('km_driven_to', kmTo);
-            
-            // Build query string
-            const params = new URLSearchParams();
-            for (const [key, value] of formData.entries()) {
-                params.append(key, value);
-            }
-            
-            // Navigate to vehicles page with filters
             window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
         });
     }
     
     // Reset filters function
     function resetAllFilters() {
-        // Reset all dropdown hidden inputs
-        document.querySelectorAll('.dropdown-input').forEach(input => {
-            input.value = '';
-        });
-        
-        // Reset all dropdown selected text to default values
-        const defaultTexts = {
-            'category': '{{ __('messages.forms.category') }}',
-            'brand': '{{ __('messages.forms.brand') }}',
-            'model': '{{ __('messages.forms.model') }}',
-            'model_year': '{{ __('messages.forms.model_year') }}',
-            'fuel_type': '{{ __('messages.forms.fuel_type') }}'
-        };
+        const defaultTexts = DEFAULT_DROPDOWN_LABELS;
         
         document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
             const dropdownType = dropdown.getAttribute('data-dropdown');
             const selectedText = dropdown.querySelector('.dropdown-selected');
+            const valuesContainer = dropdown.querySelector('.dropdown-values-container');
+            const options = dropdown.querySelectorAll('.dropdown-option');
+            
+            if (valuesContainer) {
+                valuesContainer.innerHTML = '';
+            }
+            options.forEach(opt => opt.classList.remove('selected'));
             if (selectedText && defaultTexts[dropdownType]) {
                 selectedText.textContent = defaultTexts[dropdownType];
             }
         });
         
-        // Reset price range
+        const modelDropdown = document.querySelector('[data-dropdown="model"]');
+        if (modelDropdown) {
+            const modelSearchInput = modelDropdown.querySelector('.dropdown-search');
+            if (modelSearchInput) modelSearchInput.value = '';
+            filterModelsByBrand([]);
+        }
         const priceFromInput = document.getElementById('price-from-dropdown');
         const priceToInput = document.getElementById('price-to-dropdown');
         const priceMinSlider = document.getElementById('price-slider-min-dropdown');
@@ -1273,7 +1275,7 @@
         if (priceFromInput) priceFromInput.value = '';
         if (priceToInput) priceToInput.value = '';
         if (priceMinSlider) priceMinSlider.value = '0';
-        if (priceMaxSlider) priceMaxSlider.value = '1000000';
+        if (priceMaxSlider) priceMaxSlider.value = '5000000';
         if (priceSelectedText) priceSelectedText.textContent = '{{ __('messages.forms.price') }}';
         
         // Reset KM driven range
@@ -1286,7 +1288,7 @@
         if (kmFromInput) kmFromInput.value = '';
         if (kmToInput) kmToInput.value = '';
         if (kmMinSlider) kmMinSlider.value = '0';
-        if (kmMaxSlider) kmMaxSlider.value = '500000';
+        if (kmMaxSlider) kmMaxSlider.value = '2000000';
         if (kmSelectedText) kmSelectedText.textContent = '{{ __('messages.forms.km_driven') }}';
         
         // Update range slider visuals
@@ -1300,7 +1302,7 @@
                 maxHandle: document.getElementById('price-handle-max-dropdown'),
                 track: document.getElementById('price-range-track-dropdown'),
                 min: 0,
-                max: 1000000
+                max: 5000000
             };
             
             const updatePriceSlider = () => {
@@ -1324,7 +1326,7 @@
                 maxHandle: document.getElementById('km-driven-handle-max'),
                 track: document.getElementById('km-driven-range-track'),
                 min: 0,
-                max: 500000
+                max: 2000000
             };
             
             const updateKmSlider = () => {
@@ -1339,17 +1341,6 @@
             };
             updateKmSlider();
         }
-        
-        // Reset model dropdown - disable it since no brand is selected
-        const modelDropdown = document.querySelector('[data-dropdown="model"]');
-        if (modelDropdown) {
-            const modelSearchInput = modelDropdown.querySelector('.dropdown-search');
-            if (modelSearchInput) {
-                modelSearchInput.value = '';
-            }
-            // Call filterModelsByBrand with empty brand to disable dropdown
-            filterModelsByBrand('');
-        }
     }
     
     // Reset filters button handler
@@ -1362,10 +1353,9 @@
     initSearchableDropdowns();
     initDropdownRangeSliders();
     
-    // Initialize model dropdown state on page load
-    const brandInput = document.querySelector('[data-dropdown="brand"] .dropdown-input');
-    const initialBrandId = brandInput?.value || '';
-    filterModelsByBrand(initialBrandId);
+    const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+    const initialBrandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
+    filterModelsByBrand(initialBrandIds);
     </script>
     
     <!-- Featured Vehicles Navigation Script -->

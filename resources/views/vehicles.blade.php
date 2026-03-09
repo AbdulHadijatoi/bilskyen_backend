@@ -106,7 +106,7 @@
                 </button>
             </div>
 
-            <!-- Condition + Listing Type (always visible) -->
+            <!-- Condition + Listing Type + Sales Type (always visible) -->
             <div class="px-4 py-3 space-y-3 border-b border-border shrink-0">
                 <!-- Condition -->
                 <div class="space-y-2">
@@ -153,6 +153,16 @@
                             </label>
                         @endif
                     </div>
+                </div>
+                <!-- Sales Type -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.sales_type') }}</label>
+                    <select name="sales_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach($constants['sales_types'] ?? [] as $st)
+                        <option value="{{ is_array($st) ? $st['id'] : $st->id }}" @if(isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array(is_array($st) ? $st['id'] : $st->id, $cf['sales_type_id']) : (is_array($st) ? $st['id'] : $st->id) == $cf['sales_type_id'])) selected @endif>{{ is_array($st) ? $st['name'] : $st->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
@@ -279,6 +289,11 @@
             </details>
 
             <!-- Fuel & Body (collapsed by default) -->
+            @php
+                $selectedFuelTypeIds = isset($cf['fuel_type_id']) ? (is_array($cf['fuel_type_id']) ? $cf['fuel_type_id'] : [$cf['fuel_type_id']]) : [];
+                $fuelTypesList = $constants['fuel_types'] ?? [];
+                $selectedFuelTypeNames = collect($fuelTypesList)->filter(fn($ft) => in_array(is_array($ft) ? $ft['id'] : $ft->id, $selectedFuelTypeIds))->map(fn($ft) => is_array($ft) ? $ft['name'] : $ft->name)->values()->all();
+            @endphp
             <details @if(isset($cf['fuel_type_id']) || isset($cf['body_type_id'])) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
@@ -286,14 +301,25 @@
                 </summary>
                 <div class="px-4 pb-3 space-y-2">
                     <div class="grid grid-cols-2 gap-2">
-                        <div>
+                        <div class="relative" data-multiselect-dropdown>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.fuel_type') }}</label>
-                            <select name="fuel_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['fuel_types'] ?? [] as $ft)
-                                <option value="{{ is_array($ft) ? $ft['id'] : $ft->id }}" @if(isset($cf['fuel_type_id']) && (is_array($cf['fuel_type_id']) ? in_array(is_array($ft) ? $ft['id'] : $ft->id, $cf['fuel_type_id']) : (is_array($ft) ? $ft['id'] : $ft->id) == $cf['fuel_type_id'])) selected @endif>{{ is_array($ft) ? $ft['name'] : $ft->name }}</option>
-                                @endforeach
-                            </select>
+                            <button type="button" id="fuel-type-dropdown-trigger" class="fuel-type-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="fuel-type-dropdown-label">
+                                <span id="fuel-type-dropdown-label" class="truncate">
+                                    @if(count($selectedFuelTypeNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedFuelTypeNames) === 1){{ $selectedFuelTypeNames[0] }}@else{{ count($selectedFuelTypeNames) }} {{ __('messages.forms.selected') }}@endif
+                                </span>
+                                <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                            </button>
+                            <div id="fuel-type-dropdown-panel" class="fuel-type-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                                <div id="fuel-type-checkbox-list" class="p-2 space-y-0.5">
+                                    @foreach($constants['fuel_types'] ?? [] as $ft)
+                                    @php $ftid = is_array($ft) ? $ft['id'] : $ft->id; $ftname = is_array($ft) ? $ft['name'] : $ft->name; @endphp
+                                    <label class="fuel-type-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
+                                        <input type="checkbox" name="fuel_type_id[]" value="{{ $ftid }}" class="fuel-type-checkbox rounded border-input" @if(in_array($ftid, $selectedFuelTypeIds)) checked @endif>
+                                        <span class="fuel-type-checkbox-name">{{ $ftname }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
@@ -308,9 +334,9 @@
                 </div>
             </details>
 
-            <!-- More Details: Color, Variant, Type, Sales, Price type, Euronom, Use (collapsed, 2-col grid) -->
+            <!-- More Details: Color, Variant, Type, Price type, Euronom, Use (collapsed, 2-col grid) -->
             @php
-                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['sales_type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']);
+                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']);
             @endphp
             <details @if($moreDetailsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -334,15 +360,6 @@
                                 <option value="">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['types'] ?? [] as $t)
                                 <option value="{{ is_array($t) ? $t['id'] : $t->id }}" @if(isset($cf['type_id']) && (is_array($t) ? $t['id'] : $t->id) == $cf['type_id']) selected @endif>{{ is_array($t) ? $t['name'] : $t->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.sales_type') }}</label>
-                            <select name="sales_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['sales_types'] ?? [] as $st)
-                                <option value="{{ is_array($st) ? $st['id'] : $st->id }}" @if(isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array(is_array($st) ? $st['id'] : $st->id, $cf['sales_type_id']) : (is_array($st) ? $st['id'] : $st->id) == $cf['sales_type_id'])) selected @endif>{{ is_array($st) ? $st['name'] : $st->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -783,6 +800,9 @@
     </div>
     
     <!-- Vehicle Grid/List -->
+    <div id="no-results-message" class="hidden col-span-full py-4 text-center rounded-lg bg-muted/50 border border-border">
+        <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
+    </div>
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
         @forelse($vehicles as $vehicle)
         <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
@@ -894,8 +914,8 @@
             </div>
         </div>
         @empty
-        <div class="col-span-full flex items-center justify-center py-12">
-            <div class="flex flex-col items-center justify-center text-center">
+        <div class="col-span-full space-y-6">
+            <div class="flex flex-col items-center justify-center text-center py-12">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.3-4.3"></path>
@@ -905,12 +925,80 @@
                     {{ __('messages.forms.try_adjusting_filters') }}
                 </p>
             </div>
+            @if(isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0)
+            <div class="pt-4 border-t border-border">
+                <h4 class="text-sm font-semibold text-foreground mb-4">{{ __('messages.pages.vehicles.showing_all_vehicles') }}</h4>
+                <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
+                @foreach($fallbackVehicles as $vehicle)
+        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full vehicle-item">
+            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
+                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                    <img
+                        src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
+                        alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
+                        class="h-full w-full object-cover rounded-md"
+                    />
+                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
+                    @if($vehicle->dealer_id)
+                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ __('messages.pages.vehicles.dealer') }}</span>
+                    @else
+                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ __('messages.pages.vehicles.private') }}</span>
+                    @endif
+                    @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}</span>
+                    @endif
+                    </div>
+                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                    </button>
+                </div>
+                <div class="p-3 space-y-1">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="flex items-center gap-2 text-xs">{{ $vehicle->title }}</h3>
+                        @if($vehicle->version)<p class="text-muted-foreground text-xs font-normal">{{ $vehicle->version }}</p>@endif
+                        <p class="text-lg font-bold">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1 text-xs font-light">
+                        @if($vehicle->mileage || $vehicle->km_driven)
+                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
+                        @endif
+                        @if($vehicle->engine_power_hp)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>@endif
+                        @if($vehicle->first_registration_date)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>@endif
+                        @if($vehicle->fuel_type_name)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ $vehicle->fuel_type_name }}</span>@endif
+                        @if($vehicle->gear_type_name)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ $vehicle->gear_type_name }}</span>@endif
+                    </div>
+                </div>
+            </a>
+            <div class="mt-auto" onclick="event.stopPropagation()">
+                @if($vehicle->seller_address || $vehicle->seller_postcode)
+                <div class="px-3 pt-3 pb-2">
+                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 flex-shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span class="truncate text-right">@if($vehicle->seller_address){{ $vehicle->seller_address }}@endif @if($vehicle->seller_address && $vehicle->seller_postcode), @endif @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif</span>
+                    </div>
+                </div>
+                @endif
+                <div class="p-3 pt-0">
+                    <div class="flex w-full flex-col gap-2 sm:flex-row">
+                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
+                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">{{ __('messages.pages.vehicles.view_details') }}</button>
+                        </a>
+                        <button type="button" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">{{ __('messages.pages.vehicles.enquire') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+                @endforeach
+                </div>
+            </div>
+            @endif
         </div>
         @endforelse
     </div>
 
     <!-- Enquiry Dialogs for Vehicles -->
-    @foreach($vehicles as $vehicle)
+    @php $vehiclesForDialogs = (isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0) ? $fallbackVehicles : $vehicles; @endphp
+    @foreach($vehiclesForDialogs as $vehicle)
         <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
     @endforeach
 
@@ -1325,9 +1413,9 @@
                                 {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
-                            ${(details && details.sales_type_name) ? `
+                            ${(details && details.sales_type_name) || vehicle.sales_type_name ? `
                             <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                ${details.sales_type_name}
+                                ${details.sales_type_name || vehicle.sales_type_name || ''}
                             </span>
                             ` : ''}
                             </div>
@@ -1464,8 +1552,8 @@
                                     {{ __('messages.pages.vehicles.private') }}
                                 </span>
                                 `}
-                            ${(details && details.sales_type_name) ? `
-                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">${details.sales_type_name}</span>
+                            ${(details && details.sales_type_name) || vehicle.sales_type_name ? `
+                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">${details.sales_type_name || vehicle.sales_type_name || ''}</span>
                             ` : ''}
                             </span>
 
@@ -1888,6 +1976,22 @@
                 });
             }
             
+            // Fuel type (multi-select: one chip per selected fuel type)
+            if (filters.fuel_type_id) {
+                const ids = Array.isArray(filters.fuel_type_id) ? filters.fuel_type_id : [filters.fuel_type_id];
+                ids.forEach(id => {
+                    const fuelTypeName = getLabelText('fuel_type_id[]', id);
+                    if (fuelTypeName) {
+                        chips.push({
+                            key: 'fuel_type_id',
+                            label: fuelTypeName,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
+            
             
             // Price range
             if (filters.price_from || filters.price_to) {
@@ -2150,10 +2254,9 @@
                 }
             }
             
-            // Single-value selects (body_type, fuel_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
+            // Single-value selects (body_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
             const selectChips = [
                 ['body_type_id', '{{ __('messages.forms.body_type') }}'],
-                ['fuel_type_id', '{{ __('messages.forms.fuel_type') }}'],
                 ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
                 ['color_id', '{{ __('messages.forms.color') }}'],
                 ['type_id', '{{ __('messages.forms.type') }}'],
@@ -2222,6 +2325,7 @@
                             if (typeof filterModelListByBrands === 'function') filterModelListByBrands();
                         }
                         if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
+                        if (key === 'fuel_type_id' && typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
                     } else if (key === 'listing_type_id') {
@@ -2351,16 +2455,38 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const json = await response.json();
                 const data = json.data || {};
-                const vehicles = data.docs || [];
-                const totalDocs = data.totalDocs ?? 0;
-                const page = data.page ?? 1;
-                const totalPages = data.totalPages ?? 1;
+                let vehicles = data.docs || [];
+                let totalDocs = data.totalDocs ?? 0;
+                let page = data.page ?? 1;
+                let totalPages = data.totalPages ?? 1;
+                const noResults = data.no_results === true && Array.isArray(data.fallback_docs);
+                if (noResults && totalDocs === 0 && data.fallback_docs.length > 0) {
+                    vehicles = data.fallback_docs;
+                    totalDocs = data.fallback_totalDocs ?? vehicles.length;
+                    page = data.fallback_page ?? 1;
+                    totalPages = data.fallback_totalPages ?? 1;
+                }
+                const noResultsMessageEl = document.getElementById('no-results-message');
+                if (noResultsMessageEl) {
+                    if (noResults && data.totalDocs === 0) {
+                        noResultsMessageEl.classList.remove('hidden');
+                        noResultsMessageEl.innerHTML = '<h3 class="text-lg font-semibold">{{ __("messages.forms.no_vehicles_found") }}</h3><p class="text-muted-foreground text-sm mt-1">{{ __("messages.forms.try_adjusting_filters") }} {{ __("messages.pages.vehicles.showing_all_vehicles") }}</p>';
+                    } else {
+                        noResultsMessageEl.classList.add('hidden');
+                        noResultsMessageEl.innerHTML = '';
+                    }
+                }
                 renderVehicleGrid(vehicles);
                 await checkFavoritesBatch();
                 renderPagination({ current_page: page, last_page: totalPages, total: totalDocs });
                 const resultsCount = document.getElementById('results-count');
                 if (resultsCount) {
-                    resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('en-US').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
+                    const filteredTotal = data.totalDocs ?? 0;
+                    if (noResults && filteredTotal === 0 && vehicles.length > 0) {
+                        resultsCount.innerHTML = `<strong>0</strong> {{ __('messages.forms.results') }} <span class="text-muted-foreground">({{ __('messages.pages.vehicles.showing_all_vehicles') }})</span>`;
+                    } else {
+                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('en-US').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
+                    }
                 }
                 renderFilterChips();
                 updateResetButtonVisibility();
@@ -3058,11 +3184,12 @@ if (config) {
             if (brandIds.length > 0) filters.brand_id = brandIds;
             const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (modelIds.length > 0) filters.model_id = modelIds;
+            const fuelTypeIds = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked).map(cb => cb.value);
+            if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
             if (vNum('price_to', 5000001)) filters.price_to = v('price_to');
             if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');
             if (vNum('km_driven_to', 2000001)) filters.km_driven_to = v('km_driven_to');
-            if (v('fuel_type_id')) filters.fuel_type_id = v('fuel_type_id');
             if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
             if (v('body_type_id')) filters.body_type_id = v('body_type_id');
             if (v('color_id')) filters.color_id = v('color_id');
@@ -3155,17 +3282,31 @@ if (config) {
             else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
         }
 
-        // Initialize dropdown toggle and outside-click close for brand/model multiselects
+        // Update fuel type dropdown trigger label from checked checkboxes
+        function updateFuelTypeDropdownLabel() {
+            const labelEl = document.getElementById('fuel-type-dropdown-label');
+            if (!labelEl) return;
+            const checked = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked);
+            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.fuel-type-checkbox-name')) ? cb.closest('label').querySelector('.fuel-type-checkbox-name').textContent.trim() : '').filter(Boolean);
+            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
+            else if (names.length === 1) labelEl.textContent = names[0];
+            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
+        }
+
+        // Initialize dropdown toggle and outside-click close for brand/model/fuel-type multiselects
         function initBrandModelDropdowns() {
             const brandTrigger = document.getElementById('brand-dropdown-trigger');
             const brandPanel = document.getElementById('brand-dropdown-panel');
             const modelTrigger = document.getElementById('model-dropdown-trigger');
             const modelPanel = document.getElementById('model-dropdown-panel');
+            const fuelTypeTrigger = document.getElementById('fuel-type-dropdown-trigger');
+            const fuelTypePanel = document.getElementById('fuel-type-dropdown-panel');
 
             function closeAll() {
                 if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
                 if (modelPanel) { modelPanel.classList.add('hidden'); if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false'); }
-                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
+                if (fuelTypePanel) { fuelTypePanel.classList.add('hidden'); if (fuelTypeTrigger) fuelTypeTrigger.setAttribute('aria-expanded', 'false'); }
+                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
             }
 
             if (brandTrigger && brandPanel) {
@@ -3194,9 +3335,22 @@ if (config) {
                     }
                 });
             }
+            if (fuelTypeTrigger && fuelTypePanel) {
+                fuelTypeTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = !fuelTypePanel.classList.contains('hidden');
+                    closeAll();
+                    if (!isOpen) {
+                        fuelTypePanel.classList.remove('hidden');
+                        fuelTypeTrigger.setAttribute('aria-expanded', 'true');
+                        const chev = fuelTypeTrigger.querySelector('.dropdown-chevron');
+                        if (chev) chev.style.transform = 'rotate(180deg)';
+                    }
+                });
+            }
             document.addEventListener('click', () => closeAll());
 
-            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel').forEach(panel => {
+            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
                 panel.addEventListener('click', (e) => e.stopPropagation());
             });
 
@@ -3205,6 +3359,9 @@ if (config) {
             });
             document.querySelectorAll('.model-checkbox').forEach(cb => {
                 cb.addEventListener('change', updateModelDropdownLabel);
+            });
+            document.querySelectorAll('.fuel-type-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateFuelTypeDropdownLabel);
             });
         }
 

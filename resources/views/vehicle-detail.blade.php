@@ -688,18 +688,6 @@
                     <p class="detail-value whitespace-pre-wrap">{{ $details->extra_equipment }}</p>
                     </div>
                 @endif
-                @if($details->dispensations)
-                <div class="detail-item md:col-span-2">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.dispensations') }}</span>
-                    <p class="detail-value whitespace-pre-wrap">{{ $details->dispensations }}</p>
-                </div>
-                @endif
-                @if($details->permits)
-                <div class="detail-item md:col-span-2">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.permits') }}</span>
-                    <p class="detail-value whitespace-pre-wrap">{{ $details->permits }}</p>
-            </div>
-            @endif
             </div>
         </div>
 

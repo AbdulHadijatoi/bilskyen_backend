@@ -377,11 +377,13 @@ return [
             'toggle_filters' => 'Toggle filters',
             'open_filters' => 'Open filters',
             'close_filters' => 'Close filters',
+            'advanced_filters' => 'Advanced Filters',
             'no_favorites' => 'No favorites yet',
             'no_favorites_description' => 'Start saving vehicles you like by clicking the heart icon.',
             'browse_vehicles' => 'Browse Vehicles',
             'vehicles_saved' => 'Vehicles you\'ve saved for later',
             'failed_to_load_vehicles' => 'Failed to load vehicles. Please try again.',
+            'showing_all_vehicles' => 'Showing all vehicles',
             'detail' => [
                 'page_title' => 'Vehicle Details',
                 'basic_information' => 'Basic Information',

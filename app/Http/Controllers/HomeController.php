@@ -352,10 +352,16 @@ class HomeController extends Controller
             $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
         }
 
+        $showNoResultsMessage = $vehicles->total() === 0;
+        $fallbackVehicles = null;
+        if ($showNoResultsMessage) {
+            $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
+        }
+
         $constants = $this->lookupService->getPublicConstants();
         $seo = $this->seoService->getForPage('listing', 'vehicles');
 
-        return view('vehicles', compact('vehicles', 'constants', 'currentFilters', 'seo'));
+        return view('vehicles', compact('vehicles', 'constants', 'currentFilters', 'seo', 'showNoResultsMessage', 'fallbackVehicles'));
     }
 
     /**

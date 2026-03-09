@@ -588,12 +588,12 @@ class VehicleService
             });
         }
 
-        // Category filter
+        // Category filter (supports array for multiple categories)
         if (!empty($filters['category_id'])) {
-            // where null or match the category_id
-            $query->where(function ($q) use ($filters) {
+            $categoryIds = is_array($filters['category_id']) ? $filters['category_id'] : [$filters['category_id']];
+            $query->where(function ($q) use ($categoryIds) {
                 $q->whereNull('category_id')
-                  ->orWhere('category_id', $filters['category_id']);
+                  ->orWhereIn('category_id', $categoryIds);
             });
         }
 
@@ -609,28 +609,44 @@ class VehicleService
             $query->whereIn('model_id', $modelIds);
         }
 
-        // Model Year filter
+        // Model Year filter (supports array for multiple years)
         if (!empty($filters['model_year_id'])) {
-            $query->where(function ($q) use ($filters) {
+            $yearIds = is_array($filters['model_year_id']) ? $filters['model_year_id'] : [$filters['model_year_id']];
+            $query->where(function ($q) use ($yearIds) {
                 $q->whereNull('model_year_id')
-                  ->orWhere('model_year_id', $filters['model_year_id']);
+                  ->orWhereIn('model_year_id', $yearIds);
             });
         }
 
         // Fuel Type filter (supports array for multiple values)
         if (!empty($filters['fuel_type_id'])) {
-            $query->where(function ($q) use ($filters) {
+            $fuelTypeIds = is_array($filters['fuel_type_id']) ? $filters['fuel_type_id'] : [$filters['fuel_type_id']];
+            $query->where(function ($q) use ($fuelTypeIds) {
                 $q->whereNull('fuel_type_id')
-                  ->orWhere('fuel_type_id', $filters['fuel_type_id']);
+                  ->orWhereIn('fuel_type_id', $fuelTypeIds);
             });
         }
 
-        // Kilometers Driven filter
-        if (!empty($filters['km_driven_from']) && !empty($filters['km_driven_to'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereNull('km_driven')
-                  ->orWhereBetween('km_driven', [$filters['km_driven_from'], $filters['km_driven_to']]);
-            });
+        // Kilometers Driven filter (support min only, max only, or both)
+        if (!empty($filters['km_driven_from']) || !empty($filters['km_driven_to'])) {
+            $from = isset($filters['km_driven_from']) && $filters['km_driven_from'] !== '' ? (int) $filters['km_driven_from'] : null;
+            $to = isset($filters['km_driven_to']) && $filters['km_driven_to'] !== '' ? (int) $filters['km_driven_to'] : null;
+            if ($from !== null && $to !== null) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereNull('km_driven')
+                      ->orWhereBetween('km_driven', [$from, $to]);
+                });
+            } elseif ($from !== null) {
+                $query->where(function ($q) use ($from) {
+                    $q->whereNull('km_driven')
+                      ->orWhere('km_driven', '>=', $from);
+                });
+            } else {
+                $query->where(function ($q) use ($to) {
+                    $q->whereNull('km_driven')
+                      ->orWhere('km_driven', '<=', $to);
+                });
+            }
         }
 
         // Price range filter (exclude 0 values)
@@ -647,12 +663,16 @@ class VehicleService
             });
         }
 
-        // Listing Type filter
+        // Listing Type filter (supports array for multiple types, e.g. Purchase + Leasing)
         if (!empty($filters['listing_type_id'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->whereNull('listing_type_id')
-                  ->orWhere('listing_type_id', $filters['listing_type_id']);
-            });
+            $ids = is_array($filters['listing_type_id']) ? $filters['listing_type_id'] : [$filters['listing_type_id']];
+            $ids = array_filter(array_map('intval', $ids));
+            if (!empty($ids)) {
+                $query->where(function ($q) use ($ids) {
+                    $q->whereNull('listing_type_id')
+                      ->orWhereIn('listing_type_id', $ids);
+                });
+            }
         }
 
         return $query->paginate($perPage, ['*'], 'page', $page);
@@ -959,7 +979,8 @@ class VehicleService
         }
 
         if (!empty($basicFilters['category_id'])) {
-            $query->where('vehicles.category_id', $basicFilters['category_id']);
+            $categoryIds = is_array($basicFilters['category_id']) ? $basicFilters['category_id'] : [$basicFilters['category_id']];
+            $query->whereIn('vehicles.category_id', $categoryIds);
         }
 
         if (!empty($basicFilters['brand_id'])) {
@@ -973,7 +994,8 @@ class VehicleService
         }
 
         if (!empty($basicFilters['model_year_id'])) {
-            $query->where('vehicles.model_year_id', $basicFilters['model_year_id']);
+            $yearIds = is_array($basicFilters['model_year_id']) ? $basicFilters['model_year_id'] : [$basicFilters['model_year_id']];
+            $query->whereIn('vehicles.model_year_id', $yearIds);
         }
 
         // Model Year range filter (year_from and year_to)
@@ -1008,7 +1030,11 @@ class VehicleService
         }
 
         if (!empty($basicFilters['listing_type_id'])) {
-            $query->where('vehicles.listing_type_id', $basicFilters['listing_type_id']);
+            $ids = is_array($basicFilters['listing_type_id']) ? $basicFilters['listing_type_id'] : [$basicFilters['listing_type_id']];
+            $ids = array_filter(array_map('intval', $ids));
+            if (!empty($ids)) {
+                $query->whereIn('vehicles.listing_type_id', $ids);
+            }
         }
 
         // Join with vehicle_details for advanced filters
@@ -1051,12 +1077,20 @@ class VehicleService
             }
         }
 
-        // Drive Wheels (supports array for multiple values)
+        // Drive Wheels: frontend sends fwd/rwd/awd; DB column is integer (1=fwd, 2=rwd, 3=awd)
         if (!empty($advancedFilters['drive_axles'])) {
-            if (is_array($advancedFilters['drive_axles'])) {
-                $query->whereIn('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
-            } else {
-                $query->where('vehicle_details.drive_axles', $advancedFilters['drive_axles']);
+            $map = ['fwd' => 1, 'rwd' => 2, 'awd' => 3];
+            $vals = is_array($advancedFilters['drive_axles']) ? $advancedFilters['drive_axles'] : [$advancedFilters['drive_axles']];
+            $ids = [];
+            foreach ($vals as $v) {
+                if (is_numeric($v)) {
+                    $ids[] = (int) $v;
+                } elseif (isset($map[strtolower((string) $v)])) {
+                    $ids[] = $map[strtolower((string) $v)];
+                }
+            }
+            if (!empty($ids)) {
+                $query->whereIn('vehicle_details.drive_axles', array_unique($ids));
             }
         }
 
@@ -1064,7 +1098,7 @@ class VehicleService
         if (!empty($advancedFilters['first_registration_year_from']) && $advancedFilters['first_registration_year_from'] > 1975) {
             $query->whereYear('vehicles.first_registration_date', '>=', $advancedFilters['first_registration_year_from']);
         }
-        if (!empty($advancedFilters['first_registration_year_to']) && $advancedFilters['first_registration_year_to'] < date('Y')) {
+        if (!empty($advancedFilters['first_registration_year_to']) && $advancedFilters['first_registration_year_to'] <= (int) date('Y') + 1) {
             $query->whereYear('vehicles.first_registration_date', '<=', $advancedFilters['first_registration_year_to']);
         }
 
@@ -1201,8 +1235,8 @@ class VehicleService
         if (!empty($advancedFilters['airbags'])) {
             $query->where('vehicle_details.airbags', $advancedFilters['airbags']);
         }
-        if (isset($advancedFilters['ncap_five'])) {
-            $query->where('vehicle_details.ncap_five', (bool) $advancedFilters['ncap_five']);
+        if (!empty($advancedFilters['ncap_five'])) {
+            $query->where('vehicle_details.ncap_five', true);
         }
 
         // Equipment (many-to-many)
@@ -1234,12 +1268,12 @@ class VehicleService
             $query->where('vehicles.towing_weight', '>=', $advancedFilters['towing_weight']);
         }
 
-        // Import / Factory new (vehicle_details)
-        if (isset($advancedFilters['is_import'])) {
-            $query->where('vehicle_details.is_import', (bool) $advancedFilters['is_import']);
+        // Import / Factory new (vehicle_details) – only filter when user explicitly selects "yes"
+        if (!empty($advancedFilters['is_import'])) {
+            $query->where('vehicle_details.is_import', true);
         }
-        if (isset($advancedFilters['is_factory_new'])) {
-            $query->where('vehicle_details.is_factory_new', (bool) $advancedFilters['is_factory_new']);
+        if (!empty($advancedFilters['is_factory_new'])) {
+            $query->where('vehicle_details.is_factory_new', true);
         }
 
         // Select distinct vehicles to avoid duplicates from joins

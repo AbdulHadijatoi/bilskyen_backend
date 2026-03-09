@@ -415,11 +415,13 @@ return [
             'toggle_filters' => 'Skift filtre',
             'open_filters' => 'Åbn filtre',
             'close_filters' => 'Luk filtre',
+            'advanced_filters' => 'Avancerede Filtre',
             'no_favorites' => 'Ingen favoritter endnu',
             'no_favorites_description' => 'Begynd at gemme køretøjer, du kan lide, ved at klikke på hjerteikonet.',
             'browse_vehicles' => 'Gennemse Køretøjer',
             'vehicles_saved' => 'Køretøjer du har gemt til senere',
             'failed_to_load_vehicles' => 'Kunne ikke indlæse køretøjer. Prøv venligst igen.',
+            'showing_all_vehicles' => 'Viser alle køretøjer',
             'detail' => [
                 'page_title' => 'Køretøjsdetaljer',
                 'basic_information' => 'Grundlæggende Information',
