@@ -729,7 +729,7 @@ class SellYourCarController extends Controller
         
         if (!$tokenData) {
             return redirect()->route('sell-your-car')
-                ->with('error', 'Invalid or expired access token. Please create a new vehicle listing.');
+                ->with('error', __('messages.errors.invalid_access_token_listing'));
         }
 
         $vehicleId = $tokenData['vehicle_id'];
@@ -742,19 +742,19 @@ class SellYourCarController extends Controller
         } catch (ModelNotFoundException $e) {
             // Vehicle has been permanently deleted
             return redirect()->route('sell-your-car')
-                ->with('error', 'This vehicle listing no longer exists. It may have been permanently deleted.');
+                ->with('error', __('messages.errors.listing_no_longer_exists'));
         }
 
         // Verify user owns this vehicle (double check)
         if ($vehicle->user_id !== $user->id) {
             return redirect()->route('sell-your-car')
-                ->with('error', 'You do not have permission to access this vehicle listing.');
+                ->with('error', __('messages.errors.no_permission_listing'));
         }
 
         // Check if vehicle is soft-deleted
         if ($vehicle->trashed()) {
             return redirect()->route('sell-your-car')
-                ->with('error', 'This vehicle listing has been deleted and is no longer accessible.');
+                ->with('error', __('messages.errors.listing_deleted_inaccessible'));
         }
 
         // Check if vehicle is already featured
@@ -860,7 +860,7 @@ class SellYourCarController extends Controller
         }
 
         return redirect()->route('sell-your-car.success', ['token' => $token])
-            ->with('success', 'Vehicle featured successfully!');
+            ->with('success', __('messages.messages.vehicle_featured_successfully'));
     }
 }
 

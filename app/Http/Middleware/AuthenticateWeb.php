@@ -24,12 +24,15 @@ class AuthenticateWeb
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            return redirect('/auth/login')->with('error', 'Please login to access this page.');
+            return redirect('/auth/login')->with('error', __('messages.errors.please_login_access_page'));
         }
 
         // Check if user is banned
         if ($user->banned) {
-            return redirect('/auth/login')->with('error', 'Account is banned. ' . ($user->ban_reason ? 'Reason: ' . $user->ban_reason : ''));
+            $message = $user->ban_reason
+                ? __('messages.errors.account_banned_with_reason', ['reason' => $user->ban_reason])
+                : __('messages.errors.account_banned');
+            return redirect('/auth/login')->with('error', $message);
         }
 
         return $next($request);

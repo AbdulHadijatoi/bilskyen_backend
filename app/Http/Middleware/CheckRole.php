@@ -56,7 +56,7 @@ class CheckRole
             ], 401);
         }
 
-        return redirect()->route('login')->with('error', 'You must be signed in to access this resource.');
+        return redirect()->route('login')->with('error', __('messages.errors.must_be_signed_in'));
     }
 
     /**

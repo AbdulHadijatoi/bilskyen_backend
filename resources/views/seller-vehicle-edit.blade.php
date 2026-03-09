@@ -1028,7 +1028,7 @@
                         <!-- Existing images will be inserted here by JavaScript -->
                         @foreach($vehicle->images as $image)
                             <div class="image-preview-item" data-image-id="{{ $image->id }}" data-sort-order="{{ $image->sort_order }}" draggable="true">
-                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Vehicle image">
+                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ __('messages.forms.vehicle_image_alt') }}">
                                 <div class="image-preview-overlay">
                                     <button type="button" class="image-remove-btn" onclick="removeExistingImage({{ $image->id }})" title="{{ __('messages.pages.edit_vehicle.remove_image') }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

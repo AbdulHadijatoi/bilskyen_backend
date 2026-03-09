@@ -16,7 +16,7 @@
                 <!-- Dealer Logo -->
                 @if($dealer->logo_url)
                 <div class="flex-shrink-0">
-                    <img src="{{ $dealer->logo_url }}" alt="{{ $dealer->owner?->name ?? 'Dealer' }}" class="h-32 w-auto object-contain rounded-md">
+                    <img src="{{ $dealer->logo_url }}{{ str_contains($dealer->logo_url, '?') ? '&' : '?' }}t={{ $dealer->updated_at?->timestamp ?? time() }}" alt="{{ $dealer->owner?->name ?? __('messages.pages.vehicles.dealer') }}" class="h-32 w-auto object-contain rounded-md">
                 </div>
                 @endif
                 

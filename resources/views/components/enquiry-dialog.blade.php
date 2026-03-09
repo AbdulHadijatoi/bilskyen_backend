@@ -58,12 +58,12 @@
     
     // Get vehicle data - handle both objects and arrays
     if (is_array($vehicle)) {
-        $vehicleTitle = $vehicle['title'] ?? 'Vehicle';
+        $vehicleTitle = $vehicle['title'] ?? __('messages.forms.vehicle');
         $vehiclePrice = $vehicle['price'] ?? null;
         $vehicleBrand = $vehicle['brand_name'] ?? null;
         $vehicleModel = $vehicle['model_name'] ?? null;
     } else {
-        $vehicleTitle = $vehicle->title ?? 'Vehicle';
+        $vehicleTitle = $vehicle->title ?? __('messages.forms.vehicle');
         $vehiclePrice = $vehicle->price ?? null;
         $vehicleBrand = $vehicle->brand_name ?? null;
         $vehicleModel = $vehicle->model_name ?? null;

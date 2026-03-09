@@ -604,8 +604,8 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold">{{ $homePageContent['stat_1_value'] ?? '100+' }}</h3>
-                        <p class="mb-2 font-medium">{{ $homePageContent['stat_1_title'] ?? 'Quality Vehicles' }}</p>
-                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? 'Thoroughly inspected vehicles in our inventory' }}</p>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_1_title'] ?? __('messages.pages.home.stat_1_title') }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? __('messages.pages.home.stat_1_description') }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -619,8 +619,8 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold">{{ $homePageContent['stat_2_value'] ?? '500+' }}</h3>
-                        <p class="mb-2 font-medium">{{ $homePageContent['stat_2_title'] ?? 'Happy Customers' }}</p>
-                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? 'Satisfied customers who found their perfect vehicle' }}</p>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_2_title'] ?? __('messages.pages.home.stat_2_title') }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? __('messages.pages.home.stat_2_description') }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -634,8 +634,8 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold">{{ $homePageContent['stat_3_value'] ?? '15+' }}</h3>
-                        <p class="mb-2 font-medium">{{ $homePageContent['stat_3_title'] ?? 'Years of Experience' }}</p>
-                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? 'Years serving our community with integrity' }}</p>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_3_title'] ?? __('messages.pages.home.stat_3_title') }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? __('messages.pages.home.stat_3_description') }}</p>
                     </div>
                 </div>
                 <div class="rounded-lg border border-border bg-card">
@@ -647,8 +647,8 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold">{{ $homePageContent['stat_4_value'] ?? '98%' }}</h3>
-                        <p class="mb-2 font-medium">{{ $homePageContent['stat_4_title'] ?? 'Satisfaction Rate' }}</p>
-                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_4_description'] ?? 'Customer satisfaction based on reviews' }}</p>
+                        <p class="mb-2 font-medium">{{ $homePageContent['stat_4_title'] ?? __('messages.pages.home.stat_4_title') }}</p>
+                        <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_4_description'] ?? __('messages.pages.home.stat_4_description') }}</p>
                     </div>
                 </div>
             </div>
@@ -674,9 +674,9 @@
                             <line x1="2" x2="22" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_1_title'] ?? 'Financing Options' }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_1_title'] ?? __('messages.pages.home.feature_1_title') }}</h3>
                     <p class="text-muted-foreground">
-                        {{ $homePageContent['feature_1_description'] ?? 'We work with multiple lenders to find the best financing solutions for your budget.' }}
+                        {{ $homePageContent['feature_1_description'] ?? __('messages.pages.home.feature_1_description') }}
                     </p>
                 </div>
                 <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
@@ -685,9 +685,9 @@
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_2_title'] ?? 'Vehicle Warranty' }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_2_title'] ?? __('messages.pages.home.feature_2_title') }}</h3>
                     <p class="text-muted-foreground">
-                        {{ $homePageContent['feature_2_description'] ?? 'Extended warranty options to protect your investment and give you peace of mind.' }}
+                        {{ $homePageContent['feature_2_description'] ?? __('messages.pages.home.feature_2_description') }}
                     </p>
                 </div>
                 <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
@@ -699,9 +699,9 @@
                             <line x1="3" x2="21" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_3_title'] ?? 'Service Department' }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_3_title'] ?? __('messages.pages.home.feature_3_title') }}</h3>
                     <p class="text-muted-foreground">
-                        {{ $homePageContent['feature_3_description'] ?? 'Professional maintenance and repair services to keep your vehicle in top condition.' }}
+                        {{ $homePageContent['feature_3_description'] ?? __('messages.pages.home.feature_3_description') }}
                     </p>
                 </div>
             </div>
@@ -723,21 +723,21 @@
                 @php
                     $testimonials = [
                         [
-                            'name' => $homePageContent['testimonial_1_name'] ?? 'John Davis',
-                            'location' => $homePageContent['testimonial_1_location'] ?? 'Copenhagen, Denmark',
-                            'quote' => $homePageContent['testimonial_1_quote'] ?? 'The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.',
+                            'name' => $homePageContent['testimonial_1_name'] ?? __('messages.pages.home.testimonial_1_name'),
+                            'location' => $homePageContent['testimonial_1_location'] ?? __('messages.pages.home.testimonial_1_location'),
+                            'quote' => $homePageContent['testimonial_1_quote'] ?? __('messages.pages.home.testimonial_1_quote'),
                             'rating' => (int)($homePageContent['testimonial_1_rating'] ?? 5)
                         ],
                         [
-                            'name' => $homePageContent['testimonial_2_name'] ?? 'Priya Sharma',
-                            'location' => $homePageContent['testimonial_2_location'] ?? 'Aarhus, Denmark',
-                            'quote' => $homePageContent['testimonial_2_quote'] ?? 'I was impressed with their knowledge and no-pressure approach. I got a great deal on my new car and would definitely recommend them.',
+                            'name' => $homePageContent['testimonial_2_name'] ?? __('messages.pages.home.testimonial_2_name'),
+                            'location' => $homePageContent['testimonial_2_location'] ?? __('messages.pages.home.testimonial_2_location'),
+                            'quote' => $homePageContent['testimonial_2_quote'] ?? __('messages.pages.home.testimonial_2_quote'),
                             'rating' => (int)($homePageContent['testimonial_2_rating'] ?? 5)
                         ],
                         [
-                            'name' => $homePageContent['testimonial_3_name'] ?? 'Ahmed Khan',
-                            'location' => $homePageContent['testimonial_3_location'] ?? 'Odense, Denmark',
-                            'quote' => $homePageContent['testimonial_3_quote'] ?? 'The financing options they provided were better than I expected. The entire process was smooth and I drove away very happy.',
+                            'name' => $homePageContent['testimonial_3_name'] ?? __('messages.pages.home.testimonial_3_name'),
+                            'location' => $homePageContent['testimonial_3_location'] ?? __('messages.pages.home.testimonial_3_location'),
+                            'quote' => $homePageContent['testimonial_3_quote'] ?? __('messages.pages.home.testimonial_3_quote'),
                             'rating' => (int)($homePageContent['testimonial_3_rating'] ?? 4)
                         ],
                     ];
@@ -1599,7 +1599,7 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_remove_favorites') }}', 'error');
                         }
                     }
                 } else {
@@ -1644,14 +1644,14 @@
                         }
                         const data = await response.json().catch(() => ({}));
                         if (window.showSnackbar) {
-                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
+                            window.showSnackbar(data.message || '{{ __('messages.errors.failed_to_save_favorites') }}', 'error');
                         }
                     }
                 }
             } catch (error) {
                 console.error('Error toggling favorite:', error);
                 if (window.showSnackbar) {
-                    window.showSnackbar('{{ __('messages.errors.failed_to_create_vehicle') }}', 'error');
+                    window.showSnackbar('{{ __('messages.dialogs.error_occurred') }}', 'error');
                 }
             }
             

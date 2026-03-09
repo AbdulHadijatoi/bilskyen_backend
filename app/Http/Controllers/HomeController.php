@@ -176,7 +176,7 @@ class HomeController extends Controller
             ]);
         }
 
-        return redirect('/profile')->with('status', 'Profile updated successfully!');
+        return redirect('/profile')->with('status', __('messages.messages.profile_updated_successfully'));
     }
 
     /**

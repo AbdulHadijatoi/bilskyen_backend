@@ -328,7 +328,13 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.price') }}</span>
                     <span class="detail-value text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
-                    </div>
+                </div>
+                @if($details && $details->wholesale_price !== null)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.forms.wholesale_price') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($details->wholesale_price) }}</span>
+                </div>
+                @endif
                 @if($vehicle->listing_type_name)
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.listing_type') }}</span>

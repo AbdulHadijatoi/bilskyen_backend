@@ -506,6 +506,9 @@ class VehicleController extends Controller
                 'co2_emissions' => $details->co2_emissions,
                 'is_import' => $details->is_import,
                 'is_factory_new' => $details->is_factory_new,
+                'wholesale_price' => $details->wholesale_price,
+                'internal_cost_price' => $details->internal_cost_price,
+                'engine_type' => $details->engine_type,
                 'use_id' => $details->use_id,
                 'color_id' => $details->color_id,
                 'body_type_id' => $details->body_type_id,
@@ -615,6 +618,11 @@ class VehicleController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $request->validate([
+            'registration' => 'nullable|string|max:20',
+            'vin' => 'nullable|string|max:17',
+        ]);
+
         $data = $request->all();
 
         // Set dealer_id from authenticated user

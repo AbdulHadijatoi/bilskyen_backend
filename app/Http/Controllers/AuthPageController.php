@@ -446,7 +446,7 @@ class AuthPageController extends Controller
 
         if (!$resetRecord || !Hash::check($token, $resetRecord->value)) {
             return redirect('/auth/reset-password')
-                ->with('error', 'Invalid or expired reset token.')
+                ->with('error', __('messages.errors.invalid_reset_token'))
                 ->withInput($request->only('email', 'token'));
         }
 
@@ -454,7 +454,7 @@ class AuthPageController extends Controller
         $user = User::where('email', $email)->first();
         if (!$user) {
             return redirect('/auth/reset-password')
-                ->with('error', 'User not found.')
+                ->with('error', __('messages.errors.user_not_found'))
                 ->withInput($request->only('email', 'token'));
         }
 
@@ -464,7 +464,7 @@ class AuthPageController extends Controller
         // Delete the reset token
         DB::table('verifications')->where('identifier', $identifier)->delete();
 
-        return redirect('/auth/login')->with('status', 'Password has been reset successfully. You can now login with your new password.');
+        return redirect('/auth/login')->with('status', __('messages.messages.password_reset_successfully'));
     }
 
     /**
@@ -478,17 +478,17 @@ class AuthPageController extends Controller
         // Get authenticated user from JWT token in cookie
         $token = $request->cookie('access_token');
         if (!$token) {
-            return redirect('/auth/login')->with('error', 'Please login to verify your email.');
+            return redirect('/auth/login')->with('error', __('messages.errors.please_login_verify_email'));
         }
 
         try {
             $user = JWTAuth::setToken($token)->authenticate();
             if (!$user) {
-                return redirect('/auth/login')->with('error', 'Please login to verify your email.');
+                return redirect('/auth/login')->with('error', __('messages.errors.please_login_verify_email'));
             }
 
             if ($user->email_verified) {
-                return redirect('/')->with('status', 'Email is already verified.');
+                return redirect('/')->with('status', __('messages.messages.email_already_verified'));
             }
 
             // Generate verification token
@@ -511,9 +511,9 @@ class AuthPageController extends Controller
             // TODO: Send verification email
             // Mail::to($user)->send(new VerifyEmailMail($verificationUrl));
 
-            return back()->with('status', 'Verification email sent! Please check your inbox.');
+            return back()->with('status', __('messages.messages.verification_email_sent'));
         } catch (JWTException $e) {
-            return redirect('/auth/login')->with('error', 'Please login to verify your email.');
+            return redirect('/auth/login')->with('error', __('messages.errors.please_login_verify_email'));
         }
     }
 
@@ -529,7 +529,7 @@ class AuthPageController extends Controller
     {
         $user = User::find($id);
         if (!$user) {
-            return redirect('/auth/login')->with('error', 'Invalid verification link.');
+            return redirect('/auth/login')->with('error', __('messages.errors.invalid_verification_link'));
         }
 
         // Check verification token
@@ -540,7 +540,7 @@ class AuthPageController extends Controller
             ->first();
 
         if (!$verification || !Hash::check($hash, $verification->value)) {
-            return redirect('/auth/verify-email')->with('error', 'Invalid or expired verification link.');
+            return redirect('/auth/verify-email')->with('error', __('messages.errors.invalid_expired_verification_link'));
         }
 
         // Capture before state for audit log
@@ -580,7 +580,7 @@ class AuthPageController extends Controller
         DB::table('verifications')->where('identifier', $identifier)->delete();
 
         // Redirect all users to home page
-        return redirect('/')->with('status', 'Email verified successfully!');
+        return redirect('/')->with('status', __('messages.messages.email_verified_successfully'));
     }
 
     /**
@@ -599,7 +599,7 @@ class AuthPageController extends Controller
         $user = User::where('email', $email)->first();
 
         // Always return success for security
-        $message = 'If that email is in our system, we\'ll send you a magic link. Check your inbox!';
+        $message = __('messages.messages.magic_link_sent');
 
         if ($user) {
             // Generate magic link token
@@ -700,7 +700,7 @@ class AuthPageController extends Controller
         // TODO: Send magic link email
         // Mail::to($user)->send(new MagicLinkMail($magicLinkUrl));
 
-        return back()->with('status', 'Magic link sent! Please check your inbox to complete signup.');
+        return back()->with('status', __('messages.messages.magic_link_sent_signup'));
     }
 
     /**
@@ -734,7 +734,7 @@ class AuthPageController extends Controller
 
         if (!$verification) {
             return redirect('/auth/magic-link/verify')
-                ->with('error', 'Invalid or expired magic link.')
+                ->with('error', __('messages.errors.invalid_expired_magic_link'))
                 ->withInput($request->only('token', 'callbackURL'));
         }
 
@@ -744,12 +744,12 @@ class AuthPageController extends Controller
         // Find user by email
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return redirect('/auth/login')->with('error', 'User not found.');
+            return redirect('/auth/login')->with('error', __('messages.errors.user_not_found'));
         }
 
         // Check if user is banned
         if ($user->banned) {
-            return redirect('/auth/login')->with('error', 'Account is banned.');
+            return redirect('/auth/login')->with('error', __('messages.errors.account_banned'));
         }
 
         // Generate JWT tokens
@@ -792,7 +792,7 @@ class AuthPageController extends Controller
 
         // Redirect all users to callback URL or home
         return redirect($callbackURL)->withCookies([$refreshCookie, $accessCookie])
-            ->with('status', 'Magic link verified successfully!');
+            ->with('status', __('messages.messages.magic_link_verified_successfully'));
     }
 
     /**
@@ -832,14 +832,14 @@ class AuthPageController extends Controller
             $refreshCookie = cookie()->forget('refresh_token');
 
             return redirect('/')->withCookies([$accessCookie, $refreshCookie])
-                ->with('status', 'Logged out successfully');
+                ->with('status', __('messages.errors.logged_out_success'));
         } catch (\Exception $e) {
             // Clear cookies anyway
             $accessCookie = cookie()->forget('access_token');
             $refreshCookie = cookie()->forget('refresh_token');
             
             return redirect('/')->withCookies([$accessCookie, $refreshCookie])
-                ->with('status', 'Logged out successfully');
+                ->with('status', __('messages.errors.logged_out_success'));
         }
     }
 }
