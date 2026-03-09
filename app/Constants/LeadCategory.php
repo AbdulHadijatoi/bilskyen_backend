@@ -14,6 +14,7 @@ class LeadCategory
     public const ENQUIRY_FORM_SUBMISSION = 5;
     public const PHONE_NUMBER_REVEALED = 6;
     public const REQUEST_TEST_DRIVE = 7;
+    public const EXCHANGE_REQUEST = 8;
 
     /**
      * Get all valid category IDs
@@ -28,6 +29,7 @@ class LeadCategory
             self::ENQUIRY_FORM_SUBMISSION,
             self::PHONE_NUMBER_REVEALED,
             self::REQUEST_TEST_DRIVE,
+            self::EXCHANGE_REQUEST,
         ];
     }
 

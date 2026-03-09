@@ -38,7 +38,7 @@
             <button 
         id="mobile-filter-toggle"
                 type="button" 
-        class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-white shadow-xl ring-2 ring-white/80 transition-all hover:bg-green-700 hover:ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
+        class="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-xl border-2 border-white transition-all hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         aria-label="{{ __('messages.pages.vehicles.toggle_filters') }}"
             >
         <!-- Filter Icon (shown when sidebar is closed) — SlidersHorizontal -->
@@ -92,7 +92,12 @@
             @php $cf = $currentFilters ?? []; @endphp
 
             <!-- Sticky Header -->
-            <div class="sticky top-0 z-10 bg-card flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+            <div class="sticky top-0 z-10 bg-card flex flex-col shrink-0 border-b border-border">
+                <!-- Pull bar (mobile): drag down or tap to close -->
+                <div id="sidebar-pullbar" class="lg:hidden flex justify-center items-center py-3 touch-none cursor-grab active:cursor-grabbing select-none min-h-[44px]" aria-label="{{ __('messages.pages.vehicles.close_filters') }}">
+                    <span class="w-10 h-1 rounded-full bg-muted-foreground/50"></span>
+                </div>
+                <div class="flex items-center justify-between px-4 py-3">
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-semibold text-foreground">{{ __('messages.forms.filters') }}</span>
                 </div>
@@ -218,14 +223,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" max="{{ date('Y') }}" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="year-slider-min" min="1975" max="{{ date('Y') + 1 }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="year-slider-max" min="1975" max="{{ date('Y') + 1 }}" step="1" value="{{ date('Y') + 1 }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="year-slider-min" min="1950" max="2027" step="1" value="1950" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="year-slider-max" min="1950" max="2027" step="1" value="2027" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -243,14 +248,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="5000000" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="5000000" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="price-slider-min" min="0" max="1000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="price-slider-max" min="0" max="1000000" step="1000" value="1000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-min" min="0" max="5000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-max" min="0" max="5000000" step="1000" value="5000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="price-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="price-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -258,14 +263,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="2000000" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="2000000" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="mileage-slider-min" min="0" max="500000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="mileage-slider-max" min="0" max="500000" step="1000" value="500000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-min" min="0" max="2000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-max" min="0" max="2000000" step="1000" value="2000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="mileage-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="mileage-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -385,14 +390,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.first_registration_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="first-reg-year-from" name="first_registration_year_from" placeholder="{{ __('messages.forms.from') }}" min="1975" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="first-reg-year-to" name="first_registration_year_to" placeholder="{{ __('messages.forms.to') }}" min="1975" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="first-reg-year-from" name="first_registration_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="first-reg-year-to" name="first_registration_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="first-reg-year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="first-reg-year-slider-min" min="1975" max="{{ date('Y') }}" step="1" value="1975" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="first-reg-year-slider-max" min="1975" max="{{ date('Y') }}" step="1" value="{{ date('Y') }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="first-reg-year-slider-min" min="1950" max="2027" step="1" value="1950" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="first-reg-year-slider-max" min="1950" max="2027" step="1" value="2027" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="first-reg-year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="first-reg-year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -400,14 +405,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.owner_tax') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="owner-tax-from" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="owner-tax-to" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="owner-tax-from" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="20000" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="owner-tax-to" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="20000" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="owner-tax-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="owner-tax-slider-min" min="0" max="100000" step="100" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="owner-tax-slider-max" min="0" max="100000" step="100" value="100000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="owner-tax-slider-min" min="0" max="20000" step="100" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="owner-tax-slider-max" min="0" max="20000" step="100" value="20000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="owner-tax-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="owner-tax-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -436,8 +441,8 @@
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="battery-capacity-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="battery-capacity-slider-min" min="0" max="200" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="battery-capacity-slider-max" min="0" max="200" step="5" value="200" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="battery-capacity-slider-min" min="0" max="500" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="battery-capacity-slider-max" min="0" max="500" step="5" value="500" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="battery-capacity-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="battery-capacity-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -451,8 +456,8 @@
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="range-km-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="range-km-slider-min" min="0" max="1000" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="range-km-slider-max" min="0" max="1000" step="10" value="1000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="range-km-slider-min" min="0" max="1500" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="range-km-slider-max" min="0" max="1500" step="10" value="1500" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="range-km-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="range-km-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -466,8 +471,8 @@
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="fuel-efficiency-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="fuel-efficiency-slider-min" min="0" max="50" step="0.5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="fuel-efficiency-slider-max" min="0" max="50" step="0.5" value="50" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="fuel-efficiency-slider-min" min="0" max="100" step="0.5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="fuel-efficiency-slider-max" min="0" max="100" step="0.5" value="100" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="fuel-efficiency-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="fuel-efficiency-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -475,9 +480,9 @@
                 </div>
             </details>
 
-            <!-- Physical Details: top speed, weight, engine displacement, single inputs, drive wheels (collapsed) -->
+            <!-- Physical Details: top speed, weight, single inputs, drive wheels (collapsed) -->
             @php
-                $physicalOpen = isset($cf['top_speed_from']) || isset($cf['top_speed_to']) || isset($cf['weight_from']) || isset($cf['weight_to']) || isset($cf['engine_displacement_from']) || isset($cf['engine_displacement_to']) || isset($cf['engine_cylinders']) || isset($cf['doors']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['wheels']) || isset($cf['axles']) || isset($cf['airbags']) || !empty($cf['drive_axles']) || isset($cf['towing_weight']);
+                $physicalOpen = isset($cf['top_speed_from']) || isset($cf['top_speed_to']) || isset($cf['weight_from']) || isset($cf['weight_to']) || isset($cf['engine_cylinders']) || isset($cf['doors']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['wheels']) || isset($cf['axles']) || isset($cf['airbags']) || !empty($cf['drive_axles']) || isset($cf['towing_weight']);
             @endphp
             <details @if($physicalOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -494,8 +499,8 @@
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="top-speed-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="top-speed-slider-min" min="0" max="350" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="top-speed-slider-max" min="0" max="350" step="5" value="350" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="top-speed-slider-min" min="0" max="400" step="5" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="top-speed-slider-max" min="0" max="400" step="5" value="400" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="top-speed-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="top-speed-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -513,21 +518,6 @@
                             <input type="range" id="weight-slider-max" min="0" max="5000" step="50" value="5000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="weight-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="weight-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                        </div></div>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.engine_displacement_short') }}</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="engine-displacement-from" name="engine_displacement_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['engine_displacement_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="engine-displacement-to" name="engine_displacement_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['engine_displacement_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        </div>
-                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
-                            <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="engine-displacement-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="engine-displacement-slider-min" min="0" max="8000" step="100" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="engine-displacement-slider-max" min="0" max="8000" step="100" value="8000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <div id="engine-displacement-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                            <div id="engine-displacement-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
@@ -2085,23 +2075,6 @@
                 }
             }
 
-            // Engine displacement range
-            if (filters.engine_displacement_from || filters.engine_displacement_to) {
-                const from = filters.engine_displacement_from || '';
-                const to = filters.engine_displacement_to || '';
-                if (from && to) {
-                    chips.push({
-                        key: 'engine_displacement_range',
-                        label: `{{ __('messages.forms.engine_displacement') }}: ${from} - ${to}`,
-                        value: 'range'
-                    });
-                } else if (from) {
-                    chips.push({ key: 'engine_displacement_from', label: `{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_displacement_from });
-                } else if (to) {
-                    chips.push({ key: 'engine_displacement_to', label: `{{ __('messages.forms.engine_displacement_short') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_displacement_to });
-                }
-            }
-
             // Single numeric filters (engine_cylinders, doors, seats_min, seats_max, wheels, axles, airbags, towing_weight)
             const singleNumChips = [
                 ['engine_cylinders', '{{ __('messages.forms.engine_cylinders') }}'],
@@ -2306,10 +2279,6 @@
                     } else if (key === 'weight_range') {
                         const a = document.querySelector('[name="weight_from"]');
                         const b = document.querySelector('[name="weight_to"]');
-                        if (a) a.value = ''; if (b) b.value = '';
-                    } else if (key === 'engine_displacement_range') {
-                        const a = document.querySelector('[name="engine_displacement_from"]');
-                        const b = document.querySelector('[name="engine_displacement_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'drive_axles' && isArray) {
                         const checkbox = document.querySelector(`[name="drive_axles[]"][value="${value}"]`);
@@ -2524,7 +2493,38 @@
                 filterSidebar.classList.toggle('hidden');
                 updateToggleIcon();
             });
-            
+
+            // Pullbar: tap or drag down to close sidebar on mobile (touch-friendly)
+            const sidebarPullbar = document.getElementById('sidebar-pullbar');
+            if (sidebarPullbar && filterSidebar) {
+                let pullbarStartY = 0;
+                function closeSidebar() {
+                    filterSidebar.classList.add('hidden');
+                    updateToggleIcon();
+                }
+                sidebarPullbar.addEventListener('click', (e) => {
+                    if (window.innerWidth < 1024) {
+                        e.preventDefault();
+                        closeSidebar();
+                    }
+                });
+                sidebarPullbar.addEventListener('touchend', (e) => {
+                    if (window.innerWidth >= 1024) return;
+                    const touch = e.changedTouches && e.changedTouches[0];
+                    if (!touch) return;
+                    const deltaY = touch.clientY - pullbarStartY;
+                    if (deltaY > 30) closeSidebar();
+                }, { passive: true });
+                sidebarPullbar.addEventListener('touchstart', (e) => {
+                    if (e.touches && e.touches[0]) pullbarStartY = e.touches[0].clientY;
+                }, { passive: true });
+                sidebarPullbar.addEventListener('mousedown', (e) => { pullbarStartY = e.clientY; });
+                sidebarPullbar.addEventListener('mouseup', (e) => {
+                    if (window.innerWidth >= 1024) return;
+                    if (e.clientY - pullbarStartY > 30) closeSidebar();
+                });
+            }
+
             // Update icon on initial load
             updateToggleIcon();
         }
@@ -2806,7 +2806,7 @@
                 maxHandle: document.getElementById('price-handle-max'),
                 track: document.getElementById('price-range-track'),
                 min: 0,
-                max: 1000000
+                max: 5000000
             },
             {
                 minSlider: document.getElementById('year-slider-min'),
@@ -2816,8 +2816,8 @@
                 minHandle: document.getElementById('year-handle-min'),
                 maxHandle: document.getElementById('year-handle-max'),
                 track: document.getElementById('year-range-track'),
-                min: 1975,
-                max: {{ date('Y') + 1 }}
+                min: 1950,
+                max: 2027
             },
             {
                 minSlider: document.getElementById('mileage-slider-min'),
@@ -2828,7 +2828,7 @@
                 maxHandle: document.getElementById('mileage-handle-max'),
                 track: document.getElementById('mileage-range-track'),
                 min: 0,
-                max: 500000
+                max: 2000000
             },
             {
                 minSlider: document.getElementById('first-reg-year-slider-min'),
@@ -2838,8 +2838,8 @@
                 minHandle: document.getElementById('first-reg-year-handle-min'),
                 maxHandle: document.getElementById('first-reg-year-handle-max'),
                 track: document.getElementById('first-reg-year-range-track'),
-                min: 1975,
-                max: {{ date('Y') }}
+                min: 1950,
+                max: 2027
             },
             {
                 minSlider: document.getElementById('horsepower-slider-min'),
@@ -2861,7 +2861,7 @@
                 maxHandle: document.getElementById('battery-capacity-handle-max'),
                 track: document.getElementById('battery-capacity-range-track'),
                 min: 0,
-                max: 200
+                max: 500
             },
             {
                 minSlider: document.getElementById('owner-tax-slider-min'),
@@ -2872,7 +2872,7 @@
                 maxHandle: document.getElementById('owner-tax-handle-max'),
                 track: document.getElementById('owner-tax-range-track'),
                 min: 0,
-                max: 100000
+                max: 20000
             },
             {
                 minSlider: document.getElementById('range-km-slider-min'),
@@ -2883,7 +2883,7 @@
                 maxHandle: document.getElementById('range-km-handle-max'),
                 track: document.getElementById('range-km-range-track'),
                 min: 0,
-                max: 1000
+                max: 1500
             },
             {
                 minSlider: document.getElementById('fuel-efficiency-slider-min'),
@@ -2894,7 +2894,7 @@
                 maxHandle: document.getElementById('fuel-efficiency-handle-max'),
                 track: document.getElementById('fuel-efficiency-range-track'),
                 min: 0,
-                max: 50
+                max: 100
             },
             {
                 minSlider: document.getElementById('top-speed-slider-min'),
@@ -2905,7 +2905,7 @@
                 maxHandle: document.getElementById('top-speed-handle-max'),
                 track: document.getElementById('top-speed-range-track'),
                 min: 0,
-                max: 350
+                max: 400
             },
             {
                 minSlider: document.getElementById('weight-slider-min'),
@@ -2917,17 +2917,6 @@
                 track: document.getElementById('weight-range-track'),
                 min: 0,
                 max: 5000
-            },
-            {
-                minSlider: document.getElementById('engine-displacement-slider-min'),
-                maxSlider: document.getElementById('engine-displacement-slider-max'),
-                minInput: document.getElementById('engine-displacement-from'),
-                maxInput: document.getElementById('engine-displacement-to'),
-                minHandle: document.getElementById('engine-displacement-handle-min'),
-                maxHandle: document.getElementById('engine-displacement-handle-max'),
-                track: document.getElementById('engine-displacement-range-track'),
-                min: 0,
-                max: 8000
             }
         ];
 
@@ -3070,9 +3059,9 @@ if (config) {
             const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (modelIds.length > 0) filters.model_id = modelIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
-            if (vNum('price_to', 1000000)) filters.price_to = v('price_to');
+            if (vNum('price_to', 5000001)) filters.price_to = v('price_to');
             if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');
-            if (vNum('km_driven_to', 500001)) filters.km_driven_to = v('km_driven_to');
+            if (vNum('km_driven_to', 2000001)) filters.km_driven_to = v('km_driven_to');
             if (v('fuel_type_id')) filters.fuel_type_id = v('fuel_type_id');
             if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
             if (v('body_type_id')) filters.body_type_id = v('body_type_id');
@@ -3082,27 +3071,25 @@ if (config) {
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
             if (v('euronom_id')) filters.euronom_id = v('euronom_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            if (v('year_from') && parseInt(v('year_from')) > 1975) filters.year_from = v('year_from');
+            if (v('year_from') && parseInt(v('year_from')) > 1950) filters.year_from = v('year_from');
             if (vNum('year_to', currentYear + 2)) filters.year_to = v('year_to');
-            if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1975) filters.first_registration_year_from = v('first_registration_year_from');
+            if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1950) filters.first_registration_year_from = v('first_registration_year_from');
             if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
             if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');
-            if (vNum('ownership_tax_to', 100001)) filters.ownership_tax_to = v('ownership_tax_to');
+            if (vNum('ownership_tax_to', 20001)) filters.ownership_tax_to = v('ownership_tax_to');
             if (vNum('engine_power_from')) filters.engine_power_from = v('engine_power_from');
             if (vNum('engine_power_to', 1001)) filters.engine_power_to = v('engine_power_to');
             if (vNum('battery_capacity_from')) filters.battery_capacity_from = v('battery_capacity_from');
-            if (vNum('battery_capacity_to', 201)) filters.battery_capacity_to = v('battery_capacity_to');
+            if (vNum('battery_capacity_to', 501)) filters.battery_capacity_to = v('battery_capacity_to');
             if (vNum('range_km_from')) filters.range_km_from = v('range_km_from');
-            if (vNum('range_km_to', 1001)) filters.range_km_to = v('range_km_to');
+            if (vNum('range_km_to', 1501)) filters.range_km_to = v('range_km_to');
             if (vNum('fuel_efficiency_from')) filters.fuel_efficiency_from = v('fuel_efficiency_from');
-            if (vNum('fuel_efficiency_to')) filters.fuel_efficiency_to = v('fuel_efficiency_to');
+            if (vNum('fuel_efficiency_to', 101)) filters.fuel_efficiency_to = v('fuel_efficiency_to');
             if (v('charging_type')) filters.charging_type = v('charging_type');
             if (v('top_speed_from')) filters.top_speed_from = v('top_speed_from');
             if (v('top_speed_to')) filters.top_speed_to = v('top_speed_to');
             if (v('weight_from')) filters.weight_from = v('weight_from');
             if (v('weight_to')) filters.weight_to = v('weight_to');
-            if (v('engine_displacement_from')) filters.engine_displacement_from = v('engine_displacement_from');
-            if (v('engine_displacement_to')) filters.engine_displacement_to = v('engine_displacement_to');
             if (v('engine_cylinders')) filters.engine_cylinders = v('engine_cylinders');
             if (v('doors')) filters.doors = v('doors');
             if (v('seats_min')) filters.seats_min = v('seats_min');

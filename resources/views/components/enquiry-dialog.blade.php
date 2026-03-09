@@ -42,6 +42,16 @@
             'endpoint' => "/vehicles/{$slug}/price-negotiation/submit",
             'errorMessage' => __('messages.dialogs.please_login_price_negotiation'),
         ],
+        'exchange' => [
+            'title' => __('messages.dialogs.exchange_form'),
+            'description' => __('messages.dialogs.exchange_description'),
+            'formTitle' => __('messages.forms.your_details'),
+            'messageLabel' => __('messages.forms.message'),
+            'messagePlaceholder' => __('messages.dialogs.exchange_message_placeholder'),
+            'submitText' => __('messages.dialogs.submit_exchange'),
+            'endpoint' => "/vehicles/{$slug}/exchange/submit",
+            'errorMessage' => __('messages.dialogs.please_login_exchange'),
+        ],
     ];
     
     $config = $formConfig[$type] ?? $formConfig['enquiry'];
@@ -188,6 +198,50 @@
                             >
                         </div>
 
+                        @if($type === 'exchange')
+                        <div class="space-y-2">
+                            <label for="{{ $type }}-licence_plate-{{ $slug }}" class="text-sm font-medium leading-none">
+                                {{ __('messages.forms.licence_plate') }} <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="{{ $type }}-licence_plate-{{ $slug }}" 
+                                name="licence_plate" 
+                                required
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="{{ __('messages.forms.enter_licence_plate') }}"
+                            >
+                        </div>
+                        <div class="space-y-2">
+                            <label for="{{ $type }}-kilometers-{{ $slug }}" class="text-sm font-medium leading-none">
+                                {{ __('messages.forms.kilometres_used') }} <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="{{ $type }}-kilometers-{{ $slug }}" 
+                                name="kilometers" 
+                                required
+                                min="0"
+                                step="1"
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="{{ __('messages.forms.enter_kilometres') }}"
+                            >
+                        </div>
+                        <div class="space-y-2">
+                            <label for="{{ $type }}-expected_price-{{ $slug }}" class="text-sm font-medium leading-none">
+                                {{ __('messages.forms.expected_price') }} <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="{{ $type }}-expected_price-{{ $slug }}" 
+                                name="expected_price" 
+                                required
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="{{ __('messages.forms.enter_expected_price') }}"
+                            >
+                        </div>
+                        @endif
+
                         <div class="space-y-2">
                             <label for="{{ $type }}-message-{{ $slug }}" class="text-sm font-medium leading-none">
                                 {{ $config['messageLabel'] }} <span class="text-red-500">*</span>
@@ -267,6 +321,11 @@
             phone: formData.get('phone'),
             message: formData.get('message'),
         };
+        @if($type === 'exchange')
+        data.licence_plate = formData.get('licence_plate');
+        data.kilometers = formData.get('kilometers');
+        data.expected_price = formData.get('expected_price');
+        @endif
 
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';

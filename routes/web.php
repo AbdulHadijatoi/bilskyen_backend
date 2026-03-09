@@ -67,6 +67,9 @@ Route::post('/vehicles/{vehicle}/test-drive/submit', [\App\Http\Controllers\Enqu
 Route::get('/vehicles/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
 Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
 
+// Exchange Routes - Public (guests can submit exchange requests)
+Route::post('/vehicles/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])->name('vehicles.exchange.submit');
+
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
     // Profile Routes

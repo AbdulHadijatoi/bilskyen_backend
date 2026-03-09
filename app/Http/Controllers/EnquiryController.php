@@ -39,6 +39,7 @@ class EnquiryController extends Controller
             'Email Clicked' => LeadIntent::MEDIUM,
             'Request Test Drive' => LeadIntent::VERY_HIGH,
             'Price Negotiation Request' => LeadIntent::VERY_HIGH,
+            'Exchange Request' => LeadIntent::VERY_HIGH,
             default => null,
         };
     }
@@ -559,6 +560,124 @@ class EnquiryController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Your price negotiation has been submitted successfully. We will get back to you soon.',
+            'data' => [
+                'lead_id' => $lead->id,
+                'enquiry_id' => $enquiry->id,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Submit exchange request form and create lead + enquiry
+     * Allows both authenticated and guest users
+     */
+    public function submitExchangeForm(Request $request, Vehicle $vehicle): JsonResponse
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
+            'licence_plate' => 'required|string|max:20',
+            'kilometers' => 'required|numeric|min:0',
+            'expected_price' => 'required|string|max:50',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $dealerId = $vehicle->dealer_id;
+
+        $sourceName = $this->getSourceName($request);
+        $source = Source::firstOrCreate(['name' => $sourceName]);
+
+        $leadCategory = LeadCategory::where('name', 'Exchange Request')->first();
+        if (!$leadCategory) {
+            $leadCategory = LeadCategory::where('name', 'Enquire')->first();
+        }
+
+        $leadIntentId = $this->getLeadIntentId('Exchange Request');
+
+        if ($user && $validated['name'] !== $user->name) {
+            $user->name = $validated['name'];
+            $user->save();
+        }
+
+        $lead = Lead::create([
+            'vehicle_id' => $vehicle->id,
+            'buyer_user_id' => $user?->id,
+            'dealer_id' => $dealerId,
+            'lead_stage_id' => LeadStage::NEW,
+            'lead_intent_id' => $leadIntentId,
+            'source_id' => $source->id,
+            'lead_category_id' => $leadCategory?->id,
+            'created_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        $enquiryMessage = "Licence plate: {$validated['licence_plate']}\n";
+        $enquiryMessage .= "Kilometres: {$validated['kilometers']}\n";
+        $enquiryMessage .= "Expected price (exchange vehicle): {$validated['expected_price']}\n\n";
+        $enquiryMessage .= "Message:\n{$validated['message']}";
+
+        $enquirySubject = 'Exchange request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
+            'subject' => $enquirySubject,
+            'message' => $enquiryMessage,
+            'type' => 'Trade-In',
+            'status' => Enquiries::STATUSES[0],
+            'source' => $sourceName,
+            'user_id' => $user?->id,
+            'vehicle_id' => $vehicle->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+        ]);
+
+        try {
+            $this->auditLogService->logCreateForGuest(
+                $user,
+                'Lead',
+                $lead->id,
+                $lead->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Lead created for vehicle',
+                ['lead', 'enquiry']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for lead creation', [
+                'lead_id' => $lead->id,
+                'user_id' => $user?->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            $this->auditLogService->logCreateForGuest(
+                $user,
+                'Enquiry',
+                $enquiry->id,
+                $enquiry->toArray(),
+                $request,
+                'Vehicle',
+                $vehicle->id,
+                'Exchange request submitted for vehicle',
+                ['enquiry', 'exchange']
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create audit log for enquiry creation', [
+                'enquiry_id' => $enquiry->id,
+                'user_id' => $user?->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Your exchange request has been submitted successfully. We will get back to you soon.',
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,

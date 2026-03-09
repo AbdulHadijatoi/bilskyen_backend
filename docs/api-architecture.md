@@ -387,6 +387,7 @@ Lead tracking endpoints are **public** (guests and authenticated users can submi
 | POST | `/api/v1/vehicles/{id}/enquiries` | Submit enquiry form (creates lead + enquiry) |
 | POST | `/api/v1/vehicles/{id}/test-drive` | Submit test drive request (creates lead + enquiry) |
 | POST | `/api/v1/vehicles/{id}/price-negotiation` | Submit price negotiation request (creates lead + enquiry) |
+| POST | `/api/v1/vehicles/{id}/exchange` | Submit exchange/trade-in request (creates lead + enquiry) |
 
 **Lead Tracking Request Bodies:**
 
@@ -421,6 +422,19 @@ Lead tracking endpoints are **public** (guests and authenticated users can submi
   }
   ```
 
+- `POST /api/v1/vehicles/{id}/exchange`:
+  ```json
+  {
+    "name": "string",
+    "email": "string",
+    "phone": "string (optional)",
+    "licence_plate": "string",
+    "kilometers": "number",
+    "expected_price": "string",
+    "message": "string"
+  }
+  ```
+
 **Lead Categories and Intents:**
 
 Leads are automatically assigned intent levels based on the action:
@@ -430,6 +444,7 @@ Leads are automatically assigned intent levels based on the action:
 - **Email Clicked**: Medium Intent
 - **Request Test Drive**: Very High Intent
 - **Price Negotiation Request**: Very High Intent
+- **Exchange Request**: Very High Intent
 
 **Source Detection:**
 

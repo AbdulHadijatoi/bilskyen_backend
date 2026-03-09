@@ -124,6 +124,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/{vehicle}/enquiries', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm']);
         Route::post('/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm']);
         Route::post('/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm']);
+        Route::post('/{vehicle}/exchange', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm']);
     });
     
     // Seller Profile API routes (for authenticated sellers)
