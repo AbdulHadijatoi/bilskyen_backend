@@ -93,6 +93,12 @@ return new class extends Migration
                 'created_at' => now(),
             ],
             [
+                'key' => 'max_equipment_per_vehicle',
+                'feature_value_type_id' => $numberTypeId,
+                'description' => 'Maximum number of equipment items selectable per vehicle',
+                'created_at' => now(),
+            ],
+            [
                 'key' => 'upload_3d_view',
                 'feature_value_type_id' => $booleanTypeId,
                 'description' => 'Ability to upload 3D views of vehicles',

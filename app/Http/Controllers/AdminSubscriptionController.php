@@ -6,7 +6,10 @@ use App\Models\DealerSubscription;
 use App\Models\Dealer;
 use App\Models\Plan;
 use App\Models\PlanPriceHistory;
+use App\Models\Vehicle;
 use App\Constants\SubscriptionStatus;
+use App\Constants\VehicleListStatus;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -17,6 +20,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AdminSubscriptionController extends Controller
 {
+    public function __construct(
+        private SubscriptionFeatureService $subscriptionFeatureService
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $query = DealerSubscription::with(['dealer.owner', 'plan', 'subscriptionStatus']);
@@ -123,6 +130,7 @@ class AdminSubscriptionController extends Controller
         ]);
 
         $subscription = DealerSubscription::findOrFail($id);
+        $dealer = $subscription->dealer;
 
         DB::beginTransaction();
         try {
@@ -132,6 +140,13 @@ class AdminSubscriptionController extends Controller
                 'ends_at',
                 'auto_renew'
             ]));
+
+            $this->subscriptionFeatureService->clearCache($dealer);
+
+            $newStatusId = $subscription->fresh()->subscription_status_id;
+            if (in_array($newStatusId, [SubscriptionStatus::CANCELED, SubscriptionStatus::EXPIRED], true)) {
+                $this->handleSubscriptionInactive($dealer);
+            }
 
             DB::commit();
 
@@ -150,21 +165,32 @@ class AdminSubscriptionController extends Controller
         ]);
 
         $subscription = DealerSubscription::findOrFail($id);
+        $dealer = $subscription->dealer;
         $subscription->subscription_status_id = $request->status;
         $subscription->save();
 
-        return $this->success($subscription);
+        $this->subscriptionFeatureService->clearCache($dealer);
+
+        $newStatusId = (int) $request->status;
+        if (in_array($newStatusId, [SubscriptionStatus::CANCELED, SubscriptionStatus::EXPIRED], true)) {
+            $this->handleSubscriptionInactive($dealer);
+        }
+
+        return $this->success($subscription->load(['dealer.owner', 'plan', 'subscriptionStatus']));
     }
 
     public function cancel(int $id): JsonResponse
     {
         $subscription = DealerSubscription::findOrFail($id);
+        $dealer = $subscription->dealer;
 
         DB::beginTransaction();
         try {
             $subscription->update([
                 'subscription_status_id' => SubscriptionStatus::CANCELED,
             ]);
+
+            $this->handleSubscriptionInactive($dealer);
 
             DB::commit();
 
@@ -221,6 +247,17 @@ class AdminSubscriptionController extends Controller
             ->get();
 
         return $this->success($subscriptions);
+    }
+
+    /**
+     * When subscription becomes inactive (canceled or expired): archive all dealer vehicles and clear feature cache.
+     */
+    private function handleSubscriptionInactive(Dealer $dealer): void
+    {
+        Vehicle::where('dealer_id', $dealer->id)->update([
+            'vehicle_list_status_id' => VehicleListStatus::ARCHIVED,
+        ]);
+        $this->subscriptionFeatureService->clearCache($dealer);
     }
 }
 

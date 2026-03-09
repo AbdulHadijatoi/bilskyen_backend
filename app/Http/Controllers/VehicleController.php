@@ -651,6 +651,31 @@ class VehicleController extends Controller
             }
         }
 
+        // Check max_equipment_per_vehicle limit
+        if ($dealer && isset($data['equipment_ids']) && is_array($data['equipment_ids'])) {
+            $equipmentLimit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_equipment_per_vehicle', 999);
+            $equipmentCount = count($data['equipment_ids']);
+            if ($equipmentCount > $equipmentLimit) {
+                return $this->error(
+                    "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
+                    403
+                );
+            }
+        }
+
+        // Check max_vehicle_images limit on create
+        if ($dealer && $request->hasFile('images')) {
+            $images = $request->file('images');
+            $newImageCount = is_array($images) ? count($images) : 1;
+            $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
+            if ($maxImages > 0 && $newImageCount > $maxImages) {
+                return $this->error(
+                    "You may upload at most {$maxImages} images per vehicle. Your plan limit has been exceeded.",
+                    403
+                );
+            }
+        }
+
         // Handle file uploads
         if ($request->hasFile('images')) {
             $data['images'] = $request->file('images');
@@ -741,6 +766,34 @@ class VehicleController extends Controller
         
         // Store before state for audit log
         $beforeState = $vehicle->toArray();
+
+        $dealer = $vehicle->dealer;
+        if ($dealer) {
+            // Check max_equipment_per_vehicle limit when updating equipment
+            if ($request->has('equipment_ids') && is_array($request->equipment_ids)) {
+                $equipmentLimit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_equipment_per_vehicle', 999);
+                $equipmentCount = count($request->equipment_ids);
+                if ($equipmentCount > $equipmentLimit) {
+                    return $this->error(
+                        "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
+                        403
+                    );
+                }
+            }
+
+            // Check max_vehicle_images limit when updating images
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                $newImageCount = is_array($images) ? count($images) : 1;
+                $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
+                if ($maxImages > 0 && $newImageCount > $maxImages) {
+                    return $this->error(
+                        "You may upload at most {$maxImages} images per vehicle. Your plan limit has been exceeded.",
+                        403
+                    );
+                }
+            }
+        }
 
         // Handle file uploads
         if ($request->hasFile('images')) {
@@ -1134,6 +1187,18 @@ class VehicleController extends Controller
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
+        $dealer = $vehicle->dealer;
+
+        if ($dealer) {
+            $equipmentLimit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_equipment_per_vehicle', 999);
+            $equipmentCount = count($request->equipment_ids);
+            if ($equipmentCount > $equipmentLimit) {
+                return $this->error(
+                    "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
+                    403
+                );
+            }
+        }
         
         $oldEquipmentIds = $vehicle->equipment()->pluck('equipments.id')->toArray();
         

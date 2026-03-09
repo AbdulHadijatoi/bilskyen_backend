@@ -79,6 +79,7 @@ return new class extends Migration
             'priority_support' => 'false',
             'analytics' => 'false',
             'max_vehicle_images' => '10',
+            'max_equipment_per_vehicle' => '10',
             'upload_3d_view' => 'false',
         ];
 
@@ -142,6 +143,7 @@ return new class extends Migration
             'priority_support' => 'true',
             'analytics' => 'true',
             'max_vehicle_images' => '20',
+            'max_equipment_per_vehicle' => '30',
             'upload_3d_view' => 'true',
         ];
 
