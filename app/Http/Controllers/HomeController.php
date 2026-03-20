@@ -4,20 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Category;
-use App\Models\Brand;
-use App\Models\VehicleModel;
 use App\Models\ModelYear;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
 use App\Models\GearType;
 use App\Models\FuelType;
+use App\Models\Brand;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Condition;
 use App\Models\SalesType;
+use App\Models\Type;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
+use App\Models\VehicleModel;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
@@ -49,8 +50,6 @@ class HomeController extends Controller
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
             'fuelTypes' => FuelType::orderBy('name')->get(),
-            'brands' => Brand::orderBy('name')->get(),
-            'models' => VehicleModel::orderBy('name')->get(),
             'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
         ];
 
@@ -358,10 +357,34 @@ class HomeController extends Controller
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
         }
 
+        // Because `/api/v1/constants` no longer includes brands/models/types (to reduce load),
+        // we only fetch the currently-selected values for initial dropdown rendering.
+        $selectedBrandIds = array_map(fn ($v) => (int) $v, $currentFilters['brand_id'] ?? []);
+        $selectedModelIds = array_map(fn ($v) => (int) $v, $currentFilters['model_id'] ?? []);
+        $selectedTypeId = isset($currentFilters['type_id']) && $currentFilters['type_id'] !== '' ? (int) $currentFilters['type_id'] : null;
+
+        $selectedBrands = !empty($selectedBrandIds)
+            ? Brand::whereIn('id', $selectedBrandIds)->orderBy('name')->get(['id', 'name'])
+            : collect();
+        $selectedModels = !empty($selectedModelIds)
+            ? VehicleModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
+            : collect();
+        $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
+
         $constants = $this->lookupService->getPublicConstants();
         $seo = $this->seoService->getForPage('listing', 'vehicles');
 
-        return view('vehicles', compact('vehicles', 'constants', 'currentFilters', 'seo', 'showNoResultsMessage', 'fallbackVehicles'));
+        return view('vehicles', compact(
+            'vehicles',
+            'constants',
+            'currentFilters',
+            'seo',
+            'showNoResultsMessage',
+            'fallbackVehicles',
+            'selectedBrands',
+            'selectedModels',
+            'selectedType'
+        ));
     }
 
     /**

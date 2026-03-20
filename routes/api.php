@@ -41,6 +41,12 @@ Route::prefix('v1')->group(function () {
     
     // Constants API - Get all lookup tables data
     Route::get('/constants', [LookupController::class, 'constants'])->name('constants');
+
+    // Public lookup search endpoints (partial datasets to reduce `/constants` load)
+    Route::get('/brands', [LookupController::class, 'searchBrands'])->name('lookup.brands');
+    Route::get('/models', [LookupController::class, 'searchModels'])->name('lookup.models');
+    Route::get('/types', [LookupController::class, 'searchTypes'])->name('lookup.types');
+    Route::get('/variants', [LookupController::class, 'searchVariants'])->name('lookup.variants');
     
     // Home Page Content API (public, uses cache)
     Route::get('/home-page-content', [HomePageContentController::class, 'getHomePageContent'])->name('home-page-content');

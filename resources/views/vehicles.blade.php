@@ -170,8 +170,8 @@
             @php
                 $selectedBrandIds = isset($cf['brand_id']) ? (is_array($cf['brand_id']) ? $cf['brand_id'] : [$cf['brand_id']]) : [];
                 $selectedModelIds = isset($cf['model_id']) ? (is_array($cf['model_id']) ? $cf['model_id'] : [$cf['model_id']]) : [];
-                $brandsList = $constants['brands'] ?? [];
-                $modelsList = $constants['models'] ?? [];
+                $brandsList = $selectedBrands ?? [];
+                $modelsList = $selectedModels ?? [];
                 $selectedBrandNames = collect($brandsList)->filter(fn($b) => in_array(is_array($b) ? $b['id'] : $b->id, $selectedBrandIds))->map(fn($b) => is_array($b) ? $b['name'] : $b->name)->values()->all();
                 $selectedModelNames = collect($modelsList)->filter(fn($m) => in_array(is_array($m) ? $m['id'] : $m->id, $selectedModelIds))->map(fn($m) => is_array($m) ? $m['name'] : $m->name)->values()->all();
             @endphp
@@ -190,13 +190,22 @@
                             <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                         </button>
                         <div id="brand-dropdown-panel" class="brand-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                            <div class="p-2 border-b border-border">
+                                <input
+                                    type="text"
+                                    id="brand-search-input"
+                                    placeholder="{{ __('messages.forms.search_brand') }}"
+                                    class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    autocomplete="off"
+                                >
+                            </div>
                             <div id="brand-checkbox-list" class="p-2 space-y-0.5">
-                                @foreach($constants['brands'] ?? [] as $b)
-                                @php $bid = is_array($b) ? $b['id'] : $b->id; $bname = is_array($b) ? $b['name'] : $b->name; @endphp
-                                <label class="brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
-                                    <input type="checkbox" name="brand_id[]" value="{{ $bid }}" class="brand-checkbox rounded border-input" @if(in_array($bid, $selectedBrandIds)) checked @endif>
-                                    <span>{{ $bname }}</span>
-                                </label>
+                                @foreach($selectedBrands ?? [] as $b)
+                                    @php $bid = is_array($b) ? $b['id'] : $b->id; $bname = is_array($b) ? $b['name'] : $b->name; @endphp
+                                    <label class="brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
+                                        <input type="checkbox" name="brand_id[]" value="{{ $bid }}" class="brand-checkbox rounded border-input" checked>
+                                        <span>{{ $bname }}</span>
+                                    </label>
                                 @endforeach
                             </div>
                         </div>
@@ -210,13 +219,22 @@
                             <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                         </button>
                         <div id="model-dropdown-panel" class="model-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                            <div class="p-2 border-b border-border">
+                                <input
+                                    type="text"
+                                    id="model-search-input"
+                                    placeholder="{{ __('messages.forms.search_model') }}"
+                                    class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    autocomplete="off"
+                                >
+                            </div>
                             <div id="model-checkbox-list" class="p-2 space-y-0.5">
-                                @foreach($constants['models'] ?? [] as $m)
-                                @php $mid = is_array($m) ? $m['id'] : $m->id; $mname = is_array($m) ? $m['name'] : $m->name; $mBrandId = is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id; @endphp
-                                <label class="model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-brand-id="{{ $mBrandId }}">
-                                    <input type="checkbox" name="model_id[]" value="{{ $mid }}" class="model-checkbox rounded border-input" @if(in_array($mid, $selectedModelIds)) checked @endif>
-                                    <span class="model-checkbox-name">{{ $mname }}</span>
-                                </label>
+                                @foreach($selectedModels ?? [] as $m)
+                                    @php $mid = is_array($m) ? $m['id'] : $m->id; $mname = is_array($m) ? $m['name'] : $m->name; $mBrandId = is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id; @endphp
+                                    <label class="model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-brand-id="{{ $mBrandId }}">
+                                        <input type="checkbox" name="model_id[]" value="{{ $mid }}" class="model-checkbox rounded border-input" checked>
+                                        <span class="model-checkbox-name">{{ $mname }}</span>
+                                    </label>
                                 @endforeach
                             </div>
                         </div>
@@ -356,11 +374,18 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.type') }}</label>
-                            <select name="type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <input
+                                type="text"
+                                id="type-search-input"
+                                placeholder="{{ __('messages.common.search') }}"
+                                class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary mb-2"
+                                autocomplete="off"
+                            >
+                            <select name="type_id" id="type-select" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['types'] ?? [] as $t)
-                                <option value="{{ is_array($t) ? $t['id'] : $t->id }}" @if(isset($cf['type_id']) && (is_array($t) ? $t['id'] : $t->id) == $cf['type_id']) selected @endif>{{ is_array($t) ? $t['name'] : $t->name }}</option>
-                                @endforeach
+                                @if($selectedType)
+                                    <option value="{{ $selectedType->id }}" selected>{{ $selectedType->name }}</option>
+                                @endif
                             </select>
                         </div>
                         <div>
@@ -3260,6 +3285,272 @@ if (config) {
             });
         }
 
+        // Partial lookup search (brands/models/types) - avoids loading full tables.
+        const LOOKUP_LIMIT = 25;
+        let brandLookupToken = 0;
+        let modelLookupToken = 0;
+        let typeLookupToken = 0;
+
+        function getSelectedBrandMeta() {
+            const meta = {};
+            Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).forEach(cb => {
+                const label = cb.closest('label');
+                const span = label ? (label.querySelector('span:last-child') || label.querySelector('span')) : null;
+                meta[String(cb.value)] = span ? span.textContent.trim() : String(cb.value);
+            });
+            return meta;
+        }
+
+        function getSelectedModelMeta() {
+            const meta = {};
+            Array.from(document.querySelectorAll('input[name="model_id[]"]:checked')).forEach(cb => {
+                const label = cb.closest('label');
+                const span = label ? (label.querySelector('.model-checkbox-name') || label.querySelector('span')) : null;
+                const brandId = label ? String(label.getAttribute('data-brand-id') || '') : '';
+                meta[String(cb.value)] = {
+                    text: span ? span.textContent.trim() : String(cb.value),
+                    brandId
+                };
+            });
+            return meta;
+        }
+
+        async function refreshBrandsFromApi(searchTerm) {
+            const list = document.getElementById('brand-checkbox-list');
+            if (!list) return;
+
+            const selectedMeta = getSelectedBrandMeta();
+            const selectedIds = new Set(Object.keys(selectedMeta));
+
+            const token = ++brandLookupToken;
+            const term = (searchTerm || '').trim();
+
+            const url = new URL('/api/v1/brands', window.location.origin);
+            url.searchParams.set('limit', String(LOOKUP_LIMIT));
+            if (term !== '') url.searchParams.set('search', term);
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) return;
+                const json = await response.json().catch(() => ({}));
+                if (token !== brandLookupToken) return;
+
+                const items = json?.data?.items || [];
+                list.innerHTML = '';
+
+                const resultsIds = new Set();
+                items.forEach(item => {
+                    const id = String(item.id);
+                    resultsIds.add(id);
+
+                    const label = document.createElement('label');
+                    label.className = 'brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'brand_id[]';
+                    input.value = id;
+                    input.className = 'brand-checkbox rounded border-input';
+                    input.checked = selectedIds.has(id);
+
+                    const span = document.createElement('span');
+                    span.textContent = item.name;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                // Keep selected brands visible even if they don't match current search.
+                Object.keys(selectedMeta).forEach(id => {
+                    if (resultsIds.has(id)) return;
+                    const label = document.createElement('label');
+                    label.className = 'brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'brand_id[]';
+                    input.value = id;
+                    input.className = 'brand-checkbox rounded border-input';
+                    input.checked = true;
+
+                    const span = document.createElement('span');
+                    span.textContent = selectedMeta[id];
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                updateBrandDropdownLabel();
+                filterModelListByBrands();
+            } catch (e) {
+                console.debug('Brand lookup failed:', e);
+            }
+        }
+
+        async function refreshModelsFromApi(searchTerm) {
+            const list = document.getElementById('model-checkbox-list');
+            if (!list) return;
+
+            const selectedMeta = getSelectedModelMeta();
+            const selectedIds = new Set(Object.keys(selectedMeta));
+            const selectedBrandIds = Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
+
+            const token = ++modelLookupToken;
+            const term = (searchTerm || '').trim();
+
+            const url = new URL('/api/v1/models', window.location.origin);
+            url.searchParams.set('limit', String(LOOKUP_LIMIT));
+            if (term !== '') url.searchParams.set('search', term);
+            if (selectedBrandIds.length > 0) url.searchParams.set('brand_ids', selectedBrandIds.join(','));
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) return;
+                const json = await response.json().catch(() => ({}));
+                if (token !== modelLookupToken) return;
+
+                const items = json?.data?.items || [];
+                list.innerHTML = '';
+
+                const resultsIds = new Set();
+                items.forEach(item => {
+                    const id = String(item.id);
+                    resultsIds.add(id);
+
+                    const label = document.createElement('label');
+                    label.className = 'model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-brand-id', String(item.brand_id || ''));
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'model_id[]';
+                    input.value = id;
+                    input.className = 'model-checkbox rounded border-input';
+                    input.checked = selectedIds.has(id);
+
+                    const span = document.createElement('span');
+                    span.className = 'model-checkbox-name';
+                    span.textContent = item.name;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                // Keep selected models visible even if they don't match current search.
+                Object.keys(selectedMeta).forEach(id => {
+                    if (resultsIds.has(id)) return;
+                    const meta = selectedMeta[id];
+
+                    const label = document.createElement('label');
+                    label.className = 'model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-brand-id', String(meta.brandId || ''));
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'model_id[]';
+                    input.value = id;
+                    input.className = 'model-checkbox rounded border-input';
+                    input.checked = true;
+
+                    const span = document.createElement('span');
+                    span.className = 'model-checkbox-name';
+                    span.textContent = meta.text;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                updateModelDropdownLabel();
+                filterModelListByBrands();
+            } catch (e) {
+                console.debug('Model lookup failed:', e);
+            }
+        }
+
+        async function refreshTypesFromApi(searchTerm) {
+            const typeSelect = document.getElementById('type-select');
+            if (!typeSelect) return;
+
+            const currentValue = typeSelect.value || '';
+            const currentText = typeSelect.querySelector(`option[value="${currentValue}"]`)?.textContent?.trim() || '';
+
+            const token = ++typeLookupToken;
+            const term = (searchTerm || '').trim();
+
+            // If empty search, just keep current selection (plus "All").
+            if (term === '') {
+                typeSelect.innerHTML = '';
+                const allOpt = document.createElement('option');
+                allOpt.value = '';
+                allOpt.textContent = '{{ __("messages.common.all") }}';
+                typeSelect.appendChild(allOpt);
+
+                if (currentValue !== '' && currentText) {
+                    const opt = document.createElement('option');
+                    opt.value = currentValue;
+                    opt.textContent = currentText;
+                    opt.selected = true;
+                    typeSelect.appendChild(opt);
+                }
+                return;
+            }
+
+            const url = new URL('/api/v1/types', window.location.origin);
+            url.searchParams.set('limit', String(LOOKUP_LIMIT));
+            url.searchParams.set('search', term);
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) return;
+                const json = await response.json().catch(() => ({}));
+                if (token !== typeLookupToken) return;
+
+                const items = json?.data?.items || [];
+
+                typeSelect.innerHTML = '';
+                const allOpt = document.createElement('option');
+                allOpt.value = '';
+                allOpt.textContent = '{{ __("messages.common.all") }}';
+                typeSelect.appendChild(allOpt);
+
+                const resultsIds = new Set();
+                items.forEach(item => {
+                    const id = String(item.id);
+                    resultsIds.add(id);
+
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = item.name;
+                    if (String(currentValue) === id) opt.selected = true;
+                    typeSelect.appendChild(opt);
+                });
+
+                // Ensure the current selection stays in the dropdown even if it doesn't match results.
+                if (currentValue !== '' && !resultsIds.has(String(currentValue))) {
+                    const opt = document.createElement('option');
+                    opt.value = String(currentValue);
+                    opt.textContent = currentText || String(currentValue);
+                    opt.selected = true;
+                    typeSelect.appendChild(opt);
+                }
+            } catch (e) {
+                console.debug('Type lookup failed:', e);
+            }
+        }
+
         // Update brand dropdown trigger label from checked checkboxes
         function updateBrandDropdownLabel() {
             const labelEl = document.getElementById('brand-dropdown-label');
@@ -3301,6 +3592,8 @@ if (config) {
             const modelPanel = document.getElementById('model-dropdown-panel');
             const fuelTypeTrigger = document.getElementById('fuel-type-dropdown-trigger');
             const fuelTypePanel = document.getElementById('fuel-type-dropdown-panel');
+            const brandSearchInput = document.getElementById('brand-search-input');
+            const modelSearchInput = document.getElementById('model-search-input');
 
             function closeAll() {
                 if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
@@ -3319,6 +3612,7 @@ if (config) {
                         brandTrigger.setAttribute('aria-expanded', 'true');
                         const chev = brandTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
+                        refreshBrandsFromApi(brandSearchInput ? brandSearchInput.value : '');
                     }
                 });
             }
@@ -3332,6 +3626,7 @@ if (config) {
                         modelTrigger.setAttribute('aria-expanded', 'true');
                         const chev = modelTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
+                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
                     }
                 });
             }
@@ -3354,15 +3649,53 @@ if (config) {
                 panel.addEventListener('click', (e) => e.stopPropagation());
             });
 
-            document.querySelectorAll('.brand-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateBrandDropdownLabel);
-            });
-            document.querySelectorAll('.model-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateModelDropdownLabel);
-            });
+            // Use delegation for dynamically injected brand/model checkboxes.
+            if (brandPanel) {
+                const brandList = brandPanel.querySelector('#brand-checkbox-list');
+                if (brandList) {
+                    brandList.addEventListener('change', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('brand-checkbox')) updateBrandDropdownLabel();
+                    });
+                }
+            }
+            if (modelPanel) {
+                const modelList = modelPanel.querySelector('#model-checkbox-list');
+                if (modelList) {
+                    modelList.addEventListener('change', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('model-checkbox')) updateModelDropdownLabel();
+                    });
+                }
+            }
+
             document.querySelectorAll('.fuel-type-checkbox').forEach(cb => {
                 cb.addEventListener('change', updateFuelTypeDropdownLabel);
             });
+
+            // Brand/model search inputs (debounced).
+            if (brandSearchInput) {
+                let t = null;
+                brandSearchInput.addEventListener('input', () => {
+                    clearTimeout(t);
+                    t = setTimeout(() => refreshBrandsFromApi(brandSearchInput.value), 300);
+                });
+            }
+            if (modelSearchInput) {
+                let t = null;
+                modelSearchInput.addEventListener('input', () => {
+                    clearTimeout(t);
+                    t = setTimeout(() => refreshModelsFromApi(modelSearchInput.value), 300);
+                });
+            }
+
+            // Type dropdown search.
+            const typeSearchInput = document.getElementById('type-search-input');
+            if (typeSearchInput) {
+                let t = null;
+                typeSearchInput.addEventListener('input', () => {
+                    clearTimeout(t);
+                    t = setTimeout(() => refreshTypesFromApi(typeSearchInput.value), 300);
+                });
+            }
         }
 
         // Set up auto-apply listeners for all filter inputs
@@ -3374,17 +3707,20 @@ if (config) {
                 radio.addEventListener('change', autoApplyFilters);
             });
             
-            // Checkboxes (body type, fuel type, gear type, equipment, etc.)
-            filterSidebar.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', autoApplyFilters);
-            });
-            
-            // Brand checkboxes: filter visible models by selected brands
-            filterSidebar.querySelectorAll('.brand-checkbox').forEach(cb => {
-                cb.addEventListener('change', () => {
-                    filterModelListByBrands();
+            // Checkboxes (use event delegation to support dynamically injected items)
+            filterSidebar.addEventListener('change', (e) => {
+                const target = e.target;
+                if (!(target instanceof Element)) return;
+
+                if (target.matches('input[type="checkbox"]')) {
+                    // If brand changed, refresh model suggestions based on the new selection.
+                    if (target.classList.contains('brand-checkbox')) {
+                        filterModelListByBrands();
+                        const modelSearchInput = document.getElementById('model-search-input');
+                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
+                    }
                     autoApplyFilters();
-                });
+                }
             });
             
             // Select dropdowns
