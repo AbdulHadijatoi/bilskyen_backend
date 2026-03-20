@@ -217,9 +217,7 @@
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
                                 <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
-                                @foreach($filterOptions['brands'] as $brand)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $brand->id }}" data-text="{{ $brand->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $brand->name }}</button>
-                                @endforeach
+                                <!-- Options loaded on-demand via /api/v1/brands -->
                             </div>
                         </div>
                         <div class="dropdown-values-container" data-name="brand_id[]"></div>
@@ -239,9 +237,7 @@
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
                                 <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
-                                @foreach($filterOptions['models'] as $model)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $model->id }}" data-text="{{ $model->name }}" data-brand-id="{{ $model->brand_id }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $model->name }}</button>
-                                @endforeach
+                                <!-- Options loaded on-demand via /api/v1/models -->
                             </div>
                         </div>
                         <div class="dropdown-values-container" data-name="model_id[]"></div>
@@ -911,8 +907,11 @@
             
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    if (dropdownType === 'model') {
+                    const rawTerm = e.target.value || '';
+                    const searchTerm = rawTerm.toLowerCase();
+                    if (dropdownType === 'brand') {
+                        loadBrandOptions(rawTerm);
+                    } else if (dropdownType === 'model') {
                         const brandDropdown = document.querySelector('[data-dropdown="brand"]');
                         const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
                         filterModelsByBrand(brandIds);
@@ -926,30 +925,38 @@
             }
             
             if (dropdownType !== 'price' && dropdownType !== 'km_driven') {
-                options.forEach(option => {
-                    option.addEventListener('click', () => {
+                const optionsContainer = dropdown.querySelector('.dropdown-options');
+                if (optionsContainer) {
+                    optionsContainer.addEventListener('click', (evt) => {
+                        const option = evt.target.closest('.dropdown-option');
+                        if (!option) return;
+                        evt.preventDefault();
+                        evt.stopPropagation();
+
                         const value = option.getAttribute('data-value');
                         const text = option.getAttribute('data-text') || option.textContent.trim();
-                        
+
                         if (isMultiSelect) {
                             if (value === '') {
-                                options.forEach(opt => opt.classList.remove('selected'));
+                                dropdown.querySelectorAll('.dropdown-option.selected').forEach(opt => opt.classList.remove('selected'));
                                 syncMultiSelectInputs(dropdown);
                                 updateMultiSelectButtonText(dropdown);
                                 if (dropdownType === 'brand') filterModelsByBrand([]);
                                 menu.classList.add('hidden');
                                 return;
                             }
+
                             option.classList.toggle('selected');
                             syncMultiSelectInputs(dropdown);
                             updateMultiSelectButtonText(dropdown);
+
                             if (dropdownType === 'brand') {
                                 const brandIds = getMultiSelectValues(dropdown);
                                 filterModelsByBrand(brandIds);
                             }
                             return;
                         }
-                        
+
                         if (valuesContainer) {
                             valuesContainer.innerHTML = '';
                             if (value) {
@@ -961,7 +968,7 @@
                                 valuesContainer.appendChild(input);
                             }
                         }
-                        
+
                         if (value === '') {
                             selectedText.textContent = DEFAULT_DROPDOWN_LABELS[dropdownType] || '{{ __('messages.common.select') }}';
                         } else {
@@ -970,7 +977,7 @@
                         if (dropdownType === 'brand') filterModelsByBrand(value);
                         menu.classList.add('hidden');
                     });
-                });
+                }
             }
             
             // Update selected text for price and km_driven when range changes
@@ -1025,62 +1032,241 @@
         });
     }
     
-    // Filter models by brand(s)
+    const LOOKUP_LIMIT = 25;
+    let brandsFetchToken = 0;
+    let modelsFetchToken = 0;
+
+    async function loadBrandOptions(searchTerm) {
+        const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+        if (!brandDropdown) return;
+
+        const optionsContainer = brandDropdown.querySelector('.dropdown-options');
+        if (!optionsContainer) return;
+
+        const defaultOption = brandDropdown.querySelector('.dropdown-option[data-value=""]');
+
+        // Preserve current selections across re-renders.
+        const selectedMeta = {};
+        brandDropdown.querySelectorAll('.dropdown-option.selected[data-value]:not([data-value=""])').forEach(opt => {
+            const id = String(opt.getAttribute('data-value'));
+            selectedMeta[id] = {
+                text: opt.getAttribute('data-text') || opt.textContent.trim()
+            };
+        });
+
+        brandsFetchToken++;
+        const token = brandsFetchToken;
+
+        const term = (searchTerm || '').trim();
+        const url = new URL('/api/v1/brands', window.location.origin);
+        if (term !== '') url.searchParams.set('search', term);
+        url.searchParams.set('limit', String(LOOKUP_LIMIT));
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) return;
+            const json = await response.json().catch(() => ({}));
+            if (token !== brandsFetchToken) return;
+
+            const items = json?.data?.items || [];
+
+            // Remove previous non-default options.
+            optionsContainer.querySelectorAll('.dropdown-option').forEach(opt => {
+                if (defaultOption && opt === defaultOption) return;
+                if (opt.getAttribute('data-value') === '') return;
+                opt.remove();
+            });
+
+            const resultsIds = new Set();
+
+            items.forEach(item => {
+                const id = String(item.id);
+                resultsIds.add(id);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                btn.setAttribute('data-value', id);
+                btn.setAttribute('data-text', item.name);
+
+                const check = document.createElement('span');
+                check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                check.textContent = '✓';
+
+                btn.appendChild(check);
+                btn.appendChild(document.createTextNode(item.name));
+
+                if (selectedMeta[id]) btn.classList.add('selected');
+                optionsContainer.appendChild(btn);
+            });
+
+            // Ensure selected items remain visible even if they don't match current search term.
+            Object.keys(selectedMeta).forEach(id => {
+                if (resultsIds.has(id)) return;
+                const meta = selectedMeta[id];
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                btn.setAttribute('data-value', id);
+                btn.setAttribute('data-text', meta.text);
+
+                const check = document.createElement('span');
+                check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                check.textContent = '✓';
+
+                btn.appendChild(check);
+                btn.appendChild(document.createTextNode(meta.text));
+
+                btn.classList.add('selected');
+                optionsContainer.appendChild(btn);
+            });
+
+            syncMultiSelectInputs(brandDropdown);
+            updateMultiSelectButtonText(brandDropdown);
+        } catch (e) {
+            // Silently fail - dropdown can still function without brand suggestions.
+            console.debug('Brand lookup failed:', e);
+        }
+    }
+
+    // Filter models by brand(s) + search (remote, partial dataset)
     function filterModelsByBrand(brandIds) {
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (!modelDropdown) return;
-        
+
         const modelButton = document.getElementById('model-dropdown-button');
-        const modelOptions = modelDropdown.querySelectorAll('.dropdown-option[data-brand-id]');
+        const optionsContainer = modelDropdown.querySelector('.dropdown-options');
         const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
         const selectedText = modelDropdown.querySelector('.dropdown-selected');
         const searchInput = modelDropdown.querySelector('.dropdown-search');
-        const searchTerm = searchInput?.value.toLowerCase() || '';
+
+        const searchTerm = (searchInput?.value || '').trim();
         const ids = Array.isArray(brandIds) ? brandIds : (brandIds === '' || !brandIds ? [] : [String(brandIds)]);
-        
+        const brandIdSet = new Set(ids.map(String));
+
+        // No brand selected => disable and clear model options.
         if (ids.length === 0) {
             if (modelButton) modelButton.disabled = true;
             if (selectedText) selectedText.textContent = '{{ __('messages.forms.model') }}';
+
+            // Clear selections + options (keep only the default option).
+            modelDropdown.querySelectorAll('.dropdown-option').forEach(opt => {
+                if (!opt) return;
+                if (opt.getAttribute('data-value') === '') return;
+                opt.classList.remove('selected');
+                opt.remove();
+            });
+
             syncMultiSelectInputs(modelDropdown);
-            modelDropdown.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
             updateMultiSelectButtonText(modelDropdown);
-            modelOptions.forEach(option => option.style.display = 'none');
+
             const menu = modelDropdown.querySelector('.dropdown-menu');
             if (menu) menu.classList.add('hidden');
             return;
         }
-        
+
         if (modelButton) modelButton.disabled = false;
-        if (selectedText && getMultiSelectValues(modelDropdown).length === 0) {
-            selectedText.textContent = '{{ __('messages.forms.model') }}';
-        }
-        
-        const idSet = new Set(ids.map(String));
-        modelOptions.forEach(option => {
-            const optionBrandId = option.getAttribute('data-brand-id');
-            const text = (option.getAttribute('data-text') || option.textContent).toLowerCase();
-            const matchesBrand = idSet.has(optionBrandId);
-            const matchesSearch = !searchTerm || text.includes(searchTerm);
-            option.style.display = (matchesBrand && matchesSearch) ? '' : 'none';
+
+        // Preserve currently selected models that match the allowed brands.
+        const selectedMeta = {};
+        modelDropdown.querySelectorAll('.dropdown-option.selected[data-value]:not([data-value=""])').forEach(opt => {
+            const id = String(opt.getAttribute('data-value'));
+            const bId = String(opt.getAttribute('data-brand-id') || '');
+            if (!brandIdSet.has(bId)) return;
+            selectedMeta[id] = {
+                text: opt.getAttribute('data-text') || opt.textContent.trim(),
+                brandId: bId
+            };
         });
-        
-        if (defaultOption) defaultOption.style.display = '';
-        
-        const currentValues = getMultiSelectValues(modelDropdown);
-        if (currentValues.length > 0) {
-            const toRemove = [];
-            modelOptions.forEach(opt => {
-                if (opt.classList.contains('selected')) {
-                    const optionBrandId = opt.getAttribute('data-brand-id');
-                    if (!idSet.has(optionBrandId)) toRemove.push(opt);
+
+        modelsFetchToken++;
+        const token = modelsFetchToken;
+
+        const url = new URL('/api/v1/models', window.location.origin);
+        url.searchParams.set('limit', String(LOOKUP_LIMIT));
+        if (searchTerm !== '') url.searchParams.set('search', searchTerm);
+        url.searchParams.set('brand_ids', ids.join(','));
+
+        fetch(url.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+            .then(r => r.ok ? r.json() : null)
+            .then(json => {
+                if (!json || token !== modelsFetchToken) return;
+                const items = json?.data?.items || [];
+
+                // Remove previous non-default options.
+                if (optionsContainer) {
+                    optionsContainer.querySelectorAll('.dropdown-option').forEach(opt => {
+                        if (defaultOption && opt === defaultOption) return;
+                        if (opt.getAttribute('data-value') === '') return;
+                        opt.remove();
+                    });
                 }
-            });
-            toRemove.forEach(opt => opt.classList.remove('selected'));
-            if (toRemove.length) {
+
+                const resultsIds = new Set();
+
+                items.forEach(item => {
+                    const id = String(item.id);
+                    resultsIds.add(id);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                    btn.setAttribute('data-value', id);
+                    btn.setAttribute('data-text', item.name);
+                    btn.setAttribute('data-brand-id', String(item.brand_id));
+
+                    const check = document.createElement('span');
+                    check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                    check.textContent = '✓';
+
+                    btn.appendChild(check);
+                    btn.appendChild(document.createTextNode(item.name));
+
+                    if (selectedMeta[id]) btn.classList.add('selected');
+                    if (optionsContainer) optionsContainer.appendChild(btn);
+                });
+
+                // Ensure selected models remain visible even if they don't match search term.
+                Object.keys(selectedMeta).forEach(id => {
+                    if (resultsIds.has(id)) return;
+                    const meta = selectedMeta[id];
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                    btn.setAttribute('data-value', id);
+                    btn.setAttribute('data-text', meta.text);
+                    btn.setAttribute('data-brand-id', meta.brandId);
+
+                    const check = document.createElement('span');
+                    check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                    check.textContent = '✓';
+
+                    btn.appendChild(check);
+                    btn.appendChild(document.createTextNode(meta.text));
+
+                    btn.classList.add('selected');
+                    if (optionsContainer) optionsContainer.appendChild(btn);
+                });
+
                 syncMultiSelectInputs(modelDropdown);
                 updateMultiSelectButtonText(modelDropdown);
-            }
-        }
+
+                // If user typed a search term, keep the filtered model options open.
+                const menu = modelDropdown.querySelector('.dropdown-menu');
+                if (menu && !menu.classList.contains('hidden')) {
+                    menu.classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                console.debug('Model lookup failed:', err);
+            });
     }
     
     // Range Slider for Price and KM Driven dropdowns

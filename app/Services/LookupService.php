@@ -205,27 +205,122 @@ class LookupService
         });
     }
 
+    private function normalizeSearchLimit(int $limit): int
+    {
+        $limit = max(1, $limit);
+        // Hard cap to keep dropdown searches cheap.
+        return min(50, $limit);
+    }
+
+    /**
+     * Brands dropdown search (no full-table caching).
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchBrands(?string $search, int $limit): array
+    {
+        $limit = $this->normalizeSearchLimit($limit);
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = Brand::query()->select(['id', 'name'])->orderBy('name');
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (Brand $b) => ['id' => $b->id, 'name' => $b->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Models dropdown search (optionally constrained by brand_ids).
+     *
+     * @param array<int,int> $brandIds
+     * @return array<int, array{id:int,name:string,brand_id:int}>
+     */
+    public function searchModels(?string $search, array $brandIds, int $limit): array
+    {
+        $limit = $this->normalizeSearchLimit($limit);
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = VehicleModel::query()->select(['id', 'name', 'brand_id'])->orderBy('name');
+        if (!empty($brandIds)) {
+            $query->whereIn('brand_id', $brandIds);
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (VehicleModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Types dropdown search.
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchTypes(?string $search, int $limit): array
+    {
+        $limit = $this->normalizeSearchLimit($limit);
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = Type::query()->select(['id', 'name'])->orderBy('name');
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (Type $t) => ['id' => $t->id, 'name' => $t->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Variants dropdown search (optionally constrained by model_ids).
+     *
+     * @param array<int,int> $modelIds
+     * @return array<int, array{id:int,name:string,model_id:int}>
+     */
+    public function searchVariants(?string $search, array $modelIds, int $limit): array
+    {
+        $limit = $this->normalizeSearchLimit($limit);
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = Variant::query()->select(['id', 'name', 'model_id'])->orderBy('name');
+        if (!empty($modelIds)) {
+            $query->whereIn('model_id', $modelIds);
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (Variant $v) => ['id' => $v->id, 'name' => $v->name, 'model_id' => $v->model_id])
+            ->values()
+            ->all();
+    }
+
     /**
      * Return all constants for the public API (minimal fields: id, name; models with brand_id).
      */
     public function getPublicConstants(): array
     {
         return [
-            'brands' => $this->getBrands()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'model_years' => $this->getModelYears()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'fuel_types' => $this->getFuelTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'gear_types' => $this->getGearTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'listing_types' => $this->getListingTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'body_types' => $this->getBodyTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'colors' => $this->getColors()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
-            'variants' => $this->getVariants()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
-            'types' => $this->getTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'conditions' => $this->getConditions()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'sales_types' => $this->getSalesTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'price_types' => $this->getPriceTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'euronorms' => $this->getEuronorms()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'vehicle_uses' => $this->getVehicleUses()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
-            'models' => $this->getVehicleModels()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id]),
             'equipment_types' => $this->getEquipmentTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'equipments' => $this->getEquipments()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'equipment_type_id' => $m->equipment_type_id]),
             'transmissions' => $this->getTransmissions()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
