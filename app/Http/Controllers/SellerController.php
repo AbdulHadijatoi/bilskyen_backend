@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Enquiry;
 use App\Models\ListingViewsLog;
-use App\Models\VehicleDetail;
 use App\Models\VehicleImage;
 use App\Models\Brand;
 use App\Models\VehicleModel;
@@ -59,7 +58,7 @@ class SellerController extends Controller
         $vehicles = Vehicle::where('user_id', $user->id)
             ->with(['images' => function ($q) {
                 $q->orderBy('sort_order');
-            }, 'details'])
+            }, 'dmrFactVehicle.variant.model.brand'])
             ->withCount(['enquiries as enquiries_count', 'viewLogs as views_count'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -73,12 +72,6 @@ class SellerController extends Controller
             'total_inquiries' => Enquiry::whereIn('vehicle_id', $vehicleIds)->count(),
             'total_views' => ListingViewsLog::whereIn('vehicle_id', $vehicleIds)->count(),
         ];
-
-        // Also get views from vehicle_details for more accurate count
-        $viewsFromDetails = VehicleDetail::whereIn('vehicle_id', $vehicleIds)->sum('views_count');
-        if ($viewsFromDetails > $statistics['total_views']) {
-            $statistics['total_views'] = $viewsFromDetails;
-        }
 
         // Get all enquiries for display
         $enquiries = Enquiry::whereIn('vehicle_id', $vehicleIds)
@@ -114,11 +107,10 @@ class SellerController extends Controller
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'details',
             'equipment',
-            'details.color',
-            'details.variant',
-            'details.euronom'
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.emissionNorm',
+            'dmrFactVehicle.colour',
         ])->findOrFail($id);
         
         if ($vehicle->user_id !== $user->id) {
@@ -153,7 +145,7 @@ class SellerController extends Controller
         }
 
         // Get vehicle and verify ownership
-        $vehicle = Vehicle::with(['images', 'details', 'equipment'])->findOrFail($id);
+        $vehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle.variant.model.brand'])->findOrFail($id);
         
         if ($vehicle->user_id !== $user->id) {
             return response()->json([
@@ -432,7 +424,7 @@ class SellerController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => __('messages.errors.vehicle_updated_success'),
-                'vehicle' => $updatedVehicle->load(['images', 'details', 'equipment']),
+                'vehicle' => $updatedVehicle->load(['images', 'equipment', 'dmrFactVehicle.variant.model.brand']),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([

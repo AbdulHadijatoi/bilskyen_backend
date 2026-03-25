@@ -2,84 +2,57 @@
 
 namespace App\Models;
 
+use App\ViewModels\VehicleDetailPresenter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use App\Models\Enquiry;
 
 class Vehicle extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Static cache for lookup data (in-memory cache)
-     */
     private static array $lookupCache = [];
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
+        'dmr_fact_vehicle_id',
+        'user_id',
+        'dealer_id',
         'title',
         'slug',
         'registration',
-        'vin',
-        'dealer_id',
-        'user_id',
-        'category_id',
-        'brand_id',
-        'model_id',
-        'model_year_id',
-        'km_driven',
-        'fuel_type_id',
         'price',
+        'vehicle_list_status_id',
+        'published_at',
+        'description',
+        'address',
+        'postcode',
+        'gear_type_id',
+        'km_driven',
         'battery_capacity',
         'range_km',
         'charging_type',
-        'engine_power',
-        'towing_weight',
-        'ownership_tax',
-        'first_registration_date',
-        'version',
-        'gear_type_id',
-        'fuel_efficiency',
-        'vehicle_list_status_id',
-        'listing_type_id',
-        'published_at',
-        'seller_address',
-        'seller_postcode',
+        'condition_id',
+        'servicebog',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
         'price' => 'integer',
         'km_driven' => 'integer',
         'battery_capacity' => 'integer',
         'range_km' => 'integer',
-        'engine_power' => 'integer',
-        'towing_weight' => 'integer',
-        'ownership_tax' => 'integer',
-        'first_registration_date' => 'date',
-        'fuel_efficiency' => 'decimal:2',
         'published_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * The accessors to append to the model's array form.
-     */
     protected $appends = [
-        'category_name',
         'brand_name',
         'model_name',
         'model_year_name',
@@ -87,16 +60,14 @@ class Vehicle extends Model
         'gear_type_name',
         'engine_power_hp',
         'vehicle_list_status_name',
-        'listing_type_name',
+        'first_registration_date',
+        'seller_address',
+        'seller_postcode',
     ];
 
-    /**
-     * Boot the model.
-     */
     protected static function booted(): void
     {
         static::addGlobalScope('defaultOrder', function (Builder $query) {
-            // Only apply default ordering if no explicit orderBy is set
             if (empty($query->getQuery()->orders)) {
                 $query->orderBy('id', 'desc');
             }
@@ -131,30 +102,26 @@ class Vehicle extends Model
         });
     }
 
-    /**
-     * Get the route key for the model (used in URL route model binding).
-     */
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    /**
-     * Generate a unique slug from the vehicle title.
-     * If the base slug exists for another vehicle, appends -2, -3, etc.
-     */
     public function generateUniqueSlug(): string
     {
         $title = $this->title ?? '';
-        if (empty($title)) {
+        if ($title === '' && ! empty($this->registration)) {
+            $title = 'listing-' . preg_replace('/[^a-zA-Z0-9]+/', '-', (string) $this->registration);
+        }
+        if ($title === '') {
             $title = 'vehicle';
         }
         $slug = Str::slug($title);
-        if (empty($slug)) {
+        if ($slug === '') {
             $slug = 'vehicle';
         }
         $base = $slug;
-        $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+        $query = self::withoutGlobalScopes()->where('slug', $slug);
         if ($this->id !== null) {
             $query->where('id', '!=', $this->id);
         }
@@ -162,18 +129,15 @@ class Vehicle extends Model
         while ($query->exists()) {
             $slug = $base . '-' . $counter;
             $counter++;
-            $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+            $query = self::withoutGlobalScopes()->where('slug', $slug);
             if ($this->id !== null) {
                 $query->where('id', '!=', $this->id);
             }
         }
+
         return $slug;
     }
 
-    /**
-     * Get cached lookup value
-     * Checks static cache first, then Laravel cache, then database
-     */
     public static function getCachedLookup(string $table, ?int $id): ?string
     {
         if ($id === null) {
@@ -182,30 +146,20 @@ class Vehicle extends Model
 
         $cacheKey = "{$table}_{$id}";
 
-        // Check static cache first
         if (isset(self::$lookupCache[$cacheKey])) {
             return self::$lookupCache[$cacheKey];
         }
 
-        // Check Laravel cache (24 hour TTL)
         $cached = Cache::remember("vehicle_lookup_{$cacheKey}", 86400, function () use ($table, $id) {
-            // Use direct database queries to avoid recursive loops with relationships
             $model = match ($table) {
-                'categories' => Category::withoutGlobalScopes()->find($id),
-                'brands' => Brand::withoutGlobalScopes()->find($id),
-                'models' => VehicleModel::withoutGlobalScopes()->find($id),
-                'model_years' => ModelYear::withoutGlobalScopes()->find($id),
-                'fuel_types' => FuelType::withoutGlobalScopes()->find($id),
                 'gear_types' => GearType::withoutGlobalScopes()->find($id),
                 'vehicle_list_statuses' => VehicleListStatus::withoutGlobalScopes()->select('id', 'name')->find($id),
-                'listing_types' => ListingType::withoutGlobalScopes()->find($id),
                 default => null,
             };
 
             return $model?->name;
         });
 
-        // Store in static cache for this request
         if ($cached !== null) {
             self::$lookupCache[$cacheKey] = $cached;
         }
@@ -213,238 +167,161 @@ class Vehicle extends Model
         return $cached;
     }
 
-    /**
-     * Get category name attribute (cached)
-     */
-    public function getCategoryNameAttribute(): ?string
-    {
-        return self::getCachedLookup('categories', $this->category_id);
-    }
-
-    /**
-     * Get brand name attribute (cached)
-     */
     public function getBrandNameAttribute(): ?string
     {
-        return self::getCachedLookup('brands', $this->brand_id);
+        return $this->dmrFactVehicle?->variant?->model?->brand?->name;
     }
 
-    /**
-     * Get model name attribute (cached)
-     */
     public function getModelNameAttribute(): ?string
     {
-        return self::getCachedLookup('models', $this->model_id);
+        return $this->dmrFactVehicle?->variant?->model?->name;
     }
 
-    /**
-     * Get model year name attribute (cached)
-     */
-    public function getModelYearNameAttribute(): ?string
-    {
-        return self::getCachedLookup('model_years', $this->model_year_id);
-    }
-
-    /**
-     * Get fuel type name attribute (cached)
-     */
     public function getFuelTypeNameAttribute(): ?string
     {
-        return self::getCachedLookup('fuel_types', $this->fuel_type_id);
+        $fv = $this->dmrFactVehicle;
+        if (! $fv) {
+            return null;
+        }
+        $lines = $fv->relationLoaded('drivmiddelLines')
+            ? $fv->drivmiddelLines
+            : $fv->drivmiddelLines()->orderBy('line_order')->get();
+        $sorted = $lines->sortBy('line_order')->values();
+        $primary = $sorted->first(fn ($line) => (bool) $line->drivmiddel_primaer) ?? $sorted->first();
+
+        return $primary?->driveEnergy?->name;
     }
 
-    /**
-     * Get gear type name attribute (cached)
-     */
     public function getGearTypeNameAttribute(): ?string
     {
         return self::getCachedLookup('gear_types', $this->gear_type_id);
     }
 
-    /**
-     * Get engine power in HP attribute
-     */
     public function getEnginePowerHpAttribute(): ?float
     {
-        return $this->engine_power ? round($this->engine_power * 1.36, 2) : null;
-    }
-
-    /**
-     * Get title attribute - returns title if exists, otherwise auto-generates from brand + model + model year
-     */
-    public function getTitleAttribute($value): ?string
-    {
-        // If title exists and is not empty, return it
-        if (!empty($value)) {
-            return $value;
+        $kw = $this->dmrFactVehicle?->motor_stoerste_effekt;
+        if ($kw === null) {
+            return null;
         }
-        
-        // Otherwise, auto-generate from brand + model + model year
-        // Use getAttribute to avoid infinite recursion with accessors
-        $parts = array_filter([
-            $this->getAttribute('brand_name'),
-            $this->getAttribute('model_name'),
-            $this->getAttribute('model_year_name'),
-        ]);
-        
-        return !empty($parts) ? implode(' ', $parts) : null;
+
+        return round((float) $kw * 1.36, 2);
     }
 
-    /**
-     * Get vehicle list status name attribute (cached)
-     */
+    public function getModelYearNameAttribute(): ?string
+    {
+        $y = $this->dmrFactVehicle?->model_aar;
+
+        return $y !== null ? (string) $y : null;
+    }
+
+    /** DMR variant label (legacy "version" field in views). */
+    public function getVersionAttribute(): ?string
+    {
+        return $this->dmrFactVehicle?->variant?->name;
+    }
+
+    public function getFirstRegistrationDateAttribute(): ?Carbon
+    {
+        return $this->dmrFactVehicle?->foerste_registrering_dato;
+    }
+
     public function getVehicleListStatusNameAttribute(): ?string
     {
         return self::getCachedLookup('vehicle_list_statuses', $this->vehicle_list_status_id);
     }
 
-    /**
-     * Get listing type name attribute (cached)
-     */
-    public function getListingTypeNameAttribute(): ?string
+    public function getSellerAddressAttribute(): ?string
     {
-        return self::getCachedLookup('listing_types', $this->listing_type_id);
+        return $this->attributes['address'] ?? null;
+    }
+
+    public function getSellerPostcodeAttribute(): ?string
+    {
+        return $this->attributes['postcode'] ?? null;
     }
 
     /**
-     * Get dealer for this vehicle
+     * Blade parity: legacy templates used vehicle_details; expose DMR-backed read model.
      */
+    public function getDetailsAttribute(): VehicleDetailPresenter
+    {
+        return new VehicleDetailPresenter($this);
+    }
+
+    public function getTitleAttribute($value): ?string
+    {
+        if (! empty($value)) {
+            return $value;
+        }
+
+        $parts = array_filter([
+            $this->getAttribute('brand_name'),
+            $this->getAttribute('model_name'),
+        ]);
+
+        return ! empty($parts) ? implode(' ', $parts) : null;
+    }
+
+    public function dmrFactVehicle(): BelongsTo
+    {
+        return $this->belongsTo(DmrFactVehicle::class, 'dmr_fact_vehicle_id');
+    }
+
     public function dealer(): BelongsTo
     {
         return $this->belongsTo(Dealer::class);
     }
 
-    /**
-     * Get user (creator) for this vehicle
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get vehicle details for this vehicle
-     */
-    public function details(): HasOne
-    {
-        return $this->hasOne(VehicleDetail::class);
-    }
-
-    /**
-     * Get images for this vehicle
-     */
     public function images(): HasMany
     {
         return $this->hasMany(VehicleImage::class)->orderBy('sort_order');
     }
 
-    /**
-     * Get favorites for this vehicle
-     */
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class);
     }
 
-    /**
-     * Get leads for this vehicle
-     */
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);
     }
 
-    /**
-     * Get enquiries for this vehicle
-     */
     public function enquiries(): HasMany
     {
         return $this->hasMany(Enquiry::class);
     }
 
-    /**
-     * Get price history for this vehicle
-     */
     public function priceHistory(): HasMany
     {
         return $this->hasMany(PriceHistory::class);
     }
 
-    /**
-     * Get view logs for this vehicle
-     */
     public function viewLogs(): HasMany
     {
         return $this->hasMany(ListingViewsLog::class);
     }
 
-    /**
-     * Get equipment for this vehicle (many-to-many)
-     */
     public function equipment(): BelongsToMany
     {
         return $this->belongsToMany(Equipment::class, 'vehicle_equipment');
     }
 
-    /**
-     * Get model for this vehicle
-     */
-    public function model(): BelongsTo
-    {
-        return $this->belongsTo(VehicleModel::class, 'model_id');
-    }
-
-    /**
-     * Get listing type for this vehicle
-     */
-    public function listingType(): BelongsTo
-    {
-        return $this->belongsTo(ListingType::class);
-    }
-
-    /**
-     * Get gear type for this vehicle
-     */
     public function gearType(): BelongsTo
     {
         return $this->belongsTo(GearType::class);
     }
 
-    /**
-     * Get category for this vehicle
-     */
-    public function category(): BelongsTo
+    public function condition(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Condition::class, 'condition_id');
     }
 
-    /**
-     * Get brand for this vehicle
-     */
-    public function brand(): BelongsTo
-    {
-        return $this->belongsTo(Brand::class);
-    }
-
-    /**
-     * Get model year for this vehicle
-     */
-    public function modelYear(): BelongsTo
-    {
-        return $this->belongsTo(ModelYear::class);
-    }
-
-    /**
-     * Get fuel type for this vehicle
-     */
-    public function fuelType(): BelongsTo
-    {
-        return $this->belongsTo(FuelType::class);
-    }
-
-    /**
-     * Get vehicle list status for this vehicle
-     */
     public function vehicleListStatus(): BelongsTo
     {
         return $this->belongsTo(VehicleListStatus::class);

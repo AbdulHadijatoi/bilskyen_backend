@@ -44,7 +44,7 @@ class SellerProfileController extends Controller
         $query = Vehicle::where('user_id', $user->id)
             ->with(['images' => function ($q) {
                 $q->orderBy('sort_order');
-            }, 'details', 'equipment']);
+            }, 'equipment', 'dmrFactVehicle']);
 
         // Apply status filter
         if ($request->has('vehicle_list_status_id') && $request->input('vehicle_list_status_id')) {
@@ -56,8 +56,8 @@ class SellerProfileController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                    ->orWhere('registration', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -91,7 +91,7 @@ class SellerProfileController extends Controller
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
-                'vin' => $vehicle->vin,
+                'vin' => $vehicle->dmrFactVehicle?->stel_nummer,
                 'price' => $vehicle->price,
                 'km_driven' => $vehicle->km_driven,
                 'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
@@ -130,11 +130,9 @@ class SellerProfileController extends Controller
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'details',
             'equipment',
-            'details.color',
-            'details.variant',
-            'details.euronom'
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.emissionNorm',
         ])->findOrFail($id);
 
         // Verify ownership
@@ -189,7 +187,7 @@ class SellerProfileController extends Controller
             ]);
         }
 
-        return $this->success($vehicle->load(['images', 'details', 'equipment']));
+        return $this->success($vehicle->load(['images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
     }
 
     /**

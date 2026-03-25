@@ -91,11 +91,6 @@ class DmrFactVehicle extends Model
         return $this->belongsTo(DmrRegistrationStatus::class, 'registration_status_id');
     }
 
-    public function etlLoad(): BelongsTo
-    {
-        return $this->belongsTo(DmrEtlLoad::class, 'etl_load_id');
-    }
-
     public function equipmentLines(): HasMany
     {
         return $this->hasMany(DmrBridgeVehicleEquipment::class, 'vehicle_id');
@@ -104,5 +99,10 @@ class DmrFactVehicle extends Model
     public function drivmiddelLines(): HasMany
     {
         return $this->hasMany(DmrBridgeVehicleDrivmiddel::class, 'vehicle_id');
+    }
+
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class, 'dmr_fact_vehicle_id');
     }
 }

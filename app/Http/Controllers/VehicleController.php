@@ -23,7 +23,6 @@ use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
-use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\SellYourCarRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Helpers\FilterHelper;
@@ -59,6 +58,7 @@ class VehicleController extends Controller
         // Fetch featured vehicles from FeaturedListing model
         $featuredListings = FeaturedListing::with([
             'vehicle.images',
+            'vehicle.dmrFactVehicle.variant',
         ])
             ->orderBy('sort_order')
             ->get();
@@ -80,7 +80,7 @@ class VehicleController extends Controller
             return [
                 'id' => $vehicle->id,
                 'title' => $title,
-                'version' => $vehicle->version ?? '',
+                'version' => $vehicle->dmrFactVehicle?->variant?->name ?? '',
                 'price' => $vehicle->price ?? 0,
                 'image' => $imageUrl,
                 'km_driven' => $vehicle->km_driven ?? 0,
@@ -207,7 +207,7 @@ class VehicleController extends Controller
                 'seller_address' => $vehicle->seller_address,
                 'seller_postcode' => $vehicle->seller_postcode,
                 'user_id' => $vehicle->user_id,
-                'sales_type_name' => $vehicle->details?->sales_type_name ?? $vehicle->details?->salesType?->name ?? null,
+                'sales_type_name' => null,
             ];
         });
 
@@ -246,7 +246,7 @@ class VehicleController extends Controller
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
                     'user_id' => $vehicle->user_id,
-                    'sales_type_name' => $vehicle->details?->sales_type_name ?? $vehicle->details?->salesType?->name ?? null,
+                    'sales_type_name' => null,
                 ];
             });
             $paginationData = [
@@ -337,8 +337,7 @@ class VehicleController extends Controller
     }
 
     /**
-     * Get vehicle details
-     * Returns all fields from both vehicles and vehicle_details tables
+     * Get vehicle details (DMR-linked listing).
      */
     public function show(int $id): JsonResponse
     {
@@ -350,75 +349,49 @@ class VehicleController extends Controller
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'details' => function ($q) {
-                $q->with(['color', 'variant', 'euronom', 'transmission']);
-            },
             'equipment',
-            'brand',
-            'model',
-            'modelYear',
-            'fuelType',
             'gearType',
-            'category',
-            'listingType',
-            'vehicleListStatus'
+            'condition',
+            'vehicleListStatus',
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.drivmiddelLines.driveEnergy',
         ])->findOrFail($id);
 
-        // Format response to include all fields from both tables
-        $firstImage = $vehicle->images->first();
-        $details = $vehicle->details;
-        
-        // Determine seller type
-        $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+        $isDealer = $vehicle->dealer && ! str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
         $sellerType = $isDealer ? 'Dealer' : 'Private';
-        
-        // Build comprehensive response
+
         $response = [
-            // Vehicles table fields
             'id' => $vehicle->id,
+            'slug' => $vehicle->slug,
+            'dmr_fact_vehicle_id' => $vehicle->dmr_fact_vehicle_id,
             'title' => $vehicle->title,
             'registration' => $vehicle->registration,
-            'vin' => $vehicle->vin,
             'dealer_id' => $vehicle->dealer_id,
             'user_id' => $vehicle->user_id,
-            'category_id' => $vehicle->category_id,
-            'brand_id' => $vehicle->brand_id,
-            'model_id' => $vehicle->model_id,
-            'model_year_id' => $vehicle->model_year_id,
-            'fuel_type_id' => $vehicle->fuel_type_id,
             'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
-            'listing_type_id' => $vehicle->listing_type_id,
             'km_driven' => $vehicle->km_driven,
             'price' => $vehicle->price,
             'battery_capacity' => $vehicle->battery_capacity,
             'range_km' => $vehicle->range_km,
             'charging_type' => $vehicle->charging_type,
-            'engine_power' => $vehicle->engine_power,
             'engine_power_hp' => $vehicle->engine_power_hp,
-            'towing_weight' => $vehicle->towing_weight,
-            'ownership_tax' => $vehicle->ownership_tax,
-            'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-            'version' => $vehicle->version,
-            'gear_type_id' => $vehicle->gear_type_id,
-            'fuel_efficiency' => $vehicle->fuel_efficiency,
+            'description' => $vehicle->description,
             'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
             'seller_address' => $vehicle->seller_address,
             'seller_postcode' => $vehicle->seller_postcode,
+            'gear_type_id' => $vehicle->gear_type_id,
+            'condition_id' => $vehicle->condition_id,
+            'servicebog' => $vehicle->servicebog,
             'created_at' => $vehicle->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $vehicle->updated_at->format('Y-m-d H:i:s'),
             'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
-            
-            // Accessor fields (names)
             'brand_name' => $vehicle->brand_name,
             'model_name' => $vehicle->model_name,
-            'category_name' => $vehicle->category_name,
             'fuel_type_name' => $vehicle->fuel_type_name,
             'gear_type_name' => $vehicle->gear_type_name,
             'model_year_name' => $vehicle->model_year_name,
+            'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
             'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
-            'listing_type_name' => $vehicle->listing_type_name,
-            
-            // Relationships
             'images' => $vehicle->images->map(function ($image) {
                 return [
                     'id' => $image->id,
@@ -456,102 +429,11 @@ class VehicleController extends Controller
                 'phone' => $vehicle->user->phone,
             ] : null,
             'seller_type' => $sellerType,
+            'details' => null,
         ];
-        
-        // Add vehicle_details fields if available
-        if ($details) {
-            $response['details'] = [
-                'id' => $details->id,
-                'vehicle_id' => $details->vehicle_id,
-                'vehicle_external_id' => $details->vehicle_external_id,
-                'description' => $details->description,
-                'views_count' => $details->views_count,
-                'vin_location' => $details->vin_location,
-                'type_id' => $details->type_id,
-                'type_name' => $details->type_name,
-                'registration_status' => $details->registration_status,
-                'registration_status_updated_date' => $details->registration_status_updated_date?->format('Y-m-d'),
-                'expire_date' => $details->expire_date?->format('Y-m-d'),
-                'status_updated_date' => $details->status_updated_date?->format('Y-m-d'),
-                'total_weight' => $details->total_weight,
-                'vehicle_weight' => $details->vehicle_weight,
-                'technical_total_weight' => $details->technical_total_weight,
-                'coupling' => $details->coupling,
-                'towing_weight_brakes' => $details->towing_weight_brakes,
-                'minimum_weight' => $details->minimum_weight,
-                'gross_combination_weight' => $details->gross_combination_weight,
-                'engine_displacement' => $details->engine_displacement,
-                'engine_cylinders' => $details->engine_cylinders,
-                'engine_code' => $details->engine_code,
-                'category' => $details->category,
-                'last_inspection_date' => $details->last_inspection_date?->format('Y-m-d'),
-                'last_inspection_result' => $details->last_inspection_result,
-                'last_inspection_odometer' => $details->last_inspection_odometer,
-                'type_approval_code' => $details->type_approval_code,
-                'top_speed' => $details->top_speed,
-                'doors' => $details->doors,
-                'minimum_seats' => $details->minimum_seats,
-                'maximum_seats' => $details->maximum_seats,
-                'wheels' => $details->wheels,
-                'extra_equipment' => $details->extra_equipment,
-                'axles' => $details->axles,
-                'drive_axles' => $details->drive_axles,
-                'wheelbase' => $details->wheelbase,
-                'leasing_period_start' => $details->leasing_period_start?->format('Y-m-d'),
-                'leasing_period_end' => $details->leasing_period_end?->format('Y-m-d'),
-                'production_date' => $details->production_date?->format('Y-m-d'),
-                'cover_image_index' => $details->cover_image_index,
-                'fuel_consumption_wltp' => $details->fuel_consumption_wltp,
-                'fuel_consumption_nedc' => $details->fuel_consumption_nedc,
-                'co2_emissions' => $details->co2_emissions,
-                'is_import' => $details->is_import,
-                'is_factory_new' => $details->is_factory_new,
-                'wholesale_price' => $details->wholesale_price,
-                'internal_cost_price' => $details->internal_cost_price,
-                'engine_type' => $details->engine_type,
-                'use_id' => $details->use_id,
-                'color_id' => $details->color_id,
-                'body_type_id' => $details->body_type_id,
-                'transmission_id' => $details->transmission_id,
-                'variant_id' => $details->variant_id,
-                'dispensations' => $details->dispensations,
-                'permits' => $details->permits,
-                'ncap_five' => $details->ncap_five,
-                'airbags' => $details->airbags,
-                'integrated_child_seats' => $details->integrated_child_seats,
-                'seat_belt_alarms' => $details->seat_belt_alarms,
-                'euronom_id' => $details->euronom_id,
-                'servicebog' => $details->servicebog,
-                'price_type_id' => $details->price_type_id,
-                'condition_id' => $details->condition_id,
-                'sales_type_id' => $details->sales_type_id,
-                'seller_phone' => $details->seller_phone,
-                'annual_tax' => $details->annual_tax,
-                'owners' => $details->owners,
-                'color_name' => $details->color_name,
-                'body_type_name' => $details->body_type_name,
-                'condition_name' => $details->condition_name,
-                'price_type_name' => $details->price_type_name,
-                'sales_type_name' => $details->sales_type_name,
-                'use_name' => $details->use_name,
-                'transmission_name' => $details->transmission_name,
-                'type_name_resolved' => $details->type_name_resolved,
-                'variant' => $details->variant ? [
-                    'id' => $details->variant->id,
-                    'name' => $details->variant->name,
-                ] : null,
-                'euronom' => $details->euronom ? [
-                    'id' => $details->euronom->id,
-                    'name' => $details->euronom->name,
-                ] : null,
-            ];
-        } else {
-            $response['details'] = null;
-        }
 
         return $this->success($response);
     }
-
     /**
      * Get vehicles list (legacy method for backward compatibility)
      */
@@ -566,22 +448,21 @@ class VehicleController extends Controller
     public function getVehiclesOverview(): JsonResponse
     {
         $totalVehicles = Vehicle::count();
-        $availableVehicles = Vehicle::where('status', 'Available')->count();
-        $pendingVehicles = Vehicle::whereIn('status', ['Pending Sale', 'Pending Purchase'])->count();
-        $totalInventoryValue = Vehicle::where('status', 'Available')->sum('listing_price');
-        $averageVehicleValue = $availableVehicles > 0 ? $totalInventoryValue / $availableVehicles : 0;
-        
-        // Calculate average days in inventory
-        $averageDaysInInventory = Vehicle::where('status', 'Available')
-            ->selectRaw('AVG(DATEDIFF(NOW(), inventory_date)) as avg_days')
+        $publishedVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
+        $draftVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
+        $soldVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+
+        $totalInventoryValue = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->sum('price');
+        $averageVehicleValue = $publishedVehicles > 0 ? $totalInventoryValue / $publishedVehicles : 0;
+
+        $averageDaysListed = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->whereNotNull('published_at')
+            ->selectRaw('AVG(DATEDIFF(NOW(), published_at)) as avg_days')
             ->value('avg_days') ?? 0;
 
-        $vehiclesOver90Days = Vehicle::where('status', 'Available')
-            ->whereRaw('DATEDIFF(NOW(), inventory_date) > 90')
-            ->count();
-
-        $vehiclesNeedingWork = Vehicle::where('status', 'Available')
-            ->whereJsonLength('pending_works', '>', 0)
+        $listingsOver90Days = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->whereNotNull('published_at')
+            ->whereRaw('DATEDIFF(NOW(), published_at) > 90')
             ->count();
 
         $newArrivals7Days = Vehicle::where('created_at', '>=', now()->subDays(7))->count();
@@ -589,13 +470,13 @@ class VehicleController extends Controller
 
         return $this->success([
             'totalVehicles' => $totalVehicles,
-            'availableVehicles' => $availableVehicles,
-            'pendingVehicles' => $pendingVehicles,
+            'publishedVehicles' => $publishedVehicles,
+            'draftVehicles' => $draftVehicles,
+            'soldVehicles' => $soldVehicles,
             'totalInventoryValue' => $totalInventoryValue,
             'averageVehicleValue' => round($averageVehicleValue, 2),
-            'averageDaysInInventory' => round($averageDaysInInventory, 2),
-            'vehiclesOver90Days' => $vehiclesOver90Days,
-            'vehiclesNeedingWork' => $vehiclesNeedingWork,
+            'averageDaysListed' => round((float) $averageDaysListed, 2),
+            'publishedListingsOver90Days' => $listingsOver90Days,
             'newArrivals7Days' => $newArrivals7Days,
             'recentlyUpdated24h' => $recentlyUpdated24h,
         ]);
@@ -703,7 +584,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->created($vehicle->load(['dealer', 'images', 'details']));
+        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
     }
 
     /**
@@ -753,7 +634,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->created($vehicle->load(['dealer', 'images', 'details']), 'Vehicle draft saved successfully');
+        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']), 'Vehicle draft saved successfully');
     }
 
     /**
@@ -824,7 +705,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->success($vehicle->load(['dealer', 'images', 'details']));
+        return $this->success($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
     }
 
     /**
@@ -1667,7 +1548,7 @@ class VehicleController extends Controller
                 ]);
             }
 
-            return $this->created($vehicle->load(['dealer', 'images', 'details', 'equipment']));
+            return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
         } catch (\Exception $e) {
             Log::error('VehicleController::sellYourCar - Error', [
                 'user_id' => $user->id,

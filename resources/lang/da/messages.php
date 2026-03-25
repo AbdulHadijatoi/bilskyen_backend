@@ -792,6 +792,7 @@ return [
             'section_specifications_subtitle' => 'Kørte kilometer, registrering, syn og tekniske detaljer',
             'section_specifications_description' => 'Tekniske specifikationer og registreringsdetaljer.',
             'km_driven_help' => 'Hvor langt bilen har kørt',
+            'select_gear_type' => 'Vælg geartype',
             'first_registration' => 'Første Registrering',
             'select_month' => 'Vælg måned',
             'select_year' => 'Vælg år',

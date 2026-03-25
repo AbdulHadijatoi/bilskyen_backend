@@ -66,20 +66,16 @@ class EnquiryController extends Controller
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
 
         // Get phone number with fallback logic
         $phoneNumber = null;
-        
-        // First try: vehicle details seller_phone
-        if ($vehicle->details && !empty($vehicle->details->seller_phone)) {
-            $phoneNumber = $vehicle->details->seller_phone;
-        }
-        // If empty and vehicle has dealer: Get phone from dealer owner
-        elseif (empty($phoneNumber) && $vehicle->dealer) {
+
+        // If vehicle has dealer: Get phone from dealer owner
+        if (empty($phoneNumber) && $vehicle->dealer) {
             // Load owner relationship
             $vehicle->dealer->load('owner');
             if ($vehicle->dealer->owner && !empty($vehicle->dealer->owner->phone)) {
@@ -159,7 +155,7 @@ class EnquiryController extends Controller
      */
     public function showEnquiryForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
 
         return view('vehicle-enquiry-form', [
             'vehicle' => $vehicle,
@@ -183,7 +179,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -296,7 +292,7 @@ class EnquiryController extends Controller
      */
     public function showTestDriveForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-test-drive-form', [
             'vehicle' => $vehicle,
@@ -321,7 +317,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -434,7 +430,7 @@ class EnquiryController extends Controller
      */
     public function showPriceNegotiationForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-price-negotiation-form', [
             'vehicle' => $vehicle,
@@ -459,7 +455,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -585,7 +581,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
         $dealerId = $vehicle->dealer_id;
 
         $sourceName = $this->getSourceName($request);

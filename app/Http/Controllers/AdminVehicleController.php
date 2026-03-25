@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ModelYear;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Constants\VehicleListStatus;
@@ -30,7 +31,7 @@ class AdminVehicleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Vehicle::with(['dealer', 'user', 'images', 'details', 'equipment']);
+        $query = Vehicle::with(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']);
 
         // Apply direct query parameter filters
         if ($request->has('dealer_id')) {
@@ -59,17 +60,26 @@ class AdminVehicleController extends Controller
             });
         }
 
-        // Filter by lookup models
+        // Filter by DMR brand / model / year
         if ($request->has('brand_id')) {
-            $query->where('brand_id', $request->brand_id);
+            $query->whereHas('dmrFactVehicle.variant.model', function ($q) use ($request) {
+                $q->where('brand_id', (int) $request->brand_id);
+            });
         }
 
         if ($request->has('model_id')) {
-            $query->where('model_id', $request->model_id);
+            $query->whereHas('dmrFactVehicle.variant', function ($q) use ($request) {
+                $q->where('model_id', (int) $request->model_id);
+            });
         }
 
         if ($request->has('model_year_id')) {
-            $query->where('model_year_id', $request->model_year_id);
+            $yearName = ModelYear::find($request->model_year_id)?->name;
+            if ($yearName !== null && $yearName !== '') {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($yearName) {
+                    $q->where('model_aar', (int) $yearName);
+                });
+            }
         }
 
         // Filter by status
@@ -80,13 +90,12 @@ class AdminVehicleController extends Controller
             }
         }
 
-        // General search across title, registration, VIN
         if ($request->has('search') && $request->input('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                    ->orWhere('registration', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -119,14 +128,13 @@ class AdminVehicleController extends Controller
             'dealer',
             'user',
             'images',
-            'details',
             'equipment',
             'equipment.equipmentType',
             'priceHistory',
             'viewLogs',
-            'model',
-            'listingType',
-            'gearType'
+            'gearType',
+            'condition',
+            'dmrFactVehicle.variant.model.brand',
         ])->findOrFail($id);
 
         return $this->success($vehicle);
@@ -137,24 +145,19 @@ class AdminVehicleController extends Controller
         $request->validate([
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'registration' => ['nullable', 'string', 'max:20'],
-            'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
-            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'model_id' => ['nullable', 'integer', 'exists:models,id'],
-            'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
+            'dmr_fact_vehicle_id' => ['sometimes', 'integer', 'exists:dmr_fact_vehicles,id'],
             'km_driven' => ['nullable', 'integer', 'min:0'],
-            'fuel_type_id' => ['sometimes', 'nullable', 'integer', 'exists:fuel_types,id'],
             'gear_type_id' => ['nullable', 'integer', 'exists:gear_types,id'],
             'price' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'battery_capacity' => ['nullable', 'integer', 'min:0'],
             'range_km' => ['nullable', 'integer', 'min:0'],
             'charging_type' => ['nullable', 'string'],
-            'engine_power' => ['nullable', 'integer', 'min:0'],
-            'towing_weight' => ['nullable', 'integer', 'min:0'],
-            'ownership_tax' => ['nullable', 'integer', 'min:0'],
-            'first_registration_date' => ['nullable', 'date'],
-            'fuel_efficiency' => ['nullable', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
+            'servicebog' => ['nullable', 'string', 'max:50'],
             'vehicle_list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
-            'listing_type_id' => ['nullable', 'integer', 'exists:listing_types,id'],
             'published_at' => ['nullable', 'date'],
         ]);
 
@@ -164,7 +167,7 @@ class AdminVehicleController extends Controller
         // Use VehicleService to update vehicle (handles details, equipment, etc.)
         $updatedVehicle = $this->vehicleService->updateVehicle($vehicle, $data);
 
-        return $this->success($updatedVehicle->load(['dealer', 'user', 'images', 'details', 'equipment']));
+        return $this->success($updatedVehicle->load(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
     }
 
     public function updateStatus(Request $request, int $id): JsonResponse
@@ -188,7 +191,7 @@ class AdminVehicleController extends Controller
 
         $vehicle->save();
 
-        return $this->success($vehicle->load(['dealer', 'user', 'images', 'details', 'equipment']));
+        return $this->success($vehicle->load(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
     }
 
     public function delete(int $id, Request $request): JsonResponse

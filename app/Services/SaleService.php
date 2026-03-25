@@ -9,6 +9,7 @@ use App\Models\Purchase;
 use App\Models\Transaction;
 use App\Models\TransactionEntry;
 use App\Models\Notification;
+use App\Constants\VehicleListStatus;
 use App\Services\FinancialAccountService;
 use App\Services\TransactionService;
 use App\Services\FileService;
@@ -29,7 +30,7 @@ class SaleService
      */
     public function validateVehicleAndContact(int $vehicleId, int $contactId): array
     {
-        $vehicle = Vehicle::findOrFail($vehicleId);
+        $vehicle = Vehicle::with(['dmrFactVehicle.variant.model.brand'])->findOrFail($vehicleId);
         $contact = Contact::findOrFail($contactId);
 
         return ['vehicle' => $vehicle, 'contact' => $contact];
@@ -140,8 +141,7 @@ class SaleService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            // Update vehicle status
-            $vehicle->update(['status' => 'Sold']);
+            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::SOLD]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();
@@ -170,7 +170,7 @@ class SaleService
             );
 
             // Create transaction
-            $narration = "Sale of {$vehicle->make} {$vehicle->model} to " . ($contact->name ?? $contact->company_name);
+            $narration = 'Sale of ' . ($vehicle->title ?? '#' . $vehicle->id) . ' to ' . ($contact->name ?? $contact->company_name);
 
             $transaction = $this->transactionService->createTransaction([
                 'type' => 'Vehicle Sale',
@@ -217,11 +217,7 @@ class SaleService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            // Update vehicle status
-            $vehicle->update([
-                'status' => 'Sold',
-                'pending_works' => array_merge($vehicle->pending_works ?? [], ['Documents pending']),
-            ]);
+            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::SOLD]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();
@@ -250,7 +246,7 @@ class SaleService
             );
 
             // Update transaction
-            $narration = "Sale of {$vehicle->make} {$vehicle->model} to " . ($contact->name ?? $contact->company_name);
+            $narration = 'Sale of ' . ($vehicle->title ?? '#' . $vehicle->id) . ' to ' . ($contact->name ?? $contact->company_name);
 
             $this->transactionService->updateTransaction(
                 $sale->transaction,
@@ -301,7 +297,7 @@ class SaleService
             // Update vehicle status back to Available
             $vehicle = $sale->vehicle;
             if ($vehicle) {
-                $vehicle->update(['status' => 'Available']);
+                $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::PUBLISHED]);
             }
 
             // Delete transaction and sale images

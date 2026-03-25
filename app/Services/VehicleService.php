@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Models\VehicleDetail;
+use App\Models\DmrBrand;
+use App\Models\DmrDriveEnergy;
+use App\Models\DmrModel;
 use App\Models\FuelType;
 use App\Models\Brand;
 use App\Models\Category;
@@ -20,6 +23,7 @@ use App\Models\Euronom;
 use App\Constants\VehicleListStatus;
 use App\Services\FileService;
 use App\Services\NotificationService;
+use App\Services\DmrFactVehicleLookupService;
 use App\Services\NummerpladeApiService;
 use App\Exceptions\NummerpladeApiException;
 use Illuminate\Support\Facades\DB;
@@ -30,92 +34,25 @@ class VehicleService
     public function __construct(
         private FileService $fileService,
         private NotificationService $notificationService,
-        private NummerpladeApiService $nummerpladeService
+        private NummerpladeApiService $nummerpladeService,
+        private DmrFactVehicleLookupService $dmrFactVehicleLookupService
     ) {}
 
     /**
-     * Create a vehicle
-     * Fetches data from Nummerplade API if registration or VIN is provided
+     * Create a vehicle (DMR-linked listing row).
      */
     public function createVehicle(array $vehicleData): Vehicle
     {
-
-        // Handle Brand creation if brand name is provided but brand_id is not
-        if (isset($vehicleData['brand_name']) && !isset($vehicleData['brand_id'])) {
-            $brand = Brand::firstOrCreateInsensitive(
-                ['name' => $vehicleData['brand_name']]
-            );
-            $vehicleData['brand_id'] = $brand->id;
-            unset($vehicleData['brand_name']);
-        }
-
-        // Handle VehicleModel creation if model name is provided but model_id is not
-        if (isset($vehicleData['model_name']) && !isset($vehicleData['model_id'])) {
-            // brand_id is required for model creation
-            if (!isset($vehicleData['brand_id'])) {
-                throw new \InvalidArgumentException('brand_id is required when creating a model');
-            }
-            
-            $model = VehicleModel::firstOrCreateInsensitive(
-                [
-                    'brand_id' => $vehicleData['brand_id'],
-                    'name' => $vehicleData['model_name']
-                ]
-            );
-            $vehicleData['model_id'] = $model->id;
-            unset($vehicleData['model_name']);
-        }
-
-        // Handle ModelYear creation if model year name is provided but model_year_id is not
-        if (isset($vehicleData['model_year_name']) && !isset($vehicleData['model_year_id'])) {
-            $modelYear = ModelYear::firstOrCreateInsensitive(
-                ['name' => (string) $vehicleData['model_year_name']]
-            );
-            $vehicleData['model_year_id'] = $modelYear->id;
-            unset($vehicleData['model_year_name']);
-        }
-
-        // Also handle if model_year is provided as a number
-        if (isset($vehicleData['model_year']) && !isset($vehicleData['model_year_id'])) {
-            $modelYear = ModelYear::firstOrCreateInsensitive(
-                ['name' => (string) $vehicleData['model_year']]
-            );
-            $vehicleData['model_year_id'] = $modelYear->id;
-            unset($vehicleData['model_year']);
-        }
-
-        // Handle Euronom creation if euronorm name is provided but euronom_id is not
-        if (isset($vehicleData['euronorm']) && !isset($vehicleData['euronom_id'])) {
-            $euronom = Euronom::firstOrCreateInsensitive(
-                ['name' => trim($vehicleData['euronorm'])]
-            );
-            $vehicleData['euronom_id'] = $euronom->id;
-            unset($vehicleData['euronorm']);
-        }
-
-        // Separate equipment IDs if present
         $equipmentIds = null;
         if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
             $equipmentIds = $vehicleData['equipment_ids'];
             unset($vehicleData['equipment_ids']);
         } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
-            // Support legacy 'equipment' key for backward compatibility
             $equipmentIds = $vehicleData['equipment'];
             unset($vehicleData['equipment']);
         }
 
-        // Resolve variant name to ID if provided
-        if (empty($vehicleData['variant_id']) && (isset($vehicleData['variant']) || isset($vehicleData['variantName']))) {
-            $variantName = $vehicleData['variant'] ?? $vehicleData['variantName'];
-            if (!empty($variantName)) {
-                $variant = Variant::firstOrCreateInsensitive(['name' => $variantName]);
-                $vehicleData['variant_id'] = $variant->id;
-            }
-            unset($vehicleData['variant'], $vehicleData['variantName']);
-        }
-
-        // Separate vehicle details if present
-        $vehicleDetailsData = [];
+        $extraDescription = '';
         $detailsFields = [
             'description', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
             'registration_status', 'registration_status_updated_date', 'expire_date',
@@ -132,55 +69,57 @@ class VehicleService
             'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
             'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
             'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name',
-            'wholesale_price', 'internal_cost_price', 'engine_type'
+            'wholesale_price', 'internal_cost_price', 'engine_type',
         ];
-
         foreach ($detailsFields as $field) {
             if (isset($vehicleData[$field])) {
-                $vehicleDetailsData[$field] = $vehicleData[$field];
+                if ($field === 'description' && empty($vehicleData['description'])) {
+                    $vehicleData['description'] = (string) $vehicleData[$field];
+                } elseif ($field === 'description') {
+                    $vehicleData['description'] = trim((string) ($vehicleData['description'] ?? '') . "\n\n" . (string) $vehicleData[$field]);
+                } elseif ($field === 'condition_id' && ! isset($vehicleData['condition_id'])) {
+                    $vehicleData['condition_id'] = $vehicleData[$field];
+                } elseif ($field === 'servicebog' && ! isset($vehicleData['servicebog'])) {
+                    $vehicleData['servicebog'] = $vehicleData[$field];
+                } else {
+                    $extraDescription .= $field . ': ' . json_encode($vehicleData[$field]) . "\n";
+                }
                 unset($vehicleData[$field]);
             }
         }
-
-        // Ensure transmission_id exists in transmissions table (column is FK); if not, set to null
-        if (array_key_exists('transmission_id', $vehicleDetailsData) && $vehicleDetailsData['transmission_id'] !== null) {
-            if (!Transmission::where('id', $vehicleDetailsData['transmission_id'])->exists()) {
-                $vehicleDetailsData['transmission_id'] = null;
-            }
+        if ($extraDescription !== '') {
+            $vehicleData['description'] = trim((string) ($vehicleData['description'] ?? '') . "\n\n" . $extraDescription);
         }
 
-        // Create vehicle
+        $images = $vehicleData['images'] ?? null;
+        unset($vehicleData['images']);
+
+        $fillable = (new Vehicle)->getFillable();
+        $vehicleData = array_intersect_key($vehicleData, array_flip($fillable));
+
+        if (empty($vehicleData['dmr_fact_vehicle_id'])) {
+            throw new \InvalidArgumentException('dmr_fact_vehicle_id is required');
+        }
+
         $vehicle = Vehicle::create($vehicleData);
 
-        // Sync equipment if provided
         if ($equipmentIds !== null) {
             $vehicle->equipment()->sync($equipmentIds);
         }
-        // Create vehicle details if provided
-        if (!empty($vehicleDetailsData)) {
-            $vehicleDetailsData['vehicle_id'] = $vehicle->id;
-            $details = VehicleDetail::create($vehicleDetailsData);
-            Log::info("vehicle details: " , [$details]);
-        }
 
-        // Handle file uploads if present
-        if (isset($vehicleData['images']) && is_array($vehicleData['images'])) {
+        if (is_array($images)) {
             $sortOrder = 0;
-            foreach ($vehicleData['images'] as $file) {
+            foreach ($images as $file) {
                 if (is_string($file)) {
-                    // Already a path/URL - extract relative path and try to generate thumbnail if it doesn't exist
-                    // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
                     $imagePath = str_replace('/storage/', '', parse_url($file, PHP_URL_PATH));
-                    
+
                     $thumbnailPath = null;
                     try {
                         $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
-                        // Extract path from URL
                         $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
                     } catch (\Exception $e) {
-                        // Thumbnail generation failed, continue without thumbnail
                     }
-                    
+
                     VehicleImage::create([
                         'vehicle_id' => $vehicle->id,
                         'image_path' => $imagePath,
@@ -188,31 +127,26 @@ class VehicleService
                         'sort_order' => $sortOrder++,
                     ]);
                 } else {
-                    // Upload file with thumbnail generation
                     $this->fileService->validateFile($file);
                     $uploadedUrl = $this->fileService->uploadFiles(
-                        [$file], 
-                        'public', 
+                        [$file],
+                        'public',
                         'vehicles',
-                        true, // createThumbnails
-                        false, // optimizeImages
-                        300, // thumbnailWidth
-                        300  // thumbnailHeight
+                        true,
+                        false,
+                        300,
+                        300
                     )[0];
-                    
-                    // Extract relative path from URL (remove domain and /storage/ prefix)
-                    // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
+
                     $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-                    
-                    // Extract thumbnail path from URL
+
                     $thumbnailPath = null;
                     try {
                         $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
                         $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
                     } catch (\Exception $e) {
-                        // Thumbnail generation failed, continue without thumbnail
                     }
-                    
+
                     VehicleImage::create([
                         'vehicle_id' => $vehicle->id,
                         'image_path' => $imagePath,
@@ -223,8 +157,7 @@ class VehicleService
             }
         }
 
-        return $vehicle->fresh(['images', 'details', 'equipment']);
-
+        return $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle']);
     }
 
     /**
@@ -234,7 +167,7 @@ class VehicleService
     public function fetchVehicleDataFromNummerplade(?string $registration = null, ?string $vin = null): array
     {
         if ($registration) {
-            return $this->nummerpladeService->getVehicleByRegistration($registration, true);
+            return $this->dmrFactVehicleLookupService->lookupByRegistration($registration, true);
         }
 
         if ($vin) {
@@ -251,16 +184,115 @@ class VehicleService
     {
         $transformed = $existingData;
 
-        // Map Nummerplade fields to our database fields
-        // Note: Field mapping depends on actual Nummerplade API response structure
-        // This is a template - adjust based on actual API response
+        // DMR registration payload (DmrFactVehicleLookupService) — nested fuel_economy or flat + dmr_fact_vehicle_id
+        $isDmrPayload = isset($apiData['dmr_fact_vehicle_id'])
+            || (isset($apiData['fuel_economy']) && is_array($apiData['fuel_economy']));
 
+        if ($isDmrPayload) {
+            $brandLabel = $apiData['brand'] ?? null;
+            $brandLabel = is_array($brandLabel) ? ($brandLabel['name'] ?? null) : $brandLabel;
+            if (!empty($brandLabel)) {
+                $brand = Brand::firstOrCreateInsensitive(['name' => trim((string) $brandLabel)]);
+                $transformed['brand_id'] = $brand->id;
+            }
+
+            $modelLabel = $apiData['model'] ?? null;
+            $modelLabel = is_array($modelLabel) ? ($modelLabel['name'] ?? null) : $modelLabel;
+            if (!empty($modelLabel) && !empty($transformed['brand_id'])) {
+                $vehicleModel = VehicleModel::firstOrCreateInsensitive([
+                    'brand_id' => $transformed['brand_id'],
+                    'name' => trim((string) $modelLabel),
+                ]);
+                $transformed['model_id'] = $vehicleModel->id;
+            }
+
+            $variantLabel = $apiData['variant'] ?? null;
+            $variantLabel = is_array($variantLabel) ? ($variantLabel['name'] ?? null) : $variantLabel;
+            if (!empty($variantLabel)) {
+                $variant = Variant::firstOrCreateInsensitive(['name' => trim((string) $variantLabel)]);
+                $transformed['variant_id'] = $variant->id;
+            }
+
+            $primaryFuel = $apiData['fuel_economy']['primary'] ?? null;
+            $lines = $apiData['fuel_economy']['lines'] ?? [];
+            $firstLineFuel = is_array($lines) && isset($lines[0]['fuel_type']) ? $lines[0]['fuel_type'] : null;
+            $fuelTypeObj = $apiData['fuel_type'] ?? null;
+            $fuelNameFromFlat = is_array($fuelTypeObj) ? ($fuelTypeObj['name'] ?? null) : null;
+            $fuelName = is_array($primaryFuel) ? ($primaryFuel['fuel_type'] ?? null) : null;
+            $fuelName = $fuelName ?? $firstLineFuel ?? $fuelNameFromFlat;
+            if ($fuelName) {
+                $fuelType = FuelType::where('name', $fuelName)->first();
+                if ($fuelType) {
+                    $transformed['fuel_type_id'] = $fuelType->id;
+                }
+            }
+
+            $kmPerLiter = is_array($primaryFuel) ? ($primaryFuel['motor_km_per_liter'] ?? null) : null;
+            if ($kmPerLiter === null && is_array($lines) && isset($lines[0]['motor_km_per_liter'])) {
+                $kmPerLiter = $lines[0]['motor_km_per_liter'];
+            }
+            if ($kmPerLiter === null && array_key_exists('motor_km_per_liter', $apiData)) {
+                $kmPerLiter = $apiData['motor_km_per_liter'];
+            }
+            if ($kmPerLiter !== null) {
+                $transformed['fuel_efficiency'] = $kmPerLiter;
+            }
+
+            $euronormLabel = $apiData['euronorm'] ?? null;
+            $euronormLabel = is_array($euronormLabel) ? ($euronormLabel['name'] ?? null) : $euronormLabel;
+            if (!empty($euronormLabel)) {
+                $euronom = Euronom::firstOrCreateInsensitive(['name' => trim((string) $euronormLabel)]);
+                $transformed['euronom_id'] = $euronom->id;
+            }
+
+            if (isset($apiData['registration'])) {
+                $transformed['registration'] = $apiData['registration'];
+            }
+
+            if (isset($apiData['chassis_number'])) {
+                $transformed['vin'] = $apiData['chassis_number'];
+            }
+
+            if (isset($apiData['first_registration_date'])) {
+                $transformed['first_registration_date'] = $apiData['first_registration_date'];
+            }
+
+            if (isset($apiData['engine_power_kw'])) {
+                $transformed['engine_power'] = (int) round((float) $apiData['engine_power_kw']);
+            }
+
+            if (isset($apiData['maximum_weight_kg'])) {
+                $transformed['technical_total_weight'] = $apiData['maximum_weight_kg'];
+            }
+
+            $year = $apiData['model_year_effective'] ?? $apiData['model_year'] ?? null;
+            if ($year !== null) {
+                $modelYear = ModelYear::firstOrCreateInsensitive(['name' => (string) $year]);
+                $transformed['model_year_id'] = $modelYear->id;
+            }
+
+            $titleBrand = is_array($apiData['brand'] ?? null) ? ($apiData['brand']['name'] ?? '') : (string) ($apiData['brand'] ?? '');
+            $titleModel = is_array($apiData['model'] ?? null) ? ($apiData['model']['name'] ?? '') : (string) ($apiData['model'] ?? '');
+            if ($titleBrand !== '' && $titleModel !== '') {
+                $transformed['title'] = trim($titleBrand . ' ' . $titleModel);
+            }
+
+            return $transformed;
+        }
+
+        // Legacy Nummerplade / VIN API shape
         // Lookup brand_id from brands table
         if (isset($apiData['make']) || isset($apiData['brand'])) {
             $brandName = $apiData['make'] ?? $apiData['brand'];
-            $brand = Brand::where('name', $brandName)->first();
-            if ($brand) {
-                $transformed['brand_id'] = $brand->id;
+            // Support string brand (legacy) or nested structure
+            if (is_array($brandName)) {
+                $brandName = $brandName['name'] ?? null;
+            }
+            if ($brandName) {
+                $brand = Brand::where('name', $brandName)->first();
+                if ($brand) {
+                    $transformed['brand_id'] = $brand->id;
+                }
             }
         }
 
@@ -344,6 +376,9 @@ class VehicleService
         // Handle variant lookup/insertion
         if (isset($apiData['variant']) || isset($apiData['variantName'])) {
             $variantName = $apiData['variant'] ?? $apiData['variantName'];
+            if (is_array($variantName)) {
+                $variantName = $variantName['name'] ?? null;
+            }
             if ($variantName) {
                 $variant = Variant::firstOrCreateInsensitive(['name' => $variantName]);
                 $transformed['variant_id'] = $variant->id;
@@ -353,6 +388,9 @@ class VehicleService
         // Handle euronom lookup/insertion
         if (isset($apiData['euronorm']) || isset($apiData['euronom']) || isset($apiData['euroNorm'])) {
             $euronomName = $apiData['euronorm'] ?? $apiData['euronom'] ?? $apiData['euroNorm'];
+            if (is_array($euronomName)) {
+                $euronomName = $euronomName['name'] ?? null;
+            }
             if ($euronomName) {
                 $euronom = Euronom::firstOrCreateInsensitive(['name' => $euronomName]);
                 $transformed['euronom_id'] = $euronom->id;
@@ -378,19 +416,15 @@ class VehicleService
     public function updateVehicle(Vehicle $vehicle, array $vehicleData): Vehicle
     {
         return DB::transaction(function () use ($vehicle, $vehicleData) {
-            // Separate equipment IDs if present
             $equipmentIds = null;
             if (isset($vehicleData['equipment_ids']) && is_array($vehicleData['equipment_ids'])) {
                 $equipmentIds = $vehicleData['equipment_ids'];
                 unset($vehicleData['equipment_ids']);
             } elseif (isset($vehicleData['equipment']) && is_array($vehicleData['equipment'])) {
-                // Support legacy 'equipment' key for backward compatibility
                 $equipmentIds = $vehicleData['equipment'];
                 unset($vehicleData['equipment']);
             }
 
-            // Separate vehicle details if present
-            $vehicleDetailsData = [];
             $detailsFields = [
                 'description', 'views_count', 'vin_location', 'vehicle_external_id', 'type_id', 'type_name',
                 'registration_status', 'registration_status_updated_date', 'expire_date',
@@ -407,51 +441,23 @@ class VehicleService
                 'sales_type_id', 'seller_phone', 'annual_tax', 'owners',
                 'production_date', 'cover_image_index', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
                 'co2_emissions', 'is_import', 'is_factory_new', 'transmission_id', 'transmission_name',
-                'wholesale_price', 'internal_cost_price', 'engine_type'
+                'wholesale_price', 'internal_cost_price', 'engine_type',
             ];
-
             foreach ($detailsFields as $field) {
                 if (isset($vehicleData[$field])) {
-                    $vehicleDetailsData[$field] = $vehicleData[$field];
+                    if ($field === 'description') {
+                        $vehicleData['description'] = trim((string) ($vehicleData['description'] ?? '') . "\n\n" . (string) $vehicleData[$field]);
+                    } elseif ($field === 'condition_id') {
+                        $vehicleData['condition_id'] = $vehicleData['condition_id'] ?? $vehicleData[$field];
+                    } elseif ($field === 'servicebog') {
+                        $vehicleData['servicebog'] = $vehicleData['servicebog'] ?? $vehicleData[$field];
+                    }
                     unset($vehicleData[$field]);
                 }
             }
 
-            // Ensure transmission_id exists in transmissions table (column is FK); if not, set to null
-            if (array_key_exists('transmission_id', $vehicleDetailsData) && $vehicleDetailsData['transmission_id'] !== null) {
-                if (!Transmission::where('id', $vehicleDetailsData['transmission_id'])->exists()) {
-                    $vehicleDetailsData['transmission_id'] = null;
-                }
-            }
-
-            // Sync equipment if provided
             if ($equipmentIds !== null) {
                 $vehicle->equipment()->sync($equipmentIds);
-            }
-
-            // Update vehicle details if provided
-            if (!empty($vehicleDetailsData) && $vehicle->id) {
-                // Filter out any fields that aren't fillable in VehicleDetail model
-                $fillableFields = (new \App\Models\VehicleDetail())->getFillable();
-                $filteredDetailsData = array_intersect_key(
-                    $vehicleDetailsData,
-                    array_flip($fillableFields)
-                );
-                
-                // Get or create the vehicle details record
-                if (!empty($filteredDetailsData)) {
-                    // Find existing details or create new instance
-                    $details = VehicleDetail::where('vehicle_id', $vehicle->id)->first();
-                    
-                    if ($details) {
-                        // Update existing record
-                        $details->update($filteredDetailsData);
-                    } else {
-                        // Create new record with vehicle_id explicitly set
-                        $filteredDetailsData['vehicle_id'] = $vehicle->id;
-                        VehicleDetail::create($filteredDetailsData);
-                    }
-                }
             }
 
             // Handle image updates if provided
@@ -525,19 +531,19 @@ class VehicleService
                 unset($vehicleData['images']);
             }
 
-            // Update vehicle
-            if (!empty($vehicleData)) {
+            $fillable = (new Vehicle)->getFillable();
+            $vehicleData = array_intersect_key($vehicleData, array_flip($fillable));
+
+            if (! empty($vehicleData)) {
                 $vehicle->update($vehicleData);
             }
 
-            // Refresh vehicle with relationships
-            $updatedVehicle = $vehicle->fresh(['images', 'details', 'equipment']);
-            
-            // Fallback: reload by ID if fresh() returns null (shouldn't happen, but safety check)
-            if (!$updatedVehicle) {
-                $updatedVehicle = Vehicle::with(['images', 'details', 'equipment'])->findOrFail($vehicle->id);
+            $updatedVehicle = $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle']);
+
+            if (! $updatedVehicle) {
+                $updatedVehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle'])->findOrFail($vehicle->id);
             }
-            
+
             return $updatedVehicle;
         });
     }
@@ -576,104 +582,150 @@ class VehicleService
             ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
             ->with(['images' => function ($query) {
                 $query->orderBy('sort_order');
-            }, 'details', 'dealer']);
+            }, 'dmrFactVehicle.variant.model.brand', 'dealer']);
 
-        // Search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['dealer_id'])) {
+            $query->where('dealer_id', $filters['dealer_id']);
+        }
+
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                    ->orWhere('registration', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        // Category filter (supports array for multiple categories)
-        if (!empty($filters['category_id'])) {
-            $categoryIds = is_array($filters['category_id']) ? $filters['category_id'] : [$filters['category_id']];
-            $query->where(function ($q) use ($categoryIds) {
-                $q->whereNull('category_id')
-                  ->orWhereIn('category_id', $categoryIds);
-            });
-        }
-
-        // Brand filter (supports array for multiple brands)
-        if (!empty($filters['brand_id'])) {
+        if (! empty($filters['brand_id'])) {
             $brandIds = is_array($filters['brand_id']) ? $filters['brand_id'] : [$filters['brand_id']];
-            $query->whereIn('brand_id', $brandIds);
+            $dmrBrandIds = $this->resolveDmrBrandIds($brandIds);
+            if (! empty($dmrBrandIds)) {
+                $query->whereHas('dmrFactVehicle.variant.model', function ($q) use ($dmrBrandIds) {
+                    $q->whereIn('brand_id', $dmrBrandIds);
+                });
+            }
         }
 
-        // Model filter (supports array for multiple models)
-        if (!empty($filters['model_id'])) {
+        if (! empty($filters['model_id'])) {
             $modelIds = is_array($filters['model_id']) ? $filters['model_id'] : [$filters['model_id']];
-            $query->whereIn('model_id', $modelIds);
+            $dmrModelIds = $this->resolveDmrModelIds($modelIds);
+            if (! empty($dmrModelIds)) {
+                $query->whereHas('dmrFactVehicle.variant', function ($q) use ($dmrModelIds) {
+                    $q->whereIn('model_id', $dmrModelIds);
+                });
+            }
         }
 
-        // Model Year filter (supports array for multiple years)
-        if (!empty($filters['model_year_id'])) {
+        if (! empty($filters['model_year_id'])) {
             $yearIds = is_array($filters['model_year_id']) ? $filters['model_year_id'] : [$filters['model_year_id']];
-            $query->where(function ($q) use ($yearIds) {
-                $q->whereNull('model_year_id')
-                  ->orWhereIn('model_year_id', $yearIds);
-            });
+            $years = ModelYear::whereIn('id', $yearIds)->pluck('name')->map(fn ($n) => (string) $n)->all();
+            if (! empty($years)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($years) {
+                    $q->whereIn(DB::raw('CAST(model_aar AS CHAR)'), $years);
+                });
+            }
         }
 
-        // Fuel Type filter (supports array for multiple values)
-        if (!empty($filters['fuel_type_id'])) {
+        if (! empty($filters['fuel_type_id'])) {
             $fuelTypeIds = is_array($filters['fuel_type_id']) ? $filters['fuel_type_id'] : [$filters['fuel_type_id']];
-            $query->where(function ($q) use ($fuelTypeIds) {
-                $q->whereNull('fuel_type_id')
-                  ->orWhereIn('fuel_type_id', $fuelTypeIds);
-            });
+            $energyIds = $this->resolveDmrDriveEnergyIds($fuelTypeIds);
+            if (! empty($energyIds)) {
+                $query->whereHas('dmrFactVehicle.drivmiddelLines', function ($q) use ($energyIds) {
+                    $q->whereIn('drive_energy_id', $energyIds);
+                });
+            }
         }
 
-        // Kilometers Driven filter (support min only, max only, or both)
-        if (!empty($filters['km_driven_from']) || !empty($filters['km_driven_to'])) {
+        if (! empty($filters['km_driven_from']) || ! empty($filters['km_driven_to'])) {
             $from = isset($filters['km_driven_from']) && $filters['km_driven_from'] !== '' ? (int) $filters['km_driven_from'] : null;
             $to = isset($filters['km_driven_to']) && $filters['km_driven_to'] !== '' ? (int) $filters['km_driven_to'] : null;
             if ($from !== null && $to !== null) {
                 $query->where(function ($q) use ($from, $to) {
                     $q->whereNull('km_driven')
-                      ->orWhereBetween('km_driven', [$from, $to]);
+                        ->orWhereBetween('km_driven', [$from, $to]);
                 });
             } elseif ($from !== null) {
                 $query->where(function ($q) use ($from) {
                     $q->whereNull('km_driven')
-                      ->orWhere('km_driven', '>=', $from);
+                        ->orWhere('km_driven', '>=', $from);
                 });
             } else {
                 $query->where(function ($q) use ($to) {
                     $q->whereNull('km_driven')
-                      ->orWhere('km_driven', '<=', $to);
+                        ->orWhere('km_driven', '<=', $to);
                 });
             }
         }
 
-        // Price range filter (exclude 0 values)
-        if (!empty($filters['price_from']) && $filters['price_from'] > 0) {
+        if (! empty($filters['price_from']) && $filters['price_from'] > 0) {
             $query->where(function ($q) use ($filters) {
                 $q->whereNull('price')
-                  ->orWhere('price', '>=', $filters['price_from']);
+                    ->orWhere('price', '>=', $filters['price_from']);
             });
         }
-        if (!empty($filters['price_to']) && $filters['price_to'] > 0) {
+        if (! empty($filters['price_to']) && $filters['price_to'] > 0) {
             $query->where(function ($q) use ($filters) {
                 $q->whereNull('price')
-                  ->orWhere('price', '<=', $filters['price_to']);
+                    ->orWhere('price', '<=', $filters['price_to']);
             });
         }
 
-        // Listing Type filter (supports array for multiple types, e.g. Purchase + Leasing)
-        if (!empty($filters['listing_type_id'])) {
-            $ids = is_array($filters['listing_type_id']) ? $filters['listing_type_id'] : [$filters['listing_type_id']];
-            $ids = array_filter(array_map('intval', $ids));
-            if (!empty($ids)) {
-                $query->where(function ($q) use ($ids) {
-                    $q->whereNull('listing_type_id')
-                      ->orWhereIn('listing_type_id', $ids);
+        if (! empty($filters['condition_id'])) {
+            $query->where('condition_id', (int) $filters['condition_id']);
+        }
+
+        if (! empty($filters['equipment_ids']) || ! empty($filters['equipment_id'])) {
+            $equipmentIds = $filters['equipment_ids'] ?? [$filters['equipment_id']];
+            $equipmentIds = is_array($equipmentIds) ? array_filter(array_map('intval', $equipmentIds)) : [];
+            if (! empty($equipmentIds)) {
+                $query->whereHas('equipment', function ($q) use ($equipmentIds) {
+                    $q->whereIn('equipments.id', $equipmentIds);
                 });
             }
         }
+
+        if (! empty($filters['year_from']) && $filters['year_from'] > 1975) {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('model_aar', '>=', (int) $filters['year_from']);
+            });
+        }
+        if (! empty($filters['year_to']) && $filters['year_to'] < (int) date('Y') + 2) {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('model_aar', '<=', (int) $filters['year_to']);
+            });
+        }
+
+        if (! empty($filters['body_type_id'])) {
+            $bodyIds = is_array($filters['body_type_id']) ? $filters['body_type_id'] : [$filters['body_type_id']];
+            $bodyIds = array_filter(array_map('intval', $bodyIds));
+            if (! empty($bodyIds)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($bodyIds) {
+                    $q->whereIn('body_type_id', $bodyIds);
+                });
+            }
+        }
+
+        if (! empty($filters['gear_type_id'])) {
+            $gearIds = is_array($filters['gear_type_id']) ? $filters['gear_type_id'] : [$filters['gear_type_id']];
+            $gearIds = array_filter(array_map('intval', $gearIds));
+            if (! empty($gearIds)) {
+                $query->whereIn('gear_type_id', $gearIds);
+            }
+        }
+
+        if (! empty($filters['first_registration_year_from']) && $filters['first_registration_year_from'] > 1975) {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->whereYear('foerste_registrering_dato', '>=', (int) $filters['first_registration_year_from']);
+            });
+        }
+        if (! empty($filters['first_registration_year_to']) && $filters['first_registration_year_to'] <= (int) date('Y') + 1) {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->whereYear('foerste_registrering_dato', '<=', (int) $filters['first_registration_year_to']);
+            });
+        }
+
+        $this->applySorting($query, $filters['sort'] ?? 'standard');
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -689,20 +741,20 @@ class VehicleService
                 'images' => function ($query) {
                     $query->orderBy('sort_order');
                 },
-                'details',
                 'equipment',
+                'dmrFactVehicle.variant.model.brand',
             ]);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                    ->orWhere('registration', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        if (!empty($filters['vehicle_list_status_id'])) {
+        if (! empty($filters['vehicle_list_status_id'])) {
             $query->where('vehicle_list_status_id', $filters['vehicle_list_status_id']);
         }
 
@@ -723,107 +775,22 @@ class VehicleService
      */
     public function getPublicDealerVehicles(int $dealerId, array $filters = [], int $perPage = 15, int $page = 1)
     {
-        $query = Vehicle::query()
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
-            ->where('dealer_id', $dealerId)
-            ->with(['images' => function ($query) {
-                $query->orderBy('sort_order');
-            }, 'details', 'dealer']);
+        $filters['dealer_id'] = $dealerId;
 
-        // Search filter
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
-            });
-        }
-
-        // Category filter
-        if (!empty($filters['category_id'])) {
-            $query->where('category_id', $filters['category_id']);
-        }
-
-        // Brand filter
-        if (!empty($filters['brand_id'])) {
-            $query->where('brand_id', $filters['brand_id']);
-        }
-
-        // Model filter
-        if (!empty($filters['model_id'])) {
-            $query->where('model_id', $filters['model_id']);
-        }
-
-        // Model Year filter
-        if (!empty($filters['model_year_id'])) {
-            $query->where('model_year_id', $filters['model_year_id']);
-        }
-
-        // Fuel Type filter (supports array for multiple values)
-        if (!empty($filters['fuel_type_id'])) {
-            if (is_array($filters['fuel_type_id'])) {
-                $query->whereIn('fuel_type_id', $filters['fuel_type_id']);
-            } else {
-                $query->where('fuel_type_id', $filters['fuel_type_id']);
-            }
-        }
-
-        // Kilometers Driven filter
-        if (!empty($filters['km_driven'])) {
-            $query->where('km_driven', $filters['km_driven']);
-        }
-
-        // Price range filter (exclude 0 values)
-        if (!empty($filters['price_from']) && $filters['price_from'] > 0) {
-            $query->where('price', '>=', $filters['price_from']);
-        }
-        if (!empty($filters['price_to']) && $filters['price_to'] > 0) {
-            $query->where('price', '<=', $filters['price_to']);
-        }
-
-        // Listing Type filter
-        if (!empty($filters['listing_type_id'])) {
-            $query->where('listing_type_id', $filters['listing_type_id']);
-        }
-
-        // Apply sorting
-        $this->applySorting($query, $filters['sort'] ?? 'standard');
-
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        return $this->getPublicVehicles($filters, $perPage, $page);
     }
-    
+
     /**
-     * Apply sorting to vehicle query
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $sort
-     * @return void
+     * Apply sorting to vehicle query (DMR-backed listings).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      */
     protected function applySorting($query, string $sort = 'standard'): void
     {
-        // Check if query already has joins (for advanced filters)
         $joins = $query->getQuery()->joins ?? [];
-        $hasJoins = !empty($joins);
-        $hasVehicleDetailsJoin = false;
-        $hasBrandsJoin = false;
-        $hasModelYearsJoin = false;
-        
-        foreach ($joins as $join) {
-            $table = $join->table ?? '';
-            if (str_contains($table, 'vehicle_details')) {
-                $hasVehicleDetailsJoin = true;
-            }
-            if (str_contains($table, 'brands')) {
-                $hasBrandsJoin = true;
-            }
-            if (str_contains($table, 'model_years')) {
-                $hasModelYearsJoin = true;
-            }
-        }
-        
+        $hasJoins = ! empty($joins);
         $tablePrefix = $hasJoins ? 'vehicles.' : '';
-        
+
         switch ($sort) {
             case 'price_asc':
                 $query->orderBy($tablePrefix . 'price', 'asc');
@@ -838,20 +805,16 @@ class VehicleService
                 $query->orderBy($tablePrefix . 'created_at', 'asc');
                 break;
             case 'year_desc':
-                if (!$hasModelYearsJoin) {
-                    $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
-                }
-                $query->orderBy('model_years.name', 'desc');
-                if (!$hasJoins) {
+                $query->leftJoin('dmr_fact_vehicles as dfv_y', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_y.id')
+                    ->orderBy('dfv_y.model_aar', 'desc');
+                if (! $hasJoins) {
                     $query->select('vehicles.*');
                 }
                 break;
             case 'year_asc':
-                if (!$hasModelYearsJoin) {
-                    $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
-                }
-                $query->orderBy('model_years.name', 'asc');
-                if (!$hasJoins) {
+                $query->leftJoin('dmr_fact_vehicles as dfv_y2', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_y2.id')
+                    ->orderBy('dfv_y2.model_aar', 'asc');
+                if (! $hasJoins) {
                     $query->select('vehicles.*');
                 }
                 break;
@@ -860,12 +823,6 @@ class VehicleService
                 break;
             case 'mileage_asc':
                 $query->orderByRaw('COALESCE(' . $tablePrefix . 'km_driven, 0) ASC');
-                break;
-            case 'fuel_efficiency_desc':
-                $query->orderBy($tablePrefix . 'fuel_efficiency', 'desc');
-                break;
-            case 'fuel_efficiency_asc':
-                $query->orderBy($tablePrefix . 'fuel_efficiency', 'asc');
                 break;
             case 'range_desc':
                 $query->orderBy($tablePrefix . 'range_km', 'desc');
@@ -880,416 +837,129 @@ class VehicleService
                 $query->orderBy($tablePrefix . 'battery_capacity', 'asc');
                 break;
             case 'brand_asc':
-                if (!$hasBrandsJoin) {
-                    $query->leftJoin('brands', 'vehicles.brand_id', '=', 'brands.id');
-                }
-                $query->orderBy('brands.name', 'asc');
-                if (!$hasJoins) {
+                $query->leftJoin('dmr_fact_vehicles as dfv_b', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_b.id')
+                    ->leftJoin('dmr_variants as dv_b', 'dfv_b.variant_id', '=', 'dv_b.id')
+                    ->leftJoin('dmr_models as dm_b', 'dv_b.model_id', '=', 'dm_b.id')
+                    ->leftJoin('dmr_brands as db_b', 'dm_b.brand_id', '=', 'db_b.id')
+                    ->orderBy('db_b.name', 'asc');
+                if (! $hasJoins) {
                     $query->select('vehicles.*');
                 }
                 break;
             case 'brand_desc':
-                if (!$hasBrandsJoin) {
-                    $query->leftJoin('brands', 'vehicles.brand_id', '=', 'brands.id');
-                }
-                $query->orderBy('brands.name', 'desc');
-                if (!$hasJoins) {
+                $query->leftJoin('dmr_fact_vehicles as dfv_b2', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_b2.id')
+                    ->leftJoin('dmr_variants as dv_b2', 'dfv_b2.variant_id', '=', 'dv_b2.id')
+                    ->leftJoin('dmr_models as dm_b2', 'dv_b2.model_id', '=', 'dm_b2.id')
+                    ->leftJoin('dmr_brands as db_b2', 'dm_b2.brand_id', '=', 'db_b2.id')
+                    ->orderBy('db_b2.name', 'desc');
+                if (! $hasJoins) {
                     $query->select('vehicles.*');
                 }
-                break;
-            case 'engine_power_desc':
-                $query->orderBy($tablePrefix . 'engine_power', 'desc');
-                break;
-            case 'engine_power_asc':
-                $query->orderBy($tablePrefix . 'engine_power', 'asc');
-                break;
-            case 'towing_weight_desc':
-                $query->orderBy($tablePrefix . 'towing_weight', 'desc');
-                break;
-            case 'towing_weight_asc':
-                $query->orderBy($tablePrefix . 'towing_weight', 'asc');
-                break;
-            case 'top_speed_desc':
-                if (!$hasVehicleDetailsJoin) {
-                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
-                }
-                $query->orderBy('vehicle_details.top_speed', 'desc');
-                if (!$hasJoins) {
-                    $query->select('vehicles.*');
-                }
-                break;
-            case 'top_speed_asc':
-                if (!$hasVehicleDetailsJoin) {
-                    $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
-                }
-                $query->orderBy('vehicle_details.top_speed', 'asc');
-                if (!$hasJoins) {
-                    $query->select('vehicles.*');
-                }
-                break;
-            case 'ownership_tax_desc':
-                $query->orderBy($tablePrefix . 'ownership_tax', 'desc');
-                break;
-            case 'ownership_tax_asc':
-                $query->orderBy($tablePrefix . 'ownership_tax', 'asc');
                 break;
             case 'first_reg_desc':
-                $query->orderBy($tablePrefix . 'first_registration_date', 'desc');
+                $query->leftJoin('dmr_fact_vehicles as dfv_fr', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_fr.id')
+                    ->orderBy('dfv_fr.foerste_registrering_dato', 'desc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
                 break;
             case 'first_reg_asc':
-                $query->orderBy($tablePrefix . 'first_registration_date', 'asc');
+                $query->leftJoin('dmr_fact_vehicles as dfv_fr2', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_fr2.id')
+                    ->orderBy('dfv_fr2.foerste_registrering_dato', 'asc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
                 break;
             case 'distance_asc':
             case 'distance_desc':
-                // Distance sorting not available without location data
-                // Default to standard sorting
                 $query->orderBy($tablePrefix . 'id', 'desc');
                 break;
             case 'standard':
             default:
-                // Default: order by id desc (newest first)
                 $query->orderBy($tablePrefix . 'id', 'desc');
                 break;
         }
     }
 
     /**
-     * Get public vehicles with advanced filters (vehicles and vehicle_details tables)
-     * 
-     * @param array $basicFilters
-     * @param array $advancedFilters
-     * @param int $perPage
-     * @param int $page
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * Advanced filters: merged into {@see getPublicVehicles()} (DMR + slim vehicles columns).
      */
     public function getPublicVehiclesWithAdvancedFilters(array $basicFilters = [], array $advancedFilters = [], int $perPage = 15, int $page = 1)
     {
-        // Start with base query
-        $query = Vehicle::query()
-            ->where('vehicles.vehicle_list_status_id', VehicleListStatus::PUBLISHED);
-
-        // Apply basic filters first
-        if (!empty($basicFilters['search'])) {
-            $search = $basicFilters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('vehicles.title', 'like', "%{$search}%")
-                  ->orWhere('vehicles.registration', 'like', "%{$search}%")
-                  ->orWhere('vehicles.vin', 'like', "%{$search}%");
-            });
+        $merged = array_merge($advancedFilters, $basicFilters);
+        if (! empty($merged['mileage_from']) && empty($merged['km_driven_from'])) {
+            $merged['km_driven_from'] = $merged['mileage_from'];
+        }
+        if (! empty($merged['mileage_to']) && empty($merged['km_driven_to'])) {
+            $merged['km_driven_to'] = $merged['mileage_to'];
         }
 
-        if (!empty($basicFilters['category_id'])) {
-            $categoryIds = is_array($basicFilters['category_id']) ? $basicFilters['category_id'] : [$basicFilters['category_id']];
-            $query->whereIn('vehicles.category_id', $categoryIds);
+        return $this->getPublicVehicles($merged, $perPage, $page);
+    }
+
+    /**
+     * @param  array<int|string>  $brandIds
+     * @return array<int>
+     */
+    protected function resolveDmrBrandIds(array $brandIds): array
+    {
+        $brandIds = array_values(array_filter(array_map('intval', $brandIds)));
+        if (empty($brandIds)) {
+            return [];
+        }
+        $dmr = DmrBrand::whereIn('id', $brandIds)->pluck('id')->all();
+        if (count($dmr) === count($brandIds)) {
+            return $dmr;
+        }
+        $names = Brand::whereIn('id', $brandIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
         }
 
-        if (!empty($basicFilters['brand_id'])) {
-            $brandIds = is_array($basicFilters['brand_id']) ? $basicFilters['brand_id'] : [$basicFilters['brand_id']];
-            $query->whereIn('vehicles.brand_id', $brandIds);
+        return DmrBrand::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $modelIds
+     * @return array<int>
+     */
+    protected function resolveDmrModelIds(array $modelIds): array
+    {
+        $modelIds = array_values(array_filter(array_map('intval', $modelIds)));
+        if (empty($modelIds)) {
+            return [];
+        }
+        $dmr = DmrModel::whereIn('id', $modelIds)->pluck('id')->all();
+        if (count($dmr) === count($modelIds)) {
+            return $dmr;
+        }
+        $names = VehicleModel::whereIn('id', $modelIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
         }
 
-        if (!empty($basicFilters['model_id'])) {
-            $modelIds = is_array($basicFilters['model_id']) ? $basicFilters['model_id'] : [$basicFilters['model_id']];
-            $query->whereIn('vehicles.model_id', $modelIds);
+        return DmrModel::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $fuelTypeIds
+     * @return array<int>
+     */
+    protected function resolveDmrDriveEnergyIds(array $fuelTypeIds): array
+    {
+        $fuelTypeIds = array_values(array_filter(array_map('intval', $fuelTypeIds)));
+        if (empty($fuelTypeIds)) {
+            return [];
+        }
+        $dmr = DmrDriveEnergy::whereIn('id', $fuelTypeIds)->pluck('id')->all();
+        if (count($dmr) === count($fuelTypeIds)) {
+            return $dmr;
+        }
+        $names = FuelType::whereIn('id', $fuelTypeIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
         }
 
-        if (!empty($basicFilters['model_year_id'])) {
-            $yearIds = is_array($basicFilters['model_year_id']) ? $basicFilters['model_year_id'] : [$basicFilters['model_year_id']];
-            $query->whereIn('vehicles.model_year_id', $yearIds);
-        }
-
-        // Model Year range filter (year_from and year_to)
-        if (!empty($advancedFilters['year_from']) && $advancedFilters['year_from'] > 1975) {
-            $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
-            $query->whereRaw('CAST(model_years.name AS UNSIGNED) >= ?', [$advancedFilters['year_from']]);
-        }
-        if (!empty($advancedFilters['year_to']) && $advancedFilters['year_to'] < (date('Y') + 1)) {
-            if (!str_contains($query->toSql(), 'model_years')) {
-                $query->leftJoin('model_years', 'vehicles.model_year_id', '=', 'model_years.id');
-            }
-            $query->whereRaw('CAST(model_years.name AS UNSIGNED) <= ?', [$advancedFilters['year_to']]);
-        }
-
-        if (!empty($basicFilters['fuel_type_id'])) {
-            if (is_array($basicFilters['fuel_type_id'])) {
-                $query->whereIn('vehicles.fuel_type_id', $basicFilters['fuel_type_id']);
-            } else {
-                $query->where('vehicles.fuel_type_id', $basicFilters['fuel_type_id']);
-            }
-        }
-
-        if (!empty($basicFilters['km_driven'])) {
-            $query->where('vehicles.km_driven', $basicFilters['km_driven']);
-        }
-
-        if (!empty($basicFilters['price_from'])) {
-            $query->where('vehicles.price', '>=', $basicFilters['price_from']);
-        }
-        if (!empty($basicFilters['price_to']) && $basicFilters['price_to'] > 0) {
-            $query->where('vehicles.price', '<=', $basicFilters['price_to']);
-        }
-
-        if (!empty($basicFilters['listing_type_id'])) {
-            $ids = is_array($basicFilters['listing_type_id']) ? $basicFilters['listing_type_id'] : [$basicFilters['listing_type_id']];
-            $ids = array_filter(array_map('intval', $ids));
-            if (!empty($ids)) {
-                $query->whereIn('vehicles.listing_type_id', $ids);
-            }
-        }
-
-        // Join with vehicle_details for advanced filters
-        $query->leftJoin('vehicle_details', 'vehicles.id', '=', 'vehicle_details.vehicle_id');
-
-        // Apply advanced filters
-        // Make (brand name lookup)
-        if (!empty($advancedFilters['make']) && empty($basicFilters['brand_id'])) {
-            $brand = Brand::where('name', 'like', "%{$advancedFilters['make']}%")->first();
-            if ($brand) {
-                $query->where('vehicles.brand_id', $brand->id);
-            }
-        }
-
-        // Mileage range (using km_driven column, exclude 0 values)
-        if (!empty($advancedFilters['mileage_from']) && $advancedFilters['mileage_from'] > 0) {
-            $query->where('vehicles.km_driven', '>=', $advancedFilters['mileage_from']);
-        }
-        if (!empty($advancedFilters['mileage_to']) && $advancedFilters['mileage_to'] > 0) {
-            $query->where('vehicles.km_driven', '<=', $advancedFilters['mileage_to']);
-        }
-        if (!empty($advancedFilters['odometer_from'])) {
-            $query->where('vehicles.km_driven', '>=', $advancedFilters['odometer_from']);
-        }
-        if (!empty($advancedFilters['odometer_to'])) {
-            $query->where('vehicles.km_driven', '<=', $advancedFilters['odometer_to']);
-        }
-
-        // Listing Status
-        if (!empty($advancedFilters['vehicle_list_status_id'])) {
-            $query->where('vehicles.vehicle_list_status_id', $advancedFilters['vehicle_list_status_id']);
-        }
-
-        // Vehicle Body Type (supports array for multiple values)
-        if (!empty($advancedFilters['body_type_id'])) {
-            if (is_array($advancedFilters['body_type_id'])) {
-                $query->whereIn('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
-            } else {
-                $query->where('vehicle_details.body_type_id', $advancedFilters['body_type_id']);
-            }
-        }
-
-        // Drive Wheels: frontend sends fwd/rwd/awd; DB column is integer (1=fwd, 2=rwd, 3=awd)
-        if (!empty($advancedFilters['drive_axles'])) {
-            $map = ['fwd' => 1, 'rwd' => 2, 'awd' => 3];
-            $vals = is_array($advancedFilters['drive_axles']) ? $advancedFilters['drive_axles'] : [$advancedFilters['drive_axles']];
-            $ids = [];
-            foreach ($vals as $v) {
-                if (is_numeric($v)) {
-                    $ids[] = (int) $v;
-                } elseif (isset($map[strtolower((string) $v)])) {
-                    $ids[] = $map[strtolower((string) $v)];
-                }
-            }
-            if (!empty($ids)) {
-                $query->whereIn('vehicle_details.drive_axles', array_unique($ids));
-            }
-        }
-
-        // First Registration Year (exclude default min/max values)
-        if (!empty($advancedFilters['first_registration_year_from']) && $advancedFilters['first_registration_year_from'] > 1975) {
-            $query->whereYear('vehicles.first_registration_date', '>=', $advancedFilters['first_registration_year_from']);
-        }
-        if (!empty($advancedFilters['first_registration_year_to']) && $advancedFilters['first_registration_year_to'] <= (int) date('Y') + 1) {
-            $query->whereYear('vehicles.first_registration_date', '<=', $advancedFilters['first_registration_year_to']);
-        }
-
-        // Seller Type / Dealer
-        if (!empty($advancedFilters['dealer_id'])) {
-            $query->where('vehicles.dealer_id', $advancedFilters['dealer_id']);
-        }
-
-        // Price Type (supports array for multiple values)
-        if (!empty($advancedFilters['price_type_id'])) {
-            if (is_array($advancedFilters['price_type_id'])) {
-                $query->whereIn('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
-            } else {
-                $query->where('vehicle_details.price_type_id', $advancedFilters['price_type_id']);
-            }
-        }
-
-        // Condition (ensure integer for correct match with vehicle_details.condition_id)
-        if (!empty($advancedFilters['condition_id'])) {
-            $query->where('vehicle_details.condition_id', (int) $advancedFilters['condition_id']);
-        }
-
-        // Gear Type (supports array for multiple values)
-        if (!empty($advancedFilters['gear_type_id'])) {
-            if (is_array($advancedFilters['gear_type_id'])) {
-                $query->whereIn('vehicles.gear_type_id', $advancedFilters['gear_type_id']);
-            } else {
-                $query->where('vehicles.gear_type_id', $advancedFilters['gear_type_id']);
-            }
-        }
-
-        // Sales Type (supports array for multiple values)
-        if (!empty($advancedFilters['sales_type_id'])) {
-            if (is_array($advancedFilters['sales_type_id'])) {
-                $query->whereIn('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
-            } else {
-                $query->where('vehicle_details.sales_type_id', $advancedFilters['sales_type_id']);
-            }
-        }
-
-        // Performance - Top Speed
-        if (!empty($advancedFilters['top_speed_from'])) {
-            $query->where('vehicle_details.top_speed', '>=', $advancedFilters['top_speed_from']);
-        }
-        if (!empty($advancedFilters['top_speed_to'])) {
-            $query->where('vehicle_details.top_speed', '<=', $advancedFilters['top_speed_to']);
-        }
-
-        // Performance - Engine Power (exclude 0 values)
-        if (!empty($advancedFilters['engine_power_from']) && $advancedFilters['engine_power_from'] > 0) {
-            $query->where('vehicles.engine_power', '>=', $advancedFilters['engine_power_from']);
-        }
-        if (!empty($advancedFilters['engine_power_to']) && $advancedFilters['engine_power_to'] > 0) {
-            $query->where('vehicles.engine_power', '<=', $advancedFilters['engine_power_to']);
-        }
-
-        // Owner Tax range filter (exclude 0 values)
-        if (!empty($advancedFilters['ownership_tax_from']) && $advancedFilters['ownership_tax_from'] > 0) {
-            $query->where('vehicles.ownership_tax', '>=', $advancedFilters['ownership_tax_from']);
-        }
-        if (!empty($advancedFilters['ownership_tax_to']) && $advancedFilters['ownership_tax_to'] > 0) {
-            $query->where('vehicles.ownership_tax', '<=', $advancedFilters['ownership_tax_to']);
-        }
-
-        // Battery & Charging (EV) (exclude 0 values)
-        if (!empty($advancedFilters['battery_capacity_from']) && $advancedFilters['battery_capacity_from'] > 0) {
-            $query->where('vehicles.battery_capacity', '>=', $advancedFilters['battery_capacity_from']);
-        }
-        if (!empty($advancedFilters['battery_capacity_to']) && $advancedFilters['battery_capacity_to'] > 0) {
-            $query->where('vehicles.battery_capacity', '<=', $advancedFilters['battery_capacity_to']);
-        }
-        if (!empty($advancedFilters['range_km_from']) && $advancedFilters['range_km_from'] > 0) {
-            $query->where('vehicles.range_km', '>=', $advancedFilters['range_km_from']);
-        }
-        if (!empty($advancedFilters['range_km_to']) && $advancedFilters['range_km_to'] > 0) {
-            $query->where('vehicles.range_km', '<=', $advancedFilters['range_km_to']);
-        }
-        if (!empty($advancedFilters['charging_type'])) {
-            $query->where('vehicles.charging_type', $advancedFilters['charging_type']);
-        }
-
-        // Economy & Environment
-        if (!empty($advancedFilters['fuel_efficiency_from'])) {
-            $query->where('vehicles.fuel_efficiency', '>=', $advancedFilters['fuel_efficiency_from']);
-        }
-        if (!empty($advancedFilters['fuel_efficiency_to'])) {
-            $query->where('vehicles.fuel_efficiency', '<=', $advancedFilters['fuel_efficiency_to']);
-        }
-        // Euro norm: DB column is euronom_id (FK to euronorms); accept euronom_id from normalized input
-        if (!empty($advancedFilters['euronom_id'])) {
-            $query->where('vehicle_details.euronom_id', $advancedFilters['euronom_id']);
-        }
-
-        // Physical Details
-        if (!empty($advancedFilters['color_id'])) {
-            $query->where('vehicle_details.color_id', $advancedFilters['color_id']);
-        }
-        if (!empty($advancedFilters['doors'])) {
-            $query->where('vehicle_details.doors', $advancedFilters['doors']);
-        }
-        if (!empty($advancedFilters['seats_min'])) {
-            $query->where('vehicle_details.minimum_seats', '>=', $advancedFilters['seats_min']);
-        }
-        if (!empty($advancedFilters['seats_max'])) {
-            $query->where('vehicle_details.maximum_seats', '<=', $advancedFilters['seats_max']);
-        }
-        if (!empty($advancedFilters['weight_from'])) {
-            $query->where(function ($q) use ($advancedFilters) {
-                $q->where('vehicle_details.vehicle_weight', '>=', $advancedFilters['weight_from'])
-                  ->orWhere('vehicle_details.total_weight', '>=', $advancedFilters['weight_from']);
-            });
-        }
-        if (!empty($advancedFilters['weight_to'])) {
-            $query->where(function ($q) use ($advancedFilters) {
-                $q->where('vehicle_details.vehicle_weight', '<=', $advancedFilters['weight_to'])
-                  ->orWhere('vehicle_details.total_weight', '<=', $advancedFilters['weight_to']);
-            });
-        }
-        if (!empty($advancedFilters['wheels'])) {
-            $query->where('vehicle_details.wheels', $advancedFilters['wheels']);
-        }
-        if (!empty($advancedFilters['axles'])) {
-            $query->where('vehicle_details.axles', $advancedFilters['axles']);
-        }
-        if (!empty($advancedFilters['engine_cylinders'])) {
-            $query->where('vehicle_details.engine_cylinders', $advancedFilters['engine_cylinders']);
-        }
-        if (!empty($advancedFilters['engine_displacement_from'])) {
-            $query->where('vehicle_details.engine_displacement', '>=', $advancedFilters['engine_displacement_from']);
-        }
-        if (!empty($advancedFilters['engine_displacement_to'])) {
-            $query->where('vehicle_details.engine_displacement', '<=', $advancedFilters['engine_displacement_to']);
-        }
-        if (!empty($advancedFilters['airbags'])) {
-            $query->where('vehicle_details.airbags', $advancedFilters['airbags']);
-        }
-        if (!empty($advancedFilters['ncap_five'])) {
-            $query->where('vehicle_details.ncap_five', true);
-        }
-
-        // Equipment (many-to-many)
-        if (!empty($advancedFilters['equipment_ids']) || !empty($advancedFilters['equipment_id'])) {
-            $equipmentIds = $advancedFilters['equipment_ids'] ?? [$advancedFilters['equipment_id']];
-            if (is_array($equipmentIds) && !empty($equipmentIds)) {
-                $query->whereHas('equipment', function ($q) use ($equipmentIds) {
-                    $q->whereIn('equipments.id', $equipmentIds);
-                });
-            }
-        }
-
-        // Variant, Type, Use, Transmission (vehicle_details)
-        if (!empty($advancedFilters['variant_id'])) {
-            $query->where('vehicle_details.variant_id', $advancedFilters['variant_id']);
-        }
-        if (!empty($advancedFilters['type_id'])) {
-            $query->where('vehicle_details.type_id', $advancedFilters['type_id']);
-        }
-        if (!empty($advancedFilters['use_id'])) {
-            $query->where('vehicle_details.use_id', $advancedFilters['use_id']);
-        }
-        if (!empty($advancedFilters['transmission_id'])) {
-            $query->where('vehicle_details.transmission_id', $advancedFilters['transmission_id']);
-        }
-
-        // Towing weight (vehicles table - minimum value)
-        if (!empty($advancedFilters['towing_weight']) && $advancedFilters['towing_weight'] > 0) {
-            $query->where('vehicles.towing_weight', '>=', $advancedFilters['towing_weight']);
-        }
-
-        // Import / Factory new (vehicle_details) – only filter when user explicitly selects "yes"
-        if (!empty($advancedFilters['is_import'])) {
-            $query->where('vehicle_details.is_import', true);
-        }
-        if (!empty($advancedFilters['is_factory_new'])) {
-            $query->where('vehicle_details.is_factory_new', true);
-        }
-
-        // Select distinct vehicles to avoid duplicates from joins
-        $query->select('vehicles.*')
-              ->distinct();
-
-        // Apply sorting (before pagination)
-        $sort = $basicFilters['sort'] ?? $advancedFilters['sort'] ?? 'standard';
-        $this->applySorting($query, $sort);
-
-        // Eager load relationships
-        $query->with(['images' => function ($query) {
-            $query->orderBy('sort_order');
-        }, 'details', 'dealer']);
-
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        return DmrDriveEnergy::whereIn('name', $names)->pluck('id')->all();
     }
 }
-

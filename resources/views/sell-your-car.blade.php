@@ -1249,7 +1249,7 @@
                         </svg>
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.find_vehicle_button') }}</span>
                     </button>
-                    <button type="button" id="enter-manually-button" class="lookup-button btn-secondary text-primary border border-primary" style="margin-left: 0;">
+                    <button type="button" id="enter-manually-button" class="hidden lookup-button btn-secondary text-primary border border-primary" style="margin-left: 0;">
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.enter_manually') }}</span>
                     </button>
                 </div>
@@ -1371,7 +1371,7 @@
                             <label for="manual_fuel_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
                             <select id="manual_fuel_type_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['fuelTypes'] as $fuel)
+                                @foreach($lookupData['dmrDriveEnergies'] as $fuel)
                                     <option value="{{ $fuel->id }}">{{ $fuel->name }}</option>
                                 @endforeach
                             </select>
@@ -1401,7 +1401,7 @@
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm opacity-60 cursor-not-allowed">
                             <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                             @foreach($lookupData['variants'] as $variant)
-                                <option value="{{ $variant->id }}">{{ $variant->name }}</option>
+                                <option value="{{ $variant->id }}" data-model-id="{{ $variant->model_id }}">{{ $variant->name }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
@@ -1413,7 +1413,7 @@
                         <select id="color_id" name="color_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
-                            @foreach($lookupData['colors'] as $color)
+                            @foreach($lookupData['dmrColours'] as $color)
                                 <option value="{{ $color->id }}">{{ $color->name }}</option>
                             @endforeach
                         </select>
@@ -1451,8 +1451,19 @@
                         <label for="gear_type_id" class="text-sm font-medium">{{ __('messages.forms.gear_type') }}</label>
                         <select id="gear_type_id" name="gear_type_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">{{ __('messages.pages.sell_your_car.select_gear_type') }}</option>
                             @foreach($lookupData['gearTypes'] ?? [] as $gt)
                                 <option value="{{ $gt->id }}" @if(strtolower($gt->name ?? '') === 'automatic') selected @endif>{{ $gt->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="condition_id" class="text-sm font-medium">{{ __('messages.forms.condition') }}</label>
+                        <select id="condition_id" name="condition_id"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            @foreach($lookupData['conditions'] ?? [] as $cond)
+                                <option value="{{ $cond->id }}" @if((int) $cond->id === 2) selected @endif>{{ $cond->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1528,7 +1539,7 @@
                         <select id="euronom_id" name="euronom_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
-                            @foreach($lookupData['euronorms'] as $euronom)
+                            @foreach($lookupData['dmrEuronorms'] as $euronom)
                                 <option value="{{ $euronom->id }}">{{ $euronom->name }}</option>
                             @endforeach
                         </select>
@@ -1554,69 +1565,8 @@
                     {{ __('messages.pages.sell_your_car.section_equipment_description') }}
                 </div>
                 
-                <!-- Equipment by Category -->
-                <div class="space-y-2">
-                    @foreach($lookupData['equipmentTypes'] as $equipmentType)
-                        @if($equipmentType->equipments->count() > 0)
-                            <details class="equipment-type-details">
-                                <summary class="equipment-type-toggle">
-                                    <span>{{ $equipmentType->name }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </summary>
-                                <div class="equipment-type-content">
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($equipmentType->equipments as $equipment)
-                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="equipment_ids[]" 
-                                                    value="{{ $equipment->id }}"
-                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                    onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                                >
-                                                <span>{{ $equipment->name }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </details>
-                        @endif
-                    @endforeach
-                    
-                    <!-- Equipment without category -->
-                    @php
-                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
-                            return !$equip->equipment_type_id;
-                        });
-                    @endphp
-                    @if($equipmentWithoutType->count() > 0)
-                        <details class="equipment-type-details">
-                            <summary class="equipment-type-toggle">
-                                <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </summary>
-                            <div class="equipment-type-content">
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentWithoutType as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                            <input 
-                                                type="checkbox" 
-                                                name="equipment_ids[]" 
-                                                value="{{ $equipment->id }}"
-                                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                            >
-                                            <span>{{ $equipment->name }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </details>
-                    @endif
+                <div id="sell-your-car-equipment-root" class="space-y-2">
+                    @include('partials.sell-your-car-equipment', ['lookupData' => $lookupData])
                 </div>
             </div>
         </div>
@@ -1811,6 +1761,7 @@
 
         <!-- Hidden fields for required data from API -->
         <input type="hidden" id="registration" name="registration" value="" required>
+        <input type="hidden" id="dmr_fact_vehicle_id" name="dmr_fact_vehicle_id" value="">
 
         <script>
         function toggleTaxInfo() {
@@ -1837,6 +1788,7 @@
 @push('scripts')
 <script>
     window.locationsData = @json($lookupData['locations'] ?? []);
+    window.sellYourCarLookupContextBase = @json(url('/sell-your-car/lookup-context'));
 </script>
 <script src="{{ asset('js/sell-your-car-form.js') }}"></script>
 @endpush

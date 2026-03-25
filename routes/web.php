@@ -85,6 +85,8 @@ Route::middleware('auth.web')->group(function () {
     
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+    Route::get('/sell-your-car/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
+        ->name('sell-your-car.lookup-context');
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
     Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
     Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
@@ -111,10 +113,10 @@ Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->nam
 // Terms of Service Page
 Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
 
-// Vehicles Page
+// Vehicles Page (DMR-linked Vehicle records)
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 
-// Vehicle Details Page
+// Vehicle detail (slug)
 Route::get('/vehicles/{vehicle}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
 // Dealer Public Page

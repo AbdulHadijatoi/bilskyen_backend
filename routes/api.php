@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VersionController;
 use App\Http\Controllers\NummerpladeController;
+use App\Http\Controllers\DmrFactVehicleLookupController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
@@ -153,6 +154,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/statistics', [\App\Http\Controllers\DealerProfileApiController::class, 'getStatistics']);
     });
     
+    // Local DMR vehicle lookup by registration (slim payload from dmr_* tables)
+    Route::prefix('dmr')->group(function () {
+        Route::post('/vehicle-by-registration', [DmrFactVehicleLookupController::class, 'lookupByRegistration'])
+            ->middleware('throttle:40,1');
+    });
+
     // Nummerplade API proxy routes (for Flutter/Vue.js)
     Route::prefix('nummerplade')->group(function () {
         // Vehicle lookup endpoints (rate limited)

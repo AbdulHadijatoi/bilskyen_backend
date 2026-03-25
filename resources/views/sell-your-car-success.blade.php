@@ -270,40 +270,50 @@
             </div>
         @endif
 
+        @php
+            $dmr = $listing->dmrFactVehicle ?? null;
+            $dmrBrand = $dmr && $dmr->variant && $dmr->variant->model && $dmr->variant->model->brand
+                ? $dmr->variant->model->brand->name
+                : null;
+            $dmrModel = $dmr && $dmr->variant && $dmr->variant->model
+                ? $dmr->variant->model->name
+                : null;
+            $previewTitle = trim(implode(' ', array_filter([$dmrBrand, $dmrModel, $dmr->model_aar ?? null])));
+        @endphp
         <!-- Vehicle Preview -->
         <div class="vehicle-preview">
-            @if($vehicle->images && $vehicle->images->count() > 0)
+            @if($listing->images && $listing->images->count() > 0)
                 <img 
-                    src="{{ asset('storage/' . $vehicle->images->first()->image_path) }}" 
-                    alt="{{ $vehicle->title }}"
+                    src="{{ asset('storage/' . $listing->images->first()->image_path) }}" 
+                    alt="{{ $previewTitle ?: __('messages.pages.sell_your_car_success.title') }}"
                     class="vehicle-preview-image"
                     onerror="this.style.display='none'"
                 >
             @endif
-            <h3 class="vehicle-preview-title">{{ $vehicle->title }}</h3>
+            <h3 class="vehicle-preview-title">{{ $previewTitle ?: __('messages.pages.sell_your_car_success.title') }}</h3>
             <div class="vehicle-preview-details">
-                @if($vehicle->brand)
+                @if($dmrBrand)
                     <div class="vehicle-preview-detail">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>{{ $vehicle->brand->name }}</span>
+                        <span>{{ $dmrBrand }}</span>
                     </div>
                 @endif
-                @if($vehicle->model)
+                @if($dmrModel)
                     <div class="vehicle-preview-detail">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span>{{ $vehicle->model->name }}</span>
+                        <span>{{ $dmrModel }}</span>
                     </div>
                 @endif
-                @if($vehicle->price)
+                @if($listing->price)
                     <div class="vehicle-preview-detail">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>{{ \App\Helpers\FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
+                        <span>{{ \App\Helpers\FormatHelper::formatCurrency($listing->price ?? null) }}</span>
                     </div>
                 @endif
             </div>
@@ -325,7 +335,7 @@
                 </button>
             @endif
             <a 
-                href="{{ route('vehicle.detail', $vehicle) }}" 
+                href="{{ route('vehicles') }}"
                 class="btn-view"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

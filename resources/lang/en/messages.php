@@ -792,6 +792,7 @@ return [
             'section_specifications_subtitle' => 'Kilometer driven, registration, inspection, and technical details',
             'section_specifications_description' => 'Technical specifications and registration details.',
             'km_driven_help' => 'How far car has driven',
+            'select_gear_type' => 'Select Gear Type',
             'first_registration' => 'First Registration',
             'select_month' => 'Select Month',
             'select_year' => 'Select Year',

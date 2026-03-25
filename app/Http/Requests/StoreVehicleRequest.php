@@ -23,19 +23,18 @@ class StoreVehicleRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'registration' => ['nullable', 'string', 'max:20'],
-            'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
-            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
+            'dmr_fact_vehicle_id' => ['required', 'integer', 'exists:dmr_fact_vehicles,id'],
             'km_driven' => ['nullable', 'integer', 'min:0'],
-            'fuel_type_id' => ['required', 'integer', 'exists:fuel_types,id'],
+            'gear_type_id' => ['nullable', 'integer', 'exists:gear_types,id'],
             'price' => ['required', 'integer', 'min:0'],
-            'mileage' => ['nullable', 'integer', 'min:0'],
             'battery_capacity' => ['nullable', 'integer', 'min:0'],
-            'engine_power' => ['nullable', 'integer', 'min:0'],
-            'towing_weight' => ['nullable', 'integer', 'min:0'],
-            'ownership_tax' => ['nullable', 'integer', 'min:0'],
-            'first_registration_date' => ['nullable', 'date'],
+            'range_km' => ['nullable', 'integer', 'min:0'],
+            'charging_type' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
+            'servicebog' => ['nullable', 'string', 'max:50'],
             'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
         ];
@@ -48,17 +47,12 @@ class StoreVehicleRequest extends FormRequest
     {
         return [
             'title.required' => 'Please provide a vehicle title.',
-            'fuel_type_id.required' => 'Please select a fuel type.',
-            'fuel_type_id.exists' => 'Please select a valid fuel type.',
+            'dmr_fact_vehicle_id.required' => 'A DMR vehicle record is required.',
+            'dmr_fact_vehicle_id.exists' => 'Please select a valid DMR vehicle.',
             'price.required' => 'Please provide a price.',
             'price.min' => 'Price must be a positive number.',
             'vehicle_list_status_id.required' => 'Please select a vehicle status.',
             'vehicle_list_status_id.exists' => 'Please select a valid vehicle status.',
-            'vin.size' => 'VIN must be exactly 17 characters.',
-            'vin.regex' => 'VIN can only contain letters (except I, O, Q) and numbers.',
-            'category_id.exists' => 'Please select a valid category.',
-            'brand_id.exists' => 'Please select a valid brand.',
-            'model_year_id.exists' => 'Please select a valid model year.',
         ];
     }
 }

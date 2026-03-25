@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\Transaction;
 use App\Models\TransactionEntry;
 use App\Models\Notification;
+use App\Constants\VehicleListStatus;
 use App\Services\FinancialAccountService;
 use App\Services\TransactionService;
 use App\Services\FileService;
@@ -28,7 +29,7 @@ class PurchaseService
      */
     public function validateVehicleAndContact(int $vehicleId, int $contactId): array
     {
-        $vehicle = Vehicle::findOrFail($vehicleId);
+        $vehicle = Vehicle::with(['dmrFactVehicle.variant.model.brand'])->findOrFail($vehicleId);
         $contact = Contact::findOrFail($contactId);
 
         return ['vehicle' => $vehicle, 'contact' => $contact];
@@ -87,11 +88,7 @@ class PurchaseService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            // Update vehicle status
-            $vehicle->update([
-                'status' => 'Available',
-                'pending_works' => array_merge($vehicle->pending_works ?? [], ['Documents pending']),
-            ]);
+            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::PUBLISHED]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();
@@ -112,7 +109,7 @@ class PurchaseService
             );
 
             // Create transaction
-            $narration = "Purchase of {$vehicle->make} {$vehicle->model}";
+            $narration = 'Purchase of ' . ($vehicle->title ?? '#' . $vehicle->id);
             if ($contact->name || $contact->company_name) {
                 $narration .= " from " . ($contact->name ?? $contact->company_name);
             }
@@ -181,7 +178,7 @@ class PurchaseService
             );
 
             // Update transaction
-            $narration = "Purchase of {$vehicle->make} {$vehicle->model} from " . ($contact->name ?? $contact->company_name);
+            $narration = 'Purchase of ' . ($vehicle->title ?? '#' . $vehicle->id) . ' from ' . ($contact->name ?? $contact->company_name);
 
             $this->transactionService->updateTransaction(
                 $purchase->transaction,

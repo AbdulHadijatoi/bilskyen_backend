@@ -56,7 +56,7 @@ class HomeController extends Controller
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
             'vehicle.images',
-            'vehicle.details',
+            'vehicle.dmrFactVehicle',
         ])
             ->orderBy('sort_order')
             ->get()
@@ -70,9 +70,6 @@ class HomeController extends Controller
                 $firstImage = $vehicle->images->first();
                 $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
 
-                // Get details
-                $details = $vehicle->details;
-
                 // Build title
                 $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
                 
@@ -80,7 +77,7 @@ class HomeController extends Controller
                     'id' => $vehicle->id,
                     'slug' => $vehicle->slug,
                     'title' => $title,
-                    'version' => $vehicle->version ?? '',
+                    'version' => '',
                     'price' => $vehicle->price ?? 0,
                     'image' => $imageUrl,
                     'km_driven' => $vehicle->km_driven ?? 0,
@@ -92,7 +89,7 @@ class HomeController extends Controller
                     'dealer_id' => $vehicle->dealer_id,
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
-                    'sales_type_name' => $details?->sales_type_name ?? $details?->salesType?->name,
+                    'sales_type_name' => null,
                 ];
             })
             ->filter() // Remove null entries
@@ -397,12 +394,17 @@ class HomeController extends Controller
     public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
         $vehicle->load([
-            'details',
             'equipment',
-            'listingType',
             'images',
             'user',
-            'dealer.owner'
+            'dealer.owner',
+            'condition',
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.colour',
+            'dmrFactVehicle.bodyType',
+            'dmrFactVehicle.vehicleUse',
+            'dmrFactVehicle.emissionNorm',
+            'dmrFactVehicle.registrationStatus',
         ]);
 
         // Get authenticated user (if any)
@@ -412,19 +414,7 @@ class HomeController extends Controller
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
 
-        // Increment view count and log the view
         DB::transaction(function () use ($vehicle, $user, $ipAddress, $userAgent) {
-            // Increment views_count in vehicle_details
-            if ($vehicle->details) {
-                $vehicle->details->increment('views_count');
-            } else {
-                // Create vehicle_details if it doesn't exist
-                $vehicle->details()->create([
-                    'views_count' => 1,
-                ]);
-            }
-
-            // Create view log entry
             ListingViewsLog::create([
                 'vehicle_id' => $vehicle->id,
                 'user_id' => $user?->id,
@@ -433,9 +423,6 @@ class HomeController extends Controller
                 'viewed_at' => now(),
             ]);
         });
-
-        // Reload vehicle with updated details
-        $vehicle->load('details');
         $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
 
         return view('vehicle-detail', [
@@ -462,8 +449,7 @@ class HomeController extends Controller
         $favorites = \App\Models\Favorite::where('user_id', $user->id)
             ->with([
                 'vehicle.images',
-                'vehicle.listingType',
-                'vehicle.details'
+                'vehicle.dmrFactVehicle.variant.model.brand',
             ])
             ->orderBy('created_at', 'desc')
             ->paginate(12);

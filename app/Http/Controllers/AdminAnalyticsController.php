@@ -14,8 +14,6 @@ use App\Models\ListingViewsLog;
 use App\Models\PriceHistory;
 use App\Models\Source;
 use App\Models\LeadCategory;
-use App\Models\Category;
-use App\Models\FuelType;
 use App\Models\AuditLog;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
@@ -363,33 +361,51 @@ class AdminAnalyticsController extends Controller
             $vehicleQuery->where('created_at', '<=', $endDate);
         }
 
-        // Vehicles by category
-        $vehiclesByCategory = Vehicle::withoutGlobalScopes()
-            ->select('category_id', DB::raw('count(*) as count'))
-            ->groupBy('category_id')
-            ->orderByRaw('count(*) desc')
+        // Vehicles by DMR body type (replaces legacy category_id on vehicles)
+        $categoryQuery = DB::table('vehicles as v')
+            ->join('dmr_fact_vehicles as dfv', 'v.dmr_fact_vehicle_id', '=', 'dfv.id')
+            ->leftJoin('dmr_body_types as dbt', 'dfv.body_type_id', '=', 'dbt.id')
+            ->whereNull('v.deleted_at');
+        if ($startDate) {
+            $categoryQuery->where('v.created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $categoryQuery->where('v.created_at', '<=', $endDate);
+        }
+        $vehiclesByCategory = $categoryQuery
+            ->select(DB::raw('COALESCE(dbt.name, "Unknown") as category_name'), DB::raw('count(*) as count'))
+            ->groupBy('dbt.id', 'dbt.name')
+            ->orderByDesc('count')
             ->get()
-            ->map(function ($item) {
-                $category = Category::find($item->category_id);
-                return [
-                    'category' => $category?->name ?? 'Unknown',
-                    'count' => $item->count,
-                ];
-            });
+            ->map(fn ($item) => [
+                'category' => $item->category_name,
+                'count' => $item->count,
+            ]);
 
-        // Vehicles by fuel type
-        $vehiclesByFuelType = Vehicle::withoutGlobalScopes()
-            ->select('fuel_type_id', DB::raw('count(*) as count'))
-            ->groupBy('fuel_type_id')
-            ->orderByRaw('count(*) desc')
+        // Primary drivmiddel line → drive energy name (replaces legacy fuel_type_id)
+        $fuelQuery = DB::table('vehicles as v')
+            ->join('dmr_fact_vehicles as dfv', 'v.dmr_fact_vehicle_id', '=', 'dfv.id')
+            ->leftJoin('dmr_bridge_vehicle_drivmiddel as dbvd', function ($join) {
+                $join->on('dfv.id', '=', 'dbvd.vehicle_id')
+                    ->where('dbvd.drivmiddel_primaer', '=', 1);
+            })
+            ->leftJoin('dmr_drive_energies as dde', 'dbvd.drive_energy_id', '=', 'dde.id')
+            ->whereNull('v.deleted_at');
+        if ($startDate) {
+            $fuelQuery->where('v.created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $fuelQuery->where('v.created_at', '<=', $endDate);
+        }
+        $vehiclesByFuelType = $fuelQuery
+            ->select(DB::raw('COALESCE(dde.name, "Unknown") as fuel_name'), DB::raw('count(*) as count'))
+            ->groupBy('dde.id', 'dde.name')
+            ->orderByDesc('count')
             ->get()
-            ->map(function ($item) {
-                $fuelType = FuelType::find($item->fuel_type_id);
-                return [
-                    'fuel_type' => $fuelType?->name ?? 'Unknown',
-                    'count' => $item->count,
-                ];
-            });
+            ->map(fn ($item) => [
+                'fuel_type' => $item->fuel_name,
+                'count' => $item->count,
+            ]);
 
         // Vehicles by price range
         $priceRanges = [
