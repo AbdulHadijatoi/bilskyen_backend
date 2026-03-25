@@ -41,6 +41,8 @@ use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
+use App\Http\Controllers\AdminOwnershipTaxRuleController;
+use App\Http\Controllers\AdminDmrDriveEnergyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -396,4 +398,15 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/export', [AdminTranslationController::class, 'export']);
         Route::get('/locales', [AdminTranslationController::class, 'locales']);
     });
+
+    // Ownership Tax Rules
+    Route::prefix('ownership-tax-rules')->group(function () {
+        Route::get('/', [AdminOwnershipTaxRuleController::class, 'index']);
+        Route::post('/create', [AdminOwnershipTaxRuleController::class, 'create']);
+        Route::post('/update/{id}', [AdminOwnershipTaxRuleController::class, 'update']);
+        Route::post('/delete/{id}', [AdminOwnershipTaxRuleController::class, 'delete']);
+    });
+
+    // DMR Drive Energies (fuel type options for ownership tax rules)
+    Route::get('/dmr-drive-energies', [AdminDmrDriveEnergyController::class, 'index']);
 });

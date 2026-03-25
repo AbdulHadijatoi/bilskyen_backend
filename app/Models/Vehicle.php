@@ -28,6 +28,7 @@ class Vehicle extends Model
         'slug',
         'registration',
         'price',
+        'calculated_ownership_tax',
         'vehicle_list_status_id',
         'published_at',
         'description',
@@ -44,6 +45,7 @@ class Vehicle extends Model
 
     protected $casts = [
         'price' => 'integer',
+        'calculated_ownership_tax' => 'integer',
         'km_driven' => 'integer',
         'battery_capacity' => 'integer',
         'range_km' => 'integer',

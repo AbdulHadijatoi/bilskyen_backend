@@ -25,6 +25,7 @@ use App\Services\FileService;
 use App\Services\NotificationService;
 use App\Services\DmrFactVehicleLookupService;
 use App\Services\NummerpladeApiService;
+use App\Services\OwnershipTaxService;
 use App\Exceptions\NummerpladeApiException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +36,8 @@ class VehicleService
         private FileService $fileService,
         private NotificationService $notificationService,
         private NummerpladeApiService $nummerpladeService,
-        private DmrFactVehicleLookupService $dmrFactVehicleLookupService
+        private DmrFactVehicleLookupService $dmrFactVehicleLookupService,
+        private OwnershipTaxService $ownershipTaxService,
     ) {}
 
     /**
@@ -157,7 +159,12 @@ class VehicleService
             }
         }
 
-        return $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle']);
+        $vehicle = $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle.drivmiddelLines']);
+        if ($vehicle) {
+            $this->ownershipTaxService->updateCalculatedOwnershipTax($vehicle);
+        }
+
+        return $vehicle;
     }
 
     /**
@@ -538,11 +545,13 @@ class VehicleService
                 $vehicle->update($vehicleData);
             }
 
-            $updatedVehicle = $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle']);
+            $updatedVehicle = $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle.drivmiddelLines']);
 
             if (! $updatedVehicle) {
-                $updatedVehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle'])->findOrFail($vehicle->id);
+                $updatedVehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle.drivmiddelLines'])->findOrFail($vehicle->id);
             }
+
+            $this->ownershipTaxService->updateCalculatedOwnershipTax($updatedVehicle);
 
             return $updatedVehicle;
         });

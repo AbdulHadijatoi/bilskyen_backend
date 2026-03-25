@@ -1249,7 +1249,7 @@
                         </svg>
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.find_vehicle_button') }}</span>
                     </button>
-                    <button type="button" id="enter-manually-button" class="hidden lookup-button btn-secondary text-primary border border-primary" style="margin-left: 0;">
+                    <button type="button" id="enter-manually-button" class="lookup-button btn-secondary text-primary border border-primary" style="margin-left: 0;">
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.enter_manually') }}</span>
                     </button>
                 </div>
@@ -1342,6 +1342,14 @@
                     <div class="form-grid">
                         <div class="space-y-2">
                             <label for="manual_brand_id" class="text-sm font-medium required-field">{{ __('messages.forms.brand') }}</label>
+                            <input
+                                type="text"
+                                id="manual_brand_search"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="{{ __('messages.forms.search_brand') }}"
+                                autocomplete="off"
+                                spellcheck="false"
+                            />
                             <select id="manual_brand_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                                 @foreach($lookupData['brands'] as $brand)
@@ -1351,6 +1359,14 @@
                         </div>
                         <div class="space-y-2">
                             <label for="manual_model_id" class="text-sm font-medium required-field">{{ __('messages.forms.model') }}</label>
+                            <input
+                                type="text"
+                                id="manual_model_search"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="{{ __('messages.forms.search_model') }}"
+                                autocomplete="off"
+                                spellcheck="false"
+                            />
                             <select id="manual_model_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                                 @foreach($lookupData['models'] as $model)
@@ -1360,6 +1376,14 @@
                         </div>
                         <div class="space-y-2">
                             <label for="manual_model_year_id" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.year') }}</label>
+                            <input
+                                type="text"
+                                id="manual_model_year_search"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="{{ __('messages.forms.search_year') }}"
+                                autocomplete="off"
+                                spellcheck="false"
+                            />
                             <select id="manual_model_year_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                                 @foreach($lookupData['modelYears'] as $year)
@@ -1369,6 +1393,14 @@
                         </div>
                         <div class="space-y-2">
                             <label for="manual_fuel_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
+                            <input
+                                type="text"
+                                id="manual_fuel_type_search"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="{{ __('messages.forms.search_fuel_type') }}"
+                                autocomplete="off"
+                                spellcheck="false"
+                            />
                             <select id="manual_fuel_type_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                                 @foreach($lookupData['dmrDriveEnergies'] as $fuel)

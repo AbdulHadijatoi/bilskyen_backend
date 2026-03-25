@@ -482,14 +482,146 @@
         const manualModel = document.getElementById('manual_model_id');
         const manualModelYear = document.getElementById('manual_model_year_id');
         const manualFuelType = document.getElementById('manual_fuel_type_id');
+        const manualBrandSearch = document.getElementById('manual_brand_search');
+        const manualModelSearch = document.getElementById('manual_model_search');
+        const manualModelYearSearch = document.getElementById('manual_model_year_search');
+        const manualFuelTypeSearch = document.getElementById('manual_fuel_type_search');
         const brandIdHidden = document.getElementById('brand_id');
         const modelIdHidden = document.getElementById('model_id');
         const modelYearIdHidden = document.getElementById('model_year_id');
         const fuelTypeIdHidden = document.getElementById('fuel_type_id');
         const titleDisplay = document.getElementById('title-display');
         const titleInput = document.getElementById('title');
+        const manualSearchLimit = 10;
+        const dmrApiBase = '/api/v1/dmr';
 
         if (!enterManuallyBtn || !vehicleForm) return;
+
+        function debounce(fn, wait) {
+            let timeoutId = null;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(this, args), wait);
+            };
+        }
+
+        function getSelectPlaceholderText(selectId) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return '';
+            const placeholderOpt = sel.querySelector('option[value=""]');
+            return placeholderOpt ? placeholderOpt.textContent : '';
+        }
+
+        function setSelectOptions(selectEl, items, options) {
+            const opts = options || {};
+            const placeholderText = opts.placeholderText ?? '';
+            const optionExtraAttrs = typeof opts.optionExtraAttrs === 'function' ? opts.optionExtraAttrs : null;
+            const keepSelection = opts.keepSelection !== false;
+
+            if (!selectEl || !selectEl.tagName || selectEl.tagName !== 'SELECT') return;
+
+            const currentValue = keepSelection ? selectEl.value : '';
+            const currentOption = keepSelection
+                ? Array.from(selectEl.options).find(o => String(o.value) === String(currentValue))
+                : null;
+
+            selectEl.innerHTML = '';
+
+            const opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = placeholderText;
+            selectEl.appendChild(opt0);
+
+            (items || []).forEach(function(item) {
+                if (!item || item.id === null || item.id === undefined) return;
+                const opt = document.createElement('option');
+                opt.value = String(item.id);
+                opt.textContent = item.name ? String(item.name) : '';
+                if (optionExtraAttrs) optionExtraAttrs(opt, item);
+                selectEl.appendChild(opt);
+            });
+
+            // Preserve existing selection if still present (or inject it if needed).
+            if (currentValue) {
+                const has = !!selectEl.querySelector(`option[value="${String(currentValue)}"]`);
+                if (!has && currentOption && currentOption.textContent) {
+                    const opt = document.createElement('option');
+                    opt.value = String(currentValue);
+                    opt.textContent = currentOption.textContent;
+                    selectEl.appendChild(opt);
+                }
+                selectEl.value = String(currentValue);
+            } else {
+                selectEl.value = '';
+            }
+        }
+
+        async function fetchManualItems(url) {
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            let json = null;
+            try {
+                json = await res.json();
+            } catch (e) {
+                json = null;
+            }
+
+            if (!res.ok || (json && json.success === false)) {
+                const msg = (json && (json.message || (json.errors && json.errors.code) || json.errors)) ? (json.message || 'Failed to load options') : 'Failed to load options';
+                throw new Error(msg);
+            }
+
+            // Expected: { success, data: { items: [...] , limit: n } }
+            const items = json && json.data
+                ? (json.data.items ?? json.data.docs ?? json.data)
+                : (json && (json.items ?? []));
+
+            return Array.isArray(items) ? items : [];
+        }
+
+        async function loadManualDropdownInitialOptions() {
+            // Ensure we start from a clean slate for searching.
+            if (manualBrandSearch) manualBrandSearch.value = '';
+            if (manualModelSearch) manualModelSearch.value = '';
+            if (manualModelYearSearch) manualModelYearSearch.value = '';
+            if (manualFuelTypeSearch) manualFuelTypeSearch.value = '';
+
+            // Load brands/models/years/fuel types in limited chunks (<=10 each).
+            // Models endpoint can optionally be filtered by selected brand.
+            const brandId = manualBrand ? manualBrand.value : '';
+
+            const placeholderBrand = getSelectPlaceholderText('manual_brand_id');
+            const placeholderModel = getSelectPlaceholderText('manual_model_id');
+            const placeholderYear = getSelectPlaceholderText('manual_model_year_id');
+            const placeholderFuel = getSelectPlaceholderText('manual_fuel_type_id');
+
+            const [brands, models, years, fuels] = await Promise.all([
+                fetchManualItems(`${dmrApiBase}/manual-brands?limit=${manualSearchLimit}`),
+                fetchManualItems(`${dmrApiBase}/manual-models?limit=${manualSearchLimit}${brandId ? `&brand_id=${encodeURIComponent(String(brandId))}` : ''}`),
+                fetchManualItems(`${dmrApiBase}/manual-model-years?limit=${manualSearchLimit}`),
+                fetchManualItems(`${dmrApiBase}/manual-fuel-types?limit=${manualSearchLimit}`),
+            ]);
+
+            setSelectOptions(manualBrand, brands, { placeholderText: placeholderBrand, keepSelection: true });
+            setSelectOptions(manualModel, models, {
+                placeholderText: placeholderModel,
+                keepSelection: true,
+                optionExtraAttrs: function(opt, item) {
+                    if (item.brand_id !== null && item.brand_id !== undefined) {
+                        opt.setAttribute('data-brand-id', String(item.brand_id));
+                    }
+                }
+            });
+            setSelectOptions(manualModelYear, years, { placeholderText: placeholderYear, keepSelection: true });
+            setSelectOptions(manualFuelType, fuels, { placeholderText: placeholderFuel, keepSelection: true });
+
+            // If selection wasn't preserved, make sure hidden inputs + title are consistent.
+            syncManualToHidden();
+        }
 
         function showFormForManualEntry() {
             window.manualEntryMode = true;
@@ -521,7 +653,11 @@
                     header.classList.add('active');
                 }
             });
-            syncManualToHidden();
+            // Load limited dropdown data (initial 10 per dropdown).
+            loadManualDropdownInitialOptions().catch(err => {
+                console.error('Manual dropdown load failed:', err);
+                displayGeneralError(err.message || 'Failed to load manual dropdown options. Please try again.');
+            });
         }
 
         function startOver() {
@@ -630,7 +766,38 @@
 
         if (manualBrand) {
             manualBrand.addEventListener('change', function() {
-                filterModelsByBrand();
+                // When in manual mode we keep the dropdowns searchable; reload models instead of filtering.
+                if (window.manualEntryMode) {
+                    const brandId = manualBrand.value;
+                    const searchTerm = manualModelSearch ? manualModelSearch.value.trim() : '';
+                    // Reset selection (so title updates correctly).
+                    if (manualModel) manualModel.value = '';
+                    if (modelIdHidden) modelIdHidden.value = '';
+                    syncManualToHidden();
+
+                    const placeholderModel = getSelectPlaceholderText('manual_model_id');
+                    fetchManualItems(
+                        `${dmrApiBase}/manual-models?limit=${manualSearchLimit}` +
+                        `${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ''}` +
+                        `${brandId ? `&brand_id=${encodeURIComponent(String(brandId))}` : ''}`
+                    ).then(function(models) {
+                        setSelectOptions(manualModel, models, {
+                            placeholderText: placeholderModel,
+                            keepSelection: false,
+                            optionExtraAttrs: function(opt, item) {
+                                if (item.brand_id !== null && item.brand_id !== undefined) {
+                                    opt.setAttribute('data-brand-id', String(item.brand_id));
+                                }
+                            }
+                        });
+                        filterVariantsByModel();
+                        syncManualToHidden();
+                    }).catch(function(err) {
+                        console.error('Manual model reload failed:', err);
+                    });
+                } else {
+                    filterModelsByBrand();
+                }
             });
         }
         if (manualModel || manualModelYear || manualFuelType) {
@@ -643,6 +810,105 @@
                 filterVariantsByModel();
             });
         }
+
+        // Debounced searchable dropdowns (manual mode only).
+        if (manualBrandSearch) {
+            manualBrandSearch.addEventListener('input', debounce(function() {
+                if (!window.manualEntryMode) return;
+                const term = manualBrandSearch.value.trim();
+                const placeholderBrand = getSelectPlaceholderText('manual_brand_id');
+                // Clear current selections while searching.
+                if (manualBrand) manualBrand.value = '';
+                if (brandIdHidden) brandIdHidden.value = '';
+                if (manualModel) manualModel.value = '';
+                if (modelIdHidden) modelIdHidden.value = '';
+                syncManualToHidden();
+
+                fetchManualItems(`${dmrApiBase}/manual-brands?limit=${manualSearchLimit}` + (term ? `&search=${encodeURIComponent(term)}` : ''))
+                    .then(function(brands) {
+                        setSelectOptions(manualBrand, brands, { placeholderText: placeholderBrand, keepSelection: false });
+                        filterVariantsByModel();
+                        syncManualToHidden();
+                    })
+                    .catch(function(err) {
+                        console.error('Manual brand search failed:', err);
+                    });
+            }, 300));
+        }
+        if (manualModelSearch) {
+            manualModelSearch.addEventListener('input', debounce(function() {
+                if (!window.manualEntryMode) return;
+                const term = manualModelSearch.value.trim();
+                const brandId = manualBrand ? manualBrand.value : '';
+                const placeholderModel = getSelectPlaceholderText('manual_model_id');
+
+                // Clear current selection while searching.
+                if (manualModel) manualModel.value = '';
+                if (modelIdHidden) modelIdHidden.value = '';
+                syncManualToHidden();
+
+                fetchManualItems(
+                    `${dmrApiBase}/manual-models?limit=${manualSearchLimit}` +
+                    (term ? `&search=${encodeURIComponent(term)}` : '') +
+                    (brandId ? `&brand_id=${encodeURIComponent(String(brandId))}` : '')
+                ).then(function(models) {
+                    setSelectOptions(manualModel, models, {
+                        placeholderText: placeholderModel,
+                        keepSelection: false,
+                        optionExtraAttrs: function(opt, item) {
+                            if (item.brand_id !== null && item.brand_id !== undefined) {
+                                opt.setAttribute('data-brand-id', String(item.brand_id));
+                            }
+                        }
+                    });
+                    filterVariantsByModel();
+                    syncManualToHidden();
+                }).catch(function(err) {
+                    console.error('Manual model search failed:', err);
+                });
+            }, 300));
+        }
+        if (manualModelYearSearch) {
+            manualModelYearSearch.addEventListener('input', debounce(function() {
+                if (!window.manualEntryMode) return;
+                const term = manualModelYearSearch.value.trim();
+                const placeholderYear = getSelectPlaceholderText('manual_model_year_id');
+
+                if (manualModelYear) manualModelYear.value = '';
+                if (modelYearIdHidden) modelYearIdHidden.value = '';
+                syncManualToHidden();
+
+                fetchManualItems(`${dmrApiBase}/manual-model-years?limit=${manualSearchLimit}` + (term ? `&search=${encodeURIComponent(term)}` : ''))
+                    .then(function(years) {
+                        setSelectOptions(manualModelYear, years, { placeholderText: placeholderYear, keepSelection: false });
+                        syncManualToHidden();
+                    })
+                    .catch(function(err) {
+                        console.error('Manual year search failed:', err);
+                    });
+            }, 300));
+        }
+        if (manualFuelTypeSearch) {
+            manualFuelTypeSearch.addEventListener('input', debounce(function() {
+                if (!window.manualEntryMode) return;
+                const term = manualFuelTypeSearch.value.trim();
+                const placeholderFuel = getSelectPlaceholderText('manual_fuel_type_id');
+
+                if (manualFuelType) manualFuelType.value = '';
+                if (fuelTypeIdHidden) fuelTypeIdHidden.value = '';
+                syncManualToHidden();
+
+                fetchManualItems(`${dmrApiBase}/manual-fuel-types?limit=${manualSearchLimit}` + (term ? `&search=${encodeURIComponent(term)}` : ''))
+                    .then(function(fuels) {
+                        setSelectOptions(manualFuelType, fuels, { placeholderText: placeholderFuel, keepSelection: false });
+                        syncManualToHidden();
+                    })
+                    .catch(function(err) {
+                        console.error('Manual fuel type search failed:', err);
+                    });
+            }, 300));
+        }
+
         if (variantSelect) {
             variantSelect.addEventListener('change', function() {
                 var h = document.getElementById('variant_id_hidden');
@@ -740,6 +1006,53 @@
                 }
                 var firstEmpty = (manualBrand && !manualBrand.value) ? manualBrand : (manualModel && !manualModel.value) ? manualModel : (manualModelYear && !manualModelYear.value) ? manualModelYear : manualFuelType;
                 if (firstEmpty) firstEmpty.focus();
+                return;
+            }
+
+            // Resolve required `dmr_fact_vehicle_id` from the chosen manual dropdown values.
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const mappingRes = await fetch('/api/v1/dmr/vehicle-by-manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        manual_brand_id: manualBrand ? parseInt(manualBrand.value, 10) : null,
+                        manual_model_id: manualModel ? parseInt(manualModel.value, 10) : null,
+                        manual_model_year_id: manualModelYear ? parseInt(manualModelYear.value, 10) : null,
+                        manual_fuel_type_id: manualFuelType ? parseInt(manualFuelType.value, 10) : null
+                    })
+                });
+
+                let mappingJson = null;
+                try {
+                    mappingJson = await mappingRes.json();
+                } catch (e) {
+                    mappingJson = null;
+                }
+
+                if (!mappingRes.ok || !mappingJson || mappingJson.success !== true) {
+                    const msg = (mappingJson && mappingJson.message) ? mappingJson.message : 'Unable to find a matching vehicle for the selected manual values.';
+                    throw new Error(msg);
+                }
+
+                const resolvedId = mappingJson.data && mappingJson.data.dmr_fact_vehicle_id
+                    ? mappingJson.data.dmr_fact_vehicle_id
+                    : null;
+
+                if (!resolvedId) {
+                    throw new Error('Unable to find a matching vehicle for the selected manual values.');
+                }
+
+                const dmrHidden = document.getElementById('dmr_fact_vehicle_id');
+                if (dmrHidden) dmrHidden.value = String(resolvedId);
+            } catch (err) {
+                console.error('Manual->DMR mapping failed:', err);
+                displayGeneralError(err.message || 'Unable to find a matching vehicle. Please adjust your manual selections and try again.');
                 return;
             }
         }

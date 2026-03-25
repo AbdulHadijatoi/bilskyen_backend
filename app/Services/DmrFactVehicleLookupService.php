@@ -3,13 +3,22 @@
 namespace App\Services;
 
 use App\Exceptions\NummerpladeApiException;
+use App\Models\DmrBrand;
 use App\Models\DmrBridgeVehicleDrivmiddel;
 use App\Models\DmrFactVehicle;
+use App\Models\DmrDriveEnergy;
+use App\Models\DmrModel;
+use App\Models\ModelYear;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Local DMR dataset: lookup vehicle facts by registration number.
  * Returns a slim, explicit payload for API consumers (no legacy Nummerplade shape).
+ *
+ * @method array<int, array{id:int,name:string}> searchManualBrands(?string $search, int $limit)
+ * @method array<int, array{id:int,name:string,brand_id:int}> searchManualModels(?string $search, ?int $brandId, int $limit)
+ * @method array<int, array{id:int,name:string}> searchManualModelYears(?string $search, int $limit)
+ * @method array<int, array{id:int,name:string}> searchManualFuelTypes(?string $search, int $limit)
  */
 class DmrFactVehicleLookupService
 {
@@ -260,5 +269,147 @@ class DmrFactVehicleLookupService
         }
 
         return null;
+    }
+
+    /**
+     * Manual dropdown search: limit hard-capped to 10 for performance.
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchManualBrands(?string $search, int $limit): array
+    {
+        $limit = max(1, (int) $limit);
+        $limit = min(10, $limit);
+
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (DmrBrand $b) => ['id' => (int) $b->id, 'name' => (string) $b->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Manual dropdown search: limit hard-capped to 10 for performance.
+     *
+     * @return array<int, array{id:int,name:string,brand_id:int}>
+     */
+    public function searchManualModels(?string $search, ?int $brandId, int $limit): array
+    {
+        $limit = max(1, (int) $limit);
+        $limit = min(10, $limit);
+
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = DmrModel::query()->select(['id', 'name', 'brand_id'])->orderBy('name');
+        if ($brandId !== null) {
+            $brandId = (int) $brandId;
+            if ($brandId > 0) {
+                $query->where('brand_id', $brandId);
+            }
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (DmrModel $m) => [
+                'id' => (int) $m->id,
+                'name' => (string) $m->name,
+                'brand_id' => (int) $m->brand_id,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Manual dropdown search: model years in `model_years` table.
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchManualModelYears(?string $search, int $limit): array
+    {
+        $limit = max(1, (int) $limit);
+        $limit = min(10, $limit);
+
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = ModelYear::query()->select(['id', 'name'])->orderBy('name', 'desc');
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (ModelYear $y) => ['id' => (int) $y->id, 'name' => (string) $y->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Manual dropdown search: drive energies in `dmr_drive_energies`.
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchManualFuelTypes(?string $search, int $limit): array
+    {
+        $limit = max(1, (int) $limit);
+        $limit = min(10, $limit);
+
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $query = DmrDriveEnergy::query()->select(['id', 'name'])->orderBy('name');
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->limit($limit)->get()
+            ->map(fn (DmrDriveEnergy $f) => ['id' => (int) $f->id, 'name' => (string) $f->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Resolve a single candidate `dmr_fact_vehicle_id` based on the manual dropdown selections.
+     *
+     * This is used to allow manual submissions to satisfy the `dmr_fact_vehicle_id` requirement
+     * without loading the full DMR dataset client-side.
+     */
+    public function resolveDmrFactVehicleIdByManual(
+        int $manualBrandId,
+        int $manualModelId,
+        int $manualModelYearId,
+        int $manualFuelTypeId
+    ): ?int {
+        $modelYear = ModelYear::query()->select(['id', 'name'])->find($manualModelYearId);
+        if (!$modelYear) {
+            return null;
+        }
+
+        $yearName = (string) $modelYear->name;
+        $yearInt = is_numeric($yearName) ? (int) $yearName : null;
+        if (!$yearInt) {
+            return null;
+        }
+
+        $candidate = DmrFactVehicle::query()
+            ->where('model_aar', $yearInt)
+            ->whereHas('variant.model', function ($q) use ($manualBrandId, $manualModelId) {
+                $q->where('brand_id', $manualBrandId);
+                $q->where('id', $manualModelId);
+            })
+            ->whereHas('drivmiddelLines', function ($q) use ($manualFuelTypeId) {
+                $q->where('drive_energy_id', $manualFuelTypeId);
+            })
+            ->orderByDesc('registrering_status_dato')
+            ->orderByDesc('foerste_registrering_dato')
+            ->orderByDesc('id')
+            ->first();
+
+        return $candidate ? (int) $candidate->id : null;
     }
 }

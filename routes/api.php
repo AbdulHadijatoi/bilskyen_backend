@@ -158,6 +158,15 @@ Route::prefix('v1')->group(function () {
     Route::prefix('dmr')->group(function () {
         Route::post('/vehicle-by-registration', [DmrFactVehicleLookupController::class, 'lookupByRegistration'])
             ->middleware('throttle:40,1');
+
+        // Manual dropdown search (limited datasets for performance)
+        Route::get('/manual-brands', [DmrFactVehicleLookupController::class, 'searchManualBrands']);
+        Route::get('/manual-models', [DmrFactVehicleLookupController::class, 'searchManualModels']);
+        Route::get('/manual-model-years', [DmrFactVehicleLookupController::class, 'searchManualModelYears']);
+        Route::get('/manual-fuel-types', [DmrFactVehicleLookupController::class, 'searchManualFuelTypes']);
+
+        // Manual -> dmr_fact_vehicle_id resolver (used on submit)
+        Route::post('/vehicle-by-manual', [DmrFactVehicleLookupController::class, 'lookupByManual']);
     });
 
     // Nummerplade API proxy routes (for Flutter/Vue.js)
