@@ -26,6 +26,6 @@ class VehicleListStatus extends Model
      */
     public function vehicles(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'vehicle_list_status_id');
+        return $this->hasMany(Vehicle::class, 'list_status_id');
     }
 }

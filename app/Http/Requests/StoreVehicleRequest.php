@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreVehicleRequest extends FormRequest
 {
@@ -27,15 +26,13 @@ class StoreVehicleRequest extends FormRequest
             'km_driven' => ['nullable', 'integer', 'min:0'],
             'gear_type_id' => ['nullable', 'integer', 'exists:gear_types,id'],
             'price' => ['required', 'integer', 'min:0'],
-            'battery_capacity' => ['nullable', 'integer', 'min:0'],
-            'range_km' => ['nullable', 'integer', 'min:0'],
             'charging_type' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'postcode' => ['nullable', 'string', 'max:20'],
             'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
             'servicebog' => ['nullable', 'string', 'max:50'],
-            'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
         ];
     }
@@ -51,8 +48,8 @@ class StoreVehicleRequest extends FormRequest
             'dmr_fact_vehicle_id.exists' => 'Please select a valid DMR vehicle.',
             'price.required' => 'Please provide a price.',
             'price.min' => 'Price must be a positive number.',
-            'vehicle_list_status_id.required' => 'Please select a vehicle status.',
-            'vehicle_list_status_id.exists' => 'Please select a valid vehicle status.',
+            'list_status_id.required' => 'Please select a vehicle status.',
+            'list_status_id.exists' => 'Please select a valid vehicle status.',
         ];
     }
 }

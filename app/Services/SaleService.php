@@ -141,7 +141,7 @@ class SaleService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::SOLD]);
+            $vehicle->update(['list_status_id' => VehicleListStatus::SOLD]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();
@@ -217,7 +217,7 @@ class SaleService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::SOLD]);
+            $vehicle->update(['list_status_id' => VehicleListStatus::SOLD]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();
@@ -297,7 +297,7 @@ class SaleService
             // Update vehicle status back to Available
             $vehicle = $sale->vehicle;
             if ($vehicle) {
-                $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::PUBLISHED]);
+                $vehicle->update(['list_status_id' => VehicleListStatus::PUBLISHED]);
             }
 
             // Delete transaction and sale images

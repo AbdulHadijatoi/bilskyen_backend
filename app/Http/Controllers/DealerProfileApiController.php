@@ -245,13 +245,13 @@ class DealerProfileApiController extends Controller
         // Vehicle Statistics
         $totalVehicles = Vehicle::where('dealer_id', $dealerId)->count();
         $publishedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)->count();
         $draftVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
+            ->where('list_status_id', VehicleListStatus::DRAFT)->count();
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+            ->where('list_status_id', VehicleListStatus::SOLD)->count();
         $archivedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count();
+            ->where('list_status_id', VehicleListStatus::ARCHIVED)->count();
 
         // Get vehicle IDs for this dealer
         $vehicleIds = Vehicle::where('dealer_id', $dealerId)->pluck('id');

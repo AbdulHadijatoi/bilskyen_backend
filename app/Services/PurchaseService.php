@@ -88,7 +88,7 @@ class PurchaseService
             $vehicle = $entities['vehicle'];
             $contact = $entities['contact'];
 
-            $vehicle->update(['vehicle_list_status_id' => VehicleListStatus::PUBLISHED]);
+            $vehicle->update(['list_status_id' => VehicleListStatus::PUBLISHED]);
 
             // Get or create financial accounts
             $vehicleInventoryAccount = $this->financialAccountService->getOrCreateVehicleInventoryAccount();

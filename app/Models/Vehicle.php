@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -21,71 +20,116 @@ class Vehicle extends Model
     private static array $lookupCache = [];
 
     protected $fillable = [
+        'registration',
         'dmr_fact_vehicle_id',
-        'user_id',
-        'dealer_id',
+        'vin',
         'title',
         'slug',
-        'registration',
-        'price',
-        'calculated_ownership_tax',
-        'vehicle_list_status_id',
-        'published_at',
-        'description',
-        'address',
-        'postcode',
-        'gear_type_id',
-        'fuel_efficiency',
-        'km_driven',
-        'battery_capacity',
-        'range_km',
-        'charging_type',
-        'condition_id',
-        'servicebog',
+        'dealer_id',
+        'user_id',
+        'km_per_liter',
+        'co2_emission',
+        'electrical_consumption',
+        'engine_power_kw',
+        'engine_power_hp',
+        'engine_size_cc',
+        'engine_displacement_litres',
+        'first_registration_date',
+        'first_registration_year',
+        'nox_emission',
+        'particle_filter',
+        'axle_count',
+        'door_count',
+        'gear_count',
+        'max_speed',
+        'model_year',
+        'ncap_test',
+        'seats_min',
+        'seats_max',
+        'maximum_weight_kg',
+        'registration_status',
+        'last_registration_change',
+        'measurement_norm_id',
         'listing_type_id',
         'sales_type_id',
         'price_type_id',
         'category_id',
-        'type_id',
-        'transmission_id',
+        'price',
+        'calculated_ownership_tax',
+        'km_driven',
         'towing_weight',
-        'airbags',
-        'wheels',
-        'drive_axles',
         'is_import',
         'is_factory_new',
+        'charging_type',
+        'gear_type_id',
+        'list_status_id',
+        'published_at',
+        'address',
+        'postcode',
+        'description',
+        'condition_id',
+        'servicebog',
     ];
 
     protected $casts = [
+        'km_per_liter' => 'float',
+        'co2_emission' => 'float',
+        'electrical_consumption' => 'float',
+        'engine_power_kw' => 'float',
+        'engine_power_hp' => 'float',
+        'engine_size_cc' => 'integer',
+        'engine_displacement_litres' => 'float',
+        'first_registration_date' => 'date',
+        'first_registration_year' => 'integer',
+        'nox_emission' => 'float',
+        'particle_filter' => 'boolean',
+        'axle_count' => 'integer',
+        'door_count' => 'integer',
+        'gear_count' => 'integer',
+        'max_speed' => 'integer',
+        'model_year' => 'integer',
+        'ncap_test' => 'boolean',
+        'seats_min' => 'integer',
+        'seats_max' => 'integer',
+        'maximum_weight_kg' => 'integer',
+        'last_registration_change' => 'date',
+        'measurement_norm_id' => 'integer',
+        'listing_type_id' => 'integer',
+        'sales_type_id' => 'integer',
+        'price_type_id' => 'integer',
+        'category_id' => 'integer',
         'price' => 'integer',
         'calculated_ownership_tax' => 'integer',
         'km_driven' => 'integer',
-        'battery_capacity' => 'integer',
-        'range_km' => 'integer',
-        'fuel_efficiency' => 'float',
         'towing_weight' => 'integer',
-        'airbags' => 'integer',
-        'wheels' => 'integer',
-        'drive_axles' => 'array',
         'is_import' => 'boolean',
         'is_factory_new' => 'boolean',
         'published_at' => 'datetime',
+        'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    protected $appends = [
-        'brand_name',
-        'model_name',
-        'model_year_name',
-        'fuel_type_name',
-        'gear_type_name',
-        'engine_power_hp',
-        'vehicle_list_status_name',
-        'first_registration_date',
-        'seller_address',
-        'seller_postcode',
-    ];
+    // protected $appends = [
+    //     'brand_name',
+    //     'model_name',
+    //     'variant_name',
+    //     'color_name',
+    //     'body_type_name',
+    //     'use_name',
+    //     'emission_norm_name',
+    //     'fuel_type_name',
+    //     'gear_type_name',
+    //     'measurement_norm_name',
+    //     'listing_type_name',
+    //     'sales_type_name',
+    //     'price_type_name',
+    //     'category_name',
+    //     'condition_name',
+    //     'list_status_name',
+    //     'equipment_names',
+    //     'specifications'
+    // ];
 
     protected static function booted(): void
     {
@@ -189,101 +233,6 @@ class Vehicle extends Model
         return $cached;
     }
 
-    public function getBrandNameAttribute(): ?string
-    {
-        return $this->dmrFactVehicle?->variant?->model?->brand?->name;
-    }
-
-    public function getModelNameAttribute(): ?string
-    {
-        return $this->dmrFactVehicle?->variant?->model?->name;
-    }
-
-    public function getFuelTypeNameAttribute(): ?string
-    {
-        $fv = $this->dmrFactVehicle;
-        if (! $fv) {
-            return null;
-        }
-        $lines = $fv->relationLoaded('drivmiddelLines')
-            ? $fv->drivmiddelLines
-            : $fv->drivmiddelLines()->orderBy('line_order')->get();
-        $sorted = $lines->sortBy('line_order')->values();
-        $primary = $sorted->first(fn ($line) => (bool) $line->drivmiddel_primaer) ?? $sorted->first();
-
-        return $primary?->driveEnergy?->name;
-    }
-
-    public function getGearTypeNameAttribute(): ?string
-    {
-        return self::getCachedLookup('gear_types', $this->gear_type_id);
-    }
-
-    public function getEnginePowerHpAttribute(): ?float
-    {
-        $kw = $this->dmrFactVehicle?->motor_stoerste_effekt;
-        if ($kw === null) {
-            return null;
-        }
-
-        return round((float) $kw * 1.36, 2);
-    }
-
-    public function getModelYearNameAttribute(): ?string
-    {
-        $y = $this->dmrFactVehicle?->model_aar;
-
-        return $y !== null ? (string) $y : null;
-    }
-
-    /** DMR variant label (legacy "version" field in views). */
-    public function getVersionAttribute(): ?string
-    {
-        return $this->dmrFactVehicle?->variant?->name;
-    }
-
-    public function getFirstRegistrationDateAttribute(): ?Carbon
-    {
-        return $this->dmrFactVehicle?->foerste_registrering_dato;
-    }
-
-    public function getVehicleListStatusNameAttribute(): ?string
-    {
-        return self::getCachedLookup('vehicle_list_statuses', $this->vehicle_list_status_id);
-    }
-
-    public function getSellerAddressAttribute(): ?string
-    {
-        return $this->attributes['address'] ?? null;
-    }
-
-    public function getSellerPostcodeAttribute(): ?string
-    {
-        return $this->attributes['postcode'] ?? null;
-    }
-
-    /**
-     * Blade parity: legacy templates used vehicle_details; expose DMR-backed read model.
-     */
-    public function getDetailsAttribute(): VehicleDetailPresenter
-    {
-        return new VehicleDetailPresenter($this);
-    }
-
-    public function getTitleAttribute($value): ?string
-    {
-        if (! empty($value)) {
-            return $value;
-        }
-
-        $parts = array_filter([
-            $this->getAttribute('brand_name'),
-            $this->getAttribute('model_name'),
-        ]);
-
-        return ! empty($parts) ? implode(' ', $parts) : null;
-    }
-
     public function dmrFactVehicle(): BelongsTo
     {
         return $this->belongsTo(DmrFactVehicle::class, 'dmr_fact_vehicle_id');
@@ -344,8 +293,13 @@ class Vehicle extends Model
         return $this->belongsTo(Condition::class, 'condition_id');
     }
 
+    public function measurementNorm(): BelongsTo
+    {
+        return $this->belongsTo(MeasurementNorm::class, 'measurement_norm_id');
+    }
+
     public function vehicleListStatus(): BelongsTo
     {
-        return $this->belongsTo(VehicleListStatus::class);
+        return $this->belongsTo(VehicleListStatus::class, 'list_status_id');
     }
 }

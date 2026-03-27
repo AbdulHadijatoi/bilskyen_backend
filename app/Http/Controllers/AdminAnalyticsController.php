@@ -78,8 +78,8 @@ class AdminAnalyticsController extends Controller
         }
 
         $totalVehicles = Vehicle::count();
-        $activeVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
-        $soldVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+        $activeVehicles = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->count();
+        $soldVehicles = Vehicle::where('list_status_id', VehicleListStatus::SOLD)->count();
         $featuredVehicles = FeaturedListing::count();
 
         // Dealer metrics
@@ -269,7 +269,7 @@ class AdminAnalyticsController extends Controller
 
         // Top dealers by sold vehicles
         $topDealersBySold = Dealer::withCount(['vehicles' => function ($query) use ($startDate, $endDate) {
-            $query->where('vehicle_list_status_id', VehicleListStatus::SOLD);
+            $query->where('list_status_id', VehicleListStatus::SOLD);
             if ($startDate) {
                 $query->where('created_at', '>=', $startDate);
             }
@@ -418,7 +418,7 @@ class AdminAnalyticsController extends Controller
 
         $vehiclesByPriceRange = [];
         foreach ($priceRanges as $range) {
-            $query = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED);
+            $query = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED);
             if ($range['min'] !== null) {
                 $query->where('price', '>=', $range['min']);
             }
@@ -433,7 +433,7 @@ class AdminAnalyticsController extends Controller
         }
 
         // Average days to sell
-        $soldVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::SOLD)
+        $soldVehicles = Vehicle::where('list_status_id', VehicleListStatus::SOLD)
             ->whereNotNull('created_at')
             ->whereNotNull('updated_at')
             ->get();
@@ -523,7 +523,7 @@ class AdminAnalyticsController extends Controller
         // Lead to sale conversion
         $totalLeads = Lead::count();
         $leadsThatConverted = Lead::whereHas('vehicle', function ($query) {
-            $query->where('vehicle_list_status_id', VehicleListStatus::SOLD);
+            $query->where('list_status_id', VehicleListStatus::SOLD);
         })->count();
         $conversionRate = $totalLeads > 0 
             ? round(($leadsThatConverted / $totalLeads) * 100, 2) 

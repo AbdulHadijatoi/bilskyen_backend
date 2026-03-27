@@ -44,7 +44,7 @@ class AdminFeaturedVehicleController extends Controller
             $statusId = VehicleListStatus::nameToId($request->status);
             if ($statusId) {
                 $query->whereHas('vehicle', function ($q) use ($statusId) {
-                    $q->where('vehicle_list_status_id', $statusId);
+                    $q->where('list_status_id', $statusId);
                 });
             }
         }

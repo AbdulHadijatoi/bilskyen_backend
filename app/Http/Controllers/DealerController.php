@@ -56,7 +56,7 @@ class DealerController extends Controller
 
         // Load dealer relationships
         $dealer->load(['owner', 'vehicles' => function ($query) {
-            $query->where('vehicle_list_status_id', \App\Constants\VehicleListStatus::PUBLISHED)
+            $query->where('list_status_id', \App\Constants\VehicleListStatus::PUBLISHED)
                   ->with(['images' => function ($q) {
                       $q->orderBy('sort_order');
                   }]);

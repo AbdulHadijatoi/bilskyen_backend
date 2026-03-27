@@ -255,7 +255,7 @@ class AdminSubscriptionController extends Controller
     private function handleSubscriptionInactive(Dealer $dealer): void
     {
         Vehicle::where('dealer_id', $dealer->id)->update([
-            'vehicle_list_status_id' => VehicleListStatus::ARCHIVED,
+            'list_status_id' => VehicleListStatus::ARCHIVED,
         ]);
         $this->subscriptionFeatureService->clearCache($dealer);
     }

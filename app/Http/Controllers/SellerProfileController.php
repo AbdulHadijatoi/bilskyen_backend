@@ -35,7 +35,7 @@ class SellerProfileController extends Controller
         $user = $request->user();
 
         $filters = $request->only([
-            'vehicle_list_status_id',
+            'list_status_id',
             'search',
             'sort',
         ]);
@@ -47,8 +47,8 @@ class SellerProfileController extends Controller
             }, 'equipment', 'dmrFactVehicle']);
 
         // Apply status filter
-        if ($request->has('vehicle_list_status_id') && $request->input('vehicle_list_status_id')) {
-            $query->where('vehicle_list_status_id', $request->input('vehicle_list_status_id'));
+        if ($request->has('list_status_id') && $request->input('list_status_id')) {
+            $query->where('list_status_id', $request->input('list_status_id'));
         }
 
         // Apply search filter
@@ -94,7 +94,7 @@ class SellerProfileController extends Controller
                 'vin' => $vehicle->dmrFactVehicle?->stel_nummer,
                 'price' => $vehicle->price,
                 'km_driven' => $vehicle->km_driven,
-                'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
+                'list_status_id' => $vehicle->list_status_id,
                 'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                 'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
@@ -199,7 +199,7 @@ class SellerProfileController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         if ($validator->fails()) {
@@ -217,10 +217,10 @@ class SellerProfileController extends Controller
         $beforeState = $vehicle->toArray();
 
         // Update status
-        $vehicle->vehicle_list_status_id = $request->input('vehicle_list_status_id');
+        $vehicle->list_status_id = $request->input('list_status_id');
         
         // Set published_at if publishing
-        if ($request->input('vehicle_list_status_id') == VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
+        if ($request->input('list_status_id') == VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
             $vehicle->published_at = now();
         }
         
@@ -369,16 +369,16 @@ class SellerProfileController extends Controller
         // Add status breakdown
         $statistics['by_status'] = [
             'published' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
                 ->count(),
             'draft' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)
+                ->where('list_status_id', VehicleListStatus::DRAFT)
                 ->count(),
             'sold' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
+                ->where('list_status_id', VehicleListStatus::SOLD)
                 ->count(),
             'archived' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)
+                ->where('list_status_id', VehicleListStatus::ARCHIVED)
                 ->count(),
         ];
 

@@ -159,7 +159,7 @@ class SellerController extends Controller
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'price' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'km_driven' => ['nullable', 'integer', 'min:0'],
-            'vehicle_list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'description' => ['nullable', 'string'],
             'variant_id' => ['nullable', 'exists:variants,id'],
             'color_id' => ['nullable', 'exists:colors,id'],
@@ -221,8 +221,8 @@ class SellerController extends Controller
             if ($request->has('km_driven')) {
                 $vehicleData['km_driven'] = $request->input('km_driven');
             }
-            if ($request->has('vehicle_list_status_id')) {
-                $vehicleData['vehicle_list_status_id'] = $request->input('vehicle_list_status_id');
+            if ($request->has('list_status_id')) {
+                $vehicleData['list_status_id'] = $request->input('list_status_id');
             }
             if ($request->has('fuel_efficiency')) {
                 $vehicleData['fuel_efficiency'] = $request->input('fuel_efficiency');
@@ -476,7 +476,7 @@ class SellerController extends Controller
         $beforeState = $vehicle->toArray();
 
         // Update status to ARCHIVED
-        $vehicle->vehicle_list_status_id = VehicleListStatus::ARCHIVED;
+        $vehicle->list_status_id = VehicleListStatus::ARCHIVED;
         $vehicle->save();
 
         // Audit log
@@ -582,7 +582,7 @@ class SellerController extends Controller
 
         // Validate request
         $validated = $request->validate([
-            'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         // Get vehicle and verify ownership
@@ -599,7 +599,7 @@ class SellerController extends Controller
         $beforeState = $vehicle->toArray();
 
         // Update status
-        $vehicle->vehicle_list_status_id = $validated['vehicle_list_status_id'];
+        $vehicle->list_status_id = $validated['list_status_id'];
         $vehicle->save();
 
         // Audit log

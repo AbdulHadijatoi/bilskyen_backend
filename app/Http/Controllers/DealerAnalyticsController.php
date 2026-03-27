@@ -130,11 +130,11 @@ class DealerAnalyticsController extends Controller
 
         // Vehicle metrics
         $totalActiveVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->count();
         
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
+            ->where('list_status_id', VehicleListStatus::SOLD)
             ->count();
         
         // Reserved vehicles (if there's a reserved status, otherwise use a different logic)
@@ -355,7 +355,7 @@ class DealerAnalyticsController extends Controller
 
         // Average days on market
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
+            ->where('list_status_id', VehicleListStatus::SOLD)
             ->whereNotNull('created_at')
             ->whereNotNull('updated_at')
             ->get();
@@ -419,7 +419,7 @@ class DealerAnalyticsController extends Controller
         // Non-featured vehicles
         $nonFeaturedVehicles = Vehicle::where('dealer_id', $dealerId)
             ->whereNotIn('id', $featuredVehicleIds)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->count();
 
         $featuredVehicles = count($featuredVehicleIds);

@@ -43,13 +43,13 @@ class DealerDashboardController extends Controller
         // Vehicle Statistics (scoped to dealer)
         $totalVehicles = Vehicle::where('dealer_id', $dealerId)->count();
         $publishedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)->count();
         $draftVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
+            ->where('list_status_id', VehicleListStatus::DRAFT)->count();
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+            ->where('list_status_id', VehicleListStatus::SOLD)->count();
         $archivedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count();
+            ->where('list_status_id', VehicleListStatus::ARCHIVED)->count();
         
         $newVehiclesLast7Days = Vehicle::where('dealer_id', $dealerId)
             ->where('created_at', '>=', $last7Days)->count();
@@ -87,7 +87,7 @@ class DealerDashboardController extends Controller
 
         // Vehicle Price Statistics
         $totalVehicleValue = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->sum('price');
         $averageVehiclePrice = $publishedVehicles > 0 
             ? round($totalVehicleValue / $publishedVehicles, 2) 
@@ -106,7 +106,7 @@ class DealerDashboardController extends Controller
                     'registration' => $vehicle->registration,
                     'price' => $vehicle->price,
                     'user_name' => $vehicle->user->name ?? 'N/A',
-                    'status' => $vehicle->vehicle_list_status_id,
+                    'status' => $vehicle->list_status_id,
                     'created_at' => $vehicle->created_at?->toISOString(),
                 ];
             });

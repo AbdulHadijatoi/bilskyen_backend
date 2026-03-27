@@ -231,8 +231,6 @@ class SellYourCarController extends Controller
             'registration' => 'required|string|max:20',
             'price' => 'required|integer|min:0',
             'km_driven' => 'required|integer|min:0',
-            'battery_capacity' => 'nullable|integer|min:0',
-            'range_km' => 'nullable|integer|min:0',
             'charging_type' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'equipment_ids' => 'nullable|array',
@@ -358,17 +356,11 @@ class SellYourCarController extends Controller
                 'title' => $title,
                 'registration' => $request->input('registration'),
                 'price' => (int) $request->input('price'),
-                'vehicle_list_status_id' => VehicleListStatusConstant::PUBLISHED,
+                'list_status_id' => VehicleListStatusConstant::PUBLISHED,
                 'published_at' => now(),
                 'description' => $description,
                 'gear_type_id' => $request->filled('gear_type_id') ? (int) $request->input('gear_type_id') : null,
                 'km_driven' => (int) $request->input('km_driven'),
-                'battery_capacity' => $request->input('battery_capacity') !== null && $request->input('battery_capacity') !== ''
-                    ? (int) $request->input('battery_capacity')
-                    : null,
-                'range_km' => $request->input('range_km') !== null && $request->input('range_km') !== ''
-                    ? (int) $request->input('range_km')
-                    : null,
                 'charging_type' => $request->input('charging_type') ?: null,
                 'condition_id' => $request->filled('condition_id') ? (int) $request->input('condition_id') : null,
                 'servicebog' => $request->input('servicebog') ?: null,

@@ -86,7 +86,7 @@ class AdminVehicleController extends Controller
         if ($request->has('status')) {
             $statusId = VehicleListStatus::nameToId($request->status);
             if ($statusId) {
-                $query->where('vehicle_list_status_id', $statusId);
+                $query->where('list_status_id', $statusId);
             }
         }
 
@@ -157,7 +157,7 @@ class AdminVehicleController extends Controller
             'postcode' => ['nullable', 'string', 'max:20'],
             'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
             'servicebog' => ['nullable', 'string', 'max:50'],
-            'vehicle_list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
         ]);
 
@@ -183,7 +183,7 @@ class AdminVehicleController extends Controller
             return $this->validationError(['status' => ['Invalid status value']]);
         }
 
-        $vehicle->vehicle_list_status_id = $statusId;
+        $vehicle->list_status_id = $statusId;
         
         if ($request->status === 'published' && !$vehicle->published_at) {
             $vehicle->published_at = now();

@@ -102,7 +102,7 @@ class VehicleController extends Controller
     private const ADVANCED_FILTER_KEYS = [
         'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
         'year_from', 'year_to', 'mileage_from', 'mileage_to',
-        'odometer_from', 'odometer_to', 'listing_type_id', 'vehicle_list_status_id',
+        'odometer_from', 'odometer_to', 'listing_type_id', 'list_status_id',
         'category_id', 'price_type_id', 'condition_id',
         'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
         'first_registration_year_from', 'first_registration_year_to',
@@ -298,7 +298,7 @@ class VehicleController extends Controller
 
         $filters = $request->only([
             'search',
-            'vehicle_list_status_id',
+            'list_status_id',
             'sort',
         ]);
 
@@ -306,7 +306,7 @@ class VehicleController extends Controller
         if ($request->has('status') && $request->input('status')) {
             $statusId = VehicleListStatus::nameToId($request->input('status'));
             if ($statusId) {
-                $filters['vehicle_list_status_id'] = $statusId;
+                $filters['list_status_id'] = $statusId;
             }
         }
 
@@ -352,7 +352,7 @@ class VehicleController extends Controller
             'registration' => $vehicle->registration,
             'dealer_id' => $vehicle->dealer_id,
             'user_id' => $vehicle->user_id,
-            'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
+            'list_status_id' => $vehicle->list_status_id,
             'km_driven' => $vehicle->km_driven,
             'price' => $vehicle->price,
             'battery_capacity' => $vehicle->battery_capacity,
@@ -432,19 +432,19 @@ class VehicleController extends Controller
     public function getVehiclesOverview(): JsonResponse
     {
         $totalVehicles = Vehicle::count();
-        $publishedVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
-        $draftVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
-        $soldVehicles = Vehicle::where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+        $publishedVehicles = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->count();
+        $draftVehicles = Vehicle::where('list_status_id', VehicleListStatus::DRAFT)->count();
+        $soldVehicles = Vehicle::where('list_status_id', VehicleListStatus::SOLD)->count();
 
-        $totalInventoryValue = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->sum('price');
+        $totalInventoryValue = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->sum('price');
         $averageVehicleValue = $publishedVehicles > 0 ? $totalInventoryValue / $publishedVehicles : 0;
 
-        $averageDaysListed = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+        $averageDaysListed = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)
             ->whereNotNull('published_at')
             ->selectRaw('AVG(DATEDIFF(NOW(), published_at)) as avg_days')
             ->value('avg_days') ?? 0;
 
-        $listingsOver90Days = Vehicle::where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+        $listingsOver90Days = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)
             ->whereNotNull('published_at')
             ->whereRaw('DATEDIFF(NOW(), published_at) > 90')
             ->count();
@@ -501,10 +501,10 @@ class VehicleController extends Controller
         $data['user_id'] = $request->user()->id;
 
         // Check max_listings limit if vehicle is being published
-        $vehicleListStatusId = $data['vehicle_list_status_id'] ?? null;
+        $vehicleListStatusId = $data['list_status_id'] ?? null;
         if ($dealer && ($vehicleListStatusId == VehicleListStatus::PUBLISHED || $vehicleListStatusId == 2)) {
             $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
                 ->count();
             
             if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
@@ -588,7 +588,7 @@ class VehicleController extends Controller
         $data['user_id'] = $request->user()->id;
 
         // Automatically set status to Draft (ID: 1)
-        $data['vehicle_list_status_id'] = 1;
+        $data['list_status_id'] = 1;
 
         // Handle file uploads
         if ($request->hasFile('images')) {
@@ -735,14 +735,14 @@ class VehicleController extends Controller
     {
         $request->validate([
             'status' => ['sometimes', 'in:published,unpublished,archived,draft,sold'],
-            'vehicle_list_status_id' => ['sometimes', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['sometimes', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
         
-        // If vehicle_list_status_id is provided, use it directly
-        if ($request->has('vehicle_list_status_id')) {
-            $statusId = $request->vehicle_list_status_id;
+        // If list_status_id is provided, use it directly
+        if ($request->has('list_status_id')) {
+            $statusId = $request->list_status_id;
         } elseif ($request->has('status')) {
             // Otherwise, convert status name to ID
             $statusId = \App\Constants\VehicleListStatus::nameToId($request->status);
@@ -751,17 +751,17 @@ class VehicleController extends Controller
                 return $this->validationError(['status' => ['Invalid status value']]);
             }
         } else {
-            return $this->validationError(['status' => ['Either status or vehicle_list_status_id is required']]);
+            return $this->validationError(['status' => ['Either status or list_status_id is required']]);
         }
 
-        $oldStatusId = $vehicle->vehicle_list_status_id;
+        $oldStatusId = $vehicle->list_status_id;
         
         // Check max_listings limit if changing to published status
         if ($statusId == VehicleListStatus::PUBLISHED && $oldStatusId != VehicleListStatus::PUBLISHED) {
             $dealer = $vehicle->dealer;
             if ($dealer) {
                 $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                    ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                    ->where('list_status_id', VehicleListStatus::PUBLISHED)
                     ->count();
                 
                 // Don't count the current vehicle if it's already published
@@ -779,7 +779,7 @@ class VehicleController extends Controller
             }
         }
         
-        $vehicle->vehicle_list_status_id = $statusId;
+        $vehicle->list_status_id = $statusId;
         
         if ($request->input('status') === 'published' && !$vehicle->published_at) {
             $vehicle->published_at = now();
@@ -794,8 +794,8 @@ class VehicleController extends Controller
                 $request->user(),
                 'Vehicle',
                 $vehicle->id,
-                ['vehicle_list_status_id' => $oldStatusId],
-                ['vehicle_list_status_id' => $statusId],
+                ['list_status_id' => $oldStatusId],
+                ['list_status_id' => $statusId],
                 $request,
                 'Dealer',
                 $vehicle->dealer_id,
@@ -1314,8 +1314,8 @@ class VehicleController extends Controller
                 'seller_address', 'seller_postcode'
             ]);
             
-            // Set vehicle_list_status_id automatically to 2 (ignore any value from frontend)
-            $vehicleData['vehicle_list_status_id'] = 2;
+            // Set list_status_id automatically to 2 (ignore any value from frontend)
+            $vehicleData['list_status_id'] = 2;
             
             // Set published_at automatically (ignore any value from frontend)
             $vehicleData['published_at'] = now();
