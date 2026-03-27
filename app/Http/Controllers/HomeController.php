@@ -309,44 +309,23 @@ class HomeController extends Controller
         $limit = (int) $request->input('limit', 15);
         $page = (int) $request->input('page', 1);
 
-        $advancedKeys = [
-            'price_from', 'price_to', 'brand_id', 'model_id', 'model_year_id', 'year_from', 'year_to',
-            'mileage_from', 'mileage_to', 'km_driven_from', 'km_driven_to', 'listing_type_id', 'category_id',
-            'price_type_id', 'condition_id', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
-            'first_registration_year_from', 'first_registration_year_to', 'sales_type_id',
-            'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
-            'ownership_tax_from', 'ownership_tax_to', 'battery_capacity_from', 'battery_capacity_to',
-            'range_km_from', 'range_km_to', 'charging_type', 'fuel_efficiency_from', 'fuel_efficiency_to',
-            'euronorm', 'euronom_id', 'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 'engine_displacement_to',
-            'airbags', 'ncap_five', 'equipment_ids', 'equipment_id', 'variant_id', 'type_id', 'use_id', 'transmission_id', 'towing_weight', 'is_import', 'is_factory_new',
-        ];
-        $basicKeys = ['search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'price_from', 'price_to', 'listing_type_id', 'sort'];
-        $hasAdvanced = !empty(array_intersect_key($currentFilters, array_flip($advancedKeys)));
-
-        if ($hasAdvanced) {
-            $input = $currentFilters;
-            if (isset($input['km_driven_from'])) {
-                $input['mileage_from'] = $input['km_driven_from'];
-            }
-            if (isset($input['km_driven_to'])) {
-                $input['mileage_to'] = $input['km_driven_to'];
-            }
-            // Accept both euronorm (name) and euronom_id; normalize to euronom_id for backend filter (DB column is euronom_id)
-            if (!empty($input['euronorm']) && empty($input['euronom_id'])) {
-                $euronom = \App\Models\Euronom::where('name', trim($input['euronorm']))->first();
-                if ($euronom) {
-                    $input['euronom_id'] = $euronom->id;
-                }
-                unset($input['euronorm']);
-            }
-            $basicFilters = array_intersect_key($input, array_flip($basicKeys));
-            $advancedFilters = array_intersect_key($input, array_flip($advancedKeys));
-            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters($basicFilters, $advancedFilters, $limit, $page);
-        } else {
-            $filters = array_intersect_key($currentFilters, array_flip(array_merge($basicKeys, ['km_driven_from', 'km_driven_to'])));
-            $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
+        $input = $currentFilters;
+        if (isset($input['km_driven_from'])) {
+            $input['mileage_from'] = $input['km_driven_from'];
         }
+        if (isset($input['km_driven_to'])) {
+            $input['mileage_to'] = $input['km_driven_to'];
+        }
+        // Accept both euronorm (name) and euronom_id; normalize to euronom_id for backend filter
+        if (! empty($input['euronorm']) && empty($input['euronom_id'])) {
+            $euronom = \App\Models\Euronom::where('name', trim((string) $input['euronorm']))->first();
+            if ($euronom) {
+                $input['euronom_id'] = $euronom->id;
+            }
+            unset($input['euronorm']);
+        }
+
+        $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
         $showNoResultsMessage = $vehicles->total() === 0;
         $fallbackVehicles = null;

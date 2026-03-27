@@ -136,7 +136,7 @@ class VehicleController extends Controller
         if (isset($input['km_driven_to'])) {
             $input['mileage_to'] = $input['km_driven_to'];
         }
-        // Ensure condition_id is integer so filter matches vehicle_details.condition_id correctly
+        // Ensure condition_id is integer so filter matches vehicles.condition_id correctly
         if (isset($input['condition_id']) && $input['condition_id'] !== '' && $input['condition_id'] !== null) {
             $input['condition_id'] = (int) $input['condition_id'];
         }
@@ -158,26 +158,10 @@ class VehicleController extends Controller
      */
     private function getVehiclesListResponse(array $input, string $path = '', array $query = []): JsonResponse
     {
-        $advancedFilterKeys = self::ADVANCED_FILTER_KEYS;
-        $basicFilterKeys = self::BASIC_FILTER_KEYS;
-        $hasAdvancedFilters = !empty(array_intersect_key(array_flip($advancedFilterKeys), $input));
-
         $limit = (int) ($input['limit'] ?? 15);
         $page = (int) ($input['page'] ?? 1);
 
-        if ($hasAdvancedFilters) {
-            $basicFilters = array_intersect_key($input, array_flip($basicFilterKeys));
-            $advancedFilters = array_intersect_key($input, array_flip($advancedFilterKeys));
-            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters(
-                $basicFilters,
-                $advancedFilters,
-                $limit,
-                $page
-            );
-        } else {
-            $filters = array_intersect_key($input, array_flip($basicFilterKeys));
-            $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
-        }
+        $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
         $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
             // Get first image (frontend prioritizes: thumbnail_url, image_url, image)

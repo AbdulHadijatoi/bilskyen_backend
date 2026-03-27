@@ -168,42 +168,4 @@ Route::prefix('v1')->group(function () {
         // Manual -> dmr_fact_vehicle_id resolver (used on submit)
         Route::post('/vehicle-by-manual', [DmrFactVehicleLookupController::class, 'lookupByManual']);
     });
-
-    // Nummerplade API proxy routes (for Flutter/Vue.js)
-    Route::prefix('nummerplade')->group(function () {
-        // Vehicle lookup endpoints (rate limited)
-        Route::post('/vehicle-by-registration', [NummerpladeController::class, 'getVehicleByRegistration'])
-            ->middleware('throttle:40,1'); // 40 requests per minute per IP
-        
-        Route::post('/vehicle-by-vin', [NummerpladeController::class, 'getVehicleByVin'])
-            ->middleware('throttle:40,1'); // 40 requests per minute per IP
-        
-        // Reference data (cached, less restrictive)
-        Route::get('/reference/body-types', [NummerpladeController::class, 'getBodyTypes']);
-        Route::get('/reference/colors', [NummerpladeController::class, 'getColors']);
-        Route::get('/reference/fuel-types', [NummerpladeController::class, 'getFuelTypes']);
-        Route::get('/reference/equipment', [NummerpladeController::class, 'getEquipment']);
-        Route::get('/reference/permits', [NummerpladeController::class, 'getPermits']);
-        Route::get('/reference/types', [NummerpladeController::class, 'getTypes']);
-        Route::get('/reference/uses', [NummerpladeController::class, 'getUses']);
-        
-        // Additional data endpoints (rate limited)
-        Route::get('/inspections/{vehicleId}', [NummerpladeController::class, 'getInspections'])
-            ->middleware('throttle:20,1'); // 20 requests per minute per IP
-        
-        Route::get('/dmr/{vehicleId}', [NummerpladeController::class, 'getDmrData'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/debt/{vehicleId}', [NummerpladeController::class, 'getDebt'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/tinglysning/{vin}', [NummerpladeController::class, 'getTinglysning'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/emissions/{input}', [NummerpladeController::class, 'getEmissions'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/evaluations/{input}', [NummerpladeController::class, 'getEvaluations'])
-            ->middleware('throttle:20,1');
-    });
 });

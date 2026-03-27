@@ -5,23 +5,19 @@ namespace App\Constants;
 /**
  * Transmission constants for API validation
  */
-class Transmission
+class GearType
 {
     public const MANUAL = 1;
     public const AUTOMATIC = 2;
-    public const CVT = 3;
-    public const SEMI_AUTOMATIC = 4;
 
     /**
-     * Get all valid transmission IDs
+     * Get all valid gear type IDs
      */
     public static function values(): array
     {
         return [
             self::MANUAL,
             self::AUTOMATIC,
-            self::CVT,
-            self::SEMI_AUTOMATIC,
         ];
     }
 
@@ -33,8 +29,6 @@ class Transmission
         return [
             'manual',
             'automatic',
-            'cvt',
-            'semi-automatic',
         ];
     }
 
@@ -46,8 +40,6 @@ class Transmission
         $mapping = [
             'manual' => self::MANUAL,
             'automatic' => self::AUTOMATIC,
-            'cvt' => self::CVT,
-            'semi-automatic' => self::SEMI_AUTOMATIC,
         ];
 
         return $mapping[strtolower($name)] ?? null;

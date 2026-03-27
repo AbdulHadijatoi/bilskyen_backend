@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Local DMR dataset: lookup vehicle facts by registration number.
- * Returns a slim, explicit payload for API consumers (no legacy Nummerplade shape).
  *
  * @method array<int, array{id:int,name:string}> searchManualBrands(?string $search, int $limit)
  * @method array<int, array{id:int,name:string,brand_id:int}> searchManualModels(?string $search, ?int $brandId, int $limit)
@@ -22,42 +21,18 @@ use Illuminate\Support\Facades\Log;
  */
 class DmrFactVehicleLookupService
 {
-    /**
-     * Lookup by license plate. Throws NummerpladeApiException on miss or failure (HTTP layer compatibility).
-     *
-     * @param  bool  $advanced  Unused; kept for API parity with Nummerplade.
-     */
-    public function lookupByRegistration(string $registration, bool $advanced = false): array
+    public function lookupByRegistration(string $registration): array
     {
         try {
-            $startTime = microtime(true);
             $normalizedRegistration = $this->normalizeRegistration($registration);
             $vehicle = $this->findFactVehicleByRegistration($normalizedRegistration);
 
             if (!$vehicle) {
-                Log::info('DMR fact vehicle registration lookup miss', [
-                    'method' => 'lookupByRegistration',
-                    'registration' => $registration,
-                    'registration_normalized' => $normalizedRegistration,
-                    'source' => 'dmr_local',
-                ]);
-
                 throw NummerpladeApiException::invalidInput('Invalid registration or VIN provided');
             }
 
             $data = $this->mapFactVehicleToLookupResponse($vehicle, $normalizedRegistration);
-            $processingTime = microtime(true) - $startTime;
-
-            Log::info('DMR fact vehicle registration lookup hit', [
-                'method' => 'lookupByRegistration',
-                'registration' => $registration,
-                'registration_normalized' => $normalizedRegistration,
-                'source' => 'dmr_local',
-                'dmr_fact_vehicle_id' => $vehicle->id,
-                'processing_time' => round($processingTime, 3) . 's',
-                'data_keys_count' => count($data),
-            ]);
-
+            dd($data);
             return $data;
         } catch (\Throwable $e) {
             if ($e instanceof NummerpladeApiException) {
@@ -172,7 +147,7 @@ class DmrFactVehicleLookupService
             ->sortBy('line_order')
             ->map(fn ($line) => [
                 'name' => $line->equipmentType?->name,
-                'antal' => $line->antal,
+                'count' => $line->antal,
             ])
             ->filter(fn ($item) => !empty($item['name']))
             ->values()
@@ -187,42 +162,42 @@ class DmrFactVehicleLookupService
         return [
             'dmr_fact_vehicle_id' => (int) $vehicle->id,
             'registration' => $vehicle->registrering_nummer ?? $normalizedRegistration,
-            'brand' => $this->idName($brand),
-            'model' => $this->idName($model),
-            'variant' => $this->idName($variant),
-            'body_type' => $this->idName($vehicle->bodyType),
-            'use' => $this->idName($vehicle->vehicleUse),
-            'color' => $this->idName($vehicle->colour),
-            'fuel_type' => $this->idName($fuelType),
-            'measurement_norm' => $measurementNorm,
-            'motor_km_per_liter' => $primary && $primary->motor_km_per_liter !== null ? (float) $primary->motor_km_per_liter : null,
-            'miljoe_co2_udslip' => $primary && $primary->miljoe_co2_udslip !== null ? (float) $primary->miljoe_co2_udslip : null,
-            'motor_elektrisk_forbrug' => $primary && $primary->motor_elektrisk_forbrug !== null ? (float) $primary->motor_elektrisk_forbrug : null,
-            'drivmiddel_primaer' => $primary ? (bool) $primary->drivmiddel_primaer : null,
+            'km_per_liter' => $primary && $primary->motor_km_per_liter !== null ? (float) $primary->motor_km_per_liter : null,
+            'co2_emission' => $primary && $primary->miljoe_co2_udslip !== null ? (float) $primary->miljoe_co2_udslip : null,
+            'electrical_consumption' => $primary && $primary->motor_elektrisk_forbrug !== null ? (float) $primary->motor_elektrisk_forbrug : null,
+            // 'drivmiddel_primaer' => $primary ? (bool) $primary->drivmiddel_primaer : null,
             'engine_power_kw' => $kw,
             'engine_power_hp' => $this->kwToHp($kw),
-            'engine_displacement_cc' => $cc !== null ? (int) round($cc) : null,
+            'engine_size_cc' => $cc !== null ? (int) round($cc) : null,
             'engine_displacement_litres' => $this->ccToDisplayLitres($cc),
-            'euronorm' => $this->idName($vehicle->emissionNorm),
             'first_registration_date' => $vehicle->foerste_registrering_dato?->format('Y-m-d'),
+            'first_registration_year' => $vehicle->foerste_registrering_dato?->format('Y'),
             'chassis_number' => $vehicle->stel_nummer,
-            'co2_emission' => $vehicle->emission_co !== null ? (float) $vehicle->emission_co : null,
+            'co2_emission_2' => $vehicle->emission_co !== null ? (float) $vehicle->emission_co : null,
             'nox_emission' => $vehicle->emission_nox !== null ? (float) $vehicle->emission_nox : null,
-            'particle_filter' => $this->formatYesNo($vehicle->partikel_filter),
+            'particle_filter' => $vehicle->partikel_filter && intval($vehicle->partikel_filter) > 0 ? true : false,
             'axle_count' => $vehicle->aksel_antal,
             'door_count' => $vehicle->antal_doere,
             'gear_count' => $vehicle->antal_gear,
             'max_speed' => $vehicle->maksimum_hastighed,
-            'model_year' => $vehicle->model_aar,
-            'model_year_effective' => $this->modelYearEffective($vehicle),
-            'ncap_test' => $this->formatYesNo($vehicle->ncap_test),
-            'equipments' => $equipments,
-            'equipments_other' => $vehicle->oevrigt_udstyr,
+            'model_year' => $this->modelYearEffective($vehicle),
+            'ncap_test' => $vehicle->ncap_test && intval($vehicle->ncap_test) > 0 ? true : false,
             'seats_min' => $vehicle->siddepladser_minimum,
             'seats_max' => $vehicle->siddepladser_maksimum,
             'maximum_weight_kg' => $vehicle->teknisk_total_vaegt,
             'registration_status' => $vehicle->registrationStatus?->name,
             'last_registration_change' => $vehicle->registrering_status_dato?->format('Y-m-d'),
+            'measurement_norm' => $measurementNorm, // this will be added in measurement_norms table
+            'equipments' => $vehicle->oevrigt_udstyr,
+            'brand' => $this->idName($brand),
+            'model' => $this->idName($model),
+            'variant' => $this->idName($variant),
+            'euronorm' => $this->idName($vehicle->emissionNorm),
+            'body_type' => $this->idName($vehicle->bodyType),
+            'use' => $this->idName($vehicle->vehicleUse),
+            'color' => $this->idName($vehicle->colour),
+            'fuel_type' => $this->idName($fuelType),
+            'specifications' => $equipments, // each spec name will be added in specifications table and count will be added in vehicle_specs table against vehicle_id and spec_id
         ];
     }
 
@@ -241,7 +216,7 @@ class DmrFactVehicleLookupService
             return null;
         }
 
-        return round($kw * 1.36, 2);
+        return round((float) $kw * 1.36, 2);
     }
 
     /**

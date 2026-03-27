@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
-use App\Models\VehicleDetail;
+use App\Models\DmrBodyType;
 use App\Models\DmrBrand;
+use App\Models\DmrColour;
 use App\Models\DmrDriveEnergy;
+use App\Models\DmrEmissionNorm;
 use App\Models\DmrModel;
+use App\Models\DmrVehicleUse;
 use App\Models\FuelType;
 use App\Models\Brand;
 use App\Models\Category;
@@ -15,10 +18,8 @@ use App\Models\ModelYear;
 use App\Models\VehicleModel;
 use App\Models\BodyType;
 use App\Models\Color;
-use App\Models\Type;
 use App\Models\VehicleUse;
 use App\Models\Variant;
-use App\Models\Transmission;
 use App\Models\Euronom;
 use App\Constants\VehicleListStatus;
 use App\Services\FileService;
@@ -27,6 +28,7 @@ use App\Services\DmrFactVehicleLookupService;
 use App\Services\NummerpladeApiService;
 use App\Services\OwnershipTaxService;
 use App\Exceptions\NummerpladeApiException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -578,11 +580,9 @@ class VehicleService
     }
 
     /**
-     * Get public vehicles with basic filters (vehicles table only)
-     * 
-     * @param array $filters
-     * @param int $perPage
-     * @param int $page
+     * Get public vehicles with filters (vehicles + DMR + vehicle_equipment only).
+     *
+     * @param  array<string, mixed>  $filters
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getPublicVehicles(array $filters = [], int $perPage = 15, int $page = 1)
@@ -593,6 +593,20 @@ class VehicleService
                 $query->orderBy('sort_order');
             }, 'dmrFactVehicle.variant.model.brand', 'dealer']);
 
+        $this->applyPublicListingFilters($query, $filters);
+
+        $this->applySorting($query, $filters['sort'] ?? 'standard');
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Apply listing filters using only {@see Vehicle}, DMR relations, and {@see Vehicle::equipment()} (vehicle_equipment).
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    protected function applyPublicListingFilters(Builder $query, array $filters): void
+    {
         if (! empty($filters['dealer_id'])) {
             $query->where('dealer_id', $filters['dealer_id']);
         }
@@ -708,9 +722,10 @@ class VehicleService
         if (! empty($filters['body_type_id'])) {
             $bodyIds = is_array($filters['body_type_id']) ? $filters['body_type_id'] : [$filters['body_type_id']];
             $bodyIds = array_filter(array_map('intval', $bodyIds));
-            if (! empty($bodyIds)) {
-                $query->whereHas('dmrFactVehicle', function ($q) use ($bodyIds) {
-                    $q->whereIn('body_type_id', $bodyIds);
+            $dmrBodyIds = $this->resolveDmrBodyTypeIds($bodyIds);
+            if (! empty($dmrBodyIds)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($dmrBodyIds) {
+                    $q->whereIn('body_type_id', $dmrBodyIds);
                 });
             }
         }
@@ -734,9 +749,280 @@ class VehicleService
             });
         }
 
-        $this->applySorting($query, $filters['sort'] ?? 'standard');
+        if (! empty($filters['listing_type_id'])) {
+            $ltIds = is_array($filters['listing_type_id']) ? $filters['listing_type_id'] : [$filters['listing_type_id']];
+            $ltIds = array_filter(array_map('intval', $ltIds));
+            if (! empty($ltIds)) {
+                $query->whereIn('listing_type_id', $ltIds);
+            }
+        }
 
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        if (! empty($filters['sales_type_id'])) {
+            $stIds = is_array($filters['sales_type_id']) ? $filters['sales_type_id'] : [$filters['sales_type_id']];
+            $stIds = array_filter(array_map('intval', $stIds));
+            if (! empty($stIds)) {
+                $query->whereIn('sales_type_id', $stIds);
+            }
+        }
+
+        if (! empty($filters['price_type_id'])) {
+            $ptIds = is_array($filters['price_type_id']) ? $filters['price_type_id'] : [$filters['price_type_id']];
+            $ptIds = array_filter(array_map('intval', $ptIds));
+            if (! empty($ptIds)) {
+                $query->whereIn('price_type_id', $ptIds);
+            }
+        }
+
+        if (! empty($filters['category_id'])) {
+            $query->where('category_id', (int) $filters['category_id']);
+        }
+
+        if (! empty($filters['type_id'])) {
+            $query->where('type_id', (int) $filters['type_id']);
+        }
+
+        if (! empty($filters['transmission_id'])) {
+            $query->where('transmission_id', (int) $filters['transmission_id']);
+        }
+
+        if (! empty($filters['battery_capacity_from']) || ! empty($filters['battery_capacity_to'])) {
+            $from = isset($filters['battery_capacity_from']) && $filters['battery_capacity_from'] !== '' ? (int) $filters['battery_capacity_from'] : null;
+            $to = isset($filters['battery_capacity_to']) && $filters['battery_capacity_to'] !== '' ? (int) $filters['battery_capacity_to'] : null;
+            if ($from !== null && $to !== null) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereNull('battery_capacity')->orWhereBetween('battery_capacity', [$from, $to]);
+                });
+            } elseif ($from !== null) {
+                $query->where(function ($q) use ($from) {
+                    $q->whereNull('battery_capacity')->orWhere('battery_capacity', '>=', $from);
+                });
+            } elseif ($to !== null) {
+                $query->where(function ($q) use ($to) {
+                    $q->whereNull('battery_capacity')->orWhere('battery_capacity', '<=', $to);
+                });
+            }
+        }
+
+        if (! empty($filters['range_km_from']) || ! empty($filters['range_km_to'])) {
+            $from = isset($filters['range_km_from']) && $filters['range_km_from'] !== '' ? (int) $filters['range_km_from'] : null;
+            $to = isset($filters['range_km_to']) && $filters['range_km_to'] !== '' ? (int) $filters['range_km_to'] : null;
+            if ($from !== null && $to !== null) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereNull('range_km')->orWhereBetween('range_km', [$from, $to]);
+                });
+            } elseif ($from !== null) {
+                $query->where(function ($q) use ($from) {
+                    $q->whereNull('range_km')->orWhere('range_km', '>=', $from);
+                });
+            } elseif ($to !== null) {
+                $query->where(function ($q) use ($to) {
+                    $q->whereNull('range_km')->orWhere('range_km', '<=', $to);
+                });
+            }
+        }
+
+        if (! empty($filters['charging_type'])) {
+            $query->where('charging_type', $filters['charging_type']);
+        }
+
+        if (! empty($filters['ownership_tax_from']) || ! empty($filters['ownership_tax_to'])) {
+            $from = isset($filters['ownership_tax_from']) && $filters['ownership_tax_from'] !== '' ? (int) $filters['ownership_tax_from'] : null;
+            $to = isset($filters['ownership_tax_to']) && $filters['ownership_tax_to'] !== '' ? (int) $filters['ownership_tax_to'] : null;
+            if ($from !== null && $to !== null) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereNull('calculated_ownership_tax')
+                        ->orWhereBetween('calculated_ownership_tax', [$from, $to]);
+                });
+            } elseif ($from !== null) {
+                $query->where(function ($q) use ($from) {
+                    $q->whereNull('calculated_ownership_tax')
+                        ->orWhere('calculated_ownership_tax', '>=', $from);
+                });
+            } elseif ($to !== null) {
+                $query->where(function ($q) use ($to) {
+                    $q->whereNull('calculated_ownership_tax')
+                        ->orWhere('calculated_ownership_tax', '<=', $to);
+                });
+            }
+        }
+
+        if (! empty($filters['engine_power_from']) || ! empty($filters['engine_power_to'])) {
+            $fromHp = isset($filters['engine_power_from']) && $filters['engine_power_from'] !== '' ? (float) $filters['engine_power_from'] : null;
+            $toHp = isset($filters['engine_power_to']) && $filters['engine_power_to'] !== '' ? (float) $filters['engine_power_to'] : null;
+            $query->whereHas('dmrFactVehicle', function ($q) use ($fromHp, $toHp) {
+                if ($fromHp !== null) {
+                    $kwMin = $fromHp / 1.36;
+                    $q->where('motor_stoerste_effekt', '>=', $kwMin);
+                }
+                if ($toHp !== null) {
+                    $kwMax = $toHp / 1.36;
+                    $q->where('motor_stoerste_effekt', '<=', $kwMax);
+                }
+            });
+        }
+
+        if (! empty($filters['top_speed_from']) || ! empty($filters['top_speed_to'])) {
+            $from = isset($filters['top_speed_from']) && $filters['top_speed_from'] !== '' ? (int) $filters['top_speed_from'] : null;
+            $to = isset($filters['top_speed_to']) && $filters['top_speed_to'] !== '' ? (int) $filters['top_speed_to'] : null;
+            $query->whereHas('dmrFactVehicle', function ($q) use ($from, $to) {
+                if ($from !== null) {
+                    $q->where('maksimum_hastighed', '>=', $from);
+                }
+                if ($to !== null) {
+                    $q->where('maksimum_hastighed', '<=', $to);
+                }
+            });
+        }
+
+        if (! empty($filters['weight_from']) || ! empty($filters['weight_to'])) {
+            $from = isset($filters['weight_from']) && $filters['weight_from'] !== '' ? (int) $filters['weight_from'] : null;
+            $to = isset($filters['weight_to']) && $filters['weight_to'] !== '' ? (int) $filters['weight_to'] : null;
+            $query->whereHas('dmrFactVehicle', function ($q) use ($from, $to) {
+                if ($from !== null) {
+                    $q->where('teknisk_total_vaegt', '>=', $from);
+                }
+                if ($to !== null) {
+                    $q->where('teknisk_total_vaegt', '<=', $to);
+                }
+            });
+        }
+
+        if (! empty($filters['doors']) && $filters['doors'] !== '') {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('antal_doere', (int) $filters['doors']);
+            });
+        }
+
+        if (! empty($filters['seats_min']) && $filters['seats_min'] !== '') {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('siddepladser_minimum', '>=', (int) $filters['seats_min']);
+            });
+        }
+
+        if (! empty($filters['seats_max']) && $filters['seats_max'] !== '') {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('siddepladser_maksimum', '<=', (int) $filters['seats_max']);
+            });
+        }
+
+        if (! empty($filters['axles']) && $filters['axles'] !== '') {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('aksel_antal', (int) $filters['axles']);
+            });
+        }
+
+        if (! empty($filters['wheels']) && $filters['wheels'] !== '') {
+            $query->where('wheels', (int) $filters['wheels']);
+        }
+
+        if (! empty($filters['towing_weight']) && $filters['towing_weight'] !== '') {
+            $query->where('towing_weight', '>=', (int) $filters['towing_weight']);
+        }
+
+        if (! empty($filters['airbags']) && $filters['airbags'] !== '') {
+            $query->where('airbags', '>=', (int) $filters['airbags']);
+        }
+
+        if (! empty($filters['drive_axles'])) {
+            $axles = is_array($filters['drive_axles']) ? $filters['drive_axles'] : [$filters['drive_axles']];
+            $axles = array_values(array_filter(array_map('strval', $axles)));
+            if (! empty($axles)) {
+                $query->where(function ($q) use ($axles) {
+                    foreach ($axles as $token) {
+                        $q->orWhereJsonContains('drive_axles', $token);
+                    }
+                });
+            }
+        }
+
+        if (! empty($filters['is_import']) && (string) $filters['is_import'] === '1') {
+            $query->where('is_import', true);
+        }
+
+        if (! empty($filters['is_factory_new']) && (string) $filters['is_factory_new'] === '1') {
+            $query->where('is_factory_new', true);
+        }
+
+        if (! empty($filters['ncap_five']) && (string) $filters['ncap_five'] === '1') {
+            $query->whereHas('dmrFactVehicle', function ($q) {
+                $q->where('ncap_test', true);
+            });
+        }
+
+        if (! empty($filters['variant_id'])) {
+            $query->whereHas('dmrFactVehicle', function ($q) use ($filters) {
+                $q->where('variant_id', (int) $filters['variant_id']);
+            });
+        }
+
+        if (! empty($filters['color_id'])) {
+            $dmrColourIds = $this->resolveDmrColourIds([(int) $filters['color_id']]);
+            if (! empty($dmrColourIds)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($dmrColourIds) {
+                    $q->whereIn('colour_id', $dmrColourIds);
+                });
+            }
+        }
+
+        if (! empty($filters['euronom_id'])) {
+            $dmrNormIds = $this->resolveDmrEmissionNormIds([(int) $filters['euronom_id']]);
+            if (! empty($dmrNormIds)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($dmrNormIds) {
+                    $q->whereIn('emission_norm_id', $dmrNormIds);
+                });
+            }
+        }
+
+        if (! empty($filters['use_id'])) {
+            $dmrUseIds = $this->resolveDmrVehicleUseIds([(int) $filters['use_id']]);
+            if (! empty($dmrUseIds)) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($dmrUseIds) {
+                    $q->whereIn('vehicle_use_id', $dmrUseIds);
+                });
+            }
+        }
+
+        if (! empty($filters['engine_displacement_from']) || ! empty($filters['engine_displacement_to'])) {
+            $fromRaw = isset($filters['engine_displacement_from']) && $filters['engine_displacement_from'] !== '' ? (float) $filters['engine_displacement_from'] : null;
+            $toRaw = isset($filters['engine_displacement_to']) && $filters['engine_displacement_to'] !== '' ? (float) $filters['engine_displacement_to'] : null;
+            $fromL = $fromRaw !== null ? ($fromRaw > 50 ? $fromRaw / 1000 : $fromRaw) : null;
+            $toL = $toRaw !== null ? ($toRaw > 50 ? $toRaw / 1000 : $toRaw) : null;
+            $query->whereHas('dmrFactVehicle', function ($q) use ($fromL, $toL) {
+                if ($fromL !== null) {
+                    $q->where('motor_slag_volumen', '>=', $fromL);
+                }
+                if ($toL !== null) {
+                    $q->where('motor_slag_volumen', '<=', $toL);
+                }
+            });
+        }
+
+        if (! empty($filters['fuel_efficiency_from']) || ! empty($filters['fuel_efficiency_to'])) {
+            $from = isset($filters['fuel_efficiency_from']) && $filters['fuel_efficiency_from'] !== '' ? (float) $filters['fuel_efficiency_from'] : null;
+            $to = isset($filters['fuel_efficiency_to']) && $filters['fuel_efficiency_to'] !== '' ? (float) $filters['fuel_efficiency_to'] : null;
+            $query->where(function ($q) use ($from, $to) {
+                $q->where(function ($q2) use ($from, $to) {
+                    $q2->whereNotNull('fuel_efficiency');
+                    if ($from !== null) {
+                        $q2->where('fuel_efficiency', '>=', $from);
+                    }
+                    if ($to !== null) {
+                        $q2->where('fuel_efficiency', '<=', $to);
+                    }
+                })->orWhereHas('dmrFactVehicle.drivmiddelLines', function ($q3) use ($from, $to) {
+                    if ($from !== null) {
+                        $q3->where('motor_km_per_liter', '>=', $from);
+                    }
+                    if ($to !== null) {
+                        $q3->where('motor_km_per_liter', '<=', $to);
+                    }
+                });
+            });
+        }
+
+        if (! empty($filters['engine_cylinders']) && $filters['engine_cylinders'] !== '') {
+            // No DMR column; reserved for future vehicles.engine_cylinders if populated.
+        }
     }
 
     /**
@@ -879,6 +1165,55 @@ class VehicleService
                     $query->select('vehicles.*');
                 }
                 break;
+            case 'engine_power_desc':
+                $query->leftJoin('dmr_fact_vehicles as dfv_pw', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_pw.id')
+                    ->orderBy('dfv_pw.motor_stoerste_effekt', 'desc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'engine_power_asc':
+                $query->leftJoin('dmr_fact_vehicles as dfv_pw2', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_pw2.id')
+                    ->orderBy('dfv_pw2.motor_stoerste_effekt', 'asc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'top_speed_desc':
+                $query->leftJoin('dmr_fact_vehicles as dfv_ts', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_ts.id')
+                    ->orderBy('dfv_ts.maksimum_hastighed', 'desc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'top_speed_asc':
+                $query->leftJoin('dmr_fact_vehicles as dfv_ts2', 'vehicles.dmr_fact_vehicle_id', '=', 'dfv_ts2.id')
+                    ->orderBy('dfv_ts2.maksimum_hastighed', 'asc');
+                if (! $hasJoins) {
+                    $query->select('vehicles.*');
+                }
+                break;
+            case 'towing_weight_desc':
+                $query->orderBy($tablePrefix . 'towing_weight', 'desc');
+                break;
+            case 'towing_weight_asc':
+                $query->orderBy($tablePrefix . 'towing_weight', 'asc');
+                break;
+            case 'ownership_tax_desc':
+                $query->orderBy($tablePrefix . 'calculated_ownership_tax', 'desc');
+                break;
+            case 'ownership_tax_asc':
+                $query->orderBy($tablePrefix . 'calculated_ownership_tax', 'asc');
+                break;
+            case 'fuel_efficiency_desc':
+                $query->orderBy($tablePrefix . 'fuel_efficiency', 'desc');
+                break;
+            case 'fuel_efficiency_asc':
+                $query->orderBy($tablePrefix . 'fuel_efficiency', 'asc');
+                break;
+            case 'best_match':
+                $query->orderBy($tablePrefix . 'id', 'desc');
+                break;
             case 'distance_asc':
             case 'distance_desc':
                 $query->orderBy($tablePrefix . 'id', 'desc');
@@ -970,5 +1305,93 @@ class VehicleService
         }
 
         return DmrDriveEnergy::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $bodyTypeIds
+     * @return array<int>
+     */
+    protected function resolveDmrBodyTypeIds(array $bodyTypeIds): array
+    {
+        $bodyTypeIds = array_values(array_filter(array_map('intval', $bodyTypeIds)));
+        if (empty($bodyTypeIds)) {
+            return [];
+        }
+        $dmr = DmrBodyType::whereIn('id', $bodyTypeIds)->pluck('id')->all();
+        if (count($dmr) === count($bodyTypeIds)) {
+            return $dmr;
+        }
+        $names = BodyType::whereIn('id', $bodyTypeIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
+        }
+
+        return DmrBodyType::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $colourIds
+     * @return array<int>
+     */
+    protected function resolveDmrColourIds(array $colourIds): array
+    {
+        $colourIds = array_values(array_filter(array_map('intval', $colourIds)));
+        if (empty($colourIds)) {
+            return [];
+        }
+        $dmr = DmrColour::whereIn('id', $colourIds)->pluck('id')->all();
+        if (count($dmr) === count($colourIds)) {
+            return $dmr;
+        }
+        $names = Color::whereIn('id', $colourIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
+        }
+
+        return DmrColour::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $euronomIds
+     * @return array<int>
+     */
+    protected function resolveDmrEmissionNormIds(array $euronomIds): array
+    {
+        $euronomIds = array_values(array_filter(array_map('intval', $euronomIds)));
+        if (empty($euronomIds)) {
+            return [];
+        }
+        $dmr = DmrEmissionNorm::whereIn('id', $euronomIds)->pluck('id')->all();
+        if (count($dmr) === count($euronomIds)) {
+            return $dmr;
+        }
+        $names = Euronom::whereIn('id', $euronomIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
+        }
+
+        return DmrEmissionNorm::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int|string>  $useIds
+     * @return array<int>
+     */
+    protected function resolveDmrVehicleUseIds(array $useIds): array
+    {
+        $useIds = array_values(array_filter(array_map('intval', $useIds)));
+        if (empty($useIds)) {
+            return [];
+        }
+        $dmr = DmrVehicleUse::whereIn('id', $useIds)->pluck('id')->all();
+        if (count($dmr) === count($useIds)) {
+            return $dmr;
+        }
+        $names = VehicleUse::whereIn('id', $useIds)->pluck('name')->filter();
+        if ($names->isEmpty()) {
+            return [];
+        }
+
+        return DmrVehicleUse::whereIn('name', $names)->pluck('id')->all();
     }
 }
