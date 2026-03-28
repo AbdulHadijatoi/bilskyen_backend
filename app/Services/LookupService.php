@@ -74,7 +74,8 @@ class LookupService
 
     public function getBodyTypes(): Collection
     {
-        return Cache::remember('constants_body_types', self::CACHE_TTL, function () {
+        // Avoid legacy cache serialized as App\Models\BodyType (LookupService uses DmrBodyType).
+        return Cache::remember('constants_dmr_body_types', self::CACHE_TTL, function () {
             return DmrBodyType::orderBy('name')->get();
         });
     }
