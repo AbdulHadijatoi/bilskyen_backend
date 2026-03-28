@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
+use App\Models\DmrModel;
 use App\Models\VehicleModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -15,16 +16,20 @@ class AdminVehicleModelController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $vehicleModels = VehicleModel::with('brand')
-            ->orderBy('name')
-            ->paginate($request->get('limit', 15));
+        $query = DmrModel::query()
+            ->with('brand')
+            ->orderBy('name');
 
-        return $this->paginated($vehicleModels);
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', (int) $request->input('brand_id'));
+        }
+
+        return $this->paginated($query->paginate($request->get('limit', 15)));
     }
 
     public function show(int $id): JsonResponse
     {
-        $vehicleModel = VehicleModel::with('brand')->findOrFail($id);
+        $vehicleModel = DmrModel::with('brand')->findOrFail($id);
         return $this->success($vehicleModel);
     }
 
@@ -35,9 +40,9 @@ class AdminVehicleModelController extends Controller
             'brand_id' => 'required|integer|exists:brands,id',
         ]);
 
-        $vehicleModel = VehicleModel::create($request->only(['name', 'brand_id']));
+        $vehicleModel = DmrModel::create($request->only(['name', 'brand_id']));
 
-        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('dmr_models');
         LookupService::forgetLookupCacheGroup('brands');
 
         return $this->created($vehicleModel);
@@ -45,7 +50,7 @@ class AdminVehicleModelController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $vehicleModel = VehicleModel::findOrFail($id);
+        $vehicleModel = DmrModel::findOrFail($id);
 
         $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -54,7 +59,7 @@ class AdminVehicleModelController extends Controller
 
         $vehicleModel->update($request->only(['name', 'brand_id']));
 
-        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('dmr_models');
         LookupService::forgetLookupCacheGroup('brands');
 
         return $this->success($vehicleModel);
@@ -62,10 +67,10 @@ class AdminVehicleModelController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $vehicleModel = VehicleModel::findOrFail($id);
+        $vehicleModel = DmrModel::findOrFail($id);
         $vehicleModel->delete();
 
-        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('dmr_models');
         LookupService::forgetLookupCacheGroup('brands');
 
         return $this->noContent();

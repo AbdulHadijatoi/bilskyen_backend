@@ -42,6 +42,7 @@ use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
 use App\Http\Controllers\AdminOwnershipTaxRuleController;
+use App\Http\Controllers\AdminVehicleSpecDefinitionController;
 use App\Http\Controllers\AdminDmrDriveEnergyController;
 
 /*
@@ -405,6 +406,14 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/create', [AdminOwnershipTaxRuleController::class, 'create']);
         Route::post('/update/{id}', [AdminOwnershipTaxRuleController::class, 'update']);
         Route::post('/delete/{id}', [AdminOwnershipTaxRuleController::class, 'delete']);
+    });
+
+    Route::prefix('vehicle-spec-definitions')->group(function () {
+        Route::get('/', [AdminVehicleSpecDefinitionController::class, 'index']);
+        Route::get('/show/{id}', [AdminVehicleSpecDefinitionController::class, 'show']);
+        Route::post('/create', [AdminVehicleSpecDefinitionController::class, 'create']);
+        Route::post('/update/{id}', [AdminVehicleSpecDefinitionController::class, 'update']);
+        Route::post('/delete/{id}', [AdminVehicleSpecDefinitionController::class, 'delete']);
     });
 
     // DMR Drive Energies (fuel type options for ownership tax rules)

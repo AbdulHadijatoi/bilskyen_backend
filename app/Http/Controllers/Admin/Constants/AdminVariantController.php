@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
+use App\Models\DmrVariant;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -17,16 +18,20 @@ class AdminVariantController extends Controller
     use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
-        $variants = Variant::with('model')
-            ->orderBy('name')
-            ->paginate($request->get('limit', 15));
+        $query = DmrVariant::query()
+            ->with('model')
+            ->orderBy('name');
 
-        return $this->paginated($variants);
+        if ($request->filled('model_id')) {
+            $query->where('model_id', (int) $request->input('model_id'));
+        }
+
+        return $this->paginated($query->paginate($request->get('limit', 15)));
     }
 
     public function show(int $id): JsonResponse
     {
-        $variant = Variant::with('model')->findOrFail($id);
+        $variant = DmrVariant::with('model')->findOrFail($id);
         return $this->success($variant);
     }
 
@@ -37,7 +42,7 @@ class AdminVariantController extends Controller
             'model_id' => 'nullable|integer|exists:models,id',
         ]);
 
-        $variant = Variant::create($request->only(['name', 'model_id']));
+        $variant = DmrVariant::create($request->only(['name', 'model_id']));
 
         // Clear cache
         $this->clearConstantsCache('variants');
@@ -47,7 +52,7 @@ class AdminVariantController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $variant = Variant::findOrFail($id);
+        $variant = DmrVariant::findOrFail($id);
 
         $request->validate([
             'name' => 'sometimes|string|max:255|unique:variants,name,' . $id,
@@ -64,7 +69,7 @@ class AdminVariantController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $variant = Variant::findOrFail($id);
+        $variant = DmrVariant::findOrFail($id);
         $variant->delete();
 
         // Clear cache
