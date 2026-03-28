@@ -52,7 +52,8 @@ class LookupService
 
     public function getFuelTypes(): Collection
     {
-        return Cache::remember('constants_fuel_types', self::CACHE_TTL, function () {
+        // Key must not reuse legacy cache that serialized App\Models\FuelType (incomplete object on unserialize).
+        return Cache::remember('constants_dmr_drive_energies', self::CACHE_TTL, function () {
             return DmrDriveEnergy::orderBy('name')->get();
         });
     }

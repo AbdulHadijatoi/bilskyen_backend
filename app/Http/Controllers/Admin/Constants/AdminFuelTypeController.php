@@ -35,8 +35,8 @@ class AdminFuelTypeController extends Controller
 
         $fuelType = DmrDriveEnergy::create($request->only(['name', 'type_nummer']));
 
-        // Clear cache
-        Cache::forget('constants_fuel_types');
+        Cache::forget('constants_dmr_drive_energies');
+        Cache::forget('constants_fuel_types'); // legacy serialized FuelType payloads
 
         return $this->created($fuelType);
     }
@@ -52,7 +52,7 @@ class AdminFuelTypeController extends Controller
 
         $fuelType->update($request->only(['name', 'type_nummer']));
 
-        // Clear cache
+        Cache::forget('constants_dmr_drive_energies');
         Cache::forget('constants_fuel_types');
 
         return $this->success($fuelType);
@@ -63,7 +63,7 @@ class AdminFuelTypeController extends Controller
         $fuelType = DmrDriveEnergy::findOrFail($id);
         $fuelType->delete();
 
-        // Clear cache
+        Cache::forget('constants_dmr_drive_energies');
         Cache::forget('constants_fuel_types');
 
         return $this->noContent();
