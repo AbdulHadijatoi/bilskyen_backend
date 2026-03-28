@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use App\Services\LookupService;
 
 /**
  * Admin Equipment Controller
@@ -38,8 +38,8 @@ class AdminEquipmentController extends Controller
         $equipment = Equipment::create($request->only(['name', 'equipment_type_id']));
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->created($equipment);
     }
@@ -56,8 +56,8 @@ class AdminEquipmentController extends Controller
         $equipment->update($request->only(['name', 'equipment_type_id']));
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->success($equipment);
     }
@@ -68,8 +68,8 @@ class AdminEquipmentController extends Controller
         $equipment->delete();
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->noContent();
     }

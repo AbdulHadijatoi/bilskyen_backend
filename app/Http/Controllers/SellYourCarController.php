@@ -26,6 +26,7 @@ use App\Services\AuthService;
 use App\Services\AuditLogService;
 use App\Services\DmrLookupAssociationService;
 use App\Services\FileService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -460,7 +461,7 @@ class SellYourCarController extends Controller
             $lookupCsv = is_string($lookupCsv) ? trim($lookupCsv) : '';
             $lookupIds = $this->dmrLookupAssociationService->resolveEquipmentIdsFromLookupString($lookupCsv !== '' ? $lookupCsv : null);
             if ($lookupCsv !== '') {
-                Cache::forget('constants_equipments');
+                LookupService::forgetLookupCacheGroup('equipments');
             }
             $allEquipmentIds = array_values(array_unique(array_merge($checkboxIds, $lookupIds)));
             if ($allEquipmentIds !== []) {

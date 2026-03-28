@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\DmrDriveEnergy;
+use App\Services\LookupService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Admin Fuel Type Controller
@@ -35,8 +35,7 @@ class AdminFuelTypeController extends Controller
 
         $fuelType = DmrDriveEnergy::create($request->only(['name', 'type_nummer']));
 
-        Cache::forget('constants_dmr_drive_energies');
-        Cache::forget('constants_fuel_types'); // legacy serialized FuelType payloads
+        LookupService::forgetFuelTypesLookupCache();
 
         return $this->created($fuelType);
     }
@@ -52,8 +51,7 @@ class AdminFuelTypeController extends Controller
 
         $fuelType->update($request->only(['name', 'type_nummer']));
 
-        Cache::forget('constants_dmr_drive_energies');
-        Cache::forget('constants_fuel_types');
+        LookupService::forgetFuelTypesLookupCache();
 
         return $this->success($fuelType);
     }
@@ -63,8 +61,7 @@ class AdminFuelTypeController extends Controller
         $fuelType = DmrDriveEnergy::findOrFail($id);
         $fuelType->delete();
 
-        Cache::forget('constants_dmr_drive_energies');
-        Cache::forget('constants_fuel_types');
+        LookupService::forgetFuelTypesLookupCache();
 
         return $this->noContent();
     }

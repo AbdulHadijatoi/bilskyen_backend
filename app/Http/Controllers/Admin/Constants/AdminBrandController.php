@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use App\Services\LookupService;
 
 /**
  * Admin Brand Controller
@@ -35,7 +35,7 @@ class AdminBrandController extends Controller
         $brand = Brand::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_brands');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->created($brand);
     }
@@ -51,7 +51,7 @@ class AdminBrandController extends Controller
         $brand->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_brands');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->success($brand);
     }
@@ -62,7 +62,7 @@ class AdminBrandController extends Controller
         $brand->delete();
 
         // Clear cache
-        Cache::forget('constants_brands');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->noContent();
     }

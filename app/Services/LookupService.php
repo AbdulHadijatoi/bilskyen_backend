@@ -5,18 +5,12 @@ namespace App\Services;
 use App\Models\DmrBrand;
 use App\Models\DmrModel;
 use App\Models\DmrVariant;
-use App\Models\DmrFactVehicle;
 use App\Models\DmrDriveEnergy;
 use App\Models\GearType;
 use App\Models\ListingType;
-use App\Models\BodyType;
-use App\Models\Color;
-use App\Models\Type;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Models\PriceType;
-use App\Models\Euronom;
-use App\Models\VehicleUse;
 use App\Models\VehicleListStatus;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
@@ -41,111 +35,152 @@ class LookupService
     public const CACHE_TTL = 86400; // 24 hours
 
     /**
+     * Namespace for serialized lookup payloads. Bump if stored model classes or shape change
+     * (avoids __PHP_Incomplete_Class after Dmr migrations / renames).
+     */
+    private const CACHE_KEY_PREFIX = 'lookup_v2_';
+
+    private static function cacheKey(string $suffix): string
+    {
+        return self::CACHE_KEY_PREFIX . $suffix;
+    }
+
+    /**
+     * Drop current and legacy cache keys for a logical group (admin CRUD, etc.).
+     * $group matches ConstantsCacheTrait names (e.g. body_types, colors, euronorms).
+     */
+    public static function forgetLookupCacheGroup(string $group): void
+    {
+        $segment = match ($group) {
+            'body_types' => 'dmr_body_types',
+            'colors' => 'dmr_colours',
+            default => $group,
+        };
+
+        Cache::forget(self::cacheKey($segment));
+
+        $legacyKeys = match ($group) {
+            'body_types' => ['constants_body_types', 'constants_dmr_body_types'],
+            'colors' => ['constants_colors'],
+            default => ['constants_' . $group],
+        };
+
+        foreach ($legacyKeys as $key) {
+            Cache::forget($key);
+        }
+    }
+
+    public static function forgetFuelTypesLookupCache(): void
+    {
+        Cache::forget(self::cacheKey('dmr_drive_energies'));
+        Cache::forget('constants_fuel_types');
+        Cache::forget('constants_dmr_drive_energies');
+    }
+
+    /**
      * Get brands (id, name, ...). Same cache key used by all APIs.
      */
     public function getBrands(): Collection
     {
-        return Cache::remember('constants_brands', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('brands'), self::CACHE_TTL, function () {
             return DmrBrand::orderBy('name')->get();
         });
     }
 
     public function getFuelTypes(): Collection
     {
-        // Key must not reuse legacy cache that serialized App\Models\FuelType (incomplete object on unserialize).
-        return Cache::remember('constants_dmr_drive_energies', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('dmr_drive_energies'), self::CACHE_TTL, function () {
             return DmrDriveEnergy::orderBy('name')->get();
         });
     }
 
     public function getGearTypes(): Collection
     {
-        return Cache::remember('constants_gear_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('gear_types'), self::CACHE_TTL, function () {
             return GearType::orderBy('name')->get();
         });
     }
 
     public function getListingTypes(): Collection
     {
-        return Cache::remember('constants_listing_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('listing_types'), self::CACHE_TTL, function () {
             return ListingType::orderBy('name')->get();
         });
     }
 
     public function getBodyTypes(): Collection
     {
-        // Avoid legacy cache serialized as App\Models\BodyType (LookupService uses DmrBodyType).
-        return Cache::remember('constants_dmr_body_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('dmr_body_types'), self::CACHE_TTL, function () {
             return DmrBodyType::orderBy('name')->get();
         });
     }
 
     public function getColors(): Collection
     {
-        return Cache::remember('constants_colors', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('dmr_colours'), self::CACHE_TTL, function () {
             return DmrColour::orderBy('name')->get();
         });
     }
 
     public function getVariants(): Collection
     {
-        return Cache::remember('constants_variants', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('variants'), self::CACHE_TTL, function () {
             return DmrVariant::with('model')->orderBy('name')->get();
         });
     }
 
     public function getConditions(): Collection
     {
-        return Cache::remember('constants_conditions', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('conditions'), self::CACHE_TTL, function () {
             return Condition::orderBy('name')->get();
         });
     }
 
     public function getSalesTypes(): Collection
     {
-        return Cache::remember('constants_sales_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('sales_types'), self::CACHE_TTL, function () {
             return SalesType::orderBy('name')->get();
         });
     }
 
     public function getPriceTypes(): Collection
     {
-        return Cache::remember('constants_price_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('price_types'), self::CACHE_TTL, function () {
             return PriceType::orderBy('name')->get();
         });
     }
 
     public function getEuronorms(): Collection
     {
-        return Cache::remember('constants_euronorms', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('euronorms'), self::CACHE_TTL, function () {
             return DmrEmissionNorm::orderBy('name')->get();
         });
     }
 
     public function getVehicleModels(): Collection
     {
-        return Cache::remember('constants_vehicle_models', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('vehicle_models'), self::CACHE_TTL, function () {
             return DmrModel::with('brand')->orderBy('name')->get();
         });
     }
 
     public function getVehicleUses(): Collection
     {
-        return Cache::remember('constants_vehicle_uses', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('vehicle_uses'), self::CACHE_TTL, function () {
             return DmrVehicleUse::orderBy('name')->get();
         });
     }
 
     public function getVehicleListStatuses(): Collection
     {
-        return Cache::rememberForever('constants_vehicle_list_statuses', function () {
+        return Cache::rememberForever(self::cacheKey('vehicle_list_statuses'), function () {
             return VehicleListStatus::orderBy('name')->get();
         });
     }
 
     public function getEquipmentTypes(): Collection
     {
-        return Cache::remember('constants_equipment_types', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('equipment_types'), self::CACHE_TTL, function () {
             return EquipmentType::with(['equipments' => function ($query) {
                 $query->orderBy('name');
             }])->orderBy('name')->get();
@@ -154,7 +189,7 @@ class LookupService
 
     public function getEquipments(): Collection
     {
-        return Cache::remember('constants_equipments', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('equipments'), self::CACHE_TTL, function () {
             return Equipment::with('equipmentType')->orderBy('name')->get();
         });
     }
@@ -163,14 +198,14 @@ class LookupService
 
     public function getCategories(): Collection
     {
-        return Cache::remember('constants_categories', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('categories'), self::CACHE_TTL, function () {
             return Category::orderBy('name')->get();
         });
     }
 
     public function getPermits(): Collection
     {
-        return Cache::remember('constants_permits', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('permits'), self::CACHE_TTL, function () {
             return Permit::orderBy('name')->get();
         });
     }
@@ -178,14 +213,14 @@ class LookupService
     /** Dealer API only: lead intents and categories */
     public function getLeadIntents(): Collection
     {
-        return Cache::rememberForever('constants_lead_intents', function () {
+        return Cache::rememberForever(self::cacheKey('lead_intents'), function () {
             return LeadIntent::orderBy('id')->get();
         });
     }
 
     public function getLeadCategories(): Collection
     {
-        return Cache::remember('constants_lead_categories', self::CACHE_TTL, function () {
+        return Cache::remember(self::cacheKey('lead_categories'), self::CACHE_TTL, function () {
             return LeadCategory::orderBy('name')->get();
         });
     }

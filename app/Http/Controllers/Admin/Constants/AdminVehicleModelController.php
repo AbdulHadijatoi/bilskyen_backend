@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\VehicleModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use App\Services\LookupService;
 
 /**
  * Admin Vehicle Model Controller
@@ -37,9 +37,8 @@ class AdminVehicleModelController extends Controller
 
         $vehicleModel = VehicleModel::create($request->only(['name', 'brand_id']));
 
-        // Clear cache
-        Cache::forget('constants_vehicle_models');
-        Cache::forget('constants_brands'); // Also clear brands cache as it may include models
+        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->created($vehicleModel);
     }
@@ -55,9 +54,8 @@ class AdminVehicleModelController extends Controller
 
         $vehicleModel->update($request->only(['name', 'brand_id']));
 
-        // Clear cache
-        Cache::forget('constants_vehicle_models');
-        Cache::forget('constants_brands'); // Also clear brands cache as it may include models
+        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->success($vehicleModel);
     }
@@ -67,9 +65,8 @@ class AdminVehicleModelController extends Controller
         $vehicleModel = VehicleModel::findOrFail($id);
         $vehicleModel->delete();
 
-        // Clear cache
-        Cache::forget('constants_vehicle_models');
-        Cache::forget('constants_brands'); // Also clear brands cache as it may include models
+        LookupService::forgetLookupCacheGroup('vehicle_models');
+        LookupService::forgetLookupCacheGroup('brands');
 
         return $this->noContent();
     }

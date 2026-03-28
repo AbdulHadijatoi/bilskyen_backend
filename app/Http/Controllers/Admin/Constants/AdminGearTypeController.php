@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GearType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use App\Services\LookupService;
 
 /**
  * Admin Gear Type Controller
@@ -35,7 +35,7 @@ class AdminGearTypeController extends Controller
         $gearType = GearType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->created($gearType);
     }
@@ -51,7 +51,7 @@ class AdminGearTypeController extends Controller
         $gearType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->success($gearType);
     }
@@ -62,7 +62,7 @@ class AdminGearTypeController extends Controller
         $gearType->delete();
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->noContent();
     }

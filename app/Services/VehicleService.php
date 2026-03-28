@@ -121,7 +121,7 @@ class VehicleService
         }
         $lookupEquipIds = $this->dmrLookupAssociationService->resolveEquipmentIdsFromLookupString($lookupCsv);
         if ($lookupCsv !== null && $lookupCsv !== '') {
-            Cache::forget('constants_equipments');
+            LookupService::forgetLookupCacheGroup('equipments');
         }
         $allEquipmentIds = array_values(array_unique(array_merge($checkboxIds, $lookupEquipIds)));
         if ($allEquipmentIds !== []) {
@@ -325,7 +325,7 @@ class VehicleService
                 }
                 $lookupEquipIds = $this->dmrLookupAssociationService->resolveEquipmentIdsFromLookupString($lookupCsv);
                 if ($lookupCsv !== null && $lookupCsv !== '') {
-                    Cache::forget('constants_equipments');
+                    LookupService::forgetLookupCacheGroup('equipments');
                 }
                 $allEquipmentIds = array_values(array_unique(array_merge($checkboxIds, $lookupEquipIds)));
                 $vehicle->equipment()->sync($allEquipmentIds);
