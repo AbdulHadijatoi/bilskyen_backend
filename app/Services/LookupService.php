@@ -50,13 +50,6 @@ class LookupService
         });
     }
 
-    public function getModelYears(): Collection
-    {
-        return Cache::remember('constants_model_years', self::CACHE_TTL, function () {
-            return DmrFactVehicle::distinctModelYearOptions();
-        });
-    }
-
     public function getFuelTypes(): Collection
     {
         return Cache::remember('constants_fuel_types', self::CACHE_TTL, function () {
@@ -272,7 +265,6 @@ class LookupService
     public function getPublicConstants(): array
     {
         return [
-            'model_years' => $this->getModelYears()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'fuel_types' => $this->getFuelTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'gear_types' => $this->getGearTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'listing_types' => $this->getListingTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
@@ -323,7 +315,6 @@ class LookupService
     {
         return [
             'brands' => $this->getBrands(),
-            'model_years' => $this->getModelYears(),
             'fuel_types' => $this->getFuelTypes(),
             'gear_types' => $this->getGearTypes(),
             'listing_types' => $this->getListingTypes(),
