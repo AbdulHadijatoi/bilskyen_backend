@@ -2,26 +2,29 @@
 
 namespace App\Services;
 
-use App\Models\Brand;
-use App\Models\ModelYear;
-use App\Models\FuelType;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
+use App\Models\DmrVariant;
+use App\Models\DmrFactVehicle;
+use App\Models\DmrDriveEnergy;
 use App\Models\GearType;
 use App\Models\ListingType;
 use App\Models\BodyType;
 use App\Models\Color;
-use App\Models\Variant;
 use App\Models\Type;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Models\PriceType;
 use App\Models\Euronom;
-use App\Models\VehicleModel;
 use App\Models\VehicleUse;
 use App\Models\VehicleListStatus;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
-use App\Models\Transmission;
 use App\Models\Category;
+use App\Models\DmrBodyType;
+use App\Models\DmrColour;
+use App\Models\DmrEmissionNorm;
+use App\Models\DmrVehicleUse;
 use App\Models\Permit;
 use App\Models\LeadIntent;
 use App\Models\LeadCategory;
@@ -43,21 +46,21 @@ class LookupService
     public function getBrands(): Collection
     {
         return Cache::remember('constants_brands', self::CACHE_TTL, function () {
-            return Brand::orderBy('name')->get();
+            return DmrBrand::orderBy('name')->get();
         });
     }
 
     public function getModelYears(): Collection
     {
         return Cache::remember('constants_model_years', self::CACHE_TTL, function () {
-            return ModelYear::orderBy('name')->get();
+            return DmrFactVehicle::distinctModelYearOptions();
         });
     }
 
     public function getFuelTypes(): Collection
     {
         return Cache::remember('constants_fuel_types', self::CACHE_TTL, function () {
-            return FuelType::orderBy('name')->get();
+            return DmrDriveEnergy::orderBy('name')->get();
         });
     }
 
@@ -78,28 +81,21 @@ class LookupService
     public function getBodyTypes(): Collection
     {
         return Cache::remember('constants_body_types', self::CACHE_TTL, function () {
-            return BodyType::orderBy('name')->get();
+            return DmrBodyType::orderBy('name')->get();
         });
     }
 
     public function getColors(): Collection
     {
         return Cache::remember('constants_colors', self::CACHE_TTL, function () {
-            return Color::orderBy('name')->get();
+            return DmrColour::orderBy('name')->get();
         });
     }
 
     public function getVariants(): Collection
     {
         return Cache::remember('constants_variants', self::CACHE_TTL, function () {
-            return Variant::with('model')->orderBy('name')->get();
-        });
-    }
-
-    public function getTypes(): Collection
-    {
-        return Cache::remember('constants_types', self::CACHE_TTL, function () {
-            return Type::orderBy('name')->get();
+            return DmrVariant::with('model')->orderBy('name')->get();
         });
     }
 
@@ -127,21 +123,21 @@ class LookupService
     public function getEuronorms(): Collection
     {
         return Cache::remember('constants_euronorms', self::CACHE_TTL, function () {
-            return Euronom::orderBy('name')->get();
+            return DmrEmissionNorm::orderBy('name')->get();
         });
     }
 
     public function getVehicleModels(): Collection
     {
         return Cache::remember('constants_vehicle_models', self::CACHE_TTL, function () {
-            return VehicleModel::with('brand')->orderBy('name')->get();
+            return DmrModel::with('brand')->orderBy('name')->get();
         });
     }
 
     public function getVehicleUses(): Collection
     {
         return Cache::remember('constants_vehicle_uses', self::CACHE_TTL, function () {
-            return VehicleUse::orderBy('name')->get();
+            return DmrVehicleUse::orderBy('name')->get();
         });
     }
 
@@ -169,12 +165,6 @@ class LookupService
     }
 
     /** Public API only: transmissions, categories, permits */
-    public function getTransmissions(): Collection
-    {
-        return Cache::remember('constants_transmissions', self::CACHE_TTL, function () {
-            return Transmission::orderBy('name')->get();
-        });
-    }
 
     public function getCategories(): Collection
     {
@@ -205,30 +195,22 @@ class LookupService
         });
     }
 
-    private function normalizeSearchLimit(int $limit): int
-    {
-        $limit = max(1, $limit);
-        // Hard cap to keep dropdown searches cheap.
-        return min(50, $limit);
-    }
-
     /**
      * Brands dropdown search (no full-table caching).
      *
      * @return array<int, array{id:int,name:string}>
      */
-    public function searchBrands(?string $search, int $limit): array
+    public function searchBrands(?string $search): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = Brand::query()->select(['id', 'name'])->orderBy('name');
+        $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
         if ($searchTerm !== '') {
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (Brand $b) => ['id' => $b->id, 'name' => $b->name])
+        return $query->get()
+            ->map(fn (DmrBrand $b) => ['id' => $b->id, 'name' => $b->name])
             ->values()
             ->all();
     }
@@ -239,12 +221,14 @@ class LookupService
      * @param array<int,int> $brandIds
      * @return array<int, array{id:int,name:string,brand_id:int}>
      */
-    public function searchModels(?string $search, array $brandIds, int $limit): array
+    public function searchModels(?string $search, array $brandIds): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = VehicleModel::query()->select(['id', 'name', 'brand_id'])->orderBy('name');
+        $query = DmrModel::query()
+            ->select(['id', 'name', 'brand_id'])
+            ->whereNotIn('name', ['-', '.'])
+            ->orderBy('name');
         if (!empty($brandIds)) {
             $query->whereIn('brand_id', $brandIds);
         }
@@ -252,29 +236,8 @@ class LookupService
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (VehicleModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
-            ->values()
-            ->all();
-    }
-
-    /**
-     * Types dropdown search.
-     *
-     * @return array<int, array{id:int,name:string}>
-     */
-    public function searchTypes(?string $search, int $limit): array
-    {
-        $limit = $this->normalizeSearchLimit($limit);
-        $searchTerm = $search !== null ? trim($search) : '';
-
-        $query = Type::query()->select(['id', 'name'])->orderBy('name');
-        if ($searchTerm !== '') {
-            $query->where('name', 'like', '%' . $searchTerm . '%');
-        }
-
-        return $query->limit($limit)->get()
-            ->map(fn (Type $t) => ['id' => $t->id, 'name' => $t->name])
+        return $query->get()
+            ->map(fn (DmrModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
             ->values()
             ->all();
     }
@@ -285,12 +248,11 @@ class LookupService
      * @param array<int,int> $modelIds
      * @return array<int, array{id:int,name:string,model_id:int}>
      */
-    public function searchVariants(?string $search, array $modelIds, int $limit): array
+    public function searchVariants(?string $search, array $modelIds): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = Variant::query()->select(['id', 'name', 'model_id'])->orderBy('name');
+        $query = DmrVariant::query()->select(['id', 'name', 'model_id'])->orderBy('name');
         if (!empty($modelIds)) {
             $query->whereIn('model_id', $modelIds);
         }
@@ -298,8 +260,8 @@ class LookupService
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (Variant $v) => ['id' => $v->id, 'name' => $v->name, 'model_id' => $v->model_id])
+        return $query->get()
+            ->map(fn (DmrVariant $v) => ['id' => $v->id, 'name' => $v->name, 'model_id' => $v->model_id])
             ->values()
             ->all();
     }
@@ -323,32 +285,28 @@ class LookupService
             'vehicle_uses' => $this->getVehicleUses()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'equipment_types' => $this->getEquipmentTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'equipments' => $this->getEquipments()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'equipment_type_id' => $m->equipment_type_id]),
-            'transmissions' => $this->getTransmissions()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'categories' => $this->getCategories()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'permits' => $this->getPermits()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
         ];
     }
 
     /**
-     * Return all constants for dealer API (full models, includes lead intents/categories).
+     * Return all constants for dealer API (includes lead intents/categories).
+     * Model years: derive on the client (e.g. 1975–current). Models/variants: use GET /api/v1/models|variants.
      */
     public function getDealerConstants(): array
     {
         return [
             'brands' => $this->getBrands(),
-            'model_years' => $this->getModelYears(),
             'fuel_types' => $this->getFuelTypes(),
             'gear_types' => $this->getGearTypes(),
             'listing_types' => $this->getListingTypes(),
             'body_types' => $this->getBodyTypes(),
             'colors' => $this->getColors(),
-            'variants' => $this->getVariants(),
-            'types' => $this->getTypes(),
             'conditions' => $this->getConditions(),
             'sales_types' => $this->getSalesTypes(),
             'price_types' => $this->getPriceTypes(),
             'euronorms' => $this->getEuronorms(),
-            'vehicle_models' => $this->getVehicleModels(),
             'vehicle_uses' => $this->getVehicleUses(),
             'vehicle_list_statuses' => $this->getVehicleListStatuses(),
             'equipment_types' => $this->getEquipmentTypes(),
@@ -372,7 +330,6 @@ class LookupService
             'body_types' => $this->getBodyTypes(),
             'colors' => $this->getColors(),
             'variants' => $this->getVariants(),
-            'types' => $this->getTypes(),
             'conditions' => $this->getConditions(),
             'sales_types' => $this->getSalesTypes(),
             'price_types' => $this->getPriceTypes(),

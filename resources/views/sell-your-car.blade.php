@@ -10,7 +10,8 @@
         border: 1px solid var(--border);
         border-radius: 0.5rem;
         margin-bottom: 3rem;
-        overflow: hidden;
+        /* visible so manual combobox panels are not clipped at card edges */
+        overflow: visible;
         transition: all 0.3s ease;
         /* box-shadow: 0 2px 8px oklch(0 0 0 / 0.05); */
     }
@@ -114,11 +115,13 @@
     .section-content.expanded {
         max-height: 5000px;
         padding: 1rem;
+        overflow: visible;
     }
     
     .section-content.collapsed {
         max-height: 0;
         padding: 0 1rem;
+        overflow: hidden;
     }
     
     .section-description {
@@ -158,6 +161,97 @@
     @media (min-width: 1024px) {
         .form-grid {
             grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* 12-column layout: 3 fields per row, each field = 4/12 */
+    .manual-entry-grid {
+        display: grid;
+        gap: 0.875rem;
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    @media (min-width: 768px) {
+        .manual-entry-grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        .manual-entry-grid > .manual-combobox,
+        .manual-entry-grid > .manual-year-field,
+        .manual-entry-grid > .manual-color-field {
+            grid-column: span 4;
+        }
+    }
+
+    .manual-year-field select,
+    .manual-color-field select {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .manual-year-field,
+    .manual-color-field {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .manual-combobox-trigger .dropdown-chevron {
+        transition: transform 0.2s ease;
+    }
+
+    .manual-combobox-trigger[aria-expanded="true"] .dropdown-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* Above sibling fields and the next expandable section */
+    .manual-combobox .manual-combobox-panel {
+        z-index: 200;
+    }
+
+    #manual-entry-fields.sell-plate-variant-strip > .manual-entry-lead {
+        display: none;
+    }
+
+    /* After plate lookup: show variant, fuel (so fuel type can be corrected after variant), and colour; hide the rest */
+    #manual-entry-fields.sell-plate-variant-strip [data-manual-field]:not([data-manual-field="variant"]):not([data-manual-field="fuel"]):not([data-manual-field="color"]) {
+        display: none !important;
+    }
+
+    .basic-info-follow-grid {
+        display: grid;
+        gap: 0.875rem;
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    @media (min-width: 768px) {
+        .basic-info-follow-grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        .basic-info-follow-grid > .basic-info-follow-field {
+            grid-column: span 4;
+        }
+
+        .basic-info-follow-grid > .basic-info-follow-field:only-child {
+            grid-column: 1 / -1;
         }
     }
     
@@ -1336,120 +1430,123 @@
                     </div>
                 </div>
                 
-                <!-- Manual entry fields (shown when seller has no registration number) -->
+                <!-- Manual entry: combobox pattern (same idea as vehicles sidebar); options load from /api/v1/dmr/* -->
                 <div id="manual-entry-fields" class="hidden mb-4">
-                    <p class="text-sm text-muted-foreground mb-3">{{ __('messages.pages.sell_your_car.enter_manually_lead') }}</p>
-                    <div class="form-grid">
-                        <div class="space-y-2">
-                            <label for="manual_brand_id" class="text-sm font-medium required-field">{{ __('messages.forms.brand') }}</label>
-                            <input
-                                type="text"
-                                id="manual_brand_search"
-                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="{{ __('messages.forms.search_brand') }}"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                            <select id="manual_brand_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['brands'] as $brand)
-                                    <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-                                @endforeach
+                    <p class="manual-entry-lead text-sm text-muted-foreground mb-3">No plate number? Choose brand, model, variant, fuel and model year below. Options are loaded from the vehicle register as you search.</p>
+                    <div class="manual-entry-grid">
+                        <div class="manual-combobox space-y-2" data-manual-field="brand">
+                            <label for="manual-brand-trigger" class="text-sm font-medium required-field">Brand</label>
+                            <div class="relative">
+                                <button type="button" id="manual-brand-trigger" class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">Select brand</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-brand-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-brand-panel-search" placeholder="Search brands…" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-brand-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_brand_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">Select brand</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="model">
+                            <label for="manual-model-trigger" class="text-sm font-medium required-field">Model</label>
+                            <div class="relative">
+                                <button type="button" id="manual-model-trigger" disabled class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 opacity-60 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">Select model</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-model-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-model-panel-search" placeholder="Search models…" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-model-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_model_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">Select model</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="variant">
+                            <label for="manual-variant-trigger" class="text-sm font-medium">Variant</label>
+                            <div class="relative">
+                                <button type="button" id="manual-variant-trigger" disabled class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 opacity-60 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">Select variant</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-variant-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <div class="relative">
+                                            <input type="text" id="manual-variant-panel-search" placeholder="Search variants…" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                            <span id="manual_variant_loading" class="hidden absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
+                                                <svg class="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div id="manual-variant-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="variant_id" disabled class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">Select variant</option>
+                                </select>
+                                <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
+                            </div>
+                            <p class="field-help">Trim / equipment variant, if listed for this model.</p>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="fuel">
+                            <label for="manual-fuel-trigger" class="text-sm font-medium required-field">Fuel / energy</label>
+                            <div class="relative">
+                                <button type="button" id="manual-fuel-trigger" class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">Select fuel type</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-fuel-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-fuel-panel-search" placeholder="Search fuel types…" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-fuel-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_fuel_type_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">Select fuel type</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-year-field space-y-2" data-manual-field="year">
+                            <label for="manual_model_year_id" class="text-sm font-medium required-field">Model year</label>
+                            <select id="manual_model_year_id"
+                                class="block h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="">Select model year</option>
+                                @for($y = (int) date('Y'); $y >= 1975; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
                             </select>
                         </div>
-                        <div class="space-y-2">
-                            <label for="manual_model_id" class="text-sm font-medium required-field">{{ __('messages.forms.model') }}</label>
-                            <input
-                                type="text"
-                                id="manual_model_search"
-                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="{{ __('messages.forms.search_model') }}"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                            <select id="manual_model_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['models'] as $model)
-                                    <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id ?? '' }}">{{ $model->name }}</option>
+                        <div class="manual-color-field space-y-2" data-manual-field="color">
+                            <label for="colour_id" class="text-sm font-medium">Colour</label>
+                            <select id="colour_id" name="colour_id"
+                                class="block h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="">Select colour</option>
+                                @foreach($lookupData['dmrColours'] as $color)
+                                    <option value="{{ $color->id }}">{{ $color->name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label for="manual_model_year_id" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.year') }}</label>
-                            <input
-                                type="text"
-                                id="manual_model_year_search"
-                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="{{ __('messages.forms.search_year') }}"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                            <select id="manual_model_year_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['modelYears'] as $year)
-                                    <option value="{{ $year->id }}">{{ $year->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label for="manual_fuel_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
-                            <input
-                                type="text"
-                                id="manual_fuel_type_search"
-                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="{{ __('messages.forms.search_fuel_type') }}"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                            <select id="manual_fuel_type_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['dmrDriveEnergies'] as $fuel)
-                                    <option value="{{ $fuel->id }}">{{ $fuel->name }}</option>
-                                @endforeach
-                            </select>
+                            <p class="field-help">{{ __('messages.pages.sell_your_car.color_help') }}</p>
                         </div>
                     </div>
                 </div>
-                
-                <div class="form-grid">
-                    <div class="space-y-2">
+
+                <div class="basic-info-follow-grid">
+                    <div class="basic-info-follow-field space-y-2">
                         <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.title_label') }}</label>
-                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground">
-                            
-                    </div>
+                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground min-h-[2.25rem]"></div>
                         <input type="hidden" id="title" name="title" value="">
                         <input type="hidden" id="brand_id" name="brand_id" value="">
                         <input type="hidden" id="model_id" name="model_id" value="">
-                        <input type="hidden" id="model_year_id" name="model_year_id" value="">
+                        <input type="hidden" id="model_year" name="model_year" value="">
                         <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="">
-                        <p class="field-help">
-                            {{ __('messages.pages.sell_your_car.title_help') }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="variant_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.variant_label') }}</label>
-                        <select id="variant_id" disabled
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm opacity-60 cursor-not-allowed">
-                            <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                            @foreach($lookupData['variants'] as $variant)
-                                <option value="{{ $variant->id }}" data-model-id="{{ $variant->model_id }}">{{ $variant->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.variant_help') }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="color_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
-                        <select id="color_id" name="color_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
-                            @foreach($lookupData['dmrColours'] as $color)
-                                <option value="{{ $color->id }}">{{ $color->name }}</option>
-                            @endforeach
-                        </select>
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.color_help') }}</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.title_help') }}</p>
                     </div>
                 </div>
             </div>
@@ -1480,12 +1577,12 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="gear_type_id" class="text-sm font-medium">{{ __('messages.forms.gear_type') }}</label>
-                        <select id="gear_type_id" name="gear_type_id"
+                        <label for="gear_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.gear_type') }}</label>
+                        <select id="gear_type_id" name="gear_type_id" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_gear_type') }}</option>
                             @foreach($lookupData['gearTypes'] ?? [] as $gt)
-                                <option value="{{ $gt->id }}" @if(strtolower($gt->name ?? '') === 'automatic') selected @endif>{{ $gt->name }}</option>
+                                <option value="{{ $gt->id }}">{{ $gt->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1551,31 +1648,31 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
+                        <label for="km_per_liter" id="km_per_liter_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
+                        <input type="number" id="km_per_liter" name="km_per_liter" min="0" step="any" inputmode="decimal"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help" id="fuel_efficiency_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
+                        <p class="field-help" id="km_per_liter_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
-                        <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
+                        <label for="maximum_weight_kg" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
+                        <input type="number" id="maximum_weight_kg" name="maximum_weight_kg" min="0"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.technical_total_weight_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="euronom_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
-                        <select id="euronom_id" name="euronom_id"
+                        <label for="emission_norm_id" class="text-sm font-medium">Emission standard (Euro class)</label>
+                        <select id="emission_norm_id" name="emission_norm_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
+                            <option value="">Select emission standard</option>
                             @foreach($lookupData['dmrEuronorms'] as $euronom)
                                 <option value="{{ $euronom->id }}">{{ $euronom->name }}</option>
                             @endforeach
                         </select>
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.euronom_help') }}</p>
+                        <p class="field-help">Euro emission norm for this vehicle, if applicable.</p>
                     </div>
                     </div>
                     </div>
@@ -1792,7 +1889,7 @@
         </div>
 
         <!-- Hidden fields for required data from API -->
-        <input type="hidden" id="registration" name="registration" value="" required>
+        <input type="hidden" id="registration" name="registration" value="">
         <input type="hidden" id="dmr_fact_vehicle_id" name="dmr_fact_vehicle_id" value="">
 
         <script>

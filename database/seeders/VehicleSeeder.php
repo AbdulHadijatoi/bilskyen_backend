@@ -6,7 +6,7 @@ use App\Models\Vehicle;
 use App\Models\Dealer;
 use App\Models\User;
 use App\Models\DealerStaff;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use App\Models\Transmission;
 use App\Models\VehicleListStatus;
 use Illuminate\Database\Seeder;
@@ -25,7 +25,7 @@ class VehicleSeeder extends Seeder
             
             $dealers = Dealer::all();
             $users = User::whereHas('dealers')->get();
-            $fuelTypes = FuelType::all();
+            $fuelTypes = DmrDriveEnergy::all();
             $transmissions = Transmission::all();
             
             if ($dealers->isEmpty() || $users->isEmpty()) {

@@ -8,7 +8,6 @@ use App\Models\DmrBridgeVehicleDrivmiddel;
 use App\Models\DmrFactVehicle;
 use App\Models\DmrDriveEnergy;
 use App\Models\DmrModel;
-use App\Models\ModelYear;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -16,7 +15,6 @@ use Illuminate\Support\Facades\Log;
  *
  * @method array<int, array{id:int,name:string}> searchManualBrands(?string $search, int $limit)
  * @method array<int, array{id:int,name:string,brand_id:int}> searchManualModels(?string $search, ?int $brandId, int $limit)
- * @method array<int, array{id:int,name:string}> searchManualModelYears(?string $search, int $limit)
  * @method array<int, array{id:int,name:string}> searchManualFuelTypes(?string $search, int $limit)
  */
 class DmrFactVehicleLookupService
@@ -31,9 +29,7 @@ class DmrFactVehicleLookupService
                 throw NummerpladeApiException::invalidInput('Invalid registration or VIN provided');
             }
 
-            $data = $this->mapFactVehicleToLookupResponse($vehicle, $normalizedRegistration);
-            dd($data);
-            return $data;
+            return $this->mapFactVehicleToLookupResponse($vehicle, $normalizedRegistration);
         } catch (\Throwable $e) {
             if ($e instanceof NummerpladeApiException) {
                 throw $e;
@@ -55,6 +51,84 @@ class DmrFactVehicleLookupService
         return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($registration))) ?? '';
     }
 
+    public function normalizeVin(string $vin): string
+    {
+        return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($vin))) ?? '';
+    }
+
+    /**
+     * Same eager loads for registration and VIN resolution — no N+1.
+     *
+     * @return array<string, mixed>
+     */
+    protected function factVehicleEagerLoads(): array
+    {
+        return [
+            'variant' => fn ($q) => $q->select('id', 'model_id', 'name'),
+            'variant.model' => fn ($q) => $q->select('id', 'brand_id', 'name'),
+            'variant.model.brand' => fn ($q) => $q->select('id', 'name'),
+            'vehicleUse' => fn ($q) => $q->select('id', 'name'),
+            'bodyType' => fn ($q) => $q->select('id', 'name'),
+            'colour' => fn ($q) => $q->select('id', 'name'),
+            'emissionNorm' => fn ($q) => $q->select('id', 'name'),
+            'registrationStatus' => fn ($q) => $q->select('id', 'name'),
+            'drivmiddelLines' => fn ($q) => $q
+                ->orderBy('line_order')
+                ->select([
+                    'id',
+                    'vehicle_id',
+                    'line_order',
+                    'drive_energy_id',
+                    'measurement_norm_id',
+                    'drivmiddel_primaer',
+                    'motor_km_per_liter',
+                    'miljoe_co2_udslip',
+                    'motor_elektrisk_forbrug',
+                ]),
+            'drivmiddelLines.driveEnergy' => fn ($q) => $q->select('id', 'name'),
+            'drivmiddelLines.measurementNorm' => fn ($q) => $q->select('id', 'name'),
+            'equipmentLines' => fn ($q) => $q
+                ->orderBy('line_order')
+                ->select([
+                    'id',
+                    'vehicle_id',
+                    'line_order',
+                    'equipment_type_id',
+                    'antal',
+                ]),
+            'equipmentLines.equipmentType' => fn ($q) => $q->select('id', 'name'),
+        ];
+    }
+
+    public function lookupByVin(string $vin): array
+    {
+        try {
+            $normalizedVin = $this->normalizeVin($vin);
+            $vehicle = $this->findFactVehicleByVin($normalizedVin);
+
+            if (! $vehicle) {
+                throw NummerpladeApiException::invalidInput('Invalid registration or VIN provided');
+            }
+
+            $fallbackRegistration = $vehicle->registrering_nummer ?? $normalizedVin;
+
+            return $this->mapFactVehicleToLookupResponse($vehicle, $fallbackRegistration);
+        } catch (\Throwable $e) {
+            if ($e instanceof NummerpladeApiException) {
+                throw $e;
+            }
+
+            Log::error('Error in DMR fact vehicle VIN lookup', [
+                'vin' => $vin,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'source' => 'dmr_local',
+            ]);
+            throw NummerpladeApiException::unknown('Unable to process local vehicle lookup data');
+        }
+    }
+
     /**
      * One Eloquent query with constrained eager loads (selected columns only) — no N+1.
      */
@@ -65,45 +139,32 @@ class DmrFactVehicleLookupService
         }
 
         return DmrFactVehicle::query()
-            ->where("registrering_nummer",$normalizedRegistration)
+            ->with($this->factVehicleEagerLoads())
+            ->where('registrering_nummer', $normalizedRegistration)
             ->orderByDesc('registrering_status_dato')
             ->orderByDesc('foerste_registrering_dato')
             ->orderByDesc('id')
-            ->with([
-                'variant' => fn ($q) => $q->select('id', 'model_id', 'name'),
-                'variant.model' => fn ($q) => $q->select('id', 'brand_id', 'name'),
-                'variant.model.brand' => fn ($q) => $q->select('id', 'name'),
-                'vehicleUse' => fn ($q) => $q->select('id', 'name'),
-                'bodyType' => fn ($q) => $q->select('id', 'name'),
-                'colour' => fn ($q) => $q->select('id', 'name'),
-                'emissionNorm' => fn ($q) => $q->select('id', 'name'),
-                'registrationStatus' => fn ($q) => $q->select('id', 'name'),
-                'drivmiddelLines' => fn ($q) => $q
-                    ->orderBy('line_order')
-                    ->select([
-                        'id',
-                        'vehicle_id',
-                        'line_order',
-                        'drive_energy_id',
-                        'measurement_norm_id',
-                        'drivmiddel_primaer',
-                        'motor_km_per_liter',
-                        'miljoe_co2_udslip',
-                        'motor_elektrisk_forbrug',
-                    ]),
-                'drivmiddelLines.driveEnergy' => fn ($q) => $q->select('id', 'name'),
-                'drivmiddelLines.measurementNorm' => fn ($q) => $q->select('id', 'name'),
-                'equipmentLines' => fn ($q) => $q
-                    ->orderBy('line_order')
-                    ->select([
-                        'id',
-                        'vehicle_id',
-                        'line_order',
-                        'equipment_type_id',
-                        'antal',
-                    ]),
-                'equipmentLines.equipmentType' => fn ($q) => $q->select('id', 'name'),
-            ])
+            ->first();
+    }
+
+    protected function findFactVehicleByVin(string $normalizedVin): ?DmrFactVehicle
+    {
+        if ($normalizedVin === '' || strlen($normalizedVin) < 5) {
+            return null;
+        }
+
+        return DmrFactVehicle::query()
+            ->with($this->factVehicleEagerLoads())
+            ->where(function ($q) use ($normalizedVin) {
+                $q->where('stel_nummer', $normalizedVin)
+                    ->orWhereRaw(
+                        "UPPER(REPLACE(REPLACE(TRIM(COALESCE(stel_nummer, '')), ' ', ''), '-', '')) = ?",
+                        [$normalizedVin]
+                    );
+            })
+            ->orderByDesc('registrering_status_dato')
+            ->orderByDesc('foerste_registrering_dato')
+            ->orderByDesc('id')
             ->first();
     }
 
@@ -172,7 +233,7 @@ class DmrFactVehicleLookupService
             'engine_displacement_litres' => $this->ccToDisplayLitres($cc),
             'first_registration_date' => $vehicle->foerste_registrering_dato?->format('Y-m-d'),
             'first_registration_year' => $vehicle->foerste_registrering_dato?->format('Y'),
-            'chassis_number' => $vehicle->stel_nummer,
+            'vin' => $vehicle->stel_nummer,
             'co2_emission_2' => $vehicle->emission_co !== null ? (float) $vehicle->emission_co : null,
             'nox_emission' => $vehicle->emission_nox !== null ? (float) $vehicle->emission_nox : null,
             'particle_filter' => $vehicle->partikel_filter && intval($vehicle->partikel_filter) > 0 ? true : false,
@@ -247,47 +308,53 @@ class DmrFactVehicleLookupService
     }
 
     /**
-     * Manual dropdown search: limit hard-capped to 10 for performance.
+     * Manual dropdown: all brands when not searching; filtered list when searching (capped).
      *
      * @return array<int, array{id:int,name:string}>
      */
     public function searchManualBrands(?string $search, int $limit): array
     {
-        $limit = max(1, (int) $limit);
-        $limit = min(10, $limit);
-
         $searchTerm = $search !== null ? trim($search) : '';
 
         $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
         if ($searchTerm !== '') {
             $query->where('name', 'like', '%' . $searchTerm . '%');
+            $limit = max(1, min((int) $limit, 500));
+
+            return $query->limit($limit)->get()
+                ->map(fn (DmrBrand $b) => ['id' => (int) $b->id, 'name' => (string) $b->name])
+                ->values()
+                ->all();
         }
 
-        return $query->limit($limit)->get()
+        return $query->get()
             ->map(fn (DmrBrand $b) => ['id' => (int) $b->id, 'name' => (string) $b->name])
             ->values()
             ->all();
     }
 
     /**
-     * Manual dropdown search: limit hard-capped to 10 for performance.
+     * Manual dropdown: models for a brand only. Empty when no brand is selected.
      *
      * @return array<int, array{id:int,name:string,brand_id:int}>
      */
     public function searchManualModels(?string $search, ?int $brandId, int $limit): array
     {
+        if ($brandId === null || (int) $brandId <= 0) {
+            return [];
+        }
+
         $limit = max(1, (int) $limit);
-        $limit = min(10, $limit);
+        $limit = min(500, $limit);
 
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = DmrModel::query()->select(['id', 'name', 'brand_id'])->orderBy('name');
-        if ($brandId !== null) {
-            $brandId = (int) $brandId;
-            if ($brandId > 0) {
-                $query->where('brand_id', $brandId);
-            }
-        }
+        $query = DmrModel::query()
+            ->select(['id', 'name', 'brand_id'])
+            ->where('brand_id', (int) $brandId)
+            ->whereNotIn('name', ['-', '.'])
+            ->orderBy('name');
+
         if ($searchTerm !== '') {
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
@@ -303,37 +370,12 @@ class DmrFactVehicleLookupService
     }
 
     /**
-     * Manual dropdown search: model years in `model_years` table.
-     *
-     * @return array<int, array{id:int,name:string}>
-     */
-    public function searchManualModelYears(?string $search, int $limit): array
-    {
-        $limit = max(1, (int) $limit);
-        $limit = min(10, $limit);
-
-        $searchTerm = $search !== null ? trim($search) : '';
-
-        $query = ModelYear::query()->select(['id', 'name'])->orderBy('name', 'desc');
-        if ($searchTerm !== '') {
-            $query->where('name', 'like', '%' . $searchTerm . '%');
-        }
-
-        return $query->limit($limit)->get()
-            ->map(fn (ModelYear $y) => ['id' => (int) $y->id, 'name' => (string) $y->name])
-            ->values()
-            ->all();
-    }
-
-    /**
      * Manual dropdown search: drive energies in `dmr_drive_energies`.
      *
      * @return array<int, array{id:int,name:string}>
      */
     public function searchManualFuelTypes(?string $search, int $limit): array
     {
-        $limit = max(1, (int) $limit);
-        $limit = min(10, $limit);
 
         $searchTerm = $search !== null ? trim($search) : '';
 
@@ -342,7 +384,7 @@ class DmrFactVehicleLookupService
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
+        return $query->get()
             ->map(fn (DmrDriveEnergy $f) => ['id' => (int) $f->id, 'name' => (string) $f->name])
             ->values()
             ->all();
@@ -360,14 +402,8 @@ class DmrFactVehicleLookupService
         int $manualModelYearId,
         int $manualFuelTypeId
     ): ?int {
-        $modelYear = ModelYear::query()->select(['id', 'name'])->find($manualModelYearId);
-        if (!$modelYear) {
-            return null;
-        }
-
-        $yearName = (string) $modelYear->name;
-        $yearInt = is_numeric($yearName) ? (int) $yearName : null;
-        if (!$yearInt) {
+        $yearInt = $manualModelYearId;
+        if ($yearInt < 1950 || $yearInt > 2100) {
             return null;
         }
 

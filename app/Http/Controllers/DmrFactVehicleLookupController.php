@@ -7,6 +7,7 @@ use App\Services\DmrFactVehicleLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 /**
  * Local DMR fact vehicle lookup by registration (no external Nummerplade API).
@@ -60,11 +61,11 @@ class DmrFactVehicleLookupController extends Controller
     {
         $validated = $request->validate([
             'search' => 'sometimes|nullable|string|max:120',
-            'limit' => 'sometimes|integer|min:1|max:10',
+            'limit' => 'sometimes|integer|min:1|max:500',
         ]);
 
         $search = $validated['search'] ?? null;
-        $limit = (int) ($validated['limit'] ?? 10);
+        $limit = (int) ($validated['limit'] ?? 500);
 
         $items = $this->dmrFactVehicleLookupService->{'searchManualBrands'}($search, $limit);
 
@@ -83,36 +84,14 @@ class DmrFactVehicleLookupController extends Controller
         $validated = $request->validate([
             'search' => 'sometimes|nullable|string|max:120',
             'brand_id' => 'sometimes|nullable|integer|min:1',
-            'limit' => 'sometimes|integer|min:1|max:10',
+            'limit' => 'sometimes|integer|min:1|max:500',
         ]);
 
         $search = $validated['search'] ?? null;
         $brandId = $validated['brand_id'] ?? null;
-        $limit = (int) ($validated['limit'] ?? 10);
+        $limit = (int) ($validated['limit'] ?? 500);
 
         $items = $this->dmrFactVehicleLookupService->{'searchManualModels'}($search, $brandId, $limit);
-
-        return $this->success([
-            'items' => $items,
-            'limit' => $limit,
-        ]);
-    }
-
-    /**
-     * GET /api/v1/dmr/manual-model-years?search=&limit=
-     * Returns { id, name } items.
-     */
-    public function searchManualModelYears(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'search' => 'sometimes|nullable|string|max:20',
-            'limit' => 'sometimes|integer|min:1|max:10',
-        ]);
-
-        $search = $validated['search'] ?? null;
-        $limit = (int) ($validated['limit'] ?? 10);
-
-        $items = $this->dmrFactVehicleLookupService->{'searchManualModelYears'}($search, $limit);
 
         return $this->success([
             'items' => $items,
@@ -151,7 +130,13 @@ class DmrFactVehicleLookupController extends Controller
         $validated = $request->validate([
             'manual_brand_id' => 'required|integer|exists:dmr_brands,id',
             'manual_model_id' => 'required|integer|exists:dmr_models,id',
-            'manual_model_year_id' => 'required|integer|exists:model_years,id',
+            'manual_model_year_id' => [
+                'required',
+                'integer',
+                'min:1950',
+                'max:2100',
+                Rule::exists('dmr_fact_vehicles', 'model_aar'),
+            ],
             'manual_fuel_type_id' => 'required|integer|exists:dmr_drive_energies,id',
         ]);
 

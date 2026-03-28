@@ -10,12 +10,12 @@ use App\Models\Enquiry;
 use App\Models\Category;
 use App\Models\Brand;
 use App\Models\VehicleModel;
-use App\Models\ModelYear;
+use App\Models\DmrFactVehicle;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
 use App\Models\GearType;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Models\EquipmentType;
@@ -85,9 +85,9 @@ class DealerController extends Controller
             'priceTypes' => PriceType::orderBy('name')->get(),
             'bodyTypes' => BodyType::orderBy('name')->get(),
             'gearTypes' => GearType::orderBy('name')->get(),
-            'fuelTypes' => FuelType::orderBy('name')->get(),
+            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
-            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
+            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
             'conditions' => Condition::orderBy('name')->get(),
             'salesTypes' => SalesType::orderBy('name')->get(),
         ];

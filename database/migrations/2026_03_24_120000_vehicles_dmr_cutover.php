@@ -114,7 +114,7 @@ return new class extends Migration
     {
         $cols = Schema::getColumnListing('vehicles');
         if (in_array('fuel_type_id', $cols, true) && ! array_key_exists('fuel_type_id', $payload)) {
-            $id = DB::table('fuel_types')->orderBy('id')->value('id');
+            $id = DB::table('dmr_drive_energies')->orderBy('id')->value('id');
             if ($id !== null) {
                 $payload['fuel_type_id'] = $id;
             }

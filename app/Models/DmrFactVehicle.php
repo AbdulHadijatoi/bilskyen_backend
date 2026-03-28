@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class DmrFactVehicle extends Model
 {
@@ -104,5 +105,25 @@ class DmrFactVehicle extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class, 'dmr_fact_vehicle_id');
+    }
+
+    /**
+     * Distinct calendar years from DMR (`model_aar`) for filters and dropdowns.
+     * Each row uses the year as both `id` and `name` (replaces legacy `model_years` rows).
+     */
+    public static function distinctModelYearOptions(): Collection
+    {
+        return static::query()
+            ->whereNotNull('model_aar')
+            ->distinct()
+            ->orderByDesc('model_aar')
+            ->pluck('model_aar')
+            ->values()
+            ->map(fn ($y) => (object) ['id' => (int) $y, 'name' => (string) $y]);
+    }
+
+    public static function modelYearValueExists(int $year): bool
+    {
+        return static::query()->where('model_aar', $year)->exists();
     }
 }

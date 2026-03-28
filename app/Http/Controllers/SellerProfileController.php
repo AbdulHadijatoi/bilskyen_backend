@@ -8,6 +8,7 @@ use App\Models\ListingViewsLog;
 use App\Models\VehicleDetail;
 use App\Constants\VehicleListStatus;
 use App\Services\VehicleService;
+use App\Services\VehicleDetailPresentationService;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,8 @@ class SellerProfileController extends Controller
 {
     public function __construct(
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService
     ) {}
 
     /**
@@ -126,21 +128,29 @@ class SellerProfileController extends Controller
     {
         $user = $request->user();
 
-        $vehicle = Vehicle::with([
+        $vehicle = Vehicle::with(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'equipment',
-            'dmrFactVehicle.variant.model.brand',
-            'dmrFactVehicle.emissionNorm',
-        ])->findOrFail($id);
+        ]))->findOrFail($id);
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
             return $this->error('You do not have permission to view this vehicle', null, 403);
         }
 
-        return $this->success($vehicle);
+        $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
+
+        return $this->success(array_merge($payload, [
+            'images' => $vehicle->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'thumbnail_url' => $image->thumbnail_url,
+                    'sort_order' => $image->sort_order,
+                ];
+            }),
+        ]));
     }
 
     /**

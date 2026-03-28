@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -15,24 +15,25 @@ class AdminFuelTypeController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $fuelTypes = FuelType::orderBy('name')->paginate($request->get('limit', 15));
+        $fuelTypes = DmrDriveEnergy::orderBy('name')->paginate($request->get('limit', 15));
 
         return $this->paginated($fuelTypes);
     }
 
     public function show(int $id): JsonResponse
     {
-        $fuelType = FuelType::findOrFail($id);
+        $fuelType = DmrDriveEnergy::findOrFail($id);
         return $this->success($fuelType);
     }
 
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:fuel_types,name',
+            'name' => 'required|string|max:255|unique:dmr_drive_energies,name',
+            'type_nummer' => 'nullable|integer',
         ]);
 
-        $fuelType = FuelType::create($request->only(['name']));
+        $fuelType = DmrDriveEnergy::create($request->only(['name', 'type_nummer']));
 
         // Clear cache
         Cache::forget('constants_fuel_types');
@@ -42,13 +43,14 @@ class AdminFuelTypeController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $fuelType = FuelType::findOrFail($id);
+        $fuelType = DmrDriveEnergy::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:fuel_types,name,' . $id,
+            'name' => 'sometimes|string|max:255|unique:dmr_drive_energies,name,' . $id,
+            'type_nummer' => 'nullable|integer',
         ]);
 
-        $fuelType->update($request->only(['name']));
+        $fuelType->update($request->only(['name', 'type_nummer']));
 
         // Clear cache
         Cache::forget('constants_fuel_types');
@@ -58,7 +60,7 @@ class AdminFuelTypeController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $fuelType = FuelType::findOrFail($id);
+        $fuelType = DmrDriveEnergy::findOrFail($id);
         $fuelType->delete();
 
         // Clear cache

@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Category;
-use App\Models\ModelYear;
+use App\Models\DmrFactVehicle;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
 use App\Models\GearType;
-use App\Models\FuelType;
-use App\Models\Brand;
+use App\Models\DmrDriveEnergy;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
+use App\Models\DmrVariant;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Condition;
@@ -18,13 +20,13 @@ use App\Models\SalesType;
 use App\Models\Type;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
-use App\Models\VehicleModel;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
 use App\Services\LookupService;
 use App\Services\PageContentService;
 use App\Services\SeoService;
+use App\Services\VehicleDetailPresentationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +38,8 @@ class HomeController extends Controller
         private AuditLogService $auditLogService,
         private PageContentService $pageContentService,
         private LookupService $lookupService,
-        private SeoService $seoService
+        private SeoService $seoService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService
     ) {}
 
     /**
@@ -49,8 +52,8 @@ class HomeController extends Controller
         // Fetch filter options for the view
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
-            'fuelTypes' => FuelType::orderBy('name')->get(),
-            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
+            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
+            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
         ];
 
         // Fetch featured vehicles
@@ -265,17 +268,22 @@ class HomeController extends Controller
 
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
-        'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'category_id', 'listing_type_id',
-        'gear_type_id', 'body_type_id', 'color_id', 'variant_id', 'type_id', 'condition_id',
+        'brand_id', 'model_id', 'variant_id', 'model_year_id', 'fuel_type_id', 'category_id', 'listing_type_id',
+        'gear_type_id', 'body_type_id', 'color_id', 'type_id', 'condition_id',
         'sales_type_id', 'price_type_id', 'euronom_id', 'euronorm', 'use_id', 'transmission_id',
         'equipment_id', 'equipment_ids',
         'km_driven_from', 'km_driven_to', 'price_from', 'price_to', 'battery_capacity_from', 'battery_capacity_to',
-        'range_km_from', 'range_km_to', 'engine_power_from', 'engine_power_to', 'towing_weight',
+        'range_km_from', 'range_km_to', 'engine_power_from', 'engine_power_to', 'engine_power_kw_from', 'engine_power_kw_to',
+        'towing_weight',
         'ownership_tax_from', 'ownership_tax_to', 'first_registration_year_from', 'first_registration_year_to',
-        'fuel_efficiency_from', 'fuel_efficiency_to', 'year_from', 'year_to',
+        'fuel_efficiency_from', 'fuel_efficiency_to', 'model_year_from', 'model_year_to',
+        'year_from', 'year_to',
+        'electrical_consumption_from', 'electrical_consumption_to', 'km_per_liter_from', 'km_per_liter_to',
+        'max_speed_from', 'max_speed_to', 'maximum_weight_kg_from', 'maximum_weight_kg_to',
         'top_speed_from', 'top_speed_to', 'weight_from', 'weight_to', 'engine_displacement_from', 'engine_displacement_to',
-        'engine_cylinders', 'doors', 'seats_min', 'seats_max', 'wheels', 'axles', 'drive_axles', 'airbags',
-        'charging_type', 'ncap_five', 'is_import', 'is_factory_new', 'search', 'sort',
+        'engine_cylinders', 'doors', 'door_count', 'seats_min', 'seats_max', 'wheels', 'axles', 'axle_count',
+        'drive_axle_count', 'specifications_airbags', 'charging_type', 'emission_norm_id',
+        'ncap_five', 'ncap_test', 'is_import', 'is_factory_new', 'search', 'sort',
     ];
 
     /**
@@ -284,10 +292,15 @@ class HomeController extends Controller
     private function buildCurrentFilters(Request $request): array
     {
         $currentFilters = [];
-        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'seller_type', 'brand_id', 'model_id'];
+        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'drive_axle_count', 'seller_type', 'brand_id', 'model_id', 'variant_id'];
         foreach (self::VEHICLE_FILTER_KEYS as $key) {
             $value = $request->input($key);
             if ($value === null || $value === '') {
+                continue;
+            }
+            if ($key === 'variant_id' && is_string($value) && str_contains($value, ',')) {
+                $currentFilters[$key] = array_values(array_filter(array_map('intval', explode(',', $value))));
+
                 continue;
             }
             if (in_array($key, $arrayKeys, true)) {
@@ -324,6 +337,13 @@ class HomeController extends Controller
             }
             unset($input['euronorm']);
         }
+        if (isset($input['year_from']) && ! isset($input['model_year_from'])) {
+            $input['model_year_from'] = $input['year_from'];
+        }
+        if (isset($input['year_to']) && ! isset($input['model_year_to'])) {
+            $input['model_year_to'] = $input['year_to'];
+        }
+        unset($input['year_from'], $input['year_to']);
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
@@ -337,13 +357,17 @@ class HomeController extends Controller
         // we only fetch the currently-selected values for initial dropdown rendering.
         $selectedBrandIds = array_map(fn ($v) => (int) $v, $currentFilters['brand_id'] ?? []);
         $selectedModelIds = array_map(fn ($v) => (int) $v, $currentFilters['model_id'] ?? []);
+        $selectedVariantIds = array_map(fn ($v) => (int) $v, $currentFilters['variant_id'] ?? []);
         $selectedTypeId = isset($currentFilters['type_id']) && $currentFilters['type_id'] !== '' ? (int) $currentFilters['type_id'] : null;
 
         $selectedBrands = !empty($selectedBrandIds)
-            ? Brand::whereIn('id', $selectedBrandIds)->orderBy('name')->get(['id', 'name'])
+            ? DmrBrand::whereIn('id', $selectedBrandIds)->orderBy('name')->get(['id', 'name'])
             : collect();
         $selectedModels = !empty($selectedModelIds)
-            ? VehicleModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
+            ? DmrModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
+            : collect();
+        $selectedVariants = !empty($selectedVariantIds)
+            ? DmrVariant::whereIn('id', $selectedVariantIds)->orderBy('name')->get(['id', 'name', 'model_id'])
             : collect();
         $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
 
@@ -359,6 +383,7 @@ class HomeController extends Controller
             'fallbackVehicles',
             'selectedBrands',
             'selectedModels',
+            'selectedVariants',
             'selectedType'
         ));
     }
@@ -372,19 +397,13 @@ class HomeController extends Controller
      */
     public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
-        $vehicle->load([
-            'equipment',
-            'images',
+        $vehicle->load(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
             'user',
             'dealer.owner',
-            'condition',
-            'dmrFactVehicle.variant.model.brand',
-            'dmrFactVehicle.colour',
-            'dmrFactVehicle.bodyType',
-            'dmrFactVehicle.vehicleUse',
-            'dmrFactVehicle.emissionNorm',
-            'dmrFactVehicle.registrationStatus',
-        ]);
+        ]));
 
         // Get authenticated user (if any)
         $user = $this->authService->getAuthenticatedUser($request);
@@ -406,6 +425,7 @@ class HomeController extends Controller
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
+            'vehicleDetail' => $this->vehicleDetailPresentationService->buildDetailPayload($vehicle),
             'seo' => $seo,
         ]);
     }

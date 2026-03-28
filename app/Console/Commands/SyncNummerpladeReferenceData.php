@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Services\NummerpladeApiService;
 use App\Models\BodyType;
 use App\Models\Color;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use App\Models\Equipment;
 use App\Models\Type;
 use App\Models\VehicleUse;
@@ -56,10 +56,10 @@ class SyncNummerpladeReferenceData extends Command
             $colors = $nummerpladeService->getColors();
             $this->syncLookupTable(Color::class, $colors, 'colors');
 
-            // Sync Fuel Types
-            $this->info('Syncing fuel types...');
+            // Sync drive energies (legacy UI: "fuel types") into dmr_drive_energies
+            $this->info('Syncing drive energies (fuel types)...');
             $fuelTypes = $nummerpladeService->getFuelTypes();
-            $this->syncLookupTable(FuelType::class, $fuelTypes, 'fuel types');
+            $this->syncDriveEnergiesFromNummerplade($fuelTypes);
 
             // Sync Equipment
             $this->info('Syncing equipment...');
@@ -184,6 +184,51 @@ class SyncNummerpladeReferenceData extends Command
         }
 
         $this->line("  Synced {$count} {$typeName} ({$newCount} new)");
+    }
+
+    /**
+     * Sync Nummerplade fuel/drive type labels into dmr_drive_energies.
+     */
+    private function syncDriveEnergiesFromNummerplade(array $data): void
+    {
+        $count = 0;
+        $newCount = 0;
+
+        if (isset($data['data']) && is_array($data['data'])) {
+            $items = $data['data'];
+        } elseif (is_array($data) && isset($data[0])) {
+            $items = $data;
+        } else {
+            $items = [];
+        }
+
+        foreach ($items as $item) {
+            $name = null;
+            $typeNummer = null;
+            if (is_string($item)) {
+                $name = $item;
+            } elseif (is_array($item)) {
+                $name = $item['name'] ?? $item['title'] ?? $item['value'] ?? null;
+                if (isset($item['id']) && is_numeric($item['id'])) {
+                    $typeNummer = (int) $item['id'];
+                }
+            }
+
+            if ($name) {
+                $existing = DmrDriveEnergy::query()->where('name', $name)->first();
+                if (! $existing) {
+                    $attrs = ['name' => $name];
+                    if ($typeNummer !== null) {
+                        $attrs['type_nummer'] = $typeNummer;
+                    }
+                    DmrDriveEnergy::query()->create($attrs);
+                    $newCount++;
+                }
+                $count++;
+            }
+        }
+
+        $this->line("  Synced {$count} drive energies ({$newCount} new)");
     }
 
     /**

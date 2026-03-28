@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ModelYear;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Constants\VehicleListStatus;
@@ -74,10 +73,10 @@ class AdminVehicleController extends Controller
         }
 
         if ($request->has('model_year_id')) {
-            $yearName = ModelYear::find($request->model_year_id)?->name;
-            if ($yearName !== null && $yearName !== '') {
-                $query->whereHas('dmrFactVehicle', function ($q) use ($yearName) {
-                    $q->where('model_aar', (int) $yearName);
+            $year = (int) $request->model_year_id;
+            if ($year >= 1950 && $year <= 2100) {
+                $query->whereHas('dmrFactVehicle', function ($q) use ($year) {
+                    $q->where('model_aar', $year);
                 });
             }
         }

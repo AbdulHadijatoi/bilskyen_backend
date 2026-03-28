@@ -1,0 +1,50 @@
+sidebar_filter_key	table_column_key
+airbags	vehicles.specifications.airbags
+axles	vehicles.axle_count
+battery_capacity_from	vehicles.electrical_consumption
+battery_capacity_to	vehicles.electrical_consumption
+body_type_id	dmr_fact_vehicles.body_type_id
+brand_id	dmr_models.brand_id
+charging_type	vehicles.charging_type
+color_id	dmr_fact_vehicles.colour_id
+condition_id	vehicles.condition_id
+doors	vehicles.door_count
+drive_axles	-> delete it from sidebar because we already have axle_count
+engine_cylinders	N/A (not implemented)
+engine_power_from	vehicles.engine_power_kw or vehicles.engine_power_hp
+engine_power_to	vehicles.engine_power_kw or vehicles.engine_power_hp
+equipment_ids	vehicle_equipment.equipment_id
+eurornom_id	dmr_fact_vehicles.emission_norm_id
+first_registration_year_from	vehicles.first_registration_year
+first_registration_year_to	vehicles.first_registration_year
+fuel_efficiency_from	vehicles.km_per_liter
+fuel_efficiency_to	vehicles.km_per_liter
+fuel_type_id	vehicles.fuel_type_id
+gear_type_id	vehicles.gear_type_id
+is_factory_new	vehicles.is_factory_new
+is_import	vehicles.is_import
+km_driven_from	vehicles.km_driven
+km_driven_to	vehicles.km_driven
+listing_type_id	vehicles.listing_type_id
+model_id	dmr_fact_vehicles.variant.model_id
+ncap_five	vehicles.ncap_test
+ownership_tax_from	vehicles.calculated_ownership_tax
+ownership_tax_to	vehicles.calculated_ownership_tax
+price_from	vehicles.price
+price_to	vehicles.price
+price_type_id	vehicles.price_type_id
+range_km_from	remove this, no need this filter
+range_km_to	remove this no need this filter
+sales_type_id	vehicles.sales_type_id
+search	vehicles.title OR vehicles.registration OR vehicles.description
+seats_max	vehicles.seats_max
+seats_min	vehicles.seats_min
+sort	(we will work on this later)
+top_speed_from	vehicles.max_speed
+top_speed_to	vehicles.max_speed
+towing_weight	vehicles.towing_weight
+type_id	remove it, no need this filter
+use_id	dmr_fact_vehicles.vehicle_use_id
+weight_from	vehicles.maximum_weight_kg
+weight_to	vehicles.maximum_weight_kg
+wheels	(remove it, no need this filter)

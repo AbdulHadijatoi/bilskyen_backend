@@ -6,8 +6,7 @@ use App\Models\Brand;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Models\VehicleModel;
-use App\Models\ModelYear;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use App\Constants\VehicleListStatus as VehicleListStatusConstant;
 use App\Models\GearType;
 use App\Models\Condition;
@@ -20,12 +19,12 @@ use App\Models\DmrModel;
 use App\Models\DmrVariant;
 use App\Models\DmrColour;
 use App\Models\DmrEmissionNorm;
-use App\Models\DmrDriveEnergy;
 use App\Models\DmrFactVehicle;
 use App\Models\Location;
 use App\Models\FeaturedListing;
 use App\Services\AuthService;
 use App\Services\AuditLogService;
+use App\Services\DmrLookupAssociationService;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,14 +34,27 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Carbon\Carbon;
 
 class SellYourCarController extends Controller
 {
     public function __construct(
         private AuthService $authService,
         private AuditLogService $auditLogService,
-        private FileService $fileService
+        private FileService $fileService,
+        private DmrLookupAssociationService $dmrLookupAssociationService,
     ) {}
+
+    /**
+     * Equipment types + items for the equipment checkboxes partial (initial page and lookupContext HTML).
+     */
+    private function sellYourCarEquipmentLookupData(): array
+    {
+        return [
+            'equipmentTypes' => EquipmentType::with(['equipments' => fn ($q) => $q->orderBy('name')])->orderBy('name')->get(),
+            'equipment' => Equipment::with('equipmentType')->orderBy('name')->get(),
+        ];
+    }
 
     /**
      * Show the sell your car form page
@@ -59,20 +71,22 @@ class SellYourCarController extends Controller
 
         $empty = collect();
 
-        // DMR + equipment lists load after registration lookup (see lookupContext).
+        $equipmentLookup = $this->sellYourCarEquipmentLookupData();
+
+        // DMR lists load after registration lookup (see lookupContext); equipment is shared with manual entry.
         $lookupData = [
             'models' => $empty,
             'brands' => $empty,
             'dmrBrands' => $empty,
             'dmrModels' => $empty,
             'dmrVariants' => $empty,
-            'dmrColours' => $empty,
-            'dmrEuronorms' => $empty,
+            'dmrColours' => DmrColour::query()->orderBy('name')->get(),
+            'dmrEuronorms' => DmrEmissionNorm::query()->orderBy('name')->get(),
             'dmrDriveEnergies' => $empty,
             'variants' => $empty,
             'modelYears' => $empty,
-            'equipmentTypes' => $empty,
-            'equipment' => $empty,
+            'equipmentTypes' => $equipmentLookup['equipmentTypes'],
+            'equipment' => $equipmentLookup['equipment'],
             'gearTypes' => GearType::orderBy('name')->get(),
             'conditions' => Condition::orderBy('name')->get(),
             'locations' => Location::select('city', 'postcode', 'region')->orderBy('city')->get(),
@@ -136,17 +150,12 @@ class SellYourCarController extends Controller
 
         $modelYears = collect();
         if ($fv->model_aar !== null) {
-            $modelYears = ModelYear::where('name', (string) $fv->model_aar)->orderBy('name', 'desc')->get();
+            $y = (int) $fv->model_aar;
+            $modelYears = collect([(object) ['id' => $y, 'name' => (string) $y]]);
         }
 
-        $equipmentTypes = EquipmentType::with(['equipments' => fn ($q) => $q->orderBy('name')])->orderBy('name')->get();
-        $equipment = Equipment::with('equipmentType')->orderBy('name')->get();
-
         $equipmentHtml = view('partials.sell-your-car-equipment', [
-            'lookupData' => [
-                'equipmentTypes' => $equipmentTypes,
-                'equipment' => $equipment,
-            ],
+            'lookupData' => $this->sellYourCarEquipmentLookupData(),
         ])->render();
 
         return response()->json([
@@ -168,15 +177,6 @@ class SellYourCarController extends Controller
                 'color_id' => $dmrColours->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->values(),
                 'euronom_id' => $dmrEuronorms->map(fn ($e) => ['id' => $e->id, 'name' => $e->name])->values(),
             ],
-            'placeholders' => [
-                'manual_brand_id' => __('messages.pages.sell_your_car.select_variant'),
-                'manual_model_id' => __('messages.pages.sell_your_car.select_variant'),
-                'manual_model_year_id' => __('messages.pages.sell_your_car.select_variant'),
-                'manual_fuel_type_id' => __('messages.pages.sell_your_car.select_variant'),
-                'variant_id' => __('messages.pages.sell_your_car.select_variant'),
-                'color_id' => __('messages.pages.sell_your_car.select_color'),
-                'euronom_id' => __('messages.pages.sell_your_car.select_euronom'),
-            ],
             'equipment_html' => $equipmentHtml,
         ]);
     }
@@ -191,10 +191,10 @@ class SellYourCarController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('return_url', '/sell-your-car');
         }
-
         // Log all request data for debugging
         $allRequestData = $request->all();
         
+
         // Separate files from other data for cleaner logging
         $requestDataWithoutFiles = $allRequestData;
         $fileInfo = [];
@@ -213,31 +213,32 @@ class SellYourCarController extends Controller
         } else {
             $fileInfo = ['has_images' => false];
         }
-        
-        Log::info('SellYourCarController::store - Request received', [
-            'user_id' => $user->id,
-            'request_data' => $requestDataWithoutFiles,
-            'files' => $fileInfo,
-            'request_method' => $request->method(),
-            'content_type' => $request->header('Content-Type'),
-            'is_ajax' => $request->ajax(),
-            'is_json' => $request->wantsJson(),
-            'gear_type_id' => $request->input('gear_type_id'),
-        ]);
 
-        $validator = Validator::make($request->all(), [
-            'dmr_fact_vehicle_id' => 'required|integer|exists:dmr_fact_vehicles,id',
+        $rawDmr = $request->input('dmr_fact_vehicle_id');
+        $dmrFactVehicleId = ($rawDmr !== null && $rawDmr !== '') ? (int) $rawDmr : null;
+
+        $validationRules = [
             'title' => 'nullable|string|max:255',
-            'registration' => 'required|string|max:20',
+            'registration' => $dmrFactVehicleId !== null
+                ? ['required', 'string', 'max:20']
+                : ['nullable', 'string', 'max:20'],
             'price' => 'required|integer|min:0',
             'km_driven' => 'required|integer|min:0',
             'charging_type' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'equipment_ids' => 'nullable|array',
             'equipment_ids.*' => 'exists:equipments,id',
-            'gear_type_id' => 'nullable|integer|exists:gear_types,id',
+            'gear_type_id' => 'required|integer|exists:gear_types,id',
             'variant_id' => 'nullable|integer|exists:dmr_variants,id',
-            'euronom_id' => 'nullable|integer|exists:dmr_emission_norms,id',
+            'km_per_liter' => 'nullable|numeric|min:0',
+            'maximum_weight_kg' => 'nullable|integer|min:0',
+            'colour_id' => 'nullable|integer|exists:dmr_colours,id',
+            'emission_norm_id' => 'nullable|integer|exists:dmr_emission_norms,id',
+            'first_registration_month' => 'nullable|integer|min:1|max:12',
+            'first_registration_year' => 'nullable|integer|min:1900|max:'.((int) date('Y') + 1),
+            'last_inspection_month' => 'nullable|integer|min:1|max:12',
+            'last_inspection_year' => 'nullable|integer|min:1900|max:'.((int) date('Y') + 1),
+            'last_inspection_date' => 'nullable|date',
             'seller_phone' => 'required|string|max:30',
             'seller_address' => 'required|string',
             'seller_postcode' => 'required|string|max:10',
@@ -245,7 +246,21 @@ class SellYourCarController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif',
             'condition_id' => 'nullable|integer|exists:conditions,id',
             'servicebog' => 'nullable|string|max:20',
-        ]);
+            'lookup_equipments' => 'nullable|string|max:65535',
+            'lookup_specifications' => 'nullable|string|max:65535',
+        ];
+
+        if ($dmrFactVehicleId !== null) {
+            $validationRules['dmr_fact_vehicle_id'] = 'required|integer|exists:dmr_fact_vehicles,id';
+        } else {
+            $validationRules['dmr_fact_vehicle_id'] = 'nullable';
+            $validationRules['brand_id'] = 'required|integer|exists:dmr_brands,id';
+            $validationRules['model_id'] = 'required|integer|exists:dmr_models,id';
+            $validationRules['model_year'] = 'required|integer|min:1975|max:'.((int) date('Y') + 1);
+            $validationRules['fuel_type_id'] = 'required|integer|exists:dmr_drive_energies,id';
+        }
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             // Handle AJAX requests
@@ -313,7 +328,6 @@ class SellYourCarController extends Controller
             }
 
             $token = $this->generateSuccessToken($vehicle->id, $user->id);
-
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'status' => 'success',
@@ -342,6 +356,53 @@ class SellYourCarController extends Controller
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function mergeVehicleSpecAttributesFromRequest(Request $request, array &$attributes): void
+    {
+        if ($request->filled('km_per_liter')) {
+            $attributes['km_per_liter'] = (float) $request->input('km_per_liter');
+        }
+        if ($request->filled('maximum_weight_kg')) {
+            $attributes['maximum_weight_kg'] = (int) $request->input('maximum_weight_kg');
+        }
+        if ($request->filled('colour_id')) {
+            $attributes['colour_id'] = (int) $request->input('colour_id');
+        }
+        if ($request->filled('emission_norm_id')) {
+            $attributes['emission_norm_id'] = (int) $request->input('emission_norm_id');
+        }
+        if ($request->filled('body_type_id')) {
+            $attributes['body_type_id'] = (int) $request->input('body_type_id');
+        }
+        if ($request->filled('first_registration_year')) {
+            $attributes['first_registration_year'] = (int) $request->input('first_registration_year');
+        }
+        if ($request->filled('first_registration_month') && $request->filled('first_registration_year')) {
+            $y = (int) $request->input('first_registration_year');
+            $m = (int) $request->input('first_registration_month');
+            try {
+                $attributes['first_registration_date'] = Carbon::create($y, $m, 1)->format('Y-m-d');
+            } catch (\Throwable) {
+            }
+        }
+
+        if ($request->filled('last_inspection_date')) {
+            try {
+                $attributes['last_inspection_date'] = Carbon::parse($request->input('last_inspection_date'))->format('Y-m-d');
+            } catch (\Throwable) {
+            }
+        } elseif ($request->filled('last_inspection_month') && $request->filled('last_inspection_year')) {
+            $y = (int) $request->input('last_inspection_year');
+            $m = (int) $request->input('last_inspection_month');
+            try {
+                $attributes['last_inspection_date'] = Carbon::create($y, $m, 1)->format('Y-m-d');
+            } catch (\Throwable) {
+            }
+        }
+    }
+
     private function createVehicleRecord(Request $request, $user, string $description): Vehicle
     {
         return DB::transaction(function () use ($request, $user, $description) {
@@ -349,28 +410,68 @@ class SellYourCarController extends Controller
             $title = is_string($title) ? trim($title) : '';
             $title = $title !== '' ? $title : null;
 
-            $vehicle = Vehicle::create([
-                'dmr_fact_vehicle_id' => (int) $request->input('dmr_fact_vehicle_id'),
+            $rawDmr = $request->input('dmr_fact_vehicle_id');
+            $dmrFactVehicleId = ($rawDmr !== null && $rawDmr !== '') ? (int) $rawDmr : null;
+
+            $regRaw = $request->input('registration');
+            $reg = is_string($regRaw) ? trim($regRaw) : '';
+            $registration = ($reg === '' || strtoupper($reg) === 'N/A') ? null : $reg;
+
+            $attributes = [
+                'dmr_fact_vehicle_id' => $dmrFactVehicleId,
                 'user_id' => $user->id,
                 'dealer_id' => $user->dealer?->id,
                 'title' => $title,
-                'registration' => $request->input('registration'),
+                'registration' => $registration,
                 'price' => (int) $request->input('price'),
                 'list_status_id' => VehicleListStatusConstant::PUBLISHED,
                 'published_at' => now(),
                 'description' => $description,
-                'gear_type_id' => $request->filled('gear_type_id') ? (int) $request->input('gear_type_id') : null,
+                'gear_type_id' => (int) $request->input('gear_type_id'),
                 'km_driven' => (int) $request->input('km_driven'),
                 'charging_type' => $request->input('charging_type') ?: null,
                 'condition_id' => $request->filled('condition_id') ? (int) $request->input('condition_id') : null,
                 'servicebog' => $request->input('servicebog') ?: null,
                 'address' => trim((string) $request->input('seller_address', '')),
                 'postcode' => trim((string) $request->input('seller_postcode', '')),
-            ]);
+            ];
 
+            if ($dmrFactVehicleId === null) {
+                $attributes['brand_id'] = (int) $request->input('brand_id');
+                $attributes['model_id'] = (int) $request->input('model_id');
+                $attributes['model_year'] = (int) $request->input('model_year');
+                $attributes['fuel_type_id'] = (int) $request->input('fuel_type_id');
+                if ($request->filled('variant_id')) {
+                    $attributes['variant_id'] = (int) $request->input('variant_id');
+                }
+            } elseif ($request->filled('variant_id')) {
+                $attributes['variant_id'] = (int) $request->input('variant_id');
+            }
+
+            $this->mergeVehicleSpecAttributesFromRequest($request, $attributes);
+
+            $vehicle = Vehicle::create($attributes);
+
+            $checkboxIds = [];
             if ($request->filled('equipment_ids') && is_array($request->input('equipment_ids'))) {
-                $ids = array_values(array_filter(array_map('intval', $request->input('equipment_ids'))));
-                $vehicle->equipment()->sync($ids);
+                $checkboxIds = array_values(array_filter(array_map('intval', $request->input('equipment_ids'))));
+            }
+            $lookupCsv = $request->input('lookup_equipments');
+            $lookupCsv = is_string($lookupCsv) ? trim($lookupCsv) : '';
+            $lookupIds = $this->dmrLookupAssociationService->resolveEquipmentIdsFromLookupString($lookupCsv !== '' ? $lookupCsv : null);
+            if ($lookupCsv !== '') {
+                Cache::forget('constants_equipments');
+            }
+            $allEquipmentIds = array_values(array_unique(array_merge($checkboxIds, $lookupIds)));
+            if ($allEquipmentIds !== []) {
+                $vehicle->equipment()->sync($allEquipmentIds);
+            }
+
+            $lookupSpecsRaw = $request->input('lookup_specifications');
+            $lookupSpecsRaw = is_string($lookupSpecsRaw) ? trim($lookupSpecsRaw) : '';
+            $specSync = $this->dmrLookupAssociationService->resolveSpecificationSyncFromLookupJson($lookupSpecsRaw !== '' ? $lookupSpecsRaw : null);
+            if ($specSync !== []) {
+                $vehicle->specifications()->sync($specSync);
             }
 
             if ($request->hasFile('images')) {
@@ -408,7 +509,7 @@ class SellYourCarController extends Controller
                 }
             }
 
-            return $vehicle->fresh(['images', 'equipment', 'dmrFactVehicle']);
+            return $vehicle->fresh(['images', 'equipment', 'specifications', 'dmrFactVehicle']);
         });
     }
 
@@ -434,14 +535,11 @@ class SellYourCarController extends Controller
         }
         
         if ($modelYearId) {
-            $modelYear = ModelYear::find($modelYearId);
-            if ($modelYear) {
-                $parts[] = $modelYear->name;
-            }
+            $parts[] = (string) $modelYearId;
         }
         
         if ($fuelTypeId) {
-            $fuelType = FuelType::find($fuelTypeId);
+            $fuelType = DmrDriveEnergy::find($fuelTypeId);
             if ($fuelType) {
                 $parts[] = $fuelType->name;
             }
@@ -504,18 +602,18 @@ class SellYourCarController extends Controller
         }
         
         // KM/L (Fuel Efficiency)
-        if ($request->has('fuel_efficiency') && $request->input('fuel_efficiency')) {
-            $descriptionParts[] = 'Fuel efficiency: ' . number_format($request->input('fuel_efficiency'), 2) . ' km/l';
+        if ($request->filled('km_per_liter')) {
+            $descriptionParts[] = 'Fuel efficiency: ' . number_format((float) $request->input('km_per_liter'), 2) . ' km/l';
         }
         
         // Euro norm (DMR emission norm or legacy Euronom)
-        $euronomId = $request->input('euronom_id');
-        if ($euronomId) {
-            $dmrNorm = DmrEmissionNorm::find($euronomId);
+        $emissionNormId = $request->input('emission_norm_id');
+        if ($emissionNormId) {
+            $dmrNorm = DmrEmissionNorm::find($emissionNormId);
             if ($dmrNorm) {
                 $descriptionParts[] = 'Euro norm: ' . $dmrNorm->name;
             } else {
-                $euronom = Euronom::find($euronomId);
+                $euronom = Euronom::find($emissionNormId);
                 if ($euronom) {
                     $descriptionParts[] = 'Euro norm: ' . $euronom->name;
                 }
@@ -523,8 +621,8 @@ class SellYourCarController extends Controller
         }
         
         // Total Technical Weight
-        if ($request->has('technical_total_weight') && $request->input('technical_total_weight')) {
-            $descriptionParts[] = 'Total technical weight: ' . number_format($request->input('technical_total_weight'), 0, ',', '.') . ' kg';
+        if ($request->filled('maximum_weight_kg')) {
+            $descriptionParts[] = 'Total technical weight: ' . number_format((int) $request->input('maximum_weight_kg'), 0, ',', '.') . ' kg';
         }
         
         if ($variantId) {

@@ -8,8 +8,7 @@ use App\Models\Dealer;
 use App\Models\FeaturedListing;
 use App\Models\Brand;
 use App\Models\VehicleModel;
-use App\Models\ModelYear;
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use App\Models\ListingType;
 use App\Models\Variant;
 use App\Models\Euronom;
@@ -19,6 +18,7 @@ use App\Models\BodyType;
 use App\Models\PriceType;
 use App\Models\Equipment;
 use App\Services\VehicleService;
+use App\Services\VehicleDetailPresentationService;
 use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
@@ -44,7 +44,8 @@ class VehicleController extends Controller
         FileService $fileService,
         private AuditLogService $auditLogService,
         private DealerContextService $dealerContextService,
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService
     ) {
         $this->fileService = $fileService;
     }
@@ -100,22 +101,29 @@ class VehicleController extends Controller
 
     /** @var array<int, string> Advanced filter keys for vehicle search */
     private const ADVANCED_FILTER_KEYS = [
-        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id',
-        'year_from', 'year_to', 'mileage_from', 'mileage_to',
+        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id', 'variant_id',
+        'year_from', 'year_to', 'model_year_from', 'model_year_to',
+        'mileage_from', 'mileage_to',
         'odometer_from', 'odometer_to', 'listing_type_id', 'list_status_id',
         'category_id', 'price_type_id', 'condition_id',
-        'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
+        'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles', 'drive_axle_count',
         'first_registration_year_from', 'first_registration_year_to',
         'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
-        'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
+        'top_speed_from', 'top_speed_to', 'max_speed_from', 'max_speed_to',
+        'engine_power_from', 'engine_power_to', 'engine_power_kw_from', 'engine_power_kw_to',
         'ownership_tax_from', 'ownership_tax_to',
-        'battery_capacity_from', 'battery_capacity_to', 'range_km_from', 'range_km_to', 'charging_type',
-        'fuel_efficiency_from', 'fuel_efficiency_to', 'euronorm', 'euronom_id',
-        'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-        'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from',
-        'engine_displacement_to', 'airbags', 'ncap_five',
+        'battery_capacity_from', 'battery_capacity_to',
+        'electrical_consumption_from', 'electrical_consumption_to',
+        'range_km_from', 'range_km_to', 'charging_type',
+        'fuel_efficiency_from', 'fuel_efficiency_to',
+        'km_per_liter_from', 'km_per_liter_to',
+        'maximum_weight_kg_from', 'maximum_weight_kg_to',
+        'euronorm', 'euronom_id', 'emission_norm_id',
+        'color_id', 'doors', 'door_count', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
+        'wheels', 'axles', 'axle_count', 'engine_cylinders', 'engine_displacement_from',
+        'engine_displacement_to', 'airbags', 'specifications_airbags', 'ncap_five', 'ncap_test',
         'equipment_ids', 'equipment_id',
-        'variant_id', 'type_id', 'use_id', 'transmission_id', 'towing_weight',
+        'type_id', 'use_id', 'vehicle_use_id', 'transmission_id', 'towing_weight',
         'is_import', 'is_factory_new', 'km_driven_from', 'km_driven_to',
     ];
 
@@ -150,6 +158,19 @@ class VehicleController extends Controller
             }
             unset($input['euronorm']);
         }
+        if (! empty($input['variant_id']) && is_string($input['variant_id'])) {
+            $input['variant_id'] = array_values(array_filter(array_map('intval', explode(',', $input['variant_id']))));
+        }
+        if (isset($input['year_from']) && ! isset($input['model_year_from'])) {
+            $input['model_year_from'] = $input['year_from'];
+        }
+        if (isset($input['year_to']) && ! isset($input['model_year_to'])) {
+            $input['model_year_to'] = $input['year_to'];
+        }
+        if (! empty($input['euronom_id']) && empty($input['emission_norm_id'])) {
+            $input['emission_norm_id'] = (int) $input['euronom_id'];
+        }
+
         return $input;
     }
 
@@ -164,9 +185,7 @@ class VehicleController extends Controller
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
         $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
-            // Get first image (frontend prioritizes: thumbnail_url, image_url, image)
             $firstImage = $vehicle->images->first();
-            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
 
             // Determine seller type (dealer or private)
             $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
@@ -178,7 +197,7 @@ class VehicleController extends Controller
                 'dealer_id' => $vehicle->dealer_id,
                 'title' => $vehicle->title,
                 'price' => $vehicle->price,
-                'thumbnail_url' => $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? $imageUrl,
+                'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
                 'km_driven' => $vehicle->km_driven,
                 'engine_power_hp' => $vehicle->engine_power_hp,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
@@ -188,6 +207,8 @@ class VehicleController extends Controller
                 'brand_name' => $vehicle->brand_name,
                 'model_name' => $vehicle->model_name,
                 'seller_type' => $sellerType,
+                'is_dealer' => (bool) $isDealer,
+                'is_private' => ! $isDealer,
                 'seller_address' => $vehicle->seller_address,
                 'seller_postcode' => $vehicle->seller_postcode,
                 'user_id' => $vehicle->user_id,
@@ -208,7 +229,6 @@ class VehicleController extends Controller
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
             $fallbackFormatted = collect($fallbackVehicles->items())->map(function ($vehicle) {
                 $firstImage = $vehicle->images->first();
-                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
                 $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
                 $sellerType = $isDealer ? 'Dealer' : 'Private';
                 return [
@@ -217,7 +237,7 @@ class VehicleController extends Controller
                     'dealer_id' => $vehicle->dealer_id,
                     'title' => $vehicle->title,
                     'price' => $vehicle->price,
-                    'thumbnail_url' => $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? $imageUrl,
+                    'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
                     'km_driven' => $vehicle->km_driven,
                     'engine_power_hp' => $vehicle->engine_power_hp,
                     'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
@@ -227,6 +247,8 @@ class VehicleController extends Controller
                     'brand_name' => $vehicle->brand_name,
                     'model_name' => $vehicle->model_name,
                     'seller_type' => $sellerType,
+                    'is_dealer' => (bool) $isDealer,
+                    'is_private' => ! $isDealer,
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
                     'user_id' => $vehicle->user_id,
@@ -325,7 +347,7 @@ class VehicleController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $vehicle = Vehicle::with([
+        $vehicle = Vehicle::with(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
             'dealer' => function ($q) {
                 $q->with('owner');
             },
@@ -333,61 +355,28 @@ class VehicleController extends Controller
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'equipment',
-            'gearType',
-            'condition',
-            'vehicleListStatus',
-            'dmrFactVehicle.variant.model.brand',
-            'dmrFactVehicle.drivmiddelLines.driveEnergy',
-        ])->findOrFail($id);
+        ]))->findOrFail($id);
 
         $isDealer = $vehicle->dealer && ! str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
         $sellerType = $isDealer ? 'Dealer' : 'Private';
 
-        $response = [
-            'id' => $vehicle->id,
-            'slug' => $vehicle->slug,
-            'dmr_fact_vehicle_id' => $vehicle->dmr_fact_vehicle_id,
-            'title' => $vehicle->title,
-            'registration' => $vehicle->registration,
+        $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
+
+        $response = array_merge($payload, [
             'dealer_id' => $vehicle->dealer_id,
             'user_id' => $vehicle->user_id,
-            'list_status_id' => $vehicle->list_status_id,
-            'km_driven' => $vehicle->km_driven,
-            'price' => $vehicle->price,
-            'battery_capacity' => $vehicle->battery_capacity,
-            'range_km' => $vehicle->range_km,
-            'charging_type' => $vehicle->charging_type,
-            'engine_power_hp' => $vehicle->engine_power_hp,
-            'description' => $vehicle->description,
             'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
-            'seller_address' => $vehicle->seller_address,
-            'seller_postcode' => $vehicle->seller_postcode,
-            'gear_type_id' => $vehicle->gear_type_id,
-            'condition_id' => $vehicle->condition_id,
-            'servicebog' => $vehicle->servicebog,
             'created_at' => $vehicle->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $vehicle->updated_at->format('Y-m-d H:i:s'),
             'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
-            'brand_name' => $vehicle->brand_name,
-            'model_name' => $vehicle->model_name,
-            'fuel_type_name' => $vehicle->fuel_type_name,
-            'gear_type_name' => $vehicle->gear_type_name,
-            'model_year_name' => $vehicle->model_year_name,
             'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-            'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
+            'last_inspection_date' => $vehicle->last_inspection_date?->format('Y-m-d'),
             'images' => $vehicle->images->map(function ($image) {
                 return [
                     'id' => $image->id,
                     'image_url' => $image->image_url,
                     'thumbnail_url' => $image->thumbnail_url,
                     'sort_order' => $image->sort_order,
-                ];
-            }),
-            'equipment' => $vehicle->equipment->map(function ($equip) {
-                return [
-                    'id' => $equip->id,
-                    'name' => $equip->name,
                 ];
             }),
             'dealer' => $vehicle->dealer ? [
@@ -413,8 +402,7 @@ class VehicleController extends Controller
                 'phone' => $vehicle->user->phone,
             ] : null,
             'seller_type' => $sellerType,
-            'details' => null,
-        ];
+        ]);
 
         return $this->success($response);
     }
@@ -516,10 +504,17 @@ class VehicleController extends Controller
             }
         }
 
-        // Check max_equipment_per_vehicle limit
-        if ($dealer && isset($data['equipment_ids']) && is_array($data['equipment_ids'])) {
+        // Check max_equipment_per_vehicle limit (checkbox IDs + upper bound from DMR CSV)
+        if ($dealer && (isset($data['equipment_ids']) || ! empty($data['lookup_equipments'] ?? null))) {
             $equipmentLimit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_equipment_per_vehicle', 999);
-            $equipmentCount = count($data['equipment_ids']);
+            $equipmentCount = isset($data['equipment_ids']) && is_array($data['equipment_ids'])
+                ? count($data['equipment_ids'])
+                : 0;
+            $lookupCsv = $data['lookup_equipments'] ?? null;
+            if (is_string($lookupCsv) && trim($lookupCsv) !== '') {
+                $csvSegments = array_filter(array_map('trim', explode(',', $lookupCsv)));
+                $equipmentCount += count($csvSegments);
+            }
             if ($equipmentCount > $equipmentLimit) {
                 return $this->error(
                     "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
@@ -568,7 +563,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
+        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'specifications', 'dmrFactVehicle.variant.model.brand']));
     }
 
     /**
@@ -618,7 +613,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']), 'Vehicle draft saved successfully');
+        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'specifications', 'dmrFactVehicle.variant.model.brand']), 'Vehicle draft saved successfully');
     }
 
     /**
@@ -860,7 +855,7 @@ class VehicleController extends Controller
     }
 
     /**
-     * Fetch vehicle data from Nummerplade API (for preview before creating listing)
+     * Preview vehicle data from local DMR (legacy route name; same source as /api/v1/dmr/vehicle-by-registration).
      */
     public function fetchFromNummerplade(Request $request): JsonResponse
     {
@@ -1148,9 +1143,10 @@ class VehicleController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'model_id' => 'nullable|exists:models,id',
-            'model_year_id' => 'nullable|exists:model_years,id',
-            'fuel_type_id' => 'required|exists:fuel_types,id',
+            'model_year_id' => 'nullable|integer|min:1950|max:2100',
+            'fuel_type_id' => 'required|exists:dmr_drive_energies,id',
             'km_driven' => 'required|integer|min:0',
+            'gear_type_id' => 'required|integer|exists:gear_types,id',
             'battery_capacity' => 'nullable|integer|min:0',
             'range_km' => 'nullable|integer|min:0',
             'charging_type' => 'nullable|string|max:100',
@@ -1570,14 +1566,11 @@ class VehicleController extends Controller
         }
         
         if ($modelYearId) {
-            $modelYear = ModelYear::find($modelYearId);
-            if ($modelYear) {
-                $parts[] = $modelYear->name;
-            }
+            $parts[] = (string) $modelYearId;
         }
         
         if ($fuelTypeId) {
-            $fuelType = FuelType::find($fuelTypeId);
+            $fuelType = DmrDriveEnergy::find($fuelTypeId);
             if ($fuelType) {
                 $parts[] = $fuelType->name;
             }

@@ -9,8 +9,8 @@ use App\Models\VehicleImage;
 use App\Models\Brand;
 use App\Models\VehicleModel;
 use App\Models\Category;
-use App\Models\ModelYear;
-use App\Models\FuelType;
+use App\Models\DmrFactVehicle;
+use App\Models\DmrDriveEnergy;
 use App\Models\GearType;
 use App\Models\ListingType;
 use App\Models\Color;
@@ -676,8 +676,8 @@ class SellerController extends Controller
             'brands' => \App\Models\Brand::orderBy('name')->get(),
             'models' => \App\Models\VehicleModel::orderBy('name')->get(),
             'categories' => \App\Models\Category::orderBy('name')->get(),
-            'modelYears' => \App\Models\ModelYear::orderBy('name', 'desc')->get(),
-            'fuelTypes' => \App\Models\FuelType::orderBy('name')->get(),
+            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
+            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
             'gearTypes' => \App\Models\GearType::orderBy('name')->get(),
             'listingTypes' => \App\Models\ListingType::orderBy('name')->get(),
             'vehicleListStatuses' => \App\Models\VehicleListStatus::orderBy('name')->get(),

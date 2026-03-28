@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\ViewModels\VehicleDetailPresenter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +35,7 @@ class Vehicle extends Model
         'engine_displacement_litres',
         'first_registration_date',
         'first_registration_year',
+        'last_inspection_date',
         'nox_emission',
         'particle_filter',
         'axle_count',
@@ -50,6 +50,14 @@ class Vehicle extends Model
         'registration_status',
         'last_registration_change',
         'measurement_norm_id',
+        'body_type_id',
+        'colour_id',
+        'emission_norm_id',
+        'model_id',
+        'variant_id',
+        'fuel_type_id',
+        'vehicle_use_id',
+        'brand_id',
         'listing_type_id',
         'sales_type_id',
         'price_type_id',
@@ -81,6 +89,7 @@ class Vehicle extends Model
         'engine_displacement_litres' => 'float',
         'first_registration_date' => 'date',
         'first_registration_year' => 'integer',
+        'last_inspection_date' => 'date',
         'nox_emission' => 'float',
         'particle_filter' => 'boolean',
         'axle_count' => 'integer',
@@ -94,6 +103,14 @@ class Vehicle extends Model
         'maximum_weight_kg' => 'integer',
         'last_registration_change' => 'date',
         'measurement_norm_id' => 'integer',
+        'body_type_id' => 'integer',
+        'colour_id' => 'integer',
+        'emission_norm_id' => 'integer',
+        'model_id' => 'integer',
+        'variant_id' => 'integer',
+        'fuel_type_id' => 'integer',
+        'vehicle_use_id' => 'integer',
+        'brand_id' => 'integer',
         'listing_type_id' => 'integer',
         'sales_type_id' => 'integer',
         'price_type_id' => 'integer',
@@ -238,6 +255,47 @@ class Vehicle extends Model
         return $this->belongsTo(DmrFactVehicle::class, 'dmr_fact_vehicle_id');
     }
 
+    public function bodyType(): BelongsTo
+    {
+        return $this->belongsTo(DmrBodyType::class, 'body_type_id');
+    }
+
+    public function colour(): BelongsTo
+    {
+        return $this->belongsTo(DmrColour::class, 'colour_id');
+    }
+
+    public function emissionNorm(): BelongsTo
+    {
+        return $this->belongsTo(DmrEmissionNorm::class, 'emission_norm_id');
+    }
+
+    public function model(): BelongsTo
+    {
+        return $this->belongsTo(DmrModel::class, 'model_id');
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(DmrVariant::class, 'variant_id');
+    }
+
+    /** DMR drive energy (“fuel type”) — column {@see $fuel_type_id} references {@see DmrDriveEnergy}. */
+    public function fuelType(): BelongsTo
+    {
+        return $this->belongsTo(DmrDriveEnergy::class, 'fuel_type_id');
+    }
+
+    public function vehicleUse(): BelongsTo
+    {
+        return $this->belongsTo(DmrVehicleUse::class, 'vehicle_use_id');
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(DmrBrand::class, 'brand_id');
+    }
+
     public function dealer(): BelongsTo
     {
         return $this->belongsTo(Dealer::class);
@@ -283,6 +341,14 @@ class Vehicle extends Model
         return $this->belongsToMany(Equipment::class, 'vehicle_equipment');
     }
 
+    public function specifications(): BelongsToMany
+    {
+        return $this->belongsToMany(Specification::class, 'vehicle_specifications')
+            ->using(VehicleSpecification::class)
+            ->withPivot('count')
+            ->withTimestamps();
+    }
+
     public function gearType(): BelongsTo
     {
         return $this->belongsTo(GearType::class);
@@ -301,5 +367,25 @@ class Vehicle extends Model
     public function vehicleListStatus(): BelongsTo
     {
         return $this->belongsTo(VehicleListStatus::class, 'list_status_id');
+    }
+
+    public function listingType(): BelongsTo
+    {
+        return $this->belongsTo(ListingType::class, 'listing_type_id');
+    }
+
+    public function salesType(): BelongsTo
+    {
+        return $this->belongsTo(SalesType::class, 'sales_type_id');
+    }
+
+    public function priceType(): BelongsTo
+    {
+        return $this->belongsTo(PriceType::class, 'price_type_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

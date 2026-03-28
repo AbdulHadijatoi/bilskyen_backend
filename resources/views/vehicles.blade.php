@@ -170,10 +170,13 @@
             @php
                 $selectedBrandIds = isset($cf['brand_id']) ? (is_array($cf['brand_id']) ? $cf['brand_id'] : [$cf['brand_id']]) : [];
                 $selectedModelIds = isset($cf['model_id']) ? (is_array($cf['model_id']) ? $cf['model_id'] : [$cf['model_id']]) : [];
+                $selectedVariantIds = isset($cf['variant_id']) ? (is_array($cf['variant_id']) ? $cf['variant_id'] : array_filter(array_map('intval', explode(',', (string) $cf['variant_id'])))) : [];
                 $brandsList = $selectedBrands ?? [];
                 $modelsList = $selectedModels ?? [];
+                $variantsList = $selectedVariants ?? [];
                 $selectedBrandNames = collect($brandsList)->filter(fn($b) => in_array(is_array($b) ? $b['id'] : $b->id, $selectedBrandIds))->map(fn($b) => is_array($b) ? $b['name'] : $b->name)->values()->all();
                 $selectedModelNames = collect($modelsList)->filter(fn($m) => in_array(is_array($m) ? $m['id'] : $m->id, $selectedModelIds))->map(fn($m) => is_array($m) ? $m['name'] : $m->name)->values()->all();
+                $selectedVariantNames = collect($variantsList)->filter(fn($v) => in_array(is_array($v) ? $v['id'] : $v->id, $selectedVariantIds))->map(fn($v) => is_array($v) ? $v['name'] : $v->name)->values()->all();
             @endphp
             <details open class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -239,6 +242,40 @@
                             </div>
                         </div>
                     </div>
+                    <div class="relative" data-multiselect-dropdown>
+                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.variant') }}</label>
+                        <button type="button" id="variant-dropdown-trigger" class="variant-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="variant-dropdown-label">
+                            <span id="variant-dropdown-label" class="truncate">
+                                @if(count($selectedVariantNames ?? []) === 0){{ __('messages.common.all') }}@elseif(count($selectedVariantNames) === 1){{ $selectedVariantNames[0] }}@else{{ count($selectedVariantNames) }} {{ __('messages.forms.selected') }}@endif
+                            </span>
+                            <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                        </button>
+                        <div id="variant-dropdown-panel" class="variant-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
+                            <div class="p-2 border-b border-border">
+                                <div class="relative">
+                                    <input
+                                        type="text"
+                                        id="variant-search-input"
+                                        placeholder="{{ __('messages.forms.search_model') }}"
+                                        class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        autocomplete="off"
+                                    >
+                                    <span id="variant-search-loading" class="hidden absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
+                                        <svg class="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="variant-checkbox-list" class="p-2 space-y-0.5">
+                                @foreach($selectedVariants ?? [] as $v)
+                                    @php $vid = is_array($v) ? $v['id'] : $v->id; $vname = is_array($v) ? $v['name'] : $v->name; $vmid = is_array($v) ? ($v['model_id'] ?? '') : $v->model_id; @endphp
+                                    <label class="variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-model-id="{{ $vmid }}">
+                                        <input type="checkbox" name="variant_id[]" value="{{ $vid }}" class="variant-checkbox rounded border-input" checked>
+                                        <span class="variant-checkbox-name">{{ $vname }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                     <div>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
                         <select name="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -251,8 +288,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -354,7 +391,7 @@
 
             <!-- More Details: Color, Variant, Type, Price type, Euronom, Use (collapsed, 2-col grid) -->
             @php
-                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']);
+                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['price_type_id']) || isset($cf['emission_norm_id']) || isset($cf['use_id']);
             @endphp
             <details @if($moreDetailsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -373,22 +410,6 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.type') }}</label>
-                            <input
-                                type="text"
-                                id="type-search-input"
-                                placeholder="{{ __('messages.common.search') }}"
-                                class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary mb-2"
-                                autocomplete="off"
-                            >
-                            <select name="type_id" id="type-select" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @if($selectedType)
-                                    <option value="{{ $selectedType->id }}" selected>{{ $selectedType->name }}</option>
-                                @endif
-                            </select>
-                        </div>
-                        <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.price_type') }}</label>
                             <select name="price_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
@@ -399,10 +420,10 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.euro_norm') }}</label>
-                            <select name="euronom_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <select name="emission_norm_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['euronorms'] ?? [] as $en)
-                                <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['euronom_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['euronom_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
+                                <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['emission_norm_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['emission_norm_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -421,7 +442,7 @@
 
             <!-- Year & Specs: first reg, owner tax, HP, battery, range, fuel efficiency (collapsed) -->
             @php
-                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_from']) || isset($cf['engine_power_to']) || isset($cf['battery_capacity_from']) || isset($cf['battery_capacity_to']) || isset($cf['range_km_from']) || isset($cf['range_km_to']) || isset($cf['fuel_efficiency_from']) || isset($cf['fuel_efficiency_to']);
+                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_kw_from']) || isset($cf['engine_power_kw_to']) || isset($cf['electrical_consumption_from']) || isset($cf['electrical_consumption_to']) || isset($cf['km_per_liter_from']) || isset($cf['km_per_liter_to']);
             @endphp
             <details @if($yearSpecsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -462,8 +483,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.horsepower_hp') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="horsepower-min" name="engine_power_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="horsepower-max" name="engine_power_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="horsepower-min" name="engine_power_kw_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_kw_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="horsepower-max" name="engine_power_kw_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_kw_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -477,8 +498,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.battery_capacity_kwh') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="battery-capacity-min" name="battery_capacity_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['battery_capacity_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="battery-capacity-max" name="battery_capacity_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['battery_capacity_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="battery-capacity-min" name="electrical_consumption_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['electrical_consumption_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="battery-capacity-max" name="electrical_consumption_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['electrical_consumption_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -490,25 +511,10 @@
                         </div></div>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.range_km') }}</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="range-km-from" name="range_km_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['range_km_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="range-km-to" name="range_km_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['range_km_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        </div>
-                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
-                            <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="range-km-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="range-km-slider-min" min="0" max="1500" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="range-km-slider-max" min="0" max="1500" step="10" value="1500" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <div id="range-km-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                            <div id="range-km-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                        </div></div>
-                    </div>
-                    <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_efficiency') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="fuel-efficiency-from" name="fuel_efficiency_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['fuel_efficiency_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="fuel-efficiency-to" name="fuel_efficiency_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['fuel_efficiency_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="fuel-efficiency-from" name="km_per_liter_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_per_liter_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="fuel-efficiency-to" name="km_per_liter_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_per_liter_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -524,7 +530,7 @@
 
             <!-- Physical Details: top speed, weight, single inputs, drive wheels (collapsed) -->
             @php
-                $physicalOpen = isset($cf['top_speed_from']) || isset($cf['top_speed_to']) || isset($cf['weight_from']) || isset($cf['weight_to']) || isset($cf['engine_cylinders']) || isset($cf['doors']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['wheels']) || isset($cf['axles']) || isset($cf['airbags']) || !empty($cf['drive_axles']) || isset($cf['towing_weight']);
+                $physicalOpen = isset($cf['max_speed_from']) || isset($cf['max_speed_to']) || isset($cf['maximum_weight_kg_from']) || isset($cf['maximum_weight_kg_to']) || isset($cf['door_count']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['axle_count']) || isset($cf['specifications_airbags']) || isset($cf['towing_weight']);
             @endphp
             <details @if($physicalOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -535,8 +541,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.top_speed') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="top-speed-from" name="top_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['top_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="top-speed-to" name="top_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['top_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="top-speed-from" name="max_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['max_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="top-speed-to" name="max_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['max_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -550,8 +556,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.weight') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="weight-from" name="weight_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['weight_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="weight-to" name="weight_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['weight_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="weight-from" name="maximum_weight_kg_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['maximum_weight_kg_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="weight-to" name="maximum_weight_kg_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['maximum_weight_kg_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -563,33 +569,11 @@
                         </div></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" name="engine_cylinders" placeholder="{{ __('messages.forms.engine_cylinders') }}" min="0" value="{{ $cf['engine_cylinders'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="doors" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['doors'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" name="door_count" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="wheels" placeholder="{{ __('messages.forms.wheels') }}" min="0" value="{{ $cf['wheels'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="axles" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axles'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-medium text-muted-foreground mb-2">{{ __('messages.forms.drive_wheels') }}</p>
-                        <div class="flex flex-wrap gap-1.5">
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="fwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('fwd', $cf['drive_axles']) : $cf['drive_axles'] == 'fwd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.fwd') }}</span>
-                            </label>
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="rwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('rwd', $cf['drive_axles']) : $cf['drive_axles'] == 'rwd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.rwd') }}</span>
-                            </label>
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="awd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('awd', $cf['drive_axles']) : $cf['drive_axles'] == 'awd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.awd') }}</span>
-                            </label>
-                        </div>
+                        <input type="number" name="axle_count" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                     </div>
                     <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 </div>
@@ -597,7 +581,7 @@
 
             <!-- Charging, NCAP, Import, Factory New (collapsed) -->
             @php
-                $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_five']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
+                $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_test']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
             @endphp
             <details @if($extrasOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -613,9 +597,9 @@
                     </select>
                     <div class="flex flex-wrap gap-1.5 pt-1">
                         <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                            <input type="checkbox" name="ncap_five" value="1" class="sr-only peer" @if(isset($cf['ncap_five']) && $cf['ncap_five']) checked @endif>
+                            <input type="checkbox" name="ncap_test" value="1" class="sr-only peer" @if(isset($cf['ncap_test']) && $cf['ncap_test']) checked @endif>
                             <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            <span>{{ __('messages.forms.ncap_five') }}</span>
+                            <span>{{ __('messages.forms.ncap_test') }}</span>
                         </label>
                         <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
                             <input type="checkbox" name="is_import" value="1" class="sr-only peer" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif>
@@ -2000,6 +1984,23 @@
                     }
                 });
             }
+
+            // Variant (multi-select: one chip per selected variant)
+            if (filters.variant_id) {
+                const raw = filters.variant_id;
+                const ids = typeof raw === 'string' ? raw.split(',').map(s => s.trim()).filter(Boolean) : (Array.isArray(raw) ? raw : [raw]);
+                ids.forEach(id => {
+                    const variantName = getLabelText('variant_id[]', id);
+                    if (variantName) {
+                        chips.push({
+                            key: 'variant_id',
+                            label: variantName,
+                            value: id,
+                            isArray: true
+                        });
+                    }
+                });
+            }
             
             // Fuel type (multi-select: one chip per selected fuel type)
             if (filters.fuel_type_id) {
@@ -2043,27 +2044,27 @@
                 }
             }
             
-            // Year range
-            if (filters.year_from || filters.year_to) {
-                const from = filters.year_from || '';
-                const to = filters.year_to || '';
+            // Model year range
+            if (filters.model_year_from || filters.model_year_to) {
+                const from = filters.model_year_from || '';
+                const to = filters.model_year_to || '';
                 if (from && to) {
                     chips.push({
-                        key: 'year_range',
+                        key: 'model_year_range',
                         label: `${from} - ${to}`,
-                        value: { from: filters.year_from, to: filters.year_to }
+                        value: { from: filters.model_year_from, to: filters.model_year_to }
                     });
                 } else if (from) {
                     chips.push({
-                        key: 'year_from',
-                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.from') }} ${from}`,
-                        value: filters.year_from
+                        key: 'model_year_from',
+                        label: `{{ __('messages.forms.model_year') }} {{ __('messages.forms.from') }} ${from}`,
+                        value: filters.model_year_from
                     });
                 } else if (to) {
                     chips.push({
-                        key: 'year_to',
-                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.to') }} ${to}`,
-                        value: filters.year_to
+                        key: 'model_year_to',
+                        label: `{{ __('messages.forms.model_year') }} {{ __('messages.forms.to') }} ${to}`,
+                        value: filters.model_year_to
                     });
                 }
             }
@@ -2103,9 +2104,9 @@
             }
 
             // Engine power range
-            if (filters.engine_power_from || filters.engine_power_to) {
-                const from = filters.engine_power_from || '';
-                const to = filters.engine_power_to || '';
+            if (filters.engine_power_kw_from || filters.engine_power_kw_to) {
+                const from = filters.engine_power_kw_from || '';
+                const to = filters.engine_power_kw_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'engine_power_range',
@@ -2113,16 +2114,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'engine_power_from', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_power_from });
+                    chips.push({ key: 'engine_power_kw_from', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_power_kw_from });
                 } else if (to) {
-                    chips.push({ key: 'engine_power_to', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_power_to });
+                    chips.push({ key: 'engine_power_kw_to', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_power_kw_to });
                 }
             }
 
             // Battery capacity range
-            if (filters.battery_capacity_from || filters.battery_capacity_to) {
-                const from = filters.battery_capacity_from || '';
-                const to = filters.battery_capacity_to || '';
+            if (filters.electrical_consumption_from || filters.electrical_consumption_to) {
+                const from = filters.electrical_consumption_from || '';
+                const to = filters.electrical_consumption_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'battery_capacity_range',
@@ -2130,33 +2131,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'battery_capacity_from', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.from') }} ${from}`, value: filters.battery_capacity_from });
+                    chips.push({ key: 'electrical_consumption_from', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.from') }} ${from}`, value: filters.electrical_consumption_from });
                 } else if (to) {
-                    chips.push({ key: 'battery_capacity_to', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.to') }} ${to}`, value: filters.battery_capacity_to });
-                }
-            }
-
-            // Range (km) range
-            if (filters.range_km_from || filters.range_km_to) {
-                const from = filters.range_km_from || '';
-                const to = filters.range_km_to || '';
-                if (from && to) {
-                    chips.push({
-                        key: 'range_km_range',
-                        label: `{{ __('messages.forms.range_km') }}: ${from} - ${to}`,
-                        value: 'range'
-                    });
-                } else if (from) {
-                    chips.push({ key: 'range_km_from', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.from') }} ${from}`, value: filters.range_km_from });
-                } else if (to) {
-                    chips.push({ key: 'range_km_to', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.to') }} ${to}`, value: filters.range_km_to });
+                    chips.push({ key: 'electrical_consumption_to', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.to') }} ${to}`, value: filters.electrical_consumption_to });
                 }
             }
 
             // Fuel efficiency range
-            if (filters.fuel_efficiency_from || filters.fuel_efficiency_to) {
-                const from = filters.fuel_efficiency_from || '';
-                const to = filters.fuel_efficiency_to || '';
+            if (filters.km_per_liter_from || filters.km_per_liter_to) {
+                const from = filters.km_per_liter_from || '';
+                const to = filters.km_per_liter_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'fuel_efficiency_range',
@@ -2164,16 +2148,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'fuel_efficiency_from', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.from') }} ${from}`, value: filters.fuel_efficiency_from });
+                    chips.push({ key: 'km_per_liter_from', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.from') }} ${from}`, value: filters.km_per_liter_from });
                 } else if (to) {
-                    chips.push({ key: 'fuel_efficiency_to', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.to') }} ${to}`, value: filters.fuel_efficiency_to });
+                    chips.push({ key: 'km_per_liter_to', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.to') }} ${to}`, value: filters.km_per_liter_to });
                 }
             }
 
             // Top speed range
-            if (filters.top_speed_from || filters.top_speed_to) {
-                const from = filters.top_speed_from || '';
-                const to = filters.top_speed_to || '';
+            if (filters.max_speed_from || filters.max_speed_to) {
+                const from = filters.max_speed_from || '';
+                const to = filters.max_speed_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'top_speed_range',
@@ -2181,16 +2165,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'top_speed_from', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }} ${from}`, value: filters.top_speed_from });
+                    chips.push({ key: 'max_speed_from', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }} ${from}`, value: filters.max_speed_from });
                 } else if (to) {
-                    chips.push({ key: 'top_speed_to', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }} ${to}`, value: filters.top_speed_to });
+                    chips.push({ key: 'max_speed_to', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }} ${to}`, value: filters.max_speed_to });
                 }
             }
 
             // Weight range
-            if (filters.weight_from || filters.weight_to) {
-                const from = filters.weight_from || '';
-                const to = filters.weight_to || '';
+            if (filters.maximum_weight_kg_from || filters.maximum_weight_kg_to) {
+                const from = filters.maximum_weight_kg_from || '';
+                const to = filters.maximum_weight_kg_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'weight_range',
@@ -2198,21 +2182,19 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'weight_from', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }} ${from}`, value: filters.weight_from });
+                    chips.push({ key: 'maximum_weight_kg_from', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }} ${from}`, value: filters.maximum_weight_kg_from });
                 } else if (to) {
-                    chips.push({ key: 'weight_to', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }} ${to}`, value: filters.weight_to });
+                    chips.push({ key: 'maximum_weight_kg_to', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }} ${to}`, value: filters.maximum_weight_kg_to });
                 }
             }
 
-            // Single numeric filters (engine_cylinders, doors, seats_min, seats_max, wheels, axles, airbags, towing_weight)
+            // Single numeric filters (door_count, seats_min, seats_max, axle_count, specifications_airbags, towing_weight)
             const singleNumChips = [
-                ['engine_cylinders', '{{ __('messages.forms.engine_cylinders') }}'],
-                ['doors', '{{ __('messages.forms.doors') }}'],
+                ['door_count', '{{ __('messages.forms.doors') }}'],
                 ['seats_min', '{{ __('messages.forms.seats_min') }}'],
                 ['seats_max', '{{ __('messages.forms.seats_max') }}'],
-                ['wheels', '{{ __('messages.forms.wheels') }}'],
-                ['axles', '{{ __('messages.forms.axles') }}'],
-                ['airbags', '{{ __('messages.forms.airbags') }}'],
+                ['axle_count', '{{ __('messages.forms.axles') }}'],
+                ['specifications_airbags', '{{ __('messages.forms.airbags') }}'],
                 ['towing_weight', '{{ __('messages.forms.towing_weight_min') }}']
             ];
             singleNumChips.forEach(([key, labelPrefix]) => {
@@ -2229,9 +2211,9 @@
                 }
             }
 
-            // Checkboxes: ncap_five, is_import, is_factory_new
-            if (filters.ncap_five) {
-                chips.push({ key: 'ncap_five', label: '{{ __('messages.forms.ncap_five') }}', value: '1' });
+            // Checkboxes: ncap_test, is_import, is_factory_new
+            if (filters.ncap_test) {
+                chips.push({ key: 'ncap_test', label: '{{ __('messages.forms.ncap_test') }}', value: '1' });
             }
             if (filters.is_import) {
                 chips.push({ key: 'is_import', label: '{{ __('messages.forms.is_import') }}', value: '1' });
@@ -2240,12 +2222,12 @@
                 chips.push({ key: 'is_factory_new', label: '{{ __('messages.forms.is_factory_new') }}', value: '1' });
             }
 
-            // Drive axles (checkboxes)
-            if (filters.drive_axles && Array.isArray(filters.drive_axles)) {
-                filters.drive_axles.forEach(axle => {
-                    const name = getLabelText('drive_axles[]', axle);
+            // Drive axle_count (checkboxes)
+            if (filters.drive_axle_count && Array.isArray(filters.drive_axle_count)) {
+                filters.drive_axle_count.forEach(axle => {
+                    const name = getLabelText('drive_axle_count[]', axle);
                     if (name) {
-                        chips.push({ key: 'drive_axles', label: name, value: axle, isArray: true });
+                        chips.push({ key: 'drive_axle_count', label: name, value: axle, isArray: true });
                     }
                 });
             }
@@ -2284,10 +2266,9 @@
                 ['body_type_id', '{{ __('messages.forms.body_type') }}'],
                 ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
                 ['color_id', '{{ __('messages.forms.color') }}'],
-                ['type_id', '{{ __('messages.forms.type') }}'],
                 ['sales_type_id', '{{ __('messages.forms.sales_type') }}'],
                 ['price_type_id', '{{ __('messages.forms.price_type') }}'],
-                ['euronom_id', '{{ __('messages.forms.euro_norm') }}'],
+                ['emission_norm_id', '{{ __('messages.forms.euro_norm') }}'],
                 ['use_id', '{{ __('messages.forms.use') }}']
             ];
             selectChips.forEach(([key, labelPrefix]) => {
@@ -2350,6 +2331,7 @@
                             if (typeof filterModelListByBrands === 'function') filterModelListByBrands();
                         }
                         if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
+                        if (key === 'variant_id' && typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
                         if (key === 'fuel_type_id' && typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
@@ -2367,11 +2349,14 @@
                         const priceTo = document.querySelector('[name="price_to"]');
                         if (priceFrom) priceFrom.value = '';
                         if (priceTo) priceTo.value = '';
-                    } else if (key === 'year_range') {
-                        const yearFrom = document.querySelector('[name="year_from"]');
-                        const yearTo = document.querySelector('[name="year_to"]');
+                    } else if (key === 'model_year_range') {
+                        const yearFrom = document.querySelector('[name="model_year_from"]');
+                        const yearTo = document.querySelector('[name="model_year_to"]');
                         if (yearFrom) yearFrom.value = '';
                         if (yearTo) yearTo.value = '';
+                    } else if (key === 'model_year_from' || key === 'model_year_to') {
+                        const inp = document.querySelector(`[name="${key}"]`);
+                        if (inp) inp.value = '';
                     } else if (key === 'mileage_range' || key === 'km_driven_range') {
                         const from = document.querySelector('[name="km_driven_from"]');
                         const to = document.querySelector('[name="km_driven_to"]');
@@ -2386,31 +2371,27 @@
                         const b = document.querySelector('[name="ownership_tax_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'engine_power_range') {
-                        const a = document.querySelector('[name="engine_power_from"]');
-                        const b = document.querySelector('[name="engine_power_to"]');
+                        const a = document.querySelector('[name="engine_power_kw_from"]');
+                        const b = document.querySelector('[name="engine_power_kw_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'battery_capacity_range') {
-                        const a = document.querySelector('[name="battery_capacity_from"]');
-                        const b = document.querySelector('[name="battery_capacity_to"]');
-                        if (a) a.value = ''; if (b) b.value = '';
-                    } else if (key === 'range_km_range') {
-                        const a = document.querySelector('[name="range_km_from"]');
-                        const b = document.querySelector('[name="range_km_to"]');
+                        const a = document.querySelector('[name="electrical_consumption_from"]');
+                        const b = document.querySelector('[name="electrical_consumption_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'fuel_efficiency_range') {
-                        const a = document.querySelector('[name="fuel_efficiency_from"]');
-                        const b = document.querySelector('[name="fuel_efficiency_to"]');
+                        const a = document.querySelector('[name="km_per_liter_from"]');
+                        const b = document.querySelector('[name="km_per_liter_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'top_speed_range') {
-                        const a = document.querySelector('[name="top_speed_from"]');
-                        const b = document.querySelector('[name="top_speed_to"]');
+                        const a = document.querySelector('[name="max_speed_from"]');
+                        const b = document.querySelector('[name="max_speed_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'weight_range') {
-                        const a = document.querySelector('[name="weight_from"]');
-                        const b = document.querySelector('[name="weight_to"]');
+                        const a = document.querySelector('[name="maximum_weight_kg_from"]');
+                        const b = document.querySelector('[name="maximum_weight_kg_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
-                    } else if (key === 'drive_axles' && isArray) {
-                        const checkbox = document.querySelector(`[name="drive_axles[]"][value="${value}"]`);
+                    } else if (key === 'drive_axle_count' && isArray) {
+                        const checkbox = document.querySelector(`[name="drive_axle_count[]"][value="${value}"]`);
                         if (checkbox) checkbox.checked = false;
                     } else if (key === 'condition_id') {
                         const selectedRadio = document.querySelector(`[name="condition_id"][value="${value}"]`);
@@ -3209,6 +3190,8 @@ if (config) {
             if (brandIds.length > 0) filters.brand_id = brandIds;
             const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (modelIds.length > 0) filters.model_id = modelIds;
+            const variantIds = Array.from(document.getElementsByName('variant_id[]')).filter(cb => cb.checked).map(cb => cb.value);
+            if (variantIds.length > 0) filters.variant_id = variantIds.join(',');
             const fuelTypeIds = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
@@ -3218,41 +3201,36 @@ if (config) {
             if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
             if (v('body_type_id')) filters.body_type_id = v('body_type_id');
             if (v('color_id')) filters.color_id = v('color_id');
-            if (v('type_id')) filters.type_id = v('type_id');
             if (v('sales_type_id')) filters.sales_type_id = v('sales_type_id');
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
-            if (v('euronom_id')) filters.euronom_id = v('euronom_id');
+            if (v('emission_norm_id')) filters.emission_norm_id = v('emission_norm_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            if (v('year_from') && parseInt(v('year_from')) > 1950) filters.year_from = v('year_from');
-            if (vNum('year_to', currentYear + 2)) filters.year_to = v('year_to');
+            if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
+            if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
             if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1950) filters.first_registration_year_from = v('first_registration_year_from');
             if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
             if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');
             if (vNum('ownership_tax_to', 20001)) filters.ownership_tax_to = v('ownership_tax_to');
-            if (vNum('engine_power_from')) filters.engine_power_from = v('engine_power_from');
-            if (vNum('engine_power_to', 1001)) filters.engine_power_to = v('engine_power_to');
-            if (vNum('battery_capacity_from')) filters.battery_capacity_from = v('battery_capacity_from');
-            if (vNum('battery_capacity_to', 501)) filters.battery_capacity_to = v('battery_capacity_to');
-            if (vNum('range_km_from')) filters.range_km_from = v('range_km_from');
-            if (vNum('range_km_to', 1501)) filters.range_km_to = v('range_km_to');
-            if (vNum('fuel_efficiency_from')) filters.fuel_efficiency_from = v('fuel_efficiency_from');
-            if (vNum('fuel_efficiency_to', 101)) filters.fuel_efficiency_to = v('fuel_efficiency_to');
+            if (vNum('engine_power_kw_from')) filters.engine_power_kw_from = v('engine_power_kw_from');
+            if (vNum('engine_power_kw_to', 1001)) filters.engine_power_kw_to = v('engine_power_kw_to');
+            if (vNum('electrical_consumption_from')) filters.electrical_consumption_from = v('electrical_consumption_from');
+            if (vNum('electrical_consumption_to', 501)) filters.electrical_consumption_to = v('electrical_consumption_to');
+            if (vNum('km_per_liter_from')) filters.km_per_liter_from = v('km_per_liter_from');
+            if (vNum('km_per_liter_to', 101)) filters.km_per_liter_to = v('km_per_liter_to');
             if (v('charging_type')) filters.charging_type = v('charging_type');
-            if (v('top_speed_from')) filters.top_speed_from = v('top_speed_from');
-            if (v('top_speed_to')) filters.top_speed_to = v('top_speed_to');
-            if (v('weight_from')) filters.weight_from = v('weight_from');
-            if (v('weight_to')) filters.weight_to = v('weight_to');
-            if (v('engine_cylinders')) filters.engine_cylinders = v('engine_cylinders');
-            if (v('doors')) filters.doors = v('doors');
+            if (v('max_speed_from')) filters.max_speed_from = v('max_speed_from');
+            if (v('max_speed_to')) filters.max_speed_to = v('max_speed_to');
+            if (v('maximum_weight_kg_from')) filters.maximum_weight_kg_from = v('maximum_weight_kg_from');
+            if (v('maximum_weight_kg_to')) filters.maximum_weight_kg_to = v('maximum_weight_kg_to');
+            if (v('door_count')) filters.door_count = v('door_count');
             if (v('seats_min')) filters.seats_min = v('seats_min');
             if (v('seats_max')) filters.seats_max = v('seats_max');
-            if (v('wheels')) filters.wheels = v('wheels');
-            if (v('axles')) filters.axles = v('axles');
-            if (v('airbags')) filters.airbags = v('airbags');
+            if (v('axle_count')) filters.axle_count = v('axle_count');
+            if (v('specifications_airbags')) filters.specifications_airbags = v('specifications_airbags');
             if (v('towing_weight')) filters.towing_weight = v('towing_weight');
-            const driveAxles = Array.from(document.querySelectorAll('[name="drive_axles[]"]:checked')).map(cb => cb.value);
-            if (driveAxles.length > 0) filters.drive_axles = driveAxles;
-            if (document.querySelector('[name="ncap_five"]:checked')) filters.ncap_five = 1;
+            const driveAxles = Array.from(document.querySelectorAll('[name="drive_axle_count[]"]:checked')).map(cb => cb.value);
+            if (driveAxles.length > 0) filters.drive_axle_count = driveAxles;
+            if (document.querySelector('[name="ncap_test"]:checked')) filters.ncap_test = 1;
             if (document.querySelector('[name="is_import"]:checked')) filters.is_import = 1;
             if (document.querySelector('[name="is_factory_new"]:checked')) filters.is_factory_new = 1;
             const equipmentIds = Array.from(document.querySelectorAll('[name="equipment_ids[]"]:checked')).map(cb => cb.value);
@@ -3289,6 +3267,8 @@ if (config) {
         const LOOKUP_LIMIT = 25;
         let brandLookupToken = 0;
         let modelLookupToken = 0;
+        let variantLookupToken = 0;
+        let variantLookupInFlight = 0;
         let typeLookupToken = 0;
 
         function getSelectedBrandMeta() {
@@ -3315,6 +3295,25 @@ if (config) {
             return meta;
         }
 
+        function getSelectedVariantMeta() {
+            const meta = {};
+            Array.from(document.querySelectorAll('input[name="variant_id[]"]:checked')).forEach(cb => {
+                const label = cb.closest('label');
+                const span = label ? (label.querySelector('.variant-checkbox-name') || label.querySelector('span')) : null;
+                const modelId = label ? String(label.getAttribute('data-model-id') || '') : '';
+                meta[String(cb.value)] = {
+                    text: span ? span.textContent.trim() : String(cb.value),
+                    modelId
+                };
+            });
+            return meta;
+        }
+
+        function setVariantSearchLoading(on) {
+            const el = document.getElementById('variant-search-loading');
+            if (el) el.classList.toggle('hidden', !on);
+        }
+
         async function refreshBrandsFromApi(searchTerm) {
             const list = document.getElementById('brand-checkbox-list');
             if (!list) return;
@@ -3324,6 +3323,28 @@ if (config) {
 
             const token = ++brandLookupToken;
             const term = (searchTerm || '').trim();
+
+            if (term === '') {
+                list.innerHTML = '';
+                Object.keys(selectedMeta).forEach(id => {
+                    const label = document.createElement('label');
+                    label.className = 'brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'brand_id[]';
+                    input.value = id;
+                    input.className = 'brand-checkbox rounded border-input';
+                    input.checked = true;
+                    const span = document.createElement('span');
+                    span.textContent = selectedMeta[id];
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+                updateBrandDropdownLabel();
+                filterModelListByBrands();
+                return;
+            }
 
             const url = new URL('/api/v1/brands', window.location.origin);
             url.searchParams.set('limit', String(LOOKUP_LIMIT));
@@ -3403,6 +3424,33 @@ if (config) {
             const token = ++modelLookupToken;
             const term = (searchTerm || '').trim();
 
+            if (selectedBrandIds.length === 0) {
+                list.innerHTML = '';
+                Object.keys(selectedMeta).forEach(id => {
+                    const meta = selectedMeta[id];
+                    const label = document.createElement('label');
+                    label.className = 'model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-brand-id', String(meta.brandId || ''));
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'model_id[]';
+                    input.value = id;
+                    input.className = 'model-checkbox rounded border-input';
+                    input.checked = true;
+                    const span = document.createElement('span');
+                    span.className = 'model-checkbox-name';
+                    span.textContent = meta.text;
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+                updateModelDropdownLabel();
+                filterModelListByBrands();
+                const variantSearchInput = document.getElementById('variant-search-input');
+                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInput ? variantSearchInput.value : '');
+                return;
+            }
+
             const url = new URL('/api/v1/models', window.location.origin);
             url.searchParams.set('limit', String(LOOKUP_LIMIT));
             if (term !== '') url.searchParams.set('search', term);
@@ -3472,8 +3520,125 @@ if (config) {
 
                 updateModelDropdownLabel();
                 filterModelListByBrands();
+                const variantSearchInputAfterModel = document.getElementById('variant-search-input');
+                if (typeof refreshVariantsFromApi === 'function') {
+                    refreshVariantsFromApi(variantSearchInputAfterModel ? variantSearchInputAfterModel.value : '');
+                }
             } catch (e) {
                 console.debug('Model lookup failed:', e);
+            }
+        }
+
+        async function refreshVariantsFromApi(searchTerm) {
+            const list = document.getElementById('variant-checkbox-list');
+            if (!list) return;
+
+            const selectedMeta = getSelectedVariantMeta();
+            const selectedIds = new Set(Object.keys(selectedMeta));
+            const selectedModelIds = Array.from(document.querySelectorAll('input[name="model_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
+
+            const token = ++variantLookupToken;
+            const term = (searchTerm || '').trim();
+
+            if (selectedModelIds.length === 0) {
+                list.innerHTML = '';
+                Object.keys(selectedMeta).forEach(id => {
+                    const meta = selectedMeta[id];
+                    const label = document.createElement('label');
+                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-model-id', String(meta.modelId || ''));
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'variant_id[]';
+                    input.value = id;
+                    input.className = 'variant-checkbox rounded border-input';
+                    input.checked = true;
+                    const span = document.createElement('span');
+                    span.className = 'variant-checkbox-name';
+                    span.textContent = meta.text;
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+                updateVariantDropdownLabel();
+                return;
+            }
+
+            variantLookupInFlight++;
+            setVariantSearchLoading(true);
+
+            const url = new URL('/api/v1/variants', window.location.origin);
+            url.searchParams.set('limit', String(LOOKUP_LIMIT));
+            if (term !== '') url.searchParams.set('search', term);
+            url.searchParams.set('model_ids', selectedModelIds.join(','));
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) return;
+                const json = await response.json().catch(() => ({}));
+                if (token !== variantLookupToken) return;
+
+                const items = json?.data?.items || [];
+                list.innerHTML = '';
+
+                const resultsIds = new Set();
+                items.forEach(item => {
+                    const id = String(item.id);
+                    resultsIds.add(id);
+
+                    const label = document.createElement('label');
+                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-model-id', String(item.model_id || ''));
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'variant_id[]';
+                    input.value = id;
+                    input.className = 'variant-checkbox rounded border-input';
+                    input.checked = selectedIds.has(id);
+
+                    const span = document.createElement('span');
+                    span.className = 'variant-checkbox-name';
+                    span.textContent = item.name;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                Object.keys(selectedMeta).forEach(id => {
+                    if (resultsIds.has(id)) return;
+                    const meta = selectedMeta[id];
+
+                    const label = document.createElement('label');
+                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-model-id', String(meta.modelId || ''));
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'variant_id[]';
+                    input.value = id;
+                    input.className = 'variant-checkbox rounded border-input';
+                    input.checked = true;
+
+                    const span = document.createElement('span');
+                    span.className = 'variant-checkbox-name';
+                    span.textContent = meta.text;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+
+                updateVariantDropdownLabel();
+            } catch (e) {
+                console.debug('Variant lookup failed:', e);
+            } finally {
+                variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
+                if (variantLookupInFlight === 0) setVariantSearchLoading(false);
             }
         }
 
@@ -3573,6 +3738,16 @@ if (config) {
             else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
         }
 
+        function updateVariantDropdownLabel() {
+            const labelEl = document.getElementById('variant-dropdown-label');
+            if (!labelEl) return;
+            const checked = Array.from(document.getElementsByName('variant_id[]')).filter(cb => cb.checked);
+            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.variant-checkbox-name')) ? cb.closest('label').querySelector('.variant-checkbox-name').textContent.trim() : '').filter(Boolean);
+            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
+            else if (names.length === 1) labelEl.textContent = names[0];
+            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
+        }
+
         // Update fuel type dropdown trigger label from checked checkboxes
         function updateFuelTypeDropdownLabel() {
             const labelEl = document.getElementById('fuel-type-dropdown-label');
@@ -3590,16 +3765,20 @@ if (config) {
             const brandPanel = document.getElementById('brand-dropdown-panel');
             const modelTrigger = document.getElementById('model-dropdown-trigger');
             const modelPanel = document.getElementById('model-dropdown-panel');
+            const variantTrigger = document.getElementById('variant-dropdown-trigger');
+            const variantPanel = document.getElementById('variant-dropdown-panel');
             const fuelTypeTrigger = document.getElementById('fuel-type-dropdown-trigger');
             const fuelTypePanel = document.getElementById('fuel-type-dropdown-panel');
             const brandSearchInput = document.getElementById('brand-search-input');
             const modelSearchInput = document.getElementById('model-search-input');
+            const variantSearchInput = document.getElementById('variant-search-input');
 
             function closeAll() {
                 if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
                 if (modelPanel) { modelPanel.classList.add('hidden'); if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false'); }
+                if (variantPanel) { variantPanel.classList.add('hidden'); if (variantTrigger) variantTrigger.setAttribute('aria-expanded', 'false'); }
                 if (fuelTypePanel) { fuelTypePanel.classList.add('hidden'); if (fuelTypeTrigger) fuelTypeTrigger.setAttribute('aria-expanded', 'false'); }
-                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
+                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .variant-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
             }
 
             if (brandTrigger && brandPanel) {
@@ -3630,6 +3809,20 @@ if (config) {
                     }
                 });
             }
+            if (variantTrigger && variantPanel) {
+                variantTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = !variantPanel.classList.contains('hidden');
+                    closeAll();
+                    if (!isOpen) {
+                        variantPanel.classList.remove('hidden');
+                        variantTrigger.setAttribute('aria-expanded', 'true');
+                        const chev = variantTrigger.querySelector('.dropdown-chevron');
+                        if (chev) chev.style.transform = 'rotate(180deg)';
+                        refreshVariantsFromApi(variantSearchInput ? variantSearchInput.value : '');
+                    }
+                });
+            }
             if (fuelTypeTrigger && fuelTypePanel) {
                 fuelTypeTrigger.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -3645,7 +3838,7 @@ if (config) {
             }
             document.addEventListener('click', () => closeAll());
 
-            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
+            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .variant-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
                 panel.addEventListener('click', (e) => e.stopPropagation());
             });
 
@@ -3663,6 +3856,14 @@ if (config) {
                 if (modelList) {
                     modelList.addEventListener('change', (e) => {
                         if (e.target && e.target.classList && e.target.classList.contains('model-checkbox')) updateModelDropdownLabel();
+                    });
+                }
+            }
+            if (variantPanel) {
+                const variantList = variantPanel.querySelector('#variant-checkbox-list');
+                if (variantList) {
+                    variantList.addEventListener('change', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('variant-checkbox')) updateVariantDropdownLabel();
                     });
                 }
             }
@@ -3684,6 +3885,13 @@ if (config) {
                 modelSearchInput.addEventListener('input', () => {
                     clearTimeout(t);
                     t = setTimeout(() => refreshModelsFromApi(modelSearchInput.value), 300);
+                });
+            }
+            if (variantSearchInput) {
+                let tv = null;
+                variantSearchInput.addEventListener('input', () => {
+                    clearTimeout(tv);
+                    tv = setTimeout(() => refreshVariantsFromApi(variantSearchInput.value), 300);
                 });
             }
 
@@ -3718,6 +3926,15 @@ if (config) {
                         filterModelListByBrands();
                         const modelSearchInput = document.getElementById('model-search-input');
                         refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
+                        const variantSearchInputEl = document.getElementById('variant-search-input');
+                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInputEl ? variantSearchInputEl.value : '');
+                    }
+                    if (target.classList.contains('model-checkbox')) {
+                        const variantSearchInputEl = document.getElementById('variant-search-input');
+                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInputEl ? variantSearchInputEl.value : '');
+                    }
+                    if (target.classList.contains('variant-checkbox')) {
+                        if (typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
                     }
                     autoApplyFilters();
                 }
