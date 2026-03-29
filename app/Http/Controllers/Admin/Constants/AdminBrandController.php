@@ -35,8 +35,7 @@ class AdminBrandController extends Controller
 
         $brand = DmrBrand::create($request->only(['name']));
 
-        // Clear cache
-        LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetBrandAndDependentLookupCaches();
 
         return $this->created($brand);
     }
@@ -51,8 +50,7 @@ class AdminBrandController extends Controller
 
         $brand->update($request->only(['name']));
 
-        // Clear cache
-        LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetBrandAndDependentLookupCaches();
 
         return $this->success($brand);
     }
@@ -62,8 +60,7 @@ class AdminBrandController extends Controller
         $brand = DmrBrand::findOrFail($id);
         $brand->delete();
 
-        // Clear cache
-        LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetBrandAndDependentLookupCaches();
 
         return $this->noContent();
     }

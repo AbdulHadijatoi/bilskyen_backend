@@ -48,12 +48,16 @@ class LookupService
     /**
      * Drop current and legacy cache keys for a logical group (admin CRUD, etc.).
      * $group matches ConstantsCacheTrait names (e.g. body_types, colors, euronorms).
+     *
+     * Segment names must match {@see self::cacheKey()} suffixes used in the getters
+     * (e.g. vehicle models use "vehicle_models", not "dmr_models").
      */
     public static function forgetLookupCacheGroup(string $group): void
     {
         $segment = match ($group) {
             'body_types' => 'dmr_body_types',
             'colors' => 'dmr_colours',
+            'dmr_models' => 'vehicle_models',
             default => $group,
         };
 
@@ -75,6 +79,16 @@ class LookupService
         Cache::forget(self::cacheKey('dmr_drive_energies'));
         Cache::forget('constants_fuel_types');
         Cache::forget('constants_dmr_drive_energies');
+    }
+
+    /**
+     * Brand name changes affect cached vehicle_models (with brand) and variants (with model).
+     */
+    public static function forgetBrandAndDependentLookupCaches(): void
+    {
+        self::forgetLookupCacheGroup('brands');
+        self::forgetLookupCacheGroup('vehicle_models');
+        self::forgetLookupCacheGroup('variants');
     }
 
     /**
@@ -359,12 +373,10 @@ class LookupService
             'listing_types' => $this->getListingTypes(),
             'body_types' => $this->getBodyTypes(),
             'colors' => $this->getColors(),
-            'variants' => $this->getVariants(),
             'conditions' => $this->getConditions(),
             'sales_types' => $this->getSalesTypes(),
             'price_types' => $this->getPriceTypes(),
             'euronorms' => $this->getEuronorms(),
-            'vehicle_models' => $this->getVehicleModels(),
             'vehicle_uses' => $this->getVehicleUses(),
             'vehicle_list_statuses' => $this->getVehicleListStatuses(),
             'equipment_types' => $this->getEquipmentTypes(),

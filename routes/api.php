@@ -8,6 +8,7 @@ use App\Http\Controllers\DmrFactVehicleLookupController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\SellYourCarController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,10 +34,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::get('/featured-vehicles', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');
     
-    // Sell Your Car API (authenticated users can create vehicle listings)
-    Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
-        ->middleware(['auth:api', 'idempotency'])
-        ->name('api.sell-your-car');
+    // Sell Your Car API — same create logic as web /sell-your-car (SellYourCarController::store)
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/sell-your-car/form', [SellYourCarController::class, 'apiFormData'])
+            ->name('api.sell-your-car.form');
+        Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
+            ->middleware('idempotency')
+            ->name('api.sell-your-car');
+    });
     
     
     // Constants API - Get all lookup tables data
@@ -136,6 +141,7 @@ Route::prefix('v1')->group(function () {
     // Seller Profile API routes (for authenticated sellers)
     Route::middleware('auth:api')->prefix('seller')->group(function () {
         Route::get('/vehicles', [\App\Http\Controllers\SellerProfileController::class, 'getVehicles']);
+        Route::get('/vehicles/{id}/edit', [\App\Http\Controllers\SellerProfileController::class, 'getVehicleEditForm']);
         Route::get('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'getVehicle']);
         Route::put('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicle']);
         Route::patch('/vehicles/{id}/status', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicleStatus']);

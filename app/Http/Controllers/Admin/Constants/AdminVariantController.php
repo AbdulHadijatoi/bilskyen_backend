@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\DmrVariant;
-use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 use App\Traits\ConstantsCacheTrait;
 
 
@@ -38,8 +38,15 @@ class AdminVariantController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:variants,name',
-            'model_id' => 'nullable|integer|exists:models,id',
+            'model_id' => 'required|integer|exists:dmr_models,id',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_variants', 'name')->where(
+                    fn ($q) => $q->where('model_id', (int) $request->input('model_id'))
+                ),
+            ],
         ]);
 
         $variant = DmrVariant::create($request->only(['name', 'model_id']));
@@ -54,9 +61,20 @@ class AdminVariantController extends Controller
     {
         $variant = DmrVariant::findOrFail($id);
 
+        $modelIdForUnique = $request->filled('model_id')
+            ? (int) $request->input('model_id')
+            : (int) $variant->model_id;
+
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:variants,name,' . $id,
-            'model_id' => 'nullable|integer|exists:models,id',
+            'model_id' => 'sometimes|integer|exists:dmr_models,id',
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_variants', 'name')
+                    ->where(fn ($q) => $q->where('model_id', $modelIdForUnique))
+                    ->ignore($id),
+            ],
         ]);
 
         $variant->update($request->only(['name', 'model_id']));

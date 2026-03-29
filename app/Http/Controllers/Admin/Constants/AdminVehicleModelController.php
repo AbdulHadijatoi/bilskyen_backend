@@ -42,8 +42,9 @@ class AdminVehicleModelController extends Controller
 
         $vehicleModel = DmrModel::create($request->only(['name', 'brand_id']));
 
-        LookupService::forgetLookupCacheGroup('dmr_models');
+        LookupService::forgetLookupCacheGroup('vehicle_models');
         LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetLookupCacheGroup('variants');
 
         return $this->created($vehicleModel);
     }
@@ -59,8 +60,9 @@ class AdminVehicleModelController extends Controller
 
         $vehicleModel->update($request->only(['name', 'brand_id']));
 
-        LookupService::forgetLookupCacheGroup('dmr_models');
+        LookupService::forgetLookupCacheGroup('vehicle_models');
         LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetLookupCacheGroup('variants');
 
         return $this->success($vehicleModel);
     }
@@ -70,8 +72,9 @@ class AdminVehicleModelController extends Controller
         $vehicleModel = DmrModel::findOrFail($id);
         $vehicleModel->delete();
 
-        LookupService::forgetLookupCacheGroup('dmr_models');
+        LookupService::forgetLookupCacheGroup('vehicle_models');
         LookupService::forgetLookupCacheGroup('brands');
+        LookupService::forgetLookupCacheGroup('variants');
 
         return $this->noContent();
     }

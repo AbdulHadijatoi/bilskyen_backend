@@ -9,6 +9,8 @@ use App\Constants\VehicleListStatus;
 use App\Services\VehicleService;
 use App\Services\VehicleDetailPresentationService;
 use App\Services\AuditLogService;
+use App\Services\SellerVehicleEditService;
+use App\Constants\ApiStatusCode;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +26,8 @@ class SellerProfileController extends Controller
     public function __construct(
         private VehicleService $vehicleService,
         private AuditLogService $auditLogService,
-        private VehicleDetailPresentationService $vehicleDetailPresentationService
+        private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private SellerVehicleEditService $sellerVehicleEditService
     ) {}
 
     /**
@@ -120,6 +123,33 @@ class SellerProfileController extends Controller
     }
 
     /**
+     * Edit form: vehicle values + lookups (same data as seller-vehicle-edit Blade / JS).
+     * GET /api/v1/seller/vehicles/{id}/edit
+     */
+    public function getVehicleEditForm(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $vehicle = Vehicle::with([
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
+            'equipment',
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.emissionNorm',
+            'dmrFactVehicle.colour',
+        ])->findOrFail($id);
+
+        if ($vehicle->user_id !== $user->id) {
+            return $this->forbidden(__('messages.errors.no_permission_update_vehicle'));
+        }
+
+        $data = $this->sellerVehicleEditService->buildEditFormApiPayload($vehicle, $user);
+
+        return $this->success($data, ApiStatusCode::OK, __('messages.api.data_retrieved_successfully'));
+    }
+
+    /**
      * Get vehicle details
      * GET /api/v1/seller/vehicles/{id}
      */
@@ -153,50 +183,44 @@ class SellerProfileController extends Controller
     }
 
     /**
-     * Update vehicle
+     * Update vehicle (same rules and image handling as web seller.vehicle.update).
      * PUT /api/v1/seller/vehicles/{id}
+     *
+     * Send multipart/form-data with the same fields as the web form (including images[], deleted_image_ids[], existing_image_ids[], image_sort_order).
      */
     public function updateVehicle(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
 
-        $vehicle = Vehicle::findOrFail($id);
+        $vehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle.variant.model.brand'])->findOrFail($id);
 
-        // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to update this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_update_vehicle'), null, 403);
         }
 
-        // Store before state for audit log
-        $beforeState = $vehicle->toArray();
-
-        // Use VehicleService to update vehicle
-        $data = $request->all();
-        $vehicle = $this->vehicleService->updateVehicle($vehicle, $data);
-        $vehicle->refresh();
-
-        // Audit log
         try {
-            $this->auditLogService->logUpdate(
-                $user,
-                'Vehicle',
-                $vehicle->id,
-                $beforeState,
-                $vehicle->toArray(),
-                $request,
-                'Seller',
-                null,
-                "Vehicle updated by seller: {$vehicle->title}",
-                ['vehicle', 'seller', 'update']
-            );
-        } catch (\Exception $e) {
-            Log::warning('Failed to create audit log for vehicle update', [
-                'vehicle_id' => $vehicle->id,
+            $result = $this->sellerVehicleEditService->updateSellerVehicle($request, $vehicle, $user);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationError($e->errors());
+        } catch (\Throwable $e) {
+            Log::error('Seller API vehicle update failed', [
+                'vehicle_id' => $id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            return $this->error(
+                __('messages.errors.failed_to_update_vehicle', ['message' => $e->getMessage()]),
+                null,
+                ApiStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
 
-        return $this->success($vehicle->load(['images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
+        return $this->success(
+            ['vehicle' => $result['vehicle']],
+            ApiStatusCode::OK,
+            __('messages.errors.vehicle_updated_success')
+        );
     }
 
     /**
