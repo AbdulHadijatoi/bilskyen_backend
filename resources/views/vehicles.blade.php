@@ -282,6 +282,9 @@
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
+                        @if(!empty($cf['model_year']) && is_string($cf['model_year']))
+                            <input type="hidden" name="model_year" value="{{ $cf['model_year'] }}" class="js-carry-model-year" autocomplete="off" />
+                        @endif
                         <div class="grid grid-cols-2 gap-2">
                             <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                             <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
@@ -1238,9 +1241,9 @@
                                 <h3 class="flex items-center gap-2 text-xs">
                                     ${vehicle.title || ''}
                                 </h3>
-                                ${vehicle.version ? `
+                                ${vehicle.variant_name ? `
                                 <p class="text-muted-foreground text-xs font-normal">
-                                    ${vehicle.version}
+                                    ${vehicle.variant_name}
                                 </p>
                                 ` : ''}
                                 <p class="vehicle-listing-price text-lg font-bold">
@@ -1700,6 +1703,17 @@
                 }
             }
             
+            if (filters.model_year) {
+                const parts = String(filters.model_year).split(',').map((s) => s.trim()).filter(Boolean);
+                parts.forEach((y) => {
+                    chips.push({
+                        key: 'model_year',
+                        label: `{{ __('messages.forms.model_year') }} ${y}`,
+                        value: y,
+                        isArray: true
+                    });
+                });
+            }
             // Model year range
             if (filters.model_year_from || filters.model_year_to) {
                 const from = filters.model_year_from || '';
@@ -1979,6 +1993,16 @@
                     
                     // Remove filter from DOM
                     if (isArray) {
+                        if (key === 'model_year') {
+                            const carry = document.querySelector('input.js-carry-model-year[name="model_year"]');
+                            if (carry && carry.value) {
+                                const next = carry.value.split(',').map((s) => s.trim()).filter((s) => s !== String(value));
+                                if (next.length === 0) carry.remove();
+                                else carry.value = next.join(',');
+                                autoApplyFilters();
+                                return;
+                            }
+                        }
                         const inputs = document.getElementsByName(key + '[]');
                         const checkbox = Array.from(inputs).find(inp => inp.value == value);
                         if (checkbox) checkbox.checked = false;
@@ -2715,6 +2739,7 @@
 
         // Reset filters function
         function resetAllFilters() {
+            document.querySelectorAll('input.js-carry-model-year').forEach((el) => el.remove());
             // Reset search input
             if (searchInput) {
                 searchInput.value = '';
@@ -2866,8 +2891,13 @@ if (config) {
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
             if (v('emission_norm_id')) filters.emission_norm_id = v('emission_norm_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
-            if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
+            const carryModelYear = document.querySelector('input.js-carry-model-year[name="model_year"]');
+            if (carryModelYear && carryModelYear.value.trim()) {
+                filters.model_year = carryModelYear.value.trim();
+            } else {
+                if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
+                if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
+            }
             if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1950) filters.first_registration_year_from = v('first_registration_year_from');
             if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
             if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');

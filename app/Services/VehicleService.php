@@ -790,11 +790,57 @@ class VehicleService
             }
         }
 
-        foreach (['category_id', 'condition_id', 'sales_type_id', 'price_type_id', 'type_id', 'model_year_id'] as $col) {
+        foreach (['category_id', 'condition_id', 'sales_type_id', 'price_type_id', 'type_id'] as $col) {
             if (! isset($f[$col]) || $f[$col] === '' || $f[$col] === null) {
                 continue;
             }
             $query->where($col, (int) $f[$col]);
+        }
+
+        // Discrete calendar years: comma-separated `model_year` (web) or legacy `model_year_id` (API).
+        $appliedDiscreteModelYears = false;
+        if (isset($f['model_year']) && is_string($f['model_year']) && trim($f['model_year']) !== '') {
+            $years = array_values(array_unique(array_filter(array_map('intval', explode(',', $f['model_year'])))));
+            $years = array_values(array_filter($years, fn ($y) => $y >= 1900 && $y <= 2100));
+            if ($years !== []) {
+                $appliedDiscreteModelYears = true;
+                if (count($years) === 1) {
+                    $query->where('model_year', $years[0]);
+                } else {
+                    $query->whereIn('model_year', $years);
+                }
+            }
+        }
+        if (! $appliedDiscreteModelYears && isset($f['model_year_id']) && $f['model_year_id'] !== '' && $f['model_year_id'] !== null) {
+            $raw = $f['model_year_id'];
+            $candidates = is_array($raw) ? $raw : [$raw];
+            $years = [];
+            foreach ($candidates as $c) {
+                $n = (int) $c;
+                if ($n <= 0) {
+                    continue;
+                }
+                if ($n >= 1900 && $n <= 2100) {
+                    $years[] = $n;
+
+                    continue;
+                }
+                if (Schema::hasTable('model_years')) {
+                    $name = DB::table('model_years')->where('id', $n)->value('name');
+                    if ($name !== null && is_numeric(trim((string) $name))) {
+                        $years[] = (int) trim((string) $name);
+                    }
+                }
+            }
+            $years = array_values(array_unique($years));
+            if ($years !== []) {
+                $appliedDiscreteModelYears = true;
+                if (count($years) === 1) {
+                    $query->where('model_year', $years[0]);
+                } else {
+                    $query->whereIn('model_year', $years);
+                }
+            }
         }
 
         if (isset($f['use_id']) && $f['use_id'] !== '' && $f['use_id'] !== null) {
@@ -834,13 +880,15 @@ class VehicleService
             $query->where('km_driven', '<=', (int) $mileageTo);
         }
 
-        $myFrom = $f['model_year_from'] ?? $f['year_from'] ?? null;
-        $myTo = $f['model_year_to'] ?? $f['year_to'] ?? null;
-        if ($myFrom !== null && $myFrom !== '') {
-            $query->where('model_year', '>=', (int) $myFrom);
-        }
-        if ($myTo !== null && $myTo !== '') {
-            $query->where('model_year', '<=', (int) $myTo);
+        if (! $appliedDiscreteModelYears) {
+            $myFrom = $f['model_year_from'] ?? $f['year_from'] ?? null;
+            $myTo = $f['model_year_to'] ?? $f['year_to'] ?? null;
+            if ($myFrom !== null && $myFrom !== '') {
+                $query->where('model_year', '>=', (int) $myFrom);
+            }
+            if ($myTo !== null && $myTo !== '') {
+                $query->where('model_year', '<=', (int) $myTo);
+            }
         }
 
         if (isset($f['first_registration_year_from'])) {
@@ -1064,7 +1112,7 @@ class VehicleService
             }
         }
 
-        foreach (['brand_id', 'model_id', 'listing_type_id', 'fuel_type_id', 'body_type_id', 'gear_type_id'] as $k) {
+        foreach (['brand_id', 'model_id', 'listing_type_id', 'fuel_type_id', 'body_type_id', 'gear_type_id', 'model_year_id'] as $k) {
             if (! isset($f[$k])) {
                 continue;
             }

@@ -226,22 +226,31 @@ class Vehicle extends Model
     }
 
     /**
-     * Trim/variant label (column `version` was dropped).
+     * DMR variant name from {@see DmrVariant} (vehicle `variant_id`, or DMR fact link).
+     * Same resolution pattern as {@see getBrandNameAttribute()} / {@see getModelNameAttribute()}.
      */
-    public function getVersionAttribute(): ?string
+    public function getVariantNameAttribute(): ?string
     {
         if ($this->relationLoaded('variant') && $this->variant) {
             return $this->variant->name;
-        }
-        if (! empty($this->attributes['variant_id'])) {
-            return DmrVariant::query()->whereKey($this->attributes['variant_id'])->value('name');
         }
         $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
         if ($dmr?->relationLoaded('variant') && $dmr->variant) {
             return $dmr->variant->name;
         }
+        if (! empty($this->attributes['variant_id'])) {
+            return DmrVariant::query()->whereKey($this->attributes['variant_id'])->value('name');
+        }
 
         return null;
+    }
+
+    /**
+     * @deprecated Use {@see $variant_name}. Alias for legacy templates/API.
+     */
+    public function getVersionAttribute(): ?string
+    {
+        return $this->variant_name;
     }
 
     public function getBrandNameAttribute(): ?string

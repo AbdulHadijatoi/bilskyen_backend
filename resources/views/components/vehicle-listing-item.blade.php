@@ -40,9 +40,9 @@
                 <h3 class="flex items-center gap-2 text-xs">
                     {{ $vehicle->title }}
                 </h3>
-                @if($vehicle->version)
+                @if($vehicle->variant_name)
                     <p class="text-muted-foreground text-xs font-normal">
-                        {{ $vehicle->version }}
+                        {{ $vehicle->variant_name }}
                     </p>
                 @endif
                 <p class="vehicle-listing-price text-lg font-bold">

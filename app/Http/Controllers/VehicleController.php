@@ -81,7 +81,7 @@ class VehicleController extends Controller
             return [
                 'id' => $vehicle->id,
                 'title' => $title,
-                'version' => $vehicle->dmrFactVehicle?->variant?->name ?? '',
+                'variant_name' => $vehicle->variant_name,
                 'price' => $vehicle->price ?? 0,
                 'image' => $imageUrl,
                 'km_driven' => $vehicle->km_driven ?? 0,
@@ -101,7 +101,7 @@ class VehicleController extends Controller
 
     /** @var array<int, string> Advanced filter keys for vehicle search */
     private const ADVANCED_FILTER_KEYS = [
-        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year_id', 'variant_id',
+        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year', 'model_year_id', 'variant_id',
         'year_from', 'year_to', 'model_year_from', 'model_year_to',
         'mileage_from', 'mileage_to',
         'odometer_from', 'odometer_to', 'listing_type_id', 'list_status_id',
@@ -202,6 +202,7 @@ class VehicleController extends Controller
                 'slug' => $vehicle->slug,
                 'dealer_id' => $vehicle->dealer_id,
                 'title' => $vehicle->title,
+                'variant_name' => $vehicle->variant_name,
                 'price' => $vehicle->price,
                 'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
                 'km_driven' => $vehicle->km_driven,
@@ -242,6 +243,7 @@ class VehicleController extends Controller
                     'slug' => $vehicle->slug,
                     'dealer_id' => $vehicle->dealer_id,
                     'title' => $vehicle->title,
+                    'variant_name' => $vehicle->variant_name,
                     'price' => $vehicle->price,
                     'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
                     'km_driven' => $vehicle->km_driven,

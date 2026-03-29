@@ -262,7 +262,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="dropdown-values-container" data-name="model_year_id[]"></div>
+                        <div class="dropdown-values-container" data-name=""></div>
                         </div>
 
                     <!-- Fuel Type Dropdown (multi-select) -->
@@ -477,9 +477,9 @@
                                         <h3 class="flex items-center gap-2 text-xs">
                                             {{ $vehicle['title'] }}
                                         </h3>
-                                        @if(!empty($vehicle['version']))
+                                        @if(!empty($vehicle['variant_name']))
                                         <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                                            {{ $vehicle['version'] }}
+                                            {{ $vehicle['variant_name'] }}
                                         </p>
                                         @endif
                                         <p class="text-lg font-bold">
@@ -842,6 +842,11 @@
     function syncMultiSelectInputs(dropdown) {
         const container = dropdown.querySelector('.dropdown-values-container');
         if (!container) return;
+        if (dropdown.getAttribute('data-dropdown') === 'model_year') {
+            container.innerHTML = '';
+
+            return;
+        }
         const name = container.getAttribute('data-name');
         const values = getMultiSelectValues(dropdown);
         container.innerHTML = '';
@@ -1404,6 +1409,7 @@
         filterForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const params = new URLSearchParams();
+            const homeCurrentYear = {{ (int) date('Y') }};
             
             document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
                 const valuesContainer = dropdown.querySelector('.dropdown-values-container');
@@ -1422,6 +1428,20 @@
             if (priceTo) params.append('price_to', priceTo);
             if (kmFrom) params.append('km_driven_from', kmFrom);
             if (kmTo) params.append('km_driven_to', kmTo);
+
+            const modelYearDropdown = document.querySelector('[data-dropdown="model_year"]');
+            if (modelYearDropdown) {
+                const years = getMultiSelectValues(modelYearDropdown)
+                    .map((y) => parseInt(y, 10))
+                    .filter((y) => !Number.isNaN(y) && y >= 1975 && y <= homeCurrentYear);
+                years.sort((a, b) => a - b);
+                if (years.length === 1) {
+                    params.append('model_year_from', String(years[0]));
+                    params.append('model_year_to', String(years[0]));
+                } else if (years.length > 1) {
+                    params.append('model_year', years.join(','));
+                }
+            }
             
             window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
         });

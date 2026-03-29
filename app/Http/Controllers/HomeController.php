@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Category;
-use App\Models\DmrFactVehicle;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
@@ -52,16 +51,23 @@ class HomeController extends Controller
     public function index()
     {
         // Fetch filter options for the view
+        $currentYear = (int) date('Y');
+        $modelYears = collect(range($currentYear, 1975))->map(fn (int $y) => (object) [
+            'id' => $y,
+            'name' => (string) $y,
+        ]);
+
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
             'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
-            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
+            'modelYears' => $modelYears,
         ];
 
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
             'vehicle.images',
-            'vehicle.dmrFactVehicle',
+            'vehicle.variant',
+            'vehicle.dmrFactVehicle.variant',
         ])
             ->orderBy('sort_order')
             ->get()
@@ -82,7 +88,7 @@ class HomeController extends Controller
                     'id' => $vehicle->id,
                     'slug' => $vehicle->slug,
                     'title' => $title,
-                    'version' => '',
+                    'variant_name' => $vehicle->variant_name,
                     'price' => $vehicle->price ?? 0,
                     'image' => $imageUrl,
                     'km_driven' => $vehicle->km_driven ?? 0,
@@ -270,7 +276,7 @@ class HomeController extends Controller
 
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
-        'brand_id', 'model_id', 'variant_id', 'model_year_id', 'fuel_type_id', 'category_id', 'listing_type_id',
+        'brand_id', 'model_id', 'variant_id', 'model_year', 'fuel_type_id', 'category_id', 'listing_type_id',
         'gear_type_id', 'body_type_id', 'color_id', 'type_id', 'condition_id',
         'sales_type_id', 'price_type_id', 'euronom_id', 'euronorm', 'use_id', 'transmission_id',
         'equipment_id', 'equipment_ids',
@@ -320,6 +326,21 @@ class HomeController extends Controller
     public function showVehicles(Request $request)
     {
         $currentFilters = $this->buildCurrentFilters($request);
+
+        // Comma-separated `model_year` (multiple years from home): hydrate range fields only when a single year.
+        if (! empty($currentFilters['model_year']) && is_string($currentFilters['model_year'])) {
+            $parts = array_values(array_filter(array_map('intval', explode(',', $currentFilters['model_year']))));
+            $maxY = (int) date('Y');
+            $parts = array_values(array_filter($parts, fn ($y) => $y >= 1975 && $y <= $maxY));
+            if (count($parts) === 1
+                && empty($currentFilters['model_year_from'])
+                && empty($currentFilters['model_year_to'])) {
+                $y = (string) $parts[0];
+                $currentFilters['model_year_from'] = $y;
+                $currentFilters['model_year_to'] = $y;
+                unset($currentFilters['model_year']);
+            }
+        }
 
         $limit = (int) $request->input('limit', 15);
         $page = (int) $request->input('page', 1);
