@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use App\ViewModels\VehicleDetailPresenter;
 
 class Vehicle extends Model
 {
@@ -78,6 +79,29 @@ class Vehicle extends Model
         'description',
         'condition_id',
         'servicebog',
+        'annual_tax',
+        'seller_phone',
+        'wholesale_price',
+        'internal_cost_price',
+        'price_without_tax',
+        'wholesale_price_includes_delivery',
+        'fuel_consumption_wltp',
+        'fuel_consumption_nedc',
+        'production_date',
+        'cover_image_index',
+        'engine_type',
+        'views_count',
+        'leasing_enabled',
+        'leasing_type',
+        'leasing_customer_type',
+        'leasing_monthly_payment',
+        'leasing_first_payment',
+        'leasing_residual_value',
+        'leasing_duration',
+        'leasing_annual_mileage',
+        'leasing_total_cost',
+        'battery_capacity',
+        'range_km',
     ];
 
     protected $casts = [
@@ -126,7 +150,28 @@ class Vehicle extends Model
         'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'annual_tax' => 'decimal:2',
+        'fuel_consumption_wltp' => 'decimal:2',
+        'fuel_consumption_nedc' => 'decimal:2',
+        'production_date' => 'date',
+        'wholesale_price_includes_delivery' => 'boolean',
+        'leasing_enabled' => 'boolean',
+        'leasing_monthly_payment' => 'decimal:2',
+        'leasing_first_payment' => 'decimal:2',
+        'leasing_residual_value' => 'decimal:2',
+        'leasing_total_cost' => 'decimal:2',
+        'views_count' => 'integer',
+        'battery_capacity' => 'integer',
+        'range_km' => 'integer',
     ];
+
+    /**
+     * Legacy Blade templates use {@see $vehicle->details}; backed by {@see VehicleDetailPresenter}.
+     */
+    public function getDetailsAttribute(): VehicleDetailPresenter
+    {
+        return new VehicleDetailPresenter($this);
+    }
 
     // protected $appends = [
     //     'brand_name',
@@ -222,14 +267,12 @@ class Vehicle extends Model
             'price_type_id',
             'category_id',
             'type_id',
-            'transmission_id',
             'price',
             'calculated_ownership_tax',
             'km_driven',
             'towing_weight',
             'battery_capacity',
             'range_km',
-            'fuel_efficiency',
             'is_import',
             'is_factory_new',
             'charging_type',

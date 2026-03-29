@@ -771,12 +771,12 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
-                            value="{{ old('fuel_efficiency', $vehicle->fuel_efficiency) }}"
+                        <label for="km_per_liter" id="km_per_liter_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
+                        <input type="number" id="km_per_liter" name="km_per_liter" min="0" step="any" inputmode="decimal"
+                            value="{{ old('km_per_liter', $vehicle->km_per_liter) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help" id="fuel_efficiency_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
+                        <p class="field-help" id="km_per_liter_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
                     </div>
 
                     <div class="space-y-2">

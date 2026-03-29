@@ -108,6 +108,27 @@ class VehicleDetailPresentationService
             'price' => $v->price,
             'description' => $v->description,
             'servicebog' => $v->servicebog,
+            'seller_phone' => $v->seller_phone,
+            'wholesale_price' => $v->wholesale_price,
+            'internal_cost_price' => $v->internal_cost_price,
+            'price_without_tax' => $v->price_without_tax,
+            'wholesale_price_includes_delivery' => $v->wholesale_price_includes_delivery,
+            'annual_tax' => $v->annual_tax,
+            'fuel_consumption_wltp' => $v->fuel_consumption_wltp,
+            'fuel_consumption_nedc' => $v->fuel_consumption_nedc,
+            'production_date' => $date($v->production_date),
+            'cover_image_index' => $v->cover_image_index,
+            'engine_type' => $v->engine_type,
+            'views_count' => $v->views_count,
+            'leasing_enabled' => $v->leasing_enabled,
+            'leasing_type' => $v->leasing_type,
+            'leasing_customer_type' => $v->leasing_customer_type,
+            'leasing_monthly_payment' => $v->leasing_monthly_payment,
+            'leasing_first_payment' => $v->leasing_first_payment,
+            'leasing_residual_value' => $v->leasing_residual_value,
+            'leasing_duration' => $v->leasing_duration,
+            'leasing_annual_mileage' => $v->leasing_annual_mileage,
+            'leasing_total_cost' => $v->leasing_total_cost,
 
             'address' => $v->address,
             'postcode' => $v->postcode,
@@ -162,12 +183,20 @@ class VehicleDetailPresentationService
             'transmission_name' => $v->gearType?->name,
             'condition_name' => $v->condition?->name,
             'vehicle_list_status_name' => $v->vehicleListStatus?->name,
+            'status' => $v->vehicleListStatus?->name !== null && $v->vehicleListStatus->name !== ''
+                ? strtolower($v->vehicleListStatus->name)
+                : null,
             'listing_type_name' => $v->listingType?->name,
             'sales_type_name' => $v->salesType?->name,
             'price_type_name' => $v->priceType?->name,
             'category_name' => $v->category?->name,
 
             'list_status_id' => $v->list_status_id,
+            'brand_id' => $v->brand_id,
+            'model_id' => $v->model_id,
+            'variant_id' => $v->variant_id,
+            'body_type_id' => $v->body_type_id,
+            'vehicle_use_id' => $v->vehicle_use_id,
             'listing_type_id' => $v->listing_type_id,
             'sales_type_id' => $v->sales_type_id,
             'price_type_id' => $v->price_type_id,
@@ -193,7 +222,6 @@ class VehicleDetailPresentationService
 
             'battery_capacity' => $attrs['battery_capacity'] ?? null,
             'range_km' => $attrs['range_km'] ?? null,
-            'fuel_efficiency' => $attrs['fuel_efficiency'] ?? null,
         ];
     }
 }

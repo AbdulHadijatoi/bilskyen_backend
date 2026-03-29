@@ -66,7 +66,7 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{id}/price', [VehicleController::class, 'updatePrice'])
             ->middleware('permission:dealer.vehicles.update');
         
-        Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
+        Route::post('/lookup-by-registration', [VehicleController::class, 'lookupByRegistration'])
             ->middleware(['throttle:40,1', 'permission:dealer.vehicles.create']);
     });
     

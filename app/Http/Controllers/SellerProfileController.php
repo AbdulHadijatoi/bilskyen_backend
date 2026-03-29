@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Enquiry;
 use App\Models\ListingViewsLog;
-use App\Models\VehicleDetail;
 use App\Constants\VehicleListStatus;
 use App\Services\VehicleService;
 use App\Services\VehicleDetailPresentationService;
@@ -370,10 +369,9 @@ class SellerProfileController extends Controller
             'total_views' => ListingViewsLog::whereIn('vehicle_id', $vehicleIds)->count(),
         ];
 
-        // Also get views from vehicle_details for more accurate count
-        $viewsFromDetails = VehicleDetail::whereIn('vehicle_id', $vehicleIds)->sum('views_count');
-        if ($viewsFromDetails > $statistics['total_views']) {
-            $statistics['total_views'] = $viewsFromDetails;
+        $viewsFromVehicles = Vehicle::whereIn('id', $vehicleIds)->sum('views_count');
+        if ($viewsFromVehicles > $statistics['total_views']) {
+            $statistics['total_views'] = $viewsFromVehicles;
         }
 
         // Add status breakdown

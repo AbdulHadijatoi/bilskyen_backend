@@ -480,6 +480,15 @@ class VehicleController extends Controller
         $request->validate([
             'registration' => 'nullable|string|max:20',
             'vin' => 'nullable|string|max:17',
+            'list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
+            'vehicle_list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
+            'seller_phone' => 'nullable|string|max:50',
+            'wholesale_price' => 'nullable|integer|min:0',
+            'internal_cost_price' => 'nullable|integer|min:0',
+            'price_without_tax' => 'nullable|integer|min:0',
+            'annual_tax' => 'nullable|numeric|min:0',
+            'leasing_duration' => 'nullable|integer|min:0',
+            'leasing_annual_mileage' => 'nullable|integer|min:0',
         ]);
 
         $data = $request->all();
@@ -493,6 +502,10 @@ class VehicleController extends Controller
 
         // Set user_id (creator)
         $data['user_id'] = $request->user()->id;
+
+        if (! isset($data['list_status_id']) && isset($data['vehicle_list_status_id'])) {
+            $data['list_status_id'] = $data['vehicle_list_status_id'];
+        }
 
         // Check max_listings limit if vehicle is being published
         $vehicleListStatusId = $data['list_status_id'] ?? null;
@@ -629,6 +642,10 @@ class VehicleController extends Controller
     {
         $vehicle = Vehicle::findOrFail($id);
         $data = $request->all();
+
+        if (! isset($data['list_status_id']) && isset($data['vehicle_list_status_id'])) {
+            $data['list_status_id'] = $data['vehicle_list_status_id'];
+        }
         
         // Store before state for audit log
         $beforeState = $vehicle->toArray();
@@ -861,9 +878,9 @@ class VehicleController extends Controller
     }
 
     /**
-     * Preview vehicle data from local DMR (legacy route name; same source as /api/v1/dmr/vehicle-by-registration).
+     * Preview vehicle data from DMR by registration or VIN (same source as /api/v1/dmr/vehicle-by-registration).
      */
-    public function fetchFromNummerplade(Request $request): JsonResponse
+    public function lookupByRegistration(Request $request): JsonResponse
     {
         $request->validate([
             'registration' => 'required_without:vin|string|max:20',
@@ -991,6 +1008,11 @@ class VehicleController extends Controller
             ]);
         }
 
+        // Cover follows gallery order: first image by sort_order is the cover (index 0).
+        $vehicle->update([
+            'cover_image_index' => $vehicle->images()->exists() ? 0 : null,
+        ]);
+
         return $this->success($vehicle->load('images'));
     }
 
@@ -1017,6 +1039,10 @@ class VehicleController extends Controller
         }
 
         $image->delete();
+
+        $vehicle->update([
+            'cover_image_index' => $vehicle->images()->exists() ? 0 : null,
+        ]);
 
         // Audit log
         try {
@@ -1312,7 +1338,7 @@ class VehicleController extends Controller
                 'listing_type_id', 'category_id', 'brand_id', 'model_id',
                 'model_year_id', 'fuel_type_id', 'km_driven',
                 'battery_capacity', 'range_km', 'charging_type', 'engine_power', 'towing_weight',
-                'ownership_tax', 'fuel_efficiency', 'gear_type_id',
+                'ownership_tax', 'km_per_liter', 'gear_type_id',
                 'seller_address', 'seller_postcode'
             ]);
             
@@ -1639,8 +1665,8 @@ class VehicleController extends Controller
         }
         
         // KM/L (Fuel Efficiency)
-        if ($request->has('fuel_efficiency') && $request->input('fuel_efficiency')) {
-            $descriptionParts[] = 'Fuel efficiency: ' . number_format($request->input('fuel_efficiency'), 2) . ' km/l';
+        if ($request->has('km_per_liter') && $request->input('km_per_liter')) {
+            $descriptionParts[] = 'Fuel efficiency: ' . number_format((float) $request->input('km_per_liter'), 2) . ' km/l';
         }
         
         // Euronom

@@ -6,8 +6,8 @@ use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 
 /**
- * Read-only view of legacy vehicle_details fields backed by Vehicle + DmrFactVehicle.
- * Used by Blade templates that still reference $vehicle->details.
+ * Read-only view for Blade templates that reference {@see $vehicle->details}.
+ * Prefers columns on {@see Vehicle}; falls back to linked DMR fact data where useful.
  */
 class VehicleDetailPresenter
 {
@@ -29,74 +29,101 @@ class VehicleDetailPresenter
             'description' => $v->description,
             'servicebog' => $v->servicebog,
             'condition_id' => $v->condition_id,
-            'seller_phone' => $v->user?->phone ?? $v->dealer?->owner?->phone,
-            'wholesale_price' => null,
-            'annual_tax' => null,
-            'internal_cost_price' => null,
+            'seller_phone' => $v->seller_phone ?? $v->user?->phone ?? $v->dealer?->owner?->phone,
+            'wholesale_price' => $v->wholesale_price,
+            'annual_tax' => $v->annual_tax,
+            'internal_cost_price' => $v->internal_cost_price,
             'type_name_resolved' => $d?->vehicleUse?->name,
-            'use_name' => $d?->vehicleUse?->name,
-            'price_type_name' => null,
+            'use_name' => $v->vehicleUse?->name ?? $d?->vehicleUse?->name,
+            'price_type_name' => $v->relationLoaded('priceType')
+                ? $v->priceType?->name
+                : $v->priceType()->value('name'),
             'condition_name' => $v->relationLoaded('condition')
                 ? $v->condition?->name
                 : $v->condition()->value('name'),
-            'sales_type_name' => null,
-            'salesType' => null,
+            'sales_type_name' => $v->relationLoaded('salesType')
+                ? $v->salesType?->name
+                : $v->salesType()->value('name'),
+            'salesType' => $v->relationLoaded('salesType') ? $v->salesType : $v->salesType()->first(),
             'transmission_name' => $v->gear_type_name,
             'vin_location' => null,
-            'color_name' => $d?->colour?->name,
-            'body_type_name' => $d?->bodyType?->name,
-            'variant' => $d?->variant ? (object) ['name' => $d->variant->name] : null,
-            'total_weight' => $d?->teknisk_total_vaegt,
+            'color_name' => $v->colour?->name ?? $d?->colour?->name,
+            'body_type_name' => $v->bodyType?->name ?? $d?->bodyType?->name,
+            'variant' => $v->variant ? (object) ['name' => $v->variant->name] : ($d?->variant ? (object) ['name' => $d->variant->name] : null),
+            'variant_id' => $v->variant_id,
+            'total_weight' => $v->maximum_weight_kg ?? $d?->teknisk_total_vaegt,
             'vehicle_weight' => null,
-            'technical_total_weight' => $d?->teknisk_total_vaegt,
+            'technical_total_weight' => $v->maximum_weight_kg ?? $d?->teknisk_total_vaegt,
             'minimum_weight' => null,
             'gross_combination_weight' => null,
             'towing_weight_brakes' => null,
-            'engine_displacement' => $this->engineDisplacementCc($d),
+            'engine_displacement' => $this->engineDisplacementCc($v, $d),
             'engine_code' => null,
             'engine_cylinders' => null,
-            'doors' => $d?->antal_doere,
-            'minimum_seats' => $d?->siddepladser_minimum,
-            'maximum_seats' => $d?->siddepladser_maksimum,
-            'top_speed' => $d?->maksimum_hastighed,
+            'doors' => $v->door_count ?? $d?->antal_doere,
+            'minimum_seats' => $v->seats_min ?? $d?->siddepladser_minimum,
+            'maximum_seats' => $v->seats_max ?? $d?->siddepladser_maksimum,
+            'top_speed' => $v->max_speed ?? $d?->maksimum_hastighed,
             'airbags' => null,
-            'ncap_five' => $d?->ncap_test,
+            'ncap_five' => $v->ncap_test ?? $d?->ncap_test,
             'integrated_child_seats' => null,
             'seat_belt_alarms' => null,
-            'euronom' => $d?->emissionNorm ? (object) ['name' => $d->emissionNorm->name] : null,
+            'euronom' => $v->emissionNorm ? (object) ['name' => $v->emissionNorm->name] : ($d?->emissionNorm ? (object) ['name' => $d->emissionNorm->name] : null),
+            'euronom_id' => $v->emission_norm_id,
             'wheels' => null,
-            'axles' => $d?->aksel_antal,
+            'axles' => $v->axle_count ?? $d?->aksel_antal,
             'drive_axles' => null,
             'wheelbase' => null,
             'category' => null,
             'extra_equipment' => $d?->oevrigt_udstyr,
-            'registration_status' => $d?->registrationStatus?->name,
+            'registration_status' => $v->registration_status ?? $d?->registrationStatus?->name,
             'registration_status_updated_date' => $this->dateOrNull($d?->registrering_status_dato),
             'expire_date' => null,
             'status_updated_date' => null,
-            'last_inspection_date' => null,
+            'last_inspection_date' => $this->dateOrNull($v->last_inspection_date),
             'last_inspection_result' => null,
             'last_inspection_odometer' => null,
             'leasing_period_start' => null,
             'leasing_period_end' => null,
-            'co2_emissions' => $d?->emission_co !== null ? (int) round((float) $d->emission_co) : null,
-            'fuel_consumption_wltp' => null,
-            'fuel_consumption_nedc' => null,
-            'is_import' => null,
-            'is_factory_new' => null,
-            'views_count' => null,
-            'type_id', 'type_name', 'use_id', 'color_id', 'body_type_id', 'variant_id', 'transmission_id', 'euronom_id', 'price_type_id', 'sales_type_id' => null,
+            'co2_emissions' => $this->co2EmissionsDisplay($v, $d),
+            'fuel_consumption_wltp' => $v->fuel_consumption_wltp,
+            'fuel_consumption_nedc' => $v->fuel_consumption_nedc,
+            'is_import' => $v->is_import,
+            'is_factory_new' => $v->is_factory_new,
+            'views_count' => $v->views_count,
+            'type_id' => null,
+            'type_name' => null,
+            'use_id' => $v->vehicle_use_id,
+            'color_id' => $v->colour_id,
+            'body_type_id' => $v->body_type_id,
+            'transmission_id' => null,
+            'price_type_id' => $v->price_type_id,
+            'sales_type_id' => $v->sales_type_id,
             default => null,
         };
     }
 
-    private function engineDisplacementCc(?object $d): ?int
+    private function co2EmissionsDisplay(Vehicle $v, ?object $d): ?int
     {
+        if ($v->co2_emission !== null) {
+            return (int) round((float) $v->co2_emission);
+        }
+        if ($d?->emission_co !== null) {
+            return (int) round((float) $d->emission_co);
+        }
+
+        return null;
+    }
+
+    private function engineDisplacementCc(Vehicle $v, ?object $d): ?int
+    {
+        if ($v->engine_displacement_litres !== null) {
+            return (int) round((float) $v->engine_displacement_litres * 1000);
+        }
         if ($d === null || $d->motor_slag_volumen === null) {
             return null;
         }
 
-        // DMR stores displacement in liters; legacy UI expected cc.
         return (int) round((float) $d->motor_slag_volumen * 1000);
     }
 

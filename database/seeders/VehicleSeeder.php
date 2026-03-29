@@ -7,7 +7,7 @@ use App\Models\Dealer;
 use App\Models\User;
 use App\Models\DealerStaff;
 use App\Models\DmrDriveEnergy;
-use App\Models\Transmission;
+use App\Models\GearType;
 use App\Models\VehicleListStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -26,9 +26,9 @@ class VehicleSeeder extends Seeder
             $dealers = Dealer::all();
             $users = User::whereHas('dealers')->get();
             $fuelTypes = DmrDriveEnergy::all();
-            $transmissions = Transmission::all();
+            $gearTypes = GearType::all();
             
-            if ($dealers->isEmpty() || $users->isEmpty()) {
+            if ($dealers->isEmpty() || $users->isEmpty() || $fuelTypes->isEmpty() || $gearTypes->isEmpty()) {
                 $this->command->warn('Required data not found. Please run previous seeders first.');
                 return;
             }
@@ -47,7 +47,7 @@ class VehicleSeeder extends Seeder
                 $dealerUsers = $users->whereIn('id', $dealerUserIds);
                 $user = $dealerUsers->isNotEmpty() ? $dealerUsers->random() : $users->random();
                 $fuelType = $fuelTypes->random();
-                $transmission = $transmissions->random();
+                $gearType = $gearTypes->random();
                 
                 $year = $faker->numberBetween(2015, 2024);
                 $mileage = $faker->numberBetween(10000, 200000);
@@ -79,7 +79,7 @@ class VehicleSeeder extends Seeder
                     'mileage' => $mileage,
                     'year' => $year,
                     'fuel_type_id' => $fuelType->id,
-                    'transmission_id' => $transmission->id,
+                    'gear_type_id' => $gearType->id,
                     'body_type' => $faker->randomElement($bodyTypes),
                     'has_carplay' => $faker->boolean(60),
                     'has_adaptive_cruise' => $faker->boolean(40),

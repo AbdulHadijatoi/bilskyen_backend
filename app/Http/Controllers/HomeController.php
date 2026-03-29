@@ -355,6 +355,11 @@ class HomeController extends Controller
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
         }
 
+        $vehicles = $vehicles->through(fn (Vehicle $v) => $this->vehicleListingItemRow($v));
+        if ($fallbackVehicles !== null) {
+            $fallbackVehicles = $fallbackVehicles->through(fn (Vehicle $v) => $this->vehicleListingItemRow($v));
+        }
+
         // Because `/api/v1/constants` no longer includes brands/models/types (to reduce load),
         // we only fetch the currently-selected values for initial dropdown rendering.
         $selectedBrandIds = array_map(fn ($v) => (int) $v, $currentFilters['brand_id'] ?? []);
@@ -396,6 +401,31 @@ class HomeController extends Controller
             'vehicleSortLabels',
             'currentListingSort'
         ));
+    }
+
+    /**
+     * Presentation fields for the vehicle listing card component (initial SSR).
+     *
+     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null}
+     */
+    private function vehicleListingItemRow(Vehicle $vehicle): array
+    {
+        $imgUrl = $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg';
+        $imgAlt = trim(($vehicle->brand_name ?? '').' '.($vehicle->model_name ?? ''));
+
+        $salesTypeName = null;
+        if ($vehicle->relationLoaded('salesType') && $vehicle->salesType) {
+            $salesTypeName = $vehicle->salesType->name;
+        } elseif ($vehicle->sales_type_id) {
+            $salesTypeName = $vehicle->salesType()->value('name');
+        }
+
+        return [
+            'vehicle' => $vehicle,
+            'imgUrl' => $imgUrl,
+            'imgAlt' => $imgAlt,
+            'salesTypeName' => $salesTypeName,
+        ];
     }
 
     /**
@@ -454,6 +484,7 @@ class HomeController extends Controller
                 'viewed_at' => now(),
             ]);
         });
+        
         $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
 
         return view('vehicle-detail', [

@@ -408,16 +408,82 @@
                     <span class="detail-value">{{ FormatHelper::formatCurrency($vd['calculated_ownership_tax'] ?? null) }}</span>
                 </div>
                 @endif
+                @if($vehicle->annual_tax !== null && $vehicle->annual_tax !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.annual_tax') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vehicle->annual_tax) }}</span>
+                </div>
+                @endif
                 @if(!empty($vd['first_registration_date']))
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.first_registration_date') }}</span>
                     <span class="detail-value">{{ Carbon::parse($vd['first_registration_date'])->format('F j, Y') }}</span>
                 </div>
                 @endif
+                @php
+                    $firstRegYear = $vd['first_registration_year'] ?? $vehicle->first_registration_year;
+                @endphp
+                @if($firstRegYear !== null && $firstRegYear !== '' && is_numeric($firstRegYear) && (int) $firstRegYear > 0)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.forms.first_registration_year') }}</span>
+                    <span class="detail-value">{{ (int) $firstRegYear }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['production_date']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.production_date') }}</span>
+                    <span class="detail-value">{{ Carbon::parse($vd['production_date'])->format('F j, Y') }}</span>
+                </div>
+                @endif
+                @if(isset($vd['co2_emission']) && $vd['co2_emission'] !== null && $vd['co2_emission'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.co2_emission') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['co2_emission'], 0) }} g/km</span>
+                </div>
+                @endif
+                @if(isset($vd['electrical_consumption']) && $vd['electrical_consumption'] !== null && $vd['electrical_consumption'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.electrical_consumption') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['electrical_consumption'], 2) }} kWh/100km</span>
+                </div>
+                @endif
+                @if(isset($vd['nox_emission']) && $vd['nox_emission'] !== null && $vd['nox_emission'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.nox_emission') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['nox_emission'], 3) }}</span>
+                </div>
+                @endif
+                @if(isset($vd['fuel_consumption_wltp']) && $vd['fuel_consumption_wltp'] !== null && $vd['fuel_consumption_wltp'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.fuel_consumption_wltp') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['fuel_consumption_wltp'], 2) }} {{ __('messages.pages.vehicles.detail.consumption_l_per_100km_suffix') }}</span>
+                </div>
+                @endif
+                @if(isset($vd['fuel_consumption_nedc']) && $vd['fuel_consumption_nedc'] !== null && $vd['fuel_consumption_nedc'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.fuel_consumption_nedc') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['fuel_consumption_nedc'], 2) }} {{ __('messages.pages.vehicles.detail.consumption_l_per_100km_suffix') }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['measurement_norm_name']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.measurement_norm_id') }}</span>
+                    <span class="detail-value">{{ $vd['measurement_norm_name'] }}</span>
+                </div>
+                @endif
+                @if(isset($vd['engine_power_kw']) && $vd['engine_power_kw'] !== null && $vd['engine_power_kw'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.engine_power_kw') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['engine_power_kw'], 1) }} kW</span>
+                </div>
+                @endif
             </div>
         </div>
 
-        @if(!empty($vd['description']) || !empty($vd['category_name']) || !empty($vd['use_name']) || !empty($vd['price_type_name']) || !empty($vd['condition_name']) || ($vehicle->servicebog && $vehicle->servicebog !== 'Default'))
+        @php
+            $showImportFactory = ($vd['is_import'] ?? false) === true || ($vd['is_factory_new'] ?? false) === true;
+        @endphp
+        @if(!empty($vd['description']) || !empty($vd['category_name']) || !empty($vd['use_name']) || !empty($vd['price_type_name']) || !empty($vd['condition_name']) || ($vehicle->servicebog && $vehicle->servicebog !== 'Default') || $showImportFactory || !empty($vd['seller_phone']) || !empty($vd['address']) || !empty($vd['postcode']))
         <!-- Condition & History Section -->
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.condition_history_heading') }}</h2>
@@ -458,10 +524,28 @@
                     <span class="detail-value">{{ $vehicle->servicebog }}</span>
                 </div>
                 @endif
-                @if($vehicle->vin)
+                @if(($vd['is_import'] ?? false) === true)
                 <div class="detail-item">
-                    <span class="detail-label">VIN</span>
-                    <span class="detail-value font-mono text-sm">{{ $vehicle->vin }}</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.import_vehicle') }}</span>
+                    <span class="detail-value">{{ __('messages.pages.vehicles.detail.yes') }}</span>
+                </div>
+                @endif
+                @if(($vd['is_factory_new'] ?? false) === true)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.factory_new') }}</span>
+                    <span class="detail-value">{{ __('messages.pages.vehicles.detail.yes') }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['seller_phone']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.listing_phone') }}</span>
+                    <span class="detail-value"><a href="tel:{{ preg_replace('/\s+/', '', $vd['seller_phone']) }}" class="hover:underline">{{ $vd['seller_phone'] }}</a></span>
+                </div>
+                @endif
+                @if(!empty($vd['address']) || !empty($vd['postcode']))
+                <div class="detail-item md:col-span-2">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.vehicle_location') }}</span>
+                    <span class="detail-value">{{ trim(implode(', ', array_filter([$vd['address'] ?? '', $vd['postcode'] ?? '']))) }}</span>
                 </div>
                 @endif
             </div>
@@ -496,6 +580,30 @@
                     <span class="detail-value">{{ $vd['gear_type_name'] }}</span>
                 </div>
                 @endif
+                @if(!empty($vd['engine_type']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_type') }}</span>
+                    <span class="detail-value">{{ $vd['engine_type'] }}</span>
+                </div>
+                @endif
+                @if(isset($vd['engine_displacement_litres']) && $vd['engine_displacement_litres'] !== null && $vd['engine_displacement_litres'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.engine_displacement_litres') }}</span>
+                    <span class="detail-value">{{ number_format((float) $vd['engine_displacement_litres'], 2) }} L</span>
+                </div>
+                @endif
+                @if($vehicle->gear_count !== null)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.gear_count') }}</span>
+                    <span class="detail-value">{{ $vehicle->gear_count }}</span>
+                </div>
+                @endif
+                @if($vehicle->particle_filter !== null)
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.particle_filter') }}</span>
+                    <span class="detail-value">{{ $vehicle->particle_filter ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
+                </div>
+                @endif
                 @if(!empty($vd['technical_total_weight_kg']))
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.technical_total_weight') }}</span>
@@ -527,9 +635,7 @@
                 </div>
                 @endif
                 @php
-                    $fuelEff = $vd['fuel_efficiency'] ?? null;
-                    $kmPerL = $vd['km_per_liter'] ?? null;
-                    $effVal = $fuelEff ?? $kmPerL;
+                    $effVal = $vd['km_per_liter'] ?? null;
                 @endphp
                 @if($effVal)
                 <div class="detail-item">
@@ -628,14 +734,107 @@
         </div>
         @endif
 
+        @php
+            $leasingValueKeys = [
+                'leasing_monthly_payment',
+                'leasing_first_payment',
+                'leasing_residual_value',
+                'leasing_duration',
+                'leasing_annual_mileage',
+                'leasing_total_cost',
+            ];
+            $hasAnyLeasingField = ! empty($vd['leasing_enabled'])
+                || ! empty($vd['leasing_type'])
+                || ! empty($vd['leasing_customer_type']);
+            if (! $hasAnyLeasingField) {
+                foreach ($leasingValueKeys as $lk) {
+                    if (isset($vd[$lk]) && $vd[$lk] !== null && $vd[$lk] !== '') {
+                        $hasAnyLeasingField = true;
+                        break;
+                    }
+                }
+            }
+        @endphp
+        @if($hasAnyLeasingField)
+        <!-- Leasing (own section: shown when flag is on or any leasing field is filled) -->
+        <div class="detail-section bg-gray-50 border-t border-border">
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.leasing_information') }}</h2>
+            <div class="detail-grid">
+                @if(!empty($vd['leasing_type']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_type') }}</span>
+                    <span class="detail-value">{{ $vd['leasing_type'] }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['leasing_customer_type']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_customer_type') }}</span>
+                    <span class="detail-value">{{ $vd['leasing_customer_type'] }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_monthly_payment']) && $vd['leasing_monthly_payment'] !== null && $vd['leasing_monthly_payment'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_monthly_payment') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_monthly_payment']) }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_first_payment']) && $vd['leasing_first_payment'] !== null && $vd['leasing_first_payment'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_first_payment') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_first_payment']) }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_residual_value']) && $vd['leasing_residual_value'] !== null && $vd['leasing_residual_value'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_residual_value') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_residual_value']) }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_duration']) && $vd['leasing_duration'] !== null && $vd['leasing_duration'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_duration') }}</span>
+                    <span class="detail-value">{{ (int) $vd['leasing_duration'] }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_annual_mileage']) && $vd['leasing_annual_mileage'] !== null && $vd['leasing_annual_mileage'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_annual_mileage') }}</span>
+                    <span class="detail-value">{{ number_format((int) $vd['leasing_annual_mileage']) }} km</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_total_cost']) && $vd['leasing_total_cost'] !== null && $vd['leasing_total_cost'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_total_cost') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_total_cost']) }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
         <!-- Equipment & Features Section -->
-        @if($vehicle->equipment && $vehicle->equipment->count() > 0)
+        @php
+            $equipmentChips = [];
+            if ($vehicle->equipment && $vehicle->equipment->count() > 0) {
+                foreach ($vehicle->equipment as $equip) {
+                    $equipmentChips[] = $equip->name;
+                }
+            } elseif (! empty($vd['equipment']) && is_array($vd['equipment'])) {
+                foreach ($vd['equipment'] as $row) {
+                    $n = is_array($row) ? ($row['name'] ?? null) : null;
+                    if ($n !== null && $n !== '') {
+                        $equipmentChips[] = $n;
+                    }
+                }
+            }
+        @endphp
+        @if(count($equipmentChips) > 0)
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.equipment_features') }}</h2>
             <div class="flex flex-wrap gap-2">
-                @foreach($vehicle->equipment as $equip)
+                @foreach($equipmentChips as $equipName)
                 <div class="equipment-chip">
-                    <span>{{ $equip->name }}</span>
+                    <span>{{ $equipName }}</span>
                 </div>
                 @endforeach
             </div>
@@ -666,6 +865,40 @@
                     </p>
                 </div>
             </div>
+
+            @if($vehicle->wholesale_price !== null || $vehicle->internal_cost_price !== null || $vehicle->price_without_tax !== null || $vehicle->wholesale_price_includes_delivery !== null)
+            <div class="rounded-lg border border-border bg-gray-50 p-6">
+                <h2 class="text-foreground mb-4 text-xl font-semibold">
+                    {{ __('messages.pages.vehicles.detail.dealer_only_pricing') }}
+                </h2>
+                <div class="space-y-3 text-sm">
+                    @if($vehicle->wholesale_price !== null && $vehicle->wholesale_price !== '')
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-muted-foreground">{{ __('messages.forms.wholesale_price') }}</span>
+                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->wholesale_price) }}</span>
+                    </div>
+                    @endif
+                    @if($vehicle->internal_cost_price !== null && $vehicle->internal_cost_price !== '')
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.internal_cost_price') }}</span>
+                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->internal_cost_price) }}</span>
+                    </div>
+                    @endif
+                    @if($vehicle->price_without_tax !== null && $vehicle->price_without_tax !== '')
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.price_excluding_tax') }}</span>
+                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->price_without_tax) }}</span>
+                    </div>
+                    @endif
+                    @if($vehicle->wholesale_price_includes_delivery !== null)
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.wholesale_includes_delivery') }}</span>
+                        <span class="font-medium">{{ $vehicle->wholesale_price_includes_delivery ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
 
             <!-- Contact Actions -->
             @if($contactUser)
@@ -1141,6 +1374,14 @@
                                 </p>
                             </div>
                         @endif
+                        @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && ($vd['views_count'] ?? null) !== null)
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium">
+                                    {{ __('messages.pages.vehicles.detail.views_count') }}
+                                </label>
+                                <p class="font-semibold">{{ number_format((int) $vd['views_count']) }}</p>
+                            </div>
+                        @endif
                     @endauth
                 </div>
             </div>
@@ -1187,14 +1428,17 @@
                         </div>
                     @endif
 
-                    @if($vehicle->details && $vehicle->details->extra_equipment)
+                    @php
+                        $internalRemarks = trim((string) ($vehicle->details->extra_equipment ?? $vd['dmr']['extra_equipment'] ?? ''));
+                    @endphp
+                    @if($internalRemarks !== '')
                         <!-- Internal Remarks - Only for admin/dealer -->
                         <div class="bg-muted/50 rounded-lg p-6">
                             <h2 class="text-foreground mb-4 text-xl font-semibold">
                                 {{ __('messages.pages.vehicles.detail.internal_remarks') }}
                             </h2>
-                            <p class="text-foreground text-sm leading-relaxed">
-                                {{ $vehicle->details->extra_equipment }}
+                            <p class="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                                {{ $internalRemarks }}
                             </p>
                         </div>
                     @endif

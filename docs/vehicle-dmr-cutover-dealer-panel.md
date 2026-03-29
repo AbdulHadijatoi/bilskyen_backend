@@ -6,26 +6,30 @@ This document describes the backend changes required for the **dealer VueJS pane
 
 1. `vehicles` is now the primary persisted listing row and is linked to DMR fact data via `dmr_fact_vehicle_id`.
 2. The dealer panel must treat `dmr_fact_vehicle_id` as the canonical “vehicle identity” for create flows.
-3. Legacy selection/filtering fields (ex: `brand_id`, `model_id`, `fuel_type_id`) are no longer stored on the `vehicles` table row. They are available via DMR joins/accessors and are used only for filtering/search.
-4. Legacy `vehicle_details` is not used for the new listing shape in APIs; for Blade parity, `$vehicle->details` is now a read-only presenter backed by DMR.
+3. Lookup fields such as `brand_id`, `model_id`, `variant_id`, and `fuel_type_id` are stored on `vehicles` for dealer listings (alongside DMR identity).
+4. The `vehicle_details` table has been removed; dealer-facing fields from that table now live on `vehicles`. Blade still uses `$vehicle->details` as a **read-only presenter** (`VehicleDetailPresenter`) that reads from `vehicles` + DMR.
 
-## 2. Canonical persisted `vehicles` columns (create/update)
+## 2. Canonical persisted `vehicles` columns (dealer create/update)
 
-When the dealer panel creates or updates a listing, the backend will persist only the following “slim” column set on the `vehicles` row:
+The dealer panel sends a whitelist of keys (see `DEALER_VEHICLE_PERSIST_FIELDS` in `panel_vue/src/api/dealer.api.ts`). The backend mass-assigns matching columns on `vehicles` (plus `equipment_ids` / `images` handled separately).
+
+Core listing fields include:
 
 ```text
 dmr_fact_vehicle_id
+list_status_id
 user_id
 dealer_id
 title
 slug
 registration
+vin
 price
-vehicle_list_status_id
 published_at
 description
 address
 postcode
+seller_phone
 gear_type_id
 km_driven
 battery_capacity
@@ -33,7 +37,60 @@ range_km
 charging_type
 condition_id
 servicebog
+annual_tax
+brand_id
+model_id
+variant_id
+fuel_type_id
+model_year
+km_per_liter
+fuel_consumption_wltp
+fuel_consumption_nedc
+maximum_weight_kg
+colour_id
+emission_norm_id
+body_type_id
+first_registration_date
+first_registration_year
+production_date
+last_inspection_date
+registration_status
+co2_emission
+engine_power_kw
+engine_power_hp
+engine_displacement_litres
+engine_type
+door_count
+seats_min
+seats_max
+max_speed
+axle_count
+towing_weight
+is_import
+is_factory_new
+sales_type_id
+price_type_id
+vehicle_use_id
+listing_type_id
+category_id
+wholesale_price
+internal_cost_price
+price_without_tax
+wholesale_price_includes_delivery
+cover_image_index
+views_count
+leasing_enabled
+leasing_type
+leasing_customer_type
+leasing_monthly_payment
+leasing_first_payment
+leasing_residual_value
+leasing_duration
+leasing_annual_mileage
+leasing_total_cost
 ```
+
+**Key naming:** use `list_status_id` (not `vehicle_list_status_id`), `vehicle_use_id` (not `use_id`), `co2_emission` (not `co2_emissions`), `engine_power_kw` (not `engine_power`). If `engine_power_hp` is omitted but `engine_power_kw` is set, the API derives HP as `round(kW × 1.36)`.
 
 Notes:
 
@@ -54,7 +111,7 @@ All dealer routes require `auth:api` and relevant dealer permissions.
 Query params:
 
 1. `search` (optional)
-2. `vehicle_list_status_id` (optional)
+2. `list_status_id` (optional; legacy query `vehicle_list_status_id` may still appear in older clients)
 3. `sort` (optional; default handled by backend)
 4. `page`, `limit` (optional)
 
@@ -107,7 +164,7 @@ Required fields (for DMR-only listing creation):
 
 1. `dmr_fact_vehicle_id` (required; service rejects creation without it)
 2. `price` (required)
-3. `vehicle_list_status_id` (required)
+3. `list_status_id` (required for create; legacy `vehicle_list_status_id` is normalized server-side)
 4. `registration` (optional per controller validation, but may be used in UI/search)
 
 Optional fields from the slim set:
@@ -132,7 +189,7 @@ Same payload rules as create.
 
 Backend behavior:
 
-- It sets `vehicle_list_status_id = 1` (Draft) server-side.
+- It sets `list_status_id = 1` (Draft) server-side.
 
 ### 3.5 Update vehicle
 
@@ -160,7 +217,7 @@ Option A:
 
 Option B:
 
-- `vehicle_list_status_id`: a valid `vehicle_list_statuses.id`
+- `list_status_id`: a valid `vehicle_list_statuses.id`
 
 Backend behavior:
 
@@ -180,9 +237,9 @@ Backend behavior:
 
 - It appends images and sets `sort_order` after the existing max `sort_order`.
 
-### 3.8 Fetch vehicle data from Nummerplade (dealer helper)
+### 3.8 Preview vehicle by registration or VIN (dealer helper, DMR)
 
-`POST /api/v1/dealer/vehicles/fetch-from-nummerplade`
+`POST /api/v1/dealer/vehicles/lookup-by-registration`
 
 Request:
 
@@ -207,7 +264,7 @@ During `SellYourCarController::store`:
 
 After creation:
 
-1. `vehicle_list_status_id` is set to `published`
+1. `list_status_id` is set to `published`
 2. `published_at` is set to `now()`
 
 ## 5. Summary for Vue implementation
@@ -216,5 +273,5 @@ After creation:
 2. Treat `address`/`postcode` as the location fields stored on `vehicles`.
 3. For status changes, prefer `update-status` endpoint; don’t manually set `published_at` unless you have a strong reason.
 4. For listing display, use returned computed fields like `brand_name`, `model_name`, `fuel_type_name`, `model_year_name`, `engine_power_hp`.
-5. For filters, the public listing endpoints join through DMR tables; dealer list endpoints are mostly `search`, `vehicle_list_status_id`, and `sort`.
+5. For filters, the public listing endpoints join through DMR tables; dealer list endpoints are mostly `search`, `list_status_id`, and `sort`.
 

@@ -167,6 +167,7 @@ class SellerController extends Controller
             'first_registration_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'last_inspection_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'last_inspection_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
+            'km_per_liter' => ['nullable', 'numeric', 'min:0'],
             'fuel_efficiency' => ['nullable', 'numeric', 'min:0'],
             'technical_total_weight' => ['nullable', 'integer', 'min:0'],
             'euronom_id' => ['nullable', 'exists:euronorms,id'],
@@ -224,8 +225,9 @@ class SellerController extends Controller
             if ($request->has('list_status_id')) {
                 $vehicleData['list_status_id'] = $request->input('list_status_id');
             }
-            if ($request->has('fuel_efficiency')) {
-                $vehicleData['fuel_efficiency'] = $request->input('fuel_efficiency');
+            $kml = $request->input('km_per_liter', $request->input('fuel_efficiency'));
+            if ($kml !== null && $kml !== '') {
+                $vehicleData['km_per_liter'] = $kml;
             }
             if ($request->has('seller_address')) {
                 $vehicleData['seller_address'] = $request->input('seller_address');
