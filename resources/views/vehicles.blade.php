@@ -4,7 +4,6 @@
 
 @php
     use App\Helpers\FormatHelper;
-    // $vehicles is provided by HomeController
 @endphp
 
 @section('content')
@@ -197,7 +196,7 @@
                                 <input
                                     type="text"
                                     id="brand-search-input"
-                                    placeholder="{{ __('messages.forms.search_brand') }}"
+                                    placeholder="{{ __('messages.forms.filter_brand_list') }}"
                                     class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     autocomplete="off"
                                 >
@@ -226,7 +225,7 @@
                                 <input
                                     type="text"
                                     id="model-search-input"
-                                    placeholder="{{ __('messages.forms.search_model') }}"
+                                    placeholder="{{ __('messages.forms.filter_model_list') }}"
                                     class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     autocomplete="off"
                                 >
@@ -256,7 +255,7 @@
                                     <input
                                         type="text"
                                         id="variant-search-input"
-                                        placeholder="{{ __('messages.forms.search_model') }}"
+                                        placeholder="{{ __('messages.forms.filter_variant_list') }}"
                                         class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                         autocomplete="off"
                                     >
@@ -715,47 +714,13 @@
                 </div>
                 <!-- Sort Dropdown Container -->
                 <div class="relative text-xs font-medium">
-                    @php
-                        $sortLabels = [
-                            'best_match' => __('messages.pages.vehicles.sort.best_match'),
-                            'price_asc' => __('messages.pages.vehicles.sort.price_asc'),
-                            'price_desc' => __('messages.pages.vehicles.sort.price_desc'),
-                            'date_desc' => __('messages.pages.vehicles.sort.date_desc'),
-                            'date_asc' => __('messages.pages.vehicles.sort.date_asc'),
-                            'year_desc' => __('messages.pages.vehicles.sort.year_desc'),
-                            'year_asc' => __('messages.pages.vehicles.sort.year_asc'),
-                            'mileage_desc' => __('messages.pages.vehicles.sort.mileage_desc'),
-                            'mileage_asc' => __('messages.pages.vehicles.sort.mileage_asc'),
-                            'fuel_efficiency_desc' => __('messages.pages.vehicles.sort.fuel_efficiency_desc'),
-                            'fuel_efficiency_asc' => __('messages.pages.vehicles.sort.fuel_efficiency_asc'),
-                            'range_desc' => __('messages.pages.vehicles.sort.range_desc'),
-                            'range_asc' => __('messages.pages.vehicles.sort.range_asc'),
-                            'battery_desc' => __('messages.pages.vehicles.sort.battery_desc'),
-                            'battery_asc' => __('messages.pages.vehicles.sort.battery_asc'),
-                            'brand_asc' => __('messages.pages.vehicles.sort.brand_asc'),
-                            'brand_desc' => __('messages.pages.vehicles.sort.brand_desc'),
-                            'engine_power_desc' => __('messages.pages.vehicles.sort.engine_power_desc'),
-                            'engine_power_asc' => __('messages.pages.vehicles.sort.engine_power_asc'),
-                            'towing_weight_desc' => __('messages.pages.vehicles.sort.towing_weight_desc'),
-                            'towing_weight_asc' => __('messages.pages.vehicles.sort.towing_weight_asc'),
-                            'top_speed_desc' => __('messages.pages.vehicles.sort.top_speed_desc'),
-                            'top_speed_asc' => __('messages.pages.vehicles.sort.top_speed_asc'),
-                            'ownership_tax_desc' => __('messages.pages.vehicles.sort.ownership_tax_desc'),
-                            'ownership_tax_asc' => __('messages.pages.vehicles.sort.ownership_tax_asc'),
-                            'first_reg_desc' => __('messages.pages.vehicles.sort.first_reg_desc'),
-                            'first_reg_asc' => __('messages.pages.vehicles.sort.first_reg_asc'),
-                            'distance_asc' => __('messages.pages.vehicles.sort.distance_asc'),
-                            'distance_desc' => __('messages.pages.vehicles.sort.distance_desc')
-                        ];
-                        $currentSort = request()->query('sort', 'best_match');
-                    @endphp
                     <select
                         id="sort-select"
                         name="sort"
                         class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
                     >
-                        @foreach($sortLabels as $value => $label)
-                            <option value="{{ $value }}" @if($currentSort == $value) selected @endif>{{ $label }}</option>
+                        @foreach($vehicleSortLabels as $value => $label)
+                            <option value="{{ $value }}" @if($currentListingSort === $value) selected @endif>{{ $label }}</option>
                         @endforeach
                     </select>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
@@ -1340,36 +1305,10 @@
             localStorage.setItem('vehicleView', 'card');
         }
         
-        const sortLabels = {
-            'best_match': '{{ __('messages.pages.vehicles.sort.best_match') }}',
-            'price_asc': '{{ __('messages.pages.vehicles.sort.price_asc') }}',
-            'price_desc': '{{ __('messages.pages.vehicles.sort.price_desc') }}',
-            'date_desc': '{{ __('messages.pages.vehicles.sort.date_desc') }}',
-            'date_asc': '{{ __('messages.pages.vehicles.sort.date_asc') }}',
-            'year_desc': '{{ __('messages.pages.vehicles.sort.year_desc') }}',
-            'year_asc': '{{ __('messages.pages.vehicles.sort.year_asc') }}',
-            'mileage_desc': '{{ __('messages.pages.vehicles.sort.mileage_desc') }}',
-            'mileage_asc': '{{ __('messages.pages.vehicles.sort.mileage_asc') }}',
-            'fuel_efficiency_desc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_desc') }}',
-            'fuel_efficiency_asc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_asc') }}',
-            'range_desc': '{{ __('messages.pages.vehicles.sort.range_desc') }}',
-            'range_asc': '{{ __('messages.pages.vehicles.sort.range_asc') }}',
-            'battery_desc': '{{ __('messages.pages.vehicles.sort.battery_desc') }}',
-            'battery_asc': '{{ __('messages.pages.vehicles.sort.battery_asc') }}',
-            'brand_asc': '{{ __('messages.pages.vehicles.sort.brand_asc') }}',
-            'brand_desc': '{{ __('messages.pages.vehicles.sort.brand_desc') }}',
-            'engine_power_desc': '{{ __('messages.pages.vehicles.sort.engine_power_desc') }}',
-            'engine_power_asc': '{{ __('messages.pages.vehicles.sort.engine_power_asc') }}',
-            'towing_weight_desc': '{{ __('messages.pages.vehicles.sort.towing_weight_desc') }}',
-            'towing_weight_asc': '{{ __('messages.pages.vehicles.sort.towing_weight_asc') }}',
-            'top_speed_desc': '{{ __('messages.pages.vehicles.sort.top_speed_desc') }}',
-            'top_speed_asc': '{{ __('messages.pages.vehicles.sort.top_speed_asc') }}',
-            'ownership_tax_desc': '{{ __('messages.pages.vehicles.sort.ownership_tax_desc') }}',
-            'ownership_tax_asc': '{{ __('messages.pages.vehicles.sort.ownership_tax_asc') }}',
-            'first_reg_desc': '{{ __('messages.pages.vehicles.sort.first_reg_desc') }}',
-            'first_reg_asc': '{{ __('messages.pages.vehicles.sort.first_reg_asc') }}',
-            'distance_asc': '{{ __('messages.pages.vehicles.sort.distance_asc') }}',
-            'distance_desc': '{{ __('messages.pages.vehicles.sort.distance_desc') }}'
+        const sortLabels = @json($vehicleSortLabels);
+        const I18N_BMV = {
+            selectBrandForModels: @json(__('messages.forms.select_brand_for_models')),
+            selectModelForVariants: @json(__('messages.forms.select_model_for_variants')),
         };
         
         let searchDebounceTimer = null;
@@ -2328,9 +2267,13 @@
                         if (checkbox) checkbox.checked = false;
                         if (key === 'brand_id' && typeof updateBrandDropdownLabel === 'function') {
                             updateBrandDropdownLabel();
-                            if (typeof filterModelListByBrands === 'function') filterModelListByBrands();
+                            if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
+                            if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                         }
-                        if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
+                        if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') {
+                            updateModelDropdownLabel();
+                            if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
+                        }
                         if (key === 'variant_id' && typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
                         if (key === 'fuel_type_id' && typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
                     } else if (key === 'search') {
@@ -2496,7 +2439,7 @@
                 }
                 renderFilterChips();
                 updateResetButtonVisibility();
-                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || 'best_match';
+                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || 'published_at_desc';
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
@@ -2539,7 +2482,7 @@
             sortSelect.addEventListener('change', (e) => {
                 const sortValue = e.target.value;
                     // Fetch vehicles with new sort parameter
-                    fetchVehicles({ sort: sortValue === 'best_match' ? null : sortValue, page: 1 });
+                    fetchVehicles({ sort: sortValue === 'published_at_desc' ? null : sortValue, page: 1 });
             });
         }
         
@@ -3178,7 +3121,7 @@ if (config) {
             const vNum = (name, max) => { const val = v(name); if (!val) return null; const n = parseFloat(val); if (isNaN(n)) return null; if (max != null && n >= max) return null; return val; };
 
             if (searchInput?.value?.trim()) filters.search = searchInput.value.trim();
-            if (sortSelect?.value && sortSelect.value !== 'best_match') filters.sort = sortSelect.value;
+            if (sortSelect?.value && sortSelect.value !== 'published_at_desc') filters.sort = sortSelect.value;
 
             const listingTypeIds = Array.from(document.querySelectorAll('[name="listing_type_id[]"]:checked')).map(cb => cb.value);
             if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
@@ -3247,29 +3190,43 @@ if (config) {
             filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
         }
 
-        // Show/hide model checkboxes based on selected brand(s). If no brand selected, show all models.
-        function filterModelListByBrands() {
-            const modelList = document.getElementById('model-checkbox-list');
-            if (!modelList) return;
-            // Use getElementsByName to avoid CSS selector issues with "brand_id[]"
-            const brandInputs = document.getElementsByName('brand_id[]');
-            const selectedBrandIds = new Set(
-                Array.from(brandInputs).filter(cb => cb.checked).map(cb => String(cb.value).trim())
-            );
-            modelList.querySelectorAll('.model-checkbox-label').forEach(label => {
-                const brandId = String(label.getAttribute('data-brand-id') || '').trim();
-                const show = selectedBrandIds.size === 0 || (brandId !== '' && selectedBrandIds.has(brandId));
-                label.style.display = show ? '' : 'none';
-            });
-        }
-
-        // Partial lookup search (brands/models/types) - avoids loading full tables.
+        // Types dropdown still uses paged search; brands/models/variants load full lists (or scoped lists) from API.
         const LOOKUP_LIMIT = 25;
         let brandLookupToken = 0;
         let modelLookupToken = 0;
         let variantLookupToken = 0;
         let variantLookupInFlight = 0;
         let typeLookupToken = 0;
+
+        function applyBrandClientFilter() {
+            const input = document.getElementById('brand-search-input');
+            const q = (input && input.value || '').trim().toLowerCase();
+            document.querySelectorAll('#brand-checkbox-list .brand-checkbox-label').forEach(label => {
+                const span = label.querySelector('span');
+                const t = (span && span.textContent || '').toLowerCase();
+                label.style.display = !q || t.includes(q) ? '' : 'none';
+            });
+        }
+
+        function applyModelClientFilter() {
+            const input = document.getElementById('model-search-input');
+            const q = (input && input.value || '').trim().toLowerCase();
+            document.querySelectorAll('#model-checkbox-list .model-checkbox-label').forEach(label => {
+                const span = label.querySelector('.model-checkbox-name');
+                const t = (span && span.textContent || '').toLowerCase();
+                label.style.display = !q || t.includes(q) ? '' : 'none';
+            });
+        }
+
+        function applyVariantClientFilter() {
+            const input = document.getElementById('variant-search-input');
+            const q = (input && input.value || '').trim().toLowerCase();
+            document.querySelectorAll('#variant-checkbox-list .variant-checkbox-label').forEach(label => {
+                const span = label.querySelector('.variant-checkbox-name');
+                const t = (span && span.textContent || '').toLowerCase();
+                label.style.display = !q || t.includes(q) ? '' : 'none';
+            });
+        }
 
         function getSelectedBrandMeta() {
             const meta = {};
@@ -3314,7 +3271,7 @@ if (config) {
             if (el) el.classList.toggle('hidden', !on);
         }
 
-        async function refreshBrandsFromApi(searchTerm) {
+        async function refreshBrandsFromApi() {
             const list = document.getElementById('brand-checkbox-list');
             if (!list) return;
 
@@ -3322,33 +3279,7 @@ if (config) {
             const selectedIds = new Set(Object.keys(selectedMeta));
 
             const token = ++brandLookupToken;
-            const term = (searchTerm || '').trim();
-
-            if (term === '') {
-                list.innerHTML = '';
-                Object.keys(selectedMeta).forEach(id => {
-                    const label = document.createElement('label');
-                    label.className = 'brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'brand_id[]';
-                    input.value = id;
-                    input.className = 'brand-checkbox rounded border-input';
-                    input.checked = true;
-                    const span = document.createElement('span');
-                    span.textContent = selectedMeta[id];
-                    label.appendChild(input);
-                    label.appendChild(span);
-                    list.appendChild(label);
-                });
-                updateBrandDropdownLabel();
-                filterModelListByBrands();
-                return;
-            }
-
             const url = new URL('/api/v1/brands', window.location.origin);
-            url.searchParams.set('limit', String(LOOKUP_LIMIT));
-            if (term !== '') url.searchParams.set('search', term);
 
             try {
                 const response = await fetch(url.toString(), {
@@ -3385,7 +3316,6 @@ if (config) {
                     list.appendChild(label);
                 });
 
-                // Keep selected brands visible even if they don't match current search.
                 Object.keys(selectedMeta).forEach(id => {
                     if (resultsIds.has(id)) return;
                     const label = document.createElement('label');
@@ -3407,13 +3337,20 @@ if (config) {
                 });
 
                 updateBrandDropdownLabel();
-                filterModelListByBrands();
+                applyBrandClientFilter();
             } catch (e) {
-                console.debug('Brand lookup failed:', e);
+                console.debug('Brand load failed:', e);
             }
         }
 
-        async function refreshModelsFromApi(searchTerm) {
+        function appendModelHintRow(list, text) {
+            const p = document.createElement('p');
+            p.className = 'model-list-hint text-muted-foreground text-xs px-2 py-2';
+            p.textContent = text;
+            list.appendChild(p);
+        }
+
+        async function refreshModelsFromApi() {
             const list = document.getElementById('model-checkbox-list');
             if (!list) return;
 
@@ -3422,10 +3359,10 @@ if (config) {
             const selectedBrandIds = Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
 
             const token = ++modelLookupToken;
-            const term = (searchTerm || '').trim();
 
             if (selectedBrandIds.length === 0) {
                 list.innerHTML = '';
+                appendModelHintRow(list, I18N_BMV.selectBrandForModels);
                 Object.keys(selectedMeta).forEach(id => {
                     const meta = selectedMeta[id];
                     const label = document.createElement('label');
@@ -3445,16 +3382,13 @@ if (config) {
                     list.appendChild(label);
                 });
                 updateModelDropdownLabel();
-                filterModelListByBrands();
-                const variantSearchInput = document.getElementById('variant-search-input');
-                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInput ? variantSearchInput.value : '');
+                applyModelClientFilter();
+                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                 return;
             }
 
             const url = new URL('/api/v1/models', window.location.origin);
-            url.searchParams.set('limit', String(LOOKUP_LIMIT));
-            if (term !== '') url.searchParams.set('search', term);
-            if (selectedBrandIds.length > 0) url.searchParams.set('brand_ids', selectedBrandIds.join(','));
+            url.searchParams.set('brand_ids', selectedBrandIds.join(','));
 
             try {
                 const response = await fetch(url.toString(), {
@@ -3493,7 +3427,6 @@ if (config) {
                     list.appendChild(label);
                 });
 
-                // Keep selected models visible even if they don't match current search.
                 Object.keys(selectedMeta).forEach(id => {
                     if (resultsIds.has(id)) return;
                     const meta = selectedMeta[id];
@@ -3519,17 +3452,21 @@ if (config) {
                 });
 
                 updateModelDropdownLabel();
-                filterModelListByBrands();
-                const variantSearchInputAfterModel = document.getElementById('variant-search-input');
-                if (typeof refreshVariantsFromApi === 'function') {
-                    refreshVariantsFromApi(variantSearchInputAfterModel ? variantSearchInputAfterModel.value : '');
-                }
+                applyModelClientFilter();
+                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
             } catch (e) {
-                console.debug('Model lookup failed:', e);
+                console.debug('Model load failed:', e);
             }
         }
 
-        async function refreshVariantsFromApi(searchTerm) {
+        function appendVariantHintRow(list, text) {
+            const p = document.createElement('p');
+            p.className = 'variant-list-hint text-muted-foreground text-xs px-2 py-2';
+            p.textContent = text;
+            list.appendChild(p);
+        }
+
+        async function refreshVariantsFromApi() {
             const list = document.getElementById('variant-checkbox-list');
             if (!list) return;
 
@@ -3538,10 +3475,10 @@ if (config) {
             const selectedModelIds = Array.from(document.querySelectorAll('input[name="model_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
 
             const token = ++variantLookupToken;
-            const term = (searchTerm || '').trim();
 
             if (selectedModelIds.length === 0) {
                 list.innerHTML = '';
+                appendVariantHintRow(list, I18N_BMV.selectModelForVariants);
                 Object.keys(selectedMeta).forEach(id => {
                     const meta = selectedMeta[id];
                     const label = document.createElement('label');
@@ -3561,6 +3498,7 @@ if (config) {
                     list.appendChild(label);
                 });
                 updateVariantDropdownLabel();
+                applyVariantClientFilter();
                 return;
             }
 
@@ -3568,8 +3506,6 @@ if (config) {
             setVariantSearchLoading(true);
 
             const url = new URL('/api/v1/variants', window.location.origin);
-            url.searchParams.set('limit', String(LOOKUP_LIMIT));
-            if (term !== '') url.searchParams.set('search', term);
             url.searchParams.set('model_ids', selectedModelIds.join(','));
 
             try {
@@ -3634,8 +3570,9 @@ if (config) {
                 });
 
                 updateVariantDropdownLabel();
+                applyVariantClientFilter();
             } catch (e) {
-                console.debug('Variant lookup failed:', e);
+                console.debug('Variant load failed:', e);
             } finally {
                 variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
                 if (variantLookupInFlight === 0) setVariantSearchLoading(false);
@@ -3791,7 +3728,7 @@ if (config) {
                         brandTrigger.setAttribute('aria-expanded', 'true');
                         const chev = brandTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshBrandsFromApi(brandSearchInput ? brandSearchInput.value : '');
+                        refreshBrandsFromApi();
                     }
                 });
             }
@@ -3805,7 +3742,7 @@ if (config) {
                         modelTrigger.setAttribute('aria-expanded', 'true');
                         const chev = modelTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
+                        refreshModelsFromApi();
                     }
                 });
             }
@@ -3819,7 +3756,7 @@ if (config) {
                         variantTrigger.setAttribute('aria-expanded', 'true');
                         const chev = variantTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshVariantsFromApi(variantSearchInput ? variantSearchInput.value : '');
+                        refreshVariantsFromApi();
                     }
                 });
             }
@@ -3872,27 +3809,15 @@ if (config) {
                 cb.addEventListener('change', updateFuelTypeDropdownLabel);
             });
 
-            // Brand/model search inputs (debounced).
+            // Brand/model/variant: client-side filter only (full lists loaded from API).
             if (brandSearchInput) {
-                let t = null;
-                brandSearchInput.addEventListener('input', () => {
-                    clearTimeout(t);
-                    t = setTimeout(() => refreshBrandsFromApi(brandSearchInput.value), 300);
-                });
+                brandSearchInput.addEventListener('input', () => applyBrandClientFilter());
             }
             if (modelSearchInput) {
-                let t = null;
-                modelSearchInput.addEventListener('input', () => {
-                    clearTimeout(t);
-                    t = setTimeout(() => refreshModelsFromApi(modelSearchInput.value), 300);
-                });
+                modelSearchInput.addEventListener('input', () => applyModelClientFilter());
             }
             if (variantSearchInput) {
-                let tv = null;
-                variantSearchInput.addEventListener('input', () => {
-                    clearTimeout(tv);
-                    tv = setTimeout(() => refreshVariantsFromApi(variantSearchInput.value), 300);
-                });
+                variantSearchInput.addEventListener('input', () => applyVariantClientFilter());
             }
 
             // Type dropdown search.
@@ -3923,15 +3848,11 @@ if (config) {
                 if (target.matches('input[type="checkbox"]')) {
                     // If brand changed, refresh model suggestions based on the new selection.
                     if (target.classList.contains('brand-checkbox')) {
-                        filterModelListByBrands();
-                        const modelSearchInput = document.getElementById('model-search-input');
-                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
-                        const variantSearchInputEl = document.getElementById('variant-search-input');
-                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInputEl ? variantSearchInputEl.value : '');
+                        if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
+                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                     }
                     if (target.classList.contains('model-checkbox')) {
-                        const variantSearchInputEl = document.getElementById('variant-search-input');
-                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi(variantSearchInputEl ? variantSearchInputEl.value : '');
+                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                     }
                     if (target.classList.contains('variant-checkbox')) {
                         if (typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
@@ -4154,11 +4075,17 @@ if (config) {
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();
         
-        // Filter model list by selected brands on load
-        filterModelListByBrands();
-        
         // Initialize brand/model dropdown toggles and label updates
         initBrandModelDropdowns();
+        // Prefetch full brand list for faster first open
+        if (typeof refreshBrandsFromApi === 'function') refreshBrandsFromApi();
+        // If URL/state already has brands selected, load models/variants
+        if (document.querySelector('input[name="brand_id[]"]:checked') && typeof refreshModelsFromApi === 'function') {
+            refreshModelsFromApi();
+        }
+        if (document.querySelector('input[name="model_id[]"]:checked') && typeof refreshVariantsFromApi === 'function') {
+            refreshVariantsFromApi();
+        }
         
         // Initialize all range sliders
         setTimeout(() => {

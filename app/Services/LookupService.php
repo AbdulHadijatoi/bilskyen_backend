@@ -302,6 +302,8 @@ class LookupService
     public function getPublicConstants(): array
     {
         return [
+            // `{column}_asc` / `{column}_desc` for each `vehicles` table column (see VehicleService::publicListingSortOptionKeys()).
+            'vehicle_sort_keys' => VehicleService::publicListingSortOptionKeys(),
             'fuel_types' => $this->getFuelTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'gear_types' => $this->getGearTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'listing_types' => $this->getListingTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),

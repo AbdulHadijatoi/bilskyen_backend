@@ -29,6 +29,8 @@ use App\Services\SeoService;
 use App\Services\VehicleDetailPresentationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
@@ -374,6 +376,12 @@ class HomeController extends Controller
         $constants = $this->lookupService->getPublicConstants();
         $seo = $this->seoService->getForPage('listing', 'vehicles');
 
+        $vehicleSortLabels = $this->buildVehicleListingSortLabels();
+        $rawSortQuery = $request->query('sort');
+        $currentListingSort = VehicleService::normalizePublicListingSort(
+            is_string($rawSortQuery) ? $rawSortQuery : null
+        );
+
         return view('vehicles', compact(
             'vehicles',
             'constants',
@@ -384,8 +392,33 @@ class HomeController extends Controller
             'selectedBrands',
             'selectedModels',
             'selectedVariants',
-            'selectedType'
+            'selectedType',
+            'vehicleSortLabels',
+            'currentListingSort'
         ));
+    }
+
+    /**
+     * Human-readable labels for each public listing sort key (column + direction).
+     *
+     * @return array<string, string>
+     */
+    private function buildVehicleListingSortLabels(): array
+    {
+        $labels = [];
+        foreach (VehicleService::publicListingSortOptionKeys() as $sortKey) {
+            if (preg_match('/^(.+)_(asc|desc)$/', $sortKey, $m)) {
+                $colKey = 'messages.pages.vehicles.sort.columns.'.$m[1];
+                $colLabel = Lang::has($colKey)
+                    ? __($colKey)
+                    : Str::headline(str_replace('_', ' ', $m[1]));
+                $labels[$sortKey] = $colLabel
+                    . ' — '
+                    . __('messages.pages.vehicles.sort.dir_'.$m[2]);
+            }
+        }
+
+        return $labels;
     }
 
     /**

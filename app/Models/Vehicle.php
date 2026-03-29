@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Vehicle extends Model
@@ -147,6 +148,110 @@ class Vehicle extends Model
     //     'equipment_names',
     //     'specifications'
     // ];
+
+    /**
+     * Column names on the {@see vehicles} table that may be used for public listing ORDER BY.
+     * Prefer live schema; {@see self::sortableTableColumnsFallback()} when the table is unavailable.
+     *
+     * @return list<string>
+     */
+    public static function listingSortableTableColumns(): array
+    {
+        $table = (new static)->getTable();
+
+        if (! Schema::hasTable($table)) {
+            return self::sortableTableColumnsFallback();
+        }
+
+        $columns = Schema::getColumnListing($table);
+        sort($columns);
+
+        return array_values($columns);
+    }
+
+    /**
+     * Fallback when migrations have not run (e.g. some unit tests). Mirrors the vehicles table.
+     *
+     * @return list<string>
+     */
+    private static function sortableTableColumnsFallback(): array
+    {
+        $cols = [
+            'id',
+            'registration',
+            'dmr_fact_vehicle_id',
+            'vin',
+            'title',
+            'slug',
+            'dealer_id',
+            'user_id',
+            'km_per_liter',
+            'co2_emission',
+            'electrical_consumption',
+            'engine_power_kw',
+            'engine_power_hp',
+            'engine_size_cc',
+            'engine_displacement_litres',
+            'first_registration_date',
+            'first_registration_year',
+            'last_inspection_date',
+            'nox_emission',
+            'particle_filter',
+            'axle_count',
+            'door_count',
+            'gear_count',
+            'max_speed',
+            'model_year',
+            'ncap_test',
+            'seats_min',
+            'seats_max',
+            'maximum_weight_kg',
+            'registration_status',
+            'last_registration_change',
+            'measurement_norm_id',
+            'body_type_id',
+            'colour_id',
+            'emission_norm_id',
+            'model_id',
+            'variant_id',
+            'fuel_type_id',
+            'vehicle_use_id',
+            'brand_id',
+            'listing_type_id',
+            'sales_type_id',
+            'price_type_id',
+            'category_id',
+            'type_id',
+            'transmission_id',
+            'price',
+            'calculated_ownership_tax',
+            'km_driven',
+            'towing_weight',
+            'battery_capacity',
+            'range_km',
+            'fuel_efficiency',
+            'is_import',
+            'is_factory_new',
+            'charging_type',
+            'gear_type_id',
+            'list_status_id',
+            'published_at',
+            'address',
+            'postcode',
+            'description',
+            'condition_id',
+            'servicebog',
+            'airbags',
+            'wheels',
+            'drive_axles',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ];
+        sort($cols);
+
+        return array_values(array_unique($cols));
+    }
 
     protected static function booted(): void
     {

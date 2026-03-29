@@ -170,6 +170,12 @@ class VehicleController extends Controller
         if (! empty($input['euronom_id']) && empty($input['emission_norm_id'])) {
             $input['emission_norm_id'] = (int) $input['euronom_id'];
         }
+        if (array_key_exists('sort', $input)) {
+            $raw = $input['sort'];
+            $input['sort'] = VehicleService::normalizePublicListingSort(
+                $raw === null || $raw === '' ? null : (string) $raw
+            );
+        }
 
         return $input;
     }

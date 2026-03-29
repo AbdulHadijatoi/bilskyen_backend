@@ -23,6 +23,136 @@ use Illuminate\Support\Facades\DB;
 
 class VehicleService
 {
+    /**
+     * Maps legacy / human sort keys to `{column}_{asc|desc}` using only {@see Vehicle} table columns.
+     *
+     * @var array<string, string>
+     */
+    private const LEGACY_SORT_ALIASES = [
+        'best_match' => 'published_at_desc',
+        'standard' => 'published_at_desc',
+        'date_desc' => 'published_at_desc',
+        'date_asc' => 'published_at_asc',
+        'year_desc' => 'model_year_desc',
+        'year_asc' => 'model_year_asc',
+        'mileage_desc' => 'km_driven_desc',
+        'mileage_asc' => 'km_driven_asc',
+        'range_desc' => 'range_km_desc',
+        'range_asc' => 'range_km_asc',
+        'battery_desc' => 'battery_capacity_desc',
+        'battery_asc' => 'battery_capacity_asc',
+        'brand_asc' => 'brand_id_asc',
+        'brand_desc' => 'brand_id_desc',
+        'engine_power_desc' => 'engine_power_hp_desc',
+        'engine_power_asc' => 'engine_power_hp_asc',
+        'top_speed_desc' => 'max_speed_desc',
+        'top_speed_asc' => 'max_speed_asc',
+        'ownership_tax_desc' => 'calculated_ownership_tax_desc',
+        'ownership_tax_asc' => 'calculated_ownership_tax_asc',
+        'first_reg_desc' => 'first_registration_date_desc',
+        'first_reg_asc' => 'first_registration_date_asc',
+        'distance_desc' => 'published_at_desc',
+        'distance_asc' => 'published_at_desc',
+    ];
+
+    /**
+     * Columns omitted from the public sort dropdown / `vehicle_sort_keys` (internal IDs, timestamps, blobs, JSON,
+     * VIN/title/colour, booleans, long text).
+     * Sorting by these via `?sort=` is still allowed when valid on {@see Vehicle}.
+     *
+     * @var list<string>
+     */
+    private const SORT_DROPDOWN_EXCLUDED_COLUMNS = [
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'slug',
+        'user_id',
+        'dealer_id',
+        'dmr_fact_vehicle_id',
+        'description',
+        'drive_axles',
+        'vin',
+        'title',
+        'colour_id',
+        'particle_filter',
+        'ncap_test',
+        'is_import',
+        'is_factory_new',
+    ];
+
+    /**
+     * Preferred column order for listing sort UI (then remaining columns A–Z).
+     * Excludes {@see self::SORT_DROPDOWN_EXCLUDED_COLUMNS}.
+     *
+     * @var list<string>
+     */
+    private const PUBLIC_LISTING_SORT_COLUMN_PRIORITY = [
+        'published_at',
+        'price',
+        'model_year',
+        'km_driven',
+    ];
+
+    /**
+     * `sort` option keys for the listing UI and `/api/v1/constants` → `vehicle_sort_keys`.
+     * Subset of vehicles columns (see {@see self::SORT_DROPDOWN_EXCLUDED_COLUMNS}).
+     *
+     * @return list<string>
+     */
+    public static function publicListingSortOptionKeys(): array
+    {
+        $cols = array_values(array_filter(
+            Vehicle::listingSortableTableColumns(),
+            static fn (string $c): bool => ! in_array($c, self::SORT_DROPDOWN_EXCLUDED_COLUMNS, true)
+        ));
+
+        $ordered = [];
+        foreach (self::PUBLIC_LISTING_SORT_COLUMN_PRIORITY as $c) {
+            if (in_array($c, $cols, true)) {
+                $ordered[] = $c;
+            }
+        }
+        foreach ($cols as $c) {
+            if (! in_array($c, $ordered, true)) {
+                $ordered[] = $c;
+            }
+        }
+
+        $keys = [];
+        foreach ($ordered as $col) {
+            $keys[] = $col.'_asc';
+            $keys[] = $col.'_desc';
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Canonical `sort` string: `{vehicles_column}_asc` or `{vehicles_column}_desc`.
+     * Default matches newest listings first ({@see Vehicle} id desc).
+     */
+    public static function normalizePublicListingSort(?string $sort): string
+    {
+        $s = $sort === null || $sort === '' ? null : trim((string) $sort);
+        if ($s === null || $s === '') {
+            return 'published_at_desc';
+        }
+
+        $s = self::LEGACY_SORT_ALIASES[$s] ?? $s;
+
+        if (preg_match('/^([a-z0-9_]+)_(asc|desc)$/', $s, $m)) {
+            $col = $m[1];
+            $dir = $m[2];
+            if (in_array($col, Vehicle::listingSortableTableColumns(), true)) {
+                return $col.'_'.$dir;
+            }
+        }
+
+        return 'published_at_desc';
+    }
+
     public function __construct(
         private FileService $fileService,
         private OwnershipTaxService $ownershipTaxService,
@@ -454,7 +584,7 @@ class VehicleService
 
         $this->applyPublicListingFilters($query, $filters);
 
-        $this->applySorting($query, $filters['sort'] ?? 'standard');
+        $this->applySorting($query, $filters['sort'] ?? null);
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -794,7 +924,7 @@ class VehicleService
             $query->where('list_status_id', $filters['list_status_id']);
         }
 
-        $this->applySorting($query, $filters['sort'] ?? 'standard');
+        $this->applySorting($query, $filters['sort'] ?? null);
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -817,110 +947,38 @@ class VehicleService
     }
 
     /**
-     * Apply sorting to vehicle query (DMR-backed listings).
+     * Apply sorting to vehicle query using only {@see Vehicle} table columns.
+     * Clears prior ORDER BY (including the defaultOrder global scope) so user sort wins.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Vehicle>  $query
      */
-    protected function applySorting($query, string $sort = 'standard'): void
+    protected function applySorting(Builder $query, ?string $sort = null): void
     {
-        $sort = $sort === '' ? 'standard' : $sort;
+        $sort = self::normalizePublicListingSort($sort);
 
-        switch ($sort) {
-            case 'best_match':
-            case 'standard':
-                $query->orderByDesc('id');
-                break;
-            case 'price_asc':
-                $query->orderBy('price', 'asc')->orderByDesc('id');
-                break;
-            case 'price_desc':
-                $query->orderByDesc('price')->orderByDesc('id');
-                break;
-            case 'date_desc':
-                $query->orderByDesc('published_at')->orderByDesc('id');
-                break;
-            case 'date_asc':
-                $query->orderBy('published_at', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'year_desc':
-                $query->orderByDesc('model_year')->orderByDesc('id');
-                break;
-            case 'year_asc':
-                $query->orderBy('model_year', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'mileage_desc':
-                $query->orderByDesc('km_driven')->orderByDesc('id');
-                break;
-            case 'mileage_asc':
-                $query->orderBy('km_driven', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'fuel_efficiency_desc':
-                $query->orderByDesc('km_per_liter')->orderByDesc('id');
-                break;
-            case 'fuel_efficiency_asc':
-                $query->orderBy('km_per_liter', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'range_desc':
-                $query->orderByDesc('range_km')->orderByDesc('id');
-                break;
-            case 'range_asc':
-                $query->orderBy('range_km', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'battery_desc':
-                $query->orderByDesc('electrical_consumption')->orderByDesc('id');
-                break;
-            case 'battery_asc':
-                $query->orderBy('electrical_consumption', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'brand_asc':
-                $query->leftJoin('dmr_brands as sort_brand', 'sort_brand.id', '=', 'vehicles.brand_id')
-                    ->select('vehicles.*')
-                    ->orderBy('sort_brand.name', 'asc')
-                    ->orderByDesc('vehicles.id');
-                break;
-            case 'brand_desc':
-                $query->leftJoin('dmr_brands as sort_brand', 'sort_brand.id', '=', 'vehicles.brand_id')
-                    ->select('vehicles.*')
-                    ->orderByDesc('sort_brand.name')
-                    ->orderByDesc('vehicles.id');
-                break;
-            case 'engine_power_desc':
-                $query->orderByDesc('engine_power_hp')->orderByDesc('id');
-                break;
-            case 'engine_power_asc':
-                $query->orderBy('engine_power_hp', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'towing_weight_desc':
-                $query->orderByDesc('towing_weight')->orderByDesc('id');
-                break;
-            case 'towing_weight_asc':
-                $query->orderBy('towing_weight', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'top_speed_desc':
-                $query->orderByDesc('max_speed')->orderByDesc('id');
-                break;
-            case 'top_speed_asc':
-                $query->orderBy('max_speed', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'ownership_tax_desc':
-                $query->orderByDesc('calculated_ownership_tax')->orderByDesc('id');
-                break;
-            case 'ownership_tax_asc':
-                $query->orderBy('calculated_ownership_tax', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'first_reg_desc':
-                $query->orderByDesc('first_registration_date')->orderByDesc('id');
-                break;
-            case 'first_reg_asc':
-                $query->orderBy('first_registration_date', 'asc')->orderBy('id', 'asc');
-                break;
-            case 'distance_asc':
-            case 'distance_desc':
-                $query->orderByDesc('id');
-                break;
-            default:
-                $query->orderByDesc('id');
-                break;
+        $query->reorder();
+
+        if (! preg_match('/^([a-z0-9_]+)_(asc|desc)$/', $sort, $m)) {
+            $query->orderByDesc($query->getModel()->getTable().'.id');
+
+            return;
+        }
+
+        $column = $m[1];
+        $direction = $m[2] === 'asc' ? 'asc' : 'desc';
+
+        if (! in_array($column, Vehicle::listingSortableTableColumns(), true)) {
+            $query->orderByDesc($query->getModel()->getTable().'.id');
+
+            return;
+        }
+
+        $table = $query->getModel()->getTable();
+        $qualified = $table.'.'.$column;
+
+        $query->orderBy($qualified, $direction);
+        if ($column !== 'id') {
+            $query->orderByDesc($table.'.id');
         }
     }
 
