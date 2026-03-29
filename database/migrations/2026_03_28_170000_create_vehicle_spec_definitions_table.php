@@ -14,9 +14,13 @@ return new class extends Migration
 
         Schema::create('vehicle_spec_definitions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
-            $table->foreignId('model_id')->constrained('models')->cascadeOnDelete();
-            $table->foreignId('variant_id')->constrained('variants')->cascadeOnDelete();
+            // Match brands/models/variants PKs: integerIncrements() → UNSIGNED INT (not foreignId() BIGINT).
+            $table->unsignedInteger('brand_id');
+            $table->unsignedInteger('model_id');
+            $table->unsignedInteger('variant_id');
+            $table->foreign('brand_id')->references('id')->on('brands')->cascadeOnDelete();
+            $table->foreign('model_id')->references('id')->on('models')->cascadeOnDelete();
+            $table->foreign('variant_id')->references('id')->on('variants')->cascadeOnDelete();
             $table->unsignedSmallInteger('model_year');
             $table->string('name', 255);
             $table->text('value');
