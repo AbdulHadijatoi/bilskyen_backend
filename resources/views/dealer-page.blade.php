@@ -195,8 +195,8 @@
                         <!-- Vehicle Image -->
                         <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
-                                src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
-                                alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
+                                src="{{ $vehicle->images->first()?->thumbnail_url ?? $vehicle->images->first()?->image_url ?? '/placeholder-vehicle.jpg' }}"
+                                alt="{{ trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? '')) }}"
                                 class="h-full w-full object-cover rounded-md"
                             />
                             <!-- Badges - Top Left -->
@@ -204,9 +204,9 @@
                                 <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                     {{ __('messages.pages.vehicles.dealer') }}
                                 </span>
-                                @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                                @if($vehicle->salesType)
                                 <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                    {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
+                                    {{ $vehicle->salesType->name }}
                                 </span>
                                 @endif
                             </div>
@@ -235,8 +235,8 @@
                             </div>
 
                             <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
-                                @if($vehicle->mileage || $vehicle->km_driven)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
+                                @if($vehicle->km_driven !== null)
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format((int) $vehicle->km_driven) }} km</span>
                                 @endif
                                 @if($vehicle->engine_power_hp)
                                 <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
@@ -256,7 +256,7 @@
                     
                     <!-- Card Footer -->
                     <div class="mt-auto" onclick="event.stopPropagation()">
-                        @if($vehicle->seller_address || $vehicle->seller_postcode)
+                        @if($vehicle->address || $vehicle->postcode)
                         <div class="px-3 pt-3 pb-2">
                             <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
@@ -264,9 +264,9 @@
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
                                 <span class="truncate text-right">
-                                    @if($vehicle->seller_address){{ $vehicle->seller_address }}@endif
-                                    @if($vehicle->seller_address && $vehicle->seller_postcode), @endif
-                                    @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif
+                                    @if($vehicle->address){{ $vehicle->address }}@endif
+                                    @if($vehicle->address && $vehicle->postcode), @endif
+                                    @if($vehicle->postcode){{ $vehicle->postcode }}@endif
                                 </span>
                             </div>
                         </div>
@@ -1059,19 +1059,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderVehicleListItem(vehicle) {
         const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
         
-        // Build location string from seller_address and seller_postcode
+        // Build location string (vehicles.address / postcode; API may also send seller_* aliases)
         let locationText = '';
-        if (vehicle.seller_address || vehicle.seller_postcode) {
+        const addr = vehicle.address || vehicle.seller_address;
+        const pc = vehicle.postcode || vehicle.seller_postcode;
+        if (addr || pc) {
             const parts = [];
-            if (vehicle.seller_address) parts.push(vehicle.seller_address);
-            if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
+            if (addr) parts.push(addr);
+            if (pc) parts.push(pc);
             locationText = parts.join(', ');
         }
         
         // Build badges
         const badges = [];
-        if (vehicle.mileage || vehicle.km_driven) {
-            badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
+        const km = vehicle.km_driven != null && vehicle.km_driven !== '' ? vehicle.km_driven : (vehicle.mileage != null && vehicle.mileage !== '' ? vehicle.mileage : null);
+        if (km != null) {
+            badges.push(`${new Intl.NumberFormat('da-DK').format(Number(km))} km`);
         }
         if (vehicle.engine_power_hp) {
             badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);

@@ -7,18 +7,9 @@ use App\Models\Lead;
 use App\Models\Source;
 use App\Models\LeadCategory;
 use App\Models\Enquiry;
-use App\Models\Category;
-use App\Models\Brand;
-use App\Models\VehicleModel;
-use App\Models\DmrFactVehicle;
-use App\Models\ListingType;
-use App\Models\PriceType;
-use App\Models\BodyType;
-use App\Models\GearType;
-use App\Models\DmrDriveEnergy;
-use App\Models\Condition;
-use App\Models\SalesType;
-use App\Models\EquipmentType;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
+use App\Constants\VehicleListStatus;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
@@ -28,6 +19,7 @@ use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DealerController extends Controller
@@ -56,7 +48,7 @@ class DealerController extends Controller
 
         // Load dealer relationships
         $dealer->load(['owner', 'vehicles' => function ($query) {
-            $query->where('list_status_id', \App\Constants\VehicleListStatus::PUBLISHED)
+            $query->where('list_status_id', VehicleListStatus::PUBLISHED)
                   ->with(['images' => function ($q) {
                       $q->orderBy('sort_order');
                   }]);
@@ -78,38 +70,44 @@ class DealerController extends Controller
             $request->input('page', 1)
         );
 
-        // Fetch filter options for the view
+        // Brand / model filters must use DMR IDs (vehicles.brand_id → dmr_brands, model_id → dmr_models).
+        // Use the query builder (not {@see Vehicle}) so we avoid the model's default ORDER BY scope,
+        // which makes `SELECT DISTINCT … ORDER BY vehicles.id` invalid on MySQL (ONLY_FULL_GROUP_BY).
+        $publishedBrandIds = DB::table('vehicles')
+            ->where('dealer_id', $dealer->id)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->whereNotNull('brand_id')
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('brand_id');
+
+        $publishedModelIds = DB::table('vehicles')
+            ->where('dealer_id', $dealer->id)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->whereNotNull('model_id')
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('model_id');
+
         $filterOptions = [
-            'categories' => Category::orderBy('name')->get(),
-            'listingTypes' => ListingType::orderBy('name')->get(),
-            'priceTypes' => PriceType::orderBy('name')->get(),
-            'bodyTypes' => BodyType::orderBy('name')->get(),
-            'gearTypes' => GearType::orderBy('name')->get(),
-            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
-            'brands' => Brand::orderBy('name')->get(),
-            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
-            'conditions' => Condition::orderBy('name')->get(),
-            'salesTypes' => SalesType::orderBy('name')->get(),
+            'brands' => $publishedBrandIds->isNotEmpty()
+                ? DmrBrand::whereIn('id', $publishedBrandIds)->orderBy('name')->get()
+                : collect(),
+            'models' => collect(),
         ];
 
-        // Popular brands
-        $popularBrandNames = ['Volvo', 'BMW', 'Mercedes-Benz', 'Audi', 'VW', 'Toyota', 'Ford', 'Peugeot', 'Opel', 'Skoda', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Honda'];
-        $filterOptions['popularBrands'] = Brand::whereIn('name', $popularBrandNames)->orderBy('name')->get();
-
-        // Filter models by selected brand if provided
         $selectedBrandId = $request->input('brand_id');
         if ($selectedBrandId) {
-            $filterOptions['models'] = VehicleModel::where('brand_id', $selectedBrandId)->orderBy('name')->get();
+            $filterOptions['models'] = DmrModel::query()
+                ->where('brand_id', $selectedBrandId)
+                ->whereIn('id', $publishedModelIds)
+                ->orderBy('name')
+                ->get();
         } else {
-            $filterOptions['models'] = VehicleModel::orderBy('name')->get();
+            $filterOptions['models'] = $publishedModelIds->isNotEmpty()
+                ? DmrModel::whereIn('id', $publishedModelIds)->orderBy('name')->get()
+                : collect();
         }
-
-        // Group equipment by equipment type
-        $equipmentTypes = EquipmentType::with(['equipments' => function ($query) {
-            $query->orderBy('name');
-        }])->orderBy('name')->get();
-        
-        $filterOptions['equipmentTypes'] = $equipmentTypes;
 
         $seo = $this->seoService->getForPage('dealer', $dealer->slug);
 
@@ -159,7 +157,7 @@ class DealerController extends Controller
         // Format vehicles for JSON response
         $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
             $firstImage = $vehicle->images->first();
-            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->url ?? '/placeholder-vehicle.jpg';
+            $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
 
             return [
                 'id' => $vehicle->id,
@@ -176,12 +174,14 @@ class DealerController extends Controller
                 'model_year_name' => $vehicle->model_year_name,
                 'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                 'engine_power_hp' => $vehicle->engine_power_hp,
+                'version' => $vehicle->version,
+                'address' => $vehicle->address,
+                'postcode' => $vehicle->postcode,
                 'seller_address' => $vehicle->seller_address,
                 'seller_postcode' => $vehicle->seller_postcode,
                 'dealer_id' => $vehicle->dealer_id,
                 'image_url' => $imageUrl,
                 'thumbnail_url' => $firstImage?->thumbnail_url ?? null,
-                'details' => [],
             ];
         });
 

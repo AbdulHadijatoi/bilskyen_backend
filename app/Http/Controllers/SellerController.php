@@ -6,16 +6,9 @@ use App\Models\Vehicle;
 use App\Models\Enquiry;
 use App\Models\ListingViewsLog;
 use App\Models\VehicleImage;
-use App\Models\Brand;
-use App\Models\VehicleModel;
-use App\Models\Category;
-use App\Models\DmrFactVehicle;
-use App\Models\DmrDriveEnergy;
-use App\Models\GearType;
-use App\Models\ListingType;
-use App\Models\Color;
-use App\Models\Variant;
-use App\Models\Euronom;
+use App\Models\DmrColour;
+use App\Models\DmrEmissionNorm;
+use App\Models\DmrVariant;
 use App\Models\EquipmentType;
 use App\Models\Equipment;
 use App\Models\Location;
@@ -30,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class SellerController extends Controller
 {
@@ -54,12 +48,25 @@ class SellerController extends Controller
             abort(403, 'Unauthorized access');
         }
 
-        // Get all vehicles for this seller
+        // Get all vehicles for this seller (eager-load relations used by Blade + Vehicle accessors)
         $vehicles = Vehicle::where('user_id', $user->id)
-            ->with(['images' => function ($q) {
-                $q->orderBy('sort_order');
-            }, 'dmrFactVehicle.variant.model.brand'])
-            ->withCount(['enquiries as enquiries_count', 'viewLogs as views_count'])
+            ->with([
+                'images' => function ($q) {
+                    $q->orderBy('sort_order');
+                },
+                'vehicleListStatus',
+                'salesType',
+                'fuelType',
+                'gearType',
+                'brand',
+                'model',
+                'variant',
+                'dmrFactVehicle.variant.model.brand',
+            ])
+            ->withCount([
+                'enquiries as enquiries_count',
+                'viewLogs as views_count',
+            ])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -117,8 +124,8 @@ class SellerController extends Controller
             abort(403, 'You do not have permission to edit this vehicle');
         }
 
-        // Load lookup data for form
-        $lookupData = $this->getLookupData();
+        // Load lookup data for form (DMR-aligned lists)
+        $lookupData = $this->getLookupData($vehicle);
 
         return view('seller-vehicle-edit', [
             'user' => $user,
@@ -161,16 +168,16 @@ class SellerController extends Controller
             'km_driven' => ['nullable', 'integer', 'min:0'],
             'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'description' => ['nullable', 'string'],
-            'variant_id' => ['nullable', 'exists:variants,id'],
-            'color_id' => ['nullable', 'exists:colors,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:dmr_variants,id'],
+            'colour_id' => ['nullable', 'integer', 'exists:dmr_colours,id'],
             'first_registration_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'first_registration_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'last_inspection_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'last_inspection_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'km_per_liter' => ['nullable', 'numeric', 'min:0'],
             'fuel_efficiency' => ['nullable', 'numeric', 'min:0'],
-            'technical_total_weight' => ['nullable', 'integer', 'min:0'],
-            'euronom_id' => ['nullable', 'exists:euronorms,id'],
+            'maximum_weight_kg' => ['nullable', 'integer', 'min:0'],
+            'emission_norm_id' => ['nullable', 'integer', 'exists:dmr_emission_norms,id'],
             'equipment_ids' => ['nullable', 'array'],
             'equipment_ids.*' => ['exists:equipments,id'],
             'servicebog' => ['nullable', 'in:Yes,No,Default'],
@@ -180,9 +187,15 @@ class SellerController extends Controller
             'images' => ['nullable'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,gif'],
             'existing_image_ids' => ['nullable', 'array'],
-            'existing_image_ids.*' => ['integer', 'exists:vehicle_images,id'],
+            'existing_image_ids.*' => [
+                'integer',
+                Rule::exists('vehicle_images', 'id')->where('vehicle_id', $vehicle->id),
+            ],
             'deleted_image_ids' => ['nullable', 'array'],
-            'deleted_image_ids.*' => ['integer', 'exists:vehicle_images,id'],
+            'deleted_image_ids.*' => [
+                'integer',
+                Rule::exists('vehicle_images', 'id')->where('vehicle_id', $vehicle->id),
+            ],
             'image_sort_order' => ['nullable', 'array'],
             'image_sort_order.*' => ['integer'],
         ]);
@@ -191,27 +204,7 @@ class SellerController extends Controller
         $beforeState = $vehicle->toArray();
 
         try {
-            // Handle month/year to date conversion for first_registration_date
-            $firstRegistrationDate = null;
-            if ($request->has('first_registration_month') && $request->has('first_registration_year')) {
-                $month = $request->input('first_registration_month');
-                $year = $request->input('first_registration_year');
-                if ($month && $year) {
-                    $firstRegistrationDate = sprintf('%04d-%02d-01', $year, $month);
-                }
-            }
-
-            // Handle month/year to date conversion for last_inspection_date
-            $lastInspectionDate = null;
-            if ($request->has('last_inspection_month') && $request->has('last_inspection_year')) {
-                $month = $request->input('last_inspection_month');
-                $year = $request->input('last_inspection_year');
-                if ($month && $year) {
-                    $lastInspectionDate = sprintf('%04d-%02d-01', $year, $month);
-                }
-            }
-
-            // Prepare vehicle data
+            // Prepare vehicle data (flat columns on `vehicles`, same as sell-your-car / VehicleService)
             $vehicleData = [];
             if ($request->has('title')) {
                 $vehicleData['title'] = $request->input('title');
@@ -229,47 +222,65 @@ class SellerController extends Controller
             if ($kml !== null && $kml !== '') {
                 $vehicleData['km_per_liter'] = $kml;
             }
+
+            // Sell-your-car uses seller_* in the form; DB columns are address / postcode
             if ($request->has('seller_address')) {
-                $vehicleData['seller_address'] = $request->input('seller_address');
+                $vehicleData['address'] = trim((string) $request->input('seller_address', ''));
             }
             if ($request->has('seller_postcode')) {
-                $vehicleData['seller_postcode'] = $request->input('seller_postcode');
-            }
-            if ($firstRegistrationDate) {
-                $vehicleData['first_registration_date'] = $firstRegistrationDate;
+                $vehicleData['postcode'] = trim((string) $request->input('seller_postcode', ''));
             }
 
-            // Prepare vehicle details data
-            $vehicleDetailsData = [];
             if ($request->has('description')) {
-                $vehicleDetailsData['description'] = $request->input('description');
-            }
-            if ($request->has('variant_id')) {
-                $vehicleDetailsData['variant_id'] = $request->input('variant_id');
-            }
-            if ($request->has('color_id')) {
-                $vehicleDetailsData['color_id'] = $request->input('color_id');
-            }
-            if ($request->has('technical_total_weight')) {
-                $vehicleDetailsData['technical_total_weight'] = $request->input('technical_total_weight');
-            }
-            if ($request->has('euronom_id')) {
-                $vehicleDetailsData['euronom_id'] = $request->input('euronom_id');
-            }
-            if ($lastInspectionDate) {
-                $vehicleDetailsData['last_inspection_date'] = $lastInspectionDate;
-            }
-            if ($request->has('servicebog')) {
-                $vehicleDetailsData['servicebog'] = $request->input('servicebog');
-            }
-            if ($request->has('seller_phone')) {
-                $vehicleDetailsData['seller_phone'] = $request->input('seller_phone');
+                $vehicleData['description'] = $request->input('description');
             }
 
-            // Handle equipment
-            $equipmentIds = null;
-            if ($request->has('equipment_ids')) {
-                $equipmentIds = $request->input('equipment_ids');
+            if ($request->has('variant_id')) {
+                $raw = $request->input('variant_id');
+                $vehicleData['variant_id'] = ($raw === '' || $raw === null) ? null : (int) $raw;
+            }
+
+            if ($request->has('colour_id')) {
+                $raw = $request->input('colour_id');
+                $vehicleData['colour_id'] = ($raw === '' || $raw === null) ? null : (int) $raw;
+            }
+
+            if ($request->has('emission_norm_id')) {
+                $raw = $request->input('emission_norm_id');
+                $vehicleData['emission_norm_id'] = ($raw === '' || $raw === null) ? null : (int) $raw;
+            }
+
+            if ($request->has('maximum_weight_kg')) {
+                $raw = $request->input('maximum_weight_kg');
+                $vehicleData['maximum_weight_kg'] = ($raw === '' || $raw === null) ? null : (int) $raw;
+            }
+
+            if ($request->has('seller_phone')) {
+                $vehicleData['seller_phone'] = $request->input('seller_phone');
+            }
+
+            if ($request->has('servicebog')) {
+                $vehicleData['servicebog'] = $request->input('servicebog');
+            }
+
+            if ($request->has(['first_registration_month', 'first_registration_year'])) {
+                $month = $request->input('first_registration_month');
+                $year = $request->input('first_registration_year');
+                if ($month && $year) {
+                    $vehicleData['first_registration_date'] = sprintf('%04d-%02d-01', (int) $year, (int) $month);
+                } else {
+                    $vehicleData['first_registration_date'] = null;
+                }
+            }
+
+            if ($request->has(['last_inspection_month', 'last_inspection_year'])) {
+                $month = $request->input('last_inspection_month');
+                $year = $request->input('last_inspection_year');
+                if ($month && $year) {
+                    $vehicleData['last_inspection_date'] = sprintf('%04d-%02d-01', (int) $year, (int) $month);
+                } else {
+                    $vehicleData['last_inspection_date'] = null;
+                }
             }
 
             // Handle images separately - don't pass to VehicleService if we're keeping existing ones
@@ -387,17 +398,8 @@ class SellerController extends Controller
                 }
             }
 
-            // Add equipment IDs
-            if ($equipmentIds !== null) {
-                $vehicleData['equipment_ids'] = $equipmentIds;
-            }
-
-            // Add vehicle details data
-            if (!empty($vehicleDetailsData)) {
-                foreach ($vehicleDetailsData as $key => $value) {
-                    $vehicleData[$key] = $value;
-                }
-            }
+            // Equipment: when no checkboxes are checked the key is omitted — treat as empty
+            $vehicleData['equipment_ids'] = $request->input('equipment_ids', []);
 
             // Update vehicle using VehicleService
             $updatedVehicle = $this->vehicleService->updateVehicle($vehicle, $vehicleData);
@@ -582,10 +584,12 @@ class SellerController extends Controller
             ], 403);
         }
 
-        // Validate request
+        // Accept canonical list_status_id or legacy vehicle_list_status_id (older Blade/JS).
         $validated = $request->validate([
-            'list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['required_without:vehicle_list_status_id', 'integer', 'exists:vehicle_list_statuses,id'],
+            'vehicle_list_status_id' => ['required_without:list_status_id', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
+        $newStatusId = (int) ($validated['list_status_id'] ?? $validated['vehicle_list_status_id']);
 
         // Get vehicle and verify ownership
         $vehicle = Vehicle::findOrFail($id);
@@ -601,7 +605,7 @@ class SellerController extends Controller
         $beforeState = $vehicle->toArray();
 
         // Update status
-        $vehicle->list_status_id = $validated['list_status_id'];
+        $vehicle->list_status_id = (int) $newStatusId;
         $vehicle->save();
 
         // Audit log
@@ -670,27 +674,34 @@ class SellerController extends Controller
     }
 
     /**
-     * Get lookup data for forms
+     * Lookup lists for seller vehicle edit (aligned with sell-your-car DMR tables).
      */
-    private function getLookupData(): array
+    private function getLookupData(Vehicle $vehicle): array
     {
+        $modelId = $vehicle->model_id;
+        if ($modelId === null) {
+            $vehicle->loadMissing('dmrFactVehicle.variant');
+            $modelId = $vehicle->dmrFactVehicle?->variant?->model_id;
+        }
+
+        $variantsQuery = DmrVariant::query()->orderBy('name');
+        if ($modelId) {
+            $variantsQuery->where('model_id', $modelId);
+        } elseif ($vehicle->variant_id) {
+            $variantsQuery->whereKey($vehicle->variant_id);
+        } else {
+            $variantsQuery->whereRaw('0 = 1');
+        }
+
         return [
-            'brands' => \App\Models\Brand::orderBy('name')->get(),
-            'models' => \App\Models\VehicleModel::orderBy('name')->get(),
-            'categories' => \App\Models\Category::orderBy('name')->get(),
-            'modelYears' => DmrFactVehicle::distinctModelYearOptions(),
-            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
-            'gearTypes' => \App\Models\GearType::orderBy('name')->get(),
-            'listingTypes' => \App\Models\ListingType::orderBy('name')->get(),
-            'vehicleListStatuses' => \App\Models\VehicleListStatus::orderBy('name')->get(),
-            'colors' => \App\Models\Color::orderBy('name')->get(),
-            'variants' => \App\Models\Variant::orderBy('name')->get(),
-            'euronorms' => \App\Models\Euronom::orderBy('name')->get(),
-            'equipmentTypes' => \App\Models\EquipmentType::with(['equipments' => function($query) {
+            'variants' => $variantsQuery->get(),
+            'dmrColours' => DmrColour::query()->orderBy('name')->get(),
+            'dmrEuronorms' => DmrEmissionNorm::query()->orderBy('name')->get(),
+            'equipmentTypes' => EquipmentType::with(['equipments' => function ($query) {
                 $query->orderBy('name');
             }])->orderBy('name')->get(),
-            'equipment' => \App\Models\Equipment::with('equipmentType')->orderBy('name')->get(),
-            'locations' => \App\Models\Location::select('city', 'postcode', 'region')->orderBy('city')->get(),
+            'equipment' => Equipment::with('equipmentType')->orderBy('name')->get(),
+            'locations' => Location::select('city', 'postcode', 'region')->orderBy('city')->get(),
         ];
     }
 }

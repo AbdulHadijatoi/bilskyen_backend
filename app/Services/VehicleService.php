@@ -719,6 +719,11 @@ class VehicleService
             'dmrFactVehicle.variant.model.brand',
             'dealer',
             'salesType',
+            'fuelType',
+            'gearType',
+            'brand',
+            'model',
+            'variant',
         ];
         if ($with !== []) {
             $baseWith = array_merge($baseWith, $with);

@@ -652,7 +652,7 @@
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                             @foreach($lookupData['variants'] as $variant)
-                                <option value="{{ $variant->id }}" {{ $vehicle->details && $vehicle->details->variant_id == $variant->id ? 'selected' : '' }}>
+                                <option value="{{ $variant->id }}" {{ (int) $vehicle->variant_id === (int) $variant->id ? 'selected' : '' }}>
                                     {{ $variant->name }}
                                 </option>
                             @endforeach
@@ -661,12 +661,12 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="color_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
-                        <select id="color_id" name="color_id"
+                        <label for="colour_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
+                        <select id="colour_id" name="colour_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
-                            @foreach($lookupData['colors'] as $color)
-                                <option value="{{ $color->id }}" {{ $vehicle->details && $vehicle->details->color_id == $color->id ? 'selected' : '' }}>
+                            @foreach($lookupData['dmrColours'] as $color)
+                                <option value="{{ $color->id }}" {{ (int) ($vehicle->colour_id ?? 0) === (int) $color->id ? 'selected' : '' }}>
                                     {{ $color->name }}
                                 </option>
                             @endforeach
@@ -744,7 +744,7 @@
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @php
-                                        $lastInspectionDate = $vehicle->details && $vehicle->details->last_inspection_date ? \Carbon\Carbon::parse($vehicle->details->last_inspection_date) : null;
+                                        $lastInspectionDate = $vehicle->last_inspection_date ? \Carbon\Carbon::parse($vehicle->last_inspection_date) : null;
                                         $lastInspectionMonth = $lastInspectionDate ? $lastInspectionDate->month : null;
                                     @endphp
                                     @for($i = 1; $i <= 12; $i++)
@@ -780,21 +780,21 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
-                        <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
-                            value="{{ old('technical_total_weight', $vehicle->details ? $vehicle->details->technical_total_weight : '') }}"
+                        <label for="maximum_weight_kg" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
+                        <input type="number" id="maximum_weight_kg" name="maximum_weight_kg" min="0"
+                            value="{{ old('maximum_weight_kg', $vehicle->maximum_weight_kg) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.technical_total_weight_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="euronom_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
-                        <select id="euronom_id" name="euronom_id"
+                        <label for="emission_norm_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
+                        <select id="emission_norm_id" name="emission_norm_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
-                            @foreach($lookupData['euronorms'] as $euronom)
-                                <option value="{{ $euronom->id }}" {{ $vehicle->details && $vehicle->details->euronom_id == $euronom->id ? 'selected' : '' }}>
+                            @foreach($lookupData['dmrEuronorms'] as $euronom)
+                                <option value="{{ $euronom->id }}" {{ (int) ($vehicle->emission_norm_id ?? 0) === (int) $euronom->id ? 'selected' : '' }}>
                                     {{ $euronom->name }}
                                 </option>
                             @endforeach
@@ -913,7 +913,7 @@
                     <label class="text-sm font-medium mb-2 block">{{ __('messages.pages.sell_your_car.servicebog') }}</label>
                     <div class="flex gap-2 md:gap-3">
                         @php
-                            $servicebog = $vehicle->details ? $vehicle->details->servicebog : 'Default';
+                            $servicebog = $vehicle->servicebog ?? 'Default';
                         @endphp
                         <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
                             <input type="radio" name="servicebog" value="Yes" class="h-3 w-3 md:h-4 md:w-4 text-primary" {{ $servicebog == 'Yes' ? 'checked' : '' }}>
@@ -1059,7 +1059,7 @@
                     <label for="description" class="text-sm font-medium">{{ __('messages.forms.message') }}</label>
                     <textarea id="description" name="description" rows="6"
                         class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}">{{ old('description', $vehicle->details ? $vehicle->details->description : '') }}</textarea>
+                        placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}">{{ old('description', $vehicle->description) }}</textarea>
                     <p class="field-help">{{ __('messages.pages.sell_your_car.description_help') }}</p>
                 </div>
             </div>
@@ -1081,7 +1081,7 @@
                     <div class="space-y-2">
                         <label for="seller_phone" class="text-sm font-medium">{{ __('messages.forms.phone') }}</label>
                         <input type="text" id="seller_phone" name="seller_phone" 
-                            value="{{ old('seller_phone', $vehicle->details ? $vehicle->details->seller_phone : ($user->phone ?? '')) }}"
+                            value="{{ old('seller_phone', $vehicle->seller_phone ?? ($user->phone ?? '')) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="{{ __('messages.pages.sell_your_car.phone_placeholder') }}">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.phone_help') }}</p>

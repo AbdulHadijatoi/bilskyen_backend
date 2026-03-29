@@ -106,7 +106,7 @@
                         data-status="{{ VehicleListStatus::PUBLISHED }}"
                     >
                         {{ __('messages.pages.seller_dashboard.published') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700" id="count-published">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count() }}</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700" id="count-published">{{ $vehicles->where('list_status_id', VehicleListStatus::PUBLISHED)->count() }}</span>
                     </button>
                     <button
                         type="button"
@@ -115,7 +115,7 @@
                         data-status="{{ VehicleListStatus::DRAFT }}"
                     >
                         {{ __('messages.pages.seller_dashboard.draft') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700" id="count-draft">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count() }}</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700" id="count-draft">{{ $vehicles->where('list_status_id', VehicleListStatus::DRAFT)->count() }}</span>
                     </button>
                     <button
                         type="button"
@@ -124,7 +124,7 @@
                         data-status="{{ VehicleListStatus::SOLD }}"
                     >
                         {{ __('messages.pages.seller_dashboard.sold') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700" id="count-sold">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count() }}</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700" id="count-sold">{{ $vehicles->where('list_status_id', VehicleListStatus::SOLD)->count() }}</span>
                     </button>
                     <button
                         type="button"
@@ -133,7 +133,7 @@
                         data-status="{{ VehicleListStatus::ARCHIVED }}"
                     >
                         {{ __('messages.pages.seller_dashboard.archived') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700" id="count-archived">{{ $vehicles->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count() }}</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700" id="count-archived">{{ $vehicles->where('list_status_id', VehicleListStatus::ARCHIVED)->count() }}</span>
                     </button>
                 </nav>
             </div>
@@ -141,11 +141,11 @@
             <!-- Vehicle Grid -->
             <div id="vehicle-grid" class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @forelse($vehicles as $vehicle)
-                <div class="vehicle-card flex flex-col rounded-lg bg-card border border-border overflow-hidden shadow-sm" data-status="{{ $vehicle->vehicle_list_status_id }}">
+                <div class="vehicle-card flex flex-col rounded-lg bg-card border border-border overflow-hidden shadow-sm" data-status="{{ $vehicle->list_status_id }}">
                     <!-- Vehicle Image -->
                     <div class="relative aspect-[2/1.5] overflow-hidden">
                         <img
-                            src="{{ $vehicle->images->first()?->thumbnail_url ?? $vehicle->images->first()?->url ?? '/placeholder-vehicle.jpg' }}"
+                            src="{{ $vehicle->images->first()?->thumbnail_url ?? $vehicle->images->first()?->image_url ?? '/placeholder-vehicle.jpg' }}"
                             alt="{{ $vehicle->title }}"
                             class="h-full w-full object-cover"
                         />
@@ -158,14 +158,14 @@
                                     VehicleListStatus::SOLD => 'bg-blue-500',
                                     VehicleListStatus::ARCHIVED => 'bg-orange-500',
                                 ];
-                                $statusColor = $statusColors[$vehicle->vehicle_list_status_id] ?? 'bg-gray-500';
+                                $statusColor = $statusColors[$vehicle->list_status_id] ?? 'bg-gray-500';
                             @endphp
                             <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-white {{ $statusColor }}">
-                                {{ $vehicle->vehicle_list_status_name }}
+                                {{ $vehicle->vehicleListStatus?->name ?? $vehicle->vehicle_list_status_name }}
                             </span>
-                            @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
+                            @if($vehicle->salesType)
                             <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
+                                {{ $vehicle->salesType->name }}
                             </span>
                             @endif
                         </div>
@@ -185,9 +185,9 @@
 
                         <!-- Vehicle Stats -->
                         <div class="flex flex-wrap gap-2 text-xs">
-                            @if($vehicle->mileage || $vehicle->km_driven)
+                            @if($vehicle->km_driven !== null)
                             <span class="inline-flex items-center rounded-md border border-border px-2 py-1">
-                                {{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km
+                                {{ number_format((int) $vehicle->km_driven) }} km
                             </span>
                             @endif
                             @if($vehicle->engine_power_hp)
@@ -240,7 +240,7 @@
                                 </button>
                             </div>
                             <div class="flex gap-2">
-                                @if($vehicle->vehicle_list_status_id == VehicleListStatus::PUBLISHED)
+                                @if($vehicle->list_status_id == VehicleListStatus::PUBLISHED)
                                 <button 
                                     type="button"
                                     onclick="unpublishVehicle({{ $vehicle->id }}, '{{ $token }}')"
@@ -293,7 +293,7 @@
 
             <!-- Pagination -->
             @if($vehicles->hasPages())
-            <div class="flex items-center justify-center gap-2">
+            <div id="pagination-container" class="flex items-center justify-center gap-2">
                 @if($vehicles->onFirstPage())
                 <button disabled class="px-4 py-2 rounded-md border border-border bg-background text-muted-foreground cursor-not-allowed">
                     {{ __('messages.common.previous') }}
@@ -559,7 +559,7 @@ window.updateStatus = function(vehicleId, statusId, token) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ vehicle_list_status_id: statusId }),
+        body: JSON.stringify({ list_status_id: statusId }),
         credentials: 'same-origin'
     })
     .then(response => response.json())

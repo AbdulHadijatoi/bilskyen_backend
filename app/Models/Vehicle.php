@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\ViewModels\VehicleDetailPresenter;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
+use App\Models\DmrVariant;
+use App\Models\DmrDriveEnergy;
 
 class Vehicle extends Model
 {
@@ -171,6 +175,136 @@ class Vehicle extends Model
     public function getDetailsAttribute(): VehicleDetailPresenter
     {
         return new VehicleDetailPresenter($this);
+    }
+
+    /**
+     * Legacy alias: column is {@see $list_status_id}.
+     */
+    public function getVehicleListStatusIdAttribute(): ?int
+    {
+        $v = $this->attributes['list_status_id'] ?? null;
+
+        return $v !== null ? (int) $v : null;
+    }
+
+    public function getVehicleListStatusNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('vehicleListStatus') && $this->vehicleListStatus) {
+            return $this->vehicleListStatus->name;
+        }
+
+        $id = $this->attributes['list_status_id'] ?? null;
+        if ($id === null) {
+            return null;
+        }
+
+        return self::getCachedLookup('vehicle_list_statuses', (int) $id);
+    }
+
+    /** @deprecated Column removed; maps to {@see $km_driven}. */
+    public function getMileageAttribute(): ?int
+    {
+        $v = $this->attributes['km_driven'] ?? null;
+
+        return $v !== null ? (int) $v : null;
+    }
+
+    /** @deprecated Use {@see $address}; kept for seller/dealer Blade/API. */
+    public function getSellerAddressAttribute(): ?string
+    {
+        $v = $this->attributes['address'] ?? null;
+
+        return $v !== null && $v !== '' ? (string) $v : null;
+    }
+
+    /** @deprecated Use {@see $postcode}. */
+    public function getSellerPostcodeAttribute(): ?string
+    {
+        $v = $this->attributes['postcode'] ?? null;
+
+        return $v !== null && $v !== '' ? (string) $v : null;
+    }
+
+    /**
+     * Trim/variant label (column `version` was dropped).
+     */
+    public function getVersionAttribute(): ?string
+    {
+        if ($this->relationLoaded('variant') && $this->variant) {
+            return $this->variant->name;
+        }
+        if (! empty($this->attributes['variant_id'])) {
+            return DmrVariant::query()->whereKey($this->attributes['variant_id'])->value('name');
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant) {
+            return $dmr->variant->name;
+        }
+
+        return null;
+    }
+
+    public function getBrandNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('brand') && $this->brand) {
+            return $this->brand->name;
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant?->relationLoaded('model') && $dmr->variant->model?->relationLoaded('brand') && $dmr->variant->model->brand) {
+            return $dmr->variant->model->brand->name;
+        }
+        if (! empty($this->attributes['brand_id'])) {
+            return DmrBrand::query()->whereKey($this->attributes['brand_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getModelNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('model') && $this->model) {
+            return $this->model->name;
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant?->relationLoaded('model') && $dmr->variant->model) {
+            return $dmr->variant->model->name;
+        }
+        if (! empty($this->attributes['model_id'])) {
+            return DmrModel::query()->whereKey($this->attributes['model_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getFuelTypeNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('fuelType') && $this->fuelType) {
+            return $this->fuelType->name;
+        }
+        if (! empty($this->attributes['fuel_type_id'])) {
+            return DmrDriveEnergy::query()->whereKey($this->attributes['fuel_type_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getGearTypeNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('gearType') && $this->gearType) {
+            return $this->gearType->name;
+        }
+        if (! empty($this->attributes['gear_type_id'])) {
+            return self::getCachedLookup('gear_types', (int) $this->attributes['gear_type_id']);
+        }
+
+        return null;
+    }
+
+    public function getModelYearNameAttribute(): ?string
+    {
+        $y = $this->attributes['model_year'] ?? null;
+
+        return $y !== null ? (string) (int) $y : null;
     }
 
     // protected $appends = [
