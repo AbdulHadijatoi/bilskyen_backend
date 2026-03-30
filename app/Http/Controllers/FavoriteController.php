@@ -40,6 +40,9 @@ class FavoriteController extends Controller
                 return null;
             }
 
+            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+            $sellerType = $isDealer ? 'Dealer' : 'Private';
+
             // Get first image
             $firstImage = $vehicle->images->first();
             $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
@@ -53,6 +56,7 @@ class FavoriteController extends Controller
                 'version' => $vehicle->version ?? '',
                 'price' => $vehicle->price ?? 0,
                 'image' => $imageUrl,
+                'seller_type' => $sellerType,
                 'km_driven' => $vehicle->km_driven ?? 0,
                 'engine_power_hp' => $vehicle->engine_power_hp,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
