@@ -811,37 +811,7 @@ class VehicleService
                 }
             }
         }
-        if (! $appliedDiscreteModelYears && isset($f['model_year_id']) && $f['model_year_id'] !== '' && $f['model_year_id'] !== null) {
-            $raw = $f['model_year_id'];
-            $candidates = is_array($raw) ? $raw : [$raw];
-            $years = [];
-            foreach ($candidates as $c) {
-                $n = (int) $c;
-                if ($n <= 0) {
-                    continue;
-                }
-                if ($n >= 1900 && $n <= 2100) {
-                    $years[] = $n;
-
-                    continue;
-                }
-                if (Schema::hasTable('model_years')) {
-                    $name = DB::table('model_years')->where('id', $n)->value('name');
-                    if ($name !== null && is_numeric(trim((string) $name))) {
-                        $years[] = (int) trim((string) $name);
-                    }
-                }
-            }
-            $years = array_values(array_unique($years));
-            if ($years !== []) {
-                $appliedDiscreteModelYears = true;
-                if (count($years) === 1) {
-                    $query->where('model_year', $years[0]);
-                } else {
-                    $query->whereIn('model_year', $years);
-                }
-            }
-        }
+        // `model_year_id` is normalized to calendar years in {@see normalizePublicListingFilters()} (vehicles use `model_year`, not `model_year_id`).
 
         if (isset($f['use_id']) && $f['use_id'] !== '' && $f['use_id'] !== null) {
             $query->where('vehicle_use_id', (int) $f['use_id']);
@@ -1139,7 +1109,68 @@ class VehicleService
             $f['mileage_to'] = $f['km_driven_to'] ?? null;
         }
 
+        $this->hoistModelYearIdIntoCalendarFilters($f);
+
         return $f;
+    }
+
+    /**
+     * Map API / legacy `model_year_id` (calendar year or `model_years.id`) onto `model_year` / range fields,
+     * then remove the key. The `vehicles` table uses `model_year` (year int); `model_year_id` is not a column after DMR revamp.
+     *
+     * @param  array<string, mixed>  $f
+     */
+    private function hoistModelYearIdIntoCalendarFilters(array &$f): void
+    {
+        if (! array_key_exists('model_year_id', $f) || $f['model_year_id'] === '' || $f['model_year_id'] === null) {
+            return;
+        }
+
+        $appliedFromModelYearParam = false;
+        if (isset($f['model_year']) && is_string($f['model_year']) && trim($f['model_year']) !== '') {
+            $years = array_values(array_unique(array_filter(array_map('intval', explode(',', $f['model_year'])))));
+            $years = array_values(array_filter($years, fn ($y) => $y >= 1900 && $y <= 2100));
+            $appliedFromModelYearParam = $years !== [];
+        }
+
+        if (! $appliedFromModelYearParam) {
+            $raw = $f['model_year_id'];
+            $candidates = is_array($raw) ? $raw : [$raw];
+            $years = [];
+            foreach ($candidates as $c) {
+                $n = (int) $c;
+                if ($n <= 0) {
+                    continue;
+                }
+                if ($n >= 1900 && $n <= 2100) {
+                    $years[] = $n;
+
+                    continue;
+                }
+                if (Schema::hasTable('model_years')) {
+                    $name = DB::table('model_years')->where('id', $n)->value('name');
+                    if ($name !== null && is_numeric(trim((string) $name))) {
+                        $years[] = (int) trim((string) $name);
+                    }
+                }
+            }
+            $years = array_values(array_unique($years));
+            if ($years !== []) {
+                $hasRange = ($f['model_year_from'] ?? $f['year_from'] ?? null) !== null && (string) ($f['model_year_from'] ?? $f['year_from'] ?? '') !== ''
+                    || ($f['model_year_to'] ?? $f['year_to'] ?? null) !== null && (string) ($f['model_year_to'] ?? $f['year_to'] ?? '') !== '';
+                if (! $hasRange) {
+                    if (count($years) === 1) {
+                        $y = (string) $years[0];
+                        $f['model_year_from'] = $y;
+                        $f['model_year_to'] = $y;
+                    } else {
+                        $f['model_year'] = implode(',', array_map('strval', $years));
+                    }
+                }
+            }
+        }
+
+        unset($f['model_year_id']);
     }
 
     /**

@@ -866,7 +866,15 @@
                 </div>
             </div>
 
-            @if($vehicle->wholesale_price !== null || $vehicle->internal_cost_price !== null || $vehicle->price_without_tax !== null || $vehicle->wholesale_price_includes_delivery !== null)
+            @php
+                $hasWholesalePrice = $vehicle->wholesale_price !== null && $vehicle->wholesale_price !== '';
+                $hasInternalCost = $vehicle->internal_cost_price !== null && $vehicle->internal_cost_price !== '';
+                $hasPriceExTax = $vehicle->price_without_tax !== null && $vehicle->price_without_tax !== '';
+                $wholesaleIncludesDelivery = $vehicle->wholesale_price_includes_delivery;
+                $showAdditionalPricing = ($hasWholesalePrice || $hasInternalCost || $hasPriceExTax || $wholesaleIncludesDelivery === true)
+                    || ($wholesaleIncludesDelivery === false && ($hasWholesalePrice || $hasInternalCost || $hasPriceExTax));
+            @endphp
+            @if($showAdditionalPricing)
             <div class="rounded-lg border border-border bg-gray-50 p-6">
                 <h2 class="text-foreground mb-4 text-xl font-semibold">
                     {{ __('messages.pages.vehicles.detail.dealer_only_pricing') }}
