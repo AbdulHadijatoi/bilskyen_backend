@@ -23,8 +23,13 @@ class FavoriteController extends Controller
         $favorites = Favorite::where('user_id', $request->user()->id)
             ->with([
                 'vehicle.images',
-                'vehicle.details',
                 'vehicle.dealer',
+                'vehicle.brand',
+                'vehicle.model',
+                'vehicle.variant',
+                'vehicle.fuelType',
+                'vehicle.gearType',
+                'vehicle.dmrFactVehicle.variant.model.brand',
             ])
             ->paginate($request->get('limit', 15));
 
