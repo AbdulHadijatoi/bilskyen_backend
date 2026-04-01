@@ -183,12 +183,6 @@ class SellYourCarSubmissionService
             $description = $this->generateDescription($request, $variantId);
         }
         $description = trim((string) $description);
-        $contactBlock = 'Seller contact: '.$request->input('seller_phone')
-            .', '.$request->input('seller_address')
-            .', '.$request->input('seller_postcode');
-        $description = $description === ''
-            ? $contactBlock
-            : $description."\n\n".$contactBlock;
 
         $vehicle = $this->createVehicleRecord($request, $user, $description);
         $token = $this->generateSuccessToken($vehicle->id, $user->id);

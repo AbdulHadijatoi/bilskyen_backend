@@ -130,6 +130,7 @@
             $dealerDisplayCity = trim($vehicle->dealer->city ?? '') ?: null;
             $dealerDisplayPostcode = $vehicle->postcode ? trim($vehicle->postcode) : (trim($vehicle->dealer->postcode ?? '') ?: null);
         } elseif ($vehicle->user) {
+            $dealerDisplayAddress = $vehicle->address ? trim($vehicle->address) : null;
             $contactUser = $vehicle->user;
             $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
             $contactEmail = $vehicle->user->email ?? null;
@@ -534,18 +535,6 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.factory_new') }}</span>
                     <span class="detail-value">{{ __('messages.pages.vehicles.detail.yes') }}</span>
-                </div>
-                @endif
-                @if(!empty($vd['seller_phone']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.listing_phone') }}</span>
-                    <span class="detail-value"><a href="tel:{{ preg_replace('/\s+/', '', $vd['seller_phone']) }}" class="hover:underline">{{ $vd['seller_phone'] }}</a></span>
-                </div>
-                @endif
-                @if(!empty($vd['address']) || !empty($vd['postcode']))
-                <div class="detail-item md:col-span-2">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.vehicle_location') }}</span>
-                    <span class="detail-value">{{ trim(implode(', ', array_filter([$vd['address'] ?? '', $vd['postcode'] ?? '']))) }}</span>
                 </div>
                 @endif
             </div>
@@ -1049,34 +1038,6 @@
                                         {{ $dealerDisplayAddress }}
                                     </p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.address') }}</p>
-                                </div>
-                            </div>
-                        @endif
-                        @if($dealerDisplayCity)
-                            <div class="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
-                                    <path d="M12 20h9"></path>
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                </svg>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground">{{ $dealerDisplayCity }}</p>
-                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.city') }}</p>
-                                </div>
-                            </div>
-                        @endif
-                        @if($dealerDisplayPostcode)
-                            <div class="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
-                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground">
-                                        {{ $dealerDisplayPostcode }}
-                                    </p>
-                                    <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.postal_code') }}</p>
                                 </div>
                             </div>
                         @endif

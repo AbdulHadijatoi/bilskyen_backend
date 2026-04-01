@@ -1,0 +1,328 @@
+{
+  "info": {
+    "_postman_id": "b8b83d47-969a-4ff1-b544-5d0d3d1ef001",
+    "name": "Vehicles API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the vehicle search page APIs with sample values for all request keys used by the page."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "vehicle_id",
+      "value": "101"
+    },
+    {
+      "key": "vehicle_id_to_delete",
+      "value": "101"
+    }
+  ],
+  "item": [
+    {
+      "name": "Vehicle Search",
+      "item": [
+        {
+          "name": "Search Vehicles - Full Payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"search\": \"tesla model\",\n  \"sort\": \"latest\",\n  \"page\": 1,\n  \"listing_type_id\": [1, 2],\n  \"condition_id\": 1,\n  \"brand_id\": [12, 24],\n  \"model_id\": [101, 102],\n  \"variant_id\": \"1001,1002\",\n  \"fuel_type_id\": [3, 4],\n  \"price_from\": \"50000\",\n  \"price_to\": \"350000\",\n  \"km_driven_from\": \"0\",\n  \"km_driven_to\": \"120000\",\n  \"gear_type_id\": \"2\",\n  \"body_type_id\": \"5\",\n  \"color_id\": \"7\",\n  \"sales_type_id\": \"1\",\n  \"price_type_id\": \"2\",\n  \"emission_norm_id\": \"6\",\n  \"use_id\": \"1\",\n  \"model_year\": \"2022,2023\",\n  \"model_year_from\": \"2020\",\n  \"model_year_to\": \"2025\",\n  \"first_registration_year_from\": \"2020\",\n  \"first_registration_year_to\": \"2025\",\n  \"ownership_tax_from\": \"1000\",\n  \"ownership_tax_to\": \"8000\",\n  \"engine_power_kw_from\": \"80\",\n  \"engine_power_kw_to\": \"300\",\n  \"electrical_consumption_from\": \"12\",\n  \"electrical_consumption_to\": \"25\",\n  \"km_per_liter_from\": \"10\",\n  \"km_per_liter_to\": \"25\",\n  \"charging_type\": \"fast\",\n  \"max_speed_from\": \"120\",\n  \"max_speed_to\": \"260\",\n  \"maximum_weight_kg_from\": \"900\",\n  \"maximum_weight_kg_to\": \"3000\",\n  \"door_count\": \"4\",\n  \"seats_min\": \"4\",\n  \"seats_max\": \"7\",\n  \"axle_count\": \"2\",\n  \"specifications_airbags\": \"6\",\n  \"towing_weight\": \"1500\",\n  \"drive_axle_count\": [2, 4],\n  \"ncap_test\": 1,\n  \"is_import\": 1,\n  \"is_factory_new\": 0,\n  \"equipment_ids\": [11, 15, 21],\n  \"limit\": 15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/search-vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search-vehicles"
+              ]
+            },
+            "description": "Full sample payload covering all filter keys collected from the vehicles page."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lookups",
+      "item": [
+        {
+          "name": "Brands",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/brands?search=tes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "brands"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "tes"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/models?search=model&brand_ids=12,24",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "models"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "model"
+                },
+                {
+                  "key": "brand_ids",
+                  "value": "12,24"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Variants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/variants?search=performance&model_ids=101,102",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "variants"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "performance"
+                },
+                {
+                  "key": "model_ids",
+                  "value": "101,102"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/types?search=suv&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "types"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "suv"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Favorites API",
+      "item": [
+        {
+          "name": "Check Favorites Batch",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_ids\": [101, 102, 103]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/favorites/check-batch",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "favorites",
+                "check-batch"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorite",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_id\": {{vehicle_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/favorites",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "favorites"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Favorite",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/favorites/{{vehicle_id_to_delete}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "favorites",
+                "{{vehicle_id_to_delete}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
