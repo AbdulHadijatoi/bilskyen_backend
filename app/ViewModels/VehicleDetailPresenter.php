@@ -30,9 +30,7 @@ class VehicleDetailPresenter
             'servicebog' => $v->servicebog,
             'condition_id' => $v->condition_id,
             'seller_phone' => $v->seller_phone ?? $v->user?->phone ?? $v->dealer?->owner?->phone,
-            'wholesale_price' => $v->wholesale_price,
             'annual_tax' => $v->annual_tax,
-            'internal_cost_price' => $v->internal_cost_price,
             'type_name_resolved' => $d?->vehicleUse?->name,
             'use_name' => $v->vehicleUse?->name ?? $d?->vehicleUse?->name,
             'price_type_name' => $v->relationLoaded('priceType')

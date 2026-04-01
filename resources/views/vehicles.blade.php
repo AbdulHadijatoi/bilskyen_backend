@@ -165,13 +165,10 @@
             @php
                 $selectedBrandIds = isset($cf['brand_id']) ? (is_array($cf['brand_id']) ? $cf['brand_id'] : [$cf['brand_id']]) : [];
                 $selectedModelIds = isset($cf['model_id']) ? (is_array($cf['model_id']) ? $cf['model_id'] : [$cf['model_id']]) : [];
-                $selectedVariantIds = isset($cf['variant_id']) ? (is_array($cf['variant_id']) ? $cf['variant_id'] : array_filter(array_map('intval', explode(',', (string) $cf['variant_id'])))) : [];
                 $brandsList = $selectedBrands ?? [];
                 $modelsList = $selectedModels ?? [];
-                $variantsList = $selectedVariants ?? [];
                 $selectedBrandNames = collect($brandsList)->filter(fn($b) => in_array(is_array($b) ? $b['id'] : $b->id, $selectedBrandIds))->map(fn($b) => is_array($b) ? $b['name'] : $b->name)->values()->all();
                 $selectedModelNames = collect($modelsList)->filter(fn($m) => in_array(is_array($m) ? $m['id'] : $m->id, $selectedModelIds))->map(fn($m) => is_array($m) ? $m['name'] : $m->name)->values()->all();
-                $selectedVariantNames = collect($variantsList)->filter(fn($v) => in_array(is_array($v) ? $v['id'] : $v->id, $selectedVariantIds))->map(fn($v) => is_array($v) ? $v['name'] : $v->name)->values()->all();
             @endphp
             <details open class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -237,40 +234,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="relative" data-multiselect-dropdown>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.variant') }}</label>
-                        <button type="button" id="variant-dropdown-trigger" class="variant-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="variant-dropdown-label">
-                            <span id="variant-dropdown-label" class="truncate">
-                                @if(count($selectedVariantNames ?? []) === 0){{ __('messages.common.all') }}@elseif(count($selectedVariantNames) === 1){{ $selectedVariantNames[0] }}@else{{ count($selectedVariantNames) }} {{ __('messages.forms.selected') }}@endif
-                            </span>
-                            <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
-                        </button>
-                        <div id="variant-dropdown-panel" class="variant-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
-                            <div class="p-2 border-b border-border">
-                                <div class="relative">
-                                    <input
-                                        type="text"
-                                        id="variant-search-input"
-                                        placeholder="{{ __('messages.forms.filter_variant_list') }}"
-                                        class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                        autocomplete="off"
-                                    >
-                                    <span id="variant-search-loading" class="hidden absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
-                                        <svg class="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </span>
-                                </div>
-                            </div>
-                            <div id="variant-checkbox-list" class="p-2 space-y-0.5">
-                                @foreach($selectedVariants ?? [] as $v)
-                                    @php $vid = is_array($v) ? $v['id'] : $v->id; $vname = is_array($v) ? $v['name'] : $v->name; $vmid = is_array($v) ? ($v['model_id'] ?? '') : $v->model_id; @endphp
-                                    <label class="variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-model-id="{{ $vmid }}">
-                                        <input type="checkbox" name="variant_id[]" value="{{ $vid }}" class="variant-checkbox rounded border-input" checked>
-                                        <span class="variant-checkbox-name">{{ $vname }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
                     <div>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
                         <select name="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -282,9 +245,6 @@
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
-                        @if(!empty($cf['model_year']) && is_string($cf['model_year']))
-                            <input type="hidden" name="model_year" value="{{ $cf['model_year'] }}" class="js-carry-model-year" autocomplete="off" />
-                        @endif
                         <div class="grid grid-cols-2 gap-2">
                             <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                             <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
@@ -1174,7 +1134,6 @@
         const sortLabels = @json($vehicleSortLabels);
         const I18N_BMV = {
             selectBrandForModels: @json(__('messages.forms.select_brand_for_models')),
-            selectModelForVariants: @json(__('messages.forms.select_model_for_variants')),
         };
         
         let searchDebounceTimer = null;
@@ -1644,23 +1603,6 @@
                 });
             }
 
-            // Variant (multi-select: one chip per selected variant)
-            if (filters.variant_id) {
-                const raw = filters.variant_id;
-                const ids = typeof raw === 'string' ? raw.split(',').map(s => s.trim()).filter(Boolean) : (Array.isArray(raw) ? raw : [raw]);
-                ids.forEach(id => {
-                    const variantName = getLabelText('variant_id[]', id);
-                    if (variantName) {
-                        chips.push({
-                            key: 'variant_id',
-                            label: variantName,
-                            value: id,
-                            isArray: true
-                        });
-                    }
-                });
-            }
-            
             // Fuel type (multi-select: one chip per selected fuel type)
             if (filters.fuel_type_id) {
                 const ids = Array.isArray(filters.fuel_type_id) ? filters.fuel_type_id : [filters.fuel_type_id];
@@ -1703,17 +1645,6 @@
                 }
             }
             
-            if (filters.model_year) {
-                const parts = String(filters.model_year).split(',').map((s) => s.trim()).filter(Boolean);
-                parts.forEach((y) => {
-                    chips.push({
-                        key: 'model_year',
-                        label: `{{ __('messages.forms.model_year') }} ${y}`,
-                        value: y,
-                        isArray: true
-                    });
-                });
-            }
             // Model year range
             if (filters.model_year_from || filters.model_year_to) {
                 const from = filters.model_year_from || '';
@@ -1931,7 +1862,7 @@
                 }
             }
             
-            // Single-value selects (body_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
+            // Single-value selects (body_type, gear_type, color, type, sales_type, price_type, euronom, use, transmission)
             const selectChips = [
                 ['body_type_id', '{{ __('messages.forms.body_type') }}'],
                 ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
@@ -1993,29 +1924,16 @@
                     
                     // Remove filter from DOM
                     if (isArray) {
-                        if (key === 'model_year') {
-                            const carry = document.querySelector('input.js-carry-model-year[name="model_year"]');
-                            if (carry && carry.value) {
-                                const next = carry.value.split(',').map((s) => s.trim()).filter((s) => s !== String(value));
-                                if (next.length === 0) carry.remove();
-                                else carry.value = next.join(',');
-                                autoApplyFilters();
-                                return;
-                            }
-                        }
                         const inputs = document.getElementsByName(key + '[]');
                         const checkbox = Array.from(inputs).find(inp => inp.value == value);
                         if (checkbox) checkbox.checked = false;
                         if (key === 'brand_id' && typeof updateBrandDropdownLabel === 'function') {
                             updateBrandDropdownLabel();
                             if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
-                            if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                         }
                         if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') {
                             updateModelDropdownLabel();
-                            if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                         }
-                        if (key === 'variant_id' && typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
                         if (key === 'fuel_type_id' && typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
@@ -2876,8 +2794,6 @@ if (config) {
             if (brandIds.length > 0) filters.brand_id = brandIds;
             const modelIds = Array.from(document.getElementsByName('model_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (modelIds.length > 0) filters.model_id = modelIds;
-            const variantIds = Array.from(document.getElementsByName('variant_id[]')).filter(cb => cb.checked).map(cb => cb.value);
-            if (variantIds.length > 0) filters.variant_id = variantIds.join(',');
             const fuelTypeIds = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
@@ -2891,13 +2807,8 @@ if (config) {
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
             if (v('emission_norm_id')) filters.emission_norm_id = v('emission_norm_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            const carryModelYear = document.querySelector('input.js-carry-model-year[name="model_year"]');
-            if (carryModelYear && carryModelYear.value.trim()) {
-                filters.model_year = carryModelYear.value.trim();
-            } else {
-                if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
-                if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
-            }
+            if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
+            if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
             if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1950) filters.first_registration_year_from = v('first_registration_year_from');
             if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
             if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');
@@ -2938,12 +2849,10 @@ if (config) {
             filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
         }
 
-        // Types dropdown still uses paged search; brands/models/variants load full lists (or scoped lists) from API.
+        // Types dropdown still uses paged search; brands/models load full lists (or scoped lists) from API.
         const LOOKUP_LIMIT = 25;
         let brandLookupToken = 0;
         let modelLookupToken = 0;
-        let variantLookupToken = 0;
-        let variantLookupInFlight = 0;
         let typeLookupToken = 0;
 
         function applyBrandClientFilter() {
@@ -2961,16 +2870,6 @@ if (config) {
             const q = (input && input.value || '').trim().toLowerCase();
             document.querySelectorAll('#model-checkbox-list .model-checkbox-label').forEach(label => {
                 const span = label.querySelector('.model-checkbox-name');
-                const t = (span && span.textContent || '').toLowerCase();
-                label.style.display = !q || t.includes(q) ? '' : 'none';
-            });
-        }
-
-        function applyVariantClientFilter() {
-            const input = document.getElementById('variant-search-input');
-            const q = (input && input.value || '').trim().toLowerCase();
-            document.querySelectorAll('#variant-checkbox-list .variant-checkbox-label').forEach(label => {
-                const span = label.querySelector('.variant-checkbox-name');
                 const t = (span && span.textContent || '').toLowerCase();
                 label.style.display = !q || t.includes(q) ? '' : 'none';
             });
@@ -2998,25 +2897,6 @@ if (config) {
                 };
             });
             return meta;
-        }
-
-        function getSelectedVariantMeta() {
-            const meta = {};
-            Array.from(document.querySelectorAll('input[name="variant_id[]"]:checked')).forEach(cb => {
-                const label = cb.closest('label');
-                const span = label ? (label.querySelector('.variant-checkbox-name') || label.querySelector('span')) : null;
-                const modelId = label ? String(label.getAttribute('data-model-id') || '') : '';
-                meta[String(cb.value)] = {
-                    text: span ? span.textContent.trim() : String(cb.value),
-                    modelId
-                };
-            });
-            return meta;
-        }
-
-        function setVariantSearchLoading(on) {
-            const el = document.getElementById('variant-search-loading');
-            if (el) el.classList.toggle('hidden', !on);
         }
 
         async function refreshBrandsFromApi() {
@@ -3131,7 +3011,6 @@ if (config) {
                 });
                 updateModelDropdownLabel();
                 applyModelClientFilter();
-                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
                 return;
             }
 
@@ -3201,129 +3080,8 @@ if (config) {
 
                 updateModelDropdownLabel();
                 applyModelClientFilter();
-                if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
             } catch (e) {
                 console.debug('Model load failed:', e);
-            }
-        }
-
-        function appendVariantHintRow(list, text) {
-            const p = document.createElement('p');
-            p.className = 'variant-list-hint text-muted-foreground text-xs px-2 py-2';
-            p.textContent = text;
-            list.appendChild(p);
-        }
-
-        async function refreshVariantsFromApi() {
-            const list = document.getElementById('variant-checkbox-list');
-            if (!list) return;
-
-            const selectedMeta = getSelectedVariantMeta();
-            const selectedIds = new Set(Object.keys(selectedMeta));
-            const selectedModelIds = Array.from(document.querySelectorAll('input[name="model_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
-
-            const token = ++variantLookupToken;
-
-            if (selectedModelIds.length === 0) {
-                list.innerHTML = '';
-                appendVariantHintRow(list, I18N_BMV.selectModelForVariants);
-                Object.keys(selectedMeta).forEach(id => {
-                    const meta = selectedMeta[id];
-                    const label = document.createElement('label');
-                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
-                    label.setAttribute('data-model-id', String(meta.modelId || ''));
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'variant_id[]';
-                    input.value = id;
-                    input.className = 'variant-checkbox rounded border-input';
-                    input.checked = true;
-                    const span = document.createElement('span');
-                    span.className = 'variant-checkbox-name';
-                    span.textContent = meta.text;
-                    label.appendChild(input);
-                    label.appendChild(span);
-                    list.appendChild(label);
-                });
-                updateVariantDropdownLabel();
-                applyVariantClientFilter();
-                return;
-            }
-
-            variantLookupInFlight++;
-            setVariantSearchLoading(true);
-
-            const url = new URL('/api/v1/variants', window.location.origin);
-            url.searchParams.set('model_ids', selectedModelIds.join(','));
-
-            try {
-                const response = await fetch(url.toString(), {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    credentials: 'same-origin'
-                });
-                if (!response.ok) return;
-                const json = await response.json().catch(() => ({}));
-                if (token !== variantLookupToken) return;
-
-                const items = json?.data?.items || [];
-                list.innerHTML = '';
-
-                const resultsIds = new Set();
-                items.forEach(item => {
-                    const id = String(item.id);
-                    resultsIds.add(id);
-
-                    const label = document.createElement('label');
-                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
-                    label.setAttribute('data-model-id', String(item.model_id || ''));
-
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'variant_id[]';
-                    input.value = id;
-                    input.className = 'variant-checkbox rounded border-input';
-                    input.checked = selectedIds.has(id);
-
-                    const span = document.createElement('span');
-                    span.className = 'variant-checkbox-name';
-                    span.textContent = item.name;
-
-                    label.appendChild(input);
-                    label.appendChild(span);
-                    list.appendChild(label);
-                });
-
-                Object.keys(selectedMeta).forEach(id => {
-                    if (resultsIds.has(id)) return;
-                    const meta = selectedMeta[id];
-
-                    const label = document.createElement('label');
-                    label.className = 'variant-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
-                    label.setAttribute('data-model-id', String(meta.modelId || ''));
-
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'variant_id[]';
-                    input.value = id;
-                    input.className = 'variant-checkbox rounded border-input';
-                    input.checked = true;
-
-                    const span = document.createElement('span');
-                    span.className = 'variant-checkbox-name';
-                    span.textContent = meta.text;
-
-                    label.appendChild(input);
-                    label.appendChild(span);
-                    list.appendChild(label);
-                });
-
-                updateVariantDropdownLabel();
-                applyVariantClientFilter();
-            } catch (e) {
-                console.debug('Variant load failed:', e);
-            } finally {
-                variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
-                if (variantLookupInFlight === 0) setVariantSearchLoading(false);
             }
         }
 
@@ -3423,16 +3181,6 @@ if (config) {
             else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
         }
 
-        function updateVariantDropdownLabel() {
-            const labelEl = document.getElementById('variant-dropdown-label');
-            if (!labelEl) return;
-            const checked = Array.from(document.getElementsByName('variant_id[]')).filter(cb => cb.checked);
-            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.variant-checkbox-name')) ? cb.closest('label').querySelector('.variant-checkbox-name').textContent.trim() : '').filter(Boolean);
-            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
-            else if (names.length === 1) labelEl.textContent = names[0];
-            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
-        }
-
         // Update fuel type dropdown trigger label from checked checkboxes
         function updateFuelTypeDropdownLabel() {
             const labelEl = document.getElementById('fuel-type-dropdown-label');
@@ -3450,20 +3198,16 @@ if (config) {
             const brandPanel = document.getElementById('brand-dropdown-panel');
             const modelTrigger = document.getElementById('model-dropdown-trigger');
             const modelPanel = document.getElementById('model-dropdown-panel');
-            const variantTrigger = document.getElementById('variant-dropdown-trigger');
-            const variantPanel = document.getElementById('variant-dropdown-panel');
             const fuelTypeTrigger = document.getElementById('fuel-type-dropdown-trigger');
             const fuelTypePanel = document.getElementById('fuel-type-dropdown-panel');
             const brandSearchInput = document.getElementById('brand-search-input');
             const modelSearchInput = document.getElementById('model-search-input');
-            const variantSearchInput = document.getElementById('variant-search-input');
 
             function closeAll() {
                 if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
                 if (modelPanel) { modelPanel.classList.add('hidden'); if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false'); }
-                if (variantPanel) { variantPanel.classList.add('hidden'); if (variantTrigger) variantTrigger.setAttribute('aria-expanded', 'false'); }
                 if (fuelTypePanel) { fuelTypePanel.classList.add('hidden'); if (fuelTypeTrigger) fuelTypeTrigger.setAttribute('aria-expanded', 'false'); }
-                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .variant-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
+                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
             }
 
             if (brandTrigger && brandPanel) {
@@ -3494,20 +3238,6 @@ if (config) {
                     }
                 });
             }
-            if (variantTrigger && variantPanel) {
-                variantTrigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = !variantPanel.classList.contains('hidden');
-                    closeAll();
-                    if (!isOpen) {
-                        variantPanel.classList.remove('hidden');
-                        variantTrigger.setAttribute('aria-expanded', 'true');
-                        const chev = variantTrigger.querySelector('.dropdown-chevron');
-                        if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshVariantsFromApi();
-                    }
-                });
-            }
             if (fuelTypeTrigger && fuelTypePanel) {
                 fuelTypeTrigger.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -3523,7 +3253,7 @@ if (config) {
             }
             document.addEventListener('click', () => closeAll());
 
-            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .variant-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
+            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
                 panel.addEventListener('click', (e) => e.stopPropagation());
             });
 
@@ -3544,28 +3274,16 @@ if (config) {
                     });
                 }
             }
-            if (variantPanel) {
-                const variantList = variantPanel.querySelector('#variant-checkbox-list');
-                if (variantList) {
-                    variantList.addEventListener('change', (e) => {
-                        if (e.target && e.target.classList && e.target.classList.contains('variant-checkbox')) updateVariantDropdownLabel();
-                    });
-                }
-            }
-
             document.querySelectorAll('.fuel-type-checkbox').forEach(cb => {
                 cb.addEventListener('change', updateFuelTypeDropdownLabel);
             });
 
-            // Brand/model/variant: client-side filter only (full lists loaded from API).
+            // Brand/model: client-side filter only (full lists loaded from API).
             if (brandSearchInput) {
                 brandSearchInput.addEventListener('input', () => applyBrandClientFilter());
             }
             if (modelSearchInput) {
                 modelSearchInput.addEventListener('input', () => applyModelClientFilter());
-            }
-            if (variantSearchInput) {
-                variantSearchInput.addEventListener('input', () => applyVariantClientFilter());
             }
 
             // Type dropdown search.
@@ -3597,13 +3315,6 @@ if (config) {
                     // If brand changed, refresh model suggestions based on the new selection.
                     if (target.classList.contains('brand-checkbox')) {
                         if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
-                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
-                    }
-                    if (target.classList.contains('model-checkbox')) {
-                        if (typeof refreshVariantsFromApi === 'function') refreshVariantsFromApi();
-                    }
-                    if (target.classList.contains('variant-checkbox')) {
-                        if (typeof updateVariantDropdownLabel === 'function') updateVariantDropdownLabel();
                     }
                     autoApplyFilters();
                 }
@@ -3731,12 +3442,9 @@ if (config) {
         initBrandModelDropdowns();
         // Prefetch full brand list for faster first open
         if (typeof refreshBrandsFromApi === 'function') refreshBrandsFromApi();
-        // If URL/state already has brands selected, load models/variants
+        // If URL/state already has brands selected, load models
         if (document.querySelector('input[name="brand_id[]"]:checked') && typeof refreshModelsFromApi === 'function') {
             refreshModelsFromApi();
-        }
-        if (document.querySelector('input[name="model_id[]"]:checked') && typeof refreshVariantsFromApi === 'function') {
-            refreshVariantsFromApi();
         }
         
         // Initialize all range sliders

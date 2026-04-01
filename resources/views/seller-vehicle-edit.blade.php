@@ -695,10 +695,10 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="km_driven" class="text-sm font-medium required-field">{{ __('messages.forms.km_driven') }}</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0" required
+                        <input type="number" id="km_driven" name="km_driven" min="0" step="any" inputmode="decimal" required
                             value="{{ old('km_driven', $vehicle->km_driven) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.km_driven_help') }}</p>
                     </div>
 
@@ -715,7 +715,7 @@
                                     @endphp
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ $firstRegMonth == $i ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                            {{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
@@ -749,7 +749,7 @@
                                     @endphp
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ $lastInspectionMonth == $i ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                            {{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
@@ -948,10 +948,10 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="price" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.price_label') }}</label>
-                        <input type="number" id="price" name="price" required min="0"
+                        <input type="number" id="price" name="price" required min="0" step="any" inputmode="decimal"
                             value="{{ old('price', $vehicle->price) }}"
                             class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -1030,7 +1030,7 @@
                             <div class="image-preview-item" data-image-id="{{ $image->id }}" data-sort-order="{{ $image->sort_order }}" draggable="true">
                                 <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ __('messages.forms.vehicle_image_alt') }}">
                                 <div class="image-preview-overlay">
-                                    <button type="button" class="image-remove-btn" onclick="removeExistingImage({{ $image->id }})" title="{{ __('messages.pages.edit_vehicle.remove_image') }}">
+                                    <button type="button" class="image-remove-btn" data-existing-image-id="{{ $image->id }}" title="{{ __('messages.pages.edit_vehicle.remove_image') }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M18 6L6 18M6 6l12 12"></path>
                                         </svg>
@@ -1136,17 +1136,50 @@
     </form>
 </div>
 
-@push('scripts')
-<script>
-    window.locationsData = @json($lookupData['locations'] ?? []);
-    window.vehicleId = {{ $vehicle->id }};
-    window.existingImages = @json($vehicle->images->map(function($img) {
+@php
+    $editVehicleTranslations = [
+        'requiredFieldError' => __('messages.pages.edit_vehicle.required_field_error'),
+        'updating' => __('messages.pages.edit_vehicle.updating'),
+        'updateFailed' => __('messages.pages.edit_vehicle.update_failed'),
+        'updateSuccess' => __('messages.pages.edit_vehicle.update_success'),
+        'updateGenericError' => __('messages.pages.edit_vehicle.update_generic_error'),
+        'imageInvalidFormat' => __('messages.pages.edit_vehicle.image_invalid_format'),
+        'imageTooLarge' => __('messages.pages.edit_vehicle.image_too_large'),
+        'removeImage' => __('messages.pages.edit_vehicle.remove_image'),
+        'updateButton' => __('messages.pages.edit_vehicle.update_button'),
+    ];
+
+    $editVehicleExistingImages = $vehicle->images->map(function ($img) {
         return [
             'id' => $img->id,
             'url' => asset('storage/' . $img->image_path),
-            'sort_order' => $img->sort_order
+            'sort_order' => $img->sort_order,
         ];
-    }));
+    })->values();
+@endphp
+
+@push('scripts')
+<script id="edit-vehicle-locations-data" type="application/json">
+@json($lookupData['locations'] ?? [])
+</script>
+<script id="edit-vehicle-id-data" type="application/json">
+@json($vehicle->id)
+</script>
+<script id="edit-vehicle-translations-data" type="application/json">
+@json($editVehicleTranslations)
+</script>
+<script id="edit-vehicle-existing-images-data" type="application/json">
+@json($editVehicleExistingImages)
+</script>
+<script>
+    const editVehicleLocationsEl = document.getElementById('edit-vehicle-locations-data');
+    const editVehicleIdEl = document.getElementById('edit-vehicle-id-data');
+    const editVehicleTranslationsEl = document.getElementById('edit-vehicle-translations-data');
+    const editVehicleExistingImagesEl = document.getElementById('edit-vehicle-existing-images-data');
+    window.locationsData = editVehicleLocationsEl ? JSON.parse(editVehicleLocationsEl.textContent) : [];
+    window.vehicleId = editVehicleIdEl ? JSON.parse(editVehicleIdEl.textContent) : null;
+    window.editVehicleTranslations = editVehicleTranslationsEl ? JSON.parse(editVehicleTranslationsEl.textContent) : {};
+    window.existingImages = editVehicleExistingImagesEl ? JSON.parse(editVehicleExistingImagesEl.textContent) : [];
 </script>
 <script src="{{ asset('js/seller-vehicle-edit-form.js') }}"></script>
 @endpush

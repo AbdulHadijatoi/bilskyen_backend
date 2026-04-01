@@ -23,8 +23,8 @@ class PriceHistory extends Model
     ];
 
     protected $casts = [
-        'old_price' => 'integer',
-        'new_price' => 'integer',
+        'old_price' => 'float',
+        'new_price' => 'float',
         'changed_at' => 'datetime',
     ];
 

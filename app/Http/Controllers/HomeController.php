@@ -11,7 +11,6 @@ use App\Models\GearType;
 use App\Models\DmrDriveEnergy;
 use App\Models\DmrBrand;
 use App\Models\DmrModel;
-use App\Models\DmrVariant;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Condition;
@@ -276,7 +275,7 @@ class HomeController extends Controller
 
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
-        'brand_id', 'model_id', 'variant_id', 'model_year', 'fuel_type_id', 'category_id', 'listing_type_id',
+        'brand_id', 'model_id', 'fuel_type_id', 'category_id', 'listing_type_id',
         'gear_type_id', 'body_type_id', 'color_id', 'type_id', 'condition_id',
         'sales_type_id', 'price_type_id', 'euronom_id', 'euronorm', 'use_id', 'transmission_id',
         'equipment_id', 'equipment_ids',
@@ -300,15 +299,10 @@ class HomeController extends Controller
     private function buildCurrentFilters(Request $request): array
     {
         $currentFilters = [];
-        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'drive_axle_count', 'seller_type', 'brand_id', 'model_id', 'variant_id'];
+        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'drive_axle_count', 'seller_type', 'brand_id', 'model_id'];
         foreach (self::VEHICLE_FILTER_KEYS as $key) {
             $value = $request->input($key);
             if ($value === null || $value === '') {
-                continue;
-            }
-            if ($key === 'variant_id' && is_string($value) && str_contains($value, ',')) {
-                $currentFilters[$key] = array_values(array_filter(array_map('intval', explode(',', $value))));
-
                 continue;
             }
             if (in_array($key, $arrayKeys, true)) {
@@ -326,21 +320,6 @@ class HomeController extends Controller
     public function showVehicles(Request $request)
     {
         $currentFilters = $this->buildCurrentFilters($request);
-
-        // Comma-separated `model_year` (multiple years from home): hydrate range fields only when a single year.
-        if (! empty($currentFilters['model_year']) && is_string($currentFilters['model_year'])) {
-            $parts = array_values(array_filter(array_map('intval', explode(',', $currentFilters['model_year']))));
-            $maxY = (int) date('Y');
-            $parts = array_values(array_filter($parts, fn ($y) => $y >= 1975 && $y <= $maxY));
-            if (count($parts) === 1
-                && empty($currentFilters['model_year_from'])
-                && empty($currentFilters['model_year_to'])) {
-                $y = (string) $parts[0];
-                $currentFilters['model_year_from'] = $y;
-                $currentFilters['model_year_to'] = $y;
-                unset($currentFilters['model_year']);
-            }
-        }
 
         $limit = (int) $request->input('limit', 15);
         $page = (int) $request->input('page', 1);
@@ -385,7 +364,6 @@ class HomeController extends Controller
         // we only fetch the currently-selected values for initial dropdown rendering.
         $selectedBrandIds = array_map(fn ($v) => (int) $v, $currentFilters['brand_id'] ?? []);
         $selectedModelIds = array_map(fn ($v) => (int) $v, $currentFilters['model_id'] ?? []);
-        $selectedVariantIds = array_map(fn ($v) => (int) $v, $currentFilters['variant_id'] ?? []);
         $selectedTypeId = isset($currentFilters['type_id']) && $currentFilters['type_id'] !== '' ? (int) $currentFilters['type_id'] : null;
 
         $selectedBrands = !empty($selectedBrandIds)
@@ -393,9 +371,6 @@ class HomeController extends Controller
             : collect();
         $selectedModels = !empty($selectedModelIds)
             ? DmrModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
-            : collect();
-        $selectedVariants = !empty($selectedVariantIds)
-            ? DmrVariant::whereIn('id', $selectedVariantIds)->orderBy('name')->get(['id', 'name', 'model_id'])
             : collect();
         $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
 
@@ -417,7 +392,6 @@ class HomeController extends Controller
             'fallbackVehicles',
             'selectedBrands',
             'selectedModels',
-            'selectedVariants',
             'selectedType',
             'vehicleSortLabels',
             'currentListingSort'

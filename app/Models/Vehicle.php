@@ -85,25 +85,12 @@ class Vehicle extends Model
         'servicebog',
         'annual_tax',
         'seller_phone',
-        'wholesale_price',
-        'internal_cost_price',
-        'price_without_tax',
-        'wholesale_price_includes_delivery',
         'fuel_consumption_wltp',
         'fuel_consumption_nedc',
         'production_date',
         'cover_image_index',
         'engine_type',
         'views_count',
-        'leasing_enabled',
-        'leasing_type',
-        'leasing_customer_type',
-        'leasing_monthly_payment',
-        'leasing_first_payment',
-        'leasing_residual_value',
-        'leasing_duration',
-        'leasing_annual_mileage',
-        'leasing_total_cost',
         'battery_capacity',
         'range_km',
     ];
@@ -144,9 +131,9 @@ class Vehicle extends Model
         'sales_type_id' => 'integer',
         'price_type_id' => 'integer',
         'category_id' => 'integer',
-        'price' => 'integer',
+        'price' => 'float',
         'calculated_ownership_tax' => 'integer',
-        'km_driven' => 'integer',
+        'km_driven' => 'float',
         'towing_weight' => 'integer',
         'is_import' => 'boolean',
         'is_factory_new' => 'boolean',
@@ -158,12 +145,6 @@ class Vehicle extends Model
         'fuel_consumption_wltp' => 'decimal:2',
         'fuel_consumption_nedc' => 'decimal:2',
         'production_date' => 'date',
-        'wholesale_price_includes_delivery' => 'boolean',
-        'leasing_enabled' => 'boolean',
-        'leasing_monthly_payment' => 'decimal:2',
-        'leasing_first_payment' => 'decimal:2',
-        'leasing_residual_value' => 'decimal:2',
-        'leasing_total_cost' => 'decimal:2',
         'views_count' => 'integer',
         'battery_capacity' => 'integer',
         'range_km' => 'integer',
@@ -202,11 +183,11 @@ class Vehicle extends Model
     }
 
     /** @deprecated Column removed; maps to {@see $km_driven}. */
-    public function getMileageAttribute(): ?int
+    public function getMileageAttribute(): ?float
     {
         $v = $this->attributes['km_driven'] ?? null;
 
-        return $v !== null ? (int) $v : null;
+        return $v !== null ? (float) $v : null;
     }
 
     /** @deprecated Use {@see $address}; kept for seller/dealer Blade/API. */

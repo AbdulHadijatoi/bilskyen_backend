@@ -9,16 +9,12 @@ use Tests\TestCase;
 
 class VehicleDealerPersistenceTest extends TestCase
 {
-    public function test_vehicle_fillable_includes_consolidated_dealer_columns(): void
+    public function test_vehicle_fillable_includes_supported_vehicle_columns(): void
     {
         $fillable = (new Vehicle)->getFillable();
         foreach ([
-            'leasing_enabled',
-            'price_without_tax',
-            'wholesale_price_includes_delivery',
             'seller_phone',
-            'wholesale_price',
-            'internal_cost_price',
+            'price',
             'annual_tax',
             'fuel_consumption_wltp',
             'fuel_consumption_nedc',

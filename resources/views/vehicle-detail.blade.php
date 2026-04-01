@@ -723,83 +723,6 @@
         </div>
         @endif
 
-        @php
-            $leasingValueKeys = [
-                'leasing_monthly_payment',
-                'leasing_first_payment',
-                'leasing_residual_value',
-                'leasing_duration',
-                'leasing_annual_mileage',
-                'leasing_total_cost',
-            ];
-            $hasAnyLeasingField = ! empty($vd['leasing_enabled'])
-                || ! empty($vd['leasing_type'])
-                || ! empty($vd['leasing_customer_type']);
-            if (! $hasAnyLeasingField) {
-                foreach ($leasingValueKeys as $lk) {
-                    if (isset($vd[$lk]) && $vd[$lk] !== null && $vd[$lk] !== '') {
-                        $hasAnyLeasingField = true;
-                        break;
-                    }
-                }
-            }
-        @endphp
-        @if($hasAnyLeasingField)
-        <!-- Leasing (own section: shown when flag is on or any leasing field is filled) -->
-        <div class="detail-section bg-gray-50 border-t border-border">
-            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.leasing_information') }}</h2>
-            <div class="detail-grid">
-                @if(!empty($vd['leasing_type']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_type') }}</span>
-                    <span class="detail-value">{{ $vd['leasing_type'] }}</span>
-                </div>
-                @endif
-                @if(!empty($vd['leasing_customer_type']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_customer_type') }}</span>
-                    <span class="detail-value">{{ $vd['leasing_customer_type'] }}</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_monthly_payment']) && $vd['leasing_monthly_payment'] !== null && $vd['leasing_monthly_payment'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_monthly_payment') }}</span>
-                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_monthly_payment']) }}</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_first_payment']) && $vd['leasing_first_payment'] !== null && $vd['leasing_first_payment'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_first_payment') }}</span>
-                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_first_payment']) }}</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_residual_value']) && $vd['leasing_residual_value'] !== null && $vd['leasing_residual_value'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_residual_value') }}</span>
-                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_residual_value']) }}</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_duration']) && $vd['leasing_duration'] !== null && $vd['leasing_duration'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_duration') }}</span>
-                    <span class="detail-value">{{ (int) $vd['leasing_duration'] }}</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_annual_mileage']) && $vd['leasing_annual_mileage'] !== null && $vd['leasing_annual_mileage'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_annual_mileage') }}</span>
-                    <span class="detail-value">{{ number_format((int) $vd['leasing_annual_mileage']) }} km</span>
-                </div>
-                @endif
-                @if(isset($vd['leasing_total_cost']) && $vd['leasing_total_cost'] !== null && $vd['leasing_total_cost'] !== '')
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_total_cost') }}</span>
-                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_total_cost']) }}</span>
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
 
         <!-- Equipment & Features Section -->
         @php
@@ -854,48 +777,6 @@
                     </p>
                 </div>
             </div>
-
-            @php
-                $hasWholesalePrice = $vehicle->wholesale_price !== null && $vehicle->wholesale_price !== '';
-                $hasInternalCost = $vehicle->internal_cost_price !== null && $vehicle->internal_cost_price !== '';
-                $hasPriceExTax = $vehicle->price_without_tax !== null && $vehicle->price_without_tax !== '';
-                $wholesaleIncludesDelivery = $vehicle->wholesale_price_includes_delivery;
-                $showAdditionalPricing = ($hasWholesalePrice || $hasInternalCost || $hasPriceExTax || $wholesaleIncludesDelivery === true)
-                    || ($wholesaleIncludesDelivery === false && ($hasWholesalePrice || $hasInternalCost || $hasPriceExTax));
-            @endphp
-            @if($showAdditionalPricing)
-            <div class="rounded-lg border border-border bg-gray-50 p-6">
-                <h2 class="text-foreground mb-4 text-xl font-semibold">
-                    {{ __('messages.pages.vehicles.detail.dealer_only_pricing') }}
-                </h2>
-                <div class="space-y-3 text-sm">
-                    @if($vehicle->wholesale_price !== null && $vehicle->wholesale_price !== '')
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-muted-foreground">{{ __('messages.forms.wholesale_price') }}</span>
-                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->wholesale_price) }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->internal_cost_price !== null && $vehicle->internal_cost_price !== '')
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.internal_cost_price') }}</span>
-                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->internal_cost_price) }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->price_without_tax !== null && $vehicle->price_without_tax !== '')
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.price_excluding_tax') }}</span>
-                        <span class="font-medium">{{ FormatHelper::formatCurrency($vehicle->price_without_tax) }}</span>
-                    </div>
-                    @endif
-                    @if($vehicle->wholesale_price_includes_delivery !== null)
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-muted-foreground">{{ __('messages.pages.vehicles.detail.wholesale_includes_delivery') }}</span>
-                        <span class="font-medium">{{ $vehicle->wholesale_price_includes_delivery ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
 
             <!-- Contact Actions -->
             @if($contactUser)

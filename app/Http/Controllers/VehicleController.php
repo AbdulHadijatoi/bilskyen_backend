@@ -4,19 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
-use App\Models\Dealer;
 use App\Models\FeaturedListing;
-use App\Models\Brand;
-use App\Models\VehicleModel;
-use App\Models\DmrDriveEnergy;
-use App\Models\ListingType;
-use App\Models\Variant;
-use App\Models\Euronom;
-use App\Models\Type;
-use App\Models\VehicleUse;
-use App\Models\BodyType;
-use App\Models\PriceType;
-use App\Models\Equipment;
 use App\Services\VehicleService;
 use App\Services\VehicleDetailPresentationService;
 use App\Services\FileService;
@@ -24,16 +12,11 @@ use App\Services\AuditLogService;
 use App\Services\SellYourCarSubmissionService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
-use App\Http\Requests\SellYourCarRequest;
-use App\Http\Requests\UpdateVehicleRequest;
-use App\Helpers\FilterHelper;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Constants\ApiStatusCode;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -46,7 +29,6 @@ class VehicleController extends Controller
         private VehicleService $vehicleService,
         FileService $fileService,
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService,
         private SubscriptionFeatureService $subscriptionFeatureService,
         private VehicleDetailPresentationService $vehicleDetailPresentationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
@@ -103,42 +85,38 @@ class VehicleController extends Controller
         ]);
     }
 
-    /** @var array<int, string> Advanced filter keys for vehicle search */
-    private const ADVANCED_FILTER_KEYS = [
-        'price_from', 'price_to', 'make', 'brand_id', 'model_id', 'model_year', 'model_year_id', 'variant_id',
-        'year_from', 'year_to', 'model_year_from', 'model_year_to',
-        'mileage_from', 'mileage_to',
-        'odometer_from', 'odometer_to', 'listing_type_id', 'list_status_id',
-        'category_id', 'price_type_id', 'condition_id',
-        'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles', 'drive_axle_count',
+    /** @var array<int, string> Flat allowlist for public vehicle search inputs */
+    private const FILTER_KEYS = [
+        'search', 'sort', 'page', 'limit',
+        'brand_id', 'model_id',
+        'listing_type_id', 'list_status_id',
+        'category_id', 'sales_type_id', 'price_type_id', 'condition_id',
+        'body_type_id', 'fuel_type_id', 'gear_type_id',
+        'dealer_id', 'vehicle_use_id', 'measurement_norm_id',
+        'colour_id', 'emission_norm_id',
+        'model_year_from', 'model_year_to',
         'first_registration_year_from', 'first_registration_year_to',
-        'seller_type', 'dealer_id', 'sales_type_id', 'seller_distance',
-        'top_speed_from', 'top_speed_to', 'max_speed_from', 'max_speed_to',
-        'engine_power_from', 'engine_power_to', 'engine_power_kw_from', 'engine_power_kw_to',
-        'ownership_tax_from', 'ownership_tax_to',
+        'price_from', 'price_to',
+        'km_driven_from', 'km_driven_to',
+        'max_speed_from', 'max_speed_to',
+        'engine_power_kw_from', 'engine_power_kw_to',
+        'engine_power_hp_from', 'engine_power_hp_to',
+        'calculated_ownership_tax_from', 'calculated_ownership_tax_to',
         'battery_capacity_from', 'battery_capacity_to',
         'electrical_consumption_from', 'electrical_consumption_to',
-        'range_km_from', 'range_km_to', 'charging_type',
-        'fuel_efficiency_from', 'fuel_efficiency_to',
         'km_per_liter_from', 'km_per_liter_to',
+        'range_km_from', 'range_km_to',
         'maximum_weight_kg_from', 'maximum_weight_kg_to',
-        'euronorm', 'euronom_id', 'emission_norm_id',
-        'color_id', 'doors', 'door_count', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-        'wheels', 'axles', 'axle_count', 'engine_cylinders', 'engine_displacement_from',
-        'engine_displacement_to', 'airbags', 'specifications_airbags', 'ncap_five', 'ncap_test',
-        'equipment_ids', 'equipment_id',
-        'type_id', 'use_id', 'vehicle_use_id', 'transmission_id', 'towing_weight',
-        'is_import', 'is_factory_new', 'km_driven_from', 'km_driven_to',
-    ];
-
-    /** @var array<int, string> Basic filter keys for vehicle search */
-    private const BASIC_FILTER_KEYS = [
-        'search', 'category_id', 'brand_id', 'model_id', 'model_year_id',
-        'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort',
+        'door_count', 'seats_min', 'seats_max', 'axle_count', 'towing_weight',
+        'engine_displacement_litres_from', 'engine_displacement_litres_to',
+        'charging_type', 'ncap_test',
+        'is_import', 'is_factory_new',
+        'equipment_ids',
     ];
 
     /**
-     * Normalize search input: map km_driven_* to mileage_*, accept both euronorm (name) and euronom_id and normalize to euronom_id for DB filter.
+     * Normalize public search input onto the filter names understood by VehicleService.
+     * Backward-compatible aliases are still accepted for GET callers.
      */
     private function normalizeVehicleSearchInput(array $input): array
     {
@@ -148,23 +126,32 @@ class VehicleController extends Controller
         if (isset($input['km_driven_to'])) {
             $input['mileage_to'] = $input['km_driven_to'];
         }
+        if (isset($input['calculated_ownership_tax_from']) && ! isset($input['ownership_tax_from'])) {
+            $input['ownership_tax_from'] = $input['calculated_ownership_tax_from'];
+        }
+        if (isset($input['calculated_ownership_tax_to']) && ! isset($input['ownership_tax_to'])) {
+            $input['ownership_tax_to'] = $input['calculated_ownership_tax_to'];
+        }
+        if (isset($input['engine_power_hp_from']) && ! isset($input['engine_power_from'])) {
+            $input['engine_power_from'] = $input['engine_power_hp_from'];
+        }
+        if (isset($input['engine_power_hp_to']) && ! isset($input['engine_power_to'])) {
+            $input['engine_power_to'] = $input['engine_power_hp_to'];
+        }
+        if (isset($input['engine_displacement_litres_from']) && ! isset($input['engine_displacement_from'])) {
+            $input['engine_displacement_from'] = $input['engine_displacement_litres_from'];
+        }
+        if (isset($input['engine_displacement_litres_to']) && ! isset($input['engine_displacement_to'])) {
+            $input['engine_displacement_to'] = $input['engine_displacement_litres_to'];
+        }
         // Ensure condition_id is integer so filter matches vehicles.condition_id correctly
         if (isset($input['condition_id']) && $input['condition_id'] !== '' && $input['condition_id'] !== null) {
             $input['condition_id'] = (int) $input['condition_id'];
         }
-        // Accept both euronorm (string name) and euronom_id; normalize to euronom_id for filtering (DB column is euronom_id)
+        // Accept legacy emission norm aliases and normalize them to the current emission_norm_id column.
         if (!empty($input['euronom_id'])) {
             $input['euronom_id'] = (int) $input['euronom_id'];
-        } elseif (!empty($input['euronorm'])) {
-            $euronom = Euronom::where('name', trim($input['euronorm']))->first();
-            if ($euronom) {
-                $input['euronom_id'] = $euronom->id;
-            }
-            unset($input['euronorm']);
-        }
-        if (! empty($input['variant_id']) && is_string($input['variant_id'])) {
-            $input['variant_id'] = array_values(array_filter(array_map('intval', explode(',', $input['variant_id']))));
-        }
+        } 
         if (isset($input['year_from']) && ! isset($input['model_year_from'])) {
             $input['model_year_from'] = $input['year_from'];
         }
@@ -309,12 +296,7 @@ class VehicleController extends Controller
      */
     public function searchVehicles(Request $request): JsonResponse
     {
-        $allowed = array_merge(
-            self::BASIC_FILTER_KEYS,
-            self::ADVANCED_FILTER_KEYS,
-            ['page', 'limit']
-        );
-        $input = array_intersect_key($request->all(), array_flip($allowed));
+        $input = array_intersect_key($request->all(), array_flip(self::FILTER_KEYS));
         $input = $this->normalizeVehicleSearchInput($input);
         return $this->getVehiclesListResponse($input);
     }
@@ -489,12 +471,7 @@ class VehicleController extends Controller
             'list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
             'vehicle_list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
             'seller_phone' => 'nullable|string|max:50',
-            'wholesale_price' => 'nullable|integer|min:0',
-            'internal_cost_price' => 'nullable|integer|min:0',
-            'price_without_tax' => 'nullable|integer|min:0',
             'annual_tax' => 'nullable|numeric|min:0',
-            'leasing_duration' => 'nullable|integer|min:0',
-            'leasing_annual_mileage' => 'nullable|integer|min:0',
         ]);
 
         $data = $request->all();
@@ -842,7 +819,7 @@ class VehicleController extends Controller
     public function updatePrice(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'price' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $vehicle = Vehicle::findOrFail($id);

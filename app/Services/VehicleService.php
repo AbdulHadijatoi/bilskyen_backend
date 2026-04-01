@@ -573,8 +573,6 @@ class VehicleService
         }
 
         foreach ([
-            'wholesale_price_includes_delivery',
-            'leasing_enabled',
             'is_import',
             'is_factory_new',
             'particle_filter',
@@ -777,41 +775,15 @@ class VehicleService
         $this->whereInIds($query, 'body_type_id', $f['body_type_id'] ?? null);
         $this->whereInIds($query, 'gear_type_id', $f['gear_type_id'] ?? null);
 
-        if (! empty($f['variant_id'])) {
-            $ids = array_map('intval', (array) $f['variant_id']);
-            $ids = array_values(array_filter($ids));
-            if ($ids !== []) {
-                $query->where(function (Builder $outer) use ($ids) {
-                    $outer->whereIn('variant_id', $ids)
-                        ->orWhereHas('dmrFactVehicle', function (Builder $q) use ($ids) {
-                            $q->whereIn('variant_id', $ids);
-                        });
-                });
-            }
-        }
-
-        foreach (['category_id', 'condition_id', 'sales_type_id', 'price_type_id', 'type_id'] as $col) {
+        foreach (['category_id', 'condition_id', 'sales_type_id', 'price_type_id', 'type_id', 'list_status_id', 'measurement_norm_id'] as $col) {
             if (! isset($f[$col]) || $f[$col] === '' || $f[$col] === null) {
                 continue;
             }
             $query->where($col, (int) $f[$col]);
         }
 
-        // Discrete calendar years: comma-separated `model_year` (web) or legacy `model_year_id` (API).
-        $appliedDiscreteModelYears = false;
-        if (isset($f['model_year']) && is_string($f['model_year']) && trim($f['model_year']) !== '') {
-            $years = array_values(array_unique(array_filter(array_map('intval', explode(',', $f['model_year'])))));
-            $years = array_values(array_filter($years, fn ($y) => $y >= 1900 && $y <= 2100));
-            if ($years !== []) {
-                $appliedDiscreteModelYears = true;
-                if (count($years) === 1) {
-                    $query->where('model_year', $years[0]);
-                } else {
-                    $query->whereIn('model_year', $years);
-                }
-            }
-        }
-        // `model_year_id` is normalized to calendar years in {@see normalizePublicListingFilters()} (vehicles use `model_year`, not `model_year_id`).
+        // `model_year_id` is normalized to calendar year range fields in
+        // {@see normalizePublicListingFilters()} (vehicles use `model_year`, not `model_year_id`).
 
         if (isset($f['use_id']) && $f['use_id'] !== '' && $f['use_id'] !== null) {
             $query->where('vehicle_use_id', (int) $f['use_id']);
@@ -835,10 +807,10 @@ class VehicleService
         }
 
         if (isset($f['price_from'])) {
-            $query->where('price', '>=', (int) $f['price_from']);
+            $query->where('price', '>=', (float) $f['price_from']);
         }
         if (isset($f['price_to'])) {
-            $query->where('price', '<=', (int) $f['price_to']);
+            $query->where('price', '<=', (float) $f['price_to']);
         }
 
         $mileageFrom = $f['mileage_from'] ?? $f['km_driven_from'] ?? null;
@@ -850,15 +822,13 @@ class VehicleService
             $query->where('km_driven', '<=', (int) $mileageTo);
         }
 
-        if (! $appliedDiscreteModelYears) {
-            $myFrom = $f['model_year_from'] ?? $f['year_from'] ?? null;
-            $myTo = $f['model_year_to'] ?? $f['year_to'] ?? null;
-            if ($myFrom !== null && $myFrom !== '') {
-                $query->where('model_year', '>=', (int) $myFrom);
-            }
-            if ($myTo !== null && $myTo !== '') {
-                $query->where('model_year', '<=', (int) $myTo);
-            }
+        $myFrom = $f['model_year_from'] ?? $f['year_from'] ?? null;
+        $myTo = $f['model_year_to'] ?? $f['year_to'] ?? null;
+        if ($myFrom !== null && $myFrom !== '') {
+            $query->where('model_year', '>=', (int) $myFrom);
+        }
+        if ($myTo !== null && $myTo !== '') {
+            $query->where('model_year', '<=', (int) $myTo);
         }
 
         if (isset($f['first_registration_year_from'])) {
@@ -888,11 +858,18 @@ class VehicleService
             $query->where('engine_power_hp', $op, (float) $f[$k]);
         }
 
-        foreach (['electrical_consumption_from' => '>=', 'electrical_consumption_to' => '<=', 'battery_capacity_from' => '>=', 'battery_capacity_to' => '<='] as $k => $op) {
+        foreach (['electrical_consumption_from' => '>=', 'electrical_consumption_to' => '<='] as $k => $op) {
             if (! isset($f[$k])) {
                 continue;
             }
             $query->where('electrical_consumption', $op, (float) $f[$k]);
+        }
+
+        foreach (['battery_capacity_from' => '>=', 'battery_capacity_to' => '<='] as $k => $op) {
+            if (! isset($f[$k])) {
+                continue;
+            }
+            $query->where('battery_capacity', $op, (float) $f[$k]);
         }
 
         foreach (['km_per_liter_from' => '>=', 'km_per_liter_to' => '<=', 'fuel_efficiency_from' => '>=', 'fuel_efficiency_to' => '<='] as $k => $op) {
@@ -1073,15 +1050,6 @@ class VehicleService
     {
         $f = $filters;
 
-        if (isset($f['variant_id'])) {
-            $v = $f['variant_id'];
-            if (is_string($v)) {
-                $f['variant_id'] = array_values(array_filter(array_map('intval', explode(',', $v))));
-            } elseif (! is_array($v)) {
-                $f['variant_id'] = [(int) $v];
-            }
-        }
-
         foreach (['brand_id', 'model_id', 'listing_type_id', 'fuel_type_id', 'body_type_id', 'gear_type_id', 'model_year_id'] as $k) {
             if (! isset($f[$k])) {
                 continue;
@@ -1115,8 +1083,9 @@ class VehicleService
     }
 
     /**
-     * Map API / legacy `model_year_id` (calendar year or `model_years.id`) onto `model_year` / range fields,
-     * then remove the key. The `vehicles` table uses `model_year` (year int); `model_year_id` is not a column after DMR revamp.
+     * Map API / legacy `model_year_id` (calendar year or `model_years.id`) onto
+     * `model_year_from` / `model_year_to`, then remove the key. The `vehicles` table uses
+     * `model_year` (year int); `model_year_id` is not a column after DMR revamp.
      *
      * @param  array<string, mixed>  $f
      */
@@ -1126,47 +1095,34 @@ class VehicleService
             return;
         }
 
-        $appliedFromModelYearParam = false;
-        if (isset($f['model_year']) && is_string($f['model_year']) && trim($f['model_year']) !== '') {
-            $years = array_values(array_unique(array_filter(array_map('intval', explode(',', $f['model_year'])))));
-            $years = array_values(array_filter($years, fn ($y) => $y >= 1900 && $y <= 2100));
-            $appliedFromModelYearParam = $years !== [];
-        }
+        $raw = $f['model_year_id'];
+        $candidates = is_array($raw) ? $raw : [$raw];
+        $years = [];
+        foreach ($candidates as $c) {
+            $n = (int) $c;
+            if ($n <= 0) {
+                continue;
+            }
+            if ($n >= 1900 && $n <= 2100) {
+                $years[] = $n;
 
-        if (! $appliedFromModelYearParam) {
-            $raw = $f['model_year_id'];
-            $candidates = is_array($raw) ? $raw : [$raw];
-            $years = [];
-            foreach ($candidates as $c) {
-                $n = (int) $c;
-                if ($n <= 0) {
-                    continue;
-                }
-                if ($n >= 1900 && $n <= 2100) {
-                    $years[] = $n;
-
-                    continue;
-                }
-                if (Schema::hasTable('model_years')) {
-                    $name = DB::table('model_years')->where('id', $n)->value('name');
-                    if ($name !== null && is_numeric(trim((string) $name))) {
-                        $years[] = (int) trim((string) $name);
-                    }
+                continue;
+            }
+            if (Schema::hasTable('model_years')) {
+                $name = DB::table('model_years')->where('id', $n)->value('name');
+                if ($name !== null && is_numeric(trim((string) $name))) {
+                    $years[] = (int) trim((string) $name);
                 }
             }
-            $years = array_values(array_unique($years));
-            if ($years !== []) {
-                $hasRange = ($f['model_year_from'] ?? $f['year_from'] ?? null) !== null && (string) ($f['model_year_from'] ?? $f['year_from'] ?? '') !== ''
-                    || ($f['model_year_to'] ?? $f['year_to'] ?? null) !== null && (string) ($f['model_year_to'] ?? $f['year_to'] ?? '') !== '';
-                if (! $hasRange) {
-                    if (count($years) === 1) {
-                        $y = (string) $years[0];
-                        $f['model_year_from'] = $y;
-                        $f['model_year_to'] = $y;
-                    } else {
-                        $f['model_year'] = implode(',', array_map('strval', $years));
-                    }
-                }
+        }
+        $years = array_values(array_unique($years));
+        if ($years !== []) {
+            $hasRange = ($f['model_year_from'] ?? $f['year_from'] ?? null) !== null && (string) ($f['model_year_from'] ?? $f['year_from'] ?? '') !== ''
+                || ($f['model_year_to'] ?? $f['year_to'] ?? null) !== null && (string) ($f['model_year_to'] ?? $f['year_to'] ?? '') !== '';
+            if (! $hasRange) {
+                sort($years);
+                $f['model_year_from'] = (string) $years[0];
+                $f['model_year_to'] = (string) $years[count($years) - 1];
             }
         }
 

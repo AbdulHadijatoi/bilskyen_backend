@@ -147,8 +147,8 @@ class SellerVehicleEditService
 
         $request->validate([
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'price' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'km_driven' => ['nullable', 'integer', 'min:0'],
+            'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'km_driven' => ['nullable', 'numeric', 'min:0'],
             'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'description' => ['nullable', 'string'],
             'variant_id' => ['nullable', 'integer', 'exists:dmr_variants,id'],

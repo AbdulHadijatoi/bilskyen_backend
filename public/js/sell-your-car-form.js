@@ -4,15 +4,31 @@
 (function() {
     'use strict';
 
+    var SELL_YC_I18N = window.sellYourCarTranslations || {};
+
+    function trans(key, fallback, replacements) {
+        var text = Object.prototype.hasOwnProperty.call(SELL_YC_I18N, key)
+            ? SELL_YC_I18N[key]
+            : fallback;
+
+        if (!replacements) {
+            return text;
+        }
+
+        return Object.keys(replacements).reduce(function(result, replacementKey) {
+            return result.replace(new RegExp(':' + replacementKey, 'g'), String(replacements[replacementKey]));
+        }, text);
+    }
+
     /** Fixed option placeholders for sell-your-car selects (not from server copy). */
     var SELL_YC_SELECT_PH = {
-        manual_brand_id: 'Select brand',
-        manual_model_id: 'Select model',
-        manual_model_year_id: 'Select model year',
-        manual_fuel_type_id: 'Select fuel type',
-        variant_id: 'Select variant',
-        colour_id: 'Select colour',
-        emission_norm_id: 'Select emission standard',
+        manual_brand_id: trans('selectBrand', 'Select brand'),
+        manual_model_id: trans('selectModel', 'Select model'),
+        manual_model_year_id: trans('selectModelYear', 'Select model year'),
+        manual_fuel_type_id: trans('selectFuelType', 'Select fuel type'),
+        variant_id: trans('selectVariant', 'Select variant'),
+        colour_id: trans('selectColor', 'Select colour'),
+        emission_norm_id: trans('selectEmissionStandard', 'Select emission standard'),
     };
 
     // Wait for DOM to be ready
@@ -264,7 +280,7 @@
             const registration = registrationInput.value.trim();
             
             if (!registration) {
-                lookupError.textContent = 'Please enter a license plate number';
+                lookupError.textContent = trans('lookupEnterRegistration', 'Please enter a license plate number');
                 lookupError.style.color = 'var(--destructive)';
                 return;
             }
@@ -296,12 +312,12 @@
 
                 // Check for error status first (legacy + ApiResponse shape)
                 if (data.status === 'error' || data.success === false || data.failed === true) {
-                    let errorMessage = data.message || 'Failed to fetch vehicle information';
+                    let errorMessage = data.message || trans('lookupFetchFailed', 'Failed to fetch vehicle information');
                     
                     if (data.errors && data.errors.code === 'TIMEOUT') {
-                        errorMessage = 'The vehicle lookup is taking longer than expected. Please try again in a moment.';
+                        errorMessage = trans('lookupTimeout', 'The vehicle lookup is taking longer than expected. Please try again in a moment.');
                     } else if (data.errors && data.errors.retryable) {
-                        errorMessage = 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.';
+                        errorMessage = trans('lookupServiceUnavailable', 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.');
                     }
                     
                     lookupError.textContent = errorMessage;
@@ -338,7 +354,7 @@
                 
                 if (!vehicleData || typeof vehicleData !== 'object' || !vehicleData.registration) {
                     console.error('Vehicle data extraction failed. Response structure:', JSON.stringify(data, null, 2));
-                    const errorMsg = 'No vehicle data found in API response. Please try again.';
+                    const errorMsg = trans('lookupNoVehicleData', 'No vehicle data found in API response. Please try again.');
                     lookupError.textContent = errorMsg;
                     lookupError.style.color = 'var(--destructive)';
                     finishLookupLoading();
@@ -347,7 +363,7 @@
                 
                 const dmrId = vehicleData.dmr_fact_vehicle_id;
                 if (!dmrId) {
-                    lookupError.textContent = 'Missing vehicle reference. Please try again.';
+                    lookupError.textContent = trans('lookupMissingReference', 'Missing vehicle reference. Please try again.');
                     lookupError.style.color = 'var(--destructive)';
                     finishLookupLoading();
                     return;
@@ -367,14 +383,14 @@
                     .then(function(res) {
                         if (!res.ok) {
                             return res.json().then(function(body) {
-                                throw new Error((body && body.message) || 'Context load failed');
+                                throw new Error((body && body.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
                             });
                         }
                         return res.json();
                     })
                     .then(function(ctx) {
                         if (!ctx || !ctx.success) {
-                            throw new Error((ctx && ctx.message) || 'Context load failed');
+                            throw new Error((ctx && ctx.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
                         }
                         applySellYourCarLookupContextPayload(ctx);
 
@@ -455,7 +471,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span>Vehicle information loaded successfully! Review and complete the form below.</span>
+                    <span>${escapeHtml(trans('lookupSuccess', 'Vehicle information loaded successfully! Review and complete the form below.'))}</span>
                 `;
                         if (vehicleForm) {
                             vehicleForm.insertBefore(successMsg, vehicleForm.firstChild);
@@ -473,7 +489,7 @@
                 console.error('Lookup error:', error);
                 
                 // Try to extract error message from error object
-                let errorMessage = 'An error occurred while fetching vehicle information. Please try again.';
+                let errorMessage = trans('lookupGenericError', 'An error occurred while fetching vehicle information. Please try again.');
                 
                 if (error && typeof error === 'object') {
                     if (error.message) {
@@ -593,7 +609,7 @@
             if (!selectEl || !triggerEl) return;
             var labelEl = triggerEl.querySelector('.manual-combobox-label');
             if (!labelEl) return;
-            var ph = SELL_YC_SELECT_PH[selectEl.id] || 'Select…';
+            var ph = SELL_YC_SELECT_PH[selectEl.id] || '';
             var opt = selectEl.options[selectEl.selectedIndex];
             if (selectEl.value && opt && opt.textContent) {
                 labelEl.textContent = opt.textContent;
@@ -1233,7 +1249,7 @@
                 
                 const errorElement = document.createElement('p');
                 errorElement.className = 'field-error';
-                errorElement.textContent = 'This field is required';
+                errorElement.textContent = trans('requiredFieldError', 'This field is required');
                 field.parentElement.appendChild(errorElement);
 
                 if (!firstInvalidField) {
@@ -1256,7 +1272,7 @@
                 }
                 photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            displayGeneralError('Please upload at least one image of your vehicle.');
+            displayGeneralError(trans('imageRequiredError', 'Please upload at least one image of your vehicle.'));
             return;
         }
 
@@ -1271,7 +1287,7 @@
             const manualModelYear = document.getElementById('manual_model_year_id');
             const manualFuelType = document.getElementById('manual_fuel_type_id');
             if (!brandId || !brandId.value || !modelId || !modelId.value || !modelYearId || !modelYearId.value || !fuelTypeId || !fuelTypeId.value) {
-                displayGeneralError('Please select Brand, Model, Year and Fuel Type in the Basic Vehicle Information section.');
+                displayGeneralError(trans('manualEntryRequiredError', 'Please select Brand, Model, Year and Fuel Type in the Basic Vehicle Information section.'));
                 const basicSection = document.querySelector('[data-section="basic-info"]');
                 if (basicSection) {
                     const header = basicSection.querySelector('.section-header');
@@ -1614,7 +1630,7 @@
             
             if (validFileCount === 0) {
                 hideLoadingState(submitBtn, form);
-                displayGeneralError('No valid images found. Please upload at least one image.');
+                displayGeneralError(trans('noValidImages', 'No valid images found. Please upload at least one image.'));
                 return;
             }
             
@@ -1689,15 +1705,15 @@
                 window.location.href = `/sell-your-car/success/${data.token}`;
             } else if (data.vehicle_id) {
                 // Fallback: if token is missing, redirect with error message
-                displayGeneralError('Vehicle saved successfully, but access token is missing. Please contact support.');
+                displayGeneralError(trans('saveMissingToken', 'Vehicle saved successfully, but access token is missing. Please contact support.'));
             } else {
-                displayGeneralError('Vehicle saved successfully, but redirect URL is missing.');
+                displayGeneralError(trans('saveMissingRedirect', 'Vehicle saved successfully, but redirect URL is missing.'));
             }
 
         } catch (error) {
             console.error('Form submission error:', error);
             hideLoadingState(submitBtn, form);
-            displayGeneralError('An unexpected error occurred. Please try again.');
+            displayGeneralError(trans('unexpectedError', 'An unexpected error occurred. Please try again.'));
         }
     }
 
@@ -1711,7 +1727,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Saving...
+                ${escapeHtml(trans('saving', 'Saving...'))}
             `;
         }
 
@@ -1725,7 +1741,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="mt-2 text-sm text-muted-foreground">Saving vehicle...</p>
+                    <p class="mt-2 text-sm text-muted-foreground">${escapeHtml(trans('savingVehicle', 'Saving vehicle...'))}</p>
                 </div>
             `;
             document.body.appendChild(overlay);
@@ -1858,7 +1874,7 @@
         const formattedMessages = errorMessages.map(msg => {
             // Replace technical messages with user-friendly ones
             if (msg.includes('failed to upload')) {
-                return 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.';
+                return trans('imageUploadFailedFriendly', 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.');
             }
             return msg;
         });
@@ -1872,7 +1888,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-red-800 mb-1">Image Upload Error</p>
+                    <p class="text-sm font-medium text-red-800 mb-1">${escapeHtml(trans('imageUploadErrorTitle', 'Image Upload Error'))}</p>
                     <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
                         ${uniqueMessages.map(msg => `<li>${escapeHtml(msg)}</li>`).join('')}
                     </ul>
@@ -1952,8 +1968,8 @@
         const parsedFuelTypeId = parseInt(fuelTypeId);
         if (!fuelTypeId || isNaN(parsedFuelTypeId) || parsedFuelTypeId <= 0) {
             // Default to decimal step if fuel type is invalid or not provided
-            label.textContent = 'KM/L';
-            help.textContent = 'Fuel efficiency in kilometers per liter';
+            label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
@@ -1974,36 +1990,36 @@
             // If user has entered or wants to enter decimals, always use step="any"
             if (hasDecimalValue) {
                 // User has entered decimal - keep step="any"
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             } else if (!currentValue) {
                 // Field is empty - can use step="1" for electric
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0';
                 input.setAttribute('step', '1');
                 input.setAttribute('inputmode', 'numeric');
             } else {
                 // Field has whole number - keep step="any" to allow user to change to decimal
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             }
         } else if (hybridFuelTypes.includes(parsedFuelTypeId)) {
-            label.textContent = 'Electric Range / KM/L';
-            help.textContent = 'Electric range in km (for EV mode) or fuel efficiency in km/l';
+            label.textContent = trans('hybridEfficiencyLabel', 'Electric Range / KM/L');
+            help.textContent = trans('hybridEfficiencyHelp', 'Electric range in km (for EV mode) or fuel efficiency in km/l');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
         } else {
             // Petrol, Diesel, Benzin, or any other fuel type - always allow decimals
-            label.textContent = 'KM/L';
-            help.textContent = 'Fuel efficiency in kilometers per liter';
+            label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
@@ -2252,8 +2268,9 @@
             const primary = (apiData.fuel_economy && apiData.fuel_economy.primary)
                 || (apiData.fuel_economy && apiData.fuel_economy.lines && apiData.fuel_economy.lines[0])
                 || null;
-            const kmPerL = apiData.motor_km_per_liter != null ? apiData.motor_km_per_liter
-                : (primary && primary.motor_km_per_liter != null ? primary.motor_km_per_liter : null);
+            const kmPerL = apiData.km_per_liter != null ? apiData.km_per_liter
+                : (apiData.motor_km_per_liter != null ? apiData.motor_km_per_liter
+                    : (primary && primary.motor_km_per_liter != null ? primary.motor_km_per_liter : null));
             const regDateDmr = apiData.firstRegistrationDate || apiData.first_registration_date
                 || apiData.registration_date || apiData.first_reg_date;
             if (regDateDmr) {
@@ -2352,8 +2369,8 @@
         }
         
         // Fuel efficiency
-        const fuelEfficiency = apiData.km_per_liter || apiData.fuel_efficiency || apiData.fuelEfficiency || apiData.range_km || apiData.rangeKm;
-        if (fuelEfficiency) {
+        const fuelEfficiency = apiData.km_per_liter ?? apiData.fuel_efficiency ?? apiData.fuelEfficiency ?? apiData.range_km ?? apiData.rangeKm;
+        if (fuelEfficiency !== null && fuelEfficiency !== undefined && fuelEfficiency !== '') {
             setFieldValue('km_per_liter', fuelEfficiency);
         }
         
@@ -2493,7 +2510,7 @@
                                 const otherDiv = document.createElement('div');
                                 otherDiv.className = 'equipment-type-group';
                                 otherDiv.innerHTML = `
-                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">Other</h4>
+                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">${escapeHtml(trans('equipmentOther', 'Other'))}</h4>
                                     <div class="flex flex-wrap gap-2"></div>
                                 `;
                                 equipmentSection.appendChild(otherDiv);
@@ -2784,8 +2801,8 @@
                         // Update label/help for non-electric, but keep step="any"
                         const label = document.getElementById('km_per_liter_label');
                         const help = document.getElementById('km_per_liter_help');
-                        if (label) label.textContent = 'KM/L';
-                        if (help) help.textContent = 'Fuel efficiency in kilometers per liter';
+                        if (label) label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+                        if (help) help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
                         input.placeholder = '0.00';
                     }
                 }
@@ -2882,15 +2899,15 @@
     // Validate a single file
     function validateFile(file) {
         if (isDuplicateFile(file)) {
-            return { valid: false, error: `File "${file.name}" is already selected.` };
+            return { valid: false, error: trans('imageAlreadySelected', 'File ":name" is already selected.', { name: file.name }) };
         }
         
         if (!imageUploadState.allowedTypes.includes(file.type)) {
-            return { valid: false, error: `File "${file.name}" is not a valid image format. Please use JPEG, PNG, or GIF.` };
+            return { valid: false, error: trans('imageInvalidFormat', 'File ":name" is not a valid image format. Please use JPEG, PNG, or GIF.', { name: file.name }) };
         }
         
         if (file.size > imageUploadState.maxSize) {
-            return { valid: false, error: `File "${file.name}" is too large. Maximum size is 20MB.` };
+            return { valid: false, error: trans('imageTooLarge', 'File ":name" is too large. Maximum size is 20MB.', { name: file.name }) };
         }
         
         return { valid: true };

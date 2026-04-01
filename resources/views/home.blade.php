@@ -1435,11 +1435,9 @@
                     .map((y) => parseInt(y, 10))
                     .filter((y) => !Number.isNaN(y) && y >= 1975 && y <= homeCurrentYear);
                 years.sort((a, b) => a - b);
-                if (years.length === 1) {
+                if (years.length > 0) {
                     params.append('model_year_from', String(years[0]));
-                    params.append('model_year_to', String(years[0]));
-                } else if (years.length > 1) {
-                    params.append('model_year', years.join(','));
+                    params.append('model_year_to', String(years[years.length - 1]));
                 }
             }
             

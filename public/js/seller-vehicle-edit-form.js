@@ -4,6 +4,22 @@
 (function() {
     'use strict';
 
+    const EDIT_VEHICLE_I18N = window.editVehicleTranslations || {};
+
+    function trans(key, fallback, replacements) {
+        const text = Object.prototype.hasOwnProperty.call(EDIT_VEHICLE_I18N, key)
+            ? EDIT_VEHICLE_I18N[key]
+            : fallback;
+
+        if (!replacements) {
+            return text;
+        }
+
+        return Object.keys(replacements).reduce((result, replacementKey) => {
+            return result.replace(new RegExp(':' + replacementKey, 'g'), String(replacements[replacementKey]));
+        }, text);
+    }
+
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSellerVehicleEditForm);
@@ -20,6 +36,7 @@
         
         // Initialize image upload
         initImageUpload();
+        initExistingImageRemoval();
         
         // Initialize location autocomplete
         initLocationAutocomplete();
@@ -125,6 +142,18 @@
         updateImageCount();
     };
 
+    function initExistingImageRemoval() {
+        document.querySelectorAll('[data-existing-image-id]').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const imageId = this.getAttribute('data-existing-image-id');
+                if (imageId) {
+                    window.removeExistingImage(imageId);
+                }
+            });
+        });
+    }
+
     // Clear all images
     window.clearAllImages = function() {
         // Mark all existing images for deletion
@@ -222,12 +251,12 @@
         Array.from(files).forEach(file => {
             // Validate file
             if (!allowedTypes.includes(file.type)) {
-                alert(`File "${file.name}" is not a valid image format. Please use JPEG, PNG, or GIF.`);
+                alert(trans('imageInvalidFormat', 'File ":name" is not a valid image format. Please use JPEG, PNG, or GIF.', { name: file.name }));
                 return;
             }
             
             if (file.size > maxSize) {
-                alert(`File "${file.name}" is too large. Maximum size is 20MB.`);
+                alert(trans('imageTooLarge', 'File ":name" is too large. Maximum size is 20MB.', { name: file.name }));
                 return;
             }
             
@@ -269,7 +298,7 @@
             previewItem.innerHTML = `
                 <img src="${e.target.result}" alt="Preview">
                 <div class="image-preview-overlay">
-                    <button type="button" class="image-remove-btn" onclick="removeNewImage('${fileId}')" title="Remove">
+                    <button type="button" class="image-remove-btn" onclick="removeNewImage('${fileId}')" title="${escapeHtml(trans('removeImage', 'Remove'))}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 6L6 18M6 6l12 12"></path>
                         </svg>
@@ -452,7 +481,7 @@
                 
                 const errorElement = document.createElement('p');
                 errorElement.className = 'field-error';
-                errorElement.textContent = 'This field is required';
+                errorElement.textContent = trans('requiredFieldError', 'This field is required');
                 field.parentElement.appendChild(errorElement);
 
                 if (!firstInvalidField) {
@@ -480,8 +509,9 @@
         
         // Disable submit button
         if (submitBtn) {
+            submitBtn.dataset.originalText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Updating...';
+            submitBtn.textContent = trans('updating', 'Updating...');
         }
         
         // Create FormData - manually build to avoid including file input files
@@ -577,11 +607,11 @@
                 if (result.errors) {
                     displayErrors(result.errors);
                 } else {
-                    displayGeneralError(result.message || 'Failed to update vehicle. Please try again.');
+                    displayGeneralError(result.message || trans('updateFailed', 'Failed to update vehicle. Please try again.'));
                 }
             } else {
                 // Success
-                const successMsg = result.message || 'Vehicle updated successfully!';
+                const successMsg = result.message || trans('updateSuccess', 'Vehicle updated successfully!');
                 displaySuccess(successMsg);
                 
                 // Redirect to dashboard after 1.5 seconds
@@ -598,12 +628,13 @@
             }
         } catch (error) {
             console.error('Error updating vehicle:', error);
-            displayGeneralError('An error occurred. Please try again.');
+            displayGeneralError(trans('updateGenericError', 'An error occurred. Please try again.'));
         } finally {
             // Re-enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Update Vehicle Listing';
+                submitBtn.textContent = submitBtn.dataset.originalText || trans('updateButton', 'Update Vehicle Listing');
+                delete submitBtn.dataset.originalText;
             }
         }
     }
