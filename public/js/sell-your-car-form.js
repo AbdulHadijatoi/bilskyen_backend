@@ -30,6 +30,8 @@
         colour_id: trans('selectColor', 'Select colour'),
         emission_norm_id: trans('selectEmissionStandard', 'Select emission standard'),
     };
+    // Guard transient clear/reset events while lookup-prefill is still hydrating async fields.
+    var sellYourCarLookupHydrating = false;
 
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
@@ -945,7 +947,13 @@
             if (brandIdHidden && manualBrand) brandIdHidden.value = manualBrand.value || '';
             if (modelIdHidden && manualModel) modelIdHidden.value = manualModel.value || '';
             if (modelYearIdHidden && manualModelYear) modelYearIdHidden.value = manualModelYear.value || '';
-            if (fuelTypeIdHidden && manualFuelType) fuelTypeIdHidden.value = manualFuelType.value || '';
+            if (fuelTypeIdHidden && manualFuelType) {
+                var fuelValue = manualFuelType.value || '';
+                // During lookup hydration, don't let transient empty selects wipe a valid backend fuel_type_id.
+                if (fuelValue || !sellYourCarLookupHydrating) {
+                    fuelTypeIdHidden.value = fuelValue;
+                }
+            }
             updateTitleFromManual();
             syncPlateStripFuelFromManualSelect();
         }
@@ -990,15 +998,105 @@
             return reloadVariantsFromApi('');
         }
 
+        function resolveVariantSelection(candidate) {
+            if (candidate === null || candidate === undefined || candidate === '') {
+                return { id: '', name: '' };
+            }
+            if (typeof candidate === 'object') {
+                return {
+                    id: candidate.id !== null && candidate.id !== undefined ? String(candidate.id) : '',
+                    name: candidate.name ? String(candidate.name) : '',
+                };
+            }
+            if (typeof candidate === 'number' || (typeof candidate === 'string' && /^\d+$/.test(candidate))) {
+                return { id: String(candidate), name: '' };
+            }
+            return { id: '', name: String(candidate) };
+        }
+
+        function fetchAndSetVariantsForModel(modelId, selectedVariantCandidate) {
+            if (!variantSelect) return Promise.resolve();
+            var placeholderVariant = getSelectPlaceholderText('variant_id');
+            var variantHiddenEl = document.getElementById('variant_id_hidden');
+            var target = resolveVariantSelection(selectedVariantCandidate);
+            if (!modelId) {
+                setSelectOptions(variantSelect, [], { placeholderText: placeholderVariant, keepSelection: false });
+                variantSelect.value = '';
+                if (variantHiddenEl && !sellYourCarLookupHydrating) variantHiddenEl.value = '';
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+                return Promise.resolve();
+            }
+
+            var vtrEn = document.getElementById('manual-variant-trigger');
+            if (vtrEn) {
+                vtrEn.disabled = false;
+                vtrEn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+
+            variantLookupInFlight++;
+            setManualVariantSearchLoading(true);
+            var url = new URL('/api/v1/variants', window.location.origin);
+            url.searchParams.set('model_ids', String(modelId));
+            url.searchParams.set('limit', '200');
+
+            return fetch(url.toString(), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(function(res) { return res.json(); }).then(function(json) {
+                var items = json && json.data && json.data.items ? json.data.items : [];
+                setSelectOptions(variantSelect, items, {
+                    placeholderText: placeholderVariant,
+                    keepSelection: false,
+                    optionExtraAttrs: function(opt, item) {
+                        if (item.model_id !== null && item.model_id !== undefined) {
+                            opt.setAttribute('data-model-id', String(item.model_id));
+                        }
+                    }
+                });
+
+                if (target.id && !variantSelect.querySelector('option[value="' + target.id + '"]') && target.name) {
+                    addOptionIfNotExists('variant_id', target.id, target.name);
+                }
+
+                var selectedValue = '';
+                if (target.id && variantSelect.querySelector('option[value="' + target.id + '"]')) {
+                    selectedValue = target.id;
+                } else if (target.name) {
+                    var lowered = target.name.trim().toLowerCase();
+                    var options = Array.from(variantSelect.options);
+                    var byName = options.find(function(option) {
+                        return option.value && option.textContent && option.textContent.trim().toLowerCase() === lowered;
+                    });
+                    if (byName) selectedValue = byName.value;
+                }
+
+                variantSelect.value = selectedValue;
+                if (variantHiddenEl) variantHiddenEl.value = selectedValue;
+                updateTitleFromManual();
+            }).catch(function(err) {
+                console.error('Variant lookup failed:', err);
+            }).finally(function() {
+                variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
+                if (variantLookupInFlight === 0) setManualVariantSearchLoading(false);
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+            });
+        }
+
         function reloadVariantsFromApi(searchTerm) {
             if (!variantSelect || !manualModel) return Promise.resolve();
             var modelId = manualModel.value;
             var placeholderVariant = getSelectPlaceholderText('variant_id');
+            var variantHiddenEl = document.getElementById('variant_id_hidden');
+            var previousVariantValue = variantSelect.value || (variantHiddenEl ? (variantHiddenEl.value || '') : '');
             if (!modelId) {
                 setSelectOptions(variantSelect, [], { placeholderText: placeholderVariant, keepSelection: false });
                 variantSelect.value = '';
-                var vh = document.getElementById('variant_id_hidden');
-                if (vh) vh.value = '';
+                if (variantHiddenEl && !sellYourCarLookupHydrating) variantHiddenEl.value = '';
                 var sv = document.getElementById('manual-variant-panel-search');
                 if (sv) sv.value = '';
                 var vtr = document.getElementById('manual-variant-trigger');
@@ -1016,41 +1114,13 @@
                 vtrEn.disabled = false;
                 vtrEn.classList.remove('opacity-60', 'cursor-not-allowed');
             }
-            variantLookupInFlight++;
-            setManualVariantSearchLoading(true);
-            var url = new URL('/api/v1/variants', window.location.origin);
-            url.searchParams.set('model_ids', String(modelId));
-            url.searchParams.set('limit', '25');
-            var term = (searchTerm || '').trim();
-            if (term) url.searchParams.set('search', term);
-            return fetch(url.toString(), {
-                method: 'GET',
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            }).then(function(res) { return res.json(); }).then(function(json) {
-                var items = json && json.data && json.data.items ? json.data.items : [];
-                setSelectOptions(variantSelect, items, {
-                    placeholderText: placeholderVariant,
-                    keepSelection: false,
-                    optionExtraAttrs: function(opt, item) {
-                        if (item.model_id !== null && item.model_id !== undefined) {
-                            opt.setAttribute('data-model-id', String(item.model_id));
-                        }
-                    }
-                });
-                variantSelect.value = '';
-                var variantHidden = document.getElementById('variant_id_hidden');
-                if (variantHidden) variantHidden.value = '';
-            }).catch(function(err) {
-                console.error('Variant lookup failed:', err);
-            }).finally(function() {
-                variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
-                if (variantLookupInFlight === 0) setManualVariantSearchLoading(false);
-                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
-                    window.sellYourCarRefreshManualComboboxes();
-                }
+            return fetchAndSetVariantsForModel(modelId, previousVariantValue).then(function() {
+                if (!variantHiddenEl || variantHiddenEl.value) return;
+                if (!sellYourCarLookupHydrating) variantHiddenEl.value = '';
             });
         }
+
+        window.sellYourCarLoadVariantsForModel = fetchAndSetVariantsForModel;
 
         if (manualBrand) {
             bindManualCombobox({
@@ -2254,6 +2324,7 @@
         
         // Local DMR lookup (dmr_fact_vehicle_id and/or legacy fuel_economy payload)
         if (apiData.dmr_fact_vehicle_id || (apiData.fuel_economy && typeof apiData.fuel_economy === 'object')) {
+            sellYourCarLookupHydrating = true;
             setFieldValue('dmr_fact_vehicle_id', apiData.dmr_fact_vehicle_id);
             const variantSelect = document.getElementById('variant_id');
             if (variantSelect) {
@@ -2299,17 +2370,9 @@
             if (apiData.brand) {
                 setSelectByIdOrText('manual_brand_id', apiData.brand);
             }
-            const manualBrandEl = document.getElementById('manual_brand_id');
-            if (manualBrandEl) {
-                manualBrandEl.dispatchEvent(new Event('change'));
-            }
             setTimeout(function() {
                 if (apiData.model) {
                     setSelectByIdOrText('manual_model_id', apiData.model);
-                }
-                const manualModelEl = document.getElementById('manual_model_id');
-                if (manualModelEl) {
-                    manualModelEl.dispatchEvent(new Event('change'));
                 }
                 const yearStr = apiData.model_year_effective != null
                     ? String(apiData.model_year_effective)
@@ -2320,20 +2383,30 @@
                 const fuelForManual = apiData.fuel_type
                     || (primary && primary.fuel_type);
                 if (fuelForManual) {
+                    if (typeof fuelForManual === 'object' && fuelForManual.id && fuelForManual.name) {
+                        addOptionIfNotExists('manual_fuel_type_id', fuelForManual.id, fuelForManual.name);
+                    }
                     setSelectByIdOrText('manual_fuel_type_id', fuelForManual);
                 }
                 syncManualSelectionsToHidden();
-                if (apiData.variant) {
-                    setSelectByIdOrText('variant_id', apiData.variant);
-                    const variantHiddenInput = document.getElementById('variant_id_hidden');
-                    if (variantHiddenInput && document.getElementById('variant_id')) {
-                        variantHiddenInput.value = document.getElementById('variant_id').value || '';
-                    }
+                var modelIdForVariantLoad = document.getElementById('manual_model_id')?.value || '';
+                var loadVariantsFn = window.sellYourCarLoadVariantsForModel;
+                if (typeof loadVariantsFn === 'function') {
+                    loadVariantsFn(modelIdForVariantLoad, apiData.variant).finally(function() {
+                        const variantHiddenInput = document.getElementById('variant_id_hidden');
+                        if (variantHiddenInput && document.getElementById('variant_id')) {
+                            variantHiddenInput.value = document.getElementById('variant_id').value || '';
+                        }
+                    });
                 }
                 const ftId = document.getElementById('fuel_type_id')?.value;
                 if (ftId) {
                     updateFuelEfficiencyLabel(ftId);
                 }
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+                sellYourCarLookupHydrating = false;
             }, 0);
             setTimeout(function() {
                 if (!apiData.description) {

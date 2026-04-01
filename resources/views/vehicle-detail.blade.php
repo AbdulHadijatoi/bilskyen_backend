@@ -675,10 +675,15 @@
                 </div>
                 @endif
                 @foreach($vd['specifications'] ?? [] as $spec)
+                @php
+                    $specCount = (int) ($spec['count'] ?? 0);
+                @endphp
+                @if($specCount !== 0)
                 <div class="detail-item">
                     <span class="detail-label">{{ $spec['name'] }}</span>
-                    <span class="detail-value">{{ (int) ($spec['count'] ?? 1) }}</span>
+                    <span class="detail-value">{{ $specCount === 1 ? __('messages.pages.vehicles.detail.yes') : $specCount }}</span>
                 </div>
+                @endif
                 @endforeach
             </div>
         </div>

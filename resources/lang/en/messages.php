@@ -213,7 +213,7 @@ return [
     'dialogs' => [
         'enquiry_form' => 'Enquiry Form',
         'enquiry_description' => 'Submit your enquiry about this vehicle. We\'ll get back to you as soon as possible.',
-        'test_drive_request' => 'Test Drive Request',
+        'test_drive_request' => 'Call Seller',
         'test_drive_description' => 'Request a test drive for this vehicle. We\'ll get back to you as soon as possible to schedule your test drive.',
         'price_negotiation' => 'Price Negotiation',
         'price_negotiation_description' => 'Make an offer or negotiate the price for this vehicle. We\'ll get back to you as soon as possible.',
