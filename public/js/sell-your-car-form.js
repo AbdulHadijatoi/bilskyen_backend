@@ -2677,14 +2677,59 @@
         const parts = [];
         const apiData = window.apiResponseData;
 
-        // Equipment from registration lookup (comma-separated string from DMR)
-        if (apiData && typeof apiData.equipments === 'string' && apiData.equipments.trim() !== '') {
-            const equipItems = apiData.equipments.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-            if (equipItems.length > 0) {
-                parts.push(
-                    'Equipment (from registration)\n' + equipItems.map(function(item) { return '• ' + item; }).join('\n')
-                );
+        // Split lookup specifications: count 0/1 → equipment (1 only) or omit (0); other counts → specifications block
+        const specEquipNames = [];
+        const specLines = [];
+        if (apiData && Array.isArray(apiData.specifications) && apiData.specifications.length > 0) {
+            apiData.specifications.forEach(function(spec) {
+                if (!spec || typeof spec.name !== 'string') {
+                    return;
+                }
+                const n = spec.name.trim();
+                if (!n) {
+                    return;
+                }
+                const c = spec.count != null ? parseInt(spec.count, 10) : 0;
+                if (!Number.isNaN(c) && (c === 0 || c === 1)) {
+                    if (c === 1) {
+                        specEquipNames.push(n);
+                    }
+                    return;
+                }
+                const countStr = Number.isNaN(c) ? '0' : String(c);
+                specLines.push('• ' + n + ': ' + countStr);
+            });
+        }
+
+        const seenEquipLower = new Set();
+        const equipItems = [];
+        function pushEquipUnique(name) {
+            const trimmed = String(name).trim();
+            if (!trimmed) {
+                return;
             }
+            const key = trimmed.toLowerCase();
+            if (seenEquipLower.has(key)) {
+                return;
+            }
+            seenEquipLower.add(key);
+            equipItems.push(trimmed);
+        }
+
+        if (apiData && typeof apiData.equipments === 'string' && apiData.equipments.trim() !== '') {
+            apiData.equipments.split(',').forEach(function(s) {
+                pushEquipUnique(s);
+            });
+        }
+        specEquipNames.forEach(function(n) {
+            pushEquipUnique(n);
+        });
+
+        // Equipment from registration lookup (CSV + boolean specs with count 1)
+        if (equipItems.length > 0) {
+            parts.push(
+                'Equipment:\n' + equipItems.map(function(item) { return '• ' + item; }).join('\n')
+            );
         } else {
             // Equipment from form checkboxes only when register list is not present
             const equipmentCheckboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');
@@ -2698,24 +2743,8 @@
             }
         }
 
-        // Specifications from registration lookup [{ name, count }, ...]
-        if (apiData && Array.isArray(apiData.specifications) && apiData.specifications.length > 0) {
-            const specLines = [];
-            apiData.specifications.forEach(function(spec) {
-                if (!spec || typeof spec.name !== 'string') {
-                    return;
-                }
-                const n = spec.name.trim();
-                if (!n) {
-                    return;
-                }
-                const c = spec.count != null ? parseInt(spec.count, 10) : 0;
-                const countStr = isNaN(c) ? '0' : String(c);
-                specLines.push('• ' + n + ': ' + countStr);
-            });
-            if (specLines.length > 0) {
-                parts.push('Specifications (from registration)\n' + specLines.join('\n'));
-            }
+        if (specLines.length > 0) {
+            parts.push('Specifications:\n' + specLines.join('\n'));
         }
         
         // Servicebog
