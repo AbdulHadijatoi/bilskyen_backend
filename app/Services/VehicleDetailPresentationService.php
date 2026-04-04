@@ -81,7 +81,7 @@ class VehicleDetailPresentationService
         $modelYearDisplay = $modelYear !== null ? (string) $modelYear : null;
 
         $specDefinitions = [];
-        if ($v->brand_id && $v->model_id && $v->variant_id && $modelYear !== null && $modelYear !== '' && (int) $modelYear > 0) {
+        if ($v->brand_id && $v->model_id && $modelYear !== null && $modelYear !== '' && (int) $modelYear > 0) {
             $specDefinitions = VehicleSpecDefinition::query()
                 ->matchingVehicle($v)
                 ->orderBy('name')

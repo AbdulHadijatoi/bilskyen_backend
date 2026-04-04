@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DmrModel;
 use App\Models\DmrVariant;
 use App\Models\VehicleSpecDefinition;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -60,29 +61,35 @@ class AdminVehicleSpecDefinitionController extends Controller
         $data = $request->validate([
             'brand_id' => ['required', 'integer', 'exists:dmr_brands,id'],
             'model_id' => ['required', 'integer', 'exists:dmr_models,id'],
-            'variant_id' => ['required', 'integer', 'exists:dmr_variants,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:dmr_variants,id'],
             'model_year_from' => ['required', 'integer', 'min:1975', 'max:'.$maxModelYear],
             'model_year_to' => ['required', 'integer', 'min:1975', 'max:'.$maxModelYear, 'gte:model_year_from'],
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('vehicle_spec_definitions', 'name')->where(function ($query) use ($request) {
-                    return $query
-                        ->where('brand_id', (int) $request->input('brand_id'))
-                        ->where('model_id', (int) $request->input('model_id'))
-                        ->where('variant_id', (int) $request->input('variant_id'))
-                        ->where('model_year_from', (int) $request->input('model_year_from'))
-                        ->where('model_year_to', (int) $request->input('model_year_to'));
+                Rule::unique('vehicle_spec_definitions', 'name')->where(function (QueryBuilder $query) use ($request) {
+                    $this->applyCatalogScopeToUniqueQuery(
+                        $query,
+                        (int) $request->input('brand_id'),
+                        (int) $request->input('model_id'),
+                        $this->normalizeOptionalVariantId($request->input('variant_id')),
+                        (int) $request->input('model_year_from'),
+                        (int) $request->input('model_year_to')
+                    );
+
+                    return $query;
                 }),
             ],
             'value' => ['required', 'string', 'max:65535'],
         ]);
 
+        $data['variant_id'] = $this->normalizeOptionalVariantId($data['variant_id'] ?? null);
+
         $hierarchyError = $this->validateHierarchy(
             (int) $data['brand_id'],
             (int) $data['model_id'],
-            (int) $data['variant_id']
+            $data['variant_id']
         );
         if ($hierarchyError !== null) {
             return $this->validationError($hierarchyError);
@@ -102,12 +109,16 @@ class AdminVehicleSpecDefinitionController extends Controller
         $data = $request->validate([
             'brand_id' => ['sometimes', 'integer', 'exists:dmr_brands,id'],
             'model_id' => ['sometimes', 'integer', 'exists:dmr_models,id'],
-            'variant_id' => ['sometimes', 'integer', 'exists:dmr_variants,id'],
+            'variant_id' => ['sometimes', 'nullable', 'integer', 'exists:dmr_variants,id'],
             'model_year_from' => ['sometimes', 'integer', 'min:1975', 'max:'.$maxModelYear],
             'model_year_to' => ['sometimes', 'integer', 'min:1975', 'max:'.$maxModelYear],
             'name' => ['sometimes', 'string', 'max:255'],
             'value' => ['sometimes', 'string', 'max:65535'],
         ]);
+
+        if (array_key_exists('variant_id', $data)) {
+            $data['variant_id'] = $this->normalizeOptionalVariantId($data['variant_id']);
+        }
 
         $merged = array_merge($row->only([
             'brand_id',
@@ -133,13 +144,17 @@ class AdminVehicleSpecDefinitionController extends Controller
                     'string',
                     'max:255',
                     Rule::unique('vehicle_spec_definitions', 'name')
-                        ->where(function ($query) use ($merged) {
-                            return $query
-                                ->where('brand_id', (int) $merged['brand_id'])
-                                ->where('model_id', (int) $merged['model_id'])
-                                ->where('variant_id', (int) $merged['variant_id'])
-                                ->where('model_year_from', (int) $merged['model_year_from'])
-                                ->where('model_year_to', (int) $merged['model_year_to']);
+                        ->where(function (QueryBuilder $query) use ($merged) {
+                            $this->applyCatalogScopeToUniqueQuery(
+                                $query,
+                                (int) $merged['brand_id'],
+                                (int) $merged['model_id'],
+                                $this->normalizeOptionalVariantId($merged['variant_id'] ?? null),
+                                (int) $merged['model_year_from'],
+                                (int) $merged['model_year_to']
+                            );
+
+                            return $query;
                         })
                         ->ignore($row->id),
                 ],
@@ -152,7 +167,7 @@ class AdminVehicleSpecDefinitionController extends Controller
         $hierarchyError = $this->validateHierarchy(
             (int) $merged['brand_id'],
             (int) $merged['model_id'],
-            (int) $merged['variant_id']
+            $this->normalizeOptionalVariantId($merged['variant_id'] ?? null)
         );
         if ($hierarchyError !== null) {
             return $this->validationError($hierarchyError);
@@ -174,7 +189,7 @@ class AdminVehicleSpecDefinitionController extends Controller
     /**
      * @return array<string, array<int, string>>|null
      */
-    private function validateHierarchy(int $brandId, int $modelId, int $variantId): ?array
+    private function validateHierarchy(int $brandId, int $modelId, ?int $variantId): ?array
     {
         $model = DmrModel::query()->find($modelId);
         if ($model === null) {
@@ -182,6 +197,10 @@ class AdminVehicleSpecDefinitionController extends Controller
         }
         if ((int) $model->brand_id !== $brandId) {
             return ['model_id' => ['Model does not belong to the selected brand.']];
+        }
+
+        if ($variantId === null) {
+            return null;
         }
 
         $variant = DmrVariant::query()->find($variantId);
@@ -193,5 +212,35 @@ class AdminVehicleSpecDefinitionController extends Controller
         }
 
         return null;
+    }
+
+    private function normalizeOptionalVariantId(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    private function applyCatalogScopeToUniqueQuery(
+        QueryBuilder $query,
+        int $brandId,
+        int $modelId,
+        ?int $variantId,
+        int $modelYearFrom,
+        int $modelYearTo,
+    ): void {
+        $query
+            ->where('brand_id', $brandId)
+            ->where('model_id', $modelId)
+            ->where('model_year_from', $modelYearFrom)
+            ->where('model_year_to', $modelYearTo);
+
+        if ($variantId === null) {
+            $query->whereNull('variant_id');
+        } else {
+            $query->where('variant_id', $variantId);
+        }
     }
 }

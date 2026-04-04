@@ -224,6 +224,7 @@ class VehicleService
         $vehicleData = $this->normalizeIncomingVehiclePayload($vehicleData);
         $vehicleData = $this->deriveEnginePowerHpFromKw($vehicleData);
         $this->hydrateFirstRegistrationYearFromDate($vehicleData, null);
+        $this->hydrateModelYearFromFirstRegistration($vehicleData, null);
 
         $this->hydrateVariantIdFromDmrFact($vehicleData);
         $this->hydrateFuelTypeIdFromDmrFact($vehicleData);
@@ -441,6 +442,7 @@ class VehicleService
             $vehicleData = $this->normalizeIncomingVehiclePayload($vehicleData);
             $vehicleData = $this->deriveEnginePowerHpFromKw($vehicleData);
             $this->hydrateFirstRegistrationYearFromDate($vehicleData, $vehicle);
+            $this->hydrateModelYearFromFirstRegistration($vehicleData, $vehicle);
 
             $this->hydrateVariantIdFromDmrFact($vehicleData, $vehicle->dmr_fact_vehicle_id);
             $this->hydrateFuelTypeIdFromDmrFact($vehicleData, $vehicle->dmr_fact_vehicle_id);
@@ -695,6 +697,74 @@ class VehicleService
         try {
             $vehicleData['first_registration_year'] = (int) Carbon::parse($dateRaw)->year;
         } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * When {@see Vehicle::$model_year} is missing or empty in the payload, use
+     * {@see Vehicle::$first_registration_year} or the year from {@see Vehicle::$first_registration_date}
+     * (from payload or existing row on update). Does not replace a valid incoming or existing model year.
+     *
+     * @param  array<string, mixed>  $vehicleData
+     */
+    private function hydrateModelYearFromFirstRegistration(array &$vehicleData, ?Vehicle $existing): void
+    {
+        $incomingPresent = array_key_exists('model_year', $vehicleData);
+        $incomingRaw = $incomingPresent ? ($vehicleData['model_year'] ?? null) : null;
+        $incomingValid = $incomingRaw !== null && $incomingRaw !== '' && (int) $incomingRaw > 0;
+
+        if ($incomingValid) {
+            $vehicleData['model_year'] = (int) $incomingRaw;
+
+            return;
+        }
+
+        $existingMy = $existing?->model_year;
+        $existingValid = $existingMy !== null && (int) $existingMy > 0;
+
+        if (! $incomingPresent && $existingValid) {
+            return;
+        }
+
+        if ($incomingPresent && ! $incomingValid && $existingValid) {
+            unset($vehicleData['model_year']);
+
+            return;
+        }
+
+        $regYear = null;
+        if (array_key_exists('first_registration_year', $vehicleData)) {
+            $y = $vehicleData['first_registration_year'];
+            if ($y !== null && $y !== '' && (int) $y > 0) {
+                $regYear = (int) $y;
+            }
+        }
+        if ($regYear === null && $existing?->first_registration_year) {
+            $ry = (int) $existing->first_registration_year;
+            if ($ry > 0) {
+                $regYear = $ry;
+            }
+        }
+        if ($regYear === null) {
+            $dateRaw = null;
+            if (array_key_exists('first_registration_date', $vehicleData)) {
+                $v = $vehicleData['first_registration_date'];
+                if ($v !== null && $v !== '') {
+                    $dateRaw = $v;
+                }
+            } elseif ($existing?->first_registration_date) {
+                $dateRaw = $existing->first_registration_date;
+            }
+            if ($dateRaw !== null && $dateRaw !== '') {
+                try {
+                    $regYear = (int) Carbon::parse($dateRaw)->year;
+                } catch (\Throwable) {
+                }
+            }
+        }
+
+        if ($regYear !== null && $regYear > 0) {
+            $vehicleData['model_year'] = $regYear;
         }
     }
 

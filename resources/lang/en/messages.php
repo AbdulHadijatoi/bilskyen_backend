@@ -465,7 +465,7 @@ return [
                 'basic_information' => 'Basic Information',
                 'vehicle_specifications' => 'Vehicle Specifications',
                 'model_spec_definitions_heading' => 'Model specifications (reference)',
-                'model_spec_definitions_intro' => 'Values from our specification catalog for this brand, model, variant, and model year.',
+                'model_spec_definitions_intro' => 'Catalog values for this brand, model, and model year. If this listing has a variant, only specs for that variant are shown; otherwise only model-wide specs (no variant) apply.',
                 'detailed_specifications' => 'Detailed Specifications',
                 'technical_specs_heading' => 'Technical specs',
                 'condition_history_heading' => 'Condition & History',

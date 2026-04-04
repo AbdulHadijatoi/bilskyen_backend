@@ -45,7 +45,10 @@ class VehicleSpecDefinition extends Model
     }
 
     /**
-     * Rows scoped to the same brand, model, variant, and whose model year range includes the listing year.
+     * Catalog rows for the same brand, model, and model year range.
+     *
+     * If the listing has a variant, only definitions with the same variant_id match.
+     * If the listing has no variant, only definitions with null variant_id match (model-wide specs).
      *
      * @param  Builder<VehicleSpecDefinition>  $query
      * @return Builder<VehicleSpecDefinition>
@@ -54,11 +57,17 @@ class VehicleSpecDefinition extends Model
     {
         $year = (int) $vehicle->model_year;
 
-        return $query
+        $query = $query
             ->where('brand_id', $vehicle->brand_id)
             ->where('model_id', $vehicle->model_id)
-            ->where('variant_id', $vehicle->variant_id)
             ->where('model_year_from', '<=', $year)
             ->where('model_year_to', '>=', $year);
+
+        $variantId = $vehicle->variant_id;
+        if ($variantId !== null && $variantId !== '') {
+            return $query->where('variant_id', (int) $variantId);
+        }
+
+        return $query->whereNull('variant_id');
     }
 }

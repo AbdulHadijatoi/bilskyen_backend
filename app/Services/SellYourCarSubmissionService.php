@@ -240,6 +240,37 @@ class SellYourCarSubmissionService
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function applyModelYearFallbackFromRegistration(array &$attributes): void
+    {
+        $my = $attributes['model_year'] ?? null;
+        if ($my !== null && $my !== '' && (int) $my > 0) {
+            return;
+        }
+
+        $regYear = $attributes['first_registration_year'] ?? null;
+        if ($regYear !== null && $regYear !== '' && (int) $regYear > 0) {
+            $attributes['model_year'] = (int) $regYear;
+
+            return;
+        }
+
+        $dateRaw = $attributes['first_registration_date'] ?? null;
+        if ($dateRaw === null || $dateRaw === '') {
+            return;
+        }
+
+        try {
+            $y = (int) Carbon::parse($dateRaw)->year;
+            if ($y > 0) {
+                $attributes['model_year'] = $y;
+            }
+        } catch (\Throwable) {
+        }
+    }
+
     private function createVehicleRecord(Request $request, User $user, string $description): Vehicle
     {
         return DB::transaction(function () use ($request, $user, $description) {
@@ -281,11 +312,17 @@ class SellYourCarSubmissionService
                 if ($request->filled('variant_id')) {
                     $attributes['variant_id'] = (int) $request->input('variant_id');
                 }
-            } elseif ($request->filled('variant_id')) {
-                $attributes['variant_id'] = (int) $request->input('variant_id');
+            } else {
+                if ($request->filled('model_year')) {
+                    $attributes['model_year'] = (int) $request->input('model_year');
+                }
+                if ($request->filled('variant_id')) {
+                    $attributes['variant_id'] = (int) $request->input('variant_id');
+                }
             }
 
             $this->mergeVehicleSpecAttributesFromRequest($request, $attributes);
+            $this->applyModelYearFallbackFromRegistration($attributes);
 
             $vehicle = Vehicle::create($attributes);
 
