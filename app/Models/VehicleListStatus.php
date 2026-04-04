@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VehicleListStatus extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     public const DRAFT = 1;
     public const PUBLISHED = 2;
@@ -16,6 +18,10 @@ class VehicleListStatus extends Model
     public const ARCHIVED = 4;
 
     public $timestamps = false;
+
+    protected $casts = [
+        'deleted_at' => 'datetime',
+    ];
 
     protected $fillable = [
         'name',

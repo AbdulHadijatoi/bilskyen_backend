@@ -26,7 +26,7 @@ class DealerLookupController extends Controller
             return $this->success($data);
         } catch (\Exception $e) {
             return $this->error(
-                'Failed to fetch constants data: ' . $e->getMessage(),
+                __('messages.api.failed_fetch_constants_data', ['message' => $e->getMessage()]),
                 [],
                 500
             );
@@ -58,7 +58,7 @@ class DealerLookupController extends Controller
             );
         } catch (\Exception $e) {
             return $this->error(
-                'Failed to lookup vehicle: ' . $e->getMessage(),
+                __('messages.api.failed_lookup_vehicle', ['message' => $e->getMessage()]),
                 [],
                 500
             );

@@ -359,7 +359,7 @@ class AdminUserController extends Controller
 
         // Verify user is an admin
         if (!$user->hasRole('admin')) {
-            return $this->error('Only admins can use this endpoint', null, 403);
+            return $this->error(__('messages.api.only_admins_endpoint'), null, 403);
         }
 
         // Match frontend API format: current_password, password, password_confirmation
@@ -380,8 +380,8 @@ class AdminUserController extends Controller
 
         // Verify current password
         if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
-            return $this->error('Current password is incorrect', [
-                'current_password' => ['The current password is incorrect.'],
+            return $this->error(__('messages.errors.current_password_incorrect'), [
+                'current_password' => [__('messages.errors.current_password_incorrect')],
             ], 401);
         }
 

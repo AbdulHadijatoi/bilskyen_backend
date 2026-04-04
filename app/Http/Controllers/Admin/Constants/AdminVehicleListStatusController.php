@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\VehicleListStatus;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Traits\ConstantsCacheTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 
 /**
@@ -31,7 +32,12 @@ class AdminVehicleListStatusController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:vehicle_list_statuses,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('vehicle_list_statuses', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $vehicleListStatus = VehicleListStatus::create($request->only(['name']));
@@ -47,7 +53,12 @@ class AdminVehicleListStatusController extends Controller
         $vehicleListStatus = VehicleListStatus::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:vehicle_list_statuses,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('vehicle_list_statuses', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $vehicleListStatus->update($request->only(['name']));

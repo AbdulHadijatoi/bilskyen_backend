@@ -92,7 +92,7 @@ class FinancialAccountController extends Controller
     {
         if (!$this->financialAccountService->canDeleteAccount($financialAccount)) {
             return response()->json([
-                'error' => 'Financial account cannot be deleted because it has associated transactions.',
+                'error' => __('messages.api.financial_account_has_transactions'),
             ], 400);
         }
 

@@ -36,7 +36,8 @@ class DealerStaffController extends Controller
         // Check if staff_management feature is enabled
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'staff_management')) {
             return $this->error(
-                'Staff management is not available in your current subscription plan. Please upgrade to access this feature.',
+                __('messages.api.staff_management_not_in_plan'),
+                [],
                 403
             );
         }
@@ -74,7 +75,7 @@ class DealerStaffController extends Controller
 
         // Check permission
         if (!$user->hasPermissionTo('dealer.staff.manage')) {
-            return $this->forbidden('You do not have permission to manage staff');
+            return $this->forbidden(__('messages.errors.no_permission_manage_staff'));
         }
 
         // Validate request
@@ -152,7 +153,7 @@ class DealerStaffController extends Controller
 
         // Check permission
         if (!$user->hasPermissionTo('dealer.staff.manage')) {
-            return $this->forbidden('You do not have permission to manage staff');
+            return $this->forbidden(__('messages.errors.no_permission_manage_staff'));
         }
 
         $request->validate([
@@ -232,7 +233,7 @@ class DealerStaffController extends Controller
 
         // Check permission
         if (!$user->hasPermissionTo('dealer.staff.manage')) {
-            return $this->forbidden('You do not have permission to manage staff');
+            return $this->forbidden(__('messages.errors.no_permission_manage_staff'));
         }
 
         $dealerStaff = DealerStaff::where('dealer_id', $dealer->id)

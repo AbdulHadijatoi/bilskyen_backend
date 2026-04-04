@@ -46,7 +46,7 @@ class DmrFactVehicleLookupController extends Controller
             ]);
 
             return $this->error(
-                'An unexpected error occurred: ' . $e->getMessage(),
+                __('messages.api.unexpected_error_with_details', ['details' => $e->getMessage()]),
                 ['exception' => get_class($e)],
                 500
             );
@@ -149,7 +149,7 @@ class DmrFactVehicleLookupController extends Controller
 
         if (!$dmrFactVehicleId) {
             return $this->error(
-                'No matching vehicle was found for the selected manual values.',
+                __('messages.api.manual_lookup_no_match'),
                 [
                     'manual' => $validated,
                 ],

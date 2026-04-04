@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DmrBrand;
+use App\Models\DmrFactVehicle;
 use App\Models\DmrModel;
 use App\Models\DmrVariant;
 use App\Models\DmrDriveEnergy;
@@ -58,6 +59,7 @@ class LookupService
             'body_types' => 'dmr_body_types',
             'colors' => 'dmr_colours',
             'dmr_models' => 'vehicle_models',
+            'types' => 'categories',
             default => $group,
         };
 
@@ -66,6 +68,7 @@ class LookupService
         $legacyKeys = match ($group) {
             'body_types' => ['constants_body_types', 'constants_dmr_body_types'],
             'colors' => ['constants_colors'],
+            'types', 'categories' => ['constants_categories', 'constants_types'],
             default => ['constants_' . $group],
         };
 
@@ -175,6 +178,27 @@ class LookupService
     {
         return Cache::remember(self::cacheKey('vehicle_models'), self::CACHE_TTL, function () {
             return DmrModel::with('brand')->orderBy('name')->get();
+        });
+    }
+
+    /**
+     * Distinct model years from DMR fact data (read-only reference for admin UI).
+     *
+     * @return Collection<int, array{id:int,name:string}>
+     */
+    public function getModelYears(): Collection
+    {
+        return Cache::remember(self::cacheKey('model_years'), self::CACHE_TTL, function () {
+            $years = DmrFactVehicle::query()
+                ->whereNotNull('model_aar')
+                ->distinct()
+                ->orderByDesc('model_aar')
+                ->pluck('model_aar');
+
+            return $years->values()->map(fn ($y) => [
+                'id' => (int) $y,
+                'name' => (string) $y,
+            ]);
         });
     }
 

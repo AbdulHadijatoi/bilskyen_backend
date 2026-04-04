@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\Condition;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Traits\ConstantsCacheTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 
 /**
@@ -31,7 +32,12 @@ class AdminConditionController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:conditions,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('conditions', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $condition = Condition::create($request->only(['name']));
@@ -47,7 +53,12 @@ class AdminConditionController extends Controller
         $condition = Condition::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:conditions,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('conditions', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $condition->update($request->only(['name']));

@@ -105,7 +105,7 @@ class SellYourCarController extends Controller
     {
         $user = $this->authService->getAuthenticatedUser($request);
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => __('messages.api.unauthorized')], 401);
         }
 
         $fv = DmrFactVehicle::query()
@@ -119,7 +119,7 @@ class SellYourCarController extends Controller
             ->find($dmrFactVehicleId);
 
         if (!$fv) {
-            return response()->json(['message' => 'Vehicle not found'], 404);
+            return response()->json(['message' => __('messages.errors.vehicle_not_found')], 404);
         }
 
         $variant = $fv->variant;

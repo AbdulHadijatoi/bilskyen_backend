@@ -50,7 +50,7 @@ class AdminPlanController extends Controller
 
         // Validate that at least one of role_ids or dealer_ids is provided
         if (!$request->has('role_ids') && !$request->has('dealer_ids')) {
-            return $this->error('At least one of role_ids or dealer_ids must be provided', 422);
+            return $this->error(__('messages.api.plan_roles_or_dealers_required'), [], 422);
         }
 
         DB::beginTransaction();
@@ -132,7 +132,7 @@ class AdminPlanController extends Controller
         return $this->created($plan);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to create plan: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_create_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -247,7 +247,7 @@ class AdminPlanController extends Controller
         return $this->success($plan);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update plan: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -317,7 +317,7 @@ class AdminPlanController extends Controller
 
         // Validate that at least one is provided
         if (!$request->has('role_ids') && !$request->has('dealer_ids')) {
-            return $this->error('At least one of role_ids or dealer_ids must be provided', 422);
+            return $this->error(__('messages.api.plan_roles_or_dealers_required'), [], 422);
         }
 
         $plan = Plan::findOrFail($id);
@@ -372,7 +372,7 @@ class AdminPlanController extends Controller
             return $this->success($availability, 200, 'Plan availability updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to sync plan availability: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_sync_availability_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -405,7 +405,7 @@ class AdminPlanController extends Controller
         ]);
 
         if (!$request->has('monthly_price') && !$request->has('yearly_price')) {
-            return $this->error('At least one of monthly_price or yearly_price must be provided', 422);
+            return $this->error(__('messages.api.plan_pricing_price_required'), [], 422);
         }
 
         $plan = Plan::findOrFail($id);
@@ -452,7 +452,7 @@ class AdminPlanController extends Controller
             return $this->success(['message' => __('messages.errors.plan_pricing_updated_success')]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update plan pricing: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_pricing_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 }

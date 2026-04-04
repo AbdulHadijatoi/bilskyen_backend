@@ -165,7 +165,7 @@ class SellerProfileController extends Controller
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to view this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_view_vehicle'), null, 403);
         }
 
         $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
@@ -243,7 +243,7 @@ class SellerProfileController extends Controller
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to update this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_update_vehicle'), null, 403);
         }
 
         // Store before state
@@ -295,7 +295,7 @@ class SellerProfileController extends Controller
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to delete this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_delete_vehicle'), null, 403);
         }
 
         // Store before state for audit log
@@ -369,7 +369,7 @@ class SellerProfileController extends Controller
         // Verify the inquiry belongs to one of seller's vehicles
         $vehicle = $inquiry->vehicle;
         if (!$vehicle || $vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to view this inquiry', null, 403);
+            return $this->error(__('messages.errors.no_permission_view_inquiries'), null, 403);
         }
 
         return $this->success($inquiry);

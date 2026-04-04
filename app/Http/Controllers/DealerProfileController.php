@@ -26,7 +26,7 @@ class DealerProfileController extends Controller
         $dealer = $user->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         // Include user data in response (use 'owner' for frontend compatibility)

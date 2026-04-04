@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminVehicleController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AdminFeatureController;
 use App\Http\Controllers\AdminSubscriptionController;
+use App\Http\Controllers\AdminSubscriptionChangeRequestController;
 use App\Http\Controllers\AdminDealerController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AdminAnalyticsController;
@@ -23,7 +24,6 @@ use App\Http\Controllers\Admin\Constants\AdminListingTypeController;
 use App\Http\Controllers\Admin\Constants\AdminBodyTypeController;
 use App\Http\Controllers\Admin\Constants\AdminColorController;
 use App\Http\Controllers\Admin\Constants\AdminVariantController;
-use App\Http\Controllers\Admin\Constants\AdminTypeController;
 use App\Http\Controllers\Admin\Constants\AdminConditionController;
 use App\Http\Controllers\Admin\Constants\AdminSalesTypeController;
 use App\Http\Controllers\Admin\Constants\AdminPriceTypeController;
@@ -41,6 +41,7 @@ use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
+use App\Http\Controllers\AdminLocationController;
 use App\Http\Controllers\AdminOwnershipTaxRuleController;
 use App\Http\Controllers\AdminVehicleSpecDefinitionController;
 use App\Http\Controllers\AdminDmrDriveEnergyController;
@@ -110,6 +111,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/{id}/pricing', [AdminPlanController::class, 'updatePricing']);
     });
     
+    Route::prefix('subscription-change-requests')->group(function () {
+        Route::get('/', [AdminSubscriptionChangeRequestController::class, 'index']);
+        Route::post('/{id}/approve', [AdminSubscriptionChangeRequestController::class, 'approve']);
+        Route::post('/{id}/reject', [AdminSubscriptionChangeRequestController::class, 'reject']);
+    });
+
     Route::prefix('subscriptions')->group(function () {
         Route::get('/', [AdminSubscriptionController::class, 'index']);
         Route::get('/{id}', [AdminSubscriptionController::class, 'show']);
@@ -307,14 +314,6 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('delete/{id}', [AdminVariantController::class, 'delete']);
     });
     
-    Route::prefix('types')->group(function () {
-        Route::get('/', [AdminTypeController::class, 'index']);
-        Route::get('show/{id}', [AdminTypeController::class, 'show']);
-        Route::post('/create', [AdminTypeController::class, 'create']);
-        Route::post('/update/{id}', [AdminTypeController::class, 'update']);
-        Route::post('delete/{id}', [AdminTypeController::class, 'delete']);
-    });
-    
     Route::prefix('conditions')->group(function () {
         Route::get('/', [AdminConditionController::class, 'index']);
         Route::get('show/{id}', [AdminConditionController::class, 'show']);
@@ -398,6 +397,14 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/import', [AdminTranslationController::class, 'import']);
         Route::get('/export', [AdminTranslationController::class, 'export']);
         Route::get('/locales', [AdminTranslationController::class, 'locales']);
+    });
+
+    // Locations (city / postcode autocomplete dataset)
+    Route::prefix('locations')->group(function () {
+        Route::get('/', [AdminLocationController::class, 'index']);
+        Route::post('/create', [AdminLocationController::class, 'create']);
+        Route::post('/update/{id}', [AdminLocationController::class, 'update']);
+        Route::post('/delete/{id}', [AdminLocationController::class, 'delete']);
     });
 
     // Ownership Tax Rules

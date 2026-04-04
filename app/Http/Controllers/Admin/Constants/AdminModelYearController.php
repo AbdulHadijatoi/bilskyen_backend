@@ -54,7 +54,7 @@ class AdminModelYearController extends Controller
     public function create(Request $request): JsonResponse
     {
         return $this->error(
-            'Model years are derived from DMR data (model_aar) and cannot be created via this API.',
+            __('messages.api.model_year_cannot_create_api'),
             [],
             405,
             'NOT_ALLOWED'
@@ -64,7 +64,7 @@ class AdminModelYearController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         return $this->error(
-            'Model years are derived from DMR data (model_aar) and cannot be updated via this API.',
+            __('messages.api.model_year_cannot_update_api'),
             [],
             405,
             'NOT_ALLOWED'
@@ -74,7 +74,7 @@ class AdminModelYearController extends Controller
     public function delete(int $id): JsonResponse
     {
         return $this->error(
-            'Model years are derived from DMR data (model_aar) and cannot be deleted via this API.',
+            __('messages.api.model_year_cannot_delete_api'),
             [],
             405,
             'NOT_ALLOWED'

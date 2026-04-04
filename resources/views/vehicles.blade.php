@@ -1155,6 +1155,7 @@
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
             const details = vehicle.details || {};
             const slug = vehicle.slug || vehicle.id;
+            const salesTypeLabel = (details.sales_type_name || details.salesTypeName || vehicle.sales_type_name || vehicle.salesTypeName || '').trim();
 
             let locationText = '';
             if (vehicle.seller_address || vehicle.seller_postcode) {
@@ -1183,9 +1184,9 @@
                                 {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
-                            ${(details && details.sales_type_name) || vehicle.sales_type_name ? `
+                            ${salesTypeLabel ? `
                             <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                ${details.sales_type_name || vehicle.sales_type_name || ''}
+                                ${salesTypeLabel}
                             </span>
                             ` : ''}
                             </div>

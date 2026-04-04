@@ -30,13 +30,14 @@ class LeadController extends Controller
         $dealer = $request->user()->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         // Check if lead_management feature is enabled
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'lead_management')) {
             return $this->error(
-                'Lead management is not available in your current subscription plan. Please upgrade to access this feature.',
+                __('messages.api.lead_management_not_in_plan'),
+                [],
                 403
             );
         }
@@ -72,7 +73,7 @@ class LeadController extends Controller
         $dealer = $request->user()->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $lead = Lead::with([
@@ -265,7 +266,7 @@ class LeadController extends Controller
         $dealer = $request->user()->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $lead = Lead::where('dealer_id', $dealer->id)->findOrFail($id);

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Vehicle;
+use App\Models\VehicleSpecDefinition;
 use Illuminate\Support\Carbon;
 
 /**
@@ -79,6 +80,20 @@ class VehicleDetailPresentationService
         $modelYear = $v->model_year;
         $modelYearDisplay = $modelYear !== null ? (string) $modelYear : null;
 
+        $specDefinitions = [];
+        if ($v->brand_id && $v->model_id && $v->variant_id && $modelYear !== null && $modelYear !== '' && (int) $modelYear > 0) {
+            $specDefinitions = VehicleSpecDefinition::query()
+                ->matchingVehicle($v)
+                ->orderBy('name')
+                ->get(['name', 'value'])
+                ->map(static fn (VehicleSpecDefinition $row) => [
+                    'name' => $row->name,
+                    'value' => $row->value,
+                ])
+                ->values()
+                ->all();
+        }
+
         $dmr = $v->dmrFactVehicle;
         $technicalFromDmr = $dmr?->teknisk_total_vaegt;
         $extraEquipmentText = $dmr?->oevrigt_udstyr;
@@ -110,6 +125,7 @@ class VehicleDetailPresentationService
             'servicebog' => $v->servicebog,
             'seller_phone' => $v->seller_phone,
             'annual_tax' => $v->annual_tax,
+            'internal_cost_price' => $attrs['internal_cost_price'] ?? null,
             'fuel_consumption_wltp' => $v->fuel_consumption_wltp,
             'fuel_consumption_nedc' => $v->fuel_consumption_nedc,
             'production_date' => $date($v->production_date),
@@ -178,6 +194,15 @@ class VehicleDetailPresentationService
             'price_type_name' => $v->priceType?->name,
             'category_name' => $v->category?->name,
 
+            'leasing_enabled' => (bool) ($attrs['leasing_enabled'] ?? false),
+            'leasing_type' => $attrs['leasing_type'] ?? null,
+            'leasing_customer_type' => $attrs['leasing_customer_type'] ?? null,
+            'leasing_first_payment' => $attrs['leasing_first_payment'] ?? null,
+            'leasing_residual_value' => $attrs['leasing_residual_value'] ?? null,
+            'leasing_duration' => $attrs['leasing_duration'] ?? null,
+            'leasing_annual_mileage' => $attrs['leasing_annual_mileage'] ?? null,
+            'leasing_total_cost' => $attrs['leasing_total_cost'] ?? null,
+
             'list_status_id' => $v->list_status_id,
             'brand_id' => $v->brand_id,
             'model_id' => $v->model_id,
@@ -196,6 +221,7 @@ class VehicleDetailPresentationService
 
             'equipment' => $equipment,
             'specifications' => $specifications,
+            'spec_definitions' => $specDefinitions,
 
             'dmr' => [
                 'extra_equipment' => $extraEquipmentText,

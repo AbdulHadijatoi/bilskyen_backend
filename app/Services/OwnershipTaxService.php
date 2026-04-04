@@ -69,15 +69,22 @@ class OwnershipTaxService
     private function getRegistrationYear(Vehicle $vehicle): ?int
     {
         $firstReg = $vehicle->first_registration_date;
-        if (! $firstReg) {
-            return null;
+        if ($firstReg) {
+            try {
+                return (int) $firstReg->format('Y');
+            } catch (\Throwable) {
+                // fall through to first_registration_year
+            }
         }
 
-        try {
-            return (int) $firstReg->format('Y');
-        } catch (\Throwable) {
-            return null;
+        $y = $vehicle->first_registration_year;
+        if ($y !== null && $y !== '') {
+            $n = (int) $y;
+
+            return $n > 0 ? $n : null;
         }
+
+        return null;
     }
 
     private function getPrimaryDriveEnergyId(Vehicle $vehicle): ?int

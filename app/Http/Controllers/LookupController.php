@@ -76,9 +76,9 @@ class LookupController extends Controller
 
             return $this->success([
                 'items' => $items,
-            ], 200, 'Brands retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch brands: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_brands', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -96,9 +96,9 @@ class LookupController extends Controller
 
             return $this->success([
                 'items' => $items,
-            ], 200, 'Models retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch models: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_models', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -117,9 +117,9 @@ class LookupController extends Controller
             return $this->success([
                 'items' => $items,
                 'limit' => $limit,
-            ], 200, 'Types retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch types: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_types', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -137,9 +137,9 @@ class LookupController extends Controller
 
             return $this->success([
                 'items' => $items,
-            ], 200, 'Variants retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch variants: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_variants', ['message' => $e->getMessage()]), [], 500);
         }
     }
 }

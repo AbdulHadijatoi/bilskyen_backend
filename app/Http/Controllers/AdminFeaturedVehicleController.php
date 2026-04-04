@@ -7,7 +7,6 @@ use App\Models\Vehicle;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Admin Featured Vehicle Controller
@@ -24,7 +23,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ])
             ->orderBy('sort_order')
             ->orderBy('created_at', 'desc');
@@ -92,7 +92,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ]);
 
         return $this->created($featuredListing);
@@ -118,7 +119,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ]);
 
         return $this->success($featuredListing);

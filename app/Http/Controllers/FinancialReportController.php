@@ -61,7 +61,7 @@ class FinancialReportController extends Controller
         $endDate = Carbon::createFromFormat('d-m-Y', $endDateStr);
 
         if ($startDate->gt($endDate)) {
-            return response()->json(['error' => 'Start date must be before end date'], 400);
+            return response()->json(['error' => __('messages.api.start_date_before_end_date')], 400);
         }
 
         $revenueAccounts = FinancialAccount::where('type', 'revenue')
@@ -119,7 +119,7 @@ class FinancialReportController extends Controller
         $endDate = Carbon::createFromFormat('d-m-Y', $endDateStr);
 
         if ($startDate->gt($endDate)) {
-            return response()->json(['error' => 'Start date must be before end date'], 400);
+            return response()->json(['error' => __('messages.api.start_date_before_end_date')], 400);
         }
 
         // Get cash accounts

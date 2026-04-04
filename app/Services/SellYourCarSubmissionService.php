@@ -169,7 +169,7 @@ class SellYourCarSubmissionService
         }
 
         if (! $request->hasFile('images')) {
-            $msg = __('messages.errors.failed_to_create_vehicle').': At least one image is required.';
+            $msg = __('messages.errors.failed_to_create_vehicle').': '.__('messages.api.at_least_one_image_required');
 
             throw ValidationException::withMessages([
                 'images' => [$msg],

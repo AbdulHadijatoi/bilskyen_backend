@@ -59,11 +59,8 @@ return new class extends Migration
             if (! Schema::hasColumn('vehicles', 'leasing_customer_type')) {
                 $table->string('leasing_customer_type', 100)->nullable()->after('leasing_type');
             }
-            if (! Schema::hasColumn('vehicles', 'leasing_monthly_payment')) {
-                $table->decimal('leasing_monthly_payment', 12, 2)->nullable()->after('leasing_customer_type');
-            }
             if (! Schema::hasColumn('vehicles', 'leasing_first_payment')) {
-                $table->decimal('leasing_first_payment', 12, 2)->nullable()->after('leasing_monthly_payment');
+                $table->decimal('leasing_first_payment', 12, 2)->nullable()->after('leasing_customer_type');
             }
             if (! Schema::hasColumn('vehicles', 'leasing_residual_value')) {
                 $table->decimal('leasing_residual_value', 12, 2)->nullable()->after('leasing_first_payment');
@@ -200,7 +197,7 @@ return new class extends Migration
                 'annual_tax', 'seller_phone', 'wholesale_price', 'internal_cost_price', 'price_without_tax',
                 'wholesale_price_includes_delivery', 'fuel_consumption_wltp', 'fuel_consumption_nedc',
                 'production_date', 'cover_image_index', 'engine_type', 'views_count',
-                'leasing_enabled', 'leasing_type', 'leasing_customer_type', 'leasing_monthly_payment',
+                'leasing_enabled', 'leasing_type', 'leasing_customer_type',
                 'leasing_first_payment', 'leasing_residual_value', 'leasing_duration', 'leasing_annual_mileage',
                 'leasing_total_cost',
             ];

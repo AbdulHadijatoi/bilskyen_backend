@@ -214,8 +214,8 @@ class NotificationService
         // Documents pending notification
         if (in_array('Documents pending', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Vehicle {$vLabel} has pending documents.",
-                'message' => "Please ensure all documents for vehicle {$vLabel} are completed.",
+                'title' => __('messages.notifications.purchase_documents_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_documents_pending_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -230,8 +230,8 @@ class NotificationService
         if (count($vehicle->blacklist_flags ?? []) > 0) {
             $flags = implode(', ', $vehicle->blacklist_flags);
             $notifications[] = [
-                'title' => "Vehicle {$vLabel} has blacklist flags.",
-                'message' => "Vehicle {$vLabel} has the following blacklist issues: {$flags}",
+                'title' => __('messages.notifications.purchase_blacklist_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_blacklist_message', ['vehicle' => $vLabel, 'flags' => $flags]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -247,8 +247,12 @@ class NotificationService
             $pendingAmount = $purchasePrice - $paidAmount;
             $contactName = $contact->name ?? $contact->company_name;
             $notifications[] = [
-                'title' => "Purchase payment pending for {$vLabel}.",
-                'message' => "The purchase of vehicle {$vLabel} has a pending payment of {$pendingAmount}. Please follow up with {$contactName} to complete the payment.",
+                'title' => __('messages.notifications.purchase_payment_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_payment_pending_message', [
+                    'vehicle' => $vLabel,
+                    'amount' => $pendingAmount,
+                    'contact' => $contactName,
+                ]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -310,8 +314,8 @@ class NotificationService
         // Name Transfer pending
         if (in_array('Name transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Name transfer pending for {$vLabel}.",
-                'message' => "The name transfer application for vehicle {$vLabel} is still pending at RTO.",
+                'title' => __('messages.notifications.sale_name_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_name_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -325,8 +329,8 @@ class NotificationService
         // RC Name Transfer pending
         if (in_array('Registration certificate transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "RC transfer pending for {$vLabel}.",
-                'message' => "The RC ownership update for vehicle {$vLabel} has not yet reflected in VAHAN database.",
+                'title' => __('messages.notifications.sale_rc_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_rc_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -340,8 +344,8 @@ class NotificationService
         // Insurance Name Transfer pending
         if (in_array('Insurance transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Insurance transfer pending for {$vLabel}.",
-                'message' => "The insurance policy for vehicle {$vLabel} is still in the seller's name. Please update with insurer.",
+                'title' => __('messages.notifications.sale_insurance_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_insurance_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -357,8 +361,12 @@ class NotificationService
             $pendingAmount = $salePrice - $receivedAmount;
             $contactName = $contact->name ?? $contact->company_name;
             $notifications[] = [
-                'title' => "Sale payment pending for {$vLabel}.",
-                'message' => "The sale of vehicle {$vLabel} has a pending payment of {$pendingAmount}. Please follow up with {$contactName} to complete the payment.",
+                'title' => __('messages.notifications.sale_payment_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_payment_pending_message', [
+                    'vehicle' => $vLabel,
+                    'amount' => $pendingAmount,
+                    'contact' => $contactName,
+                ]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [

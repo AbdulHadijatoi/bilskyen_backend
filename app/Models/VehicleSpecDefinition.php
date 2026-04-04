@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -39,5 +40,20 @@ class VehicleSpecDefinition extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(DmrVariant::class);
+    }
+
+    /**
+     * Rows scoped to the same brand, model, variant, and model year as the listing.
+     *
+     * @param  Builder<VehicleSpecDefinition>  $query
+     * @return Builder<VehicleSpecDefinition>
+     */
+    public function scopeMatchingVehicle(Builder $query, Vehicle $vehicle): Builder
+    {
+        return $query
+            ->where('brand_id', $vehicle->brand_id)
+            ->where('model_id', $vehicle->model_id)
+            ->where('variant_id', $vehicle->variant_id)
+            ->where('model_year', (int) $vehicle->model_year);
     }
 }

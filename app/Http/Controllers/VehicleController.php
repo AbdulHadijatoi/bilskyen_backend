@@ -7,6 +7,7 @@ use App\Models\VehicleImage;
 use App\Models\FeaturedListing;
 use App\Services\VehicleService;
 use App\Services\VehicleDetailPresentationService;
+use App\Services\OwnershipTaxService;
 use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\SellYourCarSubmissionService;
@@ -32,6 +33,7 @@ class VehicleController extends Controller
         private SubscriptionFeatureService $subscriptionFeatureService,
         private VehicleDetailPresentationService $vehicleDetailPresentationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
+        private OwnershipTaxService $ownershipTaxService,
     ) {
         $this->fileService = $fileService;
     }
@@ -210,7 +212,7 @@ class VehicleController extends Controller
                 'seller_address' => $vehicle->seller_address,
                 'seller_postcode' => $vehicle->seller_postcode,
                 'user_id' => $vehicle->user_id,
-                'sales_type_name' => null,
+                'sales_type_name' => $vehicle->salesType?->name,
             ];
         });
 
@@ -251,7 +253,7 @@ class VehicleController extends Controller
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
                     'user_id' => $vehicle->user_id,
-                    'sales_type_name' => null,
+                    'sales_type_name' => $vehicle->salesType?->name,
                 ];
             });
             $paginationData = [
@@ -339,7 +341,7 @@ class VehicleController extends Controller
     /**
      * Get vehicle details (DMR-linked listing).
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $vehicle = Vehicle::with(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
             'dealer' => function ($q) {
@@ -350,6 +352,11 @@ class VehicleController extends Controller
                 $q->orderBy('sort_order');
             },
         ]))->findOrFail($id);
+
+        $dealerViewer = $request->user()?->dealer;
+        if ($dealerViewer) {
+            $vehicle->loadMissing(['dmrFactVehicle.drivmiddelLines']);
+        }
 
         $isDealer = $vehicle->dealer && ! str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
         $sellerType = $isDealer ? 'Dealer' : 'Private';
@@ -397,6 +404,12 @@ class VehicleController extends Controller
             ] : null,
             'seller_type' => $sellerType,
         ]);
+
+        if ($dealerViewer) {
+            $taxFromRules = $this->ownershipTaxService->calculateForVehicle($vehicle);
+            $response['ownership_tax'] = $taxFromRules;
+            $response['calculated_ownership_tax'] = $taxFromRules;
+        }
 
         return $this->success($response);
     }
@@ -472,6 +485,8 @@ class VehicleController extends Controller
             'vehicle_list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
             'seller_phone' => 'nullable|string|max:50',
             'annual_tax' => 'nullable|numeric|min:0',
+            'price' => ['required', 'numeric', 'min:0'],
+            'sales_type_id' => ['required', 'integer', 'exists:sales_types,id'],
         ]);
 
         $data = $request->all();
@@ -500,7 +515,8 @@ class VehicleController extends Controller
             if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
                 $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
                 return $this->error(
-                    "You have reached your maximum listing limit of {$limit}. Please upgrade your subscription or unpublish existing vehicles.",
+                    __('messages.api.max_listings_reached', ['limit' => $limit]),
+                    [],
                     403
                 );
             }
@@ -519,7 +535,8 @@ class VehicleController extends Controller
             }
             if ($equipmentCount > $equipmentLimit) {
                 return $this->error(
-                    "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
+                    __('messages.api.max_equipment_per_vehicle_exceeded', ['limit' => $equipmentLimit]),
+                    [],
                     403
                 );
             }
@@ -532,7 +549,8 @@ class VehicleController extends Controller
             $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
             if ($maxImages > 0 && $newImageCount > $maxImages) {
                 return $this->error(
-                    "You may upload at most {$maxImages} images per vehicle. Your plan limit has been exceeded.",
+                    __('messages.api.max_vehicle_images_per_vehicle_exceeded', ['limit' => $maxImages]),
+                    [],
                     403
                 );
             }
@@ -749,10 +767,10 @@ class VehicleController extends Controller
             $statusId = \App\Constants\VehicleListStatus::nameToId($request->status);
             
             if (!$statusId) {
-                return $this->validationError(['status' => ['Invalid status value']]);
+                return $this->validationError(['status' => [__('messages.api.vehicle_invalid_status_value')]]);
             }
         } else {
-            return $this->validationError(['status' => ['Either status or list_status_id is required']]);
+            return $this->validationError(['status' => [__('messages.api.vehicle_status_or_list_status_required')]]);
         }
 
         $oldStatusId = $vehicle->list_status_id;
@@ -773,7 +791,8 @@ class VehicleController extends Controller
                 if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
                     $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
                     return $this->error(
-                        "You have reached your maximum listing limit of {$limit}. Please upgrade your subscription or unpublish existing vehicles.",
+                        __('messages.api.max_listings_reached', ['limit' => $limit]),
+                        [],
                         403
                     );
                 }
@@ -908,7 +927,8 @@ class VehicleController extends Controller
             $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
             if ($maxImages > 0 && $totalImageCount > $maxImages) {
                 return $this->error(
-                    "You have reached your maximum image limit of {$maxImages} per vehicle. Please remove some images or upgrade your subscription.",
+                    __('messages.api.max_vehicle_images_total_reached', ['limit' => $maxImages]),
+                    [],
                     403
                 );
             }
@@ -1069,7 +1089,8 @@ class VehicleController extends Controller
             $equipmentCount = count($request->equipment_ids);
             if ($equipmentCount > $equipmentLimit) {
                 return $this->error(
-                    "You may select at most {$equipmentLimit} equipment items per vehicle. Your plan limit has been exceeded.",
+                    __('messages.api.max_equipment_per_vehicle_exceeded', ['limit' => $equipmentLimit]),
+                    [],
                     403
                 );
             }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Constants\VehicleListStatus;
 use App\Exceptions\NummerpladeApiException;
 use App\Models\DmrFactVehicle;
+use App\Models\SalesType;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use Illuminate\Database\Eloquent\Builder;
@@ -227,6 +228,8 @@ class VehicleService
         $this->hydrateVariantIdFromDmrFact($vehicleData);
         $this->hydrateFuelTypeIdFromDmrFact($vehicleData);
 
+        $this->applySalesTypeLeasingRules($vehicleData);
+
         $fillable = (new Vehicle)->getFillable();
         $vehicleData = array_intersect_key($vehicleData, array_flip($fillable));
 
@@ -442,6 +445,8 @@ class VehicleService
             $this->hydrateVariantIdFromDmrFact($vehicleData, $vehicle->dmr_fact_vehicle_id);
             $this->hydrateFuelTypeIdFromDmrFact($vehicleData, $vehicle->dmr_fact_vehicle_id);
 
+            $this->applySalesTypeLeasingRules($vehicleData);
+
             $fillable = (new Vehicle)->getFillable();
             $vehicleData = array_intersect_key($vehicleData, array_flip($fillable));
 
@@ -601,6 +606,55 @@ class VehicleService
         }
 
         return $vehicleData;
+    }
+
+    /**
+     * Leasing columns apply only when sales type is "Leasingdetaljer"; otherwise clear them and disable the flag.
+     *
+     * @param  array<string, mixed>  $vehicleData
+     */
+    private function applySalesTypeLeasingRules(array &$vehicleData): void
+    {
+        if (! array_key_exists('sales_type_id', $vehicleData)) {
+            return;
+        }
+
+        $raw = $vehicleData['sales_type_id'];
+        if ($raw === null || $raw === '') {
+            $this->clearLeasingVehicleAttributes($vehicleData);
+
+            return;
+        }
+
+        $name = SalesType::query()->whereKey((int) $raw)->value('name');
+        $isLeasingDetails = is_string($name) && trim($name) === 'Leasingdetaljer';
+
+        if ($isLeasingDetails) {
+            $vehicleData['leasing_enabled'] = true;
+
+            return;
+        }
+
+        $this->clearLeasingVehicleAttributes($vehicleData);
+    }
+
+    /**
+     * @param  array<string, mixed>  $vehicleData
+     */
+    private function clearLeasingVehicleAttributes(array &$vehicleData): void
+    {
+        $vehicleData['leasing_enabled'] = false;
+        foreach ([
+            'leasing_type',
+            'leasing_customer_type',
+            'leasing_first_payment',
+            'leasing_residual_value',
+            'leasing_duration',
+            'leasing_annual_mileage',
+            'leasing_total_cost',
+        ] as $key) {
+            $vehicleData[$key] = null;
+        }
     }
 
     /**

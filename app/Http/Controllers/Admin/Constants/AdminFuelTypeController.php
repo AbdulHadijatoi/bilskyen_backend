@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin\Constants;
 use App\Http\Controllers\Controller;
 use App\Models\DmrDriveEnergy;
 use App\Services\LookupService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Fuel Type Controller
@@ -29,7 +30,12 @@ class AdminFuelTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:dmr_drive_energies,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_drive_energies', 'name')->whereNull('deleted_at'),
+            ],
             'type_nummer' => 'nullable|integer',
         ]);
 
@@ -45,7 +51,12 @@ class AdminFuelTypeController extends Controller
         $fuelType = DmrDriveEnergy::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:dmr_drive_energies,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_drive_energies', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
             'type_nummer' => 'nullable|integer',
         ]);
 

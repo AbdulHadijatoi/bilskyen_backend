@@ -26,7 +26,7 @@ class DmrFactVehicleLookupService
             $vehicle = $this->findFactVehicleByRegistration($normalizedRegistration);
 
             if (!$vehicle) {
-                throw NummerpladeApiException::invalidInput('Invalid registration or VIN provided');
+                throw NummerpladeApiException::invalidInput(__('messages.api.invalid_registration_or_vin'));
             }
 
             return $this->mapFactVehicleToLookupResponse($vehicle, $normalizedRegistration);
@@ -42,7 +42,7 @@ class DmrFactVehicleLookupService
                 'line' => $e->getLine(),
                 'source' => 'dmr_local',
             ]);
-            throw NummerpladeApiException::unknown('Unable to process local vehicle lookup data');
+            throw NummerpladeApiException::unknown(__('messages.api.dmr_local_lookup_failed'));
         }
     }
 
@@ -107,7 +107,7 @@ class DmrFactVehicleLookupService
             $vehicle = $this->findFactVehicleByVin($normalizedVin);
 
             if (! $vehicle) {
-                throw NummerpladeApiException::invalidInput('Invalid registration or VIN provided');
+                throw NummerpladeApiException::invalidInput(__('messages.api.invalid_registration_or_vin'));
             }
 
             $fallbackRegistration = $vehicle->registrering_nummer ?? $normalizedVin;
@@ -125,7 +125,7 @@ class DmrFactVehicleLookupService
                 'line' => $e->getLine(),
                 'source' => 'dmr_local',
             ]);
-            throw NummerpladeApiException::unknown('Unable to process local vehicle lookup data');
+            throw NummerpladeApiException::unknown(__('messages.api.dmr_local_lookup_failed'));
         }
     }
 

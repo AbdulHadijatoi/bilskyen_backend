@@ -76,7 +76,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         // Define basic filter keys
@@ -142,7 +142,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -237,7 +237,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         $dealerId = $dealer->id;

@@ -29,7 +29,7 @@ class DealerDashboardController extends Controller
         $dealer = $user->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;

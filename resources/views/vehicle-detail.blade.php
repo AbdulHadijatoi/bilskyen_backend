@@ -79,6 +79,7 @@
     use Illuminate\Support\Carbon;
     /** @var array<string, mixed> $vehicleDetail */
     $vd = $vehicleDetail ?? [];
+    $showLeasingDetails = ! empty($vd['sales_type_name']) && trim((string) $vd['sales_type_name']) === 'Leasingdetaljer';
 @endphp
 
 @section('content')
@@ -327,7 +328,7 @@
                     <span class="detail-value">{{ $vehicle->title }}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.forms.price') }}</span>
+                    <span class="detail-label">{{ $showLeasingDetails ? __('messages.pages.vehicles.detail.leasing_monthly_payment') : __('messages.forms.price') }}</span>
                     <span class="detail-value text-primary">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</span>
                 </div>
                 @if(!empty($vd['listing_type_name']))
@@ -338,6 +339,56 @@
                 @endif
             </div>
         </div>
+
+        @if($showLeasingDetails)
+        <div class="detail-section bg-gray-50">
+            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.leasing_information') }}</h2>
+            <div class="detail-grid">
+                @if(!empty($vd['leasing_type']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_type') }}</span>
+                    <span class="detail-value">{{ $vd['leasing_type'] }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['leasing_customer_type']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_customer_type') }}</span>
+                    <span class="detail-value">{{ $vd['leasing_customer_type'] }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_first_payment']) && $vd['leasing_first_payment'] !== null && $vd['leasing_first_payment'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_first_payment') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_first_payment']) }}</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_residual_value']) && $vd['leasing_residual_value'] !== null && $vd['leasing_residual_value'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_residual_value') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_residual_value']) }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['leasing_duration']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_duration') }}</span>
+                    <span class="detail-value">{{ number_format((int) $vd['leasing_duration']) }}</span>
+                </div>
+                @endif
+                @if(!empty($vd['leasing_annual_mileage']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_annual_mileage') }}</span>
+                    <span class="detail-value">{{ number_format((int) $vd['leasing_annual_mileage']) }} km</span>
+                </div>
+                @endif
+                @if(isset($vd['leasing_total_cost']) && $vd['leasing_total_cost'] !== null && $vd['leasing_total_cost'] !== '')
+                <div class="detail-item">
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.leasing_total_cost') }}</span>
+                    <span class="detail-value">{{ FormatHelper::formatCurrency($vd['leasing_total_cost']) }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
 
         <!-- Vehicle Specifications Section -->
         <div class="detail-section bg-gray-50">
@@ -481,10 +532,7 @@
             </div>
         </div>
 
-        @php
-            $showImportFactory = ($vd['is_import'] ?? false) === true || ($vd['is_factory_new'] ?? false) === true;
-        @endphp
-        @if(!empty($vd['description']) || !empty($vd['category_name']) || !empty($vd['use_name']) || !empty($vd['price_type_name']) || !empty($vd['condition_name']) || ($vehicle->servicebog && $vehicle->servicebog !== 'Default') || $showImportFactory || !empty($vd['seller_phone']) || !empty($vd['address']) || !empty($vd['postcode']))
+        @if(!empty($vd['description']) || !empty($vd['category_name']) || !empty($vd['use_name']) || !empty($vd['price_type_name']) || !empty($vd['condition_name']) || ($vehicle->servicebog && $vehicle->servicebog !== 'Default') || !empty($vd['seller_phone']) || !empty($vd['address']) || !empty($vd['postcode']))
         <!-- Condition & History Section -->
         <div class="detail-section bg-gray-50">
             <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.condition_history_heading') }}</h2>
@@ -523,18 +571,6 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.service_book') }}</span>
                     <span class="detail-value">{{ $vehicle->servicebog }}</span>
-                </div>
-                @endif
-                @if(($vd['is_import'] ?? false) === true)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.import_vehicle') }}</span>
-                    <span class="detail-value">{{ __('messages.pages.vehicles.detail.yes') }}</span>
-                </div>
-                @endif
-                @if(($vd['is_factory_new'] ?? false) === true)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.factory_new') }}</span>
-                    <span class="detail-value">{{ __('messages.pages.vehicles.detail.yes') }}</span>
                 </div>
                 @endif
             </div>
@@ -585,12 +621,6 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.gear_count') }}</span>
                     <span class="detail-value">{{ $vehicle->gear_count }}</span>
-                </div>
-                @endif
-                @if($vehicle->particle_filter !== null)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.particle_filter') }}</span>
-                    <span class="detail-value">{{ $vehicle->particle_filter ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
                 </div>
                 @endif
                 @if(!empty($vd['technical_total_weight_kg']))
@@ -650,12 +680,6 @@
                     <span class="detail-value">{{ $value }} {{ $unit }}</span>
                 </div>
                 @endif
-                @if($vehicle->ncap_test !== null)
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.ncap_five_star') }}</span>
-                    <span class="detail-value">{{ $vehicle->ncap_test ? __('messages.pages.vehicles.detail.yes') : __('messages.pages.vehicles.detail.no') }}</span>
-                </div>
-                @endif
                 @if(!empty($vd['emission_norm_name']))
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.forms.euro_norm') }}</span>
@@ -678,10 +702,18 @@
                 @php
                     $specCount = (int) ($spec['count'] ?? 0);
                 @endphp
-                @if($specCount !== 0)
+                @if($specCount > 1)
                 <div class="detail-item">
                     <span class="detail-label">{{ $spec['name'] }}</span>
-                    <span class="detail-value">{{ $specCount === 1 ? __('messages.pages.vehicles.detail.yes') : $specCount }}</span>
+                    <span class="detail-value">{{ $specCount }}</span>
+                </div>
+                @endif
+                @endforeach
+                @foreach($vd['spec_definitions'] ?? [] as $def)
+                @if(!empty($def['name']))
+                <div class="detail-item">
+                    <span class="detail-label">{{ $def['name'] }}</span>
+                    <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
                 </div>
                 @endif
                 @endforeach
@@ -731,6 +763,28 @@
 
         <!-- Equipment & Features Section -->
         @php
+            $vehicleDetailTruthyYes = static function ($value): bool {
+                if ($value === null) {
+                    return false;
+                }
+                if (is_bool($value)) {
+                    return $value;
+                }
+                if (is_int($value) || is_float($value)) {
+                    return (int) $value === 1;
+                }
+                if (is_string($value)) {
+                    $s = strtolower(trim($value));
+                    if (in_array($s, ['0', 'no', 'false', 'off', ''], true)) {
+                        return false;
+                    }
+
+                    return in_array($s, ['1', 'yes', 'true', 'on'], true);
+                }
+
+                return (bool) $value;
+            };
+
             $equipmentChips = [];
             if ($vehicle->equipment && $vehicle->equipment->count() > 0) {
                 foreach ($vehicle->equipment as $equip) {
@@ -743,6 +797,25 @@
                         $equipmentChips[] = $n;
                     }
                 }
+            }
+
+            foreach ($vd['specifications'] ?? [] as $spec) {
+                if ((int) ($spec['count'] ?? 0) === 1 && ! empty($spec['name'])) {
+                    $equipmentChips[] = $spec['name'];
+                }
+            }
+
+            if ($vehicleDetailTruthyYes($vehicle->particle_filter ?? null)) {
+                $equipmentChips[] = __('messages.pages.vehicles.detail.particle_filter');
+            }
+            if ($vehicleDetailTruthyYes($vehicle->ncap_test ?? null)) {
+                $equipmentChips[] = __('messages.pages.vehicles.detail.ncap_five_star');
+            }
+            if ($vehicleDetailTruthyYes($vd['is_import'] ?? null)) {
+                $equipmentChips[] = __('messages.pages.vehicles.detail.import_vehicle');
+            }
+            if ($vehicleDetailTruthyYes($vd['is_factory_new'] ?? null)) {
+                $equipmentChips[] = __('messages.pages.vehicles.detail.factory_new');
             }
         @endphp
         @if(count($equipmentChips) > 0)
@@ -765,20 +838,20 @@
 
              <!-- Pricing -->
              <div class="rounded-lg bg-primary p-6">
-                <div class="mb-4 flex items-center gap-2">
+                <!-- <div class="mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-foreground">
                         <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                     </svg>
                     <h2 class="text-xl font-semibold text-primary-foreground">
                         {{ __('messages.pages.vehicles.detail.pricing') }}
                     </h2>
-                </div>
+                </div> -->
                 <div class="space-y-2">
                     <p class="text-3xl font-bold text-primary-foreground">
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
                     <p class="text-sm text-primary-foreground">
-                        {{ __('messages.pages.vehicles.detail.listed_price') }}
+                        {{ $showLeasingDetails ? __('messages.pages.vehicles.detail.leasing_monthly_payment') : __('messages.pages.vehicles.detail.listed_price') }}
                     </p>
                 </div>
             </div>

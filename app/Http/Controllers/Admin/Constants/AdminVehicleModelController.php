@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\DmrModel;
-use App\Models\VehicleModel;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Services\LookupService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Vehicle Model Controller
@@ -37,7 +37,11 @@ class AdminVehicleModelController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'brand_id' => 'required|integer|exists:brands,id',
+            'brand_id' => [
+                'required',
+                'integer',
+                Rule::exists('dmr_brands', 'id')->whereNull('deleted_at'),
+            ],
         ]);
 
         $vehicleModel = DmrModel::create($request->only(['name', 'brand_id']));
@@ -55,7 +59,11 @@ class AdminVehicleModelController extends Controller
 
         $request->validate([
             'name' => 'sometimes|string|max:255',
-            'brand_id' => 'sometimes|integer|exists:brands,id',
+            'brand_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('dmr_brands', 'id')->whereNull('deleted_at'),
+            ],
         ]);
 
         $vehicleModel->update($request->only(['name', 'brand_id']));

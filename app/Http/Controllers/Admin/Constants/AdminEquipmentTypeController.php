@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\EquipmentType;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Services\LookupService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Equipment Type Controller
@@ -29,7 +30,12 @@ class AdminEquipmentTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:equipment_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('equipment_types', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipmentType = EquipmentType::create($request->only(['name']));
@@ -46,7 +52,12 @@ class AdminEquipmentTypeController extends Controller
         $equipmentType = EquipmentType::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:equipment_types,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('equipment_types', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipmentType->update($request->only(['name']));

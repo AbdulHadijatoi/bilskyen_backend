@@ -34,7 +34,7 @@ class AuthPasswordController extends Controller
 
         // Security: Prevent admins from using this endpoint
         if ($user->hasRole('admin')) {
-            return $this->error('Admins must use the admin-specific password change endpoint', null, 403);
+            return $this->error(__('messages.api.password_change_admin_use_admin_endpoint'), null, 403);
         }
 
         // Match frontend API format: current_password, password, password_confirmation

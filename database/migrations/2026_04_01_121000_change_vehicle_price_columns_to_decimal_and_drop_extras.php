@@ -33,7 +33,6 @@ return new class extends Migration
             Schema::hasColumn('vehicles', 'leasing_enabled') ? 'leasing_enabled' : null,
             Schema::hasColumn('vehicles', 'leasing_type') ? 'leasing_type' : null,
             Schema::hasColumn('vehicles', 'leasing_customer_type') ? 'leasing_customer_type' : null,
-            Schema::hasColumn('vehicles', 'leasing_monthly_payment') ? 'leasing_monthly_payment' : null,
             Schema::hasColumn('vehicles', 'leasing_first_payment') ? 'leasing_first_payment' : null,
             Schema::hasColumn('vehicles', 'leasing_residual_value') ? 'leasing_residual_value' : null,
             Schema::hasColumn('vehicles', 'leasing_duration') ? 'leasing_duration' : null,
@@ -89,11 +88,8 @@ return new class extends Migration
             if (! Schema::hasColumn('vehicles', 'leasing_customer_type')) {
                 $table->string('leasing_customer_type', 100)->nullable()->after('leasing_type');
             }
-            if (! Schema::hasColumn('vehicles', 'leasing_monthly_payment')) {
-                $table->decimal('leasing_monthly_payment', 12, 2)->nullable()->after('leasing_customer_type');
-            }
             if (! Schema::hasColumn('vehicles', 'leasing_first_payment')) {
-                $table->decimal('leasing_first_payment', 12, 2)->nullable()->after('leasing_monthly_payment');
+                $table->decimal('leasing_first_payment', 12, 2)->nullable()->after('leasing_customer_type');
             }
             if (! Schema::hasColumn('vehicles', 'leasing_residual_value')) {
                 $table->decimal('leasing_residual_value', 12, 2)->nullable()->after('leasing_first_payment');

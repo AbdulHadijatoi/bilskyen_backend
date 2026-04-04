@@ -57,7 +57,7 @@ class NummerpladeController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return $this->error(
-                'An unexpected error occurred: ' . $e->getMessage(),
+                __('messages.api.unexpected_error_with_details', ['details' => $e->getMessage()]),
                 ['exception' => get_class($e)],
                 500
             );

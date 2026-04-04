@@ -77,7 +77,7 @@ class PushNotificationController extends Controller
         if (!$endpoint && !$userId) {
             return response()->json([
                 'success' => false,
-                'error' => 'Provide either endpoint or userId',
+                'error' => __('messages.api.provide_endpoint_or_user_id'),
             ], 400);
         }
 

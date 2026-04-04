@@ -142,7 +142,7 @@ class EnquiryController extends Controller
         // Return response with lead data and phone number
         return response()->json([
             'status' => 'success',
-            'message' => 'Lead created successfully',
+            'message' => __('messages.api.lead_created_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'phone_number' => $phoneNumber,
@@ -279,7 +279,7 @@ class EnquiryController extends Controller
         // Return success response
         return response()->json([
             'status' => 'success',
-            'message' => 'Your enquiry has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.messages.enquiry_submitted_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -417,7 +417,7 @@ class EnquiryController extends Controller
         // Return success response
         return response()->json([
             'status' => 'success',
-            'message' => 'Your test drive request has been submitted successfully. We will get back to you soon to schedule your test drive.',
+            'message' => __('messages.api.test_drive_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -555,7 +555,7 @@ class EnquiryController extends Controller
         // Return success response
         return response()->json([
             'status' => 'success',
-            'message' => 'Your price negotiation has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.api.price_negotiation_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -673,7 +673,7 @@ class EnquiryController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Your exchange request has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.api.exchange_request_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,

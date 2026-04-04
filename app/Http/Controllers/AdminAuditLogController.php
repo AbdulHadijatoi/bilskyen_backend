@@ -123,7 +123,7 @@ class AdminAuditLogController extends Controller
         $log = AuditLog::with(['auditActorType'])->find($id);
 
         if (!$log) {
-            return $this->error('Audit log not found', 404);
+            return $this->error(__('messages.api.audit_log_not_found'), [], 404);
         }
 
         // Transform log to include all details

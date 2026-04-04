@@ -75,7 +75,7 @@ class AdminSubscriptionController extends Controller
         )->unique()->toArray();
 
         if (!$plan->isAvailableToDealer($dealer->id, $dealerRoleIds)) {
-            return $this->error('This dealer is not allowed to subscribe to this plan', 403);
+            return $this->error(__('messages.api.subscription_dealer_plan_not_allowed'), [], 403);
         }
 
         DB::beginTransaction();
@@ -108,7 +108,7 @@ class AdminSubscriptionController extends Controller
             return $this->created($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to create subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_create_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -154,7 +154,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -198,7 +198,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to cancel subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_cancel_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -207,7 +207,7 @@ class AdminSubscriptionController extends Controller
         $subscription = DealerSubscription::findOrFail($id);
 
         if ($subscription->subscription_status_id !== SubscriptionStatus::EXPIRED) {
-            return $this->error('Only expired subscriptions can be renewed', 422);
+            return $this->error(__('messages.api.subscription_renew_expired_only'), [], 422);
         }
 
         DB::beginTransaction();
@@ -235,7 +235,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to renew subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_renew_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 

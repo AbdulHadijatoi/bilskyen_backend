@@ -135,6 +135,10 @@ Route::middleware('auth:api')->group(function () {
     
     // Subscriptions (admin only)
     Route::prefix('subscription')->group(function () {
+        Route::get('/change-request', [SubscriptionController::class, 'getPendingChangeRequest'])
+            ->middleware('permission:dealer.subscription.manage');
+        Route::post('/change-request/cancel', [SubscriptionController::class, 'cancelChangeRequest'])
+            ->middleware('permission:dealer.subscription.manage');
         Route::get('/', [SubscriptionController::class, 'show'])
             ->middleware('permission:dealer.subscription.manage');
         Route::get('/features', [SubscriptionController::class, 'getFeatures'])

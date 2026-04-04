@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
-use App\Models\Brand;
 use App\Models\DmrBrand;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Services\LookupService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Brand Controller
@@ -30,7 +30,12 @@ class AdminBrandController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:brands,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_brands', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $brand = DmrBrand::create($request->only(['name']));
@@ -45,7 +50,12 @@ class AdminBrandController extends Controller
         $brand = DmrBrand::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:brands,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_brands', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $brand->update($request->only(['name']));
