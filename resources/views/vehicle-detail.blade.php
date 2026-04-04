@@ -851,7 +851,7 @@
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
                     <p class="text-sm text-primary-foreground">
-                        {{ $showLeasingDetails ? __('messages.pages.vehicles.detail.leasing_monthly_payment') : __('messages.pages.vehicles.detail.listed_price') }}
+                        {{ $vd['sales_type_name'] }}
                     </p>
                 </div>
             </div>

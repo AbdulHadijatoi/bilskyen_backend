@@ -12,7 +12,8 @@ class VehicleSpecDefinition extends Model
         'brand_id',
         'model_id',
         'variant_id',
-        'model_year',
+        'model_year_from',
+        'model_year_to',
         'name',
         'value',
     ];
@@ -23,7 +24,8 @@ class VehicleSpecDefinition extends Model
             'brand_id' => 'integer',
             'model_id' => 'integer',
             'variant_id' => 'integer',
-            'model_year' => 'integer',
+            'model_year_from' => 'integer',
+            'model_year_to' => 'integer',
         ];
     }
 
@@ -43,17 +45,20 @@ class VehicleSpecDefinition extends Model
     }
 
     /**
-     * Rows scoped to the same brand, model, variant, and model year as the listing.
+     * Rows scoped to the same brand, model, variant, and whose model year range includes the listing year.
      *
      * @param  Builder<VehicleSpecDefinition>  $query
      * @return Builder<VehicleSpecDefinition>
      */
     public function scopeMatchingVehicle(Builder $query, Vehicle $vehicle): Builder
     {
+        $year = (int) $vehicle->model_year;
+
         return $query
             ->where('brand_id', $vehicle->brand_id)
             ->where('model_id', $vehicle->model_id)
             ->where('variant_id', $vehicle->variant_id)
-            ->where('model_year', (int) $vehicle->model_year);
+            ->where('model_year_from', '<=', $year)
+            ->where('model_year_to', '>=', $year);
     }
 }

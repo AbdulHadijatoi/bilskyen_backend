@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\DmrModel;
 use App\Models\DmrVariant;
-use App\Models\VehicleModel;
-use App\Models\Variant;
 use App\Models\VehicleSpecDefinition;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +28,9 @@ class AdminVehicleSpecDefinitionController extends Controller
             $query->where('variant_id', (int) $request->input('variant_id'));
         }
         if ($request->filled('model_year')) {
-            $query->where('model_year', (int) $request->input('model_year'));
+            $y = (int) $request->input('model_year');
+            $query->where('model_year_from', '<=', $y)
+                ->where('model_year_to', '>=', $y);
         }
         if ($request->filled('search')) {
             $term = trim((string) $request->input('search'));
@@ -61,7 +61,8 @@ class AdminVehicleSpecDefinitionController extends Controller
             'brand_id' => ['required', 'integer', 'exists:dmr_brands,id'],
             'model_id' => ['required', 'integer', 'exists:dmr_models,id'],
             'variant_id' => ['required', 'integer', 'exists:dmr_variants,id'],
-            'model_year' => ['required', 'integer', 'min:1975', 'max:'.$maxModelYear],
+            'model_year_from' => ['required', 'integer', 'min:1975', 'max:'.$maxModelYear],
+            'model_year_to' => ['required', 'integer', 'min:1975', 'max:'.$maxModelYear, 'gte:model_year_from'],
             'name' => [
                 'required',
                 'string',
@@ -71,7 +72,8 @@ class AdminVehicleSpecDefinitionController extends Controller
                         ->where('brand_id', (int) $request->input('brand_id'))
                         ->where('model_id', (int) $request->input('model_id'))
                         ->where('variant_id', (int) $request->input('variant_id'))
-                        ->where('model_year', (int) $request->input('model_year'));
+                        ->where('model_year_from', (int) $request->input('model_year_from'))
+                        ->where('model_year_to', (int) $request->input('model_year_to'));
                 }),
             ],
             'value' => ['required', 'string', 'max:65535'],
@@ -101,7 +103,8 @@ class AdminVehicleSpecDefinitionController extends Controller
             'brand_id' => ['sometimes', 'integer', 'exists:dmr_brands,id'],
             'model_id' => ['sometimes', 'integer', 'exists:dmr_models,id'],
             'variant_id' => ['sometimes', 'integer', 'exists:dmr_variants,id'],
-            'model_year' => ['sometimes', 'integer', 'min:1975', 'max:'.$maxModelYear],
+            'model_year_from' => ['sometimes', 'integer', 'min:1975', 'max:'.$maxModelYear],
+            'model_year_to' => ['sometimes', 'integer', 'min:1975', 'max:'.$maxModelYear],
             'name' => ['sometimes', 'string', 'max:255'],
             'value' => ['sometimes', 'string', 'max:65535'],
         ]);
@@ -110,10 +113,17 @@ class AdminVehicleSpecDefinitionController extends Controller
             'brand_id',
             'model_id',
             'variant_id',
-            'model_year',
+            'model_year_from',
+            'model_year_to',
             'name',
             'value',
         ]), $data);
+
+        if ((int) $merged['model_year_from'] > (int) $merged['model_year_to']) {
+            return $this->validationError([
+                'model_year_to' => ['The model year end must be greater than or equal to the start year.'],
+            ]);
+        }
 
         $uniqueValidator = Validator::make(
             ['name' => $merged['name']],
@@ -128,7 +138,8 @@ class AdminVehicleSpecDefinitionController extends Controller
                                 ->where('brand_id', (int) $merged['brand_id'])
                                 ->where('model_id', (int) $merged['model_id'])
                                 ->where('variant_id', (int) $merged['variant_id'])
-                                ->where('model_year', (int) $merged['model_year']);
+                                ->where('model_year_from', (int) $merged['model_year_from'])
+                                ->where('model_year_to', (int) $merged['model_year_to']);
                         })
                         ->ignore($row->id),
                 ],
