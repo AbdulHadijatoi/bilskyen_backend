@@ -113,6 +113,9 @@ Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->nam
 // Terms of Service Page
 Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
 
+// Account deletion (App Store / Play Store compliance)
+Route::get('/account-deletion', [HomeController::class, 'showAccountDeletion'])->name('account-deletion');
+
 // Vehicles Page (DMR-linked Vehicle records)
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 

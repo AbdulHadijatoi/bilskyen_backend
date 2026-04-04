@@ -273,6 +273,18 @@ class HomeController extends Controller
         ]);
     }
 
+    /**
+     * Account deletion instructions (mobile store compliance).
+     */
+    public function showAccountDeletion()
+    {
+        $seo = $this->seoService->getForPage('static', 'account-deletion');
+
+        return view('account-deletion', [
+            'seo' => $seo,
+        ]);
+    }
+
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
         'brand_id', 'model_id', 'fuel_type_id', 'category_id', 'listing_type_id',
