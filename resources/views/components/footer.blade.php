@@ -84,6 +84,7 @@
                 <ul class="space-y-2 text-sm">
                     <li><a href="/privacy-policy" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
+                    <li><a href="/account-deletion" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.account_deletion') }}</a></li>
                     <li><a href="/contact" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.contact_us') }}</a></li>
                     <li><a href="/about" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.about_us') }}</a></li>
                 </ul>
@@ -102,9 +103,10 @@
             <p class="text-xs text-white">
                 © {{ date('Y') }} {{ __('messages.common.site_name') }}. {{ __('messages.pages.footer.all_rights_reserved') }}.
             </p>
-            <div class="flex items-center space-x-4">
+            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
                 <a href="/privacy-policy" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.privacy_policy') }}</a>
                 <a href="/terms-of-service" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.terms_of_service') }}</a>
+                <a href="/account-deletion" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.account_deletion') }}</a>
             </div>
         </div>
     </div>
