@@ -464,6 +464,8 @@ return [
                 'page_title' => 'Vehicle Details',
                 'basic_information' => 'Basic Information',
                 'vehicle_specifications' => 'Vehicle Specifications',
+                'model_spec_definitions_heading' => 'Model specifications (reference)',
+                'model_spec_definitions_intro' => 'Values from our specification catalog for this brand, model, variant, and model year.',
                 'detailed_specifications' => 'Detailed Specifications',
                 'technical_specs_heading' => 'Technical specs',
                 'condition_history_heading' => 'Condition & History',

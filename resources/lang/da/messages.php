@@ -464,6 +464,8 @@ return [
                 'page_title' => 'Køretøjsdetaljer',
                 'basic_information' => 'Grundlæggende Information',
                 'vehicle_specifications' => 'Køretøjsspecifikationer',
+                'model_spec_definitions_heading' => 'Modelspecifikationer (reference)',
+                'model_spec_definitions_intro' => 'Værdier fra vores specifikationskatalog for dette mærke, model, variant og modelår.',
                 'detailed_specifications' => 'Detaljerede Specifikationer',
                 'technical_specs_heading' => 'Tekniske specifikationer',
                 'condition_history_heading' => 'Tilstand og historik',

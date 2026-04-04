@@ -530,6 +530,22 @@
                 </div>
                 @endif
             </div>
+            @if(!empty($vd['spec_definitions']))
+            <div class="border-border mt-6 border-t pt-6">
+                <h3 class="text-foreground mb-3 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.model_spec_definitions_heading') }}</h3>
+                <p class="text-muted-foreground mb-4 text-sm">{{ __('messages.pages.vehicles.detail.model_spec_definitions_intro') }}</p>
+                <div class="detail-grid">
+                    @foreach($vd['spec_definitions'] as $def)
+                    @if(!empty($def['name']))
+                    <div class="detail-item">
+                        <span class="detail-label">{{ $def['name'] }}</span>
+                        <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
+                    </div>
+                    @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
 
         @if(!empty($vd['description']) || !empty($vd['category_name']) || !empty($vd['use_name']) || !empty($vd['price_type_name']) || !empty($vd['condition_name']) || ($vehicle->servicebog && $vehicle->servicebog !== 'Default') || !empty($vd['seller_phone']) || !empty($vd['address']) || !empty($vd['postcode']))
@@ -706,14 +722,6 @@
                 <div class="detail-item">
                     <span class="detail-label">{{ $spec['name'] }}</span>
                     <span class="detail-value">{{ $specCount }}</span>
-                </div>
-                @endif
-                @endforeach
-                @foreach($vd['spec_definitions'] ?? [] as $def)
-                @if(!empty($def['name']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ $def['name'] }}</span>
-                    <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
                 </div>
                 @endif
                 @endforeach
