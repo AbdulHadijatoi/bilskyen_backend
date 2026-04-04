@@ -50,9 +50,17 @@ class AdminFeatureController extends Controller
             'key' => 'sometimes|string|max:100|unique:features,key,' . $id,
             'feature_value_type_id' => 'sometimes|exists:feature_value_types,id',
             'description' => 'sometimes|string|max:255',
+            'label_en' => 'sometimes|nullable|string|max:255',
+            'label_da' => 'sometimes|nullable|string|max:255',
         ]);
 
-        $feature->update($request->only(['key', 'feature_value_type_id', 'description']));
+        $feature->update($request->only([
+            'key',
+            'feature_value_type_id',
+            'description',
+            'label_en',
+            'label_da',
+        ]));
 
         return $this->success($feature);
     }

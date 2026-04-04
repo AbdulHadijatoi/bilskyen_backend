@@ -18,6 +18,8 @@ class Feature extends Model
         'key',
         'feature_value_type_id',
         'description',
+        'label_en',
+        'label_da',
         'created_at',
     ];
 
