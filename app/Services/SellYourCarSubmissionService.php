@@ -155,6 +155,8 @@ class SellYourCarSubmissionService
 
         if ($dmrFactVehicleId !== null) {
             $validationRules['dmr_fact_vehicle_id'] = 'required|integer|exists:dmr_fact_vehicles,id';
+            $validationRules['brand_id'] = 'required|integer|exists:dmr_brands,id';
+            $validationRules['model_id'] = 'required|integer|exists:dmr_models,id';
         } else {
             $validationRules['dmr_fact_vehicle_id'] = 'nullable';
             $validationRules['brand_id'] = 'required|integer|exists:dmr_brands,id';
@@ -304,9 +306,10 @@ class SellYourCarSubmissionService
                 'postcode' => trim((string) $request->input('seller_postcode', '')),
             ];
 
+            $attributes['brand_id'] = (int) $request->input('brand_id');
+            $attributes['model_id'] = (int) $request->input('model_id');
+
             if ($dmrFactVehicleId === null) {
-                $attributes['brand_id'] = (int) $request->input('brand_id');
-                $attributes['model_id'] = (int) $request->input('model_id');
                 $attributes['model_year'] = (int) $request->input('model_year');
                 $attributes['fuel_type_id'] = (int) $request->input('fuel_type_id');
                 if ($request->filled('variant_id')) {

@@ -481,6 +481,8 @@ class VehicleController extends Controller
         $request->validate([
             'registration' => 'nullable|string|max:20',
             'vin' => 'nullable|string|max:17',
+            'brand_id' => ['required', 'integer', 'exists:dmr_brands,id'],
+            'model_id' => ['required', 'integer', 'exists:dmr_models,id'],
             'list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
             'vehicle_list_status_id' => 'nullable|integer|exists:vehicle_list_statuses,id',
             'seller_phone' => 'nullable|string|max:50',
@@ -587,11 +589,15 @@ class VehicleController extends Controller
     }
 
     /**
-     * Create vehicle draft (no validation)
-     * Allows saving incomplete vehicle data without validation
+     * Create vehicle draft — {@see Vehicle::$brand_id} and {@see Vehicle::$model_id} are required; other fields optional.
      */
     public function storeDraft(Request $request): JsonResponse
     {
+        $request->validate([
+            'brand_id' => ['required', 'integer', 'exists:dmr_brands,id'],
+            'model_id' => ['required', 'integer', 'exists:dmr_models,id'],
+        ]);
+
         $data = $request->all();
 
         // Set dealer_id from authenticated user
@@ -610,7 +616,6 @@ class VehicleController extends Controller
             $data['images'] = $request->file('images');
         }
 
-        // No validation - allow partial/incomplete data
         $vehicle = $this->vehicleService->createVehicle($data);
 
         // Audit log

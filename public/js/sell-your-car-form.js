@@ -1407,6 +1407,8 @@
         
         // Generate description before submission if not already done
         generateDescription();
+
+        syncManualSelectionsToHidden();
         
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
@@ -1430,6 +1432,18 @@
                     const existingBt = formData.get('body_type_id');
                     if (existingBt === null || existingBt === undefined || String(existingBt).trim() === '') {
                         formData.set('body_type_id', String(apiData.body_type.id));
+                    }
+                }
+                if (apiData.brand && typeof apiData.brand === 'object' && apiData.brand.id != null) {
+                    const curB = formData.get('brand_id');
+                    if (curB === null || curB === undefined || String(curB).trim() === '') {
+                        formData.set('brand_id', String(apiData.brand.id));
+                    }
+                }
+                if (apiData.model && typeof apiData.model === 'object' && apiData.model.id != null) {
+                    const curM = formData.get('model_id');
+                    if (curM === null || curM === undefined || String(curM).trim() === '') {
+                        formData.set('model_id', String(apiData.model.id));
                     }
                 }
                 console.log('DMR lookup: skipping raw API merge; using form field values.');
@@ -1633,6 +1647,42 @@
         // DMR lookup: specifications array [{ name, count }, ...]
         if (window.apiResponseData && Array.isArray(window.apiResponseData.specifications) && window.apiResponseData.specifications.length > 0) {
             formData.set('lookup_specifications', JSON.stringify(window.apiResponseData.specifications));
+        }
+
+        // Registration lookup listings: server requires brand_id + model_id (hidden fields or API objects)
+        if (!window.manualEntryMode && window.apiResponseData && typeof window.apiResponseData === 'object') {
+            const api = window.apiResponseData;
+            if (api.brand && typeof api.brand === 'object' && api.brand.id != null) {
+                const curB = formData.get('brand_id');
+                if (curB === null || curB === undefined || String(curB).trim() === '') {
+                    formData.set('brand_id', String(api.brand.id));
+                }
+            }
+            if (api.model && typeof api.model === 'object' && api.model.id != null) {
+                const curM = formData.get('model_id');
+                if (curM === null || curM === undefined || String(curM).trim() === '') {
+                    formData.set('model_id', String(api.model.id));
+                }
+            }
+        }
+        const dmrFactForBrand = formData.get('dmr_fact_vehicle_id');
+        if (dmrFactForBrand && String(dmrFactForBrand).trim() !== '' && !window.manualEntryMode) {
+            const fb = formData.get('brand_id');
+            const fm = formData.get('model_id');
+            if (!fb || String(fb).trim() === '' || !fm || String(fm).trim() === '') {
+                displayGeneralError(trans('lookupBrandModelRequired', 'Brand and model are required. Please run the registration lookup again or enter your vehicle manually.'));
+                const basicSection = document.querySelector('[data-section="basic-info"]');
+                if (basicSection) {
+                    const header = basicSection.querySelector('.section-header');
+                    const content = basicSection.querySelector('.section-content');
+                    if (header && content) {
+                        content.classList.add('expanded');
+                        header.classList.add('active');
+                    }
+                    basicSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
         }
         
         // Manually append files from fileMap to ensure they're included
