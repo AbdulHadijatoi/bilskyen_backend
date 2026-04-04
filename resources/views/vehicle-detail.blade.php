@@ -533,7 +533,6 @@
             @if(!empty($vd['spec_definitions']))
             <div class="border-border mt-6 border-t pt-6">
                 <h3 class="text-foreground mb-3 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.model_spec_definitions_heading') }}</h3>
-                <p class="text-muted-foreground mb-4 text-sm">{{ __('messages.pages.vehicles.detail.model_spec_definitions_intro') }}</p>
                 <div class="detail-grid">
                     @foreach($vd['spec_definitions'] as $def)
                     @if(!empty($def['name']))
