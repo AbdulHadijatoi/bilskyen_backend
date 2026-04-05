@@ -83,7 +83,7 @@ class LookupController extends Controller
     }
 
     /**
-     * Search models (partial dataset).
+     * Search models (partial dataset, full DMR catalog).
      * GET /api/v1/models?search=&brand_ids=
      */
     public function searchModels(Request $request, LookupService $lookupService): JsonResponse
@@ -93,6 +93,26 @@ class LookupController extends Controller
             $brandIds = $this->parseIdList($request->input('brand_ids'));
 
             $items = $lookupService->searchModels($search, $brandIds);
+
+            return $this->success([
+                'items' => $items,
+            ], 200, __('messages.api.data_retrieved_successfully'));
+        } catch (\Exception $e) {
+            return $this->error(__('messages.api.failed_fetch_models', ['message' => $e->getMessage()]), [], 500);
+        }
+    }
+
+    /**
+     * Models for public listing filters (published inventory only, shortened names).
+     * GET /api/v1/listing-models?search=&brand_ids=
+     */
+    public function searchListingModels(Request $request, LookupService $lookupService): JsonResponse
+    {
+        try {
+            $search = $request->input('search');
+            $brandIds = $this->parseIdList($request->input('brand_ids'));
+
+            $items = $lookupService->searchModelsForListingFilters($search, $brandIds);
 
             return $this->success([
                 'items' => $items,

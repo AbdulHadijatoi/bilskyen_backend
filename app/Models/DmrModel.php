@@ -29,4 +29,23 @@ class DmrModel extends Model
     {
         return $this->hasMany(DmrVariant::class, 'model_id');
     }
+
+    /**
+     * Short label for dropdowns (API payloads): at most the first two whitespace-separated words.
+     * Does not change stored {@see $name}.
+     */
+    public static function dropdownDisplayName(string $name): string
+    {
+        $trimmed = trim($name);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY);
+        if ($parts === false || $parts === []) {
+            return $trimmed;
+        }
+
+        return implode(' ', array_slice($parts, 0, 2));
+    }
 }

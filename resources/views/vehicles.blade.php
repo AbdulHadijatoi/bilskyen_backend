@@ -3015,7 +3015,7 @@ if (config) {
                 return;
             }
 
-            const url = new URL('/api/v1/models', window.location.origin);
+            const url = new URL('/api/v1/listing-models', window.location.origin);
             url.searchParams.set('brand_ids', selectedBrandIds.join(','));
 
             try {

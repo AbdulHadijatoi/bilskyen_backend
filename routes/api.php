@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
     // Public lookup search endpoints (partial datasets to reduce `/constants` load)
     Route::get('/brands', [LookupController::class, 'searchBrands'])->name('lookup.brands');
     Route::get('/models', [LookupController::class, 'searchModels'])->name('lookup.models');
+    Route::get('/listing-models', [LookupController::class, 'searchListingModels'])->name('lookup.listing_models');
     Route::get('/types', [LookupController::class, 'searchTypes'])->name('lookup.types');
     Route::get('/variants', [LookupController::class, 'searchVariants'])->name('lookup.variants');
     

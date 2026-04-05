@@ -348,6 +348,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     
     Route::prefix('vehicle-models')->group(function () {
         Route::get('/', [AdminVehicleModelController::class, 'index']);
+        Route::get('for-listing-filters', [AdminVehicleModelController::class, 'indexForListingFilters']);
         Route::get('show/{id}', [AdminVehicleModelController::class, 'show']);
         Route::post('/create', [AdminVehicleModelController::class, 'create']);
         Route::post('/update/{id}', [AdminVehicleModelController::class, 'update']);

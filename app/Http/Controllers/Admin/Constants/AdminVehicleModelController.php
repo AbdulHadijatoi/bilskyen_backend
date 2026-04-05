@@ -27,6 +27,39 @@ class AdminVehicleModelController extends Controller
         return $this->paginated($query->paginate($request->get('limit', 15)));
     }
 
+    /**
+     * Paginated models that appear on published listings (optional brand scope), with shortened names for dropdowns.
+     * Used by Vehicle Spec Definitions and similar catalog UIs — not the full DMR CRUD list.
+     */
+    public function indexForListingFilters(Request $request, LookupService $lookupService): JsonResponse
+    {
+        $query = DmrModel::query()
+            ->with('brand')
+            ->orderBy('name');
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', (int) $request->input('brand_id'));
+        }
+
+        $brandIds = $request->filled('brand_id') ? [(int) $request->input('brand_id')] : [];
+        $publishedModelIds = $lookupService->publishedListingModelIds($brandIds);
+        if ($publishedModelIds === []) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->whereIn('id', $publishedModelIds);
+        }
+
+        $paginator = $query->paginate($request->get('limit', 15));
+
+        $paginator->getCollection()->transform(function (DmrModel $m): DmrModel {
+            $m->setAttribute('name', DmrModel::dropdownDisplayName((string) $m->name));
+
+            return $m;
+        });
+
+        return $this->paginated($paginator);
+    }
+
     public function show(int $id): JsonResponse
     {
         $vehicleModel = DmrModel::with('brand')->findOrFail($id);

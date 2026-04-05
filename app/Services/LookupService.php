@@ -25,6 +25,7 @@ use App\Models\LeadIntent;
 use App\Models\LeadCategory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lookup Service
@@ -284,7 +285,36 @@ class LookupService
     }
 
     /**
-     * Models dropdown search (optionally constrained by brand_ids).
+     * Distinct {@see DmrModel} ids that appear on published, non-deleted vehicles.
+     * When {@code $brandIds} is non-empty, only vehicles with those {@code brand_id} values are considered.
+     *
+     * @param  array<int,int>  $brandIds
+     * @return array<int,int>
+     */
+    public function publishedListingModelIds(array $brandIds): array
+    {
+        $q = DB::table('vehicles')
+            ->whereNull('deleted_at')
+            ->whereNotNull('model_id')
+            ->where('list_status_id', VehicleListStatus::PUBLISHED);
+
+        if ($brandIds !== []) {
+            $q->whereIn('brand_id', $brandIds);
+        }
+
+        $data = $q->distinct()
+            ->pluck('model_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return $data;
+    }
+
+    /**
+     * Models dropdown search (full DMR catalog; optionally constrained by brand_ids).
+     * For public listing page filters (published inventory + short labels), use {@see self::searchModelsForListingFilters} via GET /api/v1/listing-models.
      *
      * @param array<int,int> $brandIds
      * @return array<int, array{id:int,name:string,brand_id:int}>
@@ -306,6 +336,45 @@ class LookupService
 
         return $query->get()
             ->map(fn (DmrModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Models for home / vehicles listing filters: only {@see DmrModel} ids with a published, non-deleted vehicle;
+     * optional brand filter; {@code name} shortened for dropdowns via {@see DmrModel::dropdownDisplayName}.
+     *
+     * @param array<int,int> $brandIds
+     * @return array<int, array{id:int,name:string,brand_id:int}>
+     */
+    public function searchModelsForListingFilters(?string $search, array $brandIds): array
+    {
+        $searchTerm = $search !== null ? trim($search) : '';
+
+        $publishedModelIds = $this->publishedListingModelIds($brandIds);
+
+        $query = DmrModel::query()
+            ->select(['id', 'name', 'brand_id'])
+            ->whereNotIn('name', ['-', '.'])
+            ->orderBy('name');
+        if ($publishedModelIds === []) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->whereIn('id', $publishedModelIds);
+        }
+        if (!empty($brandIds)) {
+            $query->whereIn('brand_id', $brandIds);
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->get()
+            ->map(fn (DmrModel $m) => [
+                'id' => $m->id,
+                'name' => DmrModel::dropdownDisplayName((string) $m->name),
+                'brand_id' => $m->brand_id,
+            ])
             ->values()
             ->all();
     }
@@ -361,7 +430,7 @@ class LookupService
 
     /**
      * Return all constants for dealer API (includes lead intents/categories).
-     * Model years: derive on the client (e.g. 1975–current). Models/variants: use GET /api/v1/models|variants.
+     * Model years: derive on the client (e.g. 1975–current). Models/variants: use GET /api/v1/models|variants (full catalog). Listing filters on the site use GET /api/v1/listing-models.
      */
     public function getDealerConstants(): array
     {

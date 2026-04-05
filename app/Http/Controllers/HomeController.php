@@ -57,7 +57,6 @@ class HomeController extends Controller
         ]);
 
         $filterOptions = [
-            'categories' => Category::orderBy('name')->get(),
             'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
             'modelYears' => $modelYears,
         ];

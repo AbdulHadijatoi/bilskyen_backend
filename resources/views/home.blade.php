@@ -237,7 +237,7 @@
                             </div>
                             <div class="dropdown-options overflow-y-auto max-h-[250px]">
                                 <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
-                                <!-- Options loaded on-demand via /api/v1/models -->
+                                <!-- Options loaded on-demand via /api/v1/listing-models -->
                             </div>
                         </div>
                         <div class="dropdown-values-container" data-name="model_id[]"></div>
@@ -1190,7 +1190,7 @@
         modelsFetchToken++;
         const token = modelsFetchToken;
 
-        const url = new URL('/api/v1/models', window.location.origin);
+        const url = new URL('/api/v1/listing-models', window.location.origin);
         url.searchParams.set('limit', String(LOOKUP_LIMIT));
         if (searchTerm !== '') url.searchParams.set('search', searchTerm);
         url.searchParams.set('brand_ids', ids.join(','));
