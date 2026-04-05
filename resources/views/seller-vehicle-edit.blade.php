@@ -990,6 +990,7 @@
                 <div class="section-description">
                     {{ __('messages.pages.edit_vehicle.section_photos_description') }}
                 </div>
+                <p class="field-help mb-3">{{ __('messages.pages.edit_vehicle.photos_optional_hint') }}</p>
                 
                 <!-- Image Upload Area -->
                 <div class="image-upload-area" id="image-upload-area">

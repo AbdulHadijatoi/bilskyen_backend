@@ -1327,24 +1327,6 @@
                 }
             }
         });
-        
-        // Validate images are required
-        const imageCount = imageUploadState && imageUploadState.fileMap ? imageUploadState.fileMap.size : 0;
-        if (imageCount === 0) {
-            isValid = false;
-            const photosSection = document.querySelector('[data-section="photos"]');
-            if (photosSection) {
-                const header = photosSection.querySelector('.section-header');
-                const content = photosSection.querySelector('.section-content');
-                if (header && content && !content.classList.contains('expanded')) {
-                    content.classList.add('expanded');
-                    header.classList.add('active');
-                }
-                photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            displayGeneralError(trans('imageRequiredError', 'Please upload at least one image of your vehicle.'));
-            return;
-        }
 
         // In manual entry mode, require brand, model, year, fuel type
         if (window.manualEntryMode) {

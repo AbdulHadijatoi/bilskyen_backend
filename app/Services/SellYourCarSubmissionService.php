@@ -109,7 +109,7 @@ class SellYourCarSubmissionService
     }
 
     /**
-     * Validate, require images, create vehicle, success token.
+     * Validate input, create vehicle (images optional), success token.
      *
      * @return array{vehicle: Vehicle, token: string}
      *
@@ -168,14 +168,6 @@ class SellYourCarSubmissionService
         $validator = Validator::make($request->all(), $validationRules);
         if ($validator->fails()) {
             throw new ValidationException($validator);
-        }
-
-        if (! $request->hasFile('images')) {
-            $msg = __('messages.errors.failed_to_create_vehicle').': '.__('messages.api.at_least_one_image_required');
-
-            throw ValidationException::withMessages([
-                'images' => [$msg],
-            ]);
         }
 
         $variantId = $request->input('variant_id') ? (int) $request->input('variant_id') : null;
