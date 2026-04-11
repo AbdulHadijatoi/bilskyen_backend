@@ -48,8 +48,6 @@ class VehicleService
         'ownership_tax_asc' => 'calculated_ownership_tax_asc',
         'first_reg_desc' => 'first_registration_date_desc',
         'first_reg_asc' => 'first_registration_date_asc',
-        'distance_desc' => self::DEFAULT_PUBLIC_LISTING_SORT,
-        'distance_asc' => self::DEFAULT_PUBLIC_LISTING_SORT,
     ];
 
     /**
@@ -127,6 +125,64 @@ class VehicleService
     }
 
     /**
+     * Curated public listing sort options for the vehicles page: option value => Danish label.
+     * "standard" maps via {@see self::LEGACY_SORT_ALIASES} / default normalization to {@see self::DEFAULT_PUBLIC_LISTING_SORT}.
+     * "distance_*" sorts by Haversine km when {@see self::applySellerDistanceSort()} receives viewer coordinates.
+     *
+     * @return array<string, string>
+     */
+    public static function curatedPublicListingSortOptions(): array
+    {
+        return [
+            'standard' => 'Standard',
+            'price_asc' => 'Pris: (laveste først)',
+            'price_desc' => 'Pris: (Højeste først)',
+            'created_at_desc' => 'Dato: (Nyeste først)',
+            'created_at_asc' => 'Dato: (Ældste først)',
+            'model_year_desc' => 'Modelår: (Nyeste først)',
+            'model_year_asc' => 'Modelår: (Ældste først)',
+            'km_driven_desc' => 'Kilometerstand: (Højeste først)',
+            'km_driven_asc' => 'Kilometerstand: (Laveste først)',
+            'km_per_liter_desc' => 'Km/l: (Højeste først)',
+            'km_per_liter_asc' => 'Km/l: (Laveste først)',
+            'calculated_ownership_tax_desc' => 'Ejerafgift: (Højeste først)',
+            'calculated_ownership_tax_asc' => 'Ejerafgift: (Laveste først)',
+            'first_registration_date_desc' => '1. reg: (Nyeste først)',
+            'first_registration_date_asc' => '1. reg: (Ældste først)',
+            'distance_asc' => 'Afstand til sælger: (Korteste afstand)',
+            'distance_desc' => 'Afstand til sælger: (Længste afstand)',
+        ];
+    }
+
+    /**
+     * Sort keys for API/constants (same set as the curated dropdown).
+     *
+     * @return list<string>
+     */
+    public static function curatedPublicListingSortKeys(): array
+    {
+        return array_keys(self::curatedPublicListingSortOptions());
+    }
+
+    /**
+     * Whether the sort dropdown option should appear selected (uses raw ?sort= query so "Standard" vs "Dato: Nyeste" stay distinct).
+     */
+    public static function listingSortOptionIsSelected(string $optionValue, ?string $rawSortQuery): bool
+    {
+        $raw = ($rawSortQuery !== null && $rawSortQuery !== '') ? trim((string) $rawSortQuery) : null;
+
+        if ($optionValue === 'standard') {
+            return $raw === null || $raw === '' || strcasecmp($raw, 'standard') === 0;
+        }
+
+        if ($raw === null || $raw === '') {
+            return false;
+        }
+
+        return self::normalizePublicListingSort($raw) === $optionValue;
+    }
+
+    /**
      * Canonical `sort` string: `{vehicles_column}_asc` or `{vehicles_column}_desc`.
      * Default matches newest rows first by {@see Vehicle::$created_at} descending.
      */
@@ -135,6 +191,10 @@ class VehicleService
         $s = $sort === null || $sort === '' ? null : trim((string) $sort);
         if ($s === null || $s === '') {
             return self::DEFAULT_PUBLIC_LISTING_SORT;
+        }
+
+        if ($s === 'distance_asc' || $s === 'distance_desc') {
+            return $s;
         }
 
         $s = self::LEGACY_SORT_ALIASES[$s] ?? $s;
@@ -857,7 +917,7 @@ class VehicleService
 
         $this->applyPublicListingFilters($query, $filters);
 
-        $this->applySorting($query, $filters['sort'] ?? null);
+        $this->applySorting($query, $filters['sort'] ?? null, $filters);
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -877,7 +937,13 @@ class VehicleService
             $query->where(function (Builder $q) use ($term) {
                 $q->where('title', 'like', '%'.$term.'%')
                     ->orWhere('registration', 'like', '%'.$term.'%')
-                    ->orWhere('description', 'like', '%'.$term.'%');
+                    ->orWhere('description', 'like', '%'.$term.'%')
+                    ->orWhereHas('brand', function (Builder $b) use ($term): void {
+                        $b->where('name', 'like', '%'.$term.'%');
+                    })
+                    ->orWhereHas('model', function (Builder $m) use ($term): void {
+                        $m->where('name', 'like', '%'.$term.'%');
+                    });
             });
         }
 
@@ -1276,7 +1342,13 @@ class VehicleService
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('registration', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('brand', function (Builder $b) use ($search): void {
+                        $b->where('name', 'like', '%'.$search.'%');
+                    })
+                    ->orWhereHas('model', function (Builder $m) use ($search): void {
+                        $m->where('name', 'like', '%'.$search.'%');
+                    });
             });
         }
 
@@ -1284,7 +1356,7 @@ class VehicleService
             $query->where('list_status_id', $filters['list_status_id']);
         }
 
-        $this->applySorting($query, $filters['sort'] ?? null);
+        $this->applySorting($query, $filters['sort'] ?? null, []);
 
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
@@ -1306,13 +1378,20 @@ class VehicleService
      * Apply sorting to vehicle query using only {@see Vehicle} table columns.
      * Clears prior ORDER BY (including the defaultOrder global scope) so user sort wins.
      *
+     * @param  array<string, mixed>  $filters  Used for distance sort (viewer_latitude / viewer_longitude).
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Vehicle>  $query
      */
-    protected function applySorting(Builder $query, ?string $sort = null): void
+    protected function applySorting(Builder $query, ?string $sort = null, array $filters = []): void
     {
         $sort = self::normalizePublicListingSort($sort);
 
         $query->reorder();
+
+        if ($sort === 'distance_asc' || $sort === 'distance_desc') {
+            $this->applySellerDistanceSort($query, $sort, $filters);
+
+            return;
+        }
 
         if (! preg_match('/^([a-z0-9_]+)_(asc|desc)$/', $sort, $m)) {
             $query->orderByDesc($query->getModel()->getTable().'.id');
@@ -1336,5 +1415,46 @@ class VehicleService
         if ($column !== 'id') {
             $query->orderByDesc($table.'.id');
         }
+    }
+
+    /**
+     * Order by approximate distance (km) from viewer to {@see Location} matched on {@code vehicles.postcode}.
+     * Falls back to id ordering when coordinates are missing or {@see locations} table is absent.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Vehicle>  $query
+     */
+    private function applySellerDistanceSort(Builder $query, string $sort, array $filters): void
+    {
+        $table = $query->getModel()->getTable();
+        $lat = isset($filters['viewer_latitude']) ? (float) $filters['viewer_latitude'] : null;
+        $lng = isset($filters['viewer_longitude']) ? (float) $filters['viewer_longitude'] : null;
+
+        if ($lat === null || $lng === null || ! Schema::hasTable('locations')) {
+            $query->orderByDesc($table.'.id');
+
+            return;
+        }
+
+        $dir = $sort === 'distance_asc' ? 'asc' : 'desc';
+
+        $locSub = DB::table('locations')
+            ->select('postcode', DB::raw('MAX(latitude) as lat'), DB::raw('MAX(longitude) as lng'))
+            ->groupBy('postcode');
+
+        $query->select($table.'.*');
+        $query->leftJoinSub($locSub, 'loc_sort', function ($join) use ($table): void {
+            $join->on('loc_sort.postcode', '=', $table.'.postcode');
+        });
+
+        $kmExpr = '(6371 * ACOS(LEAST(1, GREATEST(-1,
+            COS(RADIANS(?)) * COS(RADIANS(loc_sort.lat)) * COS(RADIANS(loc_sort.lng) - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS(loc_sort.lat))
+        ))))';
+
+        $query->orderByRaw(
+            'CASE WHEN loc_sort.lat IS NULL OR loc_sort.lng IS NULL THEN 999999 ELSE '.$kmExpr.' END '.$dir,
+            [$lat, $lng, $lat]
+        )->orderByDesc($table.'.id');
     }
 }

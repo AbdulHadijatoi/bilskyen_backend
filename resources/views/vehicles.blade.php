@@ -123,12 +123,9 @@
                 @php
                     $listingTypes = $constants['listing_types'] ?? collect();
                     $purchaseType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Purchase') : $listingTypes->firstWhere('name', 'Purchase');
-                    $leasingType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Leasing') : $listingTypes->firstWhere('name', 'Leasing');
                     $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
                     $purchaseId = is_array($purchaseType ?? null) ? ($purchaseType['id'] ?? null) : ($purchaseType->id ?? null);
-                    $leasingId = is_array($leasingType ?? null) ? ($leasingType['id'] ?? null) : ($leasingType->id ?? null);
                     $isPurchaseActive = $purchaseId !== null && in_array($purchaseId, $selectedListingTypes);
-                    $isLeasingActive = $leasingId !== null && in_array($leasingId, $selectedListingTypes);
                 @endphp
                 <div class="space-y-2">
                     <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.listing_type') }}</p>
@@ -138,13 +135,6 @@
                                 <input type="checkbox" name="listing_type_id[]" value="{{ $purchaseId }}" class="sr-only peer listing-type-checkbox" @if($isPurchaseActive) checked @endif>
                                 <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                 <span>{{ __('messages.forms.purchase') }}</span>
-                            </label>
-                        @endif
-                        @if($leasingType)
-                            <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isLeasingActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
-                                <input type="checkbox" name="listing_type_id[]" value="{{ $leasingId }}" class="sr-only peer listing-type-checkbox" @if($isLeasingActive) checked @endif>
-                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.leasing') }}</span>
                             </label>
                         @endif
                     </div>
@@ -679,7 +669,7 @@
                         class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
                     >
                         @foreach($vehicleSortLabels as $value => $label)
-                            <option value="{{ $value }}" @if($currentListingSort === $value) selected @endif>{{ $label }}</option>
+                            <option value="{{ $value }}" @if(\App\Services\VehicleService::listingSortOptionIsSelected($value, $rawSortQuery ?? null)) selected @endif>{{ $label }}</option>
                         @endforeach
                     </select>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
@@ -1111,7 +1101,7 @@
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const sortSelect = document.getElementById('sort-select');
-        const DEFAULT_LISTING_SORT = @json(\App\Services\VehicleService::DEFAULT_PUBLIC_LISTING_SORT);
+        const DEFAULT_LISTING_SORT = 'standard';
         const filterSidebar = document.getElementById('filter-sidebar');
         const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
         const filterResetButtonMain = document.getElementById('filter-reset-button-main');
@@ -2838,6 +2828,12 @@ if (config) {
             if (document.querySelector('[name="is_factory_new"]:checked')) filters.is_factory_new = 1;
             const equipmentIds = Array.from(document.querySelectorAll('[name="equipment_ids[]"]:checked')).map(cb => cb.value);
             if (equipmentIds.length > 0) filters.equipment_ids = equipmentIds;
+            if (typeof window.__viewerGeo === 'object' && window.__viewerGeo
+                && typeof window.__viewerGeo.latitude === 'number'
+                && typeof window.__viewerGeo.longitude === 'number') {
+                filters.viewer_latitude = window.__viewerGeo.latitude;
+                filters.viewer_longitude = window.__viewerGeo.longitude;
+            }
             filters.limit = 15;
             return filters;
         }
@@ -3433,6 +3429,20 @@ if (config) {
         // Clear filter params from URL (state lives in sidebar + POST only) then run first search
         if (window.location.search) {
             history.replaceState({}, '', window.location.pathname || '/vehicles');
+        }
+        window.__viewerGeo = window.__viewerGeo || null;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    window.__viewerGeo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                    const ss = document.getElementById('sort-select');
+                    if (ss && (ss.value === 'distance_asc' || ss.value === 'distance_desc')) {
+                        fetchVehicles({ page: 1 });
+                    }
+                },
+                function() {},
+                { maximumAge: 600000, timeout: 8000 }
+            );
         }
         fetchVehicles({ page: 1 });
         

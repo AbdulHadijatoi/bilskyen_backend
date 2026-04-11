@@ -186,6 +186,16 @@
                     @endif
                 </div>
             </div>
+            @else
+            <div class="relative">
+                <div class="border-border bg-muted/50 relative aspect-[4/3] overflow-hidden rounded-lg border">
+                    <img
+                        src="/placeholder-vehicle.jpg"
+                        alt="{{ $vehicle->title }}"
+                        class="h-full w-full object-cover"
+                    />
+                </div>
+            </div>
             @endif
 
             <!-- Dealer Information (mobile only - below photos) -->
@@ -533,7 +543,7 @@
             @if(!empty($vd['spec_definitions']))
             <div class="border-border mt-6 border-t pt-6">
                 <h3 class="text-foreground mb-3 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.model_spec_definitions_heading') }}</h3>
-                <div class="detail-grid">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-x-6 md:gap-y-4">
                     @foreach($vd['spec_definitions'] as $def)
                     @if(!empty($def['name']))
                     <div class="detail-item">

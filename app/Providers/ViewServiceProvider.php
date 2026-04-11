@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\AuthService;
+use App\Services\PageContentService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -50,6 +51,13 @@ class ViewServiceProvider extends ServiceProvider
                 'hasSellerRole' => $user?->hasRole('seller') ?? false,
                 'sellerToken' => $sellerToken,
             ]);
+        });
+
+        View::composer('components.footer', function ($view) {
+            $view->with(
+                'homePageContent',
+                app(PageContentService::class)->getHomePageContent('home')
+            );
         });
     }
 }

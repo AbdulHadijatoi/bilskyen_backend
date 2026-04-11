@@ -90,6 +90,7 @@ class VehicleController extends Controller
     /** @var array<int, string> Flat allowlist for public vehicle search inputs */
     private const FILTER_KEYS = [
         'search', 'sort', 'page', 'limit',
+        'viewer_latitude', 'viewer_longitude',
         'brand_id', 'model_id',
         'listing_type_id', 'list_status_id',
         'category_id', 'sales_type_id', 'price_type_id', 'condition_id',
