@@ -12,6 +12,7 @@ use App\Models\DmrVariant;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Euronom;
+use App\Models\ListingType;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
@@ -281,6 +282,7 @@ class SellYourCarSubmissionService
 
             $attributes = [
                 'dmr_fact_vehicle_id' => $dmrFactVehicleId,
+                'listing_type_id' => ListingType::idOrDefaultPurchase($request->input('listing_type_id')),
                 'user_id' => $user->id,
                 'dealer_id' => $user->dealer?->id,
                 'title' => $title,

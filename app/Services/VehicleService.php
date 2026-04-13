@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Constants\VehicleListStatus;
 use App\Exceptions\NummerpladeApiException;
 use App\Models\DmrFactVehicle;
+use App\Models\ListingType;
 use App\Models\SalesType;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
@@ -293,6 +294,8 @@ class VehicleService
 
         $fillable = (new Vehicle)->getFillable();
         $vehicleData = array_intersect_key($vehicleData, array_flip($fillable));
+
+        $vehicleData['listing_type_id'] = ListingType::idOrDefaultPurchase($vehicleData['listing_type_id'] ?? null);
 
         $dmrId = $vehicleData['dmr_fact_vehicle_id'] ?? null;
         if ($dmrId === '' || $dmrId === null) {
