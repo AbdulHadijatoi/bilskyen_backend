@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DmrVariant;
 use App\Models\Vehicle;
 use App\Models\VehicleSpecDefinition;
 use Illuminate\Support\Carbon;
@@ -82,14 +83,45 @@ class VehicleDetailPresentationService
 
         $specDefinitions = [];
         if ($v->brand_id && $v->model_id && $modelYear !== null && $modelYear !== '' && (int) $modelYear > 0) {
-            $specDefinitions = VehicleSpecDefinition::query()
+            $rows = VehicleSpecDefinition::query()
                 ->matchingVehicle($v)
                 ->orderBy('name')
-                ->get(['name', 'value'])
-                ->map(static fn (VehicleSpecDefinition $row) => [
-                    'name' => $row->name,
-                    'value' => $row->value,
-                ])
+                ->get(['name', 'value', 'variant_ids']);
+
+            $allVariantIds = $rows
+                ->flatMap(static fn (VehicleSpecDefinition $row) => $row->normalizedVariantIds())
+                ->unique()
+                ->filter()
+                ->values()
+                ->all();
+
+            $namesById = [];
+            if ($allVariantIds !== []) {
+                $namesById = DmrVariant::query()
+                    ->whereIn('id', $allVariantIds)
+                    ->pluck('name', 'id')
+                    ->all();
+            }
+
+            $specDefinitions = $rows
+                ->map(static function (VehicleSpecDefinition $row) use ($namesById) {
+                    $variantsScope = null;
+                    if (! $row->isModelWide()) {
+                        $labels = [];
+                        foreach ($row->normalizedVariantIds() as $vid) {
+                            if (isset($namesById[$vid])) {
+                                $labels[] = (string) $namesById[$vid];
+                            }
+                        }
+                        $variantsScope = $labels !== [] ? implode(', ', $labels) : null;
+                    }
+
+                    return [
+                        'name' => $row->name,
+                        'value' => $row->value,
+                        'variants_scope' => $variantsScope,
+                    ];
+                })
                 ->values()
                 ->all();
         }

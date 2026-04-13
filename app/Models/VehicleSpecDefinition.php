@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 class VehicleSpecDefinition extends Model
 {
     protected $fillable = [
         'brand_id',
         'model_id',
-        'variant_id',
+        'variant_ids',
         'model_year_from',
         'model_year_to',
         'name',
@@ -23,10 +24,62 @@ class VehicleSpecDefinition extends Model
         return [
             'brand_id' => 'integer',
             'model_id' => 'integer',
-            'variant_id' => 'integer',
+            'variant_ids' => 'array',
             'model_year_from' => 'integer',
             'model_year_to' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (VehicleSpecDefinition $row): void {
+            $ids = $row->normalizedVariantIds();
+            $row->variant_ids = $ids === [] ? null : $ids;
+        });
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function normalizedVariantIds(): array
+    {
+        $raw = $this->variant_ids;
+        if ($raw === null || $raw === []) {
+            return [];
+        }
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($raw as $v) {
+            $n = (int) $v;
+            if ($n > 0) {
+                $ids[] = $n;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    public function isModelWide(): bool
+    {
+        return $this->normalizedVariantIds() === [];
+    }
+
+    /**
+     * @return Collection<int, DmrVariant>
+     */
+    public function resolveVariants(): Collection
+    {
+        if ($this->isModelWide()) {
+            return collect();
+        }
+
+        return DmrVariant::query()
+            ->whereIn('id', $this->normalizedVariantIds())
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     public function brand(): BelongsTo
@@ -39,16 +92,11 @@ class VehicleSpecDefinition extends Model
         return $this->belongsTo(DmrModel::class, 'model_id');
     }
 
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(DmrVariant::class);
-    }
-
     /**
      * Catalog rows for the same brand, model, and model year range.
      *
-     * If the listing has a variant, only definitions with the same variant_id match.
-     * If the listing has no variant, only definitions with null variant_id match (model-wide specs).
+     * Model-wide definitions (no variant_ids) apply to every listing of that model year.
+     * When variant_ids is set, the listing must have a variant and it must be included in that set.
      *
      * @param  Builder<VehicleSpecDefinition>  $query
      * @return Builder<VehicleSpecDefinition>
@@ -65,9 +113,14 @@ class VehicleSpecDefinition extends Model
 
         $variantId = $vehicle->variant_id;
         if ($variantId !== null && $variantId !== '') {
-            return $query->where('variant_id', (int) $variantId);
+            $vid = (int) $variantId;
+
+            return $query->where(function (Builder $q) use ($vid): void {
+                $q->whereNull('variant_ids')
+                    ->orWhereJsonContains('variant_ids', $vid);
+            });
         }
 
-        return $query->whereNull('variant_id');
+        return $query->whereNull('variant_ids');
     }
 }

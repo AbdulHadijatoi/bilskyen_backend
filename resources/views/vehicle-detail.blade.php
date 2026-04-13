@@ -548,7 +548,14 @@
                     @if(!empty($def['name']))
                     <div class="detail-item">
                         <span class="detail-label">{{ $def['name'] }}</span>
-                        <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
+                        <div>
+                            <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
+                            @if(!empty($def['variants_scope']))
+                            <div class="text-muted-foreground mt-1 text-sm">
+                                {{ __('messages.pages.vehicles.detail.model_spec_definitions_variants_line', ['variants' => $def['variants_scope']]) }}
+                            </div>
+                            @endif
+                        </div>
                     </div>
                     @endif
                     @endforeach
