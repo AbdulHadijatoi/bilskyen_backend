@@ -130,9 +130,8 @@
                 @endphp
                 <div class="space-y-2">
                     <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.listing_type') }}</p>
-                    <div class="inline-flex items-center gap-0.5 p-1 rounded-full bg-muted border border-input flex-wrap">
+                    <div class="flex flex-wrap items-center gap-2">
                         @foreach($listingTypesList as $lt)
-
                             @php
                                 if($lt['id'] == 2) {
                                     continue;
@@ -142,7 +141,7 @@
                                 $isListingTypeActive = $ltId !== null && in_array((string) $ltId, $selectedListingTypeStrings, true);
                             @endphp
                             @if($ltId !== null)
-                                <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isListingTypeActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
+                                <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border @if($isListingTypeActive) border-transparent bg-primary text-primary-foreground font-semibold shadow-sm @else border-border bg-muted/40 text-foreground/90 hover:bg-muted/70 hover:border-muted-foreground/30 @endif">
                                     <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif>
                                     <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                     <span>{{ $ltName }}</span>
