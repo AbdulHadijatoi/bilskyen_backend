@@ -134,7 +134,7 @@
                         @foreach($listingTypesList as $lt)
 
                             @php
-                                if($lt->id == 2) {
+                                if($lt['id'] == 2) {
                                     continue;
                                 }
                                 $ltId = $lt['id'] ?? null;
