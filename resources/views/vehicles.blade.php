@@ -121,22 +121,34 @@
                 </div>
                 <!-- Listing Type -->
                 @php
-                    $listingTypes = $constants['listing_types'] ?? collect();
-                    $purchaseType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Purchase') : $listingTypes->firstWhere('name', 'Purchase');
+                    $listingTypesRaw = $constants['listing_types'] ?? [];
+                    $listingTypesList = collect($listingTypesRaw)->map(function ($lt) {
+                        return is_array($lt) ? $lt : ['id' => $lt->id, 'name' => $lt->name];
+                    })->all();
                     $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
-                    $purchaseId = is_array($purchaseType ?? null) ? ($purchaseType['id'] ?? null) : ($purchaseType->id ?? null);
-                    $isPurchaseActive = $purchaseId !== null && in_array($purchaseId, $selectedListingTypes);
+                    $selectedListingTypeStrings = collect($selectedListingTypes)->map(fn ($v) => (string) $v)->all();
                 @endphp
                 <div class="space-y-2">
                     <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.listing_type') }}</p>
-                    <div class="inline-flex items-center gap-0.5 p-1 rounded-full bg-muted border border-input">
-                        @if($purchaseType)
-                            <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isPurchaseActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
-                                <input type="checkbox" name="listing_type_id[]" value="{{ $purchaseId }}" class="sr-only peer listing-type-checkbox" @if($isPurchaseActive) checked @endif>
-                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.purchase') }}</span>
-                            </label>
-                        @endif
+                    <div class="inline-flex items-center gap-0.5 p-1 rounded-full bg-muted border border-input flex-wrap">
+                        @foreach($listingTypesList as $lt)
+
+                            @php
+                                if($lt->id == 2) {
+                                    continue;
+                                }
+                                $ltId = $lt['id'] ?? null;
+                                $ltName = $lt['name'] ?? '';
+                                $isListingTypeActive = $ltId !== null && in_array((string) $ltId, $selectedListingTypeStrings, true);
+                            @endphp
+                            @if($ltId !== null)
+                                <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isListingTypeActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
+                                    <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif>
+                                    <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                    <span>{{ $ltName }}</span>
+                                </label>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
                 <!-- Sales Type -->
