@@ -389,7 +389,7 @@ class HomeController extends Controller
         $rawSortQuery = $request->query('sort');
         $rawSortQuery = is_string($rawSortQuery) ? $rawSortQuery : null;
         $currentListingSort = VehicleService::normalizePublicListingSort($rawSortQuery);
-
+        dd($constants);
         return view('vehicles', compact(
             'vehicles',
             'constants',
