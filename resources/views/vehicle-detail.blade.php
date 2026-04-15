@@ -548,9 +548,7 @@
                     @if(!empty($def['name']))
                     <div class="detail-item">
                         <span class="detail-label">{{ $def['name'] }}</span>
-                        <div>
-                            <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
-                        </div>
+                        <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
                     </div>
                     @endif
                     @endforeach
