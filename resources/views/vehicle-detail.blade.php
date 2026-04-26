@@ -95,14 +95,14 @@
                     Registration: <span class="text-foreground font-mono">{{ $vehicle->registration }}</span>
                 </p> --}}
             </div>
-            <div class="flex flex-col items-start lg:items-end">
+            <!-- <div class="flex flex-col items-start lg:items-end">
                 <p class="text-3xl font-bold text-primary">
                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
                 @if(!empty($vd['sales_type_name']))
                 <p class="text-sm font-medium text-muted-foreground">{{ $vd['sales_type_name'] }}</p>
                 @endif
-            </div>
+            </div> -->
         </div>
         <div class="border-t border-border"></div>
     </div>
