@@ -9,18 +9,19 @@ use App\Mail\SubscriptionChangeRequestRejectedMail;
 use App\Models\DealerSubscriptionChangeRequest;
 use App\Models\Plan;
 use App\Services\DealerSubscriptionApplicationService;
+use App\Services\MailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class AdminSubscriptionChangeRequestController extends Controller
 {
     public function __construct(
-        private DealerSubscriptionApplicationService $dealerSubscriptionApplicationService
+        private DealerSubscriptionApplicationService $dealerSubscriptionApplicationService,
+        private MailService $mailService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -124,7 +125,8 @@ class AdminSubscriptionChangeRequestController extends Controller
 
             if ($mailChangeRequestId !== null) {
                 $forMail = DealerSubscriptionChangeRequest::with(['requestedPlan', 'dealer.owner'])
-                    ->find($mailChangeRequestId);
+                    ->whereKey((int) $mailChangeRequestId)
+                    ->first();
                 if ($forMail) {
                     $this->sendApprovedMail($forMail);
                 }
@@ -145,6 +147,14 @@ class AdminSubscriptionChangeRequestController extends Controller
 
             return $this->error(
                 __('messages.api.subscription_change_approve_failed', ['message' => $e->getMessage()]),
+                [],
+                ApiStatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        if (!$subscription) {
+            return $this->error(
+                __('messages.api.subscription_change_approve_failed', ['message' => 'subscription_not_created']),
                 [],
                 ApiStatusCode::INTERNAL_SERVER_ERROR
             );
@@ -215,14 +225,11 @@ class AdminSubscriptionChangeRequestController extends Controller
             return;
         }
 
-        try {
-            Mail::to($owner->email)->send(new SubscriptionChangeRequestApprovedMail($changeRequest));
-        } catch (\Exception $e) {
-            Log::warning('Failed to send subscription change approved email', [
-                'change_request_id' => $changeRequest->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->mailService->sendMailable(
+            $owner->email,
+            new SubscriptionChangeRequestApprovedMail($changeRequest),
+            ['change_request_id' => $changeRequest->id, 'mail_type' => 'subscription_change_approved']
+        );
     }
 
     private function sendRejectedMail(DealerSubscriptionChangeRequest $changeRequest): void
@@ -232,13 +239,10 @@ class AdminSubscriptionChangeRequestController extends Controller
             return;
         }
 
-        try {
-            Mail::to($owner->email)->send(new SubscriptionChangeRequestRejectedMail($changeRequest));
-        } catch (\Exception $e) {
-            Log::warning('Failed to send subscription change rejected email', [
-                'change_request_id' => $changeRequest->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->mailService->sendMailable(
+            $owner->email,
+            new SubscriptionChangeRequestRejectedMail($changeRequest),
+            ['change_request_id' => $changeRequest->id, 'mail_type' => 'subscription_change_rejected']
+        );
     }
 }

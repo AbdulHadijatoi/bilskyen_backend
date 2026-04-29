@@ -1383,6 +1383,18 @@ return [
         'subscription_change_rejected_heading' => 'Subscription change request declined',
         'subscription_change_rejected_body' => 'Your request to change to the plan **:plan** was not approved.',
         'subscription_change_rejection_reason' => 'Reason',
+        'password_reset_subject' => 'Reset your password',
+        'password_reset_heading' => 'Password reset',
+        'password_reset_body' => 'We received a request to reset your password. Click the button below to choose a new password. This link expires in one hour.',
+        'password_reset_button' => 'Reset password',
+        'verify_email_subject' => 'Verify your email address',
+        'verify_email_heading' => 'Confirm your email',
+        'verify_email_body' => 'Please verify your email address to complete your account setup. This link expires in 24 hours.',
+        'verify_email_button' => 'Verify email',
+        'magic_link_subject' => 'Your sign-in link',
+        'magic_link_heading' => 'Sign in',
+        'magic_link_body' => 'Use the button below to sign in. This link expires in 15 minutes.',
+        'magic_link_button' => 'Sign in',
     ],
 
     // In-app notifications (dealer panel; stored text respects request locale when created)

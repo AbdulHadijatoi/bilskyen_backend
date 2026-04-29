@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\TestMail;
+use App\Services\MailService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AuthPageController;
@@ -128,20 +130,20 @@ Route::post('/dealer-{slug}/enquire', [\App\Http\Controllers\DealerController::c
 Route::get('/dealer-{slug}/vehicles', [\App\Http\Controllers\DealerController::class, 'getVehicles'])->name('dealer.vehicles');
 
 
-// Route::get('/test-mail', function () {
-//     Mail::raw('Hello from Laravel + Gmail SMTP', function ($msg) {
-//         $msg->to('abdulhadixt@gmail.com')
-//             ->subject('Test Gmail SMTP');
-//     });
+if (app()->environment('local', 'testing')) {
+    Route::get('/test-mail/7R8e94o4YWW1PnvM', function (MailService $mailService) {
+        $to = 'abdulhadijatoi@gmail.com';
+        $ok = $mailService->sendMailable(
+            $to,
+            new TestMail('This is a test message. If you received it, outbound mail is working.'),
+            ['mail_type' => 'test'],
+            false
+        );
 
-//     return 'Mail sent';
-// });
 
 
-Route::prefix('test/dmr')->group(function () {
-    Route::get('/webservice', [DmrTestController::class, 'dmrWebservice']);
-    Route::get('/dataset', [DmrTestController::class, 'motorRegisterData']);
-    Route::get('/scraper', [DmrTestController::class, 'jsDkCarScraper']);
-    Route::get('/xmlstream', [DmrTestController::class, 'motorregisterXmlStream']);
-});
-
+        return $ok
+            ? 'Test email sent to '.$to
+            : 'Failed to send test email (check logs).';
+    })->name('test.mail');
+}
