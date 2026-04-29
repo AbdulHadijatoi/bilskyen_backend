@@ -1388,6 +1388,16 @@ return [
         'magic_link_heading' => 'Log ind',
         'magic_link_body' => 'Brug knappen nedenfor for at logge ind. Linket udløber om 15 minutter.',
         'magic_link_button' => 'Log ind',
+        'vehicle_enquiry_received_subject' => 'Ny henvendelse for :vehicle',
+        'vehicle_enquiry_received_heading' => 'Ny køretøjshenvendelse',
+        'vehicle_enquiry_received_intro' => 'Du har modtaget en ny henvendelse for **:vehicle**.',
+        'vehicle_enquiry_received_button' => 'Åbn annonce',
+        'vehicle_enquiry_received_type' => 'Type',
+        'vehicle_enquiry_received_subject_label' => 'Emne',
+        'vehicle_enquiry_received_from' => 'Fra',
+        'vehicle_enquiry_received_email' => 'E-mail',
+        'vehicle_enquiry_received_phone' => 'Telefon',
+        'vehicle_enquiry_received_message' => 'Besked',
     ],
 
     'notifications' => [

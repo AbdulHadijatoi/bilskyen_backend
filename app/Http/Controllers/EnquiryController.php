@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VehicleEnquiryReceivedMail;
 use App\Models\Lead;
 use App\Models\Vehicle;
 use App\Models\Source;
@@ -9,6 +10,7 @@ use App\Models\LeadCategory;
 use App\Models\Enquiry;
 use App\Services\AuthService;
 use App\Services\AuditLogService;
+use App\Services\MailService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -24,8 +26,55 @@ class EnquiryController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private MailService $mailService
     ) {}
+
+    private function resolveVehicleOwnerEmail(Vehicle $vehicle): ?string
+    {
+        $dealerOwnerEmail = $vehicle->dealer?->owner?->email;
+        if (!empty($dealerOwnerEmail)) {
+            return $dealerOwnerEmail;
+        }
+
+        $sellerEmail = $vehicle->user?->email;
+        if (!empty($sellerEmail)) {
+            return $sellerEmail;
+        }
+
+        return null;
+    }
+
+    private function sendVehicleEnquiryEmail(Vehicle $vehicle, Enquiry $enquiry): void
+    {
+        $ownerEmail = $this->resolveVehicleOwnerEmail($vehicle);
+        if (!$ownerEmail) {
+            return;
+        }
+
+        $vehicleTitle = $vehicle->title ?: ('Vehicle #' . $vehicle->id);
+        $vehicleUrl = url('/vehicles/' . $vehicle->slug);
+
+        $this->mailService->sendMailable(
+            $ownerEmail,
+            new VehicleEnquiryReceivedMail(
+                vehicleTitle: $vehicleTitle,
+                vehicleUrl: $vehicleUrl,
+                enquiryType: (string) $enquiry->type,
+                enquirySubject: (string) $enquiry->subject,
+                senderName: (string) $enquiry->name,
+                senderEmail: (string) $enquiry->email,
+                senderPhone: $enquiry->phone ? (string) $enquiry->phone : null,
+                senderMessage: (string) $enquiry->message,
+            ),
+            [
+                'mail_type' => 'vehicle_enquiry_received',
+                'vehicle_id' => $vehicle->id,
+                'enquiry_id' => $enquiry->id,
+            ],
+            false
+        );
+    }
 
     /**
      * Get lead intent ID based on category name
@@ -277,6 +326,8 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.messages.enquiry_submitted_successfully'),
@@ -415,6 +466,8 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.test_drive_submitted_followup'),
@@ -553,6 +606,8 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.price_negotiation_submitted_followup'),
@@ -670,6 +725,8 @@ class EnquiryController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',

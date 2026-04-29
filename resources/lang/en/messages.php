@@ -1395,6 +1395,16 @@ return [
         'magic_link_heading' => 'Sign in',
         'magic_link_body' => 'Use the button below to sign in. This link expires in 15 minutes.',
         'magic_link_button' => 'Sign in',
+        'vehicle_enquiry_received_subject' => 'New enquiry for :vehicle',
+        'vehicle_enquiry_received_heading' => 'New vehicle enquiry',
+        'vehicle_enquiry_received_intro' => 'You received a new enquiry for **:vehicle**.',
+        'vehicle_enquiry_received_button' => 'Open listing',
+        'vehicle_enquiry_received_type' => 'Type',
+        'vehicle_enquiry_received_subject_label' => 'Subject',
+        'vehicle_enquiry_received_from' => 'From',
+        'vehicle_enquiry_received_email' => 'Email',
+        'vehicle_enquiry_received_phone' => 'Phone',
+        'vehicle_enquiry_received_message' => 'Message',
     ],
 
     // In-app notifications (dealer panel; stored text respects request locale when created)
