@@ -1398,6 +1398,8 @@ return [
         'vehicle_enquiry_received_email' => 'E-mail',
         'vehicle_enquiry_received_phone' => 'Telefon',
         'vehicle_enquiry_received_message' => 'Besked',
+        'test_subject' => ':app — testmail',
+        'test_heading' => 'Testmail',
     ],
 
     'notifications' => [

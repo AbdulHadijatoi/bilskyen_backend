@@ -1405,6 +1405,8 @@ return [
         'vehicle_enquiry_received_email' => 'Email',
         'vehicle_enquiry_received_phone' => 'Phone',
         'vehicle_enquiry_received_message' => 'Message',
+        'test_subject' => ':app — test email',
+        'test_heading' => 'Test email',
     ],
 
     // In-app notifications (dealer panel; stored text respects request locale when created)

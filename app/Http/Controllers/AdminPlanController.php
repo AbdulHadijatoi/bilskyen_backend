@@ -267,17 +267,76 @@ class AdminPlanController extends Controller
 
     public function assignFeature(Request $request, int $id): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'feature_id' => 'required|exists:features,id',
-            'value' => 'sometimes',
+            'value' => 'required',
         ]);
 
         $plan = Plan::findOrFail($id);
+        $feature = Feature::findOrFail((int) $validated['feature_id']);
+
+        $normalizedValue = $this->normalizeFeatureValue(
+            (int) $feature->feature_value_type_id,
+            $validated['value']
+        );
+        if ($normalizedValue === null) {
+            return $this->error('Invalid value for this feature type.', [], 422);
+        }
+
         $plan->features()->syncWithoutDetaching([
-            $request->feature_id => ['value' => $request->value ?? null]
+            $feature->id => ['value' => $normalizedValue]
         ]);
 
         return $this->success(['message' => __('messages.errors.feature_assigned_success')]);
+    }
+
+    private function normalizeFeatureValue(int $featureTypeId, mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($featureTypeId === 1) {
+            if (is_bool($value)) {
+                return $value ? 'true' : 'false';
+            }
+
+            if (is_int($value) || is_float($value)) {
+                if ((float) $value === 1.0) {
+                    return 'true';
+                }
+                if ((float) $value === 0.0) {
+                    return 'false';
+                }
+                return null;
+            }
+
+            if (is_string($value)) {
+                $normalized = strtolower(trim($value));
+                if (in_array($normalized, ['true', '1'], true)) {
+                    return 'true';
+                }
+                if (in_array($normalized, ['false', '0'], true)) {
+                    return 'false';
+                }
+            }
+
+            return null;
+        }
+
+        if ($featureTypeId === 2) {
+            if (is_numeric($value)) {
+                return trim((string) $value);
+            }
+
+            return null;
+        }
+
+        if (is_scalar($value)) {
+            return trim((string) $value);
+        }
+
+        return null;
     }
 
     public function removeFeature(int $id, int $featureId): JsonResponse

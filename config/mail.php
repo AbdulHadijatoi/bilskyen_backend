@@ -19,6 +19,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Outbound mail locale
+    |--------------------------------------------------------------------------
+    |
+    | Locale used when rendering all mailables (subjects and views), regardless
+    | of the HTTP request UI language. Override with MAIL_LOCALE in .env.
+    |
+    */
+
+    'default_locale' => env('MAIL_LOCALE', 'da'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Mailer Configurations
     |--------------------------------------------------------------------------
     |

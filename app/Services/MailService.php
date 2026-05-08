@@ -18,7 +18,7 @@ class MailService
     public function sendMailable(string|array $to, Mailable $mailable, array $context = [], ?bool $forceQueue = null): bool
     {
         try {
-            $pendingMail = Mail::to($to);
+            $pendingMail = Mail::to($to)->locale(config('mail.default_locale', 'da'));
 
             if ($forceQueue === true) {
                 $pendingMail->queue($mailable);
