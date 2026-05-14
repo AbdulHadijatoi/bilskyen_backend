@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Constants\ApiStatusCode;
 use App\Constants\VehicleListStatus;
 use App\Helpers\FilterHelper;
 use App\Services\FileService;
 use App\Services\VehicleService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -81,9 +83,18 @@ class AdminVehicleController extends Controller
             }
         }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $statusId = VehicleListStatus::nameToId($request->status);
+        // Filter by list_status_id (canonical), legacy vehicle_list_status_id, or status name
+        $listStatusIdParam = $request->input('list_status_id');
+        if ($listStatusIdParam === null || $listStatusIdParam === '') {
+            $listStatusIdParam = $request->input('vehicle_list_status_id');
+        }
+        if ($listStatusIdParam !== null && $listStatusIdParam !== '') {
+            $resolvedListStatusId = (int) $listStatusIdParam;
+            if (VehicleListStatus::isValid($resolvedListStatusId)) {
+                $query->where('list_status_id', $resolvedListStatusId);
+            }
+        } elseif ($request->has('status') && $request->input('status')) {
+            $statusId = VehicleListStatus::nameToId((string) $request->input('status'));
             if ($statusId) {
                 $query->where('list_status_id', $statusId);
             }
@@ -114,11 +125,52 @@ class AdminVehicleController extends Controller
             FilterHelper::applySorting($query, $sort);
         }
 
-        // Paginate
-        $perPage = $request->input('limit', 15);
-        $vehicles = $query->paginate($perPage);
+        $listStatusCounts = $this->aggregateListStatusCounts(clone $query);
 
-        return $this->paginated($vehicles);
+        // Paginate
+        $perPage = (int) $request->input('limit', 15);
+        $paginator = $query->paginate($perPage);
+
+        $paginationData = [
+            'docs' => $paginator->items(),
+            'limit' => $paginator->perPage(),
+            'page' => $paginator->currentPage(),
+            'hasPrevPage' => $paginator->currentPage() > 1,
+            'hasNextPage' => $paginator->hasMorePages(),
+            'prevPage' => $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
+            'nextPage' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+            'totalDocs' => $paginator->total(),
+            'totalPages' => $paginator->lastPage(),
+            'list_status_counts' => $listStatusCounts,
+        ];
+
+        return $this->success(
+            $paginationData,
+            ApiStatusCode::OK,
+            __('messages.api.data_retrieved_successfully')
+        );
+    }
+
+    /**
+     * Count vehicles per list_status_id using the same constraints as the list query.
+     *
+     * @return array<int, int>
+     */
+    private function aggregateListStatusCounts(Builder $query): array
+    {
+        $rows = (clone $query)
+            ->withoutEagerLoads()
+            ->reorder()
+            ->selectRaw('list_status_id, COUNT(*) as aggregate')
+            ->groupBy('list_status_id')
+            ->pluck('aggregate', 'list_status_id');
+
+        $out = [];
+        foreach (VehicleListStatus::values() as $id) {
+            $out[$id] = (int) ($rows->get($id) ?? $rows->get((string) $id) ?? 0);
+        }
+
+        return $out;
     }
 
     public function show(int $id): JsonResponse
