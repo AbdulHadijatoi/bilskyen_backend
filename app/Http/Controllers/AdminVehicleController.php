@@ -158,11 +158,16 @@ class AdminVehicleController extends Controller
      */
     private function aggregateListStatusCounts(Builder $query): array
     {
+        // `Vehicle` global scope `defaultOrder` adds `order by id desc` when orders are empty.
+        // `reorder()` clears orders, which re-triggers that scope and breaks ONLY_FULL_GROUP_BY
+        // on this aggregate. Drop the default order scope and order by the grouped column.
         $rows = (clone $query)
+            ->withoutGlobalScope('defaultOrder')
             ->withoutEagerLoads()
             ->reorder()
             ->selectRaw('list_status_id, COUNT(*) as aggregate')
             ->groupBy('list_status_id')
+            ->orderBy('list_status_id')
             ->pluck('aggregate', 'list_status_id');
 
         $out = [];
