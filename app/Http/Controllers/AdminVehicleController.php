@@ -32,7 +32,14 @@ class AdminVehicleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Vehicle::with(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']);
+        $query = Vehicle::with([
+            'dealer',
+            'user',
+            'images',
+            'equipment',
+            'vehicleListStatus',
+            'dmrFactVehicle.variant.model.brand',
+        ]);
 
         // Apply direct query parameter filters
         if ($request->has('dealer_id')) {
