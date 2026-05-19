@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleImportController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\SavedSearchController;
@@ -68,6 +69,15 @@ Route::middleware('auth:api')->group(function () {
         
         Route::post('/lookup-by-registration', [VehicleController::class, 'lookupByRegistration'])
             ->middleware(['throttle:40,1', 'permission:dealer.vehicles.create']);
+
+        Route::get('/import/template', [VehicleImportController::class, 'downloadTemplate'])
+            ->middleware('permission:dealer.vehicles.create');
+
+        Route::get('/import/sample', [VehicleImportController::class, 'sample'])
+            ->middleware('permission:dealer.vehicles.create');
+
+        Route::post('/import', [VehicleImportController::class, 'import'])
+            ->middleware(['throttle:10,1', 'permission:dealer.vehicles.create']);
     });
     
     // Lookup endpoints (for form dropdowns and vehicle lookup)

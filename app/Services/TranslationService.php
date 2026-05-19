@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Import\SpreadsheetImportParser;
 use App\Models\TranslationKey;
 use App\Models\TranslationValue;
 use Illuminate\Support\Facades\Cache;
@@ -286,71 +287,7 @@ class TranslationService
      */
     private function parseFile(string $filePath, string $fileType): array
     {
-        $data = [];
-
-        if (in_array($fileType, ['xlsx', 'xls'])) {
-            // Use Laravel Excel if available, otherwise use PhpSpreadsheet
-            if (class_exists(\Maatwebsite\Excel\Facades\Excel::class)) {
-                $data = \Maatwebsite\Excel\Facades\Excel::toArray([], $filePath)[0];
-            } else {
-                // Fallback to PhpSpreadsheet
-                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader(
-                    $fileType === 'xlsx' ? 'Xlsx' : 'Xls'
-                );
-                $spreadsheet = $reader->load($filePath);
-                $worksheet = $spreadsheet->getActiveSheet();
-                $data = $worksheet->toArray();
-            }
-
-            // Remove header row
-            $headers = array_shift($data);
-            
-            // Map data to associative array
-            $mappedData = [];
-            foreach ($data as $row) {
-                if (empty(array_filter($row))) {
-                    continue; // Skip empty rows
-                }
-                $mappedRow = [];
-                foreach ($headers as $index => $header) {
-                    $mappedRow[strtolower(trim($header))] = $row[$index] ?? '';
-                }
-                $mappedData[] = $mappedRow;
-            }
-            return $mappedData;
-        } elseif ($fileType === 'csv') {
-            $handle = fopen($filePath, 'r');
-            if ($handle === false) {
-                throw new \Exception('Could not open CSV file');
-            }
-
-            $headers = fgetcsv($handle);
-            if ($headers === false) {
-                fclose($handle);
-                throw new \Exception('CSV file is empty or invalid');
-            }
-
-            // Normalize headers
-            $headers = array_map(function ($header) {
-                return strtolower(trim($header));
-            }, $headers);
-
-            while (($row = fgetcsv($handle)) !== false) {
-                if (empty(array_filter($row))) {
-                    continue; // Skip empty rows
-                }
-                $mappedRow = [];
-                foreach ($headers as $index => $header) {
-                    $mappedRow[$header] = $row[$index] ?? '';
-                }
-                $data[] = $mappedRow;
-            }
-
-            fclose($handle);
-            return $data;
-        } else {
-            throw new \Exception("Unsupported file type: {$fileType}");
-        }
+        return (new SpreadsheetImportParser)->parse($filePath, $fileType);
     }
 
     /**
