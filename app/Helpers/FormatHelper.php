@@ -17,7 +17,7 @@ class FormatHelper
     {
         // Handle null amount
         if ($amount === null) {
-            return 'N/A';
+            return __('messages.common.not_available');
         }
 
         if ($currency === 'DKK') {

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesMailLocale;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -10,11 +11,13 @@ use Illuminate\Queue\SerializesModels;
 
 class MagicLinkMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesMailLocale;
 
     public function __construct(
         public string $magicLinkUrl
-    ) {}
+    ) {
+        $this->applyMailLocale();
+    }
 
     public function envelope(): Envelope
     {

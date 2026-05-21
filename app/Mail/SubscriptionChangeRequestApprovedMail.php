@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesMailLocale;
 use App\Models\DealerSubscriptionChangeRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,11 +13,13 @@ use Illuminate\Queue\SerializesModels;
 
 class SubscriptionChangeRequestApprovedMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesMailLocale;
 
     public function __construct(
         public DealerSubscriptionChangeRequest $changeRequest
-    ) {}
+    ) {
+        $this->applyMailLocale();
+    }
 
     public function envelope(): Envelope
     {

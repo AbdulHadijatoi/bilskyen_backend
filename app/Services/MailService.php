@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -17,15 +18,20 @@ class MailService
      */
     public function sendMailable(string|array $to, Mailable $mailable, array $context = [], ?bool $forceQueue = null): bool
     {
+        $locale = config('mail.default_locale', 'da');
+        $previousLocale = App::getLocale();
+
         try {
-            $pendingMail = Mail::to($to)->locale(config('mail.default_locale', 'da'));
+            App::setLocale($locale);
+            $mailable->locale($locale);
+
+            $pendingMail = Mail::to($to)->locale($locale);
 
             if ($forceQueue === true) {
                 $pendingMail->queue($mailable);
             } elseif ($forceQueue === false) {
                 $pendingMail->send($mailable);
             } else {
-                // Keep Laravel default behavior (supports ShouldQueue mailables).
                 $pendingMail->send($mailable);
             }
 
@@ -38,6 +44,8 @@ class MailService
             ]));
 
             return false;
+        } finally {
+            App::setLocale($previousLocale);
         }
     }
 }

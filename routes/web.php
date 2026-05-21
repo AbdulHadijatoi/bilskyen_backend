@@ -135,7 +135,7 @@ if (app()->environment('local', 'testing')) {
         $to = 'abdulhadijatoi@gmail.com';
         $ok = $mailService->sendMailable(
             $to,
-            new TestMail('This is a test message. If you received it, outbound mail is working.'),
+            new TestMail(__('messages.mail.test_body_default')),
             ['mail_type' => 'test'],
             false
         );

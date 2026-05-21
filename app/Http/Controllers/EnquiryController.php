@@ -11,6 +11,7 @@ use App\Models\Enquiry;
 use App\Services\AuthService;
 use App\Services\AuditLogService;
 use App\Services\MailService;
+use App\Support\EnquiryMailPresenter;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -52,20 +53,20 @@ class EnquiryController extends Controller
             return;
         }
 
-        $vehicleTitle = $vehicle->title ?: ('Vehicle #' . $vehicle->id);
+        $presenter = EnquiryMailPresenter::for($vehicle, $enquiry);
         $vehicleUrl = url('/vehicles/' . $vehicle->slug);
 
         $this->mailService->sendMailable(
             $ownerEmail,
             new VehicleEnquiryReceivedMail(
-                vehicleTitle: $vehicleTitle,
+                vehicleTitle: $presenter->vehicleTitle(),
                 vehicleUrl: $vehicleUrl,
-                enquiryType: (string) $enquiry->type,
-                enquirySubject: (string) $enquiry->subject,
+                enquiryType: $presenter->typeLabel(),
+                enquirySubject: $presenter->subjectLabel(),
                 senderName: (string) $enquiry->name,
                 senderEmail: (string) $enquiry->email,
                 senderPhone: $enquiry->phone ? (string) $enquiry->phone : null,
-                senderMessage: (string) $enquiry->message,
+                senderMessage: $presenter->messageBody(),
             ),
             [
                 'mail_type' => 'vehicle_enquiry_received',

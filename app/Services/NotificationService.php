@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\FormatHelper;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Purchase;
@@ -250,7 +251,7 @@ class NotificationService
                 'title' => __('messages.notifications.purchase_payment_pending_title', ['vehicle' => $vLabel]),
                 'message' => __('messages.notifications.purchase_payment_pending_message', [
                     'vehicle' => $vLabel,
-                    'amount' => $pendingAmount,
+                    'amount' => FormatHelper::formatCurrency((float) $pendingAmount),
                     'contact' => $contactName,
                 ]),
                 'target_roles' => ['dealer'],
@@ -364,7 +365,7 @@ class NotificationService
                 'title' => __('messages.notifications.sale_payment_pending_title', ['vehicle' => $vLabel]),
                 'message' => __('messages.notifications.sale_payment_pending_message', [
                     'vehicle' => $vLabel,
-                    'amount' => $pendingAmount,
+                    'amount' => FormatHelper::formatCurrency((float) $pendingAmount),
                     'contact' => $contactName,
                 ]),
                 'target_roles' => ['dealer'],

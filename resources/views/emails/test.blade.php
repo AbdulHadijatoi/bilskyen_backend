@@ -1,5 +1,5 @@
 @component('emails.layouts.common', [
-    'heading' => 'Test email',
+    'heading' => __('messages.mail.test_heading'),
 ])
 {{ $bodyLine }}
 @endcomponent
