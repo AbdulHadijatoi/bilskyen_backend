@@ -45,6 +45,7 @@ return new class extends Migration
             'dealer.staff.manage',
             'dealer.subscription.manage',
             'dealer.audit.view',
+            'dealer.analytics.view',
         ];
         
         // Define all admin permissions from admin-apis.php
