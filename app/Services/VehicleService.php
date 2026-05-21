@@ -1323,9 +1323,12 @@ class VehicleService
     }
 
     /**
-     * Get dealer vehicles (all statuses) with relations
+     * Base query for dealer vehicle list (filters + eager loads, no pagination).
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<\App\Models\Vehicle>
      */
-    public function getDealerVehicles(int $dealerId, array $filters = [], int $perPage = 15, int $page = 1)
+    public function buildDealerVehiclesQuery(int $dealerId, array $filters = []): Builder
     {
         $query = Vehicle::query()
             ->where('dealer_id', $dealerId)
@@ -1361,7 +1364,41 @@ class VehicleService
 
         $this->applySorting($query, $filters['sort'] ?? null, []);
 
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        return $query;
+    }
+
+    /**
+     * Count vehicles per list_status_id using the same constraints as the dealer list query.
+     *
+     * @param  Builder<\App\Models\Vehicle>  $query
+     * @return array<int, int>
+     */
+    public function aggregateListStatusCounts(Builder $query): array
+    {
+        $rows = (clone $query)
+            ->withoutGlobalScope('defaultOrder')
+            ->withoutEagerLoads()
+            ->reorder()
+            ->selectRaw('list_status_id, COUNT(*) as aggregate')
+            ->groupBy('list_status_id')
+            ->orderBy('list_status_id')
+            ->pluck('aggregate', 'list_status_id');
+
+        $out = [];
+        foreach (VehicleListStatus::values() as $id) {
+            $out[$id] = (int) ($rows->get($id) ?? $rows->get((string) $id) ?? 0);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Get dealer vehicles (all statuses) with relations
+     */
+    public function getDealerVehicles(int $dealerId, array $filters = [], int $perPage = 15, int $page = 1)
+    {
+        return $this->buildDealerVehiclesQuery($dealerId, $filters)
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     /**

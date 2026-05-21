@@ -329,14 +329,36 @@ class VehicleController extends Controller
             }
         }
 
-        $vehicles = $this->vehicleService->getDealerVehicles(
-            $dealer->id,
-            $filters,
-            $request->input('limit', 15),
-            $request->input('page', 1)
-        );
+        $perPage = (int) $request->input('limit', 15);
+        $page = (int) $request->input('page', 1);
 
-        return $this->paginated($vehicles);
+        // Stat cards always show dealer-wide counts (ignore list_status_id filter).
+        $countFilters = $filters;
+        unset($countFilters['list_status_id']);
+        $countQuery = $this->vehicleService->buildDealerVehiclesQuery($dealer->id, $countFilters);
+        $listStatusCounts = $this->vehicleService->aggregateListStatusCounts(clone $countQuery);
+
+        $paginator = $this->vehicleService->buildDealerVehiclesQuery($dealer->id, $filters)
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $paginationData = [
+            'docs' => $paginator->items(),
+            'limit' => $paginator->perPage(),
+            'page' => $paginator->currentPage(),
+            'hasPrevPage' => $paginator->currentPage() > 1,
+            'hasNextPage' => $paginator->hasMorePages(),
+            'prevPage' => $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
+            'nextPage' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+            'totalDocs' => $paginator->total(),
+            'totalPages' => $paginator->lastPage(),
+            'list_status_counts' => $listStatusCounts,
+        ];
+
+        return $this->success(
+            $paginationData,
+            ApiStatusCode::OK,
+            __('messages.api.data_retrieved_successfully')
+        );
     }
 
     /**
