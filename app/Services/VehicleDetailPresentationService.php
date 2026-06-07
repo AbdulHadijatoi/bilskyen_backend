@@ -236,9 +236,9 @@ class VehicleDetailPresentationService
             'leasing_total_cost' => $attrs['leasing_total_cost'] ?? null,
 
             'list_status_id' => $v->list_status_id,
-            'brand_id' => $v->brand_id,
-            'model_id' => $v->model_id,
-            'variant_id' => $v->variant_id,
+            'brand_id' => $this->resolveBrandId($v),
+            'model_id' => $this->resolveModelId($v),
+            'variant_id' => $this->resolveVariantId($v),
             'body_type_id' => $v->body_type_id,
             'vehicle_use_id' => $v->vehicle_use_id,
             'listing_type_id' => $v->listing_type_id,
@@ -268,5 +268,56 @@ class VehicleDetailPresentationService
             'battery_capacity' => $attrs['battery_capacity'] ?? null,
             'range_km' => $attrs['range_km'] ?? null,
         ];
+    }
+
+    private function resolveVariantId(Vehicle $v): ?int
+    {
+        if (! empty($v->variant_id)) {
+            return (int) $v->variant_id;
+        }
+
+        $dmrVariant = $v->relationLoaded('dmrFactVehicle')
+            ? $v->dmrFactVehicle?->variant
+            : null;
+
+        if ($dmrVariant?->id) {
+            return (int) $dmrVariant->id;
+        }
+
+        return null;
+    }
+
+    private function resolveModelId(Vehicle $v): ?int
+    {
+        if (! empty($v->model_id)) {
+            return (int) $v->model_id;
+        }
+
+        $dmrVariant = $v->relationLoaded('dmrFactVehicle')
+            ? $v->dmrFactVehicle?->variant
+            : null;
+
+        if ($dmrVariant?->model_id) {
+            return (int) $dmrVariant->model_id;
+        }
+
+        return null;
+    }
+
+    private function resolveBrandId(Vehicle $v): ?int
+    {
+        if (! empty($v->brand_id)) {
+            return (int) $v->brand_id;
+        }
+
+        $dmrModel = $v->relationLoaded('dmrFactVehicle')
+            ? $v->dmrFactVehicle?->variant?->model
+            : null;
+
+        if ($dmrModel?->brand_id) {
+            return (int) $dmrModel->brand_id;
+        }
+
+        return null;
     }
 }

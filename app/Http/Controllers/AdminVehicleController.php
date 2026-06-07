@@ -8,6 +8,7 @@ use App\Constants\ApiStatusCode;
 use App\Constants\VehicleListStatus;
 use App\Helpers\FilterHelper;
 use App\Services\FileService;
+use App\Services\VehicleDetailPresentationService;
 use App\Services\VehicleService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -22,12 +23,69 @@ use Illuminate\Support\Facades\Storage;
 class AdminVehicleController extends Controller
 {
     protected FileService $fileService;
+
     protected VehicleService $vehicleService;
 
-    public function __construct(FileService $fileService, VehicleService $vehicleService)
-    {
+    protected VehicleDetailPresentationService $vehicleDetailPresentationService;
+
+    public function __construct(
+        FileService $fileService,
+        VehicleService $vehicleService,
+        VehicleDetailPresentationService $vehicleDetailPresentationService
+    ) {
         $this->fileService = $fileService;
         $this->vehicleService = $vehicleService;
+        $this->vehicleDetailPresentationService = $vehicleDetailPresentationService;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function adminVehicleShowEagerLoads(): array
+    {
+        return array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
+            'dealer',
+            'user',
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
+            'equipment.equipmentType',
+            'priceHistory',
+            'viewLogs',
+            'dmrFactVehicle.variant.model.brand',
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAdminVehicleShowPayload(Vehicle $vehicle): array
+    {
+        $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
+
+        return array_merge($payload, [
+            'dealer_id' => $vehicle->dealer_id,
+            'user_id' => $vehicle->user_id,
+            'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
+            'created_at' => $vehicle->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $vehicle->updated_at?->format('Y-m-d H:i:s'),
+            'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
+            'dealer' => $vehicle->dealer,
+            'user' => $vehicle->user,
+            'images' => $vehicle->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'vehicle_id' => $image->vehicle_id,
+                    'image_url' => $image->image_url,
+                    'thumbnail_url' => $image->thumbnail_url,
+                    'url' => $image->image_url,
+                    'sort_order' => $image->sort_order,
+                ];
+            }),
+            'equipment' => $vehicle->equipment,
+            'price_history' => $vehicle->relationLoaded('priceHistory') ? $vehicle->priceHistory : [],
+            'view_logs' => $vehicle->relationLoaded('viewLogs') ? $vehicle->viewLogs : [],
+        ]);
     }
 
     public function index(Request $request): JsonResponse
@@ -187,20 +245,9 @@ class AdminVehicleController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $vehicle = Vehicle::with([
-            'dealer',
-            'user',
-            'images',
-            'equipment',
-            'equipment.equipmentType',
-            'priceHistory',
-            'viewLogs',
-            'gearType',
-            'condition',
-            'dmrFactVehicle.variant.model.brand',
-        ])->findOrFail($id);
+        $vehicle = Vehicle::with($this->adminVehicleShowEagerLoads())->findOrFail($id);
 
-        return $this->success($vehicle);
+        return $this->success($this->buildAdminVehicleShowPayload($vehicle));
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -208,47 +255,88 @@ class AdminVehicleController extends Controller
         $request->validate([
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'registration' => ['nullable', 'string', 'max:20'],
-            'dmr_fact_vehicle_id' => ['sometimes', 'integer', 'exists:dmr_fact_vehicles,id'],
+            'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
+            'dmr_fact_vehicle_id' => ['sometimes', 'nullable', 'integer', 'exists:dmr_fact_vehicles,id'],
+            'brand_id' => ['nullable', 'integer', 'exists:dmr_brands,id'],
+            'model_id' => ['nullable', 'integer', 'exists:dmr_models,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:dmr_variants,id'],
+            'fuel_type_id' => ['nullable', 'integer', 'exists:dmr_drive_energies,id'],
+            'body_type_id' => ['nullable', 'integer', 'exists:dmr_body_types,id'],
+            'colour_id' => ['nullable', 'integer', 'exists:dmr_colours,id'],
+            'emission_norm_id' => ['nullable', 'integer', 'exists:dmr_emission_norms,id'],
+            'vehicle_use_id' => ['nullable', 'integer', 'exists:dmr_vehicle_uses,id'],
+            'listing_type_id' => ['nullable', 'integer', 'exists:listing_types,id'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'sales_type_id' => ['nullable', 'integer', 'exists:sales_types,id'],
+            'price_type_id' => ['nullable', 'integer', 'exists:price_types,id'],
+            'model_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
             'km_driven' => ['nullable', 'numeric', 'min:0'],
             'gear_type_id' => ['nullable', 'integer', 'exists:gear_types,id'],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'towing_weight' => ['nullable', 'integer', 'min:0'],
             'battery_capacity' => ['nullable', 'integer', 'min:0'],
             'range_km' => ['nullable', 'integer', 'min:0'],
             'charging_type' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'postcode' => ['nullable', 'string', 'max:20'],
+            'seller_phone' => ['nullable', 'string', 'max:50'],
             'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
             'servicebog' => ['nullable', 'string', 'max:50'],
             'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
+            'vehicle_list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
+            'first_registration_date' => ['nullable', 'date'],
+            'last_inspection_date' => ['nullable', 'date'],
+            'production_date' => ['nullable', 'date'],
+            'co2_emission' => ['nullable', 'numeric', 'min:0'],
+            'engine_power_kw' => ['nullable', 'numeric', 'min:0'],
+            'km_per_liter' => ['nullable', 'numeric', 'min:0'],
+            'fuel_consumption_wltp' => ['nullable', 'numeric', 'min:0'],
+            'fuel_consumption_nedc' => ['nullable', 'numeric', 'min:0'],
+            'internal_cost_price' => ['nullable', 'numeric', 'min:0'],
+            'annual_tax' => ['nullable', 'numeric', 'min:0'],
+            'is_import' => ['nullable', 'boolean'],
+            'is_factory_new' => ['nullable', 'boolean'],
+            'cover_image_index' => ['nullable', 'integer', 'min:0'],
+            'equipment_ids' => ['nullable', 'array'],
+            'equipment_ids.*' => ['integer', 'exists:equipments,id'],
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
         $data = $request->all();
 
-        // Use VehicleService to update vehicle (handles details, equipment, etc.)
         $updatedVehicle = $this->vehicleService->updateVehicle($vehicle, $data);
+        $updatedVehicle->load($this->adminVehicleShowEagerLoads());
 
-        return $this->success($updatedVehicle->load(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
+        return $this->success($this->buildAdminVehicleShowPayload($updatedVehicle));
     }
 
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'status' => ['required', Rule::in(VehicleListStatus::names())],
+            'status' => ['sometimes', Rule::in(VehicleListStatus::names())],
+            'list_status_id' => ['sometimes', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
-        $statusId = VehicleListStatus::nameToId($request->status);
 
-        if (!$statusId) {
-            return $this->validationError(['status' => ['Invalid status value']]);
+        if ($request->has('list_status_id')) {
+            $statusId = (int) $request->list_status_id;
+        } elseif ($request->has('status')) {
+            $statusId = VehicleListStatus::nameToId($request->status);
+            if (!$statusId) {
+                return $this->validationError(['status' => ['Invalid status value']]);
+            }
+        } else {
+            return $this->validationError(['status' => ['Status or list_status_id is required']]);
         }
 
         $vehicle->list_status_id = $statusId;
         
         if ($request->status === 'published' && !$vehicle->published_at) {
+            $vehicle->published_at = now();
+        } elseif ($statusId === VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
             $vehicle->published_at = now();
         }
 
