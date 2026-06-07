@@ -16,13 +16,27 @@
     <link rel="canonical" href="{{ url()->current() }}">
     @endif
     <meta name="robots" content="{{ $seo['robots'] ?? 'index, follow' }}">
-    @if(!empty($seo['og_title']))<meta property="og:title" content="{{ $seo['og_title'] }}">@endif
-    @if(!empty($seo['og_description']))<meta property="og:description" content="{{ $seo['og_description'] }}">@endif
-    @if(!empty($seo['og_image']))<meta property="og:image" content="{{ str_starts_with($seo['og_image'], 'http') ? $seo['og_image'] : asset($seo['og_image']) }}">@endif
+    @php
+        $defaultOgImage = asset('images/og-image.jpg');
+        $ogImage = !empty($seo['og_image'])
+            ? (str_starts_with($seo['og_image'], 'http') ? $seo['og_image'] : asset($seo['og_image']))
+            : $defaultOgImage;
+        $twitterImage = !empty($seo['twitter_image'])
+            ? (str_starts_with($seo['twitter_image'], 'http') ? $seo['twitter_image'] : asset($seo['twitter_image']))
+            : $ogImage;
+    @endphp
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bilskyen">
+    @if(!empty($seo['og_title']))<meta property="og:title" content="{{ $seo['og_title'] }}">@else<meta property="og:title" content="{{ $seo['meta_title'] ?? $seo['title'] ?? __('messages.layouts.default_title') }}">@endif
+    @if(!empty($seo['og_description']))<meta property="og:description" content="{{ $seo['og_description'] }}">@else<meta property="og:description" content="{{ $seo['meta_description'] ?? __('messages.layouts.meta_description') }}">@endif
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="{{ url()->current() }}">
-    @if(!empty($seo['twitter_title']))<meta name="twitter:title" content="{{ $seo['twitter_title'] }}">@endif
-    @if(!empty($seo['twitter_description']))<meta name="twitter:description" content="{{ $seo['twitter_description'] }}">@endif
-    @if(!empty($seo['twitter_image']))<meta name="twitter:image" content="{{ str_starts_with($seo['twitter_image'], 'http') ? $seo['twitter_image'] : asset($seo['twitter_image']) }}">@endif
+    <meta name="twitter:card" content="summary_large_image">
+    @if(!empty($seo['twitter_title']))<meta name="twitter:title" content="{{ $seo['twitter_title'] }}">@else<meta name="twitter:title" content="{{ $seo['meta_title'] ?? $seo['title'] ?? __('messages.layouts.default_title') }}">@endif
+    @if(!empty($seo['twitter_description']))<meta name="twitter:description" content="{{ $seo['twitter_description'] }}">@else<meta name="twitter:description" content="{{ $seo['meta_description'] ?? __('messages.layouts.meta_description') }}">@endif
+    <meta name="twitter:image" content="{{ $twitterImage }}">
     @if(!empty($seo['schema_json']))
     <script type="application/ld+json">{!! is_array($seo['schema_json']) ? json_encode($seo['schema_json']) : $seo['schema_json'] !!}</script>
     @endif
@@ -31,6 +45,18 @@
     <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
     <link rel="canonical" href="{{ url()->current() }}">
     <meta name="robots" content="index, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bilskyen">
+    <meta property="og:title" content="@yield('title', __('messages.layouts.default_title'))">
+    <meta property="og:description" content="{{ __('messages.layouts.meta_description') }}">
+    <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', __('messages.layouts.default_title'))">
+    <meta name="twitter:description" content="{{ __('messages.layouts.meta_description') }}">
+    <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
     @endisset
     <meta name="google-site-verification" content="UJCmMpdQRdTthyDk_rvdfCvGYIv7OETj5CYKgKtWoPc">
     <meta name="csrf-token" content="{{ csrf_token() }}">
