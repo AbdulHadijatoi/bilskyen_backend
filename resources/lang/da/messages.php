@@ -850,7 +850,10 @@ return [
             'contact_email' => 'info@bilskyen.dk',
             'contact_address_label' => 'Adresse',
             'contact_address' => 'Vesterbrogade 208, Frederiksberg C, Danmark',
-            'last_updated' => 'Sidst Opdateret: :date',
+            'last_updated' => 'Sidst opdateret: :date',
+            'toc_title' => 'På denne side',
+            'related_documents_title' => 'Relaterede dokumenter',
+            'empty_content' => 'Vores fortrolighedspolitik opdateres. Tjek tilbage snart, eller kontakt os, hvis du har spørgsmål.',
         ],
         'sell_your_car' => [
             'page_title' => 'Sælg din bil',

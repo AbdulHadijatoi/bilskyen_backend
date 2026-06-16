@@ -18,6 +18,7 @@ use App\Models\SalesType;
 use App\Models\Type;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
+use App\Models\PageContent;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
@@ -240,9 +241,14 @@ class HomeController extends Controller
         
         $seo = $this->seoService->getForPage('static', 'privacy-policy');
 
+        $privacyLastUpdated = PageContent::where('page_name', 'privacy')
+            ->where('section_key', 'privacy_body')
+            ->value('updated_at');
+
         return view('privacy-policy', [
             'privacyPageContent' => $privacyPageContent,
             'privacyPageImages' => $privacyPageImages,
+            'privacyLastUpdated' => $privacyLastUpdated,
             'seo' => $seo,
         ]);
     }

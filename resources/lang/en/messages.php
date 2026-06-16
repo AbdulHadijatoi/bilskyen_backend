@@ -850,7 +850,10 @@ return [
             'contact_email' => 'privacy@bilskyen.dk',
             'contact_address_label' => 'Address',
             'contact_address' => '123 Dealership Lane, Copenhagen, Denmark',
-            'last_updated' => 'Last Updated: :date',
+            'last_updated' => 'Last updated: :date',
+            'toc_title' => 'On this page',
+            'related_documents_title' => 'Related documents',
+            'empty_content' => 'Our privacy policy is being updated. Please check back soon or contact us if you have questions.',
         ],
         'sell_your_car' => [
             'page_title' => 'Sell Your Car',
