@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Constants\VehicleListStatus;
+use App\Constants\VehicleSearchFilters;
 use App\Models\Category;
 use App\Models\ListingType;
 use App\Models\PriceType;
@@ -61,9 +62,7 @@ class HomeController extends Controller
         ];
 
         $publishedVehicleCount = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->count();
-        $listingTypes = $this->lookupService->getListingTypes()
-            ->filter(fn ($lt) => (int) $lt->id !== 2)
-            ->values();
+        $listingTypes = $this->lookupService->getListingTypes();
 
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
@@ -120,6 +119,8 @@ class HomeController extends Controller
             'publishedVehicleCount' => $publishedVehicleCount,
             'listingTypes' => $listingTypes,
             'currentYear' => $currentYear,
+            'filterPriceMax' => VehicleSearchFilters::PRICE_MAX,
+            'filterKmMax' => VehicleSearchFilters::KM_MAX,
         ]);
     }
 
@@ -404,6 +405,8 @@ class HomeController extends Controller
         $rawSortQuery = $request->query('sort');
         $rawSortQuery = is_string($rawSortQuery) ? $rawSortQuery : null;
         $currentListingSort = VehicleService::normalizePublicListingSort($rawSortQuery);
+        $filterPriceMax = VehicleSearchFilters::PRICE_MAX;
+        $filterKmMax = VehicleSearchFilters::KM_MAX;
 
         return view('vehicles', compact(
             'vehicles',
@@ -417,7 +420,9 @@ class HomeController extends Controller
             'selectedType',
             'vehicleSortLabels',
             'currentListingSort',
-            'rawSortQuery'
+            'rawSortQuery',
+            'filterPriceMax',
+            'filterKmMax',
         ));
     }
 

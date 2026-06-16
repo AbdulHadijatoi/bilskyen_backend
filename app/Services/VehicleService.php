@@ -926,6 +926,21 @@ class VehicleService
     }
 
     /**
+     * Count published vehicles matching public listing filters (no row hydration).
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function countPublicVehiclesWithFilters(array $filters = []): int
+    {
+        $query = Vehicle::query()
+            ->where('list_status_id', VehicleListStatus::PUBLISHED);
+
+        $this->applyPublicListingFilters($query, $filters);
+
+        return (int) $query->count();
+    }
+
+    /**
      * Apply listing filters using {@see Vehicle}, DMR relations, {@see Vehicle::equipment()} (vehicle_equipment),
      * and {@see Vehicle::specifications()} for airbags (see {@see self::applyPublicAirbagsFilter()}).
      *

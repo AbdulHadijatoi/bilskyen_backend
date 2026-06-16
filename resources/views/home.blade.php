@@ -625,6 +625,8 @@
     $homeYearMin = 1975;
     $homeYearMax = ($currentYear ?? (int) date('Y')) + 1;
     $searchDescription = $homePageContent['search_description'] ?? __('messages.pages.home.description');
+    $filterPriceMax = $filterPriceMax ?? 1_000_000;
+    $filterKmMax = $filterKmMax ?? 500_000;
 @endphp
 <div class="flex min-h-screen flex-col pt-0">
     <!-- Search Section -->
@@ -778,8 +780,8 @@
                                 <div class="home-filter-range-track-wrap">
                                     <div class="home-filter-range-rail">
                                         <div id="price-range-track-dropdown" class="home-filter-range-fill"></div>
-                                        <input type="range" id="price-slider-min-dropdown" min="0" max="5000000" step="1000" value="0" class="home-filter-range-input">
-                                        <input type="range" id="price-slider-max-dropdown" min="0" max="5000000" step="1000" value="5000000" class="home-filter-range-input home-filter-range-input-max">
+                                        <input type="range" id="price-slider-min-dropdown" min="0" max="{{ $filterPriceMax }}" step="1000" value="0" class="home-filter-range-input">
+                                        <input type="range" id="price-slider-max-dropdown" min="0" max="{{ $filterPriceMax }}" step="1000" value="{{ $filterPriceMax }}" class="home-filter-range-input home-filter-range-input-max">
                                         <div id="price-handle-min-dropdown" class="home-filter-range-handle">
                                             <span class="home-filter-range-tooltip" aria-hidden="true"></span>
                                         </div>
@@ -799,8 +801,8 @@
                                 <div class="home-filter-range-track-wrap">
                                     <div class="home-filter-range-rail">
                                         <div id="km-driven-range-track" class="home-filter-range-fill"></div>
-                                        <input type="range" id="km-driven-slider-min" min="0" max="200000" step="1000" value="0" class="home-filter-range-input">
-                                        <input type="range" id="km-driven-slider-max" min="0" max="200000" step="1000" value="200000" class="home-filter-range-input home-filter-range-input-max">
+                                        <input type="range" id="km-driven-slider-min" min="0" max="{{ $filterKmMax }}" step="1000" value="0" class="home-filter-range-input">
+                                        <input type="range" id="km-driven-slider-max" min="0" max="{{ $filterKmMax }}" step="1000" value="{{ $filterKmMax }}" class="home-filter-range-input home-filter-range-input-max">
                                         <div id="km-driven-handle-min" class="home-filter-range-handle">
                                             <span class="home-filter-range-tooltip" aria-hidden="true"></span>
                                         </div>
@@ -842,11 +844,9 @@
                             <a href="/vehicles" class="text-sm font-medium text-primary hover:underline">
                                 {{ __('messages.pages.vehicles.advanced_filters') }}
                             </a>
-                            <span id="home-results-badge" class="home-filter-results-badge">
-                                {{ __('messages.pages.home.results_count', ['count' => $vehicleCountFormatted]) }}
-                            </span>
-                            <button type="submit" class="home-filter-cta">
-                                {{ __('messages.pages.home.show_results') }}
+
+                            <button type="submit" id="home-show-results-btn" class="home-filter-cta">
+                                {{ __('messages.pages.home.see_results', ['count' => $vehicleCountFormatted]) }}
                             </button>
                         </div>
                     </div>
@@ -1313,7 +1313,11 @@
 
     const HOME_YEAR_MIN = {{ $homeYearMin }};
     const HOME_YEAR_MAX = {{ $homeYearMax }};
+    const HOME_PRICE_MAX = {{ $filterPriceMax }};
+    const HOME_KM_MAX = {{ $filterKmMax }};
     const HOME_BEFORE_YEAR_LABEL = @json(__('messages.pages.home.before_year', ['year' => 1980]));
+    const HOME_RESULTS_COUNT_LABEL = @json(__('messages.pages.home.results_count', ['count' => ':count']));
+    const HOME_SEE_RESULTS_LABEL = @json(__('messages.pages.home.see_results', ['count' => ':count']));
 
     function formatHomeNumber(value) {
         return new Intl.NumberFormat('da-DK').format(Math.round(value));
@@ -1321,13 +1325,13 @@
 
     function formatPriceRangeChip(min, max) {
         const minLabel = min <= 0 ? '0 kr.' : `${formatHomeNumber(min)} kr.`;
-        const maxLabel = max >= 5000000 ? '1.000.000+ kr.' : `${formatHomeNumber(max)} kr.`;
+        const maxLabel = max >= HOME_PRICE_MAX ? '1.000.000+ kr.' : `${formatHomeNumber(max)} kr.`;
         return `${minLabel} – ${maxLabel}`;
     }
 
     function formatKmRangeChip(min, max) {
         const minLabel = min <= 0 ? '0 km.' : `${formatHomeNumber(min)} km.`;
-        const maxLabel = max >= 200000 ? '200.000+ km.' : `${formatHomeNumber(max)} km.`;
+        const maxLabel = max >= HOME_KM_MAX ? '500.000+ km.' : `${formatHomeNumber(max)} km.`;
         return `${minLabel} – ${maxLabel}`;
     }
 
@@ -1339,13 +1343,13 @@
 
     function formatPriceHandleValue(value, isMin) {
         if (isMin && value <= 0) return '0 kr.';
-        if (!isMin && value >= 5000000) return '1.000.000+ kr.';
+        if (!isMin && value >= HOME_PRICE_MAX) return '1.000.000+ kr.';
         return `${formatHomeNumber(value)} kr.`;
     }
 
     function formatKmHandleValue(value, isMin) {
         if (isMin && value <= 0) return '0 km.';
-        if (!isMin && value >= 200000) return '200.000+ km.';
+        if (!isMin && value >= HOME_KM_MAX) return '500.000+ km.';
         return `${formatHomeNumber(value)} km.`;
     }
 
@@ -1366,7 +1370,7 @@
             const minSlider = document.getElementById('price-slider-min-dropdown');
             const maxSlider = document.getElementById('price-slider-max-dropdown');
             const finalMin = parseFloat(minSlider?.value) || 0;
-            const finalMax = parseFloat(maxSlider?.value) || 5000000;
+            const finalMax = parseFloat(maxSlider?.value) || HOME_PRICE_MAX;
             chips.push({
                 key: 'price',
                 label: formatPriceRangeChip(finalMin, finalMax),
@@ -1374,7 +1378,7 @@
                     const minSlider = document.getElementById('price-slider-min-dropdown');
                     const maxSlider = document.getElementById('price-slider-max-dropdown');
                     if (minSlider) minSlider.value = '0';
-                    if (maxSlider) maxSlider.value = '5000000';
+                    if (maxSlider) maxSlider.value = String(HOME_PRICE_MAX);
                     minSlider?.dispatchEvent(new Event('input'));
                 },
             });
@@ -1386,7 +1390,7 @@
             const minSlider = document.getElementById('km-driven-slider-min');
             const maxSlider = document.getElementById('km-driven-slider-max');
             const finalMin = parseFloat(minSlider?.value) || 0;
-            const finalMax = parseFloat(maxSlider?.value) || 200000;
+            const finalMax = parseFloat(maxSlider?.value) || HOME_KM_MAX;
             chips.push({
                 key: 'km',
                 label: formatKmRangeChip(finalMin, finalMax),
@@ -1394,7 +1398,7 @@
                     const minSlider = document.getElementById('km-driven-slider-min');
                     const maxSlider = document.getElementById('km-driven-slider-max');
                     if (minSlider) minSlider.value = '0';
-                    if (maxSlider) maxSlider.value = '200000';
+                    if (maxSlider) maxSlider.value = String(HOME_KM_MAX);
                     minSlider?.dispatchEvent(new Event('input'));
                 },
             });
@@ -1499,6 +1503,8 @@
             btn.addEventListener('click', chip.onRemove);
             container.appendChild(btn);
         });
+
+        scheduleHomeResultsCountUpdate();
     }
 
     function syncListingTypeInput(listingTypeId) {
@@ -2048,7 +2054,7 @@
             maxHandle: document.getElementById('price-handle-max-dropdown'),
             track: document.getElementById('price-range-track-dropdown'),
             min: 0,
-            max: 5000000,
+            max: HOME_PRICE_MAX,
             formatValue: formatPriceHandleValue,
         };
         
@@ -2061,7 +2067,7 @@
             maxHandle: document.getElementById('km-driven-handle-max'),
             track: document.getElementById('km-driven-range-track'),
             min: 0,
-            max: 200000,
+            max: HOME_KM_MAX,
             formatValue: formatKmHandleValue,
         };
 
@@ -2210,45 +2216,91 @@
 
         document.addEventListener('pointerup', endAllRangeDrags);
     }
+
+    function buildHomeFilterParams() {
+        const params = new URLSearchParams();
+
+        document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
+            const valuesContainer = dropdown.querySelector('.dropdown-values-container');
+            if (valuesContainer) {
+                valuesContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
+                    if (input.name && input.value) params.append(input.name, input.value);
+                });
+            }
+        });
+
+        const priceFrom = document.getElementById('price-from-dropdown')?.value;
+        const priceTo = document.getElementById('price-to-dropdown')?.value;
+        const kmFrom = document.getElementById('km-driven-from')?.value;
+        const kmTo = document.getElementById('km-driven-to')?.value;
+        const yearFrom = document.getElementById('model-year-from')?.value;
+        const yearTo = document.getElementById('model-year-to')?.value;
+        const searchQuery = document.getElementById('home-search-input')?.value?.trim();
+
+        if (priceFrom) params.append('price_from', priceFrom);
+        if (priceTo) params.append('price_to', priceTo);
+        if (kmFrom) params.append('km_driven_from', kmFrom);
+        if (kmTo) params.append('km_driven_to', kmTo);
+        if (yearFrom) params.append('model_year_from', yearFrom);
+        if (yearTo) params.append('model_year_to', yearTo);
+        if (searchQuery) params.append('search', searchQuery);
+
+        const listingTypeContainer = document.getElementById('home-listing-type-inputs');
+        if (listingTypeContainer) {
+            listingTypeContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
+                if (input.name && input.value) params.append(input.name, input.value);
+            });
+        }
+
+        return params;
+    }
+
+    let homeCountDebounceTimer = null;
+    let homeCountRequestId = 0;
+
+    function updateHomeResultsCountDisplay(count) {
+        const formatted = formatHomeNumber(count);
+        const badge = document.getElementById('home-results-badge');
+        if (badge) {
+            badge.textContent = HOME_RESULTS_COUNT_LABEL.replace(':count', formatted);
+        }
+        const button = document.getElementById('home-show-results-btn');
+        if (button) {
+            button.textContent = HOME_SEE_RESULTS_LABEL.replace(':count', formatted);
+        }
+    }
+
+    function scheduleHomeResultsCountUpdate() {
+        clearTimeout(homeCountDebounceTimer);
+        homeCountDebounceTimer = setTimeout(fetchHomeResultsCount, 300);
+    }
+
+    async function fetchHomeResultsCount() {
+        const params = buildHomeFilterParams();
+        const requestId = ++homeCountRequestId;
+
+        try {
+            const response = await fetch('/api/v1/vehicles/count?' + params.toString(), {
+                headers: { 'Accept': 'application/json' },
+            });
+            if (!response.ok) return;
+
+            const payload = await response.json();
+            if (requestId !== homeCountRequestId) return;
+
+            const count = Number(payload?.data?.count ?? 0);
+            updateHomeResultsCountDisplay(Number.isFinite(count) ? count : 0);
+        } catch (error) {
+            console.debug('Home results count failed:', error);
+        }
+    }
     
     // Form submission handler
     const filterForm = document.getElementById('filter-form');
     if (filterForm) {
         filterForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const params = new URLSearchParams();
-            
-            document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
-                const valuesContainer = dropdown.querySelector('.dropdown-values-container');
-                if (valuesContainer) {
-                    valuesContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
-                        if (input.name && input.value) params.append(input.name, input.value);
-                    });
-                }
-            });
-            
-            const priceFrom = document.getElementById('price-from-dropdown')?.value;
-            const priceTo = document.getElementById('price-to-dropdown')?.value;
-            const kmFrom = document.getElementById('km-driven-from')?.value;
-            const kmTo = document.getElementById('km-driven-to')?.value;
-            const yearFrom = document.getElementById('model-year-from')?.value;
-            const yearTo = document.getElementById('model-year-to')?.value;
-            const searchQuery = document.getElementById('home-search-input')?.value?.trim();
-            if (priceFrom) params.append('price_from', priceFrom);
-            if (priceTo) params.append('price_to', priceTo);
-            if (kmFrom) params.append('km_driven_from', kmFrom);
-            if (kmTo) params.append('km_driven_to', kmTo);
-            if (yearFrom) params.append('model_year_from', yearFrom);
-            if (yearTo) params.append('model_year_to', yearTo);
-            if (searchQuery) params.append('search', searchQuery);
-
-            const listingTypeContainer = document.getElementById('home-listing-type-inputs');
-            if (listingTypeContainer) {
-                listingTypeContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
-                    if (input.name && input.value) params.append(input.name, input.value);
-                });
-            }
-            
+            const params = buildHomeFilterParams();
             window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
         });
     }
@@ -2297,7 +2349,7 @@
         if (priceFromInput) priceFromInput.value = '';
         if (priceToInput) priceToInput.value = '';
         if (priceMinSlider) priceMinSlider.value = '0';
-        if (priceMaxSlider) priceMaxSlider.value = '5000000';
+        if (priceMaxSlider) priceMaxSlider.value = String(HOME_PRICE_MAX);
         
         const kmFromInput = document.getElementById('km-driven-from');
         const kmToInput = document.getElementById('km-driven-to');
@@ -2307,7 +2359,7 @@
         if (kmFromInput) kmFromInput.value = '';
         if (kmToInput) kmToInput.value = '';
         if (kmMinSlider) kmMinSlider.value = '0';
-        if (kmMaxSlider) kmMaxSlider.value = '200000';
+        if (kmMaxSlider) kmMaxSlider.value = String(HOME_KM_MAX);
 
         const yearFromInput = document.getElementById('model-year-from');
         const yearToInput = document.getElementById('model-year-to');
@@ -2336,6 +2388,11 @@
     initListingTypeTabs();
     initFilterPanelToggle();
     updateHomeFilterChips();
+
+    const homeSearchInput = document.getElementById('home-search-input');
+    if (homeSearchInput) {
+        homeSearchInput.addEventListener('input', scheduleHomeResultsCountUpdate);
+    }
     
     const brandDropdown = document.querySelector('[data-dropdown="brand"]');
     const initialBrandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];

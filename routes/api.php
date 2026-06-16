@@ -28,6 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/version.json', [VersionController::class, 'getVersion']);
     
     // Public vehicle listings (uses database data)
+    Route::get('/vehicles/count', [VehicleController::class, 'count'])->name('vehicles.count');
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::post('/search-vehicles', [VehicleController::class, 'searchVehicles'])->name('vehicles.search');
 

@@ -133,9 +133,6 @@
                     <div class="flex flex-wrap items-center gap-2">
                         @foreach($listingTypesList as $lt)
                             @php
-                                if($lt['id'] == 2) {
-                                    continue;
-                                }
                                 $ltId = $lt['id'] ?? null;
                                 $ltName = $lt['name'] ?? '';
                                 $isListingTypeActive = $ltId !== null && in_array((string) $ltId, $selectedListingTypeStrings, true);
@@ -272,14 +269,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="5000000" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="5000000" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="price-slider-min" min="0" max="5000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="price-slider-max" min="0" max="5000000" step="1000" value="5000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-min" min="0" max="{{ $filterPriceMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-max" min="0" max="{{ $filterPriceMax }}" step="1000" value="{{ $filterPriceMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="price-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="price-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -287,14 +284,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="2000000" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="2000000" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="mileage-slider-min" min="0" max="2000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="mileage-slider-max" min="0" max="2000000" step="1000" value="2000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-min" min="0" max="{{ $filterKmMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-max" min="0" max="{{ $filterKmMax }}" step="1000" value="{{ $filterKmMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="mileage-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="mileage-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -2543,7 +2540,7 @@
                 maxHandle: document.getElementById('price-handle-max'),
                 track: document.getElementById('price-range-track'),
                 min: 0,
-                max: 5000000
+                max: {{ $filterPriceMax }}
             },
             {
                 minSlider: document.getElementById('year-slider-min'),
@@ -2565,7 +2562,7 @@
                 maxHandle: document.getElementById('mileage-handle-max'),
                 track: document.getElementById('mileage-range-track'),
                 min: 0,
-                max: 2000000
+                max: {{ $filterKmMax }}
             },
             {
                 minSlider: document.getElementById('first-reg-year-slider-min'),
@@ -2799,9 +2796,9 @@ if (config) {
             const fuelTypeIds = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
-            if (vNum('price_to', 5000001)) filters.price_to = v('price_to');
+            if (vNum('price_to', {{ $filterPriceMax + 1 }})) filters.price_to = v('price_to');
             if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');
-            if (vNum('km_driven_to', 2000001)) filters.km_driven_to = v('km_driven_to');
+            if (vNum('km_driven_to', {{ $filterKmMax + 1 }})) filters.km_driven_to = v('km_driven_to');
             if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
             if (v('body_type_id')) filters.body_type_id = v('body_type_id');
             if (v('color_id')) filters.color_id = v('color_id');

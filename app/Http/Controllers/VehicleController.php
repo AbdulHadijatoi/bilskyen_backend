@@ -305,6 +305,19 @@ class VehicleController extends Controller
     }
 
     /**
+     * Count vehicles matching public filters (efficient COUNT query only).
+     */
+    public function count(Request $request): JsonResponse
+    {
+        $input = $this->normalizeVehicleSearchInput($request->query());
+        unset($input['page'], $input['limit'], $input['sort']);
+
+        $count = $this->vehicleService->countPublicVehiclesWithFilters($input);
+
+        return $this->success(['count' => $count]);
+    }
+
+    /**
      * Get dealer vehicles list
      */
     public function dealerIndex(Request $request): JsonResponse
