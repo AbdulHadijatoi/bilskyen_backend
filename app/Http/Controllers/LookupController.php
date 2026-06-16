@@ -71,8 +71,11 @@ class LookupController extends Controller
     {
         try {
             $search = $request->input('search');
+            $forListing = $request->boolean('listing');
 
-            $items = $lookupService->searchBrands($search);
+            $items = $forListing
+                ? $lookupService->searchBrandsForListingFilters($search)
+                : $lookupService->searchBrands($search);
 
             return $this->success([
                 'items' => $items,

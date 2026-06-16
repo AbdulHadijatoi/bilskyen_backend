@@ -282,6 +282,17 @@ return [
     'pages' => [
         'home' => [
             'title' => 'Find Your Perfect Vehicle at Bilskyen',
+            'search_headline' => 'Which car are you looking for?',
+            'tagline' => 'Find your car',
+            'search_placeholder' => 'Search by brand, model, or keyword…',
+            'search_among' => 'Search among :count cars',
+            'see_results' => 'See :count results',
+            'show_results' => 'Show results',
+            'results_count' => ':count results',
+            'hide_filters' => 'Hide filters',
+            'show_filters' => 'Show filters',
+            'all_cars' => 'All cars',
+            'before_year' => 'Before :year',
             'description' => 'Search our inventory to find the perfect match for your needs.',
             'browse_vehicles' => 'Browse Vehicles',
             "hero_description" => "Revolutionizing the car buying experience with transparent pricing, quality vehicles, and exceptional customer service.",

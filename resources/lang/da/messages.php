@@ -282,6 +282,17 @@ return [
     'pages' => [
         'home' => [
             'title' => 'Find dit perfekte køretøj hos Bilskyen',
+            'search_headline' => 'Hvilken bil leder du efter?',
+            'tagline' => 'Find din bil',
+            'search_placeholder' => 'Søg på mærke, model eller nøgleord…',
+            'search_among' => 'Søg blandt :count biler',
+            'see_results' => 'Se :count resultater',
+            'show_results' => 'Vis resultater',
+            'results_count' => ':count resultater',
+            'hide_filters' => 'Skjul filtre',
+            'show_filters' => 'Vis filtre',
+            'all_cars' => 'Alle biler',
+            'before_year' => 'før :year',
             'description' => 'Søg i vores lager for at finde det perfekte match til dine behov.',
             'browse_vehicles' => 'Gennemse køretøjer',
             "hero_description" => "Revolutionerer bilkøbsoplevelsen med gennemsigtige priser, kvalitetskøretøjer og exceptionel kundeservice.",

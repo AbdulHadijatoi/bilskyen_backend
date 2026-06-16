@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
+use App\Constants\VehicleListStatus;
 use App\Models\Category;
 use App\Models\ListingType;
 use App\Models\PriceType;
@@ -59,6 +60,11 @@ class HomeController extends Controller
             'modelYears' => $modelYears,
         ];
 
+        $publishedVehicleCount = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->count();
+        $listingTypes = $this->lookupService->getListingTypes()
+            ->filter(fn ($lt) => (int) $lt->id !== 2)
+            ->values();
+
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
             'vehicle.images',
@@ -111,6 +117,9 @@ class HomeController extends Controller
             'featuredVehicles' => $featuredVehicles,
             'homePageContent' => $homePageContent,
             'seo' => $seo,
+            'publishedVehicleCount' => $publishedVehicleCount,
+            'listingTypes' => $listingTypes,
+            'currentYear' => $currentYear,
         ]);
     }
 

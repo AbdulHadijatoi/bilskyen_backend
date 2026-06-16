@@ -181,199 +181,677 @@
             max-width: calc((min(100vw, 1316px) - 5rem) / 3);
         }
     }
+
+    /* Home filter form */
+    .home-filter-card {
+        border-radius: 1.25rem;
+    }
+
+    .home-filter-intro {
+        margin-bottom: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .home-filter-intro {
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .home-filter-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .home-filter-pill {
+        border-radius: 9999px;
+    }
+
+    .home-filter-pill-btn {
+        display: inline-flex;
+        height: 2.5rem;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 9999px;
+        border: 0;
+        background-color: #f0f1f3;
+        padding: 0 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground, #111);
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .home-filter-pill-btn:hover:not(:disabled) {
+        background-color: #e4e6ea;
+    }
+
+    .home-filter-pill-btn:focus-visible {
+        outline: none;
+        background-color: #e4e6ea;
+    }
+
+    .home-filter-pill-btn.is-open {
+        background-color: #dcdee3;
+    }
+
+    .home-filter-pill-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        background-color: #eceef1;
+        color: var(--muted-foreground, #6b7280);
+    }
+
+    .home-filter-search-input {
+        height: 2.5rem;
+        width: 100%;
+        border-radius: 9999px;
+        border: 0;
+        background-color: #f0f1f3;
+        padding: 0 1.25rem 0 2.75rem;
+        font-size: 0.9375rem;
+        color: var(--foreground, #111);
+        outline: none;
+        transition: background-color 0.15s ease;
+    }
+
+    .home-filter-search-input::placeholder {
+        color: var(--muted-foreground, #6b7280);
+    }
+
+    .home-filter-search-input:hover {
+        background-color: #e4e6ea;
+    }
+
+    .home-filter-search-input:focus {
+        background-color: #dcdee3;
+    }
+
+    .home-filter-cta {
+        display: inline-flex;
+        min-height: 2.5rem;
+        width: auto;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        border: 0;
+        background-color: var(--primary, #004aad);
+        padding: 0.5rem 1.125rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary-foreground, #fff);
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.15s ease;
+    }
+
+    .home-filter-cta:hover {
+        background-color: color-mix(in oklch, var(--primary, #004aad) 88%, #000);
+    }
+
+    .home-filter-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eceef1;
+    }
+
+    .home-filter-footer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1rem;
+        margin-left: auto;
+    }
+
+    .home-filter-top {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @media (min-width: 1024px) {
+        .home-filter-top {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+    }
+
+    .home-filter-brand-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.625rem;
+        flex-shrink: 0;
+    }
+
+    .home-filter-brand {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--foreground, #111);
+    }
+
+    .home-filter-tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9999px;
+        background-color: color-mix(in oklch, var(--primary, #004aad) 12%, #fff);
+        padding: 0.25rem 0.625rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--primary, #004aad);
+    }
+
+    .home-filter-search-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    @media (min-width: 1024px) {
+        .home-filter-search-row {
+            max-width: 28rem;
+            margin-left: auto;
+        }
+    }
+
+    .home-filter-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem 1rem;
+        margin-top: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eceef1;
+    }
+
+    .home-filter-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .home-filter-hide-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-foreground, #6b7280);
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+
+    .home-filter-hide-btn:hover {
+        color: var(--foreground, #111);
+    }
+
+    .home-filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.875rem;
+        min-height: 0;
+    }
+
+    .home-filter-chips:empty {
+        display: none;
+    }
+
+    .home-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        border: 0;
+        border-radius: 9999px;
+        background-color: #f0f1f3;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--foreground, #111);
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .home-filter-chip:hover {
+        background-color: #e4e6ea;
+    }
+
+    .home-filter-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem 1.5rem;
+        margin-top: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .home-filter-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .home-filter-results-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9999px;
+        background-color: color-mix(in oklch, var(--primary, #004aad) 12%, #fff);
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--primary, #004aad);
+        white-space: nowrap;
+    }
+
+    .home-filter-tab {
+        border: 0;
+        background: transparent;
+        padding: 0.25rem 0;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--muted-foreground, #6b7280);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .home-filter-tab:hover {
+        color: var(--foreground, #111);
+    }
+
+    .home-filter-tab.active {
+        color: var(--primary, #004aad);
+        font-weight: 700;
+        border-bottom-color: var(--primary, #004aad);
+    }
+
+    .home-filter-field-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    .home-filter-range-box {
+        border: 0;
+        border-radius: 0;
+        background-color: transparent;
+        padding: 0.25rem 0 0;
+    }
+
+    .home-filter-dropdown-menu {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 0.25rem);
+        z-index: 60;
+        width: 100%;
+        border: 0;
+        border-radius: 0.75rem;
+        background-color: #fff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        max-height: 300px;
+        overflow: hidden;
+    }
+
+    .home-filter-dropdown-menu.is-open {
+        display: block;
+    }
+
+    .home-filter-dropdown-menu .dropdown-search {
+        border: 0;
+        background-color: #f0f1f3;
+        border-radius: 0.5rem;
+    }
+
+    .home-filter-dropdown-menu .dropdown-search:focus {
+        background-color: #e4e6ea;
+        outline: none;
+    }
+
+    .home-filter-dropdown-menu .dropdown-option:hover {
+        background-color: #f0f1f3;
+    }
+
+    .home-filter-range-handle {
+        position: absolute;
+        top: -0.625rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        border: 2px solid #fff;
+        background-color: #4b5563;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15);
+        cursor: pointer;
+        z-index: 30;
+    }
+
+    .home-filter-range-tooltip {
+        position: absolute;
+        bottom: calc(100% + 0.5rem);
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 0.375rem;
+        background-color: #111827;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #fff;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.12s ease, visibility 0.12s ease;
+    }
+
+    .home-filter-range-handle.is-active .home-filter-range-tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .home-filter-range-track-wrap {
+        position: relative;
+        padding: 1.75rem 0.25rem 0;
+    }
+
+    .home-filter-range-rail {
+        position: relative;
+        height: 2px;
+        margin: 0;
+        border-radius: 9999px;
+        background-color: #d1d5db;
+    }
+
+    .home-filter-range-input {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 1.75rem;
+        margin: 0;
+        transform: translateY(-50%);
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .home-filter-range-fill {
+        position: absolute;
+        height: 2px;
+        border-radius: 9999px;
+        background-color: #6b7280;
+    }
+
+    .home-filter-range-input-max {
+        z-index: 20;
+    }
+
+    #home-filters-panel.is-collapsed {
+        display: none;
+    }
+
+    [data-dropdown] {
+        position: relative;
+        z-index: 1;
+    }
+
+    [data-dropdown]:has(.home-filter-dropdown-menu.is-open) {
+        z-index: 70;
+    }
 </style>
 @endpush
 
 @section('content')
+@php
+    $vehicleCountFormatted = number_format($publishedVehicleCount ?? 0, 0, ',', '.');
+    $homeYearMin = 1975;
+    $homeYearMax = ($currentYear ?? (int) date('Y')) + 1;
+    $searchDescription = $homePageContent['search_description'] ?? __('messages.pages.home.description');
+@endphp
 <div class="flex min-h-screen flex-col pt-0">
     <!-- Search Section -->
-    <section class="relative bg-gray-100 py-12 md:py-16">
-    
+    <section class="relative bg-gray-100 py-8 md:py-12">
         <div class="container mx-auto px-4 md:px-6">
-            <div class="mb-6">
-                <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">
-                    {{ $homePageContent['search_title'] ?? __('messages.pages.home.title') }}
-                </h1>
-            </div>
-            <div class="rounded-lg bg-card p-4 md:p-6 shadow-lg">
-                <p class="text-muted-foreground text-base md:text-lg mb-4">
-                    {{ $homePageContent['search_description'] ?? __('messages.pages.home.description') }}
-                </p>
-
-                <div class="flex flex-col gap-4">
-                <!-- First Row: 4 Dropdown Fields (equal width) -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <!-- Brand Dropdown (multi-select) -->
-                    <div class="relative flex-1" data-dropdown="brand" data-multiselect="true">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.brand') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
-                            <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                            </div>
-                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
-                                <!-- Options loaded on-demand via /api/v1/brands -->
-                            </div>
-                        </div>
-                        <div class="dropdown-values-container" data-name="brand_id[]"></div>
-                        </div>
-
-                    <!-- Model Dropdown (multi-select) -->
-                    <div class="relative flex-1" data-dropdown="model" data-multiselect="true">
-                        <button type="button" id="model-dropdown-button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <span class="dropdown-selected">{{ __('messages.forms.model') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
-                            <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                            </div>
-                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
-                                <!-- Options loaded on-demand via /api/v1/listing-models -->
-                            </div>
-                        </div>
-                        <div class="dropdown-values-container" data-name="model_id[]"></div>
-                        </div>
-
-                    <!-- Model Year Dropdown (multi-select) -->
-                    <div class="relative flex-1" data-dropdown="model_year" data-multiselect="true">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.model_year') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
-                            <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="{{ __('messages.forms.search_year') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                            </div>
-                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_years') }}</button>
-                                @foreach($filterOptions['modelYears'] as $modelYear)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $modelYear->id }}" data-text="{{ $modelYear->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $modelYear->name }}</button>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="dropdown-values-container" data-name=""></div>
-                        </div>
-
-                    <!-- Fuel Type Dropdown (multi-select) -->
-                    <div class="relative flex-1" data-dropdown="fuel_type" data-multiselect="true">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.fuel_type') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[200px] rounded-md border border-border bg-background shadow-lg max-h-[300px] overflow-hidden">
-                            <div class="p-2 border-b border-border">
-                                <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                            </div>
-                            <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_fuel_types') }}</button>
-                                @foreach($filterOptions['fuelTypes'] as $fuelType)
-                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="{{ $fuelType->id }}" data-text="{{ $fuelType->name }}"><span class="dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0">✓</span>{{ $fuelType->name }}</button>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="dropdown-values-container" data-name="fuel_type_id[]"></div>
-                    </div>
-                        </div>
-
-                <!-- Second Row: Price, KM Driven + Search Button (equal width) -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <!-- Price Dropdown (with range slider) -->
-                    <div class="relative flex-1" data-dropdown="price">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.price') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
-                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.price_range') }}</label>
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="flex-1">
-                                    <input type="number" id="price-from-dropdown" name="price_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="5000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
-                                </div>
-                                <span class="text-muted-foreground/60 text-sm">–</span>
-                                <div class="flex-1">
-                                    <input type="number" id="price-to-dropdown" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="5000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
-                                </div>
-                            </div>
-                            <div class="relative px-1">
-                                <div class="relative h-0.5 bg-muted rounded-full">
-                                    <div id="price-range-track-dropdown" class="absolute h-0.5 bg-primary rounded-full"></div>
-                                    <input type="range" id="price-slider-min-dropdown" min="0" max="5000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
-                                    <input type="range" id="price-slider-max-dropdown" min="0" max="5000000" step="1000" value="5000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
-                                    <div id="price-handle-min-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
-                                    <div id="price-handle-max-dropdown" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-
-                    <!-- KM Driven Dropdown (with range slider) -->
-                    <div class="relative flex-1" data-dropdown="km_driven">
-                        <button type="button" class="inline-flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <span class="dropdown-selected">{{ __('messages.forms.km_driven') }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 opacity-50">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu absolute z-50 mt-1 hidden w-full sm:min-w-[300px] rounded-md border border-border bg-background shadow-lg p-3 sm:p-4">
-                            <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2.5 block">{{ __('messages.forms.km_driven_range') }}</label>
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="flex-1">
-                                    <input type="number" id="km-driven-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="2000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
-                                </div>
-                                <span class="text-muted-foreground/60 text-sm">–</span>
-                                <div class="flex-1">
-                                    <input type="number" id="km-driven-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="2000000" value="" class="w-full h-9 border-0 border-b border-border bg-transparent px-0 py-2 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0 transition-colors">
-                                </div>
-                            </div>
-                            <div class="relative px-1">
-                                <div class="relative h-0.5 bg-muted rounded-full">
-                                    <div id="km-driven-range-track" class="absolute h-0.5 bg-primary rounded-full"></div>
-                                    <input type="range" id="km-driven-slider-min" min="0" max="2000000" step="1000" value="0" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-10">
-                                    <input type="range" id="km-driven-slider-max" min="0" max="2000000" step="1000" value="2000000" class="absolute w-full h-0.5 opacity-0 cursor-pointer z-20">
-                                    <div id="km-driven-handle-min" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
-                                    <div id="km-driven-handle-max" class="absolute w-6 h-6 bg-primary rounded-full border-2 border-background shadow-sm -top-2.5 cursor-pointer z-30"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Search Button -->
-                    <form method="GET" action="/vehicles" id="filter-form" class="flex-1">
-                        <button type="submit" class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.3-4.3"></path>
-                                </svg>
-                                {{ __('messages.common.search') }}
-                        </button>
-                    </form>
+            <div class="home-filter-card rounded-2xl bg-card p-5 md:p-8 shadow-lg">
+                <div class="home-filter-intro">
+                    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                        {{ $homePageContent['search_title'] ?? __('messages.pages.home.title') }}
+                    </h1>
+                    @if(filled($searchDescription))
+                        <p class="mt-2 text-sm text-muted-foreground md:mt-2.5 md:text-base">
+                            {{ $searchDescription }}
+                        </p>
+                    @endif
                 </div>
 
-                <!-- Third Row: Reset Filters + Advanced Filters -->
-                <div class="flex flex-col sm:flex-row justify-start sm:justify-end items-center gap-3 sm:gap-4">
-                    <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
-                        {{ __('messages.pages.vehicles.reset_filters') }}
+                <form method="GET" action="/vehicles" id="filter-form">
+                <div class="home-filter-top">
+                    <div class="home-filter-brand-row">
+                        <span class="home-filter-brand">Bilskyen</span>
+                        <span class="home-filter-tag">{{ __('messages.pages.home.tagline') }}</span>
+                    </div>
+                    <div class="home-filter-search-row">
+                        <div class="home-filter-field relative min-w-0 flex-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </svg>
+                            <input
+                                type="search"
+                                id="home-search-input"
+                                name="search"
+                                class="home-filter-search-input"
+                                placeholder="{{ __('messages.pages.home.search_placeholder') }}"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <button type="submit" class="home-filter-cta">
+                            {{ __('messages.common.search') }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="home-filter-toolbar">
+                    <div class="home-filter-tabs">
+                        <button type="button" class="home-filter-tab active" data-listing-type="">
+                            {{ __('messages.pages.home.all_cars') }}
+                        </button>
+                        @foreach($listingTypes ?? [] as $listingType)
+                            <button type="button" class="home-filter-tab" data-listing-type="{{ $listingType->id }}">
+                                {{ $listingType->name }}
+                            </button>
+                        @endforeach
+                    </div>
+                    <button
+                        type="button"
+                        id="toggle-filters-button"
+                        class="home-filter-hide-btn"
+                        data-hide-label="{{ __('messages.pages.home.hide_filters') }}"
+                        data-show-label="{{ __('messages.pages.home.show_filters') }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" x2="4" y1="21" y2="14"></line>
+                            <line x1="4" x2="4" y1="10" y2="3"></line>
+                            <line x1="12" x2="12" y1="21" y2="12"></line>
+                            <line x1="12" x2="12" y1="8" y2="3"></line>
+                            <line x1="20" x2="20" y1="21" y2="16"></line>
+                            <line x1="20" x2="20" y1="12" y2="3"></line>
+                            <line x1="2" x2="6" y1="14" y2="14"></line>
+                            <line x1="10" x2="14" y1="8" y2="8"></line>
+                            <line x1="18" x2="22" y1="16" y2="16"></line>
+                        </svg>
+                        <span class="home-filter-hide-btn-label">{{ __('messages.pages.home.hide_filters') }}</span>
                     </button>
-                    <a href="/vehicles" class="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                        {{ __('messages.pages.vehicles.advanced_filters') }}
-                    </a>
                 </div>
+                <div id="home-listing-type-inputs" data-name="listing_type_id[]"></div>
+
+                <div id="home-filters-panel" class="mt-0">
+                    <div id="home-filter-chips" class="home-filter-chips" aria-live="polite"></div>
+
+                    <div class="home-filter-grid">
+                        <div class="home-filter-field">
+                            <label class="home-filter-field-label">{{ __('messages.forms.brand') }}</label>
+                            <div class="relative" data-dropdown="brand" data-multiselect="true">
+                                <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_brands') }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
+                                    </div>
+                                </div>
+                                <div class="dropdown-values-container" data-name="brand_id[]"></div>
+                            </div>
+                        </div>
+
+                        <div class="home-filter-field">
+                            <label class="home-filter-field-label">{{ __('messages.forms.model') }}</label>
+                            <div class="relative" data-dropdown="model" data-multiselect="true">
+                                <button type="button" id="model-dropdown-button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_models') }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
+                                    </div>
+                                </div>
+                                <div class="dropdown-values-container" data-name="model_id[]"></div>
+                            </div>
+                        </div>
+
+                        <div class="home-filter-field">
+                            <label class="home-filter-field-label">{{ __('messages.forms.fuel_type') }}</label>
+                            <div class="relative" data-dropdown="fuel_type" data-multiselect="true">
+                                <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_fuel_types') }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                    </div>
+                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_fuel_types') }}</button>
+                                    </div>
+                                </div>
+                                <div class="dropdown-values-container" data-name="fuel_type_id[]"></div>
+                            </div>
+                        </div>
+
+                        <div class="home-filter-field" data-filter-range="price">
+                            <label class="home-filter-field-label">{{ __('messages.forms.price') }}</label>
+                            <input type="hidden" id="price-from-dropdown" name="price_from" value="">
+                            <input type="hidden" id="price-to-dropdown" name="price_to" value="">
+                            <div class="home-filter-range-box">
+                                <div class="home-filter-range-track-wrap">
+                                    <div class="home-filter-range-rail">
+                                        <div id="price-range-track-dropdown" class="home-filter-range-fill"></div>
+                                        <input type="range" id="price-slider-min-dropdown" min="0" max="5000000" step="1000" value="0" class="home-filter-range-input">
+                                        <input type="range" id="price-slider-max-dropdown" min="0" max="5000000" step="1000" value="5000000" class="home-filter-range-input home-filter-range-input-max">
+                                        <div id="price-handle-min-dropdown" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                        <div id="price-handle-max-dropdown" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="home-filter-field" data-filter-range="km_driven">
+                            <label class="home-filter-field-label">{{ __('messages.forms.km_driven') }}</label>
+                            <input type="hidden" id="km-driven-from" name="km_driven_from" value="">
+                            <input type="hidden" id="km-driven-to" name="km_driven_to" value="">
+                            <div class="home-filter-range-box">
+                                <div class="home-filter-range-track-wrap">
+                                    <div class="home-filter-range-rail">
+                                        <div id="km-driven-range-track" class="home-filter-range-fill"></div>
+                                        <input type="range" id="km-driven-slider-min" min="0" max="200000" step="1000" value="0" class="home-filter-range-input">
+                                        <input type="range" id="km-driven-slider-max" min="0" max="200000" step="1000" value="200000" class="home-filter-range-input home-filter-range-input-max">
+                                        <div id="km-driven-handle-min" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                        <div id="km-driven-handle-max" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="home-filter-field" data-filter-range="model_year">
+                            <label class="home-filter-field-label">{{ __('messages.forms.model_year') }}</label>
+                            <input type="hidden" id="model-year-from" value="">
+                            <input type="hidden" id="model-year-to" value="">
+                            <div class="home-filter-range-box">
+                                <div class="home-filter-range-track-wrap">
+                                    <div class="home-filter-range-rail">
+                                        <div id="model-year-range-track" class="home-filter-range-fill"></div>
+                                        <input type="range" id="model-year-slider-min" min="{{ $homeYearMin }}" max="{{ $homeYearMax }}" step="1" value="{{ $homeYearMin }}" class="home-filter-range-input">
+                                        <input type="range" id="model-year-slider-max" min="{{ $homeYearMin }}" max="{{ $homeYearMax }}" step="1" value="{{ $homeYearMax }}" class="home-filter-range-input home-filter-range-input-max">
+                                        <div id="model-year-handle-min" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                        <div id="model-year-handle-max" class="home-filter-range-handle">
+                                            <span class="home-filter-range-tooltip" aria-hidden="true"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="home-filter-footer">
+                        <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
+                            {{ __('messages.pages.vehicles.reset_filters') }}
+                        </button>
+                        <div class="home-filter-footer-actions">
+                            <a href="/vehicles" class="text-sm font-medium text-primary hover:underline">
+                                {{ __('messages.pages.vehicles.advanced_filters') }}
+                            </a>
+                            <span id="home-results-badge" class="home-filter-results-badge">
+                                {{ __('messages.pages.home.results_count', ['count' => $vehicleCountFormatted]) }}
+                            </span>
+                            <button type="submit" class="home-filter-cta">
+                                {{ __('messages.pages.home.show_results') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                </form>
             </div>
         </div>
     </section>
@@ -828,11 +1306,240 @@
 
     // Searchable Dropdowns Functionality
     const DEFAULT_DROPDOWN_LABELS = {
-        'brand': '{{ __('messages.forms.brand') }}',
-        'model': '{{ __('messages.forms.model') }}',
-        'model_year': '{{ __('messages.forms.model_year') }}',
-        'fuel_type': '{{ __('messages.forms.fuel_type') }}'
+        'brand': '{{ __('messages.forms.all_brands') }}',
+        'model': '{{ __('messages.forms.all_models') }}',
+        'fuel_type': '{{ __('messages.forms.all_fuel_types') }}'
     };
+
+    const HOME_YEAR_MIN = {{ $homeYearMin }};
+    const HOME_YEAR_MAX = {{ $homeYearMax }};
+    const HOME_BEFORE_YEAR_LABEL = @json(__('messages.pages.home.before_year', ['year' => 1980]));
+
+    function formatHomeNumber(value) {
+        return new Intl.NumberFormat('da-DK').format(Math.round(value));
+    }
+
+    function formatPriceRangeChip(min, max) {
+        const minLabel = min <= 0 ? '0 kr.' : `${formatHomeNumber(min)} kr.`;
+        const maxLabel = max >= 5000000 ? '1.000.000+ kr.' : `${formatHomeNumber(max)} kr.`;
+        return `${minLabel} – ${maxLabel}`;
+    }
+
+    function formatKmRangeChip(min, max) {
+        const minLabel = min <= 0 ? '0 km.' : `${formatHomeNumber(min)} km.`;
+        const maxLabel = max >= 200000 ? '200.000+ km.' : `${formatHomeNumber(max)} km.`;
+        return `${minLabel} – ${maxLabel}`;
+    }
+
+    function formatYearRangeChip(min, max) {
+        const minLabel = min <= HOME_YEAR_MIN ? HOME_BEFORE_YEAR_LABEL : String(Math.round(min));
+        const maxLabel = max >= HOME_YEAR_MAX ? String(HOME_YEAR_MAX) : String(Math.round(max));
+        return `${minLabel} – ${maxLabel}`;
+    }
+
+    function formatPriceHandleValue(value, isMin) {
+        if (isMin && value <= 0) return '0 kr.';
+        if (!isMin && value >= 5000000) return '1.000.000+ kr.';
+        return `${formatHomeNumber(value)} kr.`;
+    }
+
+    function formatKmHandleValue(value, isMin) {
+        if (isMin && value <= 0) return '0 km.';
+        if (!isMin && value >= 200000) return '200.000+ km.';
+        return `${formatHomeNumber(value)} km.`;
+    }
+
+    function formatYearHandleValue(value, isMin) {
+        if (isMin && value <= HOME_YEAR_MIN) return HOME_BEFORE_YEAR_LABEL;
+        if (!isMin && value >= HOME_YEAR_MAX) return String(HOME_YEAR_MAX);
+        return String(Math.round(value));
+    }
+
+    function updateHomeFilterChips() {
+        const container = document.getElementById('home-filter-chips');
+        if (!container) return;
+
+        const chips = [];
+        const priceFrom = document.getElementById('price-from-dropdown')?.value;
+        const priceTo = document.getElementById('price-to-dropdown')?.value;
+        if (priceFrom || priceTo) {
+            const minSlider = document.getElementById('price-slider-min-dropdown');
+            const maxSlider = document.getElementById('price-slider-max-dropdown');
+            const finalMin = parseFloat(minSlider?.value) || 0;
+            const finalMax = parseFloat(maxSlider?.value) || 5000000;
+            chips.push({
+                key: 'price',
+                label: formatPriceRangeChip(finalMin, finalMax),
+                onRemove: () => {
+                    const minSlider = document.getElementById('price-slider-min-dropdown');
+                    const maxSlider = document.getElementById('price-slider-max-dropdown');
+                    if (minSlider) minSlider.value = '0';
+                    if (maxSlider) maxSlider.value = '5000000';
+                    minSlider?.dispatchEvent(new Event('input'));
+                },
+            });
+        }
+
+        const kmFrom = document.getElementById('km-driven-from')?.value;
+        const kmTo = document.getElementById('km-driven-to')?.value;
+        if (kmFrom || kmTo) {
+            const minSlider = document.getElementById('km-driven-slider-min');
+            const maxSlider = document.getElementById('km-driven-slider-max');
+            const finalMin = parseFloat(minSlider?.value) || 0;
+            const finalMax = parseFloat(maxSlider?.value) || 200000;
+            chips.push({
+                key: 'km',
+                label: formatKmRangeChip(finalMin, finalMax),
+                onRemove: () => {
+                    const minSlider = document.getElementById('km-driven-slider-min');
+                    const maxSlider = document.getElementById('km-driven-slider-max');
+                    if (minSlider) minSlider.value = '0';
+                    if (maxSlider) maxSlider.value = '200000';
+                    minSlider?.dispatchEvent(new Event('input'));
+                },
+            });
+        }
+
+        const yearFrom = document.getElementById('model-year-from')?.value;
+        const yearTo = document.getElementById('model-year-to')?.value;
+        if (yearFrom || yearTo) {
+            const minSlider = document.getElementById('model-year-slider-min');
+            const maxSlider = document.getElementById('model-year-slider-max');
+            const finalMin = parseFloat(minSlider?.value) || HOME_YEAR_MIN;
+            const finalMax = parseFloat(maxSlider?.value) || HOME_YEAR_MAX;
+            chips.push({
+                key: 'year',
+                label: formatYearRangeChip(finalMin, finalMax),
+                onRemove: () => {
+                    const minSlider = document.getElementById('model-year-slider-min');
+                    const maxSlider = document.getElementById('model-year-slider-max');
+                    if (minSlider) minSlider.value = String(HOME_YEAR_MIN);
+                    if (maxSlider) maxSlider.value = String(HOME_YEAR_MAX);
+                    minSlider?.dispatchEvent(new Event('input'));
+                },
+            });
+        }
+
+        const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+        if (brandDropdown) {
+            getMultiSelectValues(brandDropdown).forEach(id => {
+                const opt = brandDropdown.querySelector(`.dropdown-option.selected[data-value="${id}"]`);
+                const label = opt?.getAttribute('data-text') || id;
+                chips.push({
+                    key: `brand-${id}`,
+                    label,
+                    onRemove: () => {
+                        opt?.classList.remove('selected');
+                        syncMultiSelectInputs(brandDropdown);
+                        updateMultiSelectButtonText(brandDropdown);
+                        filterModelsByBrand(getMultiSelectValues(brandDropdown));
+                        updateHomeFilterChips();
+                    },
+                });
+            });
+        }
+
+        const modelDropdown = document.querySelector('[data-dropdown="model"]');
+        if (modelDropdown) {
+            getMultiSelectValues(modelDropdown).forEach(id => {
+                const opt = modelDropdown.querySelector(`.dropdown-option.selected[data-value="${id}"]`);
+                const label = opt?.getAttribute('data-text') || id;
+                chips.push({
+                    key: `model-${id}`,
+                    label,
+                    onRemove: () => {
+                        opt?.classList.remove('selected');
+                        syncMultiSelectInputs(modelDropdown);
+                        updateMultiSelectButtonText(modelDropdown);
+                        updateHomeFilterChips();
+                    },
+                });
+            });
+        }
+
+        const fuelDropdown = document.querySelector('[data-dropdown="fuel_type"]');
+        if (fuelDropdown) {
+            getMultiSelectValues(fuelDropdown).forEach(id => {
+                const opt = fuelDropdown.querySelector(`.dropdown-option.selected[data-value="${id}"]`);
+                const label = opt?.getAttribute('data-text') || id;
+                chips.push({
+                    key: `fuel-${id}`,
+                    label,
+                    onRemove: () => {
+                        opt?.classList.remove('selected');
+                        syncMultiSelectInputs(fuelDropdown);
+                        updateMultiSelectButtonText(fuelDropdown);
+                        updateHomeFilterChips();
+                    },
+                });
+            });
+        }
+
+        const activeListingTab = document.querySelector('.home-filter-tab.active[data-listing-type]:not([data-listing-type=""])');
+        if (activeListingTab) {
+            chips.push({
+                key: 'listing-type',
+                label: activeListingTab.textContent.trim(),
+                onRemove: () => {
+                    document.querySelectorAll('.home-filter-tab').forEach(tab => {
+                        tab.classList.toggle('active', tab.getAttribute('data-listing-type') === '');
+                    });
+                    syncListingTypeInput('');
+                    updateHomeFilterChips();
+                },
+            });
+        }
+
+        container.innerHTML = '';
+        chips.forEach(chip => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'home-filter-chip';
+            btn.innerHTML = `<span>${chip.label}</span><span aria-hidden="true">×</span>`;
+            btn.addEventListener('click', chip.onRemove);
+            container.appendChild(btn);
+        });
+    }
+
+    function syncListingTypeInput(listingTypeId) {
+        const container = document.getElementById('home-listing-type-inputs');
+        if (!container) return;
+        container.innerHTML = '';
+        if (!listingTypeId) return;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = container.getAttribute('data-name');
+        input.value = listingTypeId;
+        container.appendChild(input);
+    }
+
+    function initListingTypeTabs() {
+        const tabs = document.querySelectorAll('.home-filter-tab[data-listing-type]');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                syncListingTypeInput(tab.getAttribute('data-listing-type') || '');
+                updateHomeFilterChips();
+            });
+        });
+    }
+
+    function initFilterPanelToggle() {
+        const toggleButton = document.getElementById('toggle-filters-button');
+        const panel = document.getElementById('home-filters-panel');
+        if (!toggleButton || !panel) return;
+
+        toggleButton.addEventListener('click', () => {
+            const isCollapsed = panel.classList.toggle('is-collapsed');
+            const label = toggleButton.querySelector('.home-filter-hide-btn-label');
+            if (label) {
+                label.textContent = isCollapsed
+                    ? toggleButton.getAttribute('data-show-label')
+                    : toggleButton.getAttribute('data-hide-label');
+            }
+        });
+    }
 
     function getMultiSelectValues(dropdown) {
         const options = dropdown.querySelectorAll('.dropdown-option[data-value]:not([data-value=""])');
@@ -875,171 +1582,169 @@
         }
     }
 
+    function closeAllDropdownMenus(exceptDropdown = null) {
+        document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
+            if (exceptDropdown && dropdown === exceptDropdown) return;
+            const menu = dropdown.querySelector('.dropdown-menu');
+            const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+            if (menu) menu.classList.remove('is-open');
+            if (trigger) trigger.classList.remove('is-open');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    function openDropdownMenu(dropdown) {
+        const menu = dropdown.querySelector('.dropdown-menu');
+        const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+        if (!menu || !trigger || trigger.disabled) return;
+
+        closeAllDropdownMenus(dropdown);
+        menu.classList.add('is-open');
+        trigger.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDropdownMenu(dropdown) {
+        const menu = dropdown.querySelector('.dropdown-menu');
+        const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+        if (menu) menu.classList.remove('is-open');
+        if (trigger) trigger.classList.remove('is-open');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+
     function initSearchableDropdowns() {
         const dropdowns = document.querySelectorAll('[data-dropdown]');
-        
+
         dropdowns.forEach(dropdown => {
-            const button = dropdown.querySelector('button');
+            const dropdownType = dropdown.getAttribute('data-dropdown');
+            const trigger = dropdown.querySelector('[data-dropdown-trigger]');
             const menu = dropdown.querySelector('.dropdown-menu');
+            if (!trigger || !menu) return;
+
             const searchInput = dropdown.querySelector('.dropdown-search');
-            const options = dropdown.querySelectorAll('.dropdown-option');
             const valuesContainer = dropdown.querySelector('.dropdown-values-container');
             const selectedText = dropdown.querySelector('.dropdown-selected');
-            const dropdownType = dropdown.getAttribute('data-dropdown');
             const isMultiSelect = dropdown.getAttribute('data-multiselect') === 'true';
-            
-            // Toggle menu
-            button.addEventListener('click', (e) => {
+
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                if (button.disabled) return;
-                dropdowns.forEach(d => {
-                    if (d !== dropdown) d.querySelector('.dropdown-menu').classList.add('hidden');
-                });
-                menu.classList.toggle('hidden');
-                if (!menu.classList.contains('hidden')) {
-                    if (dropdownType === 'model') {
-                        const brandDropdown = document.querySelector('[data-dropdown="brand"]');
-                        const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
-                        filterModelsByBrand(brandIds);
-                    }
-                    if (searchInput) {
-                        searchInput.value = '';
-                        searchInput.dispatchEvent(new Event('input'));
-                        setTimeout(() => searchInput.focus(), 50);
-                    }
+                if (trigger.disabled) return;
+
+                const isOpen = menu.classList.contains('is-open');
+                if (isOpen) {
+                    closeDropdownMenu(dropdown);
+                    return;
+                }
+
+                openDropdownMenu(dropdown);
+
+                if (dropdownType === 'brand') {
+                    loadBrandOptions(searchInput?.value || '');
+                } else if (dropdownType === 'model') {
+                    const brandDropdown = document.querySelector('[data-dropdown="brand"]');
+                    const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
+                    filterModelsByBrand(brandIds);
+                } else if (dropdownType === 'fuel_type') {
+                    loadFuelTypeOptions(searchInput?.value || '');
+                }
+
+                if (searchInput) {
+                    setTimeout(() => searchInput.focus(), 50);
                 }
             });
-            
+
             if (searchInput) {
+                searchInput.addEventListener('click', (e) => e.stopPropagation());
                 searchInput.addEventListener('input', (e) => {
                     const rawTerm = e.target.value || '';
-                    const searchTerm = rawTerm.toLowerCase();
                     if (dropdownType === 'brand') {
                         loadBrandOptions(rawTerm);
                     } else if (dropdownType === 'model') {
                         const brandDropdown = document.querySelector('[data-dropdown="brand"]');
                         const brandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];
                         filterModelsByBrand(brandIds);
+                    } else if (dropdownType === 'fuel_type') {
+                        loadFuelTypeOptions(rawTerm);
                     } else {
-                        options.forEach(option => {
+                        const searchTerm = rawTerm.toLowerCase();
+                        dropdown.querySelectorAll('.dropdown-option').forEach(option => {
                             const text = (option.getAttribute('data-text') || option.textContent).toLowerCase();
                             option.style.display = text.includes(searchTerm) ? '' : 'none';
                         });
                     }
                 });
             }
-            
-            if (dropdownType !== 'price' && dropdownType !== 'km_driven') {
-                const optionsContainer = dropdown.querySelector('.dropdown-options');
-                if (optionsContainer) {
-                    optionsContainer.addEventListener('click', (evt) => {
-                        const option = evt.target.closest('.dropdown-option');
-                        if (!option) return;
-                        evt.preventDefault();
-                        evt.stopPropagation();
 
-                        const value = option.getAttribute('data-value');
-                        const text = option.getAttribute('data-text') || option.textContent.trim();
+            const optionsContainer = dropdown.querySelector('.dropdown-options');
+            if (optionsContainer) {
+                optionsContainer.addEventListener('click', (evt) => {
+                    const option = evt.target.closest('.dropdown-option');
+                    if (!option) return;
+                    evt.preventDefault();
+                    evt.stopPropagation();
 
-                        if (isMultiSelect) {
-                            if (value === '') {
-                                dropdown.querySelectorAll('.dropdown-option.selected').forEach(opt => opt.classList.remove('selected'));
-                                syncMultiSelectInputs(dropdown);
-                                updateMultiSelectButtonText(dropdown);
-                                if (dropdownType === 'brand') filterModelsByBrand([]);
-                                menu.classList.add('hidden');
-                                return;
-                            }
+                    const value = option.getAttribute('data-value');
+                    const text = option.getAttribute('data-text') || option.textContent.trim();
 
-                            option.classList.toggle('selected');
+                    if (isMultiSelect) {
+                        if (value === '') {
+                            dropdown.querySelectorAll('.dropdown-option.selected').forEach(opt => opt.classList.remove('selected'));
                             syncMultiSelectInputs(dropdown);
                             updateMultiSelectButtonText(dropdown);
+                                if (dropdownType === 'brand') filterModelsByBrand([]);
+                                closeDropdownMenu(dropdown);
+                                updateHomeFilterChips();
+                                return;
+                        }
+
+                        option.classList.toggle('selected');
+                        syncMultiSelectInputs(dropdown);
+                        updateMultiSelectButtonText(dropdown);
 
                             if (dropdownType === 'brand') {
-                                const brandIds = getMultiSelectValues(dropdown);
-                                filterModelsByBrand(brandIds);
+                                filterModelsByBrand(getMultiSelectValues(dropdown));
                             }
+                            updateHomeFilterChips();
                             return;
                         }
 
-                        if (valuesContainer) {
-                            valuesContainer.innerHTML = '';
-                            if (value) {
-                                const name = valuesContainer.getAttribute('data-name');
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = name;
-                                input.value = value;
-                                valuesContainer.appendChild(input);
-                            }
+                    if (valuesContainer) {
+                        valuesContainer.innerHTML = '';
+                        if (value) {
+                            const name = valuesContainer.getAttribute('data-name');
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value;
+                            valuesContainer.appendChild(input);
                         }
+                    }
 
-                        if (value === '') {
-                            selectedText.textContent = DEFAULT_DROPDOWN_LABELS[dropdownType] || '{{ __('messages.common.select') }}';
-                        } else {
-                            selectedText.textContent = text;
-                        }
-                        if (dropdownType === 'brand') filterModelsByBrand(value);
-                        menu.classList.add('hidden');
-                    });
-                }
-            }
-            
-            // Update selected text for price and km_driven when range changes
-            if (dropdownType === 'price') {
-                const priceFromInput = document.getElementById('price-from-dropdown');
-                const priceToInput = document.getElementById('price-to-dropdown');
-                
-                const updatePriceText = () => {
-                    const from = priceFromInput?.value;
-                    const to = priceToInput?.value;
-                    if (from || to) {
-                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
-                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
-                        selectedText.textContent = `${fromText} - ${toText}`;
+                    if (value === '') {
+                        selectedText.textContent = DEFAULT_DROPDOWN_LABELS[dropdownType] || '{{ __('messages.common.select') }}';
                     } else {
-                        selectedText.textContent = '{{ __('messages.forms.price') }}';
+                        selectedText.textContent = text;
                     }
-                };
-                
-                if (priceFromInput) priceFromInput.addEventListener('input', updatePriceText);
-                if (priceToInput) priceToInput.addEventListener('input', updatePriceText);
-                updatePriceText();
+                    if (dropdownType === 'brand') filterModelsByBrand(value);
+                    closeDropdownMenu(dropdown);
+                });
             }
-            
-            if (dropdownType === 'km_driven') {
-                const kmFromInput = document.getElementById('km-driven-from');
-                const kmToInput = document.getElementById('km-driven-to');
-                
-                const updateKmText = () => {
-                    const from = kmFromInput?.value;
-                    const to = kmToInput?.value;
-                    if (from || to) {
-                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
-                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
-                        selectedText.textContent = `${fromText} - ${toText} km`;
-                    } else {
-                        selectedText.textContent = '{{ __('messages.forms.km_driven') }}';
-                    }
-                };
-                
-                if (kmFromInput) kmFromInput.addEventListener('input', updateKmText);
-                if (kmToInput) kmToInput.addEventListener('input', updateKmText);
-                updateKmText();
-            }
-            
-            // Close on outside click
-            document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target)) {
-                    menu.classList.add('hidden');
-                }
-            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-dropdown]')) return;
+            closeAllDropdownMenus();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAllDropdownMenus();
         });
     }
     
-    const LOOKUP_LIMIT = 25;
     let brandsFetchToken = 0;
     let modelsFetchToken = 0;
+    let fuelTypesFetchToken = 0;
 
     async function loadBrandOptions(searchTerm) {
         const brandDropdown = document.querySelector('[data-dropdown="brand"]');
@@ -1064,8 +1769,8 @@
 
         const term = (searchTerm || '').trim();
         const url = new URL('/api/v1/brands', window.location.origin);
+        url.searchParams.set('listing', '1');
         if (term !== '') url.searchParams.set('search', term);
-        url.searchParams.set('limit', String(LOOKUP_LIMIT));
 
         try {
             const response = await fetch(url.toString(), {
@@ -1137,6 +1842,91 @@
         }
     }
 
+    async function loadFuelTypeOptions(searchTerm) {
+        const fuelDropdown = document.querySelector('[data-dropdown="fuel_type"]');
+        if (!fuelDropdown) return;
+
+        const optionsContainer = fuelDropdown.querySelector('.dropdown-options');
+        if (!optionsContainer) return;
+
+        const defaultOption = fuelDropdown.querySelector('.dropdown-option[data-value=""]');
+        const selectedMeta = {};
+        fuelDropdown.querySelectorAll('.dropdown-option.selected[data-value]:not([data-value=""])').forEach(opt => {
+            const id = String(opt.getAttribute('data-value'));
+            selectedMeta[id] = opt.getAttribute('data-text') || opt.textContent.trim();
+        });
+
+        fuelTypesFetchToken++;
+        const token = fuelTypesFetchToken;
+        const term = (searchTerm || '').trim().toLowerCase();
+
+        try {
+            const response = await fetch('/api/v1/constants', {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) return;
+            const json = await response.json().catch(() => ({}));
+            if (token !== fuelTypesFetchToken) return;
+
+            let items = json?.data?.fuel_types || [];
+            if (term !== '') {
+                items = items.filter(item => String(item.name || '').toLowerCase().includes(term));
+            }
+
+            optionsContainer.querySelectorAll('.dropdown-option').forEach(opt => {
+                if (defaultOption && opt === defaultOption) return;
+                if (opt.getAttribute('data-value') === '') return;
+                opt.remove();
+            });
+
+            const resultsIds = new Set();
+            items.forEach(item => {
+                const id = String(item.id);
+                resultsIds.add(id);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                btn.setAttribute('data-value', id);
+                btn.setAttribute('data-text', item.name);
+
+                const check = document.createElement('span');
+                check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                check.textContent = '✓';
+
+                btn.appendChild(check);
+                btn.appendChild(document.createTextNode(item.name));
+
+                if (selectedMeta[id]) btn.classList.add('selected');
+                optionsContainer.appendChild(btn);
+            });
+
+            Object.keys(selectedMeta).forEach(id => {
+                if (resultsIds.has(id)) return;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2';
+                btn.setAttribute('data-value', id);
+                btn.setAttribute('data-text', selectedMeta[id]);
+
+                const check = document.createElement('span');
+                check.className = 'dropdown-option-check opacity-0 w-4 h-4 flex-shrink-0';
+                check.textContent = '✓';
+
+                btn.appendChild(check);
+                btn.appendChild(document.createTextNode(selectedMeta[id]));
+                btn.classList.add('selected');
+                optionsContainer.appendChild(btn);
+            });
+
+            syncMultiSelectInputs(fuelDropdown);
+            updateMultiSelectButtonText(fuelDropdown);
+        } catch (e) {
+            console.debug('Fuel type lookup failed:', e);
+        }
+    }
+
     // Filter models by brand(s) + search (remote, partial dataset)
     function filterModelsByBrand(brandIds) {
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
@@ -1145,42 +1935,20 @@
         const modelButton = document.getElementById('model-dropdown-button');
         const optionsContainer = modelDropdown.querySelector('.dropdown-options');
         const defaultOption = modelDropdown.querySelector('.dropdown-option[data-value=""]');
-        const selectedText = modelDropdown.querySelector('.dropdown-selected');
         const searchInput = modelDropdown.querySelector('.dropdown-search');
 
         const searchTerm = (searchInput?.value || '').trim();
         const ids = Array.isArray(brandIds) ? brandIds : (brandIds === '' || !brandIds ? [] : [String(brandIds)]);
         const brandIdSet = new Set(ids.map(String));
 
-        // No brand selected => disable and clear model options.
-        if (ids.length === 0) {
-            if (modelButton) modelButton.disabled = true;
-            if (selectedText) selectedText.textContent = '{{ __('messages.forms.model') }}';
-
-            // Clear selections + options (keep only the default option).
-            modelDropdown.querySelectorAll('.dropdown-option').forEach(opt => {
-                if (!opt) return;
-                if (opt.getAttribute('data-value') === '') return;
-                opt.classList.remove('selected');
-                opt.remove();
-            });
-
-            syncMultiSelectInputs(modelDropdown);
-            updateMultiSelectButtonText(modelDropdown);
-
-            const menu = modelDropdown.querySelector('.dropdown-menu');
-            if (menu) menu.classList.add('hidden');
-            return;
-        }
-
         if (modelButton) modelButton.disabled = false;
 
-        // Preserve currently selected models that match the allowed brands.
+        // Preserve currently selected models that match the allowed brands (if any).
         const selectedMeta = {};
         modelDropdown.querySelectorAll('.dropdown-option.selected[data-value]:not([data-value=""])').forEach(opt => {
             const id = String(opt.getAttribute('data-value'));
             const bId = String(opt.getAttribute('data-brand-id') || '');
-            if (!brandIdSet.has(bId)) return;
+            if (brandIdSet.size > 0 && !brandIdSet.has(bId)) return;
             selectedMeta[id] = {
                 text: opt.getAttribute('data-text') || opt.textContent.trim(),
                 brandId: bId
@@ -1191,9 +1959,8 @@
         const token = modelsFetchToken;
 
         const url = new URL('/api/v1/listing-models', window.location.origin);
-        url.searchParams.set('limit', String(LOOKUP_LIMIT));
         if (searchTerm !== '') url.searchParams.set('search', searchTerm);
-        url.searchParams.set('brand_ids', ids.join(','));
+        if (ids.length > 0) url.searchParams.set('brand_ids', ids.join(','));
 
         fetch(url.toString(), {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -1262,21 +2029,16 @@
 
                 syncMultiSelectInputs(modelDropdown);
                 updateMultiSelectButtonText(modelDropdown);
-
-                // If user typed a search term, keep the filtered model options open.
-                const menu = modelDropdown.querySelector('.dropdown-menu');
-                if (menu && !menu.classList.contains('hidden')) {
-                    menu.classList.remove('hidden');
-                }
             })
             .catch(err => {
                 console.debug('Model lookup failed:', err);
             });
     }
     
-    // Range Slider for Price and KM Driven dropdowns
+    // Range sliders for Price, KM Driven, and Model Year
     function initDropdownRangeSliders() {
-        // Price range slider
+        const rangeConfigs = [];
+
         const priceConfig = {
             minSlider: document.getElementById('price-slider-min-dropdown'),
             maxSlider: document.getElementById('price-slider-max-dropdown'),
@@ -1285,12 +2047,11 @@
             minHandle: document.getElementById('price-handle-min-dropdown'),
             maxHandle: document.getElementById('price-handle-max-dropdown'),
             track: document.getElementById('price-range-track-dropdown'),
-            selectedText: document.querySelector('[data-dropdown="price"] .dropdown-selected'),
             min: 0,
-            max: 5000000
+            max: 5000000,
+            formatValue: formatPriceHandleValue,
         };
         
-        // KM Driven range slider
         const kmDrivenConfig = {
             minSlider: document.getElementById('km-driven-slider-min'),
             maxSlider: document.getElementById('km-driven-slider-max'),
@@ -1299,13 +2060,53 @@
             minHandle: document.getElementById('km-driven-handle-min'),
             maxHandle: document.getElementById('km-driven-handle-max'),
             track: document.getElementById('km-driven-range-track'),
-            selectedText: document.querySelector('[data-dropdown="km_driven"] .dropdown-selected'),
             min: 0,
-            max: 2000000
+            max: 200000,
+            formatValue: formatKmHandleValue,
         };
+
+        const yearConfig = {
+            minSlider: document.getElementById('model-year-slider-min'),
+            maxSlider: document.getElementById('model-year-slider-max'),
+            minInput: document.getElementById('model-year-from'),
+            maxInput: document.getElementById('model-year-to'),
+            minHandle: document.getElementById('model-year-handle-min'),
+            maxHandle: document.getElementById('model-year-handle-max'),
+            track: document.getElementById('model-year-range-track'),
+            min: HOME_YEAR_MIN,
+            max: HOME_YEAR_MAX,
+            formatValue: formatYearHandleValue,
+        };
+
+        function setActiveRangeHandle(config, isMin) {
+            config.minHandle?.classList.remove('is-active');
+            config.maxHandle?.classList.remove('is-active');
+            (isMin ? config.minHandle : config.maxHandle)?.classList.add('is-active');
+        }
+
+        function clearActiveRangeHandles(config) {
+            config.minHandle?.classList.remove('is-active');
+            config.maxHandle?.classList.remove('is-active');
+        }
+
+        function updateHandleTooltips(config, finalMin, finalMax) {
+            const minTooltip = config.minHandle?.querySelector('.home-filter-range-tooltip');
+            const maxTooltip = config.maxHandle?.querySelector('.home-filter-range-tooltip');
+            if (minTooltip && config.formatValue) {
+                minTooltip.textContent = config.formatValue(finalMin, true);
+            }
+            if (maxTooltip && config.formatValue) {
+                maxTooltip.textContent = config.formatValue(finalMax, false);
+            }
+        }
+
+        function endAllRangeDrags() {
+            rangeConfigs.forEach(clearActiveRangeHandles);
+        }
         
-        [priceConfig, kmDrivenConfig].forEach(config => {
+        [priceConfig, kmDrivenConfig, yearConfig].forEach(config => {
             if (!config.minSlider || !config.maxSlider) return;
+            rangeConfigs.push(config);
             
             function updateSlider() {
                 const minVal = parseFloat(config.minSlider.value) || config.min;
@@ -1316,57 +2117,35 @@
                     config.maxSlider.value = minVal;
                 }
                 
-                const finalMin = Math.min(minVal, maxVal);
-                const finalMax = Math.max(minVal, maxVal);
+                const finalMin = Math.min(parseFloat(config.minSlider.value), parseFloat(config.maxSlider.value));
+                const finalMax = Math.max(parseFloat(config.minSlider.value), parseFloat(config.maxSlider.value));
                 
-                config.minInput.value = finalMin === config.min ? '' : finalMin;
-                config.maxInput.value = finalMax === config.max ? '' : finalMax;
+                config.minInput.value = finalMin <= config.min ? '' : String(finalMin);
+                config.maxInput.value = finalMax >= config.max ? '' : String(finalMax);
                 
                 const minPercent = ((finalMin - config.min) / (config.max - config.min)) * 100;
                 const maxPercent = ((finalMax - config.min) / (config.max - config.min)) * 100;
                 
-                config.minHandle.style.left = `calc(${minPercent}% - 12px)`;
-                config.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
-                
-                config.track.style.left = `${minPercent}%`;
-                config.track.style.width = `${maxPercent - minPercent}%`;
-                
-                // Update selected text
-                if (config.selectedText) {
-                    const from = config.minInput.value;
-                    const to = config.maxInput.value;
-                    if (from || to) {
-                        const fromText = from ? new Intl.NumberFormat().format(from) : '0';
-                        const toText = to ? new Intl.NumberFormat().format(to) : '∞';
-                        if (config === priceConfig) {
-                            config.selectedText.textContent = `${fromText} - ${toText}`;
-                        } else {
-                            config.selectedText.textContent = `${fromText} - ${toText} km`;
-                        }
-                    } else {
-                        config.selectedText.textContent = config === priceConfig ? '{{ __('messages.forms.price') }}' : '{{ __('messages.forms.km_driven') }}';
-                    }
+                if (config.minHandle) config.minHandle.style.left = `calc(${minPercent}% - 12px)`;
+                if (config.maxHandle) config.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                if (config.track) {
+                    config.track.style.left = `${minPercent}%`;
+                    config.track.style.width = `${maxPercent - minPercent}%`;
                 }
-            }
-            
-            function updateFromInput(input, slider) {
-                const value = parseFloat(input.value);
-                if (!isNaN(value)) {
-                    const clampedValue = Math.max(config.min, Math.min(config.max, value));
-                    slider.value = clampedValue;
-                    input.value = clampedValue === config.min ? '' : clampedValue;
-                    updateSlider();
-                }
+
+                updateHandleTooltips(config, finalMin, finalMax);
+                updateHomeFilterChips();
             }
             
             updateSlider();
             
             config.minSlider.addEventListener('input', updateSlider);
             config.maxSlider.addEventListener('input', updateSlider);
-            config.minInput.addEventListener('input', () => updateFromInput(config.minInput, config.minSlider));
-            config.maxInput.addEventListener('input', () => updateFromInput(config.maxInput, config.maxSlider));
+
+            [config.minSlider, config.maxSlider].forEach((slider, index) => {
+                slider.addEventListener('pointerdown', () => setActiveRangeHandle(config, index === 0));
+            });
             
-            // Handle drag events for visual handles
             let isDragging = false;
             let activeHandle = null;
             
@@ -1374,15 +2153,21 @@
                 handle.addEventListener('mousedown', (e) => {
                     isDragging = true;
                     activeHandle = index === 0 ? config.minSlider : config.maxSlider;
+                    setActiveRangeHandle(config, index === 0);
                     e.preventDefault();
                     e.stopPropagation();
                 });
+                handle.addEventListener('touchstart', () => {
+                    isDragging = true;
+                    activeHandle = index === 0 ? config.minSlider : config.maxSlider;
+                    setActiveRangeHandle(config, index === 0);
+                }, { passive: true });
             });
             
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging || !activeHandle) return;
                 
-                const sliderContainer = activeHandle.closest('.relative');
+                const sliderContainer = activeHandle.closest('.home-filter-range-rail');
                 if (!sliderContainer) return;
                 
                 const rect = sliderContainer.getBoundingClientRect();
@@ -1395,12 +2180,35 @@
                 activeHandle.value = clampedValue;
                 updateSlider();
             });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging || !activeHandle || !e.touches[0]) return;
+
+                const sliderContainer = activeHandle.closest('.home-filter-range-rail');
+                if (!sliderContainer) return;
+
+                const rect = sliderContainer.getBoundingClientRect();
+                const percent = Math.max(0, Math.min(100, ((e.touches[0].clientX - rect.left) / rect.width) * 100));
+                const value = config.min + (percent / 100) * (config.max - config.min);
+                const step = parseFloat(activeHandle.step) || 1;
+                const steppedValue = Math.round(value / step) * step;
+                const clampedValue = Math.max(config.min, Math.min(config.max, steppedValue));
+
+                activeHandle.value = clampedValue;
+                updateSlider();
+            }, { passive: true });
             
-            document.addEventListener('mouseup', () => {
+            const endDrag = () => {
                 isDragging = false;
                 activeHandle = null;
-            });
+                clearActiveRangeHandles(config);
+            };
+
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
         });
+
+        document.addEventListener('pointerup', endAllRangeDrags);
     }
     
     // Form submission handler
@@ -1409,7 +2217,6 @@
         filterForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const params = new URLSearchParams();
-            const homeCurrentYear = {{ (int) date('Y') }};
             
             document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
                 const valuesContainer = dropdown.querySelector('.dropdown-values-container');
@@ -1424,21 +2231,22 @@
             const priceTo = document.getElementById('price-to-dropdown')?.value;
             const kmFrom = document.getElementById('km-driven-from')?.value;
             const kmTo = document.getElementById('km-driven-to')?.value;
+            const yearFrom = document.getElementById('model-year-from')?.value;
+            const yearTo = document.getElementById('model-year-to')?.value;
+            const searchQuery = document.getElementById('home-search-input')?.value?.trim();
             if (priceFrom) params.append('price_from', priceFrom);
             if (priceTo) params.append('price_to', priceTo);
             if (kmFrom) params.append('km_driven_from', kmFrom);
             if (kmTo) params.append('km_driven_to', kmTo);
+            if (yearFrom) params.append('model_year_from', yearFrom);
+            if (yearTo) params.append('model_year_to', yearTo);
+            if (searchQuery) params.append('search', searchQuery);
 
-            const modelYearDropdown = document.querySelector('[data-dropdown="model_year"]');
-            if (modelYearDropdown) {
-                const years = getMultiSelectValues(modelYearDropdown)
-                    .map((y) => parseInt(y, 10))
-                    .filter((y) => !Number.isNaN(y) && y >= 1975 && y <= homeCurrentYear);
-                years.sort((a, b) => a - b);
-                if (years.length > 0) {
-                    params.append('model_year_from', String(years[0]));
-                    params.append('model_year_to', String(years[years.length - 1]));
-                }
+            const listingTypeContainer = document.getElementById('home-listing-type-inputs');
+            if (listingTypeContainer) {
+                listingTypeContainer.querySelectorAll('input[type="hidden"]').forEach(input => {
+                    if (input.name && input.value) params.append(input.name, input.value);
+                });
             }
             
             window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
@@ -1463,6 +2271,8 @@
                 selectedText.textContent = defaultTexts[dropdownType];
             }
         });
+
+        closeAllDropdownMenus();
         
         const modelDropdown = document.querySelector('[data-dropdown="model"]');
         if (modelDropdown) {
@@ -1470,81 +2280,48 @@
             if (modelSearchInput) modelSearchInput.value = '';
             filterModelsByBrand([]);
         }
+
+        const searchInput = document.getElementById('home-search-input');
+        if (searchInput) searchInput.value = '';
+
+        document.querySelectorAll('.home-filter-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.getAttribute('data-listing-type') === '');
+        });
+        syncListingTypeInput('');
+
         const priceFromInput = document.getElementById('price-from-dropdown');
         const priceToInput = document.getElementById('price-to-dropdown');
         const priceMinSlider = document.getElementById('price-slider-min-dropdown');
         const priceMaxSlider = document.getElementById('price-slider-max-dropdown');
-        const priceSelectedText = document.querySelector('[data-dropdown="price"] .dropdown-selected');
         
         if (priceFromInput) priceFromInput.value = '';
         if (priceToInput) priceToInput.value = '';
         if (priceMinSlider) priceMinSlider.value = '0';
         if (priceMaxSlider) priceMaxSlider.value = '5000000';
-        if (priceSelectedText) priceSelectedText.textContent = '{{ __('messages.forms.price') }}';
         
-        // Reset KM driven range
         const kmFromInput = document.getElementById('km-driven-from');
         const kmToInput = document.getElementById('km-driven-to');
         const kmMinSlider = document.getElementById('km-driven-slider-min');
         const kmMaxSlider = document.getElementById('km-driven-slider-max');
-        const kmSelectedText = document.querySelector('[data-dropdown="km_driven"] .dropdown-selected');
         
         if (kmFromInput) kmFromInput.value = '';
         if (kmToInput) kmToInput.value = '';
         if (kmMinSlider) kmMinSlider.value = '0';
-        if (kmMaxSlider) kmMaxSlider.value = '2000000';
-        if (kmSelectedText) kmSelectedText.textContent = '{{ __('messages.forms.km_driven') }}';
-        
-        // Update range slider visuals
-        if (priceMinSlider && priceMaxSlider) {
-            const priceConfig = {
-                minSlider: priceMinSlider,
-                maxSlider: priceMaxSlider,
-                minInput: priceFromInput,
-                maxInput: priceToInput,
-                minHandle: document.getElementById('price-handle-min-dropdown'),
-                maxHandle: document.getElementById('price-handle-max-dropdown'),
-                track: document.getElementById('price-range-track-dropdown'),
-                min: 0,
-                max: 5000000
-            };
-            
-            const updatePriceSlider = () => {
-                const minPercent = 0;
-                const maxPercent = 100;
-                if (priceConfig.minHandle) priceConfig.minHandle.style.left = `calc(${minPercent}% - 12px)`;
-                if (priceConfig.maxHandle) priceConfig.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
-                if (priceConfig.track) {
-                    priceConfig.track.style.left = `${minPercent}%`;
-                    priceConfig.track.style.width = `${maxPercent - minPercent}%`;
-                }
-            };
-            updatePriceSlider();
-        }
-        
-        if (kmMinSlider && kmMaxSlider) {
-            const kmConfig = {
-                minSlider: kmMinSlider,
-                maxSlider: kmMaxSlider,
-                minHandle: document.getElementById('km-driven-handle-min'),
-                maxHandle: document.getElementById('km-driven-handle-max'),
-                track: document.getElementById('km-driven-range-track'),
-                min: 0,
-                max: 2000000
-            };
-            
-            const updateKmSlider = () => {
-                const minPercent = 0;
-                const maxPercent = 100;
-                if (kmConfig.minHandle) kmConfig.minHandle.style.left = `calc(${minPercent}% - 12px)`;
-                if (kmConfig.maxHandle) kmConfig.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
-                if (kmConfig.track) {
-                    kmConfig.track.style.left = `${minPercent}%`;
-                    kmConfig.track.style.width = `${maxPercent - minPercent}%`;
-                }
-            };
-            updateKmSlider();
-        }
+        if (kmMaxSlider) kmMaxSlider.value = '200000';
+
+        const yearFromInput = document.getElementById('model-year-from');
+        const yearToInput = document.getElementById('model-year-to');
+        const yearMinSlider = document.getElementById('model-year-slider-min');
+        const yearMaxSlider = document.getElementById('model-year-slider-max');
+        if (yearFromInput) yearFromInput.value = '';
+        if (yearToInput) yearToInput.value = '';
+        if (yearMinSlider) yearMinSlider.value = String(HOME_YEAR_MIN);
+        if (yearMaxSlider) yearMaxSlider.value = String(HOME_YEAR_MAX);
+
+        [priceMinSlider, priceMaxSlider, kmMinSlider, kmMaxSlider, yearMinSlider, yearMaxSlider].forEach(slider => {
+            if (slider) slider.dispatchEvent(new Event('input'));
+        });
+        updateHomeFilterChips();
     }
     
     // Reset filters button handler
@@ -1556,6 +2333,9 @@
     // Initialize everything
     initSearchableDropdowns();
     initDropdownRangeSliders();
+    initListingTypeTabs();
+    initFilterPanelToggle();
+    updateHomeFilterChips();
     
     const brandDropdown = document.querySelector('[data-dropdown="brand"]');
     const initialBrandIds = brandDropdown ? getMultiSelectValues(brandDropdown) : [];

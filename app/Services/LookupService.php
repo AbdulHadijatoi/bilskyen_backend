@@ -197,6 +197,51 @@ class LookupService
     }
 
     /**
+     * Distinct brand ids on published, non-deleted vehicles.
+     *
+     * @return array<int,int>
+     */
+    public function publishedListingBrandIds(): array
+    {
+        return DB::table('vehicles')
+            ->whereNull('deleted_at')
+            ->whereNotNull('brand_id')
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->distinct()
+            ->pluck('brand_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Brands for home / vehicles listing filters (published inventory only).
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchBrandsForListingFilters(?string $search): array
+    {
+        $searchTerm = $search !== null ? trim($search) : '';
+        $publishedBrandIds = $this->publishedListingBrandIds();
+
+        $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
+        if ($publishedBrandIds === []) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->whereIn('id', $publishedBrandIds);
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->get()
+            ->map(fn (DmrBrand $b) => ['id' => $b->id, 'name' => $b->name])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Distinct {@see DmrModel} ids that appear on published, non-deleted vehicles.
      * When {@code $brandIds} is non-empty, only vehicles with those {@code brand_id} values are considered.
      *
