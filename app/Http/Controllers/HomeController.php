@@ -28,7 +28,10 @@ use App\Services\LookupService;
 use App\Services\PageContentService;
 use App\Services\SeoService;
 use App\Services\VehicleDetailPresentationService;
+use App\Services\MailService;
+use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 class HomeController extends Controller
 {
@@ -39,7 +42,8 @@ class HomeController extends Controller
         private PageContentService $pageContentService,
         private LookupService $lookupService,
         private SeoService $seoService,
-        private VehicleDetailPresentationService $vehicleDetailPresentationService
+        private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private MailService $mailService
     ) {}
 
     /**
@@ -234,6 +238,59 @@ class HomeController extends Controller
             'contactPageImages' => $contactPageImages,
             'seo' => $seo,
         ]);
+    }
+
+    /**
+     * Handle contact form submission
+     */
+    public function submitContact(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'subject' => 'required|in:vehicle-inquiry,financing,service-appointment,general',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $contactPageContent = $this->pageContentService->getHomePageContent('contact');
+        $recipientEmail = $contactPageContent['contact_email'] ?? 'info@bilskyen.dk';
+        $subjectLabel = $this->getContactSubjectLabel($validated['subject']);
+
+        $sent = $this->mailService->sendMailable(
+            $recipientEmail,
+            new ContactMessageMail(
+                senderName: $validated['name'],
+                senderEmail: $validated['email'],
+                subjectLabel: $subjectLabel,
+                senderMessage: $validated['message'],
+            ),
+            [
+                'mail_type' => 'contact_message_received',
+                'sender_email' => $validated['email'],
+            ],
+            false
+        );
+
+        if (!$sent) {
+            return back()
+                ->withInput()
+                ->with('error', __('messages.pages.contact.send_error'));
+        }
+
+        return redirect()
+            ->route('contact')
+            ->with('success', __('messages.pages.contact.send_success'));
+    }
+
+    private function getContactSubjectLabel(string $subject): string
+    {
+        return match ($subject) {
+            'vehicle-inquiry' => __('messages.pages.contact.vehicle_inquiry'),
+            'financing' => __('messages.pages.contact.financing_question'),
+            'service-appointment' => __('messages.pages.contact.service_appointment'),
+            'general' => __('messages.pages.contact.general_question'),
+            default => $subject,
+        };
     }
 
     /**

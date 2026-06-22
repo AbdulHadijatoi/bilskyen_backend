@@ -108,6 +108,7 @@ Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
 
 // Contact Page
 Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
 
 // Privacy Policy Page
 Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');

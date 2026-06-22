@@ -29,7 +29,29 @@
                         </p>
                     </div>
                     <div class="p-6 pt-0">
-                        <form class="space-y-6" method="POST" action="#">
+                        @if(session('success'))
+                            <div class="mb-6 rounded-md border p-3" style="border-color: oklch(0.8 0.15 145); background: oklch(0.95 0.1 145); color: oklch(0.4 0.2 145);">
+                                <p class="text-sm font-medium">{{ session('success') }}</p>
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="mb-6 rounded-md border p-3" style="border-color: oklch(0.8 0.2 27); background: oklch(0.95 0.1 27); color: oklch(0.4 0.2 27);">
+                                <p class="text-sm font-medium">{{ session('error') }}</p>
+                            </div>
+                        @endif
+
+                        @if($errors->any())
+                            <div class="mb-6 rounded-md border p-3" style="border-color: oklch(0.8 0.2 27); background: oklch(0.95 0.1 27); color: oklch(0.4 0.2 27);">
+                                <ul class="list-inside list-disc text-sm">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <form class="space-y-6" method="POST" action="{{ route('contact.submit') }}">
                             @csrf
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div class="space-y-2">
@@ -38,6 +60,7 @@
                                         id="name"
                                         name="name"
                                         type="text"
+                                        value="{{ old('name') }}"
                                         placeholder="{{ __('messages.forms.enter_full_name') }}"
                                         required
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -49,6 +72,7 @@
                                         id="email"
                                         name="email"
                                         type="email"
+                                        value="{{ old('email') }}"
                                         placeholder="{{ __('messages.forms.enter_email') }}"
                                         required
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -60,13 +84,14 @@
                                 <select
                                     id="subject"
                                     name="subject"
+                                    required
                                     class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    <option value="">{{ __('messages.pages.contact.select_subject') }}</option>
-                                    <option value="vehicle-inquiry">{{ __('messages.pages.contact.vehicle_inquiry') }}</option>
-                                    <option value="financing">{{ __('messages.pages.contact.financing_question') }}</option>
-                                    <option value="service-appointment">{{ __('messages.pages.contact.service_appointment') }}</option>
-                                    <option value="general">{{ __('messages.pages.contact.general_question') }}</option>
+                                    <option value="" @selected(old('subject') === '')>{{ __('messages.pages.contact.select_subject') }}</option>
+                                    <option value="vehicle-inquiry" @selected(old('subject') === 'vehicle-inquiry')>{{ __('messages.pages.contact.vehicle_inquiry') }}</option>
+                                    <option value="financing" @selected(old('subject') === 'financing')>{{ __('messages.pages.contact.financing_question') }}</option>
+                                    <option value="service-appointment" @selected(old('subject') === 'service-appointment')>{{ __('messages.pages.contact.service_appointment') }}</option>
+                                    <option value="general" @selected(old('subject') === 'general')>{{ __('messages.pages.contact.general_question') }}</option>
                                 </select>
                             </div>
                             <div class="space-y-2">
@@ -78,7 +103,7 @@
                                     rows="6"
                                     required
                                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                ></textarea>
+                                >{{ old('message') }}</textarea>
                             </div>
                             <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
