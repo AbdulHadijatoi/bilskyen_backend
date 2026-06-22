@@ -23,7 +23,8 @@ class SellerVehicleEditService
 {
     public function __construct(
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private VehicleImageUploadService $vehicleImageUploadService,
     ) {}
 
     /**
@@ -315,45 +316,7 @@ class SellerVehicleEditService
                     }
                 }
 
-                $fileService = app(FileService::class);
-
-                foreach ($newImages as $file) {
-                    if ($file && $file->isValid()) {
-                        try {
-                            $fileService->validateFile($file);
-                            $uploadedUrl = $fileService->uploadFiles(
-                                [$file],
-                                'public',
-                                'vehicles',
-                                true,
-                                false,
-                                300,
-                                300
-                            )[0];
-
-                            $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-
-                            $thumbnailPath = null;
-                            try {
-                                $thumbnailUrl = $fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                                $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                            } catch (\Exception $e) {
-                            }
-
-                            VehicleImage::create([
-                                'vehicle_id' => $vehicle->id,
-                                'image_path' => $imagePath,
-                                'thumbnail_path' => $thumbnailPath,
-                                'sort_order' => $nextSortOrder++,
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Error uploading new image for vehicle', [
-                                'vehicle_id' => $vehicle->id,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
-                }
+                $this->vehicleImageUploadService->uploadVehicleImages($vehicle, $newImages, $nextSortOrder);
             }
 
             $vehicleData['equipment_ids'] = $request->input('equipment_ids', []);

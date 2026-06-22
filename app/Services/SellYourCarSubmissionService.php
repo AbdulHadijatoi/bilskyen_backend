@@ -15,7 +15,6 @@ use App\Models\Euronom;
 use App\Models\ListingType;
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Models\VehicleImage;
 use App\Models\Variant;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -35,6 +34,7 @@ class SellYourCarSubmissionService
     public function __construct(
         private FileService $fileService,
         private DmrLookupAssociationService $dmrLookupAssociationService,
+        private VehicleImageUploadService $vehicleImageUploadService,
     ) {}
 
     /**
@@ -348,36 +348,7 @@ class SellYourCarSubmissionService
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $files = is_array($images) ? $images : [$images];
-                $sortOrder = 0;
-                foreach ($files as $file) {
-                    if (! $file || ! $file->isValid()) {
-                        continue;
-                    }
-                    $this->fileService->validateFile($file);
-                    $uploadedUrl = $this->fileService->uploadFiles(
-                        [$file],
-                        'public',
-                        'vehicles',
-                        true,
-                        false,
-                        300,
-                        300
-                    )[0];
-                    $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH) ?? '');
-                    $thumbnailPath = null;
-                    try {
-                        $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH) ?? '');
-                    } catch (\Exception $e) {
-                        Log::debug('Thumbnail generation failed for vehicle image', ['e' => $e->getMessage()]);
-                    }
-                    VehicleImage::create([
-                        'vehicle_id' => $vehicle->id,
-                        'image_path' => $imagePath,
-                        'thumbnail_path' => $thumbnailPath,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                }
+                $this->vehicleImageUploadService->uploadVehicleImages($vehicle, $files);
             }
 
             return $vehicle->fresh(['images', 'equipment', 'specifications', 'dmrFactVehicle']);

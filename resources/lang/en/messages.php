@@ -1404,6 +1404,14 @@ return [
         'subscription_change_approve_failed' => 'Failed to approve subscription change: :message',
     ],
 
+    'audit' => [
+        'lead_created_for_vehicle' => 'Lead created for vehicle',
+        'enquiry_submitted_for_vehicle' => 'Enquiry submitted for vehicle',
+        'test_drive_submitted_for_vehicle' => 'Test drive request submitted for vehicle',
+        'price_negotiation_submitted_for_vehicle' => 'Price negotiation request submitted for vehicle',
+        'exchange_request_submitted_for_vehicle' => 'Exchange request submitted for vehicle',
+    ],
+
     'enquiries' => [
         'types' => [
             'General' => 'General',

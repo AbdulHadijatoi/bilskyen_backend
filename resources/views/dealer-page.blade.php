@@ -1049,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (amount === null || amount === undefined) {
             return 'N/A';
         }
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('da-DK', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 2
         }).format(amount) + ' kr.';

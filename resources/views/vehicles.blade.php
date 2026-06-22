@@ -1142,7 +1142,7 @@
             if (amount === null || amount === undefined) {
                 return 'N/A';
             }
-            return new Intl.NumberFormat('en-US', {
+            return new Intl.NumberFormat('da-DK', {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2
             }).format(amount) + ' kr.';
@@ -1834,8 +1834,8 @@
             
             // KM driven range
             if (filters.km_driven_from || filters.km_driven_to) {
-                const from = filters.km_driven_from ? new Intl.NumberFormat('en-US').format(filters.km_driven_from) : '';
-                const to = filters.km_driven_to ? new Intl.NumberFormat('en-US').format(filters.km_driven_to) : '';
+                const from = filters.km_driven_from ? new Intl.NumberFormat('da-DK').format(filters.km_driven_from) : '';
+                const to = filters.km_driven_to ? new Intl.NumberFormat('da-DK').format(filters.km_driven_to) : '';
                 if (from && to) {
                     chips.push({
                         key: 'km_driven_range',
@@ -2093,7 +2093,7 @@
                     if (noResults && filteredTotal === 0 && vehicles.length > 0) {
                         resultsCount.innerHTML = `<strong>0</strong> {{ __('messages.forms.results') }} <span class="text-muted-foreground">({{ __('messages.pages.vehicles.showing_all_vehicles') }})</span>`;
                     } else {
-                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('en-US').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
+                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('da-DK').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
                     }
                 }
                 renderFilterChips();

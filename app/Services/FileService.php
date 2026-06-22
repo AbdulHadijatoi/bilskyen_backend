@@ -76,6 +76,171 @@ class FileService
     }
 
     /**
+     * Upload and optimize a single vehicle image (WebP pipeline, thumbnail included).
+     *
+     * @return array{url: string, path: string, thumbnail_path: string|null}
+     */
+    public function uploadVehicleImage(
+        UploadedFile $file,
+        ?string $disk = null,
+        ?string $directory = null
+    ): array {
+        $profile = config('images.vehicle', []);
+        $disk = $disk ?? ($profile['disk'] ?? 'public');
+        $directory = $directory ?? ($profile['directory'] ?? 'vehicles');
+
+        $this->validateFile($file);
+
+        if ($this->shouldPreserveAnimatedGif($file)) {
+            return $this->storeVehicleImageWithoutConversion($file, $disk, $directory, $profile);
+        }
+
+        $processed = $this->processVehicleImage($file, $profile);
+
+        $filename = Str::uuid().'.'.$processed['extension'];
+        $path = $directory.'/'.$filename;
+
+        Storage::disk($disk)->put($path, $processed['binary']);
+
+        $url = Storage::disk($disk)->url($path);
+
+        $thumbnailPath = null;
+        try {
+            $thumbnailPath = $this->createVehicleThumbnail($path, $disk, $profile);
+        } catch (\Exception $e) {
+            // Thumbnail is optional; main image is already stored.
+        }
+
+        return [
+            'url' => $url,
+            'path' => $path,
+            'thumbnail_path' => $thumbnailPath,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $profile
+     * @return array{binary: string, extension: string}
+     */
+    private function processVehicleImage(UploadedFile $file, array $profile): array
+    {
+        $maxLongEdge = (int) ($profile['max_long_edge'] ?? 2048);
+        $startQuality = (int) ($profile['start_quality'] ?? 82);
+        $minQuality = (int) ($profile['min_quality'] ?? 68);
+        $targetBytes = (int) ($profile['target_max_bytes'] ?? 819200);
+
+        $image = $this->imageManager->read($file->getPathname());
+        $image->orient();
+        $image->scaleDown($maxLongEdge, $maxLongEdge);
+
+        $useWebp = $this->supportsWebp();
+        $extension = $useWebp ? 'webp' : 'jpg';
+        $quality = $startQuality;
+        $binary = $this->encodeVehicleImage($image, $useWebp, $quality);
+
+        while (strlen($binary) > $targetBytes && $quality > $minQuality) {
+            $quality = max($minQuality, $quality - 3);
+            $binary = $this->encodeVehicleImage($image, $useWebp, $quality);
+        }
+
+        $guard = 0;
+        while (strlen($binary) > $targetBytes && $guard < 20) {
+            $guard++;
+            $width = $image->width();
+            $height = $image->height();
+
+            if ($width <= 640 || $height <= 640) {
+                break;
+            }
+
+            $image->scaleDown(
+                max(640, (int) floor($width * 0.9)),
+                max(640, (int) floor($height * 0.9))
+            );
+            $binary = $this->encodeVehicleImage($image, $useWebp, $quality);
+        }
+
+        return [
+            'binary' => $binary,
+            'extension' => $extension,
+        ];
+    }
+
+    private function encodeVehicleImage(mixed $image, bool $useWebp, int $quality): string
+    {
+        if ($useWebp) {
+            return (string) $image->toWebp(quality: $quality);
+        }
+
+        return (string) $image->toJpeg(quality: $quality);
+    }
+
+    /**
+     * @param  array<string, mixed>  $profile
+     */
+    private function createVehicleThumbnail(string $mainRelativePath, string $disk, array $profile): string
+    {
+        $filePath = Storage::disk($disk)->path($mainRelativePath);
+
+        if (! file_exists($filePath)) {
+            throw new \RuntimeException('Main image not found for thumbnail generation.');
+        }
+
+        $maxLongEdge = (int) ($profile['thumbnail_max_long_edge'] ?? 480);
+        $quality = (int) ($profile['thumbnail_quality'] ?? 75);
+        $useWebp = $this->supportsWebp();
+        $thumbExtension = $useWebp ? 'webp' : 'jpg';
+
+        $image = $this->imageManager->read($filePath);
+        $image->scaleDown($maxLongEdge, $maxLongEdge);
+
+        $pathInfo = pathinfo($mainRelativePath);
+        $thumbnailDirectory = $pathInfo['dirname'].'/thumbnails';
+        $thumbnailFilename = $pathInfo['filename'].'_thumb.'.$thumbExtension;
+        $thumbnailPath = $thumbnailDirectory.'/'.$thumbnailFilename;
+
+        Storage::disk($disk)->makeDirectory($thumbnailDirectory);
+
+        $binary = $this->encodeVehicleImage($image, $useWebp, $quality);
+        Storage::disk($disk)->put($thumbnailPath, $binary);
+
+        return $thumbnailPath;
+    }
+
+    /**
+     * @param  array<string, mixed>  $profile
+     * @return array{url: string, path: string, thumbnail_path: string|null}
+     */
+    private function storeVehicleImageWithoutConversion(
+        UploadedFile $file,
+        string $disk,
+        string $directory,
+        array $profile
+    ): array {
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $path = $file->storeAs($directory, $filename, $disk);
+        $url = Storage::disk($disk)->url($path);
+
+        $thumbnailPath = null;
+        try {
+            $thumbnailPath = $this->createVehicleThumbnail($path, $disk, $profile);
+        } catch (\Exception $e) {
+            // Continue without thumbnail for animated GIFs if generation fails.
+        }
+
+        return [
+            'url' => $url,
+            'path' => $path,
+            'thumbnail_path' => $thumbnailPath,
+        ];
+    }
+
+    private function supportsWebp(): bool
+    {
+        return function_exists('imagewebp');
+    }
+
+    /**
      * Delete files from storage
      */
     public function deleteFiles(array $fileUrls): void
@@ -419,18 +584,35 @@ class FileService
         return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
     }
 
+    private function shouldPreserveAnimatedGif(UploadedFile $file): bool
+    {
+        if ($file->getMimeType() !== 'image/gif') {
+            return false;
+        }
+
+        return $this->isAnimatedGifFile($file->getPathname());
+    }
+
     private function isAnimatedGifFile(string $absolutePath): bool
     {
-        if (strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION)) !== 'gif') {
+        $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+        $head = @file_get_contents($absolutePath, false, null, 0, 6);
+        $isGifMagic = $head === "GIF87a" || $head === 'GIF89a';
+
+        if ($extension !== 'gif' && ! $isGifMagic) {
             return false;
         }
 
-        $head = @file_get_contents($absolutePath, false, null, 0, 131072);
-        if ($head === false || $head === '') {
+        if (! $isGifMagic) {
             return false;
         }
 
-        return str_contains($head, 'NETSCAPE2.0');
+        $content = @file_get_contents($absolutePath, false, null, 0, 131072);
+        if ($content === false || $content === '') {
+            return false;
+        }
+
+        return str_contains($content, 'NETSCAPE2.0');
     }
 
     /**

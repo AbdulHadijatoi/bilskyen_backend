@@ -1397,6 +1397,14 @@ return [
         'no_active_subscription' => 'Intet aktivt abonnement fundet',
     ],
 
+    'audit' => [
+        'lead_created_for_vehicle' => 'Lead oprettet for køretøj',
+        'enquiry_submitted_for_vehicle' => 'Henvendelse sendt for køretøj',
+        'test_drive_submitted_for_vehicle' => 'Prøvetur anmodning sendt for køretøj',
+        'price_negotiation_submitted_for_vehicle' => 'Prisforhandling sendt for køretøj',
+        'exchange_request_submitted_for_vehicle' => 'Bytteanmodning sendt for køretøj',
+    ],
+
     'enquiries' => [
         'types' => [
             'General' => 'Generel',

@@ -216,6 +216,7 @@ class VehicleService
         private OwnershipTaxService $ownershipTaxService,
         private DmrLookupAssociationService $dmrLookupAssociationService,
         private DmrFactVehicleLookupService $dmrFactVehicleLookupService,
+        private VehicleImageUploadService $vehicleImageUploadService,
     ) {}
 
     /**
@@ -328,53 +329,7 @@ class VehicleService
         }
 
         if (is_array($images)) {
-            $sortOrder = 0;
-            foreach ($images as $file) {
-                if (is_string($file)) {
-                    $imagePath = str_replace('/storage/', '', parse_url($file, PHP_URL_PATH));
-
-                    $thumbnailPath = null;
-                    try {
-                        $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
-                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                    } catch (\Exception $e) {
-                    }
-
-                    VehicleImage::create([
-                        'vehicle_id' => $vehicle->id,
-                        'image_path' => $imagePath,
-                        'thumbnail_path' => $thumbnailPath,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                } else {
-                    $this->fileService->validateFile($file);
-                    $uploadedUrl = $this->fileService->uploadFiles(
-                        [$file],
-                        'public',
-                        'vehicles',
-                        true,
-                        false,
-                        300,
-                        300
-                    )[0];
-
-                    $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-
-                    $thumbnailPath = null;
-                    try {
-                        $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                    } catch (\Exception $e) {
-                    }
-
-                    VehicleImage::create([
-                        'vehicle_id' => $vehicle->id,
-                        'image_path' => $imagePath,
-                        'thumbnail_path' => $thumbnailPath,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                }
-            }
+            $this->vehicleImageUploadService->attachVehicleImages($vehicle, $images);
         }
 
         $vehicle = $vehicle->fresh(['images', 'equipment', 'specifications', 'dmrFactVehicle.drivmiddelLines']);
@@ -444,61 +399,7 @@ class VehicleService
                 }
 
                 // Upload and create new images
-                $sortOrder = 0;
-                foreach ($vehicleData['images'] as $file) {
-                    if (is_string($file)) {
-                        // Already a path/URL - extract relative path and try to generate thumbnail if it doesn't exist
-                        // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
-                        $imagePath = str_replace('/storage/', '', parse_url($file, PHP_URL_PATH));
-
-                        $thumbnailPath = null;
-                        try {
-                            $thumbnailUrl = $this->fileService->createThumbnail($file, 300, 300, 'public');
-                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                        } catch (\Exception $e) {
-                            // Thumbnail generation failed, continue without thumbnail
-                        }
-
-                        VehicleImage::create([
-                            'vehicle_id' => $vehicle->id,
-                            'image_path' => $imagePath,
-                            'thumbnail_path' => $thumbnailPath,
-                            'sort_order' => $sortOrder++,
-                        ]);
-                    } else {
-                        // Upload file with thumbnail generation
-                        $this->fileService->validateFile($file);
-                        $uploadedUrl = $this->fileService->uploadFiles(
-                            [$file],
-                            'public',
-                            'vehicles',
-                            true, // createThumbnails
-                            false, // optimizeImages
-                            300, // thumbnailWidth
-                            300  // thumbnailHeight
-                        )[0];
-
-                        // Extract relative path from URL (remove domain and /storage/ prefix)
-                        // Convert URL like "http://localhost/storage/vehicles/abc.jpg" to "vehicles/abc.jpg"
-                        $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-
-                        // Extract thumbnail path from URL
-                        $thumbnailPath = null;
-                        try {
-                            $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                            $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                        } catch (\Exception $e) {
-                            // Thumbnail generation failed, continue without thumbnail
-                        }
-
-                        VehicleImage::create([
-                            'vehicle_id' => $vehicle->id,
-                            'image_path' => $imagePath,
-                            'thumbnail_path' => $thumbnailPath,
-                            'sort_order' => $sortOrder++,
-                        ]);
-                    }
-                }
+                $this->vehicleImageUploadService->attachVehicleImages($vehicle, $vehicleData['images']);
                 unset($vehicleData['images']);
             }
 

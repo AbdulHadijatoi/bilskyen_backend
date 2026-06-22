@@ -12,8 +12,8 @@ use App\Models\PlanPriceHistory;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
 use App\Models\Source;
-use App\Models\LeadCategory;
 use App\Models\AuditLog;
+use App\Constants\LeadCategory as LeadCategoryIds;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
 use Illuminate\Http\Request;
@@ -55,25 +55,20 @@ class AdminAnalyticsController extends Controller
 
     private function mapLeadsByCategory($leadsQuery): array
     {
-        $leadsByCategory = (clone $leadsQuery)
+        $countsById = (clone $leadsQuery)
             ->select('lead_category_id', DB::raw('count(*) as count'))
             ->groupBy('lead_category_id')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                $category = LeadCategory::find($item->lead_category_id);
-
-                return [$category?->name ?? 'Unknown' => $item->count];
-            });
+            ->pluck('count', 'lead_category_id');
 
         return [
             'total' => (clone $leadsQuery)->count(),
             'by_type' => [
-                'enquiry' => $leadsByCategory->get('Enquiry Form Submission', 0),
-                'phone' => $leadsByCategory->get('Phone Number Revealed', 0),
-                'whatsapp' => $leadsByCategory->get('WhatsApp Clicked', 0),
-                'email' => $leadsByCategory->get('Email Clicked', 0),
-                'test_drive' => $leadsByCategory->get('Request Test Drive', 0),
-                'financing' => $leadsByCategory->get('Financing Request', 0),
+                'enquiry' => (int) $countsById->get(LeadCategoryIds::ENQUIRY_FORM_SUBMISSION, 0),
+                'phone' => (int) $countsById->get(LeadCategoryIds::PHONE_NUMBER_REVEALED, 0),
+                'whatsapp' => (int) $countsById->get(LeadCategoryIds::WHATSAPP_CLICKED, 0),
+                'email' => (int) $countsById->get(LeadCategoryIds::EMAIL_CLICKED, 0),
+                'test_drive' => (int) $countsById->get(LeadCategoryIds::REQUEST_TEST_DRIVE, 0),
+                'financing' => (int) $countsById->get(LeadCategoryIds::FINANCING_REQUEST, 0),
             ],
         ];
     }
@@ -458,6 +453,7 @@ class AdminAnalyticsController extends Controller
                 $source = Source::find($item->source_id);
 
                 return [
+                    'source_id' => $item->source_id,
                     'source' => $source?->name ?? 'Unknown',
                     'count' => $item->count,
                 ];

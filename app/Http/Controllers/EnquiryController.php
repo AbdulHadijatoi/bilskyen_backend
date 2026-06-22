@@ -107,6 +107,16 @@ class EnquiryController extends Controller
         return Source::WEBSITE;
     }
 
+    private function vehicleLabel(Vehicle $vehicle): string
+    {
+        return $vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $vehicle->id]);
+    }
+
+    private function enquirySubject(string $translationKey, Vehicle $vehicle): string
+    {
+        return __($translationKey, ['vehicle' => $this->vehicleLabel($vehicle)]);
+    }
+
     /**
      * Create a lead/enquiry for a vehicle
      * Allows both authenticated and guest users
@@ -178,7 +188,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -269,7 +279,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with the message details (user_id can be null for guest users)
-        $enquirySubject = 'Enquiry about ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.enquiry_about', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -294,7 +304,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -315,7 +325,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Enquiry submitted for vehicle',
+                __('messages.audit.enquiry_submitted_for_vehicle'),
                 ['enquiry', 'form']
             );
         } catch (\Exception $e) {
@@ -409,7 +419,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with type "Test Drive" (user_id can be null for guest users)
-        $enquirySubject = 'Test Drive Request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.test_drive_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -434,7 +444,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -455,7 +465,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Test drive request submitted for vehicle',
+                __('messages.audit.test_drive_submitted_for_vehicle'),
                 ['enquiry', 'test-drive']
             );
         } catch (\Exception $e) {
@@ -549,7 +559,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with type "Price Enquiry" (user_id can be null for guest users)
-        $enquirySubject = 'Price Negotiation for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.price_negotiation_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -574,7 +584,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -595,7 +605,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Price negotiation request submitted for vehicle',
+                __('messages.audit.price_negotiation_submitted_for_vehicle'),
                 ['enquiry', 'price-negotiation']
             );
         } catch (\Exception $e) {
@@ -672,7 +682,7 @@ class EnquiryController extends Controller
         $enquiryMessage .= "Expected price (exchange vehicle): {$validated['expected_price']}\n\n";
         $enquiryMessage .= "Message:\n{$validated['message']}";
 
-        $enquirySubject = 'Exchange request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.exchange_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -696,7 +706,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -716,7 +726,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Exchange request submitted for vehicle',
+                __('messages.audit.exchange_request_submitted_for_vehicle'),
                 ['enquiry', 'exchange']
             );
         } catch (\Exception $e) {

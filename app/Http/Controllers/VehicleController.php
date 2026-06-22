@@ -13,6 +13,7 @@ use App\Services\AuditLogService;
 use App\Services\SellYourCarSubmissionService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
+use App\Services\VehicleImageUploadService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class VehicleController extends Controller
         private VehicleDetailPresentationService $vehicleDetailPresentationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
         private OwnershipTaxService $ownershipTaxService,
+        private VehicleImageUploadService $vehicleImageUploadService,
     ) {
         $this->fileService = $fileService;
     }
@@ -980,55 +982,18 @@ class VehicleController extends Controller
         $sortOrder = $currentMaxSortOrder + 1;
         
         $uploadedImages = [];
-        
+
         if ($request->hasFile('images')) {
             $files = $request->file('images');
-            // Handle both array format (images[]) and single file
-            if (!is_array($files)) {
+            if (! is_array($files)) {
                 $files = [$files];
             }
-            
-            foreach ($files as $file) {
-                if ($file && $file->isValid()) {
-                    $this->fileService->validateFile($file);
-                    
-                    // Upload file (without thumbnail first to ensure file is saved)
-                    $uploadedUrl = $this->fileService->uploadFiles(
-                        [$file],
-                        'public',
-                        'vehicles',
-                        false, // Don't create thumbnails here - we'll do it explicitly below
-                        false, // optimizeImages
-                        300, // thumbnailWidth
-                        300  // thumbnailHeight
-                    )[0];
-                    
-                    $imagePath = str_replace('/storage/', '', parse_url($uploadedUrl, PHP_URL_PATH));
-                    
-                    // Explicitly create thumbnail for each image to ensure it's created
-                    $thumbnailPath = null;
-                    try {
-                        $thumbnailUrl = $this->fileService->createThumbnail($uploadedUrl, 300, 300, 'public');
-                        $thumbnailPath = str_replace('/storage/', '', parse_url($thumbnailUrl, PHP_URL_PATH));
-                    } catch (\Exception $e) {
-                        // Log the error but continue - image will be saved without thumbnail
-                        Log::warning('Failed to create thumbnail for vehicle image', [
-                            'vehicle_id' => $vehicle->id,
-                            'image_path' => $imagePath,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                    
-                    $vehicleImage = VehicleImage::create([
-                        'vehicle_id' => $vehicle->id,
-                        'image_path' => $imagePath,
-                        'thumbnail_path' => $thumbnailPath,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                    
-                    $uploadedImages[] = $vehicleImage;
-                }
-            }
+
+            $uploadedImages = $this->vehicleImageUploadService->uploadVehicleImages(
+                $vehicle,
+                $files,
+                $sortOrder
+            );
         }
 
         // Audit log
