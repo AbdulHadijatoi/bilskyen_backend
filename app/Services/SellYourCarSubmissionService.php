@@ -118,6 +118,14 @@ class SellYourCarSubmissionService
      */
     public function submit(Request $request, User $user): array
     {
+        $user->load('dealer', 'roles');
+
+        if ($user->hasRole('dealer') && $user->dealer) {
+            throw ValidationException::withMessages([
+                'dealer' => [__('messages.api.sell_your_car_dealer_must_use_panel')],
+            ]);
+        }
+
         $rawDmr = $request->input('dmr_fact_vehicle_id');
         $dmrFactVehicleId = ($rawDmr !== null && $rawDmr !== '') ? (int) $rawDmr : null;
 
@@ -180,6 +188,9 @@ class SellYourCarSubmissionService
         $description = trim((string) $description);
 
         $vehicle = $this->createVehicleRecord($request, $user, $description);
+        if ($vehicle->list_status_id === VehicleListStatusConstant::PUBLISHED) {
+            app(ListingExpirationService::class)->setExpiryOnPublish($vehicle, true);
+        }
         $token = $this->generateSuccessToken($vehicle->id, $user->id);
 
         return [
@@ -284,12 +295,14 @@ class SellYourCarSubmissionService
                 'dmr_fact_vehicle_id' => $dmrFactVehicleId,
                 'listing_type_id' => ListingType::idOrDefaultPurchase($request->input('listing_type_id')),
                 'user_id' => $user->id,
-                'dealer_id' => $user->dealer?->id,
+                'dealer_id' => null,
                 'title' => $title,
                 'registration' => $registration,
                 'price' => (float) $request->input('price'),
-                'list_status_id' => VehicleListStatusConstant::PUBLISHED,
-                'published_at' => now(),
+                'list_status_id' => config('marketplace.moderate_seller_listings', true)
+                    ? VehicleListStatusConstant::PENDING_REVIEW
+                    : VehicleListStatusConstant::PUBLISHED,
+                'published_at' => config('marketplace.moderate_seller_listings', true) ? null : now(),
                 'description' => $description,
                 'gear_type_id' => (int) $request->input('gear_type_id'),
                 'km_driven' => (float) $request->input('km_driven'),

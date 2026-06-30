@@ -13,6 +13,10 @@ use App\Services\AuditLogService;
 use App\Services\SellYourCarSubmissionService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
+use App\Services\DealerListingQuotaService;
+use App\Services\ListingBillingService;
+use App\Services\ListingExpirationService;
+use App\Services\DealerInvoiceService;
 use App\Services\VehicleImageUploadService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
@@ -32,6 +36,10 @@ class VehicleController extends Controller
         FileService $fileService,
         private AuditLogService $auditLogService,
         private SubscriptionFeatureService $subscriptionFeatureService,
+        private DealerListingQuotaService $listingQuotaService,
+        private ListingBillingService $listingBillingService,
+        private ListingExpirationService $listingExpirationService,
+        private DealerInvoiceService $dealerInvoiceService,
         private VehicleDetailPresentationService $vehicleDetailPresentationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
         private OwnershipTaxService $ownershipTaxService,
@@ -548,12 +556,13 @@ class VehicleController extends Controller
         // Check max_listings limit if vehicle is being published
         $vehicleListStatusId = $data['list_status_id'] ?? null;
         if ($dealer && ($vehicleListStatusId == VehicleListStatus::PUBLISHED || $vehicleListStatusId == 2)) {
-            $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                ->where('list_status_id', VehicleListStatus::PUBLISHED)
-                ->count();
-            
-            if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
+            if ($this->dealerInvoiceService->dealerHasBlockingInvoice($dealer)) {
+                return $this->error(__('messages.api.dealer_overdue_invoice_block'), [], 403);
+            }
+
+            if (! $this->listingQuotaService->canPublishAnotherListing($dealer, $this->subscriptionFeatureService)) {
                 $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
+
                 return $this->error(
                     __('messages.api.max_listings_reached', ['limit' => $limit]),
                     [],
@@ -602,6 +611,11 @@ class VehicleController extends Controller
         }
 
         $vehicle = $this->vehicleService->createVehicle($data);
+
+        if ($vehicle->list_status_id == VehicleListStatus::PUBLISHED) {
+            $this->listingExpirationService->setExpiryOnPublish($vehicle, false);
+            $this->listingBillingService->onVehiclePublished($vehicle->fresh());
+        }
 
         // Audit log
         try {
@@ -822,17 +836,19 @@ class VehicleController extends Controller
         if ($statusId == VehicleListStatus::PUBLISHED && $oldStatusId != VehicleListStatus::PUBLISHED) {
             $dealer = $vehicle->dealer;
             if ($dealer) {
-                $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                    ->where('list_status_id', VehicleListStatus::PUBLISHED)
-                    ->count();
-                
-                // Don't count the current vehicle if it's already published
+                if ($this->dealerInvoiceService->dealerHasBlockingInvoice($dealer)) {
+                    return $this->error(__('messages.api.dealer_overdue_invoice_block'), [], 403);
+                }
+
+                $publishedCount = $this->listingQuotaService->countPublishedListings($dealer);
+
                 if ($oldStatusId == VehicleListStatus::PUBLISHED) {
                     $publishedCount--;
                 }
-                
-                if (!$this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
+
+                if (! $this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
                     $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
+
                     return $this->error(
                         __('messages.api.max_listings_reached', ['limit' => $limit]),
                         [],
@@ -844,12 +860,19 @@ class VehicleController extends Controller
         
         $vehicle->list_status_id = $statusId;
         
-        if ($request->input('status') === 'published' && !$vehicle->published_at) {
+        if (($statusId == VehicleListStatus::PUBLISHED || $request->input('status') === 'published') && ! $vehicle->published_at) {
             $vehicle->published_at = now();
         }
 
         $vehicle->save();
         $vehicle->refresh();
+
+        if ($statusId == VehicleListStatus::PUBLISHED && $oldStatusId != VehicleListStatus::PUBLISHED) {
+            $this->listingExpirationService->setExpiryOnPublish($vehicle, false);
+            $this->listingBillingService->onVehiclePublished($vehicle);
+        } elseif ($oldStatusId == VehicleListStatus::PUBLISHED && $statusId != VehicleListStatus::PUBLISHED) {
+            $this->listingBillingService->onVehicleUnpublished($vehicle);
+        }
 
         // Audit log
         try {
@@ -871,6 +894,65 @@ class VehicleController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+
+        return $this->success($vehicle);
+    }
+
+    public function renewListing(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
+
+        if ($vehicle->list_status_id === VehicleListStatus::ARCHIVED) {
+            if ($this->dealerInvoiceService->dealerHasBlockingInvoice($dealer)) {
+                return $this->error(__('messages.api.dealer_overdue_invoice_block'), [], 403);
+            }
+            if (! $this->listingQuotaService->canPublishAnotherListing($dealer, $this->subscriptionFeatureService)) {
+                return $this->error(__('messages.api.max_listings_reached', [
+                    'limit' => $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0),
+                ]), [], 403);
+            }
+            $vehicle->list_status_id = VehicleListStatus::PUBLISHED;
+            $vehicle->published_at = now();
+            $vehicle->save();
+            $this->listingBillingService->onVehiclePublished($vehicle);
+        }
+
+        $this->listingExpirationService->renewListing($vehicle);
+
+        return $this->success($vehicle->fresh());
+    }
+
+    public function upload3dView(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        if (! $this->subscriptionFeatureService->hasFeature($dealer, 'upload_3d_view')) {
+            return $this->error(__('messages.api.subscription_feature_required', ['feature' => 'upload_3d_view']), [], 403);
+        }
+
+        $request->validate([
+            'view_3d_url' => 'required_without:file|nullable|url|max:500',
+            'file' => 'required_without:view_3d_url|nullable|file|mimes:glb,gltf,zip|max:51200',
+        ]);
+
+        $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
+
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('vehicles/3d-views', 'public');
+            $vehicle->view_3d_url = Storage::disk('public')->url($path);
+        } else {
+            $vehicle->view_3d_url = $request->input('view_3d_url');
+        }
+
+        $vehicle->save();
 
         return $this->success($vehicle);
     }

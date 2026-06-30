@@ -16,6 +16,7 @@ use App\Constants\LeadCategory as LeadCategoryIds;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
 use App\Services\SubscriptionFeatureService;
+use App\Services\DealerListingQuotaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,8 @@ use Carbon\Carbon;
 class DealerAnalyticsController extends Controller
 {
     public function __construct(
-        private readonly SubscriptionFeatureService $subscriptionFeatureService
+        private readonly SubscriptionFeatureService $subscriptionFeatureService,
+        private readonly DealerListingQuotaService $listingQuotaService
     ) {}
 
     private function getDealer(Request $request): ?Dealer
@@ -67,11 +69,9 @@ class DealerAnalyticsController extends Controller
 
     private function getActiveSubscription(int $dealerId): ?DealerSubscription
     {
-        return DealerSubscription::where('dealer_id', $dealerId)
-            ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
-            ->with(['plan.planFeatures.feature', 'subscriptionStatus'])
-            ->latest()
-            ->first();
+        $dealer = Dealer::find($dealerId);
+
+        return $dealer ? $this->subscriptionFeatureService->getActiveSubscription($dealer) : null;
     }
 
     private function getPeriods(?Carbon $startDate, ?Carbon $endDate): array
@@ -496,7 +496,7 @@ class DealerAnalyticsController extends Controller
 
             $limit = (int) $planFeature->value;
             $used = match ($feature->key) {
-                'max_listings' => Vehicle::where('dealer_id', $dealerId)->count(),
+                'max_listings' => $this->listingQuotaService->countPublishedListings(Dealer::findOrFail($dealerId)),
                 'max_feature_listings' => FeaturedListing::whereHas('vehicle', function ($query) use ($dealerId) {
                     $query->where('dealer_id', $dealerId);
                 })->count(),

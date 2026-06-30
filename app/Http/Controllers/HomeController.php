@@ -28,6 +28,7 @@ use App\Services\LookupService;
 use App\Services\PageContentService;
 use App\Services\SeoService;
 use App\Services\VehicleDetailPresentationService;
+use App\Services\VehicleViewService;
 use App\Services\MailService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
@@ -43,6 +44,7 @@ class HomeController extends Controller
         private LookupService $lookupService,
         private SeoService $seoService,
         private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private VehicleViewService $vehicleViewService,
         private MailService $mailService
     ) {}
 
@@ -542,15 +544,12 @@ class HomeController extends Controller
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
 
-        DB::transaction(function () use ($vehicle, $user, $ipAddress, $userAgent) {
-            ListingViewsLog::create([
-                'vehicle_id' => $vehicle->id,
-                'user_id' => $user?->id,
-                'ip_address' => $ipAddress,
-                'user_agent' => $userAgent,
-                'viewed_at' => now(),
-            ]);
-        });
+        $this->vehicleViewService->recordView(
+            $vehicle,
+            $user?->id,
+            $request->ip(),
+            $request->userAgent()
+        );
         
         $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
 

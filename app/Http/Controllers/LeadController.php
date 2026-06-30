@@ -8,7 +8,9 @@ use App\Models\ChatMessage;
 use App\Models\LeadStageHistory;
 use App\Constants\LeadStage;
 use App\Services\AuditLogService;
+use App\Mail\LeadBuyerMessageMail;
 use App\Services\DealerContextService;
+use App\Services\MailService;
 use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +25,8 @@ class LeadController extends Controller
     public function __construct(
         private AuditLogService $auditLogService,
         private DealerContextService $dealerContextService,
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private MailService $mailService,
     ) {}
     public function index(Request $request): JsonResponse
     {
@@ -341,6 +344,30 @@ class LeadController extends Controller
                 'message_id' => $chatMessage->id,
                 'error' => $e->getMessage(),
             ]);
+        }
+
+        if (! $request->boolean('is_internal', false)) {
+            $lead->load(['buyerUser', 'vehicle']);
+            $buyerEmail = $lead->buyerUser?->email;
+            if ($buyerEmail && $lead->vehicle) {
+                try {
+                    $this->mailService->sendMailable(
+                        $buyerEmail,
+                        new LeadBuyerMessageMail(
+                            vehicleTitle: $lead->vehicle->title ?? ('Vehicle #'.$lead->vehicle_id),
+                            dealerName: $dealer->owner?->name ?? $dealer->name ?? 'Dealer',
+                            messageBody: $request->message,
+                        ),
+                        ['mail_type' => 'lead_buyer_message', 'lead_id' => $lead->id],
+                        false
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to email buyer for lead message', [
+                        'lead_id' => $lead->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         return $this->created($chatMessage->load('sender'));

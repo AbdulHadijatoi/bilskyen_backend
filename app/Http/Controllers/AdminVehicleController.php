@@ -11,6 +11,8 @@ use App\Services\FileService;
 use App\Services\VehicleDetailPresentationService;
 use App\Services\VehicleService;
 use App\Services\VehicleImageUploadService;
+use App\Services\ListingBillingService;
+use App\Services\ListingExpirationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -35,12 +37,26 @@ class AdminVehicleController extends Controller
         FileService $fileService,
         VehicleService $vehicleService,
         VehicleDetailPresentationService $vehicleDetailPresentationService,
-        VehicleImageUploadService $vehicleImageUploadService
+        VehicleImageUploadService $vehicleImageUploadService,
+        private ListingBillingService $listingBillingService,
+        private ListingExpirationService $listingExpirationService,
     ) {
         $this->fileService = $fileService;
         $this->vehicleService = $vehicleService;
         $this->vehicleDetailPresentationService = $vehicleDetailPresentationService;
         $this->vehicleImageUploadService = $vehicleImageUploadService;
+    }
+
+    private function applyListingStatusTransition(Vehicle $vehicle, int $oldStatusId, int $newStatusId): void
+    {
+        if ($newStatusId === VehicleListStatus::PUBLISHED && $oldStatusId !== VehicleListStatus::PUBLISHED) {
+            $this->listingExpirationService->setExpiryOnPublish($vehicle, $vehicle->dealer_id === null);
+            if ($vehicle->dealer_id) {
+                $this->listingBillingService->onVehiclePublished($vehicle->fresh());
+            }
+        } elseif ($oldStatusId === VehicleListStatus::PUBLISHED && $newStatusId !== VehicleListStatus::PUBLISHED) {
+            $this->listingBillingService->onVehicleUnpublished($vehicle);
+        }
     }
 
     /**
@@ -71,7 +87,11 @@ class AdminVehicleController extends Controller
         return array_merge($payload, [
             'dealer_id' => $vehicle->dealer_id,
             'user_id' => $vehicle->user_id,
+            'list_status_id' => $vehicle->list_status_id,
             'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
+            'expires_at' => $vehicle->expires_at?->format('Y-m-d H:i:s'),
+            'listing_billing_started_at' => $vehicle->listing_billing_started_at?->format('Y-m-d H:i:s'),
+            'listing_billing_paused_at' => $vehicle->listing_billing_paused_at?->format('Y-m-d H:i:s'),
             'created_at' => $vehicle->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $vehicle->updated_at?->format('Y-m-d H:i:s'),
             'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
@@ -291,6 +311,7 @@ class AdminVehicleController extends Controller
             'list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'vehicle_list_status_id' => ['sometimes', 'nullable', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'],
             'first_registration_date' => ['nullable', 'date'],
             'last_inspection_date' => ['nullable', 'date'],
             'production_date' => ['nullable', 'date'],
@@ -331,23 +352,115 @@ class AdminVehicleController extends Controller
         } elseif ($request->has('status')) {
             $statusId = VehicleListStatus::nameToId($request->status);
             if (!$statusId) {
-                return $this->validationError(['status' => ['Invalid status value']]);
+                return $this->validationError(['status' => [__('messages.api.vehicle_invalid_status_value')]]);
             }
         } else {
-            return $this->validationError(['status' => ['Status or list_status_id is required']]);
+            return $this->validationError(['status' => [__('messages.api.vehicle_status_or_list_status_required')]]);
         }
 
+        $oldStatusId = (int) $vehicle->list_status_id;
         $vehicle->list_status_id = $statusId;
-        
-        if ($request->status === 'published' && !$vehicle->published_at) {
-            $vehicle->published_at = now();
-        } elseif ($statusId === VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
+
+        if ($statusId === VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
             $vehicle->published_at = now();
         }
 
         $vehicle->save();
+        $vehicle->refresh();
+
+        $this->applyListingStatusTransition($vehicle, $oldStatusId, $statusId);
 
         return $this->success($vehicle->load(['dealer', 'user', 'images', 'equipment', 'dmrFactVehicle.variant.model.brand']));
+    }
+
+    public function renewListing(int $id): JsonResponse
+    {
+        $vehicle = Vehicle::findOrFail($id);
+        $oldStatusId = (int) $vehicle->list_status_id;
+
+        if ($oldStatusId === VehicleListStatus::ARCHIVED) {
+            $vehicle->list_status_id = VehicleListStatus::PUBLISHED;
+            $vehicle->published_at = now();
+            $vehicle->save();
+            $this->applyListingStatusTransition($vehicle, $oldStatusId, VehicleListStatus::PUBLISHED);
+            $vehicle->refresh();
+        }
+
+        $this->listingExpirationService->renewListing($vehicle);
+
+        return $this->success($vehicle->fresh()->load(['dealer', 'user', 'images']));
+    }
+
+    public function updateListingLifecycle(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'expires_at' => ['nullable', 'date'],
+            'published_at' => ['nullable', 'date'],
+            'recalculate_expiry' => ['sometimes', 'boolean'],
+            'clear_expiry' => ['sometimes', 'boolean'],
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ($request->boolean('clear_expiry')) {
+            $vehicle->expires_at = null;
+        } elseif ($request->boolean('recalculate_expiry')) {
+            $this->listingExpirationService->setExpiryOnPublish($vehicle, $vehicle->dealer_id === null);
+            $vehicle->refresh();
+        } elseif ($request->has('expires_at')) {
+            $vehicle->expires_at = $request->input('expires_at');
+        }
+
+        if ($request->has('published_at')) {
+            $vehicle->published_at = $request->input('published_at');
+        }
+
+        $vehicle->save();
+
+        return $this->success($vehicle->fresh()->load(['dealer', 'user', 'images']));
+    }
+
+    public function rejectPendingReview(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'list_status_id' => ['sometimes', 'integer', Rule::in([VehicleListStatus::DRAFT, VehicleListStatus::ARCHIVED])],
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ((int) $vehicle->list_status_id !== VehicleListStatus::PENDING_REVIEW) {
+            return $this->error(__('messages.api.vehicle_not_pending_review'), [], 422);
+        }
+
+        $newStatusId = (int) $request->input('list_status_id', VehicleListStatus::DRAFT);
+        $vehicle->list_status_id = $newStatusId;
+        $vehicle->save();
+
+        return $this->success($vehicle->fresh()->load(['dealer', 'user', 'images']));
+    }
+
+    public function pendingReview(Request $request): JsonResponse
+    {
+        $request->merge(['list_status_id' => VehicleListStatus::PENDING_REVIEW]);
+
+        return $this->index($request);
+    }
+
+    public function approvePendingReview(int $id): JsonResponse
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ((int) $vehicle->list_status_id !== VehicleListStatus::PENDING_REVIEW) {
+            return $this->error(__('messages.api.vehicle_not_pending_review'), [], 422);
+        }
+
+        $vehicle->list_status_id = VehicleListStatus::PUBLISHED;
+        $vehicle->published_at = now();
+        $vehicle->save();
+
+        $this->applyListingStatusTransition($vehicle, VehicleListStatus::PENDING_REVIEW, VehicleListStatus::PUBLISHED);
+
+        return $this->success($vehicle->fresh()->load(['dealer', 'user', 'images']));
     }
 
     public function delete(int $id, Request $request): JsonResponse

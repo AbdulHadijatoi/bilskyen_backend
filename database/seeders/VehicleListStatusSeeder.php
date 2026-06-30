@@ -19,6 +19,7 @@ class VehicleListStatusSeeder extends Seeder
                 ['id' => VehicleListStatus::PUBLISHED, 'name' => 'Published'],
                 ['id' => VehicleListStatus::SOLD, 'name' => 'Sold'],
                 ['id' => VehicleListStatus::ARCHIVED, 'name' => 'Archived'],
+                ['id' => VehicleListStatus::PENDING_REVIEW, 'name' => 'Pending Review'],
             ];
 
             foreach ($statuses as $status) {

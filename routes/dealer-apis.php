@@ -54,6 +54,12 @@ Route::middleware('auth:api')->group(function () {
         
         Route::post('/update-status/{id}', [VehicleController::class, 'updateStatus'])
             ->middleware('permission:dealer.vehicles.status');
+
+        Route::post('/renew-listing/{id}', [VehicleController::class, 'renewListing'])
+            ->middleware('permission:dealer.vehicles.update');
+
+        Route::post('/{id}/3d-view', [VehicleController::class, 'upload3dView'])
+            ->middleware('permission:dealer.vehicles.media');
         
         Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment'])
             ->middleware('permission:dealer.vehicles.update');
@@ -155,6 +161,8 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.subscription.manage');
         Route::get('/history', [SubscriptionController::class, 'getHistory'])
             ->middleware('permission:dealer.subscription.manage');
+        Route::get('/usage', [SubscriptionController::class, 'getUsage'])
+            ->middleware('permission:dealer.subscription.manage');
         Route::post('/', [SubscriptionController::class, 'store'])
             ->middleware('permission:dealer.subscription.manage');
     });
@@ -173,10 +181,14 @@ Route::middleware('auth:api')->group(function () {
     
     // Analytics
     Route::prefix('analytics')->group(function () {
-        Route::get('/overview', [DealerAnalyticsController::class, 'overview']);
-        Route::get('/leads', [DealerAnalyticsController::class, 'leads']);
-        Route::get('/vehicles', [DealerAnalyticsController::class, 'vehicles']);
-        Route::get('/marketing', [DealerAnalyticsController::class, 'marketing']);
+        Route::get('/overview', [DealerAnalyticsController::class, 'overview'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/leads', [DealerAnalyticsController::class, 'leads'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/vehicles', [DealerAnalyticsController::class, 'vehicles'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/marketing', [DealerAnalyticsController::class, 'marketing'])
+            ->middleware('dealer.feature:analytics');
         Route::get('/subscription', [DealerAnalyticsController::class, 'subscription']);
     });
 });

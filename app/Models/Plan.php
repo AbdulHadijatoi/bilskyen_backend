@@ -18,11 +18,14 @@ class Plan extends Model
         'description',
         'is_active',
         'trial_days',
+        'billing_model',
+        'price_per_listing_per_day',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'trial_days' => 'integer',
+        'price_per_listing_per_day' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -77,7 +80,6 @@ class Plan extends Model
      */
     public function isAvailableToDealer(int $dealerId, array $dealerRoleIds = []): bool
     {
-        // Check if dealer is specifically allowed
         $dealerAvailable = $this->availability()
             ->where('dealer_id', $dealerId)
             ->where('is_enabled', true)

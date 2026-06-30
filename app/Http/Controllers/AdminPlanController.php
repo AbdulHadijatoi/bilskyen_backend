@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Models\Feature;
 use App\Models\PlanAvailability;
 use App\Models\PlanPriceHistory;
+use App\Constants\BillingModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,8 @@ class AdminPlanController extends Controller
             'pricing.monthly_price' => 'sometimes|integer|min:0',
             'pricing.yearly_price' => 'sometimes|integer|min:0',
             'pricing.currency' => 'sometimes|string|size:3',
+            'billing_model' => 'sometimes|string|in:'.BillingModel::SUBSCRIPTION.','.BillingModel::USAGE_DAILY,
+            'price_per_listing_per_day' => 'sometimes|integer|min:0|nullable',
         ]);
 
         // Validate that at least one of role_ids or dealer_ids is provided
@@ -56,7 +59,10 @@ class AdminPlanController extends Controller
         DB::beginTransaction();
         try {
             // Create plan
-            $plan = Plan::create($request->only(['name', 'slug', 'description', 'is_active', 'trial_days']));
+            $plan = Plan::create($request->only([
+                'name', 'slug', 'description', 'is_active', 'trial_days',
+                'billing_model', 'price_per_listing_per_day',
+            ]));
 
             // Create plan availability records
             $availabilityRecords = [];
@@ -154,12 +160,17 @@ class AdminPlanController extends Controller
             'pricing.monthly_price' => 'sometimes|integer|min:0',
             'pricing.yearly_price' => 'sometimes|integer|min:0',
             'pricing.currency' => 'sometimes|string|size:3',
+            'billing_model' => 'sometimes|string|in:'.BillingModel::SUBSCRIPTION.','.BillingModel::USAGE_DAILY,
+            'price_per_listing_per_day' => 'sometimes|integer|min:0|nullable',
         ]);
 
         DB::beginTransaction();
         try {
             // Update plan basic info
-            $plan->update($request->only(['name', 'slug', 'description', 'is_active', 'trial_days']));
+            $plan->update($request->only([
+                'name', 'slug', 'description', 'is_active', 'trial_days',
+                'billing_model', 'price_per_listing_per_day',
+            ]));
 
             // Update plan availability if provided
             if ($request->has('role_ids') || $request->has('dealer_ids')) {

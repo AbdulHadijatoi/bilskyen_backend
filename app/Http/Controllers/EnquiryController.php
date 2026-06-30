@@ -11,6 +11,7 @@ use App\Models\Enquiry;
 use App\Services\AuthService;
 use App\Services\AuditLogService;
 use App\Services\MailService;
+use App\Services\MarketplaceNotifier;
 use App\Support\EnquiryMailPresenter;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
@@ -28,7 +29,8 @@ class EnquiryController extends Controller
     public function __construct(
         private AuthService $authService,
         private AuditLogService $auditLogService,
-        private MailService $mailService
+        private MailService $mailService,
+        private MarketplaceNotifier $marketplaceNotifier,
     ) {}
 
     private function resolveVehicleOwnerEmail(Vehicle $vehicle): ?string
@@ -75,6 +77,19 @@ class EnquiryController extends Controller
             ],
             false
         );
+    }
+
+    private function notifyEnquiryRecipients(Vehicle $vehicle, Enquiry $enquiry): void
+    {
+        $title = __('messages.notifications.new_enquiry_title');
+        $message = __('messages.notifications.new_enquiry_message', ['vehicle' => $this->vehicleLabel($vehicle)]);
+        $meta = ['vehicle_id' => $vehicle->id, 'enquiry_id' => $enquiry->id];
+
+        if ($vehicle->dealer_id && $vehicle->dealer) {
+            $this->marketplaceNotifier->notifyDealerOwner($vehicle->dealer, $title, $message, $meta);
+        } elseif ($vehicle->user) {
+            $this->marketplaceNotifier->notifyUser($vehicle->user, $title, $message, $meta);
+        }
     }
 
     /**
@@ -200,6 +215,23 @@ class EnquiryController extends Controller
         }
 
         // Return response with lead data and phone number
+        $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
+            'vehicle_id' => $vehicle->id,
+            'user_id' => $user?->id,
+            'name' => $user?->name ?? 'Guest',
+            'email' => $user?->email ?? 'noreply@example.com',
+            'phone' => $user?->phone,
+            'subject' => $this->enquirySubject('messages.api.phone_reveal_subject', $vehicle),
+            'message' => 'A buyer revealed your phone number from the listing.',
+            'type' => Enquiries::TYPES[0],
+            'status' => Enquiries::STATUSES[0],
+            'source' => $this->getSourceName($request),
+        ]);
+
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.lead_created_successfully'),
@@ -338,6 +370,7 @@ class EnquiryController extends Controller
 
         // Return success response
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',
@@ -478,6 +511,7 @@ class EnquiryController extends Controller
 
         // Return success response
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',
@@ -618,6 +652,7 @@ class EnquiryController extends Controller
 
         // Return success response
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',
@@ -738,6 +773,7 @@ class EnquiryController extends Controller
         }
 
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',

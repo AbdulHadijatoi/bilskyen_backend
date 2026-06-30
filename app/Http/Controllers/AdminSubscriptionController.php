@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Constants\SubscriptionStatus;
 use App\Constants\VehicleListStatus;
 use App\Services\SubscriptionFeatureService;
+use App\Services\SubscriptionLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\DB;
 class AdminSubscriptionController extends Controller
 {
     public function __construct(
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private SubscriptionLifecycleService $subscriptionLifecycleService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -254,9 +256,7 @@ class AdminSubscriptionController extends Controller
      */
     private function handleSubscriptionInactive(Dealer $dealer): void
     {
-        Vehicle::where('dealer_id', $dealer->id)->update([
-            'list_status_id' => VehicleListStatus::ARCHIVED,
-        ]);
+        $this->subscriptionLifecycleService->handleSubscriptionInactive($dealer);
         $this->subscriptionFeatureService->clearCache($dealer);
     }
 }

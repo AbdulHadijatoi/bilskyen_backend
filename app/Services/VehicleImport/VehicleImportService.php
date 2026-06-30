@@ -97,6 +97,7 @@ class VehicleImportService
         $payload = $resolved['payload'];
         $warnings = $resolved['warnings'];
         $errors = $resolved['errors'];
+        $this->appendPaygImportWarnings($warnings, $dealer, $payload);
 
         $base = [
             'row' => $excelRow,
@@ -196,5 +197,39 @@ class VehicleImportService
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<int, array{field: string, value: string, message: string}>  $warnings
+     * @param  array<string, mixed>  $payload
+     */
+    private function appendPaygImportWarnings(array &$warnings, ?Dealer $dealer, array $payload): void
+    {
+        if ($dealer === null) {
+            return;
+        }
+
+        $listStatusId = (int) ($payload['list_status_id'] ?? VehicleListStatus::PUBLISHED);
+        if ($listStatusId !== VehicleListStatus::PUBLISHED) {
+            return;
+        }
+
+        if (! $this->subscriptionFeatureService->isUsageDailyPlan($dealer)) {
+            return;
+        }
+
+        $plan = $this->subscriptionFeatureService->getActiveSubscription($dealer)?->plan;
+        $cents = (int) ($plan?->price_per_listing_per_day ?? 0);
+        if ($cents <= 0) {
+            return;
+        }
+
+        $warnings[] = [
+            'field' => 'billing',
+            'value' => (string) $cents,
+            'message' => __('messages.api.vehicle_import_payg_row_warning', [
+                'amount' => number_format($cents / 100, 2, ',', '.'),
+            ]),
+        ];
     }
 }

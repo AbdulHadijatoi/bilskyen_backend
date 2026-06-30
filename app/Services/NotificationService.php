@@ -107,10 +107,10 @@ class NotificationService
     {
         $query = Notification::query();
 
-        // Filter by user roles
+        // Filter by user roles and optional per-user targeting in metadata
         $user->load('roles');
         $userRoleNames = $user->roles->pluck('name')->toArray();
-        $query->where(function ($q) use ($userRoleNames) {
+        $query->where(function ($q) use ($userRoleNames, $user) {
             if (count($userRoleNames) > 0) {
                 $q->where(function ($subQ) use ($userRoleNames) {
                     foreach ($userRoleNames as $roleName) {
@@ -118,7 +118,10 @@ class NotificationService
                     }
                 });
             }
-            $q->orWhereJsonLength('target_roles', 0); // Empty array means all users
+            $q->orWhereJsonLength('target_roles', 0);
+        })->where(function ($q) use ($user) {
+            $q->whereNull('metadata->user_id')
+                ->orWhere('metadata->user_id', $user->id);
         });
 
         // Apply filters
@@ -154,7 +157,7 @@ class NotificationService
         $user->load('roles');
         $userRoleNames = $user->roles->pluck('name')->toArray();
         $query = Notification::whereNotIn('id', $readNotificationIds)
-            ->where(function ($q) use ($userRoleNames) {
+            ->where(function ($q) use ($userRoleNames, $user) {
                 if (count($userRoleNames) > 0) {
                     $q->where(function ($subQ) use ($userRoleNames) {
                         foreach ($userRoleNames as $roleName) {
@@ -163,6 +166,9 @@ class NotificationService
                     });
                 }
                 $q->orWhereJsonLength('target_roles', 0);
+            })->where(function ($q) use ($user) {
+                $q->whereNull('metadata->user_id')
+                    ->orWhere('metadata->user_id', $user->id);
             });
 
         if ($since) {

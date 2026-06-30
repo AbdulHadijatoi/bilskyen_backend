@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\BillingModel;
 use App\Models\Dealer;
 use App\Models\DealerSubscription;
 use App\Models\Plan;
@@ -20,8 +21,6 @@ class DealerSubscriptionApplicationService
     ) {}
 
     /**
-     * Cancel active/trial subscriptions and create a new one (dealer-initiated or admin-approved flow).
-     *
      * @return array{subscription: DealerSubscription, subscription_features: array}
      */
     public function applyPlanToDealer(
@@ -35,6 +34,8 @@ class DealerSubscriptionApplicationService
         string $createAuditNote,
     ): array {
         $startsAt = $startsAt ?? now();
+        $isUsagePlan = $plan->billing_model === BillingModel::USAGE_DAILY;
+        $isFutureStart = $startsAt->isFuture();
 
         return DB::transaction(function () use (
             $dealer,
@@ -44,7 +45,9 @@ class DealerSubscriptionApplicationService
             $actorUser,
             $request,
             $cancelAuditNote,
-            $createAuditNote
+            $createAuditNote,
+            $isUsagePlan,
+            $isFutureStart
         ) {
             $existingSubscriptions = DealerSubscription::where('dealer_id', $dealer->id)
                 ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
@@ -81,16 +84,25 @@ class DealerSubscriptionApplicationService
                 }
             }
 
-            $subscriptionStatusId = ($plan->trial_days && $plan->trial_days > 0)
-                ? SubscriptionStatus::TRIAL
-                : SubscriptionStatus::ACTIVE;
-
-            if ($subscriptionStatusId === SubscriptionStatus::TRIAL && $plan->trial_days) {
-                $endsAt = $startsAt->copy()->addDays($plan->trial_days);
+            if ($isFutureStart) {
+                $subscriptionStatusId = SubscriptionStatus::SCHEDULED;
+                $endsAt = null;
+            } elseif ($isUsagePlan) {
+                $subscriptionStatusId = SubscriptionStatus::ACTIVE;
+                $endsAt = null;
+                $billingCycle = BillingModel::USAGE_DAILY;
             } else {
-                $endsAt = $billingCycle === 'yearly'
-                    ? $startsAt->copy()->addYear()
-                    : $startsAt->copy()->addMonth();
+                $subscriptionStatusId = ($plan->trial_days && $plan->trial_days > 0)
+                    ? SubscriptionStatus::TRIAL
+                    : SubscriptionStatus::ACTIVE;
+
+                if ($subscriptionStatusId === SubscriptionStatus::TRIAL && $plan->trial_days) {
+                    $endsAt = $startsAt->copy()->addDays($plan->trial_days);
+                } else {
+                    $endsAt = $billingCycle === 'yearly'
+                        ? $startsAt->copy()->addYear()
+                        : $startsAt->copy()->addMonth();
+                }
             }
 
             $subscription = DealerSubscription::create([
@@ -100,6 +112,7 @@ class DealerSubscriptionApplicationService
                 'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
                 'auto_renew' => false,
+                'billing_cycle' => $billingCycle,
                 'created_at' => now(),
             ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AuditLogService;
+use App\Services\SubscriptionFeatureService;
 use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportService;
 use App\Services\VehicleImport\VehicleImportTemplateBuilder;
@@ -17,6 +18,7 @@ class VehicleImportController extends Controller
         private VehicleImportService $vehicleImportService,
         private VehicleImportTemplateBuilder $templateBuilder,
         private AuditLogService $auditLogService,
+        private SubscriptionFeatureService $subscriptionFeatureService,
     ) {}
 
     public function downloadTemplate(): BinaryFileResponse
@@ -30,11 +32,27 @@ class VehicleImportController extends Controller
         )->deleteFileAfterSend(true);
     }
 
-    public function sample(): JsonResponse
+    public function sample(Request $request): JsonResponse
     {
+        $dealer = $request->user()?->dealer;
+        $usageNotice = null;
+
+        if ($dealer && $this->subscriptionFeatureService->isUsageDailyPlan($dealer)) {
+            $plan = $this->subscriptionFeatureService->getActiveSubscription($dealer)?->plan;
+            $cents = (int) ($plan?->price_per_listing_per_day ?? 0);
+            $usageNotice = [
+                'billing_model' => 'usage_daily',
+                'price_per_day_cents' => $cents,
+                'message' => __('messages.api.vehicle_import_payg_notice', [
+                    'amount' => number_format($cents / 100, 2, ',', '.'),
+                ]),
+            ];
+        }
+
         return $this->success([
             'headers' => VehicleImportColumnDefinitions::TEMPLATE_HEADERS,
             'row' => VehicleImportColumnDefinitions::SAMPLE_ROW,
+            'usage_notice' => $usageNotice,
         ]);
     }
 

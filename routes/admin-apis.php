@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminVehicleController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AdminFeatureController;
 use App\Http\Controllers\AdminSubscriptionController;
+use App\Http\Controllers\AdminDealerInvoiceController;
 use App\Http\Controllers\AdminSubscriptionChangeRequestController;
 use App\Http\Controllers\AdminDealerController;
 use App\Http\Controllers\AdminPageController;
@@ -84,6 +85,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     // Vehicle Management (Admin can see all dealer listings)
     Route::prefix('vehicles')->group(function () {
         Route::get('/', [AdminVehicleController::class, 'index']);
+        Route::get('/pending-review', [AdminVehicleController::class, 'pendingReview']);
+        Route::post('/approve-pending/{id}', [AdminVehicleController::class, 'approvePendingReview']);
+        Route::post('/reject-pending/{id}', [AdminVehicleController::class, 'rejectPendingReview']);
+        Route::post('/renew-listing/{id}', [AdminVehicleController::class, 'renewListing']);
+        Route::post('/listing-lifecycle/{id}', [AdminVehicleController::class, 'updateListingLifecycle']);
         Route::get('/show/{id}', [AdminVehicleController::class, 'show']);
         Route::get('/images/{id}', [AdminVehicleController::class, 'getImages']);
         Route::get('/history/{id}', [AdminVehicleController::class, 'getHistory']);
@@ -127,6 +133,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/{id}/cancel', [AdminSubscriptionController::class, 'cancel']);
         Route::post('/{id}/renew', [AdminSubscriptionController::class, 'renew']);
         Route::get('/dealer/{dealerId}', [AdminSubscriptionController::class, 'getDealerSubscriptions']);
+    });
+
+    Route::prefix('invoices')->group(function () {
+        Route::get('/', [AdminDealerInvoiceController::class, 'index']);
+        Route::get('/{id}', [AdminDealerInvoiceController::class, 'show']);
+        Route::post('/{id}/mark-sent', [AdminDealerInvoiceController::class, 'markSent']);
+        Route::post('/{id}/mark-paid', [AdminDealerInvoiceController::class, 'markPaid']);
     });
 
     // Dealer Management

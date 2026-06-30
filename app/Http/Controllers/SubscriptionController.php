@@ -10,6 +10,7 @@ use App\Models\DealerSubscriptionChangeRequest;
 use App\Models\Plan;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
+use App\Services\ListingBillingService;
 use App\Services\SubscriptionFeatureService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,7 +26,8 @@ class SubscriptionController extends Controller
     public function __construct(
         private AuditLogService $auditLogService,
         private DealerContextService $dealerContextService,
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private ListingBillingService $listingBillingService
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -36,7 +38,7 @@ class SubscriptionController extends Controller
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
-        $subscription = $dealer->subscriptions()->latest()->first();
+        $subscription = $this->subscriptionFeatureService->getActiveSubscription($dealer);
 
         if (!$subscription) {
             return $this->notFound(__('messages.api.no_active_subscription'));
@@ -164,7 +166,7 @@ class SubscriptionController extends Controller
     {
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
-            'billing_cycle' => 'required|in:monthly,yearly',
+            'billing_cycle' => 'required|in:monthly,yearly,usage_daily',
             'starts_at' => 'sometimes|date',
         ]);
 
@@ -175,6 +177,20 @@ class SubscriptionController extends Controller
         $dealer->load('owner.roles');
 
         $plan = Plan::with('availability')->findOrFail($request->plan_id);
+
+        if ($plan->billing_model === \App\Constants\BillingModel::USAGE_DAILY && $request->billing_cycle !== 'usage_daily') {
+            return $this->validationError(
+                ['billing_cycle' => [__('messages.api.usage_plan_requires_usage_daily_cycle')]],
+                __('messages.api.usage_plan_requires_usage_daily_cycle')
+            );
+        }
+
+        if ($plan->billing_model === \App\Constants\BillingModel::SUBSCRIPTION && $request->billing_cycle === 'usage_daily') {
+            return $this->validationError(
+                ['billing_cycle' => [__('messages.api.subscription_plan_invalid_billing_cycle')]],
+                __('messages.api.subscription_plan_invalid_billing_cycle')
+            );
+        }
 
         // Check if plan is available to dealer (from owner + staff)
         $dealerRoleIds = collect();
@@ -192,11 +208,7 @@ class SubscriptionController extends Controller
             return $this->error(__('messages.api.subscription_plan_not_available_dealer'), [], 403);
         }
 
-        $activeSub = DealerSubscription::query()
-            ->where('dealer_id', $dealer->id)
-            ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
-            ->orderByDesc('created_at')
-            ->first();
+        $activeSub = $this->subscriptionFeatureService->getActiveSubscription($dealer);
 
         if ($activeSub && (int) $activeSub->plan_id === (int) $plan->id) {
             return $this->validationError(
@@ -278,6 +290,15 @@ class SubscriptionController extends Controller
                 'pending_change_request' => $changeRequest,
             ],
             __('messages.api.subscription_change_request_submitted')
+        );
+    }
+
+    public function getUsage(Request $request): JsonResponse
+    {
+        $dealer = $this->dealerContextService->requireDealer($request->user());
+
+        return $this->success(
+            $this->listingBillingService->getUsageSummary($dealer)
         );
     }
 }

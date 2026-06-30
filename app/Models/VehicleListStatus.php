@@ -16,6 +16,7 @@ class VehicleListStatus extends Model
     public const PUBLISHED = 2;
     public const SOLD = 3;
     public const ARCHIVED = 4;
+    public const PENDING_REVIEW = 5;
 
     public $timestamps = false;
 

@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Lead;
-use App\Models\DealerSubscription;
-use App\Models\Plan;
+use App\Services\SubscriptionFeatureService;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus as SubscriptionStatusConstant;
 use Illuminate\Http\Request;
@@ -20,6 +19,10 @@ use Carbon\Carbon;
  */
 class DealerDashboardController extends Controller
 {
+    public function __construct(
+        private SubscriptionFeatureService $subscriptionFeatureService
+    ) {}
+
     /**
      * Get dashboard statistics and data for the authenticated dealer
      */
@@ -73,16 +76,13 @@ class DealerDashboardController extends Controller
 
         // Subscription Information (current dealer's subscription)
 
-        $currentSubscriptionWithRelations = DealerSubscription::where('dealer_id', $dealerId)
-            ->with(['plan', 'subscriptionStatus'])
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $currentSubscriptionWithRelations = $this->subscriptionFeatureService->getActiveSubscription($dealer);
 
         $subscriptionData = [
             'has_subscription' => $currentSubscriptionWithRelations !== null,
             'plan_name' => $currentSubscriptionWithRelations?->plan?->name ?? 'No Plan',
             'status' => $currentSubscriptionWithRelations?->subscriptionStatus?->name ?? 'None',
-            'is_active' => $currentSubscriptionWithRelations && $currentSubscriptionWithRelations->subscription_status_id === SubscriptionStatusConstant::ACTIVE,
+            'is_active' => $currentSubscriptionWithRelations !== null,
         ];
 
         // Vehicle Price Statistics

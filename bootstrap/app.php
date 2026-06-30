@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\RequirePermission::class,
+            'dealer.feature' => \App\Http\Middleware\RequireDealerFeature::class,
             'cron.auth' => \App\Http\Middleware\CronAuth::class,
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'auth.web' => \App\Http\Middleware\AuthenticateWeb::class,
