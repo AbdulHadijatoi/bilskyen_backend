@@ -23,6 +23,7 @@ use App\Models\DmrVehicleUse;
 use App\Models\Permit;
 use App\Models\LeadIntent;
 use App\Models\LeadCategory;
+use App\Models\LeadStage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -165,6 +166,11 @@ class LookupService
         return Permit::orderBy('name')->get();
     }
 
+    /** No-op: lookup data is not cached. */
+    public static function forgetLeadStagesLookupCache(): void
+    {
+    }
+
     /** Dealer API only: lead intents and categories */
     public function getLeadIntents(): Collection
     {
@@ -174,6 +180,11 @@ class LookupService
     public function getLeadCategories(): Collection
     {
         return LeadCategory::orderBy('name')->get();
+    }
+
+    public function getLeadStages(): Collection
+    {
+        return LeadStage::orderBy('id')->get();
     }
 
     /**
@@ -408,6 +419,7 @@ class LookupService
             'equipments' => $this->getEquipments(),
             'lead_intents' => $this->getLeadIntents(),
             'lead_categories' => $this->getLeadCategories(),
+            'lead_stages' => $this->getLeadStages(),
         ];
     }
 

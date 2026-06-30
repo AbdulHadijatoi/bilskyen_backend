@@ -45,6 +45,7 @@ use App\Http\Controllers\AdminLocationController;
 use App\Http\Controllers\AdminOwnershipTaxRuleController;
 use App\Http\Controllers\AdminVehicleSpecDefinitionController;
 use App\Http\Controllers\AdminDmrDriveEnergyController;
+use App\Http\Controllers\Admin\AdminLeadStageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -398,6 +399,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/import', [AdminTranslationController::class, 'import']);
         Route::get('/export', [AdminTranslationController::class, 'export']);
         Route::get('/locales', [AdminTranslationController::class, 'locales']);
+    });
+
+    // Lead stages (fixed IDs, editable Danish names)
+    Route::prefix('lead-stages')->group(function () {
+        Route::get('/', [AdminLeadStageController::class, 'index']);
+        Route::post('/update/{id}', [AdminLeadStageController::class, 'update']);
     });
 
     // Locations (city / postcode autocomplete dataset)

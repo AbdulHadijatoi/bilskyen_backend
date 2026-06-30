@@ -476,7 +476,9 @@ class DealerAnalyticsController extends Controller
         if (!$currentSubscription || !$currentSubscription->plan) {
             return $this->success([
                 'plan_name' => 'No Plan',
+                'plan_slug' => null,
                 'status' => 'None',
+                'status_id' => null,
                 'renewal_date' => null,
                 'features' => [],
             ]);
@@ -504,6 +506,8 @@ class DealerAnalyticsController extends Controller
             $featureUsage[] = [
                 'feature_key' => $feature->key,
                 'feature_name' => $feature->description ?? $feature->key,
+                'label_en' => $feature->label_en,
+                'label_da' => $feature->label_da,
                 'limit' => $limit,
                 'used' => $used,
                 'usage_percentage' => $limit > 0 ? round(($used / $limit) * 100, 2) : 0,
@@ -512,7 +516,9 @@ class DealerAnalyticsController extends Controller
 
         return $this->success([
             'plan_name' => $plan->name,
+            'plan_slug' => $plan->slug,
             'status' => $currentSubscription->subscriptionStatus?->name ?? 'Unknown',
+            'status_id' => $currentSubscription->subscription_status_id,
             'renewal_date' => $currentSubscription->ends_at?->toISOString(),
             'features' => $featureUsage,
         ]);
