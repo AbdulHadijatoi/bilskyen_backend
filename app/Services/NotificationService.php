@@ -178,6 +178,32 @@ class NotificationService
         return $query->count();
     }
 
+    public function getTotalCountForUser(User $user, ?\DateTime $since = null): int
+    {
+        $user->load('roles');
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $query = Notification::query()
+            ->where(function ($q) use ($userRoleNames, $user) {
+                if (count($userRoleNames) > 0) {
+                    $q->where(function ($subQ) use ($userRoleNames) {
+                        foreach ($userRoleNames as $roleName) {
+                            $subQ->orWhereJsonContains('target_roles', $roleName);
+                        }
+                    });
+                }
+                $q->orWhereJsonLength('target_roles', 0);
+            })->where(function ($q) use ($user) {
+                $q->whereNull('metadata->user_id')
+                    ->orWhere('metadata->user_id', $user->id);
+            });
+
+        if ($since) {
+            $query->where('created_at', '>=', $since);
+        }
+
+        return $query->count();
+    }
+
     /**
      * Create purchase notifications
      * Calculates purchasePrice and paidAmount from transaction entries

@@ -489,6 +489,7 @@ return [
                 'leasing_information' => 'Leasing information',
                 'equipment_features' => 'Udstyr & funktioner',
                 'photos' => 'Billeder',
+                'view_3d' => '3D-visning',
                 'pricing' => 'Prissætning',
                 'listed_price' => 'Annonceret pris',
                 'contact_actions' => 'Kontakt handlinger',
@@ -993,7 +994,10 @@ return [
         'sell_your_car_success' => [
             'page_title' => 'Køretøj Annonceret med succes',
             'title' => 'Køretøj Annonceret med succes!',
+            'title_pending_review' => 'Annonce indsendt til gennemgang',
             'message' => 'Dit køretøj er blevet offentliggjort og er nu live på Bilskyen. Du kan fremhæve det for at få mere synlighed eller se det nu.',
+            'message_pending_review' => 'Din køretøjsannonce er indsendt og afventer godkendelse. Vi giver dig besked, når den er godkendt og live på Bilskyen.',
+            'pending_review_badge' => 'Afventer godkendelse',
             'already_featured' => 'Dit køretøj er allerede fremhævet',
             'feature_button' => 'Fremhæv min annonce',
             'view_button' => 'Se mit køretøj',

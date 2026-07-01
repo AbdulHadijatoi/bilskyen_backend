@@ -54,15 +54,7 @@ class NotificationController extends Controller
         if ($unread) {
             $count = $this->notificationService->getUnreadCount($user, $since);
         } else {
-            $user->load('roles');
-            $userRoleNames = $user->roles->pluck('name')->toArray();
-            $count = Notification::where(function ($q) use ($userRoleNames) {
-                $q->where(function ($subQ) use ($userRoleNames) {
-                    foreach ($userRoleNames as $roleName) {
-                        $subQ->orWhereJsonContains('target_roles', $roleName);
-                    }
-                })->orWhereJsonLength('target_roles', 0);
-            })->count();
+            $count = $this->notificationService->getTotalCountForUser($user, $since);
         }
 
         return response()->json(['count' => $count]);
@@ -76,7 +68,7 @@ class NotificationController extends Controller
         $user = $request->user();
         $ids = $request->input('ids', []);
 
-        $result = $this->notificationService->markAsRead($user, $ids);
+        $result = $this->notificationService->markAsRead($user->id, $ids);
 
         return response()->json($result);
     }
@@ -88,7 +80,7 @@ class NotificationController extends Controller
     {
         $limit = min((int) $request->input('limit', 50), 200);
 
-        $result = $this->notificationService->dispatchPendingNotifications($limit);
+        $result = $this->notificationService->dispatchNotifications($limit);
 
         return response()->json($result);
     }

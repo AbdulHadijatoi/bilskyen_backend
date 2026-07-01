@@ -42,6 +42,8 @@ return new class extends Migration
             'dealer.leads.assign',
             'dealer.leads.update',
             'dealer.leads.messages',
+            'dealer.enquiries.view',
+            'dealer.enquiries.update',
             'dealer.staff.manage',
             'dealer.subscription.manage',
             'dealer.audit.view',

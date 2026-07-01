@@ -255,10 +255,26 @@
         </div>
 
         <!-- Success Title -->
-        <h1 class="success-title">{{ __('messages.pages.sell_your_car_success.title') }}</h1>
+        <h1 class="success-title">
+            {{ $isPendingReview
+                ? __('messages.pages.sell_your_car_success.title_pending_review')
+                : __('messages.pages.sell_your_car_success.title') }}
+        </h1>
         <p class="success-message">
-            {{ __('messages.pages.sell_your_car_success.message') }}
+            {{ $isPendingReview
+                ? __('messages.pages.sell_your_car_success.message_pending_review')
+                : __('messages.pages.sell_your_car_success.message') }}
         </p>
+
+        @if($isPendingReview)
+            <div class="featured-badge" style="background: oklch(0.95 0.08 85); border-color: oklch(0.8 0.12 85); color: oklch(0.45 0.15 85);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                <span>{{ __('messages.pages.sell_your_car_success.pending_review_badge') }}</span>
+            </div>
+        @endif
 
         <!-- Featured Badge (if already featured) -->
         @if($isFeatured)
@@ -321,7 +337,7 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            @if(!$isFeatured && $canFeature)
+            @if(!$isPendingReview && !$isFeatured && $canFeature)
                 <button 
                     type="button" 
                     id="feature-btn" 

@@ -9,6 +9,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -141,6 +142,16 @@ class User extends Authenticatable implements JWTSubject
     public function planOverrides(): HasMany
     {
         return $this->hasMany(UserPlanOverride::class);
+    }
+
+    /**
+     * In-app notifications this user has read
+     */
+    public function readNotifications(): BelongsToMany
+    {
+        return $this->belongsToMany(Notification::class, 'notification_reads')
+            ->withPivot('read_at')
+            ->withTimestamps();
     }
 
     /**

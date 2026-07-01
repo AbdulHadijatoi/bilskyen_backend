@@ -343,11 +343,14 @@ class SellYourCarController extends Controller
 
         $canFeature = $user->can('vehicle.seller.feature');
 
+        $isPendingReview = (int) $vehicle->list_status_id === VehicleListStatusConstant::PENDING_REVIEW;
+
         return view('sell-your-car-success', [
             'listing' => $vehicle,
             'vehicle' => $vehicle,
             'isFeatured' => $isFeatured,
             'canFeature' => $canFeature,
+            'isPendingReview' => $isPendingReview,
             'token' => $token,
         ]);
     }

@@ -489,6 +489,7 @@ return [
                 'leasing_information' => 'Leasing Information',
                 'equipment_features' => 'Equipment & Features',
                 'photos' => 'Photos',
+                'view_3d' => '3D View',
                 'pricing' => 'Pricing',
                 'listed_price' => 'Listed Price',
                 'contact_actions' => 'Contact Actions',
@@ -993,7 +994,10 @@ return [
         'sell_your_car_success' => [
             'page_title' => 'Vehicle Listed Successfully',
             'title' => 'Vehicle Listed Successfully!',
+            'title_pending_review' => 'Listing Submitted for Review',
             'message' => 'Your vehicle has been published and is now live on Bilskyen. You can feature it to get more visibility or view it now.',
+            'message_pending_review' => 'Your vehicle listing has been submitted and is awaiting moderation. We will notify you once it is approved and live on Bilskyen.',
+            'pending_review_badge' => 'Awaiting moderation',
             'already_featured' => 'Your vehicle is already featured',
             'feature_button' => 'Feature My Listing',
             'view_button' => 'View My Vehicle',

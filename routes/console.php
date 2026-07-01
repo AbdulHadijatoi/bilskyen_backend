@@ -40,3 +40,7 @@ Schedule::command('invoices:mark-overdue')
 
 Schedule::command('alerts:price-drops')->dailyAt('08:00')->timezone($timezone);
 Schedule::command('alerts:saved-searches')->dailyAt('08:30')->timezone($timezone);
+
+Schedule::command('notifications:dispatch')
+    ->everyFiveMinutes()
+    ->timezone($timezone);

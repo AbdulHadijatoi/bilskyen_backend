@@ -198,6 +198,21 @@
             </div>
             @endif
 
+            @if(!empty($vehicle->view_3d_url))
+            <div class="detail-section">
+                <h2 class="text-foreground mb-4 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.view_3d') }}</h2>
+                <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+                <model-viewer
+                    src="{{ $vehicle->view_3d_url }}"
+                    alt="{{ __('messages.pages.vehicles.detail.view_3d') }}"
+                    camera-controls
+                    auto-rotate
+                    shadow-intensity="1"
+                    style="width: 100%; height: 400px; border-radius: 0.5rem; background: var(--muted);"
+                ></model-viewer>
+            </div>
+            @endif
+
             <!-- Mobile Pricing + Contact Actions (below photos) -->
             <div class="space-y-6 lg:hidden">
                 <!-- Pricing -->

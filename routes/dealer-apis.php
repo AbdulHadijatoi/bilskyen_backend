@@ -14,6 +14,8 @@ use App\Http\Controllers\DealerDashboardController;
 use App\Http\Controllers\DealerEnquiryController;
 use App\Http\Controllers\DealerAuditLogController;
 use App\Http\Controllers\DealerAnalyticsController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AccountingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +33,25 @@ Route::middleware('auth:api')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DealerDashboardController::class, 'index'])
         ->middleware('permission:dealer.dashboard.view');
+
+    Route::get('/get-vehicles-overview', [DealerDashboardController::class, 'getVehiclesOverviewWidget'])
+        ->middleware('permission:dealer.dashboard.view');
+
+    Route::get('/get-sales-overview', [DealerDashboardController::class, 'getSalesOverviewWidget'])
+        ->middleware('permission:dealer.dashboard.view');
+
+    Route::prefix('accounting')->group(function () {
+        Route::get('/get-financial-overview', [AccountingController::class, 'getFinancialOverview'])
+            ->middleware('permission:dealer.dashboard.view');
+        Route::get('/get-financial-overview-chart', [AccountingController::class, 'getFinancialOverviewChart'])
+            ->middleware('permission:dealer.dashboard.view');
+    });
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::get('/count', [NotificationController::class, 'getCount']);
+        Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
+    });
     
     // Vehicle Management
     Route::prefix('vehicles')->group(function () {
@@ -122,13 +143,17 @@ Route::middleware('auth:api')->group(function () {
     
     // Enquiry Management
     Route::prefix('enquiries')->group(function () {
-        Route::get('/', [DealerEnquiryController::class, 'index']);
-        
-        Route::get('show/{id}', [DealerEnquiryController::class, 'show']);
-        
-        Route::post('status/{id}', [DealerEnquiryController::class, 'updateStatus']);
-        
-        Route::post('type/{id}', [DealerEnquiryController::class, 'updateType']);
+        Route::get('/', [DealerEnquiryController::class, 'index'])
+            ->middleware('permission:dealer.enquiries.view');
+
+        Route::get('show/{id}', [DealerEnquiryController::class, 'show'])
+            ->middleware('permission:dealer.enquiries.view');
+
+        Route::post('status/{id}', [DealerEnquiryController::class, 'updateStatus'])
+            ->middleware('permission:dealer.enquiries.update');
+
+        Route::post('type/{id}', [DealerEnquiryController::class, 'updateType'])
+            ->middleware('permission:dealer.enquiries.update');
     });
     
     // Dealer Profile
