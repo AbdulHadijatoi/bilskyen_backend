@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\Equipment;
-use Illuminate\Http\Request;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Equipment Controller
@@ -32,14 +33,18 @@ class AdminEquipmentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'equipment_type_id' => 'required|integer|exists:equipment_types,id',
+            'equipment_type_id' => [
+                'required',
+                'integer',
+                Rule::exists('equipment_types', 'id')->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipment = Equipment::create($request->only(['name', 'equipment_type_id']));
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->created($equipment);
     }
@@ -50,14 +55,18 @@ class AdminEquipmentController extends Controller
 
         $request->validate([
             'name' => 'sometimes|string|max:255',
-            'equipment_type_id' => 'sometimes|integer|exists:equipment_types,id',
+            'equipment_type_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('equipment_types', 'id')->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipment->update($request->only(['name', 'equipment_type_id']));
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->success($equipment);
     }
@@ -68,8 +77,8 @@ class AdminEquipmentController extends Controller
         $equipment->delete();
 
         // Clear cache
-        Cache::forget('constants_equipments');
-        Cache::forget('constants_equipment_types'); // Also clear equipment types cache
+        LookupService::forgetLookupCacheGroup('equipments');
+        LookupService::forgetLookupCacheGroup('equipment_types');
 
         return $this->noContent();
     }

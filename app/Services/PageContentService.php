@@ -7,10 +7,13 @@ use App\Models\PageImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class PageContentService
 {
+    public function __construct(
+        private FileService $fileService
+    ) {}
+
     /**
      * Cache TTL in seconds (30 days - long-lived since manually cleared on updates)
      */
@@ -18,14 +21,11 @@ class PageContentService
 
     /**
      * Get all home page content from cache or database
-     * 
-     * @param string $pageName
-     * @return array
      */
     public function getHomePageContent(string $pageName = 'home'): array
     {
         $cacheKey = PageContent::getCacheKey($pageName);
-        
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($pageName) {
             $sections = PageContent::where('page_name', $pageName)
                 ->get()
@@ -34,16 +34,13 @@ class PageContentService
                     return $item->content;
                 })
                 ->toArray();
-            
+
             return $sections;
         });
     }
 
     /**
      * Get all sections for admin panel
-     * 
-     * @param string $pageName
-     * @return array
      */
     public function getAllSections(string $pageName = 'home'): array
     {
@@ -61,17 +58,12 @@ class PageContentService
                 ];
             })
             ->toArray();
-        
+
         return $sections;
     }
 
     /**
      * Update a single section
-     * 
-     * @param string $pageName
-     * @param string $sectionKey
-     * @param string|null $content
-     * @return PageContent
      */
     public function updateSection(string $pageName, string $sectionKey, ?string $content): PageContent
     {
@@ -84,41 +76,38 @@ class PageContentService
                 'content' => $content,
             ]
         );
-        
+
         // Cache is automatically cleared by model event
         return $pageContent;
     }
 
     /**
      * Update multiple sections at once
-     * 
-     * @param string $pageName
-     * @param array $sections Array of [section_key => content]
-     * @return array
+     *
+     * @param  array  $sections  Array of [section_key => content]
      */
     public function updateBulk(string $pageName, array $sections): array
     {
         $updated = [];
-        
+
         foreach ($sections as $sectionKey => $content) {
             $pageContent = $this->updateSection($pageName, $sectionKey, $content);
             $updated[] = $pageContent;
         }
-        
+
         // Cache is automatically cleared by model events
         return $updated;
     }
 
     /**
      * Get all page images from cache or database
-     * 
-     * @param string $pageName
+     *
      * @return array Array keyed by section_key, each containing array of images
      */
     public function getPageImages(string $pageName = 'home'): array
     {
         $cacheKey = PageImage::getCacheKey($pageName);
-        
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($pageName) {
             $images = PageImage::where('page_name', $pageName)
                 ->orderBy('section_key')
@@ -132,20 +121,13 @@ class PageContentService
                     })->values()->toArray();
                 })
                 ->toArray();
-            
+
             return $images;
         });
     }
 
     /**
      * Upload a page image
-     * 
-     * @param string $pageName
-     * @param string $sectionKey
-     * @param UploadedFile $file
-     * @param string|null $altText
-     * @param int $sortOrder
-     * @return PageImage
      */
     public function uploadPageImage(
         string $pageName,
@@ -154,25 +136,15 @@ class PageContentService
         ?string $altText = null,
         int $sortOrder = 0
     ): PageImage {
-        // Validate file
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        $maxSize = 20 * 1024 * 1024; // 20MB
+        $this->fileService->validateFile($file);
 
-        if (!in_array($file->getMimeType(), $allowedTypes)) {
-            throw new \Exception('Invalid file type. Allowed types: ' . implode(', ', $allowedTypes));
+        $urls = $this->fileService->uploadFiles([$file], 'public', 'page-content');
+        $fileUrl = $urls[0] ?? '';
+        if ($fileUrl === '') {
+            throw new \RuntimeException('Page image upload failed.');
         }
 
-        if ($file->getSize() > $maxSize) {
-            throw new \Exception('File size exceeds maximum allowed size of 20MB');
-        }
-
-        // Upload file
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $directory = 'page-content';
-        $path = $file->storeAs($directory, $filename, 'public');
-        
-        // Extract relative path (remove 'public/' prefix if present)
-        $imagePath = str_replace('public/', '', $path);
+        $imagePath = str_replace('/storage/', '', parse_url($fileUrl, PHP_URL_PATH) ?? '');
 
         // Create page image record
         $pageImage = PageImage::create([
@@ -189,9 +161,6 @@ class PageContentService
 
     /**
      * Delete a page image
-     * 
-     * @param int $imageId
-     * @return bool
      */
     public function deletePageImage(int $imageId): bool
     {
@@ -210,10 +179,8 @@ class PageContentService
 
     /**
      * Update a page image (alt text or sort order)
-     * 
-     * @param int $imageId
-     * @param array $data Array with 'alt_text' and/or 'sort_order'
-     * @return PageImage
+     *
+     * @param  array  $data  Array with 'alt_text' and/or 'sort_order'
      */
     public function updatePageImage(int $imageId, array $data): PageImage
     {

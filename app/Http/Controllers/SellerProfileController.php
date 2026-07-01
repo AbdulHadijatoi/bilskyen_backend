@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Enquiry;
 use App\Models\ListingViewsLog;
-use App\Models\VehicleDetail;
 use App\Constants\VehicleListStatus;
 use App\Services\VehicleService;
+use App\Services\VehicleDetailPresentationService;
 use App\Services\AuditLogService;
+use App\Services\SellerVehicleEditService;
+use App\Constants\ApiStatusCode;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +25,9 @@ class SellerProfileController extends Controller
 {
     public function __construct(
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private SellerVehicleEditService $sellerVehicleEditService
     ) {}
 
     /**
@@ -35,7 +39,7 @@ class SellerProfileController extends Controller
         $user = $request->user();
 
         $filters = $request->only([
-            'vehicle_list_status_id',
+            'list_status_id',
             'search',
             'sort',
         ]);
@@ -44,11 +48,11 @@ class SellerProfileController extends Controller
         $query = Vehicle::where('user_id', $user->id)
             ->with(['images' => function ($q) {
                 $q->orderBy('sort_order');
-            }, 'details', 'equipment']);
+            }, 'equipment', 'dmrFactVehicle']);
 
         // Apply status filter
-        if ($request->has('vehicle_list_status_id') && $request->input('vehicle_list_status_id')) {
-            $query->where('vehicle_list_status_id', $request->input('vehicle_list_status_id'));
+        if ($request->has('list_status_id') && $request->input('list_status_id')) {
+            $query->where('list_status_id', $request->input('list_status_id'));
         }
 
         // Apply search filter
@@ -56,8 +60,8 @@ class SellerProfileController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('registration', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                    ->orWhere('registration', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -91,10 +95,10 @@ class SellerProfileController extends Controller
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
-                'vin' => $vehicle->vin,
+                'vin' => $vehicle->dmrFactVehicle?->stel_nummer,
                 'price' => $vehicle->price,
                 'km_driven' => $vehicle->km_driven,
-                'vehicle_list_status_id' => $vehicle->vehicle_list_status_id,
+                'list_status_id' => $vehicle->list_status_id,
                 'vehicle_list_status_name' => $vehicle->vehicle_list_status_name,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
                 'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
@@ -119,10 +123,10 @@ class SellerProfileController extends Controller
     }
 
     /**
-     * Get vehicle details
-     * GET /api/v1/seller/vehicles/{id}
+     * Edit form: vehicle values + lookups (same data as seller-vehicle-edit Blade / JS).
+     * GET /api/v1/seller/vehicles/{id}/edit
      */
-    public function getVehicle(Request $request, int $id): JsonResponse
+    public function getVehicleEditForm(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
 
@@ -130,66 +134,93 @@ class SellerProfileController extends Controller
             'images' => function ($q) {
                 $q->orderBy('sort_order');
             },
-            'details',
             'equipment',
-            'details.color',
-            'details.variant',
-            'details.euronom'
+            'dmrFactVehicle.variant.model.brand',
+            'dmrFactVehicle.emissionNorm',
+            'dmrFactVehicle.colour',
         ])->findOrFail($id);
 
-        // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to view this vehicle', null, 403);
+            return $this->forbidden(__('messages.errors.no_permission_update_vehicle'));
         }
 
-        return $this->success($vehicle);
+        $data = $this->sellerVehicleEditService->buildEditFormApiPayload($vehicle, $user);
+
+        return $this->success($data, ApiStatusCode::OK, __('messages.api.data_retrieved_successfully'));
     }
 
     /**
-     * Update vehicle
+     * Get vehicle details
+     * GET /api/v1/seller/vehicles/{id}
+     */
+    public function getVehicle(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $vehicle = Vehicle::with(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
+        ]))->findOrFail($id);
+
+        // Verify ownership
+        if ($vehicle->user_id !== $user->id) {
+            return $this->error(__('messages.errors.no_permission_view_vehicle'), null, 403);
+        }
+
+        $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
+
+        return $this->success(array_merge($payload, [
+            'images' => $vehicle->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'thumbnail_url' => $image->thumbnail_url,
+                    'sort_order' => $image->sort_order,
+                ];
+            }),
+        ]));
+    }
+
+    /**
+     * Update vehicle (same rules and image handling as web seller.vehicle.update).
      * PUT /api/v1/seller/vehicles/{id}
+     *
+     * Send multipart/form-data with the same fields as the web form (including images[], deleted_image_ids[], existing_image_ids[], image_sort_order).
      */
     public function updateVehicle(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
 
-        $vehicle = Vehicle::findOrFail($id);
+        $vehicle = Vehicle::with(['images', 'equipment', 'dmrFactVehicle.variant.model.brand'])->findOrFail($id);
 
-        // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to update this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_update_vehicle'), null, 403);
         }
 
-        // Store before state for audit log
-        $beforeState = $vehicle->toArray();
-
-        // Use VehicleService to update vehicle
-        $data = $request->all();
-        $vehicle = $this->vehicleService->updateVehicle($vehicle, $data);
-        $vehicle->refresh();
-
-        // Audit log
         try {
-            $this->auditLogService->logUpdate(
-                $user,
-                'Vehicle',
-                $vehicle->id,
-                $beforeState,
-                $vehicle->toArray(),
-                $request,
-                'Seller',
-                null,
-                "Vehicle updated by seller: {$vehicle->title}",
-                ['vehicle', 'seller', 'update']
-            );
-        } catch (\Exception $e) {
-            Log::warning('Failed to create audit log for vehicle update', [
-                'vehicle_id' => $vehicle->id,
+            $result = $this->sellerVehicleEditService->updateSellerVehicle($request, $vehicle, $user);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationError($e->errors());
+        } catch (\Throwable $e) {
+            Log::error('Seller API vehicle update failed', [
+                'vehicle_id' => $id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
+            return $this->error(
+                __('messages.errors.failed_to_update_vehicle', ['message' => $e->getMessage()]),
+                null,
+                ApiStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
 
-        return $this->success($vehicle->load(['images', 'details', 'equipment']));
+        return $this->success(
+            ['vehicle' => $result['vehicle']],
+            ApiStatusCode::OK,
+            __('messages.errors.vehicle_updated_success')
+        );
     }
 
     /**
@@ -201,7 +232,7 @@ class SellerProfileController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
         ]);
 
         if ($validator->fails()) {
@@ -212,17 +243,17 @@ class SellerProfileController extends Controller
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to update this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_update_vehicle'), null, 403);
         }
 
         // Store before state
         $beforeState = $vehicle->toArray();
 
         // Update status
-        $vehicle->vehicle_list_status_id = $request->input('vehicle_list_status_id');
+        $vehicle->list_status_id = $request->input('list_status_id');
         
         // Set published_at if publishing
-        if ($request->input('vehicle_list_status_id') == VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
+        if ($request->input('list_status_id') == VehicleListStatus::PUBLISHED && !$vehicle->published_at) {
             $vehicle->published_at = now();
         }
         
@@ -264,7 +295,7 @@ class SellerProfileController extends Controller
 
         // Verify ownership
         if ($vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to delete this vehicle', null, 403);
+            return $this->error(__('messages.errors.no_permission_delete_vehicle'), null, 403);
         }
 
         // Store before state for audit log
@@ -338,7 +369,7 @@ class SellerProfileController extends Controller
         // Verify the inquiry belongs to one of seller's vehicles
         $vehicle = $inquiry->vehicle;
         if (!$vehicle || $vehicle->user_id !== $user->id) {
-            return $this->error('You do not have permission to view this inquiry', null, 403);
+            return $this->error(__('messages.errors.no_permission_view_inquiries'), null, 403);
         }
 
         return $this->success($inquiry);
@@ -362,25 +393,24 @@ class SellerProfileController extends Controller
             'total_views' => ListingViewsLog::whereIn('vehicle_id', $vehicleIds)->count(),
         ];
 
-        // Also get views from vehicle_details for more accurate count
-        $viewsFromDetails = VehicleDetail::whereIn('vehicle_id', $vehicleIds)->sum('views_count');
-        if ($viewsFromDetails > $statistics['total_views']) {
-            $statistics['total_views'] = $viewsFromDetails;
+        $viewsFromVehicles = Vehicle::whereIn('id', $vehicleIds)->sum('views_count');
+        if ($viewsFromVehicles > $statistics['total_views']) {
+            $statistics['total_views'] = $viewsFromVehicles;
         }
 
         // Add status breakdown
         $statistics['by_status'] = [
             'published' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
                 ->count(),
             'draft' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)
+                ->where('list_status_id', VehicleListStatus::DRAFT)
                 ->count(),
             'sold' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
+                ->where('list_status_id', VehicleListStatus::SOLD)
                 ->count(),
             'archived' => Vehicle::where('user_id', $user->id)
-                ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)
+                ->where('list_status_id', VehicleListStatus::ARCHIVED)
                 ->count(),
         ];
 

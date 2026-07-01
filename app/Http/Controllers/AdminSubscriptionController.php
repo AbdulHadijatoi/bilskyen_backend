@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Constants\SubscriptionStatus;
 use App\Constants\VehicleListStatus;
 use App\Services\SubscriptionFeatureService;
+use App\Services\SubscriptionLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\DB;
 class AdminSubscriptionController extends Controller
 {
     public function __construct(
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private SubscriptionLifecycleService $subscriptionLifecycleService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -75,7 +77,7 @@ class AdminSubscriptionController extends Controller
         )->unique()->toArray();
 
         if (!$plan->isAvailableToDealer($dealer->id, $dealerRoleIds)) {
-            return $this->error('This dealer is not allowed to subscribe to this plan', 403);
+            return $this->error(__('messages.api.subscription_dealer_plan_not_allowed'), [], 403);
         }
 
         DB::beginTransaction();
@@ -108,7 +110,7 @@ class AdminSubscriptionController extends Controller
             return $this->created($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to create subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_create_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -154,7 +156,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -198,7 +200,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to cancel subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_cancel_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -207,7 +209,7 @@ class AdminSubscriptionController extends Controller
         $subscription = DealerSubscription::findOrFail($id);
 
         if ($subscription->subscription_status_id !== SubscriptionStatus::EXPIRED) {
-            return $this->error('Only expired subscriptions can be renewed', 422);
+            return $this->error(__('messages.api.subscription_renew_expired_only'), [], 422);
         }
 
         DB::beginTransaction();
@@ -235,7 +237,7 @@ class AdminSubscriptionController extends Controller
             return $this->success($subscription);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to renew subscription: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.subscription_renew_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -254,9 +256,7 @@ class AdminSubscriptionController extends Controller
      */
     private function handleSubscriptionInactive(Dealer $dealer): void
     {
-        Vehicle::where('dealer_id', $dealer->id)->update([
-            'vehicle_list_status_id' => VehicleListStatus::ARCHIVED,
-        ]);
+        $this->subscriptionLifecycleService->handleSubscriptionInactive($dealer);
         $this->subscriptionFeatureService->clearCache($dealer);
     }
 }

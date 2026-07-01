@@ -3,40 +3,46 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
-use App\Models\Color;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Models\DmrColour;
 use App\Traits\ConstantsCacheTrait;
-
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
- * Admin Color Controller
+ * Admin colour constants — backed by {@see DmrColour} / `dmr_colours`.
  */
 class AdminColorController extends Controller
 {
     use ConstantsCacheTrait;
+
     public function index(Request $request): JsonResponse
     {
-        $colors = Color::orderBy('name')->paginate($request->get('limit', 15));
+        $colors = DmrColour::orderBy('name')->paginate($request->get('limit', 15));
 
         return $this->paginated($colors);
     }
 
     public function show(int $id): JsonResponse
     {
-        $color = Color::findOrFail($id);
+        $color = DmrColour::findOrFail($id);
+
         return $this->success($color);
     }
 
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:colors,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_colours', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
-        $color = Color::create($request->only(['name']));
+        $color = DmrColour::create($request->only(['name']));
 
-        // Clear cache
         $this->clearConstantsCache('colors');
 
         return $this->created($color);
@@ -44,15 +50,19 @@ class AdminColorController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $color = Color::findOrFail($id);
+        $color = DmrColour::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:colors,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_colours', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $color->update($request->only(['name']));
 
-        // Clear cache
         $this->clearConstantsCache('colors');
 
         return $this->success($color);
@@ -60,10 +70,9 @@ class AdminColorController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $color = Color::findOrFail($id);
+        $color = DmrColour::findOrFail($id);
         $color->delete();
 
-        // Clear cache
         $this->clearConstantsCache('colors');
 
         return $this->noContent();

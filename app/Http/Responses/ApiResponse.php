@@ -12,6 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 trait ApiResponse
 {
+    /** Keep Danish / UTF-8 text readable in JSON (avoid \uXXXX escapes). */
+    private const JSON_UTF8 = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+
     /**
      * Normalize errors field - always return array or object, never null
      */
@@ -34,7 +37,7 @@ trait ApiResponse
             'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => $data,
             'errors' => [],
-        ], $statusCode);
+        ], $statusCode, [], self::JSON_UTF8);
     }
 
     /**
@@ -58,7 +61,7 @@ trait ApiResponse
             $response['error_code'] = $errorCode;
         }
 
-        return response()->json($response, $statusCode);
+        return response()->json($response, $statusCode, [], self::JSON_UTF8);
     }
 
     /**
@@ -92,7 +95,7 @@ trait ApiResponse
             'message' => $message ?? __('messages.api.data_retrieved_successfully'),
             'data' => $paginationData,
             'errors' => [],
-        ], $statusCode);
+        ], $statusCode, [], self::JSON_UTF8);
     }
 
     /**
@@ -106,7 +109,7 @@ trait ApiResponse
             'message' => $message ?? __('messages.api.resource_created_successfully'),
             'data' => $data,
             'errors' => [],
-        ], ApiStatusCode::CREATED);
+        ], ApiStatusCode::CREATED, [], self::JSON_UTF8);
     }
 
     /**
@@ -120,7 +123,7 @@ trait ApiResponse
             'message' => $message ?? __('messages.api.operation_completed_successfully'),
             'data' => null,
             'errors' => [],
-        ], ApiStatusCode::NO_CONTENT);
+        ], ApiStatusCode::NO_CONTENT, [], self::JSON_UTF8);
     }
 
     /**
@@ -168,7 +171,7 @@ trait ApiResponse
             'data' => $data,
             'meta' => $meta,
             'errors' => [],
-        ]);
+        ], ApiStatusCode::OK, [], self::JSON_UTF8);
     }
 
     /**
@@ -183,7 +186,7 @@ trait ApiResponse
             'data' => null,
             'meta' => $meta,
             'errors' => [],
-        ]);
+        ], ApiStatusCode::OK, [], self::JSON_UTF8);
     }
 }
 

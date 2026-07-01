@@ -3,40 +3,46 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
-use App\Models\Euronom;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Models\DmrEmissionNorm;
 use App\Traits\ConstantsCacheTrait;
-
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
- * Admin Euronom Controller
+ * Admin emission norm (“euronorm”) constants — backed by {@see DmrEmissionNorm} / `dmr_emission_norms`.
  */
 class AdminEuronomController extends Controller
 {
     use ConstantsCacheTrait;
+
     public function index(Request $request): JsonResponse
     {
-        $euronoms = Euronom::orderBy('name')->paginate($request->get('limit', 15));
+        $euronorms = DmrEmissionNorm::orderBy('name')->paginate($request->get('limit', 15));
 
-        return $this->paginated($euronoms);
+        return $this->paginated($euronorms);
     }
 
     public function show(int $id): JsonResponse
     {
-        $euronom = Euronom::findOrFail($id);
+        $euronom = DmrEmissionNorm::findOrFail($id);
+
         return $this->success($euronom);
     }
 
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:euronorms,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_emission_norms', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
-        $euronom = Euronom::create($request->only(['name']));
+        $euronom = DmrEmissionNorm::create($request->only(['name']));
 
-        // Clear cache
         $this->clearConstantsCache('euronorms');
 
         return $this->created($euronom);
@@ -44,15 +50,19 @@ class AdminEuronomController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $euronom = Euronom::findOrFail($id);
+        $euronom = DmrEmissionNorm::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:euronorms,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_emission_norms', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $euronom->update($request->only(['name']));
 
-        // Clear cache
         $this->clearConstantsCache('euronorms');
 
         return $this->success($euronom);
@@ -60,10 +70,9 @@ class AdminEuronomController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $euronom = Euronom::findOrFail($id);
+        $euronom = DmrEmissionNorm::findOrFail($id);
         $euronom->delete();
 
-        // Clear cache
         $this->clearConstantsCache('euronorms');
 
         return $this->noContent();

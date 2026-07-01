@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
-use App\Models\Variant;
+use App\Models\DmrVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Traits\ConstantsCacheTrait;
+use Illuminate\Validation\Rule;
 
 
 /**
@@ -17,27 +18,59 @@ class AdminVariantController extends Controller
     use ConstantsCacheTrait;
     public function index(Request $request): JsonResponse
     {
-        $variants = Variant::with('model')
-            ->orderBy('name')
-            ->paginate($request->get('limit', 15));
+        $query = DmrVariant::query()
+            ->with(['model.brand'])
+            ->orderBy('name');
 
-        return $this->paginated($variants);
+        if ($request->filled('brand_id')) {
+            $query->whereHas('model', function ($q) use ($request) {
+                $q->where('brand_id', (int) $request->input('brand_id'));
+            });
+        }
+
+        if ($request->filled('model_id')) {
+            $query->where('model_id', (int) $request->input('model_id'));
+        }
+
+        return $this->paginated($query->paginate($request->get('limit', 15)));
     }
 
     public function show(int $id): JsonResponse
     {
-        $variant = Variant::with('model')->findOrFail($id);
+        $variant = DmrVariant::with(['model.brand'])->findOrFail($id);
+
         return $this->success($variant);
     }
 
     public function create(Request $request): JsonResponse
     {
+        $brandId = (int) $request->input('brand_id');
+
         $request->validate([
-            'name' => 'required|string|max:255|unique:variants,name',
-            'model_id' => 'nullable|integer|exists:models,id',
+            'brand_id' => [
+                'required',
+                'integer',
+                Rule::exists('dmr_brands', 'id')->whereNull('deleted_at'),
+            ],
+            'model_id' => [
+                'required',
+                'integer',
+                Rule::exists('dmr_models', 'id')
+                    ->where('brand_id', $brandId)
+                    ->whereNull('deleted_at'),
+            ],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dmr_variants', 'name')->where(
+                    fn ($q) => $q->where('model_id', (int) $request->input('model_id'))
+                ),
+            ],
         ]);
 
-        $variant = Variant::create($request->only(['name', 'model_id']));
+        $variant = DmrVariant::create($request->only(['name', 'model_id']));
+        $variant->load(['model.brand']);
 
         // Clear cache
         $this->clearConstantsCache('variants');
@@ -47,14 +80,41 @@ class AdminVariantController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $variant = Variant::findOrFail($id);
+        $variant = DmrVariant::query()->with('model')->findOrFail($id);
+
+        $modelIdForUnique = $request->filled('model_id')
+            ? (int) $request->input('model_id')
+            : (int) $variant->model_id;
+
+        $brandIdForModelRule = $request->filled('brand_id')
+            ? (int) $request->input('brand_id')
+            : (int) ($variant->model?->brand_id ?? 0);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:variants,name,' . $id,
-            'model_id' => 'nullable|integer|exists:models,id',
+            'brand_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('dmr_brands', 'id')->whereNull('deleted_at'),
+            ],
+            'model_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('dmr_models', 'id')
+                    ->where('brand_id', $brandIdForModelRule)
+                    ->whereNull('deleted_at'),
+            ],
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('dmr_variants', 'name')
+                    ->where(fn ($q) => $q->where('model_id', $modelIdForUnique))
+                    ->ignore($id),
+            ],
         ]);
 
         $variant->update($request->only(['name', 'model_id']));
+        $variant->load(['model.brand']);
 
         // Clear cache
         $this->clearConstantsCache('variants');
@@ -64,7 +124,7 @@ class AdminVariantController extends Controller
 
     public function delete(int $id): JsonResponse
     {
-        $variant = Variant::findOrFail($id);
+        $variant = DmrVariant::findOrFail($id);
         $variant->delete();
 
         // Clear cache

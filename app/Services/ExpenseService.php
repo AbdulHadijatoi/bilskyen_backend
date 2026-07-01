@@ -178,7 +178,7 @@ class ExpenseService
             // Create narration
             $narration = "{$expenseData['category']}: {$expenseData['narration']}";
             if (isset($entities['vehicle'])) {
-                $narration .= " for {$entities['vehicle']->make} {$entities['vehicle']->model}";
+                $narration .= ' for ' . ($entities['vehicle']->title ?? '#' . $entities['vehicle']->id);
             }
             if (isset($entities['contact'])) {
                 $narration .= " paid to " . ($entities['contact']->name ?? $entities['contact']->company_name);
@@ -252,7 +252,7 @@ class ExpenseService
             // Create narration
             $narration = "{$expenseData['category']}: {$expenseData['narration']}";
             if (isset($entities['vehicle'])) {
-                $narration .= " for {$entities['vehicle']->make} {$entities['vehicle']->model}";
+                $narration .= ' for ' . ($entities['vehicle']->title ?? '#' . $entities['vehicle']->id);
             }
             if (isset($entities['contact'])) {
                 $narration .= " paid to " . ($entities['contact']->name ?? $entities['contact']->company_name);

@@ -111,7 +111,7 @@ class AdminTranslationController extends Controller
         }
 
         if (!in_array($locale, ['en', 'da'])) {
-            return $this->error('Invalid locale. Supported locales: en, da');
+            return $this->error(__('messages.api.translation_invalid_locale'));
         }
 
         $translationKey = TranslationKey::findOrFail($id);
@@ -155,7 +155,7 @@ class AdminTranslationController extends Controller
                 'errors' => $results['errors'],
             ]);
         } catch (\Exception $e) {
-            return $this->error('Import failed: ' . $e->getMessage());
+            return $this->error(__('messages.api.translation_import_failed', ['message' => $e->getMessage()]));
         }
     }
 

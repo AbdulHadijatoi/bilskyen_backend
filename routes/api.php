@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VersionController;
-use App\Http\Controllers\NummerpladeController;
+use App\Http\Controllers\DmrFactVehicleLookupController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/version.json', [VersionController::class, 'getVersion']);
     
     // Public vehicle listings (uses database data)
+    Route::get('/vehicles/count', [VehicleController::class, 'count'])->name('vehicles.count');
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::post('/search-vehicles', [VehicleController::class, 'searchVehicles'])->name('vehicles.search');
 
@@ -56,10 +57,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/vehicles/upsert', [\App\Http\Controllers\DmsInboundController::class, 'upsertVehicle']);
     });
     
-    // Sell Your Car API (authenticated users can create vehicle listings)
-    Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
-        ->middleware(['auth:api', 'idempotency'])
-        ->name('api.sell-your-car');
+    // Sell Your Car API — same create logic as web /sell-your-car (SellYourCarController::store)
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/sell-your-car/form', [SellYourCarController::class, 'apiFormData'])
+            ->name('api.sell-your-car.form');
+        Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
+            ->middleware('idempotency')
+            ->name('api.sell-your-car');
+    });
     
     
     // Constants API - Get all lookup tables data
@@ -68,6 +73,7 @@ Route::prefix('v1')->group(function () {
     // Public lookup search endpoints (partial datasets to reduce `/constants` load)
     Route::get('/brands', [LookupController::class, 'searchBrands'])->name('lookup.brands');
     Route::get('/models', [LookupController::class, 'searchModels'])->name('lookup.models');
+    Route::get('/listing-models', [LookupController::class, 'searchListingModels'])->name('lookup.listing_models');
     Route::get('/types', [LookupController::class, 'searchTypes'])->name('lookup.types');
     Route::get('/variants', [LookupController::class, 'searchVariants'])->name('lookup.variants');
     
@@ -142,7 +148,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:api')->prefix('favorites')->group(function () {
         Route::get('/', [\App\Http\Controllers\FavoriteController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\FavoriteController::class, 'store']);
-        Route::post('delete/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroy']);
+        Route::delete('/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroy']);
         Route::get('/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'check']);
         Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
     });
@@ -159,6 +165,7 @@ Route::prefix('v1')->group(function () {
     // Seller Profile API routes (for authenticated sellers)
     Route::middleware('auth:api')->prefix('seller')->group(function () {
         Route::get('/vehicles', [\App\Http\Controllers\SellerProfileController::class, 'getVehicles']);
+        Route::get('/vehicles/{id}/edit', [\App\Http\Controllers\SellerProfileController::class, 'getVehicleEditForm']);
         Route::get('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'getVehicle']);
         Route::put('/vehicles/{id}', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicle']);
         Route::patch('/vehicles/{id}/status', [\App\Http\Controllers\SellerProfileController::class, 'updateVehicleStatus']);
@@ -176,42 +183,18 @@ Route::prefix('v1')->group(function () {
         Route::get('/statistics', [\App\Http\Controllers\DealerProfileApiController::class, 'getStatistics']);
     });
     
-    // Nummerplade API proxy routes (for Flutter/Vue.js)
-    Route::prefix('nummerplade')->group(function () {
-        // Vehicle lookup endpoints (rate limited)
-        Route::post('/vehicle-by-registration', [NummerpladeController::class, 'getVehicleByRegistration'])
-            ->middleware('throttle:40,1'); // 40 requests per minute per IP
-        
-        Route::post('/vehicle-by-vin', [NummerpladeController::class, 'getVehicleByVin'])
-            ->middleware('throttle:40,1'); // 40 requests per minute per IP
-        
-        // Reference data (cached, less restrictive)
-        Route::get('/reference/body-types', [NummerpladeController::class, 'getBodyTypes']);
-        Route::get('/reference/colors', [NummerpladeController::class, 'getColors']);
-        Route::get('/reference/fuel-types', [NummerpladeController::class, 'getFuelTypes']);
-        Route::get('/reference/equipment', [NummerpladeController::class, 'getEquipment']);
-        Route::get('/reference/permits', [NummerpladeController::class, 'getPermits']);
-        Route::get('/reference/types', [NummerpladeController::class, 'getTypes']);
-        Route::get('/reference/uses', [NummerpladeController::class, 'getUses']);
-        
-        // Additional data endpoints (rate limited)
-        Route::get('/inspections/{vehicleId}', [NummerpladeController::class, 'getInspections'])
-            ->middleware('throttle:20,1'); // 20 requests per minute per IP
-        
-        Route::get('/dmr/{vehicleId}', [NummerpladeController::class, 'getDmrData'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/debt/{vehicleId}', [NummerpladeController::class, 'getDebt'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/tinglysning/{vin}', [NummerpladeController::class, 'getTinglysning'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/emissions/{input}', [NummerpladeController::class, 'getEmissions'])
-            ->middleware('throttle:20,1');
-        
-        Route::get('/evaluations/{input}', [NummerpladeController::class, 'getEvaluations'])
-            ->middleware('throttle:20,1');
+    // Local DMR vehicle lookup by registration (slim payload from dmr_* tables)
+    Route::prefix('dmr')->group(function () {
+        Route::post('/vehicle-by-registration', [DmrFactVehicleLookupController::class, 'lookupByRegistration'])
+            ->middleware('throttle:40,1');
+
+        // Manual dropdown search (limited datasets for performance)
+        Route::get('/manual-brands', [DmrFactVehicleLookupController::class, 'searchManualBrands']);
+        Route::get('/manual-models', [DmrFactVehicleLookupController::class, 'searchManualModels']);
+        Route::get('/manual-fuel-types', [DmrFactVehicleLookupController::class, 'searchManualFuelTypes']);
+
+        // Manual -> dmr_fact_vehicle_id resolver (used on submit)
+        Route::post('/vehicle-by-manual', [DmrFactVehicleLookupController::class, 'lookupByManual']);
     });
 });
 

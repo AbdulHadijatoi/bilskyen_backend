@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\TestMail;
+use App\Services\MailService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AuthPageController;
@@ -86,6 +88,8 @@ Route::middleware('auth.web')->group(function () {
     
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+    Route::get('/sell-your-car/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
+        ->name('sell-your-car.lookup-context');
     Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
     Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
     Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
@@ -110,6 +114,7 @@ Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
 
 // Contact Page
 Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
 
 // Privacy Policy Page
 Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
@@ -117,10 +122,13 @@ Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->nam
 // Terms of Service Page
 Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
 
-// Vehicles Page
+// Account deletion (App Store / Play Store compliance)
+Route::get('/account-deletion', [HomeController::class, 'showAccountDeletion'])->name('account-deletion');
+
+// Vehicles Page (DMR-linked Vehicle records)
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
 
-// Vehicle Details Page
+// Vehicle detail (slug)
 Route::get('/vehicles/{vehicle}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
 // Dealer Public Page
@@ -129,20 +137,20 @@ Route::post('/dealer-{slug}/enquire', [\App\Http\Controllers\DealerController::c
 Route::get('/dealer-{slug}/vehicles', [\App\Http\Controllers\DealerController::class, 'getVehicles'])->name('dealer.vehicles');
 
 
-// Route::get('/test-mail', function () {
-//     Mail::raw('Hello from Laravel + Gmail SMTP', function ($msg) {
-//         $msg->to('abdulhadixt@gmail.com')
-//             ->subject('Test Gmail SMTP');
-//     });
+if (app()->environment('local', 'testing')) {
+    Route::get('/test-mail/7R8e94o4YWW1PnvM', function (MailService $mailService) {
+        $to = 'abdulhadijatoi@gmail.com';
+        $ok = $mailService->sendMailable(
+            $to,
+            new TestMail(__('messages.mail.test_body_default')),
+            ['mail_type' => 'test'],
+            false
+        );
 
-//     return 'Mail sent';
-// });
 
 
-Route::prefix('test/dmr')->group(function () {
-    Route::get('/webservice', [DmrTestController::class, 'dmrWebservice']);
-    Route::get('/dataset', [DmrTestController::class, 'motorRegisterData']);
-    Route::get('/scraper', [DmrTestController::class, 'jsDkCarScraper']);
-    Route::get('/xmlstream', [DmrTestController::class, 'motorregisterXmlStream']);
-});
-
+        return $ok
+            ? 'Test email sent to '.$to
+            : 'Failed to send test email (check logs).';
+    })->name('test.mail');
+}

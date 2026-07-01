@@ -30,13 +30,14 @@ class DealerEnquiryController extends Controller
         $dealer = $request->user()->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         // Check if enquiry_management feature is enabled
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'enquiry_management')) {
             return $this->error(
-                'Enquiry management is not available in your current subscription plan. Please upgrade to access this feature.',
+                __('messages.api.enquiry_management_not_in_plan'),
+                [],
                 403
             );
         }
@@ -82,7 +83,7 @@ class DealerEnquiryController extends Controller
         $dealer = $request->user()->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         // Get all vehicle IDs for this dealer

@@ -129,6 +129,7 @@ class SeoService
             'vehicles' => 'vehicles',
             'privacy-policy' => 'privacy-policy',
             'terms-of-service' => 'terms-of-service',
+            'account-deletion' => 'account-deletion',
             'about' => 'about',
             'contact' => 'contact',
         ];

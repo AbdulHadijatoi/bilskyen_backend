@@ -7,7 +7,7 @@ use App\Constants\DealerInvoiceStatus;
 use App\Constants\ListingBillingPeriodStatus;
 use App\Models\Dealer;
 use App\Models\Vehicle;
-use App\Services\ListingBillingService; 
+use App\Services\ListingBillingService;
 use App\Services\SubscriptionFeatureService;
 use Mockery;
 use Tests\TestCase;

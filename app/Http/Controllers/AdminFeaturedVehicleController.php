@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\FeaturedListing;
 use App\Models\Vehicle;
 use App\Constants\VehicleListStatus;
+use App\Services\DealerFeaturedListingService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Admin Featured Vehicle Controller
@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AdminFeaturedVehicleController extends Controller
 {
+    public function __construct(
+        private DealerFeaturedListingService $featuredListingService
+    ) {}
+
     /**
      * Get all featured vehicles with pagination
      */
@@ -24,7 +28,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ])
             ->orderBy('sort_order')
             ->orderBy('created_at', 'desc');
@@ -44,7 +49,7 @@ class AdminFeaturedVehicleController extends Controller
             $statusId = VehicleListStatus::nameToId($request->status);
             if ($statusId) {
                 $query->whereHas('vehicle', function ($q) use ($statusId) {
-                    $q->where('vehicle_list_status_id', $statusId);
+                    $q->where('list_status_id', $statusId);
                 });
             }
         }
@@ -74,6 +79,10 @@ class AdminFeaturedVehicleController extends Controller
         // Get the vehicle to ensure it exists and is published
         $vehicle = Vehicle::findOrFail($request->vehicle_id);
 
+        if ($vehicle->dealer_id && ! $this->featuredListingService->canFeatureVehicle($vehicle)) {
+            return $this->error(__('messages.api.max_feature_listings_reached'), [], 403);
+        }
+
         // Auto-assign sort_order if not provided (max + 1)
         $sortOrder = $request->input('sort_order');
         if ($sortOrder === null) {
@@ -92,7 +101,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ]);
 
         return $this->created($featuredListing);
@@ -118,7 +128,8 @@ class AdminFeaturedVehicleController extends Controller
             'vehicle.images',
             'vehicle.dealer',
             'vehicle.user',
-            'vehicle.details',
+            'vehicle.vehicleListStatus',
+            'vehicle.dmrFactVehicle.variant.model.brand',
         ]);
 
         return $this->success($featuredListing);

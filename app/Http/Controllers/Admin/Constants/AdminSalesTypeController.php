@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\SalesType;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Traits\ConstantsCacheTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 
 /**
@@ -31,7 +32,12 @@ class AdminSalesTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:sales_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('sales_types', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $salesType = SalesType::create($request->only(['name']));
@@ -47,7 +53,12 @@ class AdminSalesTypeController extends Controller
         $salesType = SalesType::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:sales_types,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('sales_types', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $salesType->update($request->only(['name']));

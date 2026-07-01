@@ -10,7 +10,8 @@
         border: 1px solid var(--border);
         border-radius: 0.5rem;
         margin-bottom: 3rem;
-        overflow: hidden;
+        /* visible so manual combobox panels are not clipped at card edges */
+        overflow: visible;
         transition: all 0.3s ease;
         /* box-shadow: 0 2px 8px oklch(0 0 0 / 0.05); */
     }
@@ -114,11 +115,13 @@
     .section-content.expanded {
         max-height: 5000px;
         padding: 1rem;
+        overflow: visible;
     }
     
     .section-content.collapsed {
         max-height: 0;
         padding: 0 1rem;
+        overflow: hidden;
     }
     
     .section-description {
@@ -158,6 +161,97 @@
     @media (min-width: 1024px) {
         .form-grid {
             grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* 12-column layout: 3 fields per row, each field = 4/12 */
+    .manual-entry-grid {
+        display: grid;
+        gap: 0.875rem;
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    @media (min-width: 768px) {
+        .manual-entry-grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        .manual-entry-grid > .manual-combobox,
+        .manual-entry-grid > .manual-year-field,
+        .manual-entry-grid > .manual-color-field {
+            grid-column: span 4;
+        }
+    }
+
+    .manual-year-field select,
+    .manual-color-field select {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .manual-year-field,
+    .manual-color-field {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .manual-combobox-trigger .dropdown-chevron {
+        transition: transform 0.2s ease;
+    }
+
+    .manual-combobox-trigger[aria-expanded="true"] .dropdown-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* Above sibling fields and the next expandable section */
+    .manual-combobox .manual-combobox-panel {
+        z-index: 200;
+    }
+
+    #manual-entry-fields.sell-plate-variant-strip > .manual-entry-lead {
+        display: none;
+    }
+
+    /* After plate lookup: show variant, fuel (so fuel type can be corrected after variant), and colour; hide the rest */
+    #manual-entry-fields.sell-plate-variant-strip [data-manual-field]:not([data-manual-field="variant"]):not([data-manual-field="fuel"]):not([data-manual-field="color"]) {
+        display: none !important;
+    }
+
+    .basic-info-follow-grid {
+        display: grid;
+        gap: 0.875rem;
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    @media (min-width: 768px) {
+        .basic-info-follow-grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        .basic-info-follow-grid > .basic-info-follow-field {
+            grid-column: span 4;
+        }
+
+        .basic-info-follow-grid > .basic-info-follow-field:only-child {
+            grid-column: 1 / -1;
         }
     }
     
@@ -1336,88 +1430,123 @@
                     </div>
                 </div>
                 
-                <!-- Manual entry fields (shown when seller has no registration number) -->
+                <!-- Manual entry: combobox pattern (same idea as vehicles sidebar); options load from /api/v1/dmr/* -->
                 <div id="manual-entry-fields" class="hidden mb-4">
-                    <p class="text-sm text-muted-foreground mb-3">{{ __('messages.pages.sell_your_car.enter_manually_lead') }}</p>
-                    <div class="form-grid">
-                        <div class="space-y-2">
-                            <label for="manual_brand_id" class="text-sm font-medium required-field">{{ __('messages.forms.brand') }}</label>
-                            <select id="manual_brand_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['brands'] as $brand)
-                                    <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-                                @endforeach
+                    <p class="manual-entry-lead text-sm text-muted-foreground mb-3">{{ __('messages.pages.sell_your_car.manual_entry_lead') }}</p>
+                    <div class="manual-entry-grid">
+                        <div class="manual-combobox space-y-2" data-manual-field="brand">
+                            <label for="manual-brand-trigger" class="text-sm font-medium required-field">{{ __('messages.forms.brand') }}</label>
+                            <div class="relative">
+                                <button type="button" id="manual-brand-trigger" class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">{{ __('messages.pages.sell_your_car.select_brand') }}</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-brand-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-brand-panel-search" placeholder="{{ __('messages.pages.sell_your_car.search_brands') }}" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-brand-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_brand_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_brand') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="model">
+                            <label for="manual-model-trigger" class="text-sm font-medium required-field">{{ __('messages.forms.model') }}</label>
+                            <div class="relative">
+                                <button type="button" id="manual-model-trigger" disabled class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 opacity-60 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">{{ __('messages.pages.sell_your_car.select_model') }}</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-model-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-model-panel-search" placeholder="{{ __('messages.pages.sell_your_car.search_models') }}" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-model-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_model_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_model') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="variant">
+                            <label for="manual-variant-trigger" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.variant_label') }}</label>
+                            <div class="relative">
+                                <button type="button" id="manual-variant-trigger" disabled class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 opacity-60 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">{{ __('messages.pages.sell_your_car.select_variant') }}</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-variant-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <div class="relative">
+                                            <input type="text" id="manual-variant-panel-search" placeholder="{{ __('messages.pages.sell_your_car.search_variants') }}" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                            <span id="manual_variant_loading" class="hidden absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
+                                                <svg class="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div id="manual-variant-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="variant_id" disabled class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
+                                </select>
+                                <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
+                            </div>
+                            <p class="field-help">{{ __('messages.pages.sell_your_car.variant_help') }}</p>
+                        </div>
+                        <div class="manual-combobox space-y-2" data-manual-field="fuel">
+                            <label for="manual-fuel-trigger" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
+                            <div class="relative">
+                                <button type="button" id="manual-fuel-trigger" class="manual-combobox-trigger flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-left items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="manual-combobox-label truncate text-muted-foreground">{{ __('messages.pages.sell_your_car.select_fuel_type') }}</span>
+                                    <svg class="dropdown-chevron flex-shrink-0 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                </button>
+                                <div id="manual-fuel-panel" class="manual-combobox-panel hidden absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-input bg-background shadow-lg max-h-56 overflow-hidden flex flex-col">
+                                    <div class="p-2 border-b border-border">
+                                        <input type="text" id="manual-fuel-panel-search" placeholder="{{ __('messages.pages.sell_your_car.search_fuel_types') }}" autocomplete="off" spellcheck="false" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                    </div>
+                                    <div id="manual-fuel-list" class="overflow-y-auto p-2 space-y-0.5 max-h-44"></div>
+                                </div>
+                                <select id="manual_fuel_type_id" class="sr-only" tabindex="-1" aria-hidden="true">
+                                    <option value="">{{ __('messages.pages.sell_your_car.select_fuel_type') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="manual-year-field space-y-2" data-manual-field="year">
+                            <label for="manual_model_year_id" class="text-sm font-medium required-field">{{ __('messages.forms.model_year') }}</label>
+                            <select id="manual_model_year_id"
+                                class="block h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_model_year') }}</option>
+                                @for($y = (int) date('Y'); $y >= 1975; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
                             </select>
                         </div>
-                        <div class="space-y-2">
-                            <label for="manual_model_id" class="text-sm font-medium required-field">{{ __('messages.forms.model') }}</label>
-                            <select id="manual_model_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['models'] as $model)
-                                    <option value="{{ $model->id }}" data-brand-id="{{ $model->brand_id ?? '' }}">{{ $model->name }}</option>
+                        <div class="manual-color-field space-y-2" data-manual-field="color">
+                            <label for="colour_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
+                            <select id="colour_id" name="colour_id"
+                                class="block h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
+                                @foreach($lookupData['dmrColours'] as $color)
+                                    <option value="{{ $color->id }}">{{ $color->name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label for="manual_model_year_id" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.year') }}</label>
-                            <select id="manual_model_year_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['modelYears'] as $year)
-                                    <option value="{{ $year->id }}">{{ $year->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label for="manual_fuel_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.fuel_type') }}</label>
-                            <select id="manual_fuel_type_id" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                                @foreach($lookupData['fuelTypes'] as $fuel)
-                                    <option value="{{ $fuel->id }}">{{ $fuel->name }}</option>
-                                @endforeach
-                            </select>
+                            <p class="field-help">{{ __('messages.pages.sell_your_car.color_help') }}</p>
                         </div>
                     </div>
                 </div>
-                
-                <div class="form-grid">
-                    <div class="space-y-2">
+
+                <div class="basic-info-follow-grid">
+                    <div class="basic-info-follow-field space-y-2">
                         <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.title_label') }}</label>
-                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground">
-                            
-                    </div>
+                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground min-h-[2.25rem]"></div>
                         <input type="hidden" id="title" name="title" value="">
                         <input type="hidden" id="brand_id" name="brand_id" value="">
                         <input type="hidden" id="model_id" name="model_id" value="">
-                        <input type="hidden" id="model_year_id" name="model_year_id" value="">
+                        <input type="hidden" id="model_year" name="model_year" value="">
                         <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="">
-                        <p class="field-help">
-                            {{ __('messages.pages.sell_your_car.title_help') }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="variant_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.variant_label') }}</label>
-                        <select id="variant_id" disabled
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm opacity-60 cursor-not-allowed">
-                            <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
-                            @foreach($lookupData['variants'] as $variant)
-                                <option value="{{ $variant->id }}">{{ $variant->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="hidden" id="variant_id_hidden" name="variant_id" value="">
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.variant_help') }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="color_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
-                        <select id="color_id" name="color_id"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
-                            @foreach($lookupData['colors'] as $color)
-                                <option value="{{ $color->id }}">{{ $color->name }}</option>
-                            @endforeach
-                        </select>
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.color_help') }}</p>
+                        <p class="field-help">{{ __('messages.pages.sell_your_car.title_help') }}</p>
                     </div>
                 </div>
             </div>
@@ -1441,18 +1570,29 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="km_driven" class="text-sm font-medium required-field">{{ __('messages.forms.km_driven') }}</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0" required
+                        <input type="number" id="km_driven" name="km_driven" min="0" step="any" inputmode="decimal" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.km_driven_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="gear_type_id" class="text-sm font-medium">{{ __('messages.forms.gear_type') }}</label>
-                        <select id="gear_type_id" name="gear_type_id"
+                        <label for="gear_type_id" class="text-sm font-medium required-field">{{ __('messages.forms.gear_type') }}</label>
+                        <select id="gear_type_id" name="gear_type_id" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <option value="">{{ __('messages.pages.sell_your_car.select_gear_type') }}</option>
                             @foreach($lookupData['gearTypes'] ?? [] as $gt)
-                                <option value="{{ $gt->id }}" @if(strtolower($gt->name ?? '') === 'automatic') selected @endif>{{ $gt->name }}</option>
+                                <option value="{{ $gt->id }}">{{ $gt->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="condition_id" class="text-sm font-medium">{{ __('messages.forms.condition') }}</label>
+                        <select id="condition_id" name="condition_id"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            @foreach($lookupData['conditions'] ?? [] as $cond)
+                                <option value="{{ $cond->id }}" @if((int) $cond->id === 2) selected @endif>{{ $cond->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1465,7 +1605,7 @@
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @for($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                        <option value="{{ $i }}">{{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}</option>
                                     @endfor
                                 </select>
                             </div>
@@ -1490,7 +1630,7 @@
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @for($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}">{{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
+                                        <option value="{{ $i }}">{{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}</option>
                                     @endfor
                                 </select>
                             </div>
@@ -1508,27 +1648,27 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
+                        <label for="km_per_liter" id="km_per_liter_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
+                        <input type="number" id="km_per_liter" name="km_per_liter" min="0" step="any" inputmode="decimal"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help" id="fuel_efficiency_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
+                        <p class="field-help" id="km_per_liter_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
-                        <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
+                        <label for="maximum_weight_kg" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
+                        <input type="number" id="maximum_weight_kg" name="maximum_weight_kg" min="0"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.technical_total_weight_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="euronom_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
-                        <select id="euronom_id" name="euronom_id"
+                        <label for="emission_norm_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.emission_standard_label') }}</label>
+                        <select id="emission_norm_id" name="emission_norm_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
-                            @foreach($lookupData['euronorms'] as $euronom)
+                            @foreach($lookupData['dmrEuronorms'] as $euronom)
                                 <option value="{{ $euronom->id }}">{{ $euronom->name }}</option>
                             @endforeach
                         </select>
@@ -1554,69 +1694,8 @@
                     {{ __('messages.pages.sell_your_car.section_equipment_description') }}
                 </div>
                 
-                <!-- Equipment by Category -->
-                <div class="space-y-2">
-                    @foreach($lookupData['equipmentTypes'] as $equipmentType)
-                        @if($equipmentType->equipments->count() > 0)
-                            <details class="equipment-type-details">
-                                <summary class="equipment-type-toggle">
-                                    <span>{{ $equipmentType->name }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </summary>
-                                <div class="equipment-type-content">
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($equipmentType->equipments as $equipment)
-                                            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="equipment_ids[]" 
-                                                    value="{{ $equipment->id }}"
-                                                    class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                    onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                                >
-                                                <span>{{ $equipment->name }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </details>
-                        @endif
-                    @endforeach
-                    
-                    <!-- Equipment without category -->
-                    @php
-                        $equipmentWithoutType = $lookupData['equipment']->filter(function($equip) {
-                            return !$equip->equipment_type_id;
-                        });
-                    @endphp
-                    @if($equipmentWithoutType->count() > 0)
-                        <details class="equipment-type-details">
-                            <summary class="equipment-type-toggle">
-                                <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </summary>
-                            <div class="equipment-type-content">
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($equipmentWithoutType as $equipment)
-                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-accent focus-within:bg-accent border border-input">
-                                            <input 
-                                                type="checkbox" 
-                                                name="equipment_ids[]" 
-                                                value="{{ $equipment->id }}"
-                                                class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                onchange="handleEquipmentChange(this, {{ $equipment->id }}, '{{ addslashes($equipment->name) }}')"
-                                            >
-                                            <span>{{ $equipment->name }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </details>
-                    @endif
+                <div id="sell-your-car-equipment-root" class="space-y-2">
+                    @include('partials.sell-your-car-equipment', ['lookupData' => $lookupData])
                 </div>
             </div>
         </div>
@@ -1658,9 +1737,9 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="price" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.price_label') }}</label>
-                        <input type="number" id="price" name="price" required min="0"
+                        <input type="number" id="price" name="price" required min="0" step="any" inputmode="decimal"
                             class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -1669,19 +1748,6 @@
 
                     </div>
 
-                <!-- Expandable Tax Information Section -->
-                <div class="mt-4 border border-input rounded-lg overflow-hidden">
-                    <button type="button" class="equipment-type-toggle w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
-                        onclick="toggleTaxInfo()">
-                        <span>{{ __('messages.pages.sell_your_car.tax_info_title') }}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="equipment-type-icon transition-transform" id="tax-info-icon">
-                            <path d="m6 9 6 6 6-6"></path>
-                        </svg>
-                    </button>
-                    <div id="tax-info-content" class="equipment-type-content hidden px-4 pb-3 pt-2">
-                        <p class="text-sm text-muted-foreground">{{ __('messages.pages.sell_your_car.tax_info_description') }}</p>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1700,6 +1766,7 @@
                 <div class="section-description">
                     {{ __('messages.pages.sell_your_car.section_photos_description') }}
                 </div>
+                <p class="field-help mb-3">{{ __('messages.pages.sell_your_car.photos_optional_hint') }}</p>
                 
                 <!-- Image Upload Area -->
                 <div class="image-upload-area" id="image-upload-area">
@@ -1810,18 +1877,8 @@
         </div>
 
         <!-- Hidden fields for required data from API -->
-        <input type="hidden" id="registration" name="registration" value="" required>
-
-        <script>
-        function toggleTaxInfo() {
-            const content = document.getElementById('tax-info-content');
-            const icon = document.getElementById('tax-info-icon');
-            if (content && icon) {
-                content.classList.toggle('hidden');
-                icon.classList.toggle('rotate-180');
-            }
-        }
-        </script>
+        <input type="hidden" id="registration" name="registration" value="">
+        <input type="hidden" id="dmr_fact_vehicle_id" name="dmr_fact_vehicle_id" value="">
 
         <!-- Submit Section -->
         <div class="submit-section">
@@ -1834,9 +1891,65 @@
     </form>
 </div>
 
+@php
+    $sellYourCarTranslations = [
+        'selectBrand' => __('messages.pages.sell_your_car.select_brand'),
+        'selectModel' => __('messages.pages.sell_your_car.select_model'),
+        'selectModelYear' => __('messages.pages.sell_your_car.select_model_year'),
+        'selectFuelType' => __('messages.pages.sell_your_car.select_fuel_type'),
+        'selectVariant' => __('messages.pages.sell_your_car.select_variant'),
+        'selectColor' => __('messages.pages.sell_your_car.select_color'),
+        'selectEmissionStandard' => __('messages.pages.sell_your_car.select_euronom'),
+        'equipmentOther' => __('messages.pages.sell_your_car.equipment_other'),
+        'lookupEnterRegistration' => __('messages.pages.sell_your_car.lookup_enter_registration'),
+        'lookupFetchFailed' => __('messages.pages.sell_your_car.lookup_fetch_failed'),
+        'lookupTimeout' => __('messages.pages.sell_your_car.lookup_timeout'),
+        'lookupServiceUnavailable' => __('messages.pages.sell_your_car.lookup_service_unavailable'),
+        'lookupNoVehicleData' => __('messages.pages.sell_your_car.lookup_no_vehicle_data'),
+        'lookupMissingReference' => __('messages.pages.sell_your_car.lookup_missing_reference'),
+        'lookupContextLoadFailed' => __('messages.pages.sell_your_car.lookup_context_load_failed'),
+        'lookupSuccess' => __('messages.pages.sell_your_car.lookup_success'),
+        'lookupGenericError' => __('messages.pages.sell_your_car.lookup_generic_error'),
+        'requiredFieldError' => __('messages.pages.sell_your_car.required_field_error'),
+        'imageRequiredError' => __('messages.pages.sell_your_car.image_required_error'),
+        'manualEntryRequiredError' => __('messages.pages.sell_your_car.manual_entry_required_error'),
+        'saving' => __('messages.pages.sell_your_car.saving'),
+        'savingVehicle' => __('messages.pages.sell_your_car.saving_vehicle'),
+        'imageUploadErrorTitle' => __('messages.pages.sell_your_car.image_upload_error_title'),
+        'imageUploadFailedFriendly' => __('messages.pages.sell_your_car.image_upload_failed_friendly'),
+        'imageInvalidFormat' => __('messages.pages.sell_your_car.image_invalid_format'),
+        'imageTooLarge' => __('messages.pages.sell_your_car.image_too_large'),
+        'imageAlreadySelected' => __('messages.pages.sell_your_car.image_already_selected'),
+        'noValidImages' => __('messages.pages.sell_your_car.no_valid_images'),
+        'saveMissingToken' => __('messages.pages.sell_your_car.save_missing_token'),
+        'saveMissingRedirect' => __('messages.pages.sell_your_car.save_missing_redirect'),
+        'unexpectedError' => __('messages.pages.sell_your_car.unexpected_error'),
+        'fuelEfficiencyLabel' => __('messages.pages.sell_your_car.fuel_efficiency_label'),
+        'fuelEfficiencyHelp' => __('messages.pages.sell_your_car.fuel_efficiency_help'),
+        'electricRangeLabel' => __('messages.pages.sell_your_car.electric_range_label'),
+        'electricRangeHelp' => __('messages.pages.sell_your_car.electric_range_help'),
+        'hybridEfficiencyLabel' => __('messages.pages.sell_your_car.hybrid_efficiency_label'),
+        'hybridEfficiencyHelp' => __('messages.pages.sell_your_car.hybrid_efficiency_help'),
+    ];
+@endphp
+
 @push('scripts')
+<script id="sell-your-car-locations-data" type="application/json">
+@json($lookupData['locations'] ?? [])
+</script>
+<script id="sell-your-car-lookup-context-base-data" type="application/json">
+@json(url('/sell-your-car/lookup-context'))
+</script>
+<script id="sell-your-car-translations-data" type="application/json">
+@json($sellYourCarTranslations)
+</script>
 <script>
-    window.locationsData = @json($lookupData['locations'] ?? []);
+    const sellYourCarLocationsEl = document.getElementById('sell-your-car-locations-data');
+    const sellYourCarLookupContextBaseEl = document.getElementById('sell-your-car-lookup-context-base-data');
+    const sellYourCarTranslationsEl = document.getElementById('sell-your-car-translations-data');
+    window.locationsData = sellYourCarLocationsEl ? JSON.parse(sellYourCarLocationsEl.textContent) : [];
+    window.sellYourCarLookupContextBase = sellYourCarLookupContextBaseEl ? JSON.parse(sellYourCarLookupContextBaseEl.textContent) : '';
+    window.sellYourCarTranslations = sellYourCarTranslationsEl ? JSON.parse(sellYourCarTranslationsEl.textContent) : {};
 </script>
 <script src="{{ asset('js/sell-your-car-form.js') }}"></script>
 @endpush

@@ -42,9 +42,12 @@ return new class extends Migration
             'dealer.leads.assign',
             'dealer.leads.update',
             'dealer.leads.messages',
+            'dealer.enquiries.view',
+            'dealer.enquiries.update',
             'dealer.staff.manage',
             'dealer.subscription.manage',
             'dealer.audit.view',
+            'dealer.analytics.view',
         ];
         
         // Define all admin permissions from admin-apis.php
@@ -88,6 +91,8 @@ return new class extends Migration
             'admin.subscriptions.update-status',
             'admin.subscriptions.cancel',
             'admin.subscriptions.renew',
+            'admin.subscription_change_requests.view',
+            'admin.subscription_change_requests.review',
             
             // Dealer Management
             'admin.dealers.view',

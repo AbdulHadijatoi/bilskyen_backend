@@ -149,22 +149,7 @@
         </div>
     </header>
 
-    <div class="relative container flex flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0 min-h-screen">
-        <!-- Left Sidebar with Testimonial -->
-        <div class="bg-muted text-foreground relative hidden h-full flex-col border-r border-border p-10 lg:flex">
-            <div class="relative z-20 mt-auto">
-                <blockquote class="space-y-2">
-                    <p class="text-foreground text-lg">
-                        &ldquo;{{ $loginPageContent['testimonial_quote'] ?? __('messages.layouts.testimonial_quote') }}&rdquo;
-                    </p>
-                    <footer class="text-foreground text-sm">
-                        {{ $loginPageContent['testimonial_author'] ?? 'Rahif' }}
-                    </footer>
-                </blockquote>
-            </div>
-        </div>
-
-        <!-- Right Content Area -->
+    <div class="relative container flex flex-col items-center justify-center min-h-screen">
         <div class="mx-auto h-full w-full py-[10vh] sm:max-w-[350px]">
             @yield('content')
         </div>

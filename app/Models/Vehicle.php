@@ -2,41 +2,74 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use App\Models\Enquiry;
+use App\ViewModels\VehicleDetailPresenter;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
+use App\Models\DmrVariant;
+use App\Models\DmrDriveEnergy;
 
 class Vehicle extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Static cache for lookup data (in-memory cache)
-     */
     private static array $lookupCache = [];
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
+        'registration',
+        'dmr_fact_vehicle_id',
+        'vin',
         'title',
         'slug',
-        'registration',
-        'vin',
         'dealer_id',
         'user_id',
-        'category_id',
-        'brand_id',
+        'km_per_liter',
+        'co2_emission',
+        'electrical_consumption',
+        'engine_power_kw',
+        'engine_power_hp',
+        'engine_size_cc',
+        'engine_displacement_litres',
+        'first_registration_date',
+        'first_registration_year',
+        'last_inspection_date',
+        'nox_emission',
+        'particle_filter',
+        'axle_count',
+        'door_count',
+        'gear_count',
+        'max_speed',
+        'model_year',
+        'ncap_test',
+        'seats_min',
+        'seats_max',
+        'maximum_weight_kg',
+        'registration_status',
+        'last_registration_change',
+        'measurement_norm_id',
+        'body_type_id',
+        'colour_id',
+        'emission_norm_id',
         'model_id',
-        'model_year_id',
+        'variant_id',
+        'fuel_type_id',
+        'vehicle_use_id',
+        'brand_id',
+        'listing_type_id',
+        'sales_type_id',
+        'price_type_id',
+        'category_id',
+        'price',
+        'calculated_ownership_tax',
         'km_driven',
         'towing_weight',
         'is_import',
@@ -75,61 +108,346 @@ class Vehicle extends Model
         'video_provider',
         'battery_capacity',
         'range_km',
-        'charging_type',
-        'engine_power',
-        'towing_weight',
-        'ownership_tax',
-        'first_registration_date',
-        'version',
-        'gear_type_id',
-        'fuel_efficiency',
-        'vehicle_list_status_id',
-        'listing_type_id',
-        'published_at',
-        'seller_address',
-        'seller_postcode',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
-        'price' => 'integer',
-        'km_driven' => 'integer',
-        'battery_capacity' => 'integer',
-        'range_km' => 'integer',
-        'engine_power' => 'integer',
-        'towing_weight' => 'integer',
-        'ownership_tax' => 'integer',
+        'km_per_liter' => 'float',
+        'co2_emission' => 'float',
+        'electrical_consumption' => 'float',
+        'engine_power_kw' => 'float',
+        'engine_power_hp' => 'float',
+        'engine_size_cc' => 'integer',
+        'engine_displacement_litres' => 'float',
         'first_registration_date' => 'date',
-        'fuel_efficiency' => 'decimal:2',
+        'first_registration_year' => 'integer',
+        'last_inspection_date' => 'date',
+        'nox_emission' => 'float',
+        'particle_filter' => 'boolean',
+        'axle_count' => 'integer',
+        'door_count' => 'integer',
+        'gear_count' => 'integer',
+        'max_speed' => 'integer',
+        'model_year' => 'integer',
+        'ncap_test' => 'boolean',
+        'seats_min' => 'integer',
+        'seats_max' => 'integer',
+        'maximum_weight_kg' => 'integer',
+        'last_registration_change' => 'date',
+        'measurement_norm_id' => 'integer',
+        'body_type_id' => 'integer',
+        'colour_id' => 'integer',
+        'emission_norm_id' => 'integer',
+        'model_id' => 'integer',
+        'variant_id' => 'integer',
+        'fuel_type_id' => 'integer',
+        'vehicle_use_id' => 'integer',
+        'brand_id' => 'integer',
+        'listing_type_id' => 'integer',
+        'sales_type_id' => 'integer',
+        'price_type_id' => 'integer',
+        'category_id' => 'integer',
+        'price' => 'float',
+        'calculated_ownership_tax' => 'integer',
+        'km_driven' => 'float',
+        'towing_weight' => 'integer',
+        'is_import' => 'boolean',
+        'is_factory_new' => 'boolean',
         'published_at' => 'datetime',
+        'listing_billing_started_at' => 'datetime',
+        'listing_billing_paused_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'annual_tax' => 'decimal:2',
+        'internal_cost_price' => 'decimal:2',
+        'leasing_enabled' => 'boolean',
+        'leasing_first_payment' => 'decimal:2',
+        'leasing_residual_value' => 'decimal:2',
+        'leasing_duration' => 'integer',
+        'leasing_annual_mileage' => 'integer',
+        'leasing_total_cost' => 'decimal:2',
+        'fuel_consumption_wltp' => 'decimal:2',
+        'fuel_consumption_nedc' => 'decimal:2',
+        'production_date' => 'date',
+        'views_count' => 'integer',
+        'battery_capacity' => 'integer',
+        'range_km' => 'integer',
     ];
 
     /**
-     * The accessors to append to the model's array form.
+     * Legacy Blade templates use {@see $vehicle->details}; backed by {@see VehicleDetailPresenter}.
      */
-    protected $appends = [
-        'category_name',
-        'brand_name',
-        'model_name',
-        'model_year_name',
-        'fuel_type_name',
-        'gear_type_name',
-        'engine_power_hp',
-        'vehicle_list_status_name',
-        'listing_type_name',
-    ];
+    public function getDetailsAttribute(): VehicleDetailPresenter
+    {
+        return new VehicleDetailPresenter($this);
+    }
 
     /**
-     * Boot the model.
+     * Legacy alias: column is {@see $list_status_id}.
      */
+    public function getVehicleListStatusIdAttribute(): ?int
+    {
+        $v = $this->attributes['list_status_id'] ?? null;
+
+        return $v !== null ? (int) $v : null;
+    }
+
+    public function getVehicleListStatusNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('vehicleListStatus') && $this->vehicleListStatus) {
+            return $this->vehicleListStatus->name;
+        }
+
+        $id = $this->attributes['list_status_id'] ?? null;
+        if ($id === null) {
+            return null;
+        }
+
+        return self::getCachedLookup('vehicle_list_statuses', (int) $id);
+    }
+
+    /** @deprecated Column removed; maps to {@see $km_driven}. */
+    public function getMileageAttribute(): ?float
+    {
+        $v = $this->attributes['km_driven'] ?? null;
+
+        return $v !== null ? (float) $v : null;
+    }
+
+    /** @deprecated Use {@see $address}; kept for seller/dealer Blade/API. */
+    public function getSellerAddressAttribute(): ?string
+    {
+        $v = $this->attributes['address'] ?? null;
+
+        return $v !== null && $v !== '' ? (string) $v : null;
+    }
+
+    /** @deprecated Use {@see $postcode}. */
+    public function getSellerPostcodeAttribute(): ?string
+    {
+        $v = $this->attributes['postcode'] ?? null;
+
+        return $v !== null && $v !== '' ? (string) $v : null;
+    }
+
+    /**
+     * DMR variant name from {@see DmrVariant} (vehicle `variant_id`, or DMR fact link).
+     * Same resolution pattern as {@see getBrandNameAttribute()} / {@see getModelNameAttribute()}.
+     */
+    public function getVariantNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('variant') && $this->variant) {
+            return $this->variant->name;
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant) {
+            return $dmr->variant->name;
+        }
+        if (! empty($this->attributes['variant_id'])) {
+            return DmrVariant::query()->whereKey($this->attributes['variant_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    /**
+     * @deprecated Use {@see $variant_name}. Alias for legacy templates/API.
+     */
+    public function getVersionAttribute(): ?string
+    {
+        return $this->variant_name;
+    }
+
+    public function getBrandNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('brand') && $this->brand) {
+            return $this->brand->name;
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant?->relationLoaded('model') && $dmr->variant->model?->relationLoaded('brand') && $dmr->variant->model->brand) {
+            return $dmr->variant->model->brand->name;
+        }
+        if (! empty($this->attributes['brand_id'])) {
+            return DmrBrand::query()->whereKey($this->attributes['brand_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getModelNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('model') && $this->model) {
+            return $this->model->name;
+        }
+        $dmr = $this->relationLoaded('dmrFactVehicle') ? $this->dmrFactVehicle : null;
+        if ($dmr?->relationLoaded('variant') && $dmr->variant?->relationLoaded('model') && $dmr->variant->model) {
+            return $dmr->variant->model->name;
+        }
+        if (! empty($this->attributes['model_id'])) {
+            return DmrModel::query()->whereKey($this->attributes['model_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getFuelTypeNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('fuelType') && $this->fuelType) {
+            return $this->fuelType->name;
+        }
+        if (! empty($this->attributes['fuel_type_id'])) {
+            return DmrDriveEnergy::query()->whereKey($this->attributes['fuel_type_id'])->value('name');
+        }
+
+        return null;
+    }
+
+    public function getGearTypeNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('gearType') && $this->gearType) {
+            return $this->gearType->name;
+        }
+        if (! empty($this->attributes['gear_type_id'])) {
+            return self::getCachedLookup('gear_types', (int) $this->attributes['gear_type_id']);
+        }
+
+        return null;
+    }
+
+    public function getModelYearNameAttribute(): ?string
+    {
+        $y = $this->attributes['model_year'] ?? null;
+
+        return $y !== null ? (string) (int) $y : null;
+    }
+
+    // protected $appends = [
+    //     'brand_name',
+    //     'model_name',
+    //     'variant_name',
+    //     'color_name',
+    //     'body_type_name',
+    //     'use_name',
+    //     'emission_norm_name',
+    //     'fuel_type_name',
+    //     'gear_type_name',
+    //     'measurement_norm_name',
+    //     'listing_type_name',
+    //     'sales_type_name',
+    //     'price_type_name',
+    //     'category_name',
+    //     'condition_name',
+    //     'list_status_name',
+    //     'equipment_names',
+    //     'specifications'
+    // ];
+
+    /**
+     * Column names on the {@see vehicles} table that may be used for public listing ORDER BY.
+     * Prefer live schema; {@see self::sortableTableColumnsFallback()} when the table is unavailable.
+     *
+     * @return list<string>
+     */
+    public static function listingSortableTableColumns(): array
+    {
+        $table = (new static)->getTable();
+
+        if (! Schema::hasTable($table)) {
+            return self::sortableTableColumnsFallback();
+        }
+
+        $columns = Schema::getColumnListing($table);
+        sort($columns);
+
+        return array_values($columns);
+    }
+
+    /**
+     * Fallback when migrations have not run (e.g. some unit tests). Mirrors the vehicles table.
+     *
+     * @return list<string>
+     */
+    private static function sortableTableColumnsFallback(): array
+    {
+        $cols = [
+            'id',
+            'registration',
+            'dmr_fact_vehicle_id',
+            'vin',
+            'title',
+            'slug',
+            'dealer_id',
+            'user_id',
+            'km_per_liter',
+            'co2_emission',
+            'electrical_consumption',
+            'engine_power_kw',
+            'engine_power_hp',
+            'engine_size_cc',
+            'engine_displacement_litres',
+            'first_registration_date',
+            'first_registration_year',
+            'last_inspection_date',
+            'nox_emission',
+            'particle_filter',
+            'axle_count',
+            'door_count',
+            'gear_count',
+            'max_speed',
+            'model_year',
+            'ncap_test',
+            'seats_min',
+            'seats_max',
+            'maximum_weight_kg',
+            'registration_status',
+            'last_registration_change',
+            'measurement_norm_id',
+            'body_type_id',
+            'colour_id',
+            'emission_norm_id',
+            'model_id',
+            'variant_id',
+            'fuel_type_id',
+            'vehicle_use_id',
+            'brand_id',
+            'listing_type_id',
+            'sales_type_id',
+            'price_type_id',
+            'category_id',
+            'type_id',
+            'price',
+            'calculated_ownership_tax',
+            'km_driven',
+            'towing_weight',
+            'battery_capacity',
+            'range_km',
+            'is_import',
+            'is_factory_new',
+            'charging_type',
+            'gear_type_id',
+            'list_status_id',
+            'published_at',
+            'address',
+            'postcode',
+            'description',
+            'condition_id',
+            'servicebog',
+            'airbags',
+            'wheels',
+            'drive_axles',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ];
+        sort($cols);
+
+        return array_values(array_unique($cols));
+    }
+
     protected static function booted(): void
     {
         static::addGlobalScope('defaultOrder', function (Builder $query) {
-            // Only apply default ordering if no explicit orderBy is set
             if (empty($query->getQuery()->orders)) {
                 $query->orderBy('id', 'desc');
             }
@@ -164,30 +482,26 @@ class Vehicle extends Model
         });
     }
 
-    /**
-     * Get the route key for the model (used in URL route model binding).
-     */
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    /**
-     * Generate a unique slug from the vehicle title.
-     * If the base slug exists for another vehicle, appends -2, -3, etc.
-     */
     public function generateUniqueSlug(): string
     {
         $title = $this->title ?? '';
-        if (empty($title)) {
+        if ($title === '' && ! empty($this->registration)) {
+            $title = 'listing-' . preg_replace('/[^a-zA-Z0-9]+/', '-', (string) $this->registration);
+        }
+        if ($title === '') {
             $title = 'vehicle';
         }
         $slug = Str::slug($title);
-        if (empty($slug)) {
+        if ($slug === '') {
             $slug = 'vehicle';
         }
         $base = $slug;
-        $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+        $query = self::withoutGlobalScopes()->where('slug', $slug);
         if ($this->id !== null) {
             $query->where('id', '!=', $this->id);
         }
@@ -195,18 +509,15 @@ class Vehicle extends Model
         while ($query->exists()) {
             $slug = $base . '-' . $counter;
             $counter++;
-            $query = Vehicle::withoutGlobalScopes()->where('slug', $slug);
+            $query = self::withoutGlobalScopes()->where('slug', $slug);
             if ($this->id !== null) {
                 $query->where('id', '!=', $this->id);
             }
         }
+
         return $slug;
     }
 
-    /**
-     * Get cached lookup value
-     * Checks static cache first, then Laravel cache, then database
-     */
     public static function getCachedLookup(string $table, ?int $id): ?string
     {
         if ($id === null) {
@@ -215,30 +526,20 @@ class Vehicle extends Model
 
         $cacheKey = "{$table}_{$id}";
 
-        // Check static cache first
         if (isset(self::$lookupCache[$cacheKey])) {
             return self::$lookupCache[$cacheKey];
         }
 
-        // Check Laravel cache (24 hour TTL)
         $cached = Cache::remember("vehicle_lookup_{$cacheKey}", 86400, function () use ($table, $id) {
-            // Use direct database queries to avoid recursive loops with relationships
             $model = match ($table) {
-                'categories' => Category::withoutGlobalScopes()->find($id),
-                'brands' => Brand::withoutGlobalScopes()->find($id),
-                'models' => VehicleModel::withoutGlobalScopes()->find($id),
-                'model_years' => ModelYear::withoutGlobalScopes()->find($id),
-                'fuel_types' => FuelType::withoutGlobalScopes()->find($id),
                 'gear_types' => GearType::withoutGlobalScopes()->find($id),
                 'vehicle_list_statuses' => VehicleListStatus::withoutGlobalScopes()->select('id', 'name')->find($id),
-                'listing_types' => ListingType::withoutGlobalScopes()->find($id),
                 default => null,
             };
 
             return $model?->name;
         });
 
-        // Store in static cache for this request
         if ($cached !== null) {
             self::$lookupCache[$cacheKey] = $cached;
         }
@@ -246,240 +547,142 @@ class Vehicle extends Model
         return $cached;
     }
 
-    /**
-     * Get category name attribute (cached)
-     */
-    public function getCategoryNameAttribute(): ?string
+    public function dmrFactVehicle(): BelongsTo
     {
-        return self::getCachedLookup('categories', $this->category_id);
+        return $this->belongsTo(DmrFactVehicle::class, 'dmr_fact_vehicle_id');
     }
 
-    /**
-     * Get brand name attribute (cached)
-     */
-    public function getBrandNameAttribute(): ?string
+    public function bodyType(): BelongsTo
     {
-        return self::getCachedLookup('brands', $this->brand_id);
+        return $this->belongsTo(DmrBodyType::class, 'body_type_id');
     }
 
-    /**
-     * Get model name attribute (cached)
-     */
-    public function getModelNameAttribute(): ?string
+    public function colour(): BelongsTo
     {
-        return self::getCachedLookup('models', $this->model_id);
+        return $this->belongsTo(DmrColour::class, 'colour_id');
     }
 
-    /**
-     * Get model year name attribute (cached)
-     */
-    public function getModelYearNameAttribute(): ?string
+    public function emissionNorm(): BelongsTo
     {
-        return self::getCachedLookup('model_years', $this->model_year_id);
+        return $this->belongsTo(DmrEmissionNorm::class, 'emission_norm_id');
     }
 
-    /**
-     * Get fuel type name attribute (cached)
-     */
-    public function getFuelTypeNameAttribute(): ?string
+    public function model(): BelongsTo
     {
-        return self::getCachedLookup('fuel_types', $this->fuel_type_id);
+        return $this->belongsTo(DmrModel::class, 'model_id');
     }
 
-    /**
-     * Get gear type name attribute (cached)
-     */
-    public function getGearTypeNameAttribute(): ?string
+    public function variant(): BelongsTo
     {
-        return self::getCachedLookup('gear_types', $this->gear_type_id);
+        return $this->belongsTo(DmrVariant::class, 'variant_id');
     }
 
-    /**
-     * Get engine power in HP attribute
-     */
-    public function getEnginePowerHpAttribute(): ?float
+    /** DMR drive energy (“fuel type”) — column {@see $fuel_type_id} references {@see DmrDriveEnergy}. */
+    public function fuelType(): BelongsTo
     {
-        return $this->engine_power ? round($this->engine_power * 1.36, 2) : null;
+        return $this->belongsTo(DmrDriveEnergy::class, 'fuel_type_id');
     }
 
-    /**
-     * Get title attribute - returns title if exists, otherwise auto-generates from brand + model + model year
-     */
-    public function getTitleAttribute($value): ?string
+    public function vehicleUse(): BelongsTo
     {
-        // If title exists and is not empty, return it
-        if (!empty($value)) {
-            return $value;
-        }
-        
-        // Otherwise, auto-generate from brand + model + model year
-        // Use getAttribute to avoid infinite recursion with accessors
-        $parts = array_filter([
-            $this->getAttribute('brand_name'),
-            $this->getAttribute('model_name'),
-            $this->getAttribute('model_year_name'),
-        ]);
-        
-        return !empty($parts) ? implode(' ', $parts) : null;
+        return $this->belongsTo(DmrVehicleUse::class, 'vehicle_use_id');
     }
 
-    /**
-     * Get vehicle list status name attribute (cached)
-     */
-    public function getVehicleListStatusNameAttribute(): ?string
+    public function brand(): BelongsTo
     {
-        return self::getCachedLookup('vehicle_list_statuses', $this->vehicle_list_status_id);
+        return $this->belongsTo(DmrBrand::class, 'brand_id');
     }
 
-    /**
-     * Get listing type name attribute (cached)
-     */
-    public function getListingTypeNameAttribute(): ?string
-    {
-        return self::getCachedLookup('listing_types', $this->listing_type_id);
-    }
-
-    /**
-     * Get dealer for this vehicle
-     */
     public function dealer(): BelongsTo
     {
         return $this->belongsTo(Dealer::class);
     }
 
-    /**
-     * Get user (creator) for this vehicle
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get vehicle details for this vehicle
-     */
-    public function details(): HasOne
-    {
-        return $this->hasOne(VehicleDetail::class);
-    }
-
-    /**
-     * Get images for this vehicle
-     */
     public function images(): HasMany
     {
         return $this->hasMany(VehicleImage::class)->orderBy('sort_order');
     }
 
-    /**
-     * Get favorites for this vehicle
-     */
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class);
     }
 
-    /**
-     * Get leads for this vehicle
-     */
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);
     }
 
-    /**
-     * Get enquiries for this vehicle
-     */
     public function enquiries(): HasMany
     {
         return $this->hasMany(Enquiry::class);
     }
 
-    /**
-     * Get price history for this vehicle
-     */
     public function priceHistory(): HasMany
     {
         return $this->hasMany(PriceHistory::class);
     }
 
-    /**
-     * Get view logs for this vehicle
-     */
     public function viewLogs(): HasMany
     {
         return $this->hasMany(ListingViewsLog::class);
     }
 
-    /**
-     * Get equipment for this vehicle (many-to-many)
-     */
     public function equipment(): BelongsToMany
     {
         return $this->belongsToMany(Equipment::class, 'vehicle_equipment');
     }
 
-    /**
-     * Get model for this vehicle
-     */
-    public function model(): BelongsTo
+    public function specifications(): BelongsToMany
     {
-        return $this->belongsTo(VehicleModel::class, 'model_id');
+        return $this->belongsToMany(Specification::class, 'vehicle_specifications')
+            ->using(VehicleSpecification::class)
+            ->withPivot('count')
+            ->withTimestamps();
     }
 
-    /**
-     * Get listing type for this vehicle
-     */
-    public function listingType(): BelongsTo
-    {
-        return $this->belongsTo(ListingType::class);
-    }
-
-    /**
-     * Get gear type for this vehicle
-     */
     public function gearType(): BelongsTo
     {
         return $this->belongsTo(GearType::class);
     }
 
-    /**
-     * Get category for this vehicle
-     */
-    public function category(): BelongsTo
+    public function condition(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Condition::class, 'condition_id');
     }
 
-    /**
-     * Get brand for this vehicle
-     */
-    public function brand(): BelongsTo
+    public function measurementNorm(): BelongsTo
     {
-        return $this->belongsTo(Brand::class);
+        return $this->belongsTo(MeasurementNorm::class, 'measurement_norm_id');
     }
 
-    /**
-     * Get model year for this vehicle
-     */
-    public function modelYear(): BelongsTo
-    {
-        return $this->belongsTo(ModelYear::class);
-    }
-
-    /**
-     * Get fuel type for this vehicle
-     */
-    public function fuelType(): BelongsTo
-    {
-        return $this->belongsTo(FuelType::class);
-    }
-
-    /**
-     * Get vehicle list status for this vehicle
-     */
     public function vehicleListStatus(): BelongsTo
     {
-        return $this->belongsTo(VehicleListStatus::class);
+        return $this->belongsTo(VehicleListStatus::class, 'list_status_id');
+    }
+
+    public function listingType(): BelongsTo
+    {
+        return $this->belongsTo(ListingType::class, 'listing_type_id');
+    }
+
+    public function salesType(): BelongsTo
+    {
+        return $this->belongsTo(SalesType::class, 'sales_type_id');
+    }
+
+    public function priceType(): BelongsTo
+    {
+        return $this->belongsTo(PriceType::class, 'price_type_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

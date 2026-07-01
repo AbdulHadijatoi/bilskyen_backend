@@ -486,7 +486,7 @@ All dealer endpoints require `auth:api` middleware and are prefixed with `/api/v
 | DELETE | `/api/v1/dealer/vehicles/{id}/images/{imageId}` | Delete vehicle image |
 | PUT | `/api/v1/dealer/vehicles/{id}/status` | Update vehicle status |
 | PUT | `/api/v1/dealer/vehicles/{id}/price` | Update price (creates history) |
-| POST | `/api/v1/dealer/vehicles/fetch-from-nummerplade` | Fetch from Nummerplade API |
+| POST | `/api/v1/dealer/vehicles/lookup-by-registration` | Preview vehicle from DMR by registration or VIN |
 
 **Query Parameters for `/api/v1/dealer/vehicles`:**
 - `search` - Search in title, registration, VIN

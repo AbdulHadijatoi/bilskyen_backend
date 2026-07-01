@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
+use App\Constants\VehicleListStatus;
+use App\Constants\VehicleSearchFilters;
 use App\Models\Category;
-use App\Models\ModelYear;
 use App\Models\ListingType;
 use App\Models\PriceType;
 use App\Models\BodyType;
 use App\Models\GearType;
-use App\Models\FuelType;
-use App\Models\Brand;
+use App\Models\DmrDriveEnergy;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Condition;
@@ -18,7 +20,7 @@ use App\Models\SalesType;
 use App\Models\Type;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
-use App\Models\VehicleModel;
+use App\Models\PageContent;
 use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
@@ -31,8 +33,8 @@ use App\Services\MailService;
 use App\Services\Finance\FinanceCalculatorService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-
 class HomeController extends Controller
 {
     public function __construct(
@@ -61,16 +63,25 @@ class HomeController extends Controller
         }
 
         // Fetch filter options for the view
+        $currentYear = (int) date('Y');
+        $modelYears = collect(range($currentYear, 1975))->map(fn (int $y) => (object) [
+            'id' => $y,
+            'name' => (string) $y,
+        ]);
+
         $filterOptions = [
-            'categories' => Category::orderBy('name')->get(),
-            'fuelTypes' => FuelType::orderBy('name')->get(),
-            'modelYears' => ModelYear::orderBy('name', 'desc')->get(),
+            'fuelTypes' => DmrDriveEnergy::orderBy('name')->get(),
+            'modelYears' => $modelYears,
         ];
+
+        $publishedVehicleCount = Vehicle::where('list_status_id', VehicleListStatus::PUBLISHED)->count();
+        $listingTypes = $this->lookupService->getListingTypes();
 
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
             'vehicle.images',
-            'vehicle.details',
+            'vehicle.variant',
+            'vehicle.dmrFactVehicle.variant',
         ])
             ->orderBy('sort_order')
             ->get()
@@ -84,9 +95,6 @@ class HomeController extends Controller
                 $firstImage = $vehicle->images->first();
                 $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
 
-                // Get details
-                $details = $vehicle->details;
-
                 // Build title
                 $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
                 
@@ -94,7 +102,7 @@ class HomeController extends Controller
                     'id' => $vehicle->id,
                     'slug' => $vehicle->slug,
                     'title' => $title,
-                    'version' => $vehicle->version ?? '',
+                    'variant_name' => $vehicle->variant_name,
                     'price' => $vehicle->price ?? 0,
                     'image' => $imageUrl,
                     'km_driven' => $vehicle->km_driven ?? 0,
@@ -106,7 +114,7 @@ class HomeController extends Controller
                     'dealer_id' => $vehicle->dealer_id,
                     'seller_address' => $vehicle->seller_address,
                     'seller_postcode' => $vehicle->seller_postcode,
-                    'sales_type_name' => $details?->sales_type_name ?? $details?->salesType?->name,
+                    'sales_type_name' => null,
                 ];
             })
             ->filter() // Remove null entries
@@ -121,6 +129,11 @@ class HomeController extends Controller
             'featuredVehicles' => $featuredVehicles,
             'homePageContent' => $homePageContent,
             'seo' => $seo,
+            'publishedVehicleCount' => $publishedVehicleCount,
+            'listingTypes' => $listingTypes,
+            'currentYear' => $currentYear,
+            'filterPriceMax' => VehicleSearchFilters::PRICE_MAX,
+            'filterKmMax' => VehicleSearchFilters::KM_MAX,
         ]);
     }
 
@@ -237,6 +250,59 @@ class HomeController extends Controller
     }
 
     /**
+     * Handle contact form submission
+     */
+    public function submitContact(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'required|email|max:150',
+            'subject' => 'required|in:vehicle-inquiry,financing,service-appointment,general',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $contactPageContent = $this->pageContentService->getHomePageContent('contact');
+        $recipientEmail = $contactPageContent['contact_email'] ?? 'info@bilskyen.dk';
+        $subjectLabel = $this->getContactSubjectLabel($validated['subject']);
+
+        $sent = $this->mailService->sendMailable(
+            $recipientEmail,
+            new ContactMessageMail(
+                senderName: $validated['name'],
+                senderEmail: $validated['email'],
+                subjectLabel: $subjectLabel,
+                senderMessage: $validated['message'],
+            ),
+            [
+                'mail_type' => 'contact_message_received',
+                'sender_email' => $validated['email'],
+            ],
+            false
+        );
+
+        if (!$sent) {
+            return back()
+                ->withInput()
+                ->with('error', __('messages.pages.contact.send_error'));
+        }
+
+        return redirect()
+            ->route('contact')
+            ->with('success', __('messages.pages.contact.send_success'));
+    }
+
+    private function getContactSubjectLabel(string $subject): string
+    {
+        return match ($subject) {
+            'vehicle-inquiry' => __('messages.pages.contact.vehicle_inquiry'),
+            'financing' => __('messages.pages.contact.financing_question'),
+            'service-appointment' => __('messages.pages.contact.service_appointment'),
+            'general' => __('messages.pages.contact.general_question'),
+            default => $subject,
+        };
+    }
+
+    /**
      * Show the privacy policy page
      *
      * @return \Illuminate\View\View
@@ -251,9 +317,14 @@ class HomeController extends Controller
         
         $seo = $this->seoService->getForPage('static', 'privacy-policy');
 
+        $privacyLastUpdated = PageContent::where('page_name', 'privacy')
+            ->where('section_key', 'privacy_body')
+            ->value('updated_at');
+
         return view('privacy-policy', [
             'privacyPageContent' => $privacyPageContent,
             'privacyPageImages' => $privacyPageImages,
+            'privacyLastUpdated' => $privacyLastUpdated,
             'seo' => $seo,
         ]);
     }
@@ -280,19 +351,36 @@ class HomeController extends Controller
         ]);
     }
 
+    /**
+     * Account deletion instructions (mobile store compliance).
+     */
+    public function showAccountDeletion()
+    {
+        $seo = $this->seoService->getForPage('static', 'account-deletion');
+
+        return view('account-deletion', [
+            'seo' => $seo,
+        ]);
+    }
+
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
-        'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'category_id', 'listing_type_id',
-        'gear_type_id', 'body_type_id', 'color_id', 'variant_id', 'type_id', 'condition_id',
+        'brand_id', 'model_id', 'fuel_type_id', 'category_id', 'listing_type_id',
+        'gear_type_id', 'body_type_id', 'color_id', 'type_id', 'condition_id',
         'sales_type_id', 'price_type_id', 'euronom_id', 'euronorm', 'use_id', 'transmission_id',
         'equipment_id', 'equipment_ids',
         'km_driven_from', 'km_driven_to', 'price_from', 'price_to', 'battery_capacity_from', 'battery_capacity_to',
-        'range_km_from', 'range_km_to', 'engine_power_from', 'engine_power_to', 'towing_weight',
+        'range_km_from', 'range_km_to', 'engine_power_from', 'engine_power_to', 'engine_power_kw_from', 'engine_power_kw_to',
+        'towing_weight',
         'ownership_tax_from', 'ownership_tax_to', 'first_registration_year_from', 'first_registration_year_to',
-        'fuel_efficiency_from', 'fuel_efficiency_to', 'year_from', 'year_to',
+        'fuel_efficiency_from', 'fuel_efficiency_to', 'model_year_from', 'model_year_to',
+        'year_from', 'year_to',
+        'electrical_consumption_from', 'electrical_consumption_to', 'km_per_liter_from', 'km_per_liter_to',
+        'max_speed_from', 'max_speed_to', 'maximum_weight_kg_from', 'maximum_weight_kg_to',
         'top_speed_from', 'top_speed_to', 'weight_from', 'weight_to', 'engine_displacement_from', 'engine_displacement_to',
-        'engine_cylinders', 'doors', 'seats_min', 'seats_max', 'wheels', 'axles', 'drive_axles', 'airbags',
-        'charging_type', 'ncap_five', 'is_import', 'is_factory_new', 'search', 'sort',
+        'engine_cylinders', 'doors', 'door_count', 'seats_min', 'seats_max', 'wheels', 'axles', 'axle_count',
+        'drive_axle_count', 'specifications_airbags', 'charging_type', 'emission_norm_id',
+        'ncap_five', 'ncap_test', 'is_import', 'is_factory_new', 'search', 'sort',
     ];
 
     /**
@@ -301,7 +389,7 @@ class HomeController extends Controller
     private function buildCurrentFilters(Request $request): array
     {
         $currentFilters = [];
-        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'seller_type', 'brand_id', 'model_id'];
+        $arrayKeys = ['listing_type_id', 'equipment_ids', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'price_type_id', 'sales_type_id', 'drive_axles', 'drive_axle_count', 'seller_type', 'brand_id', 'model_id'];
         foreach (self::VEHICLE_FILTER_KEYS as $key) {
             $value = $request->input($key);
             if ($value === null || $value === '') {
@@ -326,49 +414,40 @@ class HomeController extends Controller
         $limit = (int) $request->input('limit', 15);
         $page = (int) $request->input('page', 1);
 
-        $advancedKeys = [
-            'price_from', 'price_to', 'brand_id', 'model_id', 'model_year_id', 'year_from', 'year_to',
-            'mileage_from', 'mileage_to', 'km_driven_from', 'km_driven_to', 'listing_type_id', 'category_id',
-            'price_type_id', 'condition_id', 'body_type_id', 'fuel_type_id', 'gear_type_id', 'drive_axles',
-            'first_registration_year_from', 'first_registration_year_to', 'sales_type_id',
-            'top_speed_from', 'top_speed_to', 'engine_power_from', 'engine_power_to',
-            'ownership_tax_from', 'ownership_tax_to', 'battery_capacity_from', 'battery_capacity_to',
-            'range_km_from', 'range_km_to', 'charging_type', 'fuel_efficiency_from', 'fuel_efficiency_to',
-            'euronorm', 'euronom_id', 'color_id', 'doors', 'seats_min', 'seats_max', 'weight_from', 'weight_to',
-            'wheels', 'axles', 'engine_cylinders', 'engine_displacement_from', 'engine_displacement_to',
-            'airbags', 'ncap_five', 'equipment_ids', 'equipment_id', 'variant_id', 'type_id', 'use_id', 'transmission_id', 'towing_weight', 'is_import', 'is_factory_new',
-        ];
-        $basicKeys = ['search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 'fuel_type_id', 'price_from', 'price_to', 'listing_type_id', 'sort'];
-        $hasAdvanced = !empty(array_intersect_key($currentFilters, array_flip($advancedKeys)));
-
-        if ($hasAdvanced) {
-            $input = $currentFilters;
-            if (isset($input['km_driven_from'])) {
-                $input['mileage_from'] = $input['km_driven_from'];
-            }
-            if (isset($input['km_driven_to'])) {
-                $input['mileage_to'] = $input['km_driven_to'];
-            }
-            // Accept both euronorm (name) and euronom_id; normalize to euronom_id for backend filter (DB column is euronom_id)
-            if (!empty($input['euronorm']) && empty($input['euronom_id'])) {
-                $euronom = \App\Models\Euronom::where('name', trim($input['euronorm']))->first();
-                if ($euronom) {
-                    $input['euronom_id'] = $euronom->id;
-                }
-                unset($input['euronorm']);
-            }
-            $basicFilters = array_intersect_key($input, array_flip($basicKeys));
-            $advancedFilters = array_intersect_key($input, array_flip($advancedKeys));
-            $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters($basicFilters, $advancedFilters, $limit, $page);
-        } else {
-            $filters = array_intersect_key($currentFilters, array_flip(array_merge($basicKeys, ['km_driven_from', 'km_driven_to'])));
-            $vehicles = $this->vehicleService->getPublicVehicles($filters, $limit, $page);
+        $input = $currentFilters;
+        if (isset($input['km_driven_from'])) {
+            $input['mileage_from'] = $input['km_driven_from'];
         }
+        if (isset($input['km_driven_to'])) {
+            $input['mileage_to'] = $input['km_driven_to'];
+        }
+        // Accept both euronorm (name) and euronom_id; normalize to euronom_id for backend filter
+        if (! empty($input['euronorm']) && empty($input['euronom_id'])) {
+            $euronom = \App\Models\Euronom::where('name', trim((string) $input['euronorm']))->first();
+            if ($euronom) {
+                $input['euronom_id'] = $euronom->id;
+            }
+            unset($input['euronorm']);
+        }
+        if (isset($input['year_from']) && ! isset($input['model_year_from'])) {
+            $input['model_year_from'] = $input['year_from'];
+        }
+        if (isset($input['year_to']) && ! isset($input['model_year_to'])) {
+            $input['model_year_to'] = $input['year_to'];
+        }
+        unset($input['year_from'], $input['year_to']);
+
+        $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
         $showNoResultsMessage = $vehicles->total() === 0;
         $fallbackVehicles = null;
         if ($showNoResultsMessage) {
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
+        }
+
+        $vehicles = $vehicles->through(fn (Vehicle $v) => $this->vehicleListingItemRow($v));
+        if ($fallbackVehicles !== null) {
+            $fallbackVehicles = $fallbackVehicles->through(fn (Vehicle $v) => $this->vehicleListingItemRow($v));
         }
 
         // Because `/api/v1/constants` no longer includes brands/models/types (to reduce load),
@@ -378,15 +457,22 @@ class HomeController extends Controller
         $selectedTypeId = isset($currentFilters['type_id']) && $currentFilters['type_id'] !== '' ? (int) $currentFilters['type_id'] : null;
 
         $selectedBrands = !empty($selectedBrandIds)
-            ? Brand::whereIn('id', $selectedBrandIds)->orderBy('name')->get(['id', 'name'])
+            ? DmrBrand::whereIn('id', $selectedBrandIds)->orderBy('name')->get(['id', 'name'])
             : collect();
         $selectedModels = !empty($selectedModelIds)
-            ? VehicleModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
+            ? DmrModel::whereIn('id', $selectedModelIds)->orderBy('name')->get(['id', 'name', 'brand_id'])
             : collect();
         $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
 
         $constants = $this->lookupService->getPublicConstants();
         $seo = $this->seoService->getForPage('listing', 'vehicles');
+
+        $vehicleSortLabels = $this->buildVehicleListingSortLabels();
+        $rawSortQuery = $request->query('sort');
+        $rawSortQuery = is_string($rawSortQuery) ? $rawSortQuery : null;
+        $currentListingSort = VehicleService::normalizePublicListingSort($rawSortQuery);
+        $filterPriceMax = VehicleSearchFilters::PRICE_MAX;
+        $filterKmMax = VehicleSearchFilters::KM_MAX;
 
         return view('vehicles', compact(
             'vehicles',
@@ -397,8 +483,48 @@ class HomeController extends Controller
             'fallbackVehicles',
             'selectedBrands',
             'selectedModels',
-            'selectedType'
+            'selectedType',
+            'vehicleSortLabels',
+            'currentListingSort',
+            'rawSortQuery',
+            'filterPriceMax',
+            'filterKmMax',
         ));
+    }
+
+    /**
+     * Presentation fields for the vehicle listing card component (initial SSR).
+     *
+     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null}
+     */
+    private function vehicleListingItemRow(Vehicle $vehicle): array
+    {
+        $imgUrl = $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg';
+        $imgAlt = trim(($vehicle->brand_name ?? '').' '.($vehicle->model_name ?? ''));
+
+        $salesTypeName = null;
+        if ($vehicle->relationLoaded('salesType') && $vehicle->salesType) {
+            $salesTypeName = $vehicle->salesType->name;
+        } elseif ($vehicle->sales_type_id) {
+            $salesTypeName = $vehicle->salesType()->value('name');
+        }
+
+        return [
+            'vehicle' => $vehicle,
+            'imgUrl' => $imgUrl,
+            'imgAlt' => $imgAlt,
+            'salesTypeName' => $salesTypeName,
+        ];
+    }
+
+    /**
+     * Curated Danish labels for the public vehicles listing sort dropdown.
+     *
+     * @return array<string, string>
+     */
+    private function buildVehicleListingSortLabels(): array
+    {
+        return VehicleService::curatedPublicListingSortOptions();
     }
 
     /**
@@ -410,14 +536,13 @@ class HomeController extends Controller
      */
     public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
-        $vehicle->load([
-            'details',
-            'equipment',
-            'listingType',
-            'images',
+        $vehicle->load(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
+            'images' => function ($q) {
+                $q->orderBy('sort_order');
+            },
             'user',
-            'dealer.owner'
-        ]);
+            'dealer.owner',
+        ]));
 
         // Get authenticated user (if any)
         $user = $this->authService->getAuthenticatedUser($request);
@@ -426,30 +551,13 @@ class HomeController extends Controller
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
 
-        // Increment view count and log the view
-        DB::transaction(function () use ($vehicle, $user, $ipAddress, $userAgent) {
-            // Increment views_count in vehicle_details
-            if ($vehicle->details) {
-                $vehicle->details->increment('views_count');
-            } else {
-                // Create vehicle_details if it doesn't exist
-                $vehicle->details()->create([
-                    'views_count' => 1,
-                ]);
-            }
-
-            // Create view log entry
-            ListingViewsLog::create([
-                'vehicle_id' => $vehicle->id,
-                'user_id' => $user?->id,
-                'ip_address' => $ipAddress,
-                'user_agent' => $userAgent,
-                'viewed_at' => now(),
-            ]);
-        });
-
-        // Reload vehicle with updated details
-        $vehicle->load('details');
+        $this->vehicleViewService->recordView(
+            $vehicle,
+            $user?->id,
+            $request->ip(),
+            $request->userAgent()
+        );
+        
         $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
         $showFinanceCalculator = $this->financeCalculatorService->shouldShowCalculatorForVehicle($vehicle);
         $financeSettings = $showFinanceCalculator ? $this->financeCalculatorService->settingsForLocale() : [];
@@ -462,6 +570,7 @@ class HomeController extends Controller
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
+            'vehicleDetail' => $this->vehicleDetailPresentationService->buildDetailPayload($vehicle),
             'seo' => $seo,
             'showFinanceCalculator' => $showFinanceCalculator,
             'financeSettings' => $financeSettings,
@@ -488,8 +597,7 @@ class HomeController extends Controller
         $favorites = \App\Models\Favorite::where('user_id', $user->id)
             ->with([
                 'vehicle.images',
-                'vehicle.listingType',
-                'vehicle.details'
+                'vehicle.dmrFactVehicle.variant.model.brand',
             ])
             ->orderBy('created_at', 'desc')
             ->paginate(12);

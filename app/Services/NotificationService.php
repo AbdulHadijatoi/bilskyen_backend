@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\FormatHelper;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Purchase;
@@ -106,10 +107,10 @@ class NotificationService
     {
         $query = Notification::query();
 
-        // Filter by user roles
+        // Filter by user roles and optional per-user targeting in metadata
         $user->load('roles');
         $userRoleNames = $user->roles->pluck('name')->toArray();
-        $query->where(function ($q) use ($userRoleNames) {
+        $query->where(function ($q) use ($userRoleNames, $user) {
             if (count($userRoleNames) > 0) {
                 $q->where(function ($subQ) use ($userRoleNames) {
                     foreach ($userRoleNames as $roleName) {
@@ -117,7 +118,10 @@ class NotificationService
                     }
                 });
             }
-            $q->orWhereJsonLength('target_roles', 0); // Empty array means all users
+            $q->orWhereJsonLength('target_roles', 0);
+        })->where(function ($q) use ($user) {
+            $q->whereNull('metadata->user_id')
+                ->orWhere('metadata->user_id', $user->id);
         });
 
         // Apply filters
@@ -153,7 +157,7 @@ class NotificationService
         $user->load('roles');
         $userRoleNames = $user->roles->pluck('name')->toArray();
         $query = Notification::whereNotIn('id', $readNotificationIds)
-            ->where(function ($q) use ($userRoleNames) {
+            ->where(function ($q) use ($userRoleNames, $user) {
                 if (count($userRoleNames) > 0) {
                     $q->where(function ($subQ) use ($userRoleNames) {
                         foreach ($userRoleNames as $roleName) {
@@ -162,6 +166,35 @@ class NotificationService
                     });
                 }
                 $q->orWhereJsonLength('target_roles', 0);
+            })->where(function ($q) use ($user) {
+                $q->whereNull('metadata->user_id')
+                    ->orWhere('metadata->user_id', $user->id);
+            });
+
+        if ($since) {
+            $query->where('created_at', '>=', $since);
+        }
+
+        return $query->count();
+    }
+
+    public function getTotalCountForUser(User $user, ?\DateTime $since = null): int
+    {
+        $user->load('roles');
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $query = Notification::query()
+            ->where(function ($q) use ($userRoleNames, $user) {
+                if (count($userRoleNames) > 0) {
+                    $q->where(function ($subQ) use ($userRoleNames) {
+                        foreach ($userRoleNames as $roleName) {
+                            $subQ->orWhereJsonContains('target_roles', $roleName);
+                        }
+                    });
+                }
+                $q->orWhereJsonLength('target_roles', 0);
+            })->where(function ($q) use ($user) {
+                $q->whereNull('metadata->user_id')
+                    ->orWhere('metadata->user_id', $user->id);
             });
 
         if ($since) {
@@ -209,12 +242,13 @@ class NotificationService
 
         $notifications = [];
         $fifteenDaysAfterPurchase = $purchase->purchase_date->copy()->addDays(15);
+        $vLabel = $vehicle->title ?? '#' . $vehicle->id;
 
         // Documents pending notification
         if (in_array('Documents pending', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Vehicle {$vehicle->make} {$vehicle->model} has pending documents.",
-                'message' => "Please ensure all documents for vehicle {$vehicle->make} {$vehicle->model} are completed.",
+                'title' => __('messages.notifications.purchase_documents_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_documents_pending_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -229,8 +263,8 @@ class NotificationService
         if (count($vehicle->blacklist_flags ?? []) > 0) {
             $flags = implode(', ', $vehicle->blacklist_flags);
             $notifications[] = [
-                'title' => "Vehicle {$vehicle->make} {$vehicle->model} has blacklist flags.",
-                'message' => "Vehicle {$vehicle->make} {$vehicle->model} has the following blacklist issues: {$flags}",
+                'title' => __('messages.notifications.purchase_blacklist_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_blacklist_message', ['vehicle' => $vLabel, 'flags' => $flags]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -246,8 +280,12 @@ class NotificationService
             $pendingAmount = $purchasePrice - $paidAmount;
             $contactName = $contact->name ?? $contact->company_name;
             $notifications[] = [
-                'title' => "Purchase payment pending for {$vehicle->make} {$vehicle->model}.",
-                'message' => "The purchase of vehicle {$vehicle->make} {$vehicle->model} has a pending payment of {$pendingAmount}. Please follow up with {$contactName} to complete the payment.",
+                'title' => __('messages.notifications.purchase_payment_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.purchase_payment_pending_message', [
+                    'vehicle' => $vLabel,
+                    'amount' => FormatHelper::formatCurrency((float) $pendingAmount),
+                    'contact' => $contactName,
+                ]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterPurchase,
                 'metadata' => [
@@ -304,12 +342,13 @@ class NotificationService
 
         $notifications = [];
         $fifteenDaysAfterSale = $sale->sale_date->copy()->addDays(15);
+        $vLabel = $vehicle->title ?? '#' . $vehicle->id;
 
         // Name Transfer pending
         if (in_array('Name transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Name transfer pending for {$vehicle->make} {$vehicle->model}.",
-                'message' => "The name transfer application for vehicle {$vehicle->make} {$vehicle->model} is still pending at RTO.",
+                'title' => __('messages.notifications.sale_name_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_name_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -323,8 +362,8 @@ class NotificationService
         // RC Name Transfer pending
         if (in_array('Registration certificate transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "RC transfer pending for {$vehicle->make} {$vehicle->model}.",
-                'message' => "The RC ownership update for vehicle {$vehicle->make} {$vehicle->model} has not yet reflected in VAHAN database.",
+                'title' => __('messages.notifications.sale_rc_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_rc_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -338,8 +377,8 @@ class NotificationService
         // Insurance Name Transfer pending
         if (in_array('Insurance transfer', $vehicle->pending_works ?? [])) {
             $notifications[] = [
-                'title' => "Insurance transfer pending for {$vehicle->make} {$vehicle->model}.",
-                'message' => "The insurance policy for vehicle {$vehicle->make} {$vehicle->model} is still in the seller's name. Please update with insurer.",
+                'title' => __('messages.notifications.sale_insurance_transfer_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_insurance_transfer_message', ['vehicle' => $vLabel]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [
@@ -355,8 +394,12 @@ class NotificationService
             $pendingAmount = $salePrice - $receivedAmount;
             $contactName = $contact->name ?? $contact->company_name;
             $notifications[] = [
-                'title' => "Sale payment pending for {$vehicle->make} {$vehicle->model}.",
-                'message' => "The sale of vehicle {$vehicle->make} {$vehicle->model} has a pending payment of {$pendingAmount}. Please follow up with {$contactName} to complete the payment.",
+                'title' => __('messages.notifications.sale_payment_pending_title', ['vehicle' => $vLabel]),
+                'message' => __('messages.notifications.sale_payment_pending_message', [
+                    'vehicle' => $vLabel,
+                    'amount' => FormatHelper::formatCurrency((float) $pendingAmount),
+                    'contact' => $contactName,
+                ]),
                 'target_roles' => ['dealer'],
                 'scheduled_at' => $fifteenDaysAfterSale,
                 'metadata' => [

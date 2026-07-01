@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Models\Feature;
 use App\Models\PlanAvailability;
 use App\Models\PlanPriceHistory;
+use App\Constants\BillingModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -46,17 +47,22 @@ class AdminPlanController extends Controller
             'pricing.monthly_price' => 'sometimes|integer|min:0',
             'pricing.yearly_price' => 'sometimes|integer|min:0',
             'pricing.currency' => 'sometimes|string|size:3',
+            'billing_model' => 'sometimes|string|in:'.BillingModel::SUBSCRIPTION.','.BillingModel::USAGE_DAILY,
+            'price_per_listing_per_day' => 'sometimes|integer|min:0|nullable',
         ]);
 
         // Validate that at least one of role_ids or dealer_ids is provided
         if (!$request->has('role_ids') && !$request->has('dealer_ids')) {
-            return $this->error('At least one of role_ids or dealer_ids must be provided', 422);
+            return $this->error(__('messages.api.plan_roles_or_dealers_required'), [], 422);
         }
 
         DB::beginTransaction();
         try {
             // Create plan
-            $plan = Plan::create($request->only(['name', 'slug', 'description', 'is_active', 'trial_days']));
+            $plan = Plan::create($request->only([
+                'name', 'slug', 'description', 'is_active', 'trial_days',
+                'billing_model', 'price_per_listing_per_day',
+            ]));
 
             // Create plan availability records
             $availabilityRecords = [];
@@ -132,7 +138,7 @@ class AdminPlanController extends Controller
         return $this->created($plan);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to create plan: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_create_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -154,12 +160,17 @@ class AdminPlanController extends Controller
             'pricing.monthly_price' => 'sometimes|integer|min:0',
             'pricing.yearly_price' => 'sometimes|integer|min:0',
             'pricing.currency' => 'sometimes|string|size:3',
+            'billing_model' => 'sometimes|string|in:'.BillingModel::SUBSCRIPTION.','.BillingModel::USAGE_DAILY,
+            'price_per_listing_per_day' => 'sometimes|integer|min:0|nullable',
         ]);
 
         DB::beginTransaction();
         try {
             // Update plan basic info
-            $plan->update($request->only(['name', 'slug', 'description', 'is_active', 'trial_days']));
+            $plan->update($request->only([
+                'name', 'slug', 'description', 'is_active', 'trial_days',
+                'billing_model', 'price_per_listing_per_day',
+            ]));
 
             // Update plan availability if provided
             if ($request->has('role_ids') || $request->has('dealer_ids')) {
@@ -247,7 +258,7 @@ class AdminPlanController extends Controller
         return $this->success($plan);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update plan: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -267,9 +278,9 @@ class AdminPlanController extends Controller
 
     public function assignFeature(Request $request, int $id): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'feature_id' => 'required|exists:features,id',
-            'value' => 'sometimes',
+            'value' => 'required',
         ]);
 
         $plan = Plan::findOrFail($id);
@@ -284,10 +295,59 @@ class AdminPlanController extends Controller
         }
 
         $plan->features()->syncWithoutDetaching([
-            $request->feature_id => ['value' => $request->value ?? null]
+            $feature->id => ['value' => $normalizedValue]
         ]);
 
         return $this->success(['message' => __('messages.errors.feature_assigned_success')]);
+    }
+
+    private function normalizeFeatureValue(int $featureTypeId, mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($featureTypeId === 1) {
+            if (is_bool($value)) {
+                return $value ? 'true' : 'false';
+            }
+
+            if (is_int($value) || is_float($value)) {
+                if ((float) $value === 1.0) {
+                    return 'true';
+                }
+                if ((float) $value === 0.0) {
+                    return 'false';
+                }
+                return null;
+            }
+
+            if (is_string($value)) {
+                $normalized = strtolower(trim($value));
+                if (in_array($normalized, ['true', '1'], true)) {
+                    return 'true';
+                }
+                if (in_array($normalized, ['false', '0'], true)) {
+                    return 'false';
+                }
+            }
+
+            return null;
+        }
+
+        if ($featureTypeId === 2) {
+            if (is_numeric($value)) {
+                return trim((string) $value);
+            }
+
+            return null;
+        }
+
+        if (is_scalar($value)) {
+            return trim((string) $value);
+        }
+
+        return null;
     }
 
     public function removeFeature(int $id, int $featureId): JsonResponse
@@ -327,7 +387,7 @@ class AdminPlanController extends Controller
 
         // Validate that at least one is provided
         if (!$request->has('role_ids') && !$request->has('dealer_ids')) {
-            return $this->error('At least one of role_ids or dealer_ids must be provided', 422);
+            return $this->error(__('messages.api.plan_roles_or_dealers_required'), [], 422);
         }
 
         $plan = Plan::findOrFail($id);
@@ -382,7 +442,7 @@ class AdminPlanController extends Controller
             return $this->success($availability, 200, __('messages.api.plan_availability_updated'));
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to sync plan availability: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_sync_availability_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -415,7 +475,7 @@ class AdminPlanController extends Controller
         ]);
 
         if (!$request->has('monthly_price') && !$request->has('yearly_price')) {
-            return $this->error('At least one of monthly_price or yearly_price must be provided', 422);
+            return $this->error(__('messages.api.plan_pricing_price_required'), [], 422);
         }
 
         $plan = Plan::findOrFail($id);
@@ -462,7 +522,7 @@ class AdminPlanController extends Controller
             return $this->success(['message' => __('messages.errors.plan_pricing_updated_success')]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update plan pricing: ' . $e->getMessage(), 500);
+            return $this->error(__('messages.api.plan_pricing_update_failed', ['message' => $e->getMessage()]), [], 500);
         }
     }
 }

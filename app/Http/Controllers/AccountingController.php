@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FinancialAccount;
-use App\Models\Transaction;
 use App\Models\TransactionEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AccountingController extends Controller
@@ -18,6 +17,10 @@ class AccountingController extends Controller
     public function getFinancialOverview(Request $request): JsonResponse
     {
         $period = $request->input('period', 'year');
+
+        if (! $this->accountingTablesReady()) {
+            return response()->json($this->emptyFinancialOverview($period));
+        }
         
         $periods = [
             'day' => [now()->startOfDay(), now()->endOfDay()],
@@ -28,16 +31,20 @@ class AccountingController extends Controller
         ];
 
         [$startDate, $endDate] = $periods[$period] ?? $periods['year'];
-        $previousStartDate = Carbon::parse($startDate)->sub($period)->startOf($period);
-        $previousEndDate = Carbon::parse($endDate)->sub($period)->endOf($period);
+        [$previousStartDate, $previousEndDate] = $this->previousPeriodBounds($period);
 
-        // Get revenue
-        $revenue = $this->calculateAccountTypeTotal('revenue', $startDate, $endDate);
-        $previousRevenue = $this->calculateAccountTypeTotal('revenue', $previousStartDate, $previousEndDate);
+        try {
+            $revenue = $this->calculateAccountTypeTotal('revenue', $startDate, $endDate);
+            $previousRevenue = $this->calculateAccountTypeTotal('revenue', $previousStartDate, $previousEndDate);
+            $expense = $this->calculateAccountTypeTotal('expense', $startDate, $endDate);
+            $previousExpense = $this->calculateAccountTypeTotal('expense', $previousStartDate, $previousEndDate);
+        } catch (QueryException $e) {
+            if ($this->isMissingTableException($e)) {
+                return response()->json($this->emptyFinancialOverview($period));
+            }
 
-        // Get expenses
-        $expense = $this->calculateAccountTypeTotal('expense', $startDate, $endDate);
-        $previousExpense = $this->calculateAccountTypeTotal('expense', $previousStartDate, $previousEndDate);
+            throw $e;
+        }
 
         // Calculate net profit
         $netProfit = $revenue - $expense;
@@ -84,43 +91,46 @@ class AccountingController extends Controller
      */
     public function getFinancialOverviewChart(Request $request): JsonResponse
     {
-        $granularity = $request->input('granularity', 'year');
-        
-        $data = [];
-        
-        // Determine date range and grouping
-        $startDate = now()->startOfYear();
-        $endDate = now()->endOfYear();
-        
-        if ($granularity === 'month') {
-            $startDate = now()->startOfYear();
-            $endDate = now()->endOfYear();
-            $groupBy = DB::raw('DATE_FORMAT(transactions.date, "%Y-%m")');
-        } elseif ($granularity === 'quarter') {
-            $startDate = now()->startOfYear();
-            $endDate = now()->endOfYear();
-            $groupBy = DB::raw('CONCAT(YEAR(transactions.date), "-Q", QUARTER(transactions.date))');
-        } elseif ($granularity === 'week') {
-            $startDate = now()->startOfWeek()->subWeeks(12);
-            $endDate = now()->endOfWeek();
-            $groupBy = DB::raw('YEARWEEK(transactions.date)');
-        } else {
-            $startDate = now()->startOfYear();
-            $endDate = now()->endOfYear();
-            $groupBy = DB::raw('YEAR(transactions.date)');
+        if (! $this->accountingTablesReady()) {
+            return response()->json([]);
         }
 
-        $results = TransactionEntry::join('transactions', 'transaction_entries.transaction_id', '=', 'transactions.id')
-            ->join('financial_accounts', 'transaction_entries.financial_account_id', '=', 'financial_accounts.id')
-            ->whereBetween('transactions.date', [$startDate, $endDate])
-            ->select(
-                $groupBy . ' as period',
-                DB::raw('SUM(CASE WHEN financial_accounts.type = "revenue" AND transaction_entries.type = "credit" THEN transaction_entries.amount ELSE 0 END) as revenue'),
-                DB::raw('SUM(CASE WHEN financial_accounts.type = "expense" AND transaction_entries.type = "debit" THEN transaction_entries.amount ELSE 0 END) as expense')
-            )
-            ->groupBy('period')
-            ->orderBy('period')
-            ->get();
+        $granularity = $request->input('granularity', 'year');
+
+        $periodExpression = match ($granularity) {
+            'month' => 'DATE_FORMAT(transactions.date, "%Y-%m")',
+            'quarter' => 'CONCAT(YEAR(transactions.date), "-Q", QUARTER(transactions.date))',
+            'week' => 'YEARWEEK(transactions.date)',
+            default => 'YEAR(transactions.date)',
+        };
+
+        [$startDate, $endDate] = match ($granularity) {
+            'week' => [now()->startOfWeek()->subWeeks(12), now()->endOfWeek()],
+            'month', 'quarter' => [now()->startOfYear(), now()->endOfYear()],
+            default => [now()->startOfYear(), now()->endOfYear()],
+        };
+
+        try {
+            $results = TransactionEntry::join('transactions', 'transaction_entries.transaction_id', '=', 'transactions.id')
+                ->join('financial_accounts', 'transaction_entries.financial_account_id', '=', 'financial_accounts.id')
+                ->whereBetween('transactions.date', [$startDate, $endDate])
+                ->selectRaw(
+                    "{$periodExpression} as period,
+                SUM(CASE WHEN financial_accounts.type = 'revenue' AND transaction_entries.type = 'credit' THEN transaction_entries.amount ELSE 0 END) as revenue,
+                SUM(CASE WHEN financial_accounts.type = 'expense' AND transaction_entries.type = 'debit' THEN transaction_entries.amount ELSE 0 END) as expense"
+                )
+                ->groupByRaw($periodExpression)
+                ->orderByRaw($periodExpression)
+                ->get();
+        } catch (QueryException $e) {
+            if ($this->isMissingTableException($e)) {
+                return response()->json([]);
+            }
+
+            throw $e;
+        }
+
+        $data = [];
 
         foreach ($results as $result) {
             $revenue = (float) $result->revenue;
@@ -145,6 +155,10 @@ class AccountingController extends Controller
      */
     private function calculateAccountTypeTotal(string $type, Carbon $startDate, Carbon $endDate): float
     {
+        if (! $this->accountingTablesReady()) {
+            return 0.0;
+        }
+
         return TransactionEntry::join('transactions', 'transaction_entries.transaction_id', '=', 'transactions.id')
             ->join('financial_accounts', 'transaction_entries.financial_account_id', '=', 'financial_accounts.id')
             ->where('financial_accounts.type', $type)
@@ -157,6 +171,62 @@ class AccountingController extends Controller
                 }
             })
             ->sum('transaction_entries.amount');
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function previousPeriodBounds(string $period): array
+    {
+        $now = now();
+
+        return match ($period) {
+            'day' => [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()],
+            'week' => [$now->copy()->subWeek()->startOfWeek(), $now->copy()->subWeek()->endOfWeek()],
+            'month' => [$now->copy()->subMonth()->startOfMonth(), $now->copy()->subMonth()->endOfMonth()],
+            'quarter' => [$now->copy()->subQuarter()->startOfQuarter(), $now->copy()->subQuarter()->endOfQuarter()],
+            default => [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()],
+        };
+    }
+
+    private function accountingTablesReady(): bool
+    {
+        foreach (['financial_accounts', 'transactions', 'transaction_entries'] as $table) {
+            if (! Schema::hasTable($table)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function isMissingTableException(QueryException $e): bool
+    {
+        $sqlState = $e->errorInfo[0] ?? null;
+
+        return $sqlState === '42S02'
+            || str_contains($e->getMessage(), "Base table or view not found");
+    }
+
+    /**
+     * @return list<array{type: string, value: float, previousPeriodValue: float, percentageChange: int, period: string}>
+     */
+    private function emptyFinancialOverview(string $period): array
+    {
+        $empty = static fn (string $type) => [
+            'type' => $type,
+            'value' => 0.0,
+            'previousPeriodValue' => 0.0,
+            'percentageChange' => 0,
+            'period' => $period,
+        ];
+
+        return [
+            $empty('Revenue'),
+            $empty('Expense'),
+            $empty('Net Profit'),
+            $empty('Profit Margin'),
+        ];
     }
 }
 

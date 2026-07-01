@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Facades\Cache;
+use App\Services\LookupService;
 
 trait ConstantsCacheTrait
 {
@@ -14,6 +14,6 @@ trait ConstantsCacheTrait
      */
     protected function clearConstantsCache(string $name): void
     {
-        Cache::forget("constants_{$name}");
+        LookupService::forgetLookupCacheGroup($name);
     }
 }

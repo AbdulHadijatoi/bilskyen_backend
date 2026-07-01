@@ -24,18 +24,12 @@ class UpdateVehicleRequest extends FormRequest
             'registration' => ['nullable', 'string', 'max:20'],
             'vin' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]+$/i'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
-            'km_driven' => ['nullable', 'integer', 'min:0'],
-            'fuel_type_id' => ['sometimes', 'required', 'integer', 'exists:fuel_types,id'],
-            'price' => ['sometimes', 'required', 'integer', 'min:0'],
-            'mileage' => ['nullable', 'integer', 'min:0'],
-            'battery_capacity' => ['nullable', 'integer', 'min:0'],
-            'engine_power' => ['nullable', 'integer', 'min:0'],
+            'km_driven' => ['nullable', 'numeric', 'min:0'],
+            'dmr_fact_vehicle_id' => ['sometimes', 'required', 'integer', 'exists:dmr_fact_vehicles,id'],
+            'price' => ['sometimes', 'required', 'numeric', 'min:0'],
             'towing_weight' => ['nullable', 'integer', 'min:0'],
-            'ownership_tax' => ['nullable', 'integer', 'min:0'],
             'first_registration_date' => ['nullable', 'date'],
-            'vehicle_list_status_id' => ['sometimes', 'required', 'integer', 'exists:vehicle_list_statuses,id'],
+            'list_status_id' => ['sometimes', 'required', 'integer', 'exists:vehicle_list_statuses,id'],
             'published_at' => ['nullable', 'date'],
         ];
     }
@@ -46,14 +40,11 @@ class UpdateVehicleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'fuel_type_id.exists' => __('messages.validation.update_vehicle.fuel_type_exists'),
             'price.min' => __('messages.validation.update_vehicle.price_min'),
-            'vehicle_list_status_id.exists' => __('messages.validation.update_vehicle.vehicle_list_status_exists'),
+            'list_status_id.exists' => __('messages.validation.update_vehicle.vehicle_list_status_exists'),
             'vin.size' => __('messages.validation.update_vehicle.vin_size'),
             'vin.regex' => __('messages.validation.update_vehicle.vin_regex'),
             'category_id.exists' => __('messages.validation.update_vehicle.category_exists'),
-            'brand_id.exists' => __('messages.validation.update_vehicle.brand_exists'),
-            'model_year_id.exists' => __('messages.validation.update_vehicle.model_year_exists'),
         ];
     }
 }

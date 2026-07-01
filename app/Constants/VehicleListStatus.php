@@ -13,6 +13,7 @@ class VehicleListStatus
     public const PUBLISHED = 2;
     public const SOLD = 3;
     public const ARCHIVED = 4;
+    public const PENDING_REVIEW = 5;
 
     /**
      * Get all valid status IDs
@@ -24,6 +25,7 @@ class VehicleListStatus
             self::PUBLISHED,
             self::SOLD,
             self::ARCHIVED,
+            self::PENDING_REVIEW,
         ];
     }
 
@@ -37,6 +39,7 @@ class VehicleListStatus
             'published',
             'sold',
             'archived',
+            'pending_review',
         ];
     }
 
@@ -50,6 +53,7 @@ class VehicleListStatus
             'published' => self::PUBLISHED,
             'sold' => self::SOLD,
             'archived' => self::ARCHIVED,
+            'pending_review' => self::PENDING_REVIEW,
         ];
 
         return $mapping[strtolower($name)] ?? null;

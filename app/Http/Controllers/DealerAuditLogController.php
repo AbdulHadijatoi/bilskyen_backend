@@ -33,7 +33,8 @@ class DealerAuditLogController extends Controller
         // Note: If 'audit_logs' feature doesn't exist in subscription, default to false (no access)
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'audit_logs')) {
             return $this->error(
-                'Audit logs access is not available in your current subscription plan. Please upgrade to access this feature.',
+                __('messages.api.audit_logs_not_in_plan'),
+                [],
                 403
             );
         }
@@ -68,7 +69,7 @@ class DealerAuditLogController extends Controller
                 $dateFrom = Carbon::parse($request->date_from)->startOfDay();
                 $query->where('created_at', '>=', $dateFrom);
             } catch (\Exception $e) {
-                return $this->validationError(['date_from' => ['Invalid date format']]);
+                return $this->validationError(['date_from' => [__('messages.api.invalid_date_format')]]);
             }
         }
 
@@ -77,7 +78,7 @@ class DealerAuditLogController extends Controller
                 $dateTo = Carbon::parse($request->date_to)->endOfDay();
                 $query->where('created_at', '<=', $dateTo);
             } catch (\Exception $e) {
-                return $this->validationError(['date_to' => ['Invalid date format']]);
+                return $this->validationError(['date_to' => [__('messages.api.invalid_date_format')]]);
             }
         }
 
@@ -144,7 +145,8 @@ class DealerAuditLogController extends Controller
         // Check if audit_logs feature is enabled
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'audit_logs')) {
             return $this->error(
-                'Audit logs access is not available in your current subscription plan. Please upgrade to access this feature.',
+                __('messages.api.audit_logs_not_in_plan'),
+                [],
                 403
             );
         }
@@ -154,7 +156,7 @@ class DealerAuditLogController extends Controller
             ->find($id);
 
         if (!$log) {
-            return $this->error('Audit log not found', 404);
+            return $this->error(__('messages.api.audit_log_not_found'), [], 404);
         }
 
         // Transform log to include all details

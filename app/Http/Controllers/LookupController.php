@@ -65,44 +65,63 @@ class LookupController extends Controller
 
     /**
      * Search brands (partial dataset).
-     * GET /api/v1/brands?search=&limit=
+     * GET /api/v1/brands?search=
      */
     public function searchBrands(Request $request, LookupService $lookupService): JsonResponse
     {
         try {
             $search = $request->input('search');
-            $limit = (int) $request->input('limit', 25);
+            $forListing = $request->boolean('listing');
 
-            $items = $lookupService->searchBrands($search, $limit);
+            $items = $forListing
+                ? $lookupService->searchBrandsForListingFilters($search)
+                : $lookupService->searchBrands($search);
 
             return $this->success([
                 'items' => $items,
-                'limit' => $limit,
-            ], 200, 'Brands retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch brands: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_brands', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
     /**
-     * Search models (partial dataset).
-     * GET /api/v1/models?search=&brand_ids=&limit=
+     * Search models (partial dataset, full DMR catalog).
+     * GET /api/v1/models?search=&brand_ids=
      */
     public function searchModels(Request $request, LookupService $lookupService): JsonResponse
     {
         try {
             $search = $request->input('search');
-            $limit = (int) $request->input('limit', 25);
             $brandIds = $this->parseIdList($request->input('brand_ids'));
 
-            $items = $lookupService->searchModels($search, $brandIds, $limit);
+            $items = $lookupService->searchModels($search, $brandIds);
 
             return $this->success([
                 'items' => $items,
-                'limit' => $limit,
-            ], 200, 'Models retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch models: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_models', ['message' => $e->getMessage()]), [], 500);
+        }
+    }
+
+    /**
+     * Models for public listing filters (published inventory only, shortened names).
+     * GET /api/v1/listing-models?search=&brand_ids=
+     */
+    public function searchListingModels(Request $request, LookupService $lookupService): JsonResponse
+    {
+        try {
+            $search = $request->input('search');
+            $brandIds = $this->parseIdList($request->input('brand_ids'));
+
+            $items = $lookupService->searchModelsForListingFilters($search, $brandIds);
+
+            return $this->success([
+                'items' => $items,
+            ], 200, __('messages.api.data_retrieved_successfully'));
+        } catch (\Exception $e) {
+            return $this->error(__('messages.api.failed_fetch_models', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
@@ -121,31 +140,29 @@ class LookupController extends Controller
             return $this->success([
                 'items' => $items,
                 'limit' => $limit,
-            ], 200, 'Types retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch types: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_types', ['message' => $e->getMessage()]), [], 500);
         }
     }
 
     /**
      * Search variants (partial dataset).
-     * GET /api/v1/variants?search=&model_ids=&limit=
+     * GET /api/v1/variants?search=&model_ids=
      */
     public function searchVariants(Request $request, LookupService $lookupService): JsonResponse
     {
         try {
             $search = $request->input('search');
-            $limit = (int) $request->input('limit', 25);
             $modelIds = $this->parseIdList($request->input('model_ids'));
 
-            $items = $lookupService->searchVariants($search, $modelIds, $limit);
+            $items = $lookupService->searchVariants($search, $modelIds);
 
             return $this->success([
                 'items' => $items,
-                'limit' => $limit,
-            ], 200, 'Variants retrieved successfully');
+            ], 200, __('messages.api.data_retrieved_successfully'));
         } catch (\Exception $e) {
-            return $this->error('Failed to fetch variants: ' . $e->getMessage(), [], 500);
+            return $this->error(__('messages.api.failed_fetch_variants', ['message' => $e->getMessage()]), [], 500);
         }
     }
 }

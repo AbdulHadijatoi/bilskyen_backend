@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\EquipmentType;
-use Illuminate\Http\Request;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Equipment Type Controller
@@ -29,14 +30,19 @@ class AdminEquipmentTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:equipment_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('equipment_types', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipmentType = EquipmentType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_equipment_types');
-        Cache::forget('constants_equipments'); // Also clear equipments cache as it may include types
+        LookupService::forgetLookupCacheGroup('equipment_types');
+        LookupService::forgetLookupCacheGroup('equipments');
 
         return $this->created($equipmentType);
     }
@@ -46,14 +52,19 @@ class AdminEquipmentTypeController extends Controller
         $equipmentType = EquipmentType::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:equipment_types,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('equipment_types', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $equipmentType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_equipment_types');
-        Cache::forget('constants_equipments'); // Also clear equipments cache as it may include types
+        LookupService::forgetLookupCacheGroup('equipment_types');
+        LookupService::forgetLookupCacheGroup('equipments');
 
         return $this->success($equipmentType);
     }
@@ -64,8 +75,8 @@ class AdminEquipmentTypeController extends Controller
         $equipmentType->delete();
 
         // Clear cache
-        Cache::forget('constants_equipment_types');
-        Cache::forget('constants_equipments'); // Also clear equipments cache as it may include types
+        LookupService::forgetLookupCacheGroup('equipment_types');
+        LookupService::forgetLookupCacheGroup('equipments');
 
         return $this->noContent();
     }

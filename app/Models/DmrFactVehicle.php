@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class DmrFactVehicle extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'dmr_fact_vehicles';
 
     const UPDATED_AT = null;
@@ -91,11 +95,6 @@ class DmrFactVehicle extends Model
         return $this->belongsTo(DmrRegistrationStatus::class, 'registration_status_id');
     }
 
-    public function etlLoad(): BelongsTo
-    {
-        return $this->belongsTo(DmrEtlLoad::class, 'etl_load_id');
-    }
-
     public function equipmentLines(): HasMany
     {
         return $this->hasMany(DmrBridgeVehicleEquipment::class, 'vehicle_id');
@@ -104,5 +103,30 @@ class DmrFactVehicle extends Model
     public function drivmiddelLines(): HasMany
     {
         return $this->hasMany(DmrBridgeVehicleDrivmiddel::class, 'vehicle_id');
+    }
+
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class, 'dmr_fact_vehicle_id');
+    }
+
+    /**
+     * Distinct calendar years from DMR (`model_aar`) for filters and dropdowns.
+     * Each row uses the year as both `id` and `name` (replaces legacy `model_years` rows).
+     */
+    public static function distinctModelYearOptions(): Collection
+    {
+        return static::query()
+            ->whereNotNull('model_aar')
+            ->distinct()
+            ->orderByDesc('model_aar')
+            ->pluck('model_aar')
+            ->values()
+            ->map(fn ($y) => (object) ['id' => (int) $y, 'name' => (string) $y]);
+    }
+
+    public static function modelYearValueExists(int $year): bool
+    {
+        return static::query()->where('model_aar', $year)->exists();
     }
 }

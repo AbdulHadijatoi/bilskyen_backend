@@ -20,6 +20,7 @@ class DealerSubscription extends Model
         'starts_at',
         'ends_at',
         'auto_renew',
+        'billing_cycle',
         'created_at',
     ];
 

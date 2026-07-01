@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\NummerpladeApiException;
+use App\Services\DmrFactVehicleLookupService;
 use App\Services\LookupService;
-use App\Services\NummerpladeApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DealerLookupController extends Controller
 {
     public function __construct(
-        private NummerpladeApiService $nummerpladeService
+        private DmrFactVehicleLookupService $dmrFactVehicleLookupService
     ) {}
 
     /**
@@ -26,7 +26,7 @@ class DealerLookupController extends Controller
             return $this->success($data);
         } catch (\Exception $e) {
             return $this->error(
-                'Failed to fetch constants data: ' . $e->getMessage(),
+                __('messages.api.failed_fetch_constants_data', ['message' => $e->getMessage()]),
                 [],
                 500
             );
@@ -34,7 +34,7 @@ class DealerLookupController extends Controller
     }
 
     /**
-     * Lookup vehicle by registration number using Nummerplade API
+     * Lookup vehicle by registration number (local DMR dataset, same as sell-your-car /api/v1/dmr/vehicle-by-registration).
      * POST /api/v1/dealer/lookup/vehicle-by-registration
      */
     public function lookupVehicleByRegistration(Request $request): JsonResponse
@@ -45,9 +45,8 @@ class DealerLookupController extends Controller
         ]);
 
         try {
-            $data = $this->nummerpladeService->getVehicleByRegistration(
-                $request->input('registration'),
-                $request->boolean('advanced', true)
+            $data = $this->dmrFactVehicleLookupService->lookupByRegistration(
+                $request->input('registration')
             );
 
             return $this->success($data);
@@ -59,7 +58,7 @@ class DealerLookupController extends Controller
             );
         } catch (\Exception $e) {
             return $this->error(
-                'Failed to lookup vehicle: ' . $e->getMessage(),
+                __('messages.api.failed_lookup_vehicle', ['message' => $e->getMessage()]),
                 [],
                 500
             );

@@ -4,6 +4,35 @@
 (function() {
     'use strict';
 
+    var SELL_YC_I18N = window.sellYourCarTranslations || {};
+
+    function trans(key, fallback, replacements) {
+        var text = Object.prototype.hasOwnProperty.call(SELL_YC_I18N, key)
+            ? SELL_YC_I18N[key]
+            : fallback;
+
+        if (!replacements) {
+            return text;
+        }
+
+        return Object.keys(replacements).reduce(function(result, replacementKey) {
+            return result.replace(new RegExp(':' + replacementKey, 'g'), String(replacements[replacementKey]));
+        }, text);
+    }
+
+    /** Fixed option placeholders for sell-your-car selects (not from server copy). */
+    var SELL_YC_SELECT_PH = {
+        manual_brand_id: trans('selectBrand', 'Select brand'),
+        manual_model_id: trans('selectModel', 'Select model'),
+        manual_model_year_id: trans('selectModelYear', 'Select model year'),
+        manual_fuel_type_id: trans('selectFuelType', 'Select fuel type'),
+        variant_id: trans('selectVariant', 'Select variant'),
+        colour_id: trans('selectColor', 'Select colour'),
+        emission_norm_id: trans('selectEmissionStandard', 'Select emission standard'),
+    };
+    // Guard transient clear/reset events while lookup-prefill is still hydrating async fields.
+    var sellYourCarLookupHydrating = false;
+
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSellYourCarForm);
@@ -42,10 +71,10 @@
         // Initialize location autocomplete
         initLocationAutocomplete();
         
-        // Ensure fuel_efficiency field always allows decimals (step="any") unless explicitly electric
+        // Ensure km_per_liter field always allows decimals (step="any") unless explicitly electric
         // This runs after all initialization to override any API-driven changes
         setTimeout(function() {
-            const fuelEfficiencyInput = document.getElementById('fuel_efficiency');
+            const fuelEfficiencyInput = document.getElementById('km_per_liter');
             if (fuelEfficiencyInput) {
                 // Check if current step is "1" - if so, check if we should keep it or change to "any"
                 const currentStep = fuelEfficiencyInput.getAttribute('step');
@@ -134,6 +163,102 @@
         };
     }
 
+    /** Copy manual brand/model/year/fuel selects into hidden inputs (lookup + manual entry). */
+    function syncManualSelectionsToHidden() {
+        const brandIdHidden = document.getElementById('brand_id');
+        const modelIdHidden = document.getElementById('model_id');
+        const modelYearIdHidden = document.getElementById('model_year');
+        const fuelTypeIdHidden = document.getElementById('fuel_type_id');
+        const manualBrand = document.getElementById('manual_brand_id');
+        const manualModel = document.getElementById('manual_model_id');
+        const manualModelYear = document.getElementById('manual_model_year_id');
+        const manualFuelType = document.getElementById('manual_fuel_type_id');
+        if (brandIdHidden && manualBrand) {
+            brandIdHidden.value = manualBrand.value || '';
+        }
+        if (modelIdHidden && manualModel) {
+            modelIdHidden.value = manualModel.value || '';
+        }
+        if (modelYearIdHidden && manualModelYear) {
+            modelYearIdHidden.value = manualModelYear.value || '';
+        }
+        if (fuelTypeIdHidden && manualFuelType) {
+            fuelTypeIdHidden.value = manualFuelType.value || '';
+        }
+        syncPlateStripFuelFromManualSelect();
+    }
+
+    /** Populate DMR selects + equipment HTML from SellYourCarController::lookupContext (after plate lookup). */
+    function applySellYourCarLookupContextPayload(ctx) {
+        if (!ctx || !ctx.selects) return;
+        var ph = ctx.placeholders || {};
+        function fillSelect(id, items, placeholder) {
+            var sel = document.getElementById(id);
+            if (!sel || sel.tagName !== 'SELECT') return;
+            sel.innerHTML = '';
+            var opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = placeholder || '';
+            sel.appendChild(opt0);
+            (items || []).forEach(function(item) {
+                var o = document.createElement('option');
+                o.value = String(item.id);
+                o.textContent = item.name;
+                if (item.brand_id != null && item.brand_id !== '') {
+                    o.setAttribute('data-brand-id', String(item.brand_id));
+                }
+                if (item.model_id != null && item.model_id !== '') {
+                    o.setAttribute('data-model-id', String(item.model_id));
+                }
+                sel.appendChild(o);
+            });
+        }
+        var s = ctx.selects;
+        fillSelect('manual_brand_id', s.manual_brand_id, ph.manual_brand_id || SELL_YC_SELECT_PH.manual_brand_id);
+        fillSelect('manual_model_id', s.manual_model_id, ph.manual_model_id || SELL_YC_SELECT_PH.manual_model_id);
+        // Model year options are static in the Blade (1975–current); only set value from lookup context.
+        var mmyCtx = document.getElementById('manual_model_year_id');
+        if (mmyCtx && s.manual_model_year_id && s.manual_model_year_id.length) {
+            var yv = String(s.manual_model_year_id[0].id);
+            if (mmyCtx.querySelector('option[value="' + yv + '"]')) {
+                mmyCtx.value = yv;
+            }
+        }
+        fillSelect('manual_fuel_type_id', s.manual_fuel_type_id, ph.manual_fuel_type_id || SELL_YC_SELECT_PH.manual_fuel_type_id);
+        fillSelect('variant_id', s.variant_id, ph.variant_id || SELL_YC_SELECT_PH.variant_id);
+        fillSelect('colour_id', s.color_id, ph.colour_id || SELL_YC_SELECT_PH.colour_id);
+        fillSelect('emission_norm_id', s.euronom_id, ph.emission_norm_id || SELL_YC_SELECT_PH.emission_norm_id);
+        var variantSel = document.getElementById('variant_id');
+        if (variantSel) {
+            variantSel.disabled = false;
+            variantSel.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+        var variantTrigCtx = document.getElementById('manual-variant-trigger');
+        if (variantTrigCtx) {
+            variantTrigCtx.disabled = false;
+            variantTrigCtx.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+        var fuelTrigCtx = document.getElementById('manual-fuel-trigger');
+        if (fuelTrigCtx) {
+            fuelTrigCtx.disabled = false;
+            fuelTrigCtx.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+        var brandSelCtx = document.getElementById('manual_brand_id');
+        var modelTrigCtx = document.getElementById('manual-model-trigger');
+        if (brandSelCtx && modelTrigCtx) {
+            var brandOn = !!brandSelCtx.value;
+            modelTrigCtx.disabled = !brandOn;
+            modelTrigCtx.classList.toggle('opacity-60', !brandOn);
+            modelTrigCtx.classList.toggle('cursor-not-allowed', !brandOn);
+        }
+        if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+            window.sellYourCarRefreshManualComboboxes();
+        }
+        var root = document.getElementById('sell-your-car-equipment-root');
+        if (root && ctx.equipment_html) {
+            root.innerHTML = ctx.equipment_html;
+        }
+    }
 
     // Registration lookup
     function initRegistrationLookup() {
@@ -145,11 +270,19 @@
 
         if (!registrationInput) return;
 
+        function finishLookupLoading() {
+            lookupLoading.classList.add('hidden');
+            registrationInput.disabled = false;
+            if (lookupButton) {
+                lookupButton.disabled = false;
+            }
+        }
+
         function performLookup() {
             const registration = registrationInput.value.trim();
             
             if (!registration) {
-                lookupError.textContent = 'Please enter a license plate number';
+                lookupError.textContent = trans('lookupEnterRegistration', 'Please enter a license plate number');
                 lookupError.style.color = 'var(--destructive)';
                 return;
             }
@@ -162,16 +295,13 @@
                 lookupButton.disabled = true;
             }
 
-            fetch('/api/v1/nummerplade/vehicle-by-registration', {
+            fetch('/api/v1/dmr/vehicle-by-registration', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
-                body: JSON.stringify({ 
-                    registration: registration,
-                    advanced: true
-                })
+                body: JSON.stringify({ registration })
             })
             .then(response => {
                 if (!response.ok) {
@@ -180,26 +310,21 @@
                 return response.json();
             })
             .then(data => {
-                lookupLoading.classList.add('hidden');
-                registrationInput.disabled = false;
-                if (lookupButton) {
-                    lookupButton.disabled = false;
-                }
-
                 console.log('API Response received:', data);
 
-                // Check for error status first
-                if (data.status === 'error') {
-                    let errorMessage = data.message || 'Failed to fetch vehicle information';
+                // Check for error status first (legacy + ApiResponse shape)
+                if (data.status === 'error' || data.success === false || data.failed === true) {
+                    let errorMessage = data.message || trans('lookupFetchFailed', 'Failed to fetch vehicle information');
                     
                     if (data.errors && data.errors.code === 'TIMEOUT') {
-                        errorMessage = 'The vehicle lookup is taking longer than expected. Please try again in a moment.';
+                        errorMessage = trans('lookupTimeout', 'The vehicle lookup is taking longer than expected. Please try again in a moment.');
                     } else if (data.errors && data.errors.retryable) {
-                        errorMessage = 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.';
+                        errorMessage = trans('lookupServiceUnavailable', 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.');
                     }
                     
                     lookupError.textContent = errorMessage;
                     lookupError.style.color = 'var(--destructive)';
+                    finishLookupLoading();
                     return;
                 }
 
@@ -217,6 +342,9 @@
                     vehicleData = data.vehicle;
                 } else if (Array.isArray(data) && data.length > 0) {
                     vehicleData = data[0];
+                } else if (data.success === true && data.data && typeof data.data === 'object' && data.data.registration) {
+                    // ApiResponse: { success, data: { registration, ... } }
+                    vehicleData = data.data;
                 } else if (data.status === 'success' && data.data) {
                     vehicleData = data.data;
                 } else if (typeof data === 'object' && !data.status && !data.errors && data.registration) {
@@ -228,94 +356,142 @@
                 
                 if (!vehicleData || typeof vehicleData !== 'object' || !vehicleData.registration) {
                     console.error('Vehicle data extraction failed. Response structure:', JSON.stringify(data, null, 2));
-                    const errorMsg = 'No vehicle data found in API response. Please try again.';
+                    const errorMsg = trans('lookupNoVehicleData', 'No vehicle data found in API response. Please try again.');
                     lookupError.textContent = errorMsg;
                     lookupError.style.color = 'var(--destructive)';
+                    finishLookupLoading();
                     return;
                 }
                 
-                // Store complete API response data for form submission
-                window.apiResponseData = vehicleData;
-                
-                // Set registration in hidden field before showing form
-                const registrationHidden = document.getElementById('registration');
-                if (registrationHidden && registration) {
-                    registrationHidden.value = registration;
+                const dmrId = vehicleData.dmr_fact_vehicle_id;
+                if (!dmrId) {
+                    lookupError.textContent = trans('lookupMissingReference', 'Missing vehicle reference. Please try again.');
+                    lookupError.style.color = 'var(--destructive)';
+                    finishLookupLoading();
+                    return;
                 }
-                
-                // Show the form
-                if (vehicleForm) {
-                    vehicleForm.classList.remove('form-hidden');
-                    vehicleForm.classList.add('form-visible');
-                }
-                var startOverContainer = document.getElementById('start-over-container');
-                if (startOverContainer) {
-                    startOverContainer.classList.remove('hidden');
-                }
-                
-                // Ensure all sections are expanded by default
-                document.querySelectorAll('.expandable-section').forEach(section => {
-                    const header = section.querySelector('.section-header');
-                    const content = section.querySelector('.section-content');
-                    if (header && content) {
-                        content.classList.add('expanded');
-                        header.classList.add('active');
-                    }
-                });
-                
-                // Prefill form (will set fields by name, not ID)
-                prefillForm(vehicleData);
-                
-                // Update fuel efficiency label after prefilling (in case fuel_type was set)
-                if (vehicleData.fuel_type && vehicleData.fuel_type.id) {
-                    updateFuelEfficiencyLabel(vehicleData.fuel_type.id);
-                } else if (vehicleData.fuel_type_id) {
-                    updateFuelEfficiencyLabel(vehicleData.fuel_type_id);
-                }
-                
-                // Set title from backend response (simple - just set it)
-                if (vehicleData.title) {
-                    const titleDisplay = document.getElementById('title-display');
-                    const titleInput = document.getElementById('title');
-                    if (titleDisplay) {
-                        titleDisplay.textContent = vehicleData.title;
-                    }
-                    if (titleInput) {
-                        titleInput.value = vehicleData.title;
-                    }
-                }
-                
-                // Update vehicle info display (brand, model, year, fuel type)
-                updateVehicleInfoDisplay(vehicleData);
-                
-                // Show success message
-                const successMsg = document.createElement('div');
-                successMsg.className = 'success-badge';
-                successMsg.innerHTML = `
+
+                const ctxBase = typeof window.sellYourCarLookupContextBase === 'string'
+                    ? window.sellYourCarLookupContextBase
+                    : '/sell-your-car/lookup-context';
+
+                return fetch(ctxBase + '/' + encodeURIComponent(String(dmrId)), {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(function(res) {
+                        if (!res.ok) {
+                            return res.json().then(function(body) {
+                                throw new Error((body && body.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(function(ctx) {
+                        if (!ctx || !ctx.success) {
+                            throw new Error((ctx && ctx.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
+                        }
+                        applySellYourCarLookupContextPayload(ctx);
+
+                        window.apiResponseData = vehicleData;
+
+                        const registrationHidden = document.getElementById('registration');
+                        if (registrationHidden && registration) {
+                            registrationHidden.value = registration;
+                        }
+
+                        if (vehicleForm) {
+                            vehicleForm.classList.remove('form-hidden');
+                            vehicleForm.classList.add('form-visible');
+                        }
+                        var startOverContainer = document.getElementById('start-over-container');
+                        if (startOverContainer) {
+                            startOverContainer.classList.remove('hidden');
+                        }
+
+                        document.querySelectorAll('.expandable-section').forEach(section => {
+                            const header = section.querySelector('.section-header');
+                            const content = section.querySelector('.section-content');
+                            if (header && content) {
+                                content.classList.add('expanded');
+                                header.classList.add('active');
+                            }
+                        });
+
+                        prefillForm(vehicleData);
+
+                        var manualEntryFieldsEl = document.getElementById('manual-entry-fields');
+                        if (manualEntryFieldsEl && !window.manualEntryMode) {
+                            manualEntryFieldsEl.classList.remove('hidden');
+                            manualEntryFieldsEl.classList.add('sell-plate-variant-strip');
+                        }
+
+                        const resolvedFuelTypeId = document.getElementById('fuel_type_id')?.value
+                            || (vehicleData.fuel_type && vehicleData.fuel_type.id)
+                            || vehicleData.fuel_type_id;
+                        if (resolvedFuelTypeId) {
+                            updateFuelEfficiencyLabel(resolvedFuelTypeId);
+                        }
+
+                        let titleText = vehicleData.title;
+                        if (!titleText) {
+                            const y = vehicleData.model_year_effective != null
+                                ? String(vehicleData.model_year_effective)
+                                : (vehicleData.model_year != null ? String(vehicleData.model_year) : '');
+                            const b = vehicleData.brand && typeof vehicleData.brand === 'object' ? vehicleData.brand.name : vehicleData.brand;
+                            const m = vehicleData.model && typeof vehicleData.model === 'object' ? vehicleData.model.name : vehicleData.model;
+                            const parts = [b, m, y].filter(function(p) { return p; });
+                            titleText = parts.join(' ');
+                        }
+                        if (titleText) {
+                            const titleDisplay = document.getElementById('title-display');
+                            const titleInput = document.getElementById('title');
+                            if (titleDisplay) {
+                                titleDisplay.textContent = titleText;
+                            }
+                            if (titleInput) {
+                                titleInput.value = titleText;
+                            }
+                        }
+
+                        updateVehicleInfoDisplay(vehicleData);
+
+                        var descAfterLookup = document.getElementById('description');
+                        if (descAfterLookup) {
+                            descAfterLookup.removeAttribute('data-user-edited');
+                        }
+                        setTimeout(function() {
+                            generateDescription();
+                        }, 0);
+
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'success-badge';
+                        successMsg.innerHTML = `
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span>Vehicle information loaded successfully! Review and complete the form below.</span>
+                    <span>${escapeHtml(trans('lookupSuccess', 'Vehicle information loaded successfully! Review and complete the form below.'))}</span>
                 `;
-                if (vehicleForm) {
-                    vehicleForm.insertBefore(successMsg, vehicleForm.firstChild);
-                    setTimeout(() => {
-                        successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 100);
-                    setTimeout(() => successMsg.remove(), 8000);
-                }
+                        if (vehicleForm) {
+                            vehicleForm.insertBefore(successMsg, vehicleForm.firstChild);
+                            setTimeout(() => {
+                                successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }, 100);
+                            setTimeout(() => successMsg.remove(), 8000);
+                        }
+                        finishLookupLoading();
+                    });
             })
             .catch(error => {
-                lookupLoading.classList.add('hidden');
-                registrationInput.disabled = false;
-                if (lookupButton) {
-                    lookupButton.disabled = false;
-                }
+                finishLookupLoading();
                 
                 console.error('Lookup error:', error);
                 
                 // Try to extract error message from error object
-                let errorMessage = 'An error occurred while fetching vehicle information. Please try again.';
+                let errorMessage = trans('lookupGenericError', 'An error occurred while fetching vehicle information. Please try again.');
                 
                 if (error && typeof error === 'object') {
                     if (error.message) {
@@ -366,28 +542,316 @@
         const startOverLink = document.getElementById('start-over-link');
         const startOverContainer = document.getElementById('start-over-container');
         const vehicleForm = document.getElementById('vehicle-form');
-        const lookupSection = document.querySelector('.lookup-section');
         const manualEntryFields = document.getElementById('manual-entry-fields');
         const vehicleInfoDisplay = document.getElementById('vehicle-info-display');
         const registrationHidden = document.getElementById('registration');
         const variantSelect = document.getElementById('variant_id');
+        let variantLookupInFlight = 0;
         const manualBrand = document.getElementById('manual_brand_id');
         const manualModel = document.getElementById('manual_model_id');
         const manualModelYear = document.getElementById('manual_model_year_id');
         const manualFuelType = document.getElementById('manual_fuel_type_id');
         const brandIdHidden = document.getElementById('brand_id');
         const modelIdHidden = document.getElementById('model_id');
-        const modelYearIdHidden = document.getElementById('model_year_id');
+        const modelYearIdHidden = document.getElementById('model_year');
         const fuelTypeIdHidden = document.getElementById('fuel_type_id');
         const titleDisplay = document.getElementById('title-display');
         const titleInput = document.getElementById('title');
+        const manualSearchLimit = 10;
+        const manualModelsLimit = 500;
+        const dmrApiBase = '/api/v1/dmr';
+
+        function setManualModelTriggerEnabled(enabled) {
+            var mt = document.getElementById('manual-model-trigger');
+            if (!mt) return;
+            mt.disabled = !enabled;
+            mt.classList.toggle('opacity-60', !enabled);
+            mt.classList.toggle('cursor-not-allowed', !enabled);
+        }
+
+        var manualComboboxRefreshers = [];
+        window.sellYourCarRefreshManualComboboxes = function() {
+            manualComboboxRefreshers.forEach(function(fn) {
+                try {
+                    fn();
+                } catch (e) { /* ignore */ }
+            });
+        };
 
         if (!enterManuallyBtn || !vehicleForm) return;
 
+        function debounce(fn, wait) {
+            let timeoutId = null;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(this, args), wait);
+            };
+        }
+
+        function getSelectPlaceholderText(selectId) {
+            if (SELL_YC_SELECT_PH[selectId]) {
+                return SELL_YC_SELECT_PH[selectId];
+            }
+            const sel = document.getElementById(selectId);
+            if (!sel) return '';
+            const placeholderOpt = sel.querySelector('option[value=""]');
+            return placeholderOpt ? placeholderOpt.textContent : '';
+        }
+
+        function closeAllManualComboboxPanels() {
+            document.querySelectorAll('#manual-entry-fields .manual-combobox-panel').forEach(function(p) {
+                p.classList.add('hidden');
+            });
+            document.querySelectorAll('#manual-entry-fields .manual-combobox-trigger').forEach(function(t) {
+                t.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        function updateComboboxTriggerLabel(selectEl, triggerEl) {
+            if (!selectEl || !triggerEl) return;
+            var labelEl = triggerEl.querySelector('.manual-combobox-label');
+            if (!labelEl) return;
+            var ph = SELL_YC_SELECT_PH[selectEl.id] || '';
+            var opt = selectEl.options[selectEl.selectedIndex];
+            if (selectEl.value && opt && opt.textContent) {
+                labelEl.textContent = opt.textContent;
+                labelEl.classList.remove('text-muted-foreground');
+            } else {
+                labelEl.textContent = ph;
+                labelEl.classList.add('text-muted-foreground');
+            }
+        }
+
+        function focusManualComboOrSelect(selectEl) {
+            if (!selectEl) return;
+            var wrap = selectEl.closest('.manual-combobox');
+            if (wrap) {
+                var tr = wrap.querySelector('.manual-combobox-trigger');
+                if (tr) {
+                    tr.focus();
+                    return;
+                }
+            }
+            try {
+                selectEl.focus();
+            } catch (e) { /* ignore */ }
+        }
+
+        /**
+         * @param {object} spec
+         * @param {string} spec.selectId
+         * @param {string} spec.triggerId
+         * @param {string} spec.panelId
+         * @param {string} spec.listId
+         * @param {string} [spec.searchId]
+         * @param {string} [spec.loadingId]
+         * @param {function(string): Promise<Array>} spec.fetchItems
+         */
+        function bindManualCombobox(spec) {
+            var sel = document.getElementById(spec.selectId);
+            var trigger = document.getElementById(spec.triggerId);
+            var panel = document.getElementById(spec.panelId);
+            var list = document.getElementById(spec.listId);
+            var search = spec.searchId ? document.getElementById(spec.searchId) : null;
+            var loadEl = spec.loadingId ? document.getElementById(spec.loadingId) : null;
+            if (!sel || !trigger || !panel || !list) return;
+
+            function updateLabel() {
+                updateComboboxTriggerLabel(sel, trigger);
+            }
+
+            function setLoading(on) {
+                if (loadEl) loadEl.classList.toggle('hidden', !on);
+            }
+
+            function renderItems(items) {
+                list.innerHTML = '';
+                (items || []).forEach(function(item) {
+                    if (!item || item.id === null || item.id === undefined) return;
+                    var row = document.createElement('button');
+                    row.type = 'button';
+                    row.className = 'manual-combobox-option w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted/60 transition-colors';
+                    row.textContent = item.name ? String(item.name) : '';
+                    row.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        sel.value = String(item.id);
+                        sel.dispatchEvent(new Event('change', { bubbles: true }));
+                        updateLabel();
+                        closeAllManualComboboxPanels();
+                    });
+                    list.appendChild(row);
+                });
+            }
+
+            function loadList(term) {
+                setLoading(true);
+                return spec.fetchItems(term || '').then(function(items) {
+                    renderItems(items);
+                }).catch(function(err) {
+                    console.error('Manual combobox load failed:', err);
+                    renderItems([]);
+                }).finally(function() {
+                    setLoading(false);
+                });
+            }
+
+            var debouncedSearch = debounce(function(term) {
+                loadList(term);
+            }, 300);
+
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var isOpen = !panel.classList.contains('hidden');
+                if (isOpen) {
+                    closeAllManualComboboxPanels();
+                    return;
+                }
+                closeAllManualComboboxPanels();
+                panel.classList.remove('hidden');
+                trigger.setAttribute('aria-expanded', 'true');
+                if (search) {
+                    search.value = '';
+                    search.focus();
+                }
+                loadList('');
+            });
+
+            if (search) {
+                search.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                search.addEventListener('input', function() {
+                    debouncedSearch(search.value.trim());
+                });
+            }
+
+            panel.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            manualComboboxRefreshers.push(updateLabel);
+            updateLabel();
+        }
+
+        document.addEventListener('click', function() {
+            closeAllManualComboboxPanels();
+        });
+
+        function setSelectOptions(selectEl, items, options) {
+            const opts = options || {};
+            const placeholderText = opts.placeholderText ?? '';
+            const optionExtraAttrs = typeof opts.optionExtraAttrs === 'function' ? opts.optionExtraAttrs : null;
+            const keepSelection = opts.keepSelection !== false;
+
+            if (!selectEl || !selectEl.tagName || selectEl.tagName !== 'SELECT') return;
+
+            const currentValue = keepSelection ? selectEl.value : '';
+            const currentOption = keepSelection
+                ? Array.from(selectEl.options).find(o => String(o.value) === String(currentValue))
+                : null;
+
+            selectEl.innerHTML = '';
+
+            const opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = placeholderText;
+            selectEl.appendChild(opt0);
+
+            (items || []).forEach(function(item) {
+                if (!item || item.id === null || item.id === undefined) return;
+                const opt = document.createElement('option');
+                opt.value = String(item.id);
+                opt.textContent = item.name ? String(item.name) : '';
+                if (optionExtraAttrs) optionExtraAttrs(opt, item);
+                selectEl.appendChild(opt);
+            });
+
+            // Preserve existing selection if still present (or inject it if needed).
+            if (currentValue) {
+                const has = !!selectEl.querySelector(`option[value="${String(currentValue)}"]`);
+                if (!has && currentOption && currentOption.textContent) {
+                    const opt = document.createElement('option');
+                    opt.value = String(currentValue);
+                    opt.textContent = currentOption.textContent;
+                    selectEl.appendChild(opt);
+                }
+                selectEl.value = String(currentValue);
+            } else {
+                selectEl.value = '';
+            }
+        }
+
+        async function fetchManualItems(url) {
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            let json = null;
+            try {
+                json = await res.json();
+            } catch (e) {
+                json = null;
+            }
+
+            if (!res.ok || (json && json.success === false)) {
+                const msg = (json && (json.message || (json.errors && json.errors.code) || json.errors)) ? (json.message || 'Failed to load options') : 'Failed to load options';
+                throw new Error(msg);
+            }
+
+            // Expected: { success, data: { items: [...] , limit: n } }
+            const items = json && json.data
+                ? (json.data.items ?? json.data.docs ?? json.data)
+                : (json && (json.items ?? []));
+
+            return Array.isArray(items) ? items : [];
+        }
+
+        async function loadManualDropdownInitialOptions() {
+            var sb = document.getElementById('manual-brand-panel-search');
+            var sm = document.getElementById('manual-model-panel-search');
+            var sf = document.getElementById('manual-fuel-panel-search');
+            var sv = document.getElementById('manual-variant-panel-search');
+            if (sb) sb.value = '';
+            if (sm) sm.value = '';
+            if (sf) sf.value = '';
+            if (sv) sv.value = '';
+
+            const placeholderBrand = getSelectPlaceholderText('manual_brand_id');
+            const placeholderModel = getSelectPlaceholderText('manual_model_id');
+            const placeholderFuel = getSelectPlaceholderText('manual_fuel_type_id');
+
+            const [brands, fuels] = await Promise.all([
+                fetchManualItems(`${dmrApiBase}/manual-brands`),
+                fetchManualItems(`${dmrApiBase}/manual-fuel-types?limit=${manualSearchLimit}`),
+            ]);
+
+            setSelectOptions(manualBrand, brands, { placeholderText: placeholderBrand, keepSelection: true });
+            setSelectOptions(manualModel, [], {
+                placeholderText: placeholderModel,
+                keepSelection: false,
+            });
+            if (manualModelYear) manualModelYear.value = '';
+            setSelectOptions(manualFuelType, fuels, { placeholderText: placeholderFuel, keepSelection: true });
+
+            setManualModelTriggerEnabled(false);
+
+            syncManualToHidden();
+            if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                window.sellYourCarRefreshManualComboboxes();
+            }
+        }
+
         function showFormForManualEntry() {
             window.manualEntryMode = true;
+            if (manualEntryFields) {
+                manualEntryFields.classList.remove('sell-plate-variant-strip');
+            }
             if (registrationHidden) {
-                registrationHidden.value = 'N/A';
+                registrationHidden.value = '';
             }
             if (vehicleForm) {
                 vehicleForm.classList.remove('form-hidden');
@@ -403,6 +867,11 @@
                 variantSelect.disabled = false;
                 variantSelect.classList.remove('opacity-60', 'cursor-not-allowed');
             }
+            var variantTrig = document.getElementById('manual-variant-trigger');
+            if (variantTrig) {
+                variantTrig.disabled = false;
+                variantTrig.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
             if (startOverContainer) {
                 startOverContainer.classList.remove('hidden');
             }
@@ -414,12 +883,23 @@
                     header.classList.add('active');
                 }
             });
-            syncManualToHidden();
+            // Load limited dropdown data (initial 10 per dropdown).
+            loadManualDropdownInitialOptions().catch(err => {
+                console.error('Manual dropdown load failed:', err);
+                displayGeneralError(err.message || 'Failed to load manual dropdown options. Please try again.');
+            }).then(function() {
+                if (manualBrand && manualBrand.value) {
+                    setManualModelTriggerEnabled(true);
+                }
+            });
         }
 
         function startOver() {
             window.manualEntryMode = false;
             window.apiResponseData = null;
+            if (manualEntryFields) {
+                manualEntryFields.classList.remove('sell-plate-variant-strip');
+            }
             if (vehicleForm) {
                 vehicleForm.classList.add('form-hidden');
                 vehicleForm.classList.remove('form-visible');
@@ -448,18 +928,34 @@
                 variantSelect.classList.add('opacity-60', 'cursor-not-allowed');
                 variantSelect.value = '';
             }
+            var variantTrig = document.getElementById('manual-variant-trigger');
+            if (variantTrig) {
+                variantTrig.disabled = true;
+                variantTrig.classList.add('opacity-60', 'cursor-not-allowed');
+            }
             var variantHidden = document.getElementById('variant_id_hidden');
             if (variantHidden) variantHidden.value = '';
             var errEl = document.getElementById('lookup-error');
             if (errEl) errEl.textContent = '';
+            if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                window.sellYourCarRefreshManualComboboxes();
+            }
+            setManualModelTriggerEnabled(false);
         }
 
         function syncManualToHidden() {
             if (brandIdHidden && manualBrand) brandIdHidden.value = manualBrand.value || '';
             if (modelIdHidden && manualModel) modelIdHidden.value = manualModel.value || '';
             if (modelYearIdHidden && manualModelYear) modelYearIdHidden.value = manualModelYear.value || '';
-            if (fuelTypeIdHidden && manualFuelType) fuelTypeIdHidden.value = manualFuelType.value || '';
+            if (fuelTypeIdHidden && manualFuelType) {
+                var fuelValue = manualFuelType.value || '';
+                // During lookup hydration, don't let transient empty selects wipe a valid backend fuel_type_id.
+                if (fuelValue || !sellYourCarLookupHydrating) {
+                    fuelTypeIdHidden.value = fuelValue;
+                }
+            }
             updateTitleFromManual();
+            syncPlateStripFuelFromManualSelect();
         }
 
         function updateTitleFromManual() {
@@ -467,8 +963,9 @@
             var parts = [];
             if (manualBrand && manualBrand.selectedIndex > 0) parts.push(manualBrand.options[manualBrand.selectedIndex].text);
             if (manualModel && manualModel.selectedIndex > 0) parts.push(manualModel.options[manualModel.selectedIndex].text);
-            if (manualModelYear && manualModelYear.selectedIndex > 0) parts.push(manualModelYear.options[manualModelYear.selectedIndex].text);
+            if (variantSelect && variantSelect.selectedIndex > 0) parts.push(variantSelect.options[variantSelect.selectedIndex].text);
             if (manualFuelType && manualFuelType.selectedIndex > 0) parts.push(manualFuelType.options[manualFuelType.selectedIndex].text);
+            if (manualModelYear && manualModelYear.selectedIndex > 0) parts.push(manualModelYear.options[manualModelYear.selectedIndex].text);
             var title = parts.join(' ');
             titleDisplay.textContent = title;
             titleInput.value = title;
@@ -489,7 +986,218 @@
             manualModel.value = '';
             if (modelIdHidden) modelIdHidden.value = '';
             syncManualToHidden();
+            filterVariantsByModel();
         }
+
+        function setManualVariantSearchLoading(on) {
+            var el = document.getElementById('manual_variant_loading');
+            if (el) el.classList.toggle('hidden', !on);
+        }
+
+        function filterVariantsByModel() {
+            return reloadVariantsFromApi('');
+        }
+
+        function resolveVariantSelection(candidate) {
+            if (candidate === null || candidate === undefined || candidate === '') {
+                return { id: '', name: '' };
+            }
+            if (typeof candidate === 'object') {
+                return {
+                    id: candidate.id !== null && candidate.id !== undefined ? String(candidate.id) : '',
+                    name: candidate.name ? String(candidate.name) : '',
+                };
+            }
+            if (typeof candidate === 'number' || (typeof candidate === 'string' && /^\d+$/.test(candidate))) {
+                return { id: String(candidate), name: '' };
+            }
+            return { id: '', name: String(candidate) };
+        }
+
+        function fetchAndSetVariantsForModel(modelId, selectedVariantCandidate) {
+            if (!variantSelect) return Promise.resolve();
+            var placeholderVariant = getSelectPlaceholderText('variant_id');
+            var variantHiddenEl = document.getElementById('variant_id_hidden');
+            var target = resolveVariantSelection(selectedVariantCandidate);
+            if (!modelId) {
+                setSelectOptions(variantSelect, [], { placeholderText: placeholderVariant, keepSelection: false });
+                variantSelect.value = '';
+                if (variantHiddenEl && !sellYourCarLookupHydrating) variantHiddenEl.value = '';
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+                return Promise.resolve();
+            }
+
+            var vtrEn = document.getElementById('manual-variant-trigger');
+            if (vtrEn) {
+                vtrEn.disabled = false;
+                vtrEn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+
+            variantLookupInFlight++;
+            setManualVariantSearchLoading(true);
+            var url = new URL('/api/v1/variants', window.location.origin);
+            url.searchParams.set('model_ids', String(modelId));
+            url.searchParams.set('limit', '200');
+
+            return fetch(url.toString(), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(function(res) { return res.json(); }).then(function(json) {
+                var items = json && json.data && json.data.items ? json.data.items : [];
+                setSelectOptions(variantSelect, items, {
+                    placeholderText: placeholderVariant,
+                    keepSelection: false,
+                    optionExtraAttrs: function(opt, item) {
+                        if (item.model_id !== null && item.model_id !== undefined) {
+                            opt.setAttribute('data-model-id', String(item.model_id));
+                        }
+                    }
+                });
+
+                if (target.id && !variantSelect.querySelector('option[value="' + target.id + '"]') && target.name) {
+                    addOptionIfNotExists('variant_id', target.id, target.name);
+                }
+
+                var selectedValue = '';
+                if (target.id && variantSelect.querySelector('option[value="' + target.id + '"]')) {
+                    selectedValue = target.id;
+                } else if (target.name) {
+                    var lowered = target.name.trim().toLowerCase();
+                    var options = Array.from(variantSelect.options);
+                    var byName = options.find(function(option) {
+                        return option.value && option.textContent && option.textContent.trim().toLowerCase() === lowered;
+                    });
+                    if (byName) selectedValue = byName.value;
+                }
+
+                variantSelect.value = selectedValue;
+                if (variantHiddenEl) variantHiddenEl.value = selectedValue;
+                updateTitleFromManual();
+            }).catch(function(err) {
+                console.error('Variant lookup failed:', err);
+            }).finally(function() {
+                variantLookupInFlight = Math.max(0, variantLookupInFlight - 1);
+                if (variantLookupInFlight === 0) setManualVariantSearchLoading(false);
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+            });
+        }
+
+        function reloadVariantsFromApi(searchTerm) {
+            if (!variantSelect || !manualModel) return Promise.resolve();
+            var modelId = manualModel.value;
+            var placeholderVariant = getSelectPlaceholderText('variant_id');
+            var variantHiddenEl = document.getElementById('variant_id_hidden');
+            var previousVariantValue = variantSelect.value || (variantHiddenEl ? (variantHiddenEl.value || '') : '');
+            if (!modelId) {
+                setSelectOptions(variantSelect, [], { placeholderText: placeholderVariant, keepSelection: false });
+                variantSelect.value = '';
+                if (variantHiddenEl && !sellYourCarLookupHydrating) variantHiddenEl.value = '';
+                var sv = document.getElementById('manual-variant-panel-search');
+                if (sv) sv.value = '';
+                var vtr = document.getElementById('manual-variant-trigger');
+                if (vtr) {
+                    vtr.disabled = true;
+                    vtr.classList.add('opacity-60', 'cursor-not-allowed');
+                }
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+                return Promise.resolve();
+            }
+            var vtrEn = document.getElementById('manual-variant-trigger');
+            if (vtrEn) {
+                vtrEn.disabled = false;
+                vtrEn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+            return fetchAndSetVariantsForModel(modelId, previousVariantValue).then(function() {
+                if (!variantHiddenEl || variantHiddenEl.value) return;
+                if (!sellYourCarLookupHydrating) variantHiddenEl.value = '';
+            });
+        }
+
+        window.sellYourCarLoadVariantsForModel = fetchAndSetVariantsForModel;
+
+        if (manualBrand) {
+            bindManualCombobox({
+                selectId: 'manual_brand_id',
+                triggerId: 'manual-brand-trigger',
+                panelId: 'manual-brand-panel',
+                listId: 'manual-brand-list',
+                searchId: 'manual-brand-panel-search',
+                fetchItems: function(term) {
+                    if (term) {
+                        return fetchManualItems(dmrApiBase + '/manual-brands?search=' + encodeURIComponent(term) + '&limit=500');
+                    }
+                    return fetchManualItems(dmrApiBase + '/manual-brands');
+                },
+            });
+        }
+        if (manualModel) {
+            bindManualCombobox({
+                selectId: 'manual_model_id',
+                triggerId: 'manual-model-trigger',
+                panelId: 'manual-model-panel',
+                listId: 'manual-model-list',
+                searchId: 'manual-model-panel-search',
+                fetchItems: function(term) {
+                    var brandId = manualBrand ? manualBrand.value : '';
+                    if (!brandId) {
+                        return Promise.resolve([]);
+                    }
+                    var searchQ = term ? '&search=' + encodeURIComponent(term) : '';
+                    return fetchManualItems(
+                        dmrApiBase + '/manual-models?brand_id=' + encodeURIComponent(String(brandId)) +
+                        '&limit=' + manualModelsLimit + searchQ
+                    );
+                },
+            });
+        }
+        if (variantSelect) {
+            bindManualCombobox({
+                selectId: 'variant_id',
+                triggerId: 'manual-variant-trigger',
+                panelId: 'manual-variant-panel',
+                listId: 'manual-variant-list',
+                searchId: 'manual-variant-panel-search',
+                loadingId: 'manual_variant_loading',
+                fetchItems: function(term) {
+                    var modelId = manualModel ? manualModel.value : '';
+                    if (!modelId) return Promise.resolve([]);
+                    var url = new URL('/api/v1/variants', window.location.origin);
+                    url.searchParams.set('model_ids', String(modelId));
+                    url.searchParams.set('limit', '25');
+                    if (term) url.searchParams.set('search', term);
+                    return fetch(url.toString(), {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin',
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(json) {
+                        return json && json.data && json.data.items ? json.data.items : [];
+                    });
+                },
+            });
+        }
+        if (manualFuelType) {
+            bindManualCombobox({
+                selectId: 'manual_fuel_type_id',
+                triggerId: 'manual-fuel-trigger',
+                panelId: 'manual-fuel-panel',
+                listId: 'manual-fuel-list',
+                searchId: 'manual-fuel-panel-search',
+                fetchItems: function(term) {
+                    var q = term ? '&search=' + encodeURIComponent(term) : '';
+                    return fetchManualItems(dmrApiBase + '/manual-fuel-types?limit=' + manualSearchLimit + q);
+                },
+            });
+        }
+        window.sellYourCarFocusManualSelect = focusManualComboOrSelect;
 
         enterManuallyBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -505,7 +1213,52 @@
 
         if (manualBrand) {
             manualBrand.addEventListener('change', function() {
-                filterModelsByBrand();
+                if (window.manualEntryMode) {
+                    var brandId = manualBrand.value;
+                    if (manualModel) manualModel.value = '';
+                    if (modelIdHidden) modelIdHidden.value = '';
+                    syncManualToHidden();
+
+                    var placeholderModel = getSelectPlaceholderText('manual_model_id');
+                    if (!brandId) {
+                        setSelectOptions(manualModel, [], {
+                            placeholderText: placeholderModel,
+                            keepSelection: false,
+                        });
+                        setManualModelTriggerEnabled(false);
+                        filterVariantsByModel();
+                        syncManualToHidden();
+                        if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                            window.sellYourCarRefreshManualComboboxes();
+                        }
+                        return;
+                    }
+
+                    setManualModelTriggerEnabled(true);
+                    fetchManualItems(
+                        dmrApiBase + '/manual-models?brand_id=' + encodeURIComponent(String(brandId)) +
+                        '&limit=' + manualModelsLimit
+                    ).then(function(models) {
+                        setSelectOptions(manualModel, models, {
+                            placeholderText: placeholderModel,
+                            keepSelection: false,
+                            optionExtraAttrs: function(opt, item) {
+                                if (item.brand_id !== null && item.brand_id !== undefined) {
+                                    opt.setAttribute('data-brand-id', String(item.brand_id));
+                                }
+                            }
+                        });
+                        filterVariantsByModel();
+                        syncManualToHidden();
+                        if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                            window.sellYourCarRefreshManualComboboxes();
+                        }
+                    }).catch(function(err) {
+                        console.error('Manual model reload failed:', err);
+                    });
+                } else {
+                    filterModelsByBrand();
+                }
             });
         }
         if (manualModel || manualModelYear || manualFuelType) {
@@ -513,10 +1266,17 @@
                 if (sel) sel.addEventListener('change', syncManualToHidden);
             });
         }
+        if (manualModel) {
+            manualModel.addEventListener('change', function() {
+                filterVariantsByModel();
+            });
+        }
+
         if (variantSelect) {
             variantSelect.addEventListener('change', function() {
                 var h = document.getElementById('variant_id_hidden');
                 if (h) h.value = variantSelect.value || '';
+                updateTitleFromManual();
             });
         }
     }
@@ -559,7 +1319,7 @@
                 
                 const errorElement = document.createElement('p');
                 errorElement.className = 'field-error';
-                errorElement.textContent = 'This field is required';
+                errorElement.textContent = trans('requiredFieldError', 'This field is required');
                 field.parentElement.appendChild(errorElement);
 
                 if (!firstInvalidField) {
@@ -567,37 +1327,19 @@
                 }
             }
         });
-        
-        // Validate images are required
-        const imageCount = imageUploadState && imageUploadState.fileMap ? imageUploadState.fileMap.size : 0;
-        if (imageCount === 0) {
-            isValid = false;
-            const photosSection = document.querySelector('[data-section="photos"]');
-            if (photosSection) {
-                const header = photosSection.querySelector('.section-header');
-                const content = photosSection.querySelector('.section-content');
-                if (header && content && !content.classList.contains('expanded')) {
-                    content.classList.add('expanded');
-                    header.classList.add('active');
-                }
-                photosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            displayGeneralError('Please upload at least one image of your vehicle.');
-            return;
-        }
 
         // In manual entry mode, require brand, model, year, fuel type
         if (window.manualEntryMode) {
             const brandId = document.getElementById('brand_id');
             const modelId = document.getElementById('model_id');
-            const modelYearId = document.getElementById('model_year_id');
+            const modelYearId = document.getElementById('model_year');
             const fuelTypeId = document.getElementById('fuel_type_id');
             const manualBrand = document.getElementById('manual_brand_id');
             const manualModel = document.getElementById('manual_model_id');
             const manualModelYear = document.getElementById('manual_model_year_id');
             const manualFuelType = document.getElementById('manual_fuel_type_id');
             if (!brandId || !brandId.value || !modelId || !modelId.value || !modelYearId || !modelYearId.value || !fuelTypeId || !fuelTypeId.value) {
-                displayGeneralError('Please select Brand, Model, Year and Fuel Type in the Basic Vehicle Information section.');
+                displayGeneralError(trans('manualEntryRequiredError', 'Please select Brand, Model, Year and Fuel Type in the Basic Vehicle Information section.'));
                 const basicSection = document.querySelector('[data-section="basic-info"]');
                 if (basicSection) {
                     const header = basicSection.querySelector('.section-header');
@@ -609,8 +1351,20 @@
                     basicSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 var firstEmpty = (manualBrand && !manualBrand.value) ? manualBrand : (manualModel && !manualModel.value) ? manualModel : (manualModelYear && !manualModelYear.value) ? manualModelYear : manualFuelType;
-                if (firstEmpty) firstEmpty.focus();
+                if (firstEmpty) {
+                    if (typeof window.sellYourCarFocusManualSelect === 'function') {
+                        window.sellYourCarFocusManualSelect(firstEmpty);
+                    } else {
+                        firstEmpty.focus();
+                    }
+                }
                 return;
+            }
+
+            // Manual entry: submit without resolving `dmr_fact_vehicle_id`; server stores DMR relation IDs with null fact link.
+            const dmrHidden = document.getElementById('dmr_fact_vehicle_id');
+            if (dmrHidden) {
+                dmrHidden.value = '';
             }
         }
 
@@ -635,6 +1389,8 @@
         
         // Generate description before submission if not already done
         generateDescription();
+
+        syncManualSelectionsToHidden();
         
         // Create FormData BEFORE disabling form fields
         const formData = new FormData(form);
@@ -644,9 +1400,36 @@
             formData.append('condition_id', '2');
         }
         
-        // Merge all API response fields into form data
+        // Merge all API response fields into form data (skip raw DMR slim payloads — form already filled)
         if (window.apiResponseData && typeof window.apiResponseData === 'object') {
             const apiData = window.apiResponseData;
+            const isDmrSlimPayload = !!(apiData.dmr_fact_vehicle_id || (apiData.fuel_economy && typeof apiData.fuel_economy === 'object'));
+            
+            if (isDmrSlimPayload) {
+                if (!formData.has('condition_id') || !formData.get('condition_id')) {
+                    formData.set('condition_id', '2');
+                }
+                // Lookup IDs are not merged in the full API loop below; copy from DMR response when missing.
+                if (apiData.body_type && typeof apiData.body_type === 'object' && apiData.body_type.id != null) {
+                    const existingBt = formData.get('body_type_id');
+                    if (existingBt === null || existingBt === undefined || String(existingBt).trim() === '') {
+                        formData.set('body_type_id', String(apiData.body_type.id));
+                    }
+                }
+                if (apiData.brand && typeof apiData.brand === 'object' && apiData.brand.id != null) {
+                    const curB = formData.get('brand_id');
+                    if (curB === null || curB === undefined || String(curB).trim() === '') {
+                        formData.set('brand_id', String(apiData.brand.id));
+                    }
+                }
+                if (apiData.model && typeof apiData.model === 'object' && apiData.model.id != null) {
+                    const curM = formData.get('model_id');
+                    if (curM === null || curM === undefined || String(curM).trim() === '') {
+                        formData.set('model_id', String(apiData.model.id));
+                    }
+                }
+                console.log('DMR lookup: skipping raw API merge; using form field values.');
+            }
             
             // Helper function to safely add value to FormData
             const addToFormData = (key, value) => {
@@ -683,12 +1466,23 @@
                 }
             };
             
+            if (!isDmrSlimPayload) {
             // Map API fields to form fields, handling special cases
             Object.keys(apiData).forEach(key => {
                 // Skip fields that are already in the form or are internal processing fields
                 if (key === 'title' || key === 'registration' || 
                     key === 'brand_name' || key === 'model_name' || key === 'model_year_name' || key === 'fuel_type_name') {
                     // These are internal processing fields - skip
+                    return;
+                }
+
+                // Align API aliases with vehicles table column names
+                if (key === 'fuel_efficiency' && apiData[key] !== null && apiData[key] !== undefined && apiData[key] !== '') {
+                    formData.set('km_per_liter', apiData[key]);
+                    return;
+                }
+                if (key === 'technical_total_weight' && apiData[key] !== null && apiData[key] !== undefined && apiData[key] !== '') {
+                    formData.set('maximum_weight_kg', apiData[key]);
                     return;
                 }
                 
@@ -702,7 +1496,7 @@
                     return;
                 }
                 if (key === 'model_year' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
-                    formData.append('model_year_id', apiData[key].id);
+                    formData.append('model_year', apiData[key].id);
                     return;
                 }
                 if (key === 'fuel_type' && typeof apiData[key] === 'object' && apiData[key] !== null && apiData[key].id) {
@@ -743,13 +1537,8 @@
                 } else if (key === 'body_type' && typeof value === 'object' && value !== null && value.id) {
                     // Body type object - extract ID
                     addToFormData('body_type_id', value.id);
-                } else if (key === 'transmission' && typeof value === 'object' && value !== null && value.id) {
-                    // Transmission object - extract ID
-                    console.log('Adding transmission to form data:', value);
-                    addToFormData('transmission_id', value.id);
-                    if (value.name) {
-                        addToFormData('transmission_name', value.name);
-                    }
+                } else if (key === 'gear_type' && typeof value === 'object' && value !== null && value.id) {
+                    addToFormData('gear_type_id', value.id);
                 } else if (key === 'dispensations' || key === 'permits') {
                     // Arrays - convert to JSON string
                     addToFormData(key, value);
@@ -770,9 +1559,9 @@
             
             // Handle color, variant, euronorm objects - extract IDs if not already in form
             if (apiData.color && typeof apiData.color === 'object' && apiData.color.id) {
-                const colorId = formData.get('color_id');
+                const colorId = formData.get('colour_id');
                 if (!colorId || colorId === '') {
-                    formData.set('color_id', apiData.color.id);
+                    formData.set('colour_id', apiData.color.id);
                 }
             }
             
@@ -784,9 +1573,9 @@
             }
             
             if (apiData.euronorm && typeof apiData.euronorm === 'object' && apiData.euronorm.id) {
-                const euronomId = formData.get('euronom_id');
+                const euronomId = formData.get('emission_norm_id');
                 if (!euronomId || euronomId === '') {
-                    formData.set('euronom_id', apiData.euronorm.id);
+                    formData.set('emission_norm_id', apiData.euronorm.id);
                 }
             }
             
@@ -796,6 +1585,7 @@
             }
             
             console.log('Merged API response data into form submission');
+            }
         }
         
         // Final check: ensure condition_id is always 2 if not set
@@ -806,19 +1596,74 @@
         // Handle variant name if variant_id is not set but variant name exists
         const variantHiddenInput = document.getElementById('variant_id_hidden');
         if (variantHiddenInput && !variantHiddenInput.value) {
-            // Check if there's a variant name input (from API)
             const variantNameInput = document.getElementById('variant_name_hidden');
             if (variantNameInput && variantNameInput.value) {
                 formData.append('variant_name', variantNameInput.value);
+            } else if (window.apiResponseData && window.apiResponseData.variant) {
+                var vn = typeof window.apiResponseData.variant === 'object' && window.apiResponseData.variant.name
+                    ? window.apiResponseData.variant.name
+                    : window.apiResponseData.variant;
+                if (typeof vn === 'string' && vn) formData.append('variant_name', vn);
             }
         }
         
-        // Handle euronom name if euronom_id is not set but euronom name exists
-        const euronomSelect = document.getElementById('euronom_id');
+        // Handle euronom name if emission_norm_id is not set but euronom name exists
+        const euronomSelect = document.getElementById('emission_norm_id');
         if (euronomSelect && !euronomSelect.value) {
             const euronomNameInput = document.getElementById('euronom_name_hidden');
             if (euronomNameInput && euronomNameInput.value) {
                 formData.append('euronom_name', euronomNameInput.value);
+            } else if (window.apiResponseData && window.apiResponseData.euronorm) {
+                var en = typeof window.apiResponseData.euronorm === 'object' && window.apiResponseData.euronorm.name
+                    ? window.apiResponseData.euronorm.name
+                    : window.apiResponseData.euronorm;
+                if (typeof en === 'string' && en) formData.append('euronom_name', en);
+            }
+        }
+
+        // DMR lookup: comma-separated equipment labels (not sent when isDmrSlimPayload skips API merge)
+        if (window.apiResponseData && typeof window.apiResponseData.equipments === 'string' && window.apiResponseData.equipments.trim() !== '') {
+            formData.set('lookup_equipments', window.apiResponseData.equipments.trim());
+        }
+
+        // DMR lookup: specifications array [{ name, count }, ...]
+        if (window.apiResponseData && Array.isArray(window.apiResponseData.specifications) && window.apiResponseData.specifications.length > 0) {
+            formData.set('lookup_specifications', JSON.stringify(window.apiResponseData.specifications));
+        }
+
+        // Registration lookup listings: server requires brand_id + model_id (hidden fields or API objects)
+        if (!window.manualEntryMode && window.apiResponseData && typeof window.apiResponseData === 'object') {
+            const api = window.apiResponseData;
+            if (api.brand && typeof api.brand === 'object' && api.brand.id != null) {
+                const curB = formData.get('brand_id');
+                if (curB === null || curB === undefined || String(curB).trim() === '') {
+                    formData.set('brand_id', String(api.brand.id));
+                }
+            }
+            if (api.model && typeof api.model === 'object' && api.model.id != null) {
+                const curM = formData.get('model_id');
+                if (curM === null || curM === undefined || String(curM).trim() === '') {
+                    formData.set('model_id', String(api.model.id));
+                }
+            }
+        }
+        const dmrFactForBrand = formData.get('dmr_fact_vehicle_id');
+        if (dmrFactForBrand && String(dmrFactForBrand).trim() !== '' && !window.manualEntryMode) {
+            const fb = formData.get('brand_id');
+            const fm = formData.get('model_id');
+            if (!fb || String(fb).trim() === '' || !fm || String(fm).trim() === '') {
+                displayGeneralError(trans('lookupBrandModelRequired', 'Brand and model are required. Please run the registration lookup again or enter your vehicle manually.'));
+                const basicSection = document.querySelector('[data-section="basic-info"]');
+                if (basicSection) {
+                    const header = basicSection.querySelector('.section-header');
+                    const content = basicSection.querySelector('.section-content');
+                    if (header && content) {
+                        content.classList.add('expanded');
+                        header.classList.add('active');
+                    }
+                    basicSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
             }
         }
         
@@ -887,7 +1732,7 @@
             
             if (validFileCount === 0) {
                 hideLoadingState(submitBtn, form);
-                displayGeneralError('No valid images found. Please upload at least one image.');
+                displayGeneralError(trans('noValidImages', 'No valid images found. Please upload at least one image.'));
                 return;
             }
             
@@ -962,15 +1807,15 @@
                 window.location.href = `/sell-your-car/success/${data.token}`;
             } else if (data.vehicle_id) {
                 // Fallback: if token is missing, redirect with error message
-                displayGeneralError('Vehicle saved successfully, but access token is missing. Please contact support.');
+                displayGeneralError(trans('saveMissingToken', 'Vehicle saved successfully, but access token is missing. Please contact support.'));
             } else {
-                displayGeneralError('Vehicle saved successfully, but redirect URL is missing.');
+                displayGeneralError(trans('saveMissingRedirect', 'Vehicle saved successfully, but redirect URL is missing.'));
             }
 
         } catch (error) {
             console.error('Form submission error:', error);
             hideLoadingState(submitBtn, form);
-            displayGeneralError('An unexpected error occurred. Please try again.');
+            displayGeneralError(trans('unexpectedError', 'An unexpected error occurred. Please try again.'));
         }
     }
 
@@ -984,7 +1829,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Saving...
+                ${escapeHtml(trans('saving', 'Saving...'))}
             `;
         }
 
@@ -998,7 +1843,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="mt-2 text-sm text-muted-foreground">Saving vehicle...</p>
+                    <p class="mt-2 text-sm text-muted-foreground">${escapeHtml(trans('savingVehicle', 'Saving vehicle...'))}</p>
                 </div>
             `;
             document.body.appendChild(overlay);
@@ -1131,7 +1976,7 @@
         const formattedMessages = errorMessages.map(msg => {
             // Replace technical messages with user-friendly ones
             if (msg.includes('failed to upload')) {
-                return 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.';
+                return trans('imageUploadFailedFriendly', 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.');
             }
             return msg;
         });
@@ -1145,7 +1990,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-red-800 mb-1">Image Upload Error</p>
+                    <p class="text-sm font-medium text-red-800 mb-1">${escapeHtml(trans('imageUploadErrorTitle', 'Image Upload Error'))}</p>
                     <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
                         ${uniqueMessages.map(msg => `<li>${escapeHtml(msg)}</li>`).join('')}
                     </ul>
@@ -1215,9 +2060,9 @@
     // DEFAULT BEHAVIOR: Always use step="any" to allow decimal values like 54.5
     // Only change to step="1" if fuel type is EXPLICITLY electric (3 or 7) AND user hasn't entered a decimal value
     function updateFuelEfficiencyLabel(fuelTypeId) {
-        const label = document.getElementById('fuel_efficiency_label');
-        const help = document.getElementById('fuel_efficiency_help');
-        const input = document.getElementById('fuel_efficiency');
+        const label = document.getElementById('km_per_liter_label');
+        const help = document.getElementById('km_per_liter_help');
+        const input = document.getElementById('km_per_liter');
         
         if (!label || !help || !input) return;
         
@@ -1225,8 +2070,8 @@
         const parsedFuelTypeId = parseInt(fuelTypeId);
         if (!fuelTypeId || isNaN(parsedFuelTypeId) || parsedFuelTypeId <= 0) {
             // Default to decimal step if fuel type is invalid or not provided
-            label.textContent = 'KM/L';
-            help.textContent = 'Fuel efficiency in kilometers per liter';
+            label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
@@ -1247,39 +2092,57 @@
             // If user has entered or wants to enter decimals, always use step="any"
             if (hasDecimalValue) {
                 // User has entered decimal - keep step="any"
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             } else if (!currentValue) {
                 // Field is empty - can use step="1" for electric
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0';
                 input.setAttribute('step', '1');
                 input.setAttribute('inputmode', 'numeric');
             } else {
                 // Field has whole number - keep step="any" to allow user to change to decimal
-                label.textContent = 'Electric Range (km)';
-                help.textContent = 'Electric range in kilometers';
+                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
+                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             }
         } else if (hybridFuelTypes.includes(parsedFuelTypeId)) {
-            label.textContent = 'Electric Range / KM/L';
-            help.textContent = 'Electric range in km (for EV mode) or fuel efficiency in km/l';
+            label.textContent = trans('hybridEfficiencyLabel', 'Electric Range / KM/L');
+            help.textContent = trans('hybridEfficiencyHelp', 'Electric range in km (for EV mode) or fuel efficiency in km/l');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
         } else {
             // Petrol, Diesel, Benzin, or any other fuel type - always allow decimals
-            label.textContent = 'KM/L';
-            help.textContent = 'Fuel efficiency in kilometers per liter';
+            label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
+        }
+    }
+
+    /** After registration lookup: manual fuel row is visible; keep summary + km/l label in sync with the combobox. */
+    function syncPlateStripFuelFromManualSelect() {
+        var stripEl = document.getElementById('manual-entry-fields');
+        var manualFuel = document.getElementById('manual_fuel_type_id');
+        if (!stripEl || !stripEl.classList.contains('sell-plate-variant-strip') || window.manualEntryMode || !manualFuel) {
+            return;
+        }
+        var fuelDisplay = document.getElementById('vehicle-fuel-display');
+        if (fuelDisplay) {
+            fuelDisplay.textContent = manualFuel.selectedIndex > 0
+                ? manualFuel.options[manualFuel.selectedIndex].text
+                : '';
+        }
+        if (manualFuel.value) {
+            updateFuelEfficiencyLabel(manualFuel.value);
         }
     }
 
@@ -1327,6 +2190,11 @@
         } else if (vehicleData.year) {
             modelYear = String(vehicleData.year);
         }
+        if (!modelYear && vehicleData.model_year_effective != null) {
+            modelYear = String(vehicleData.model_year_effective);
+        } else if (!modelYear && vehicleData.model_year != null) {
+            modelYear = String(vehicleData.model_year);
+        }
         
         // Extract fuel type
         let fuelType = '';
@@ -1338,6 +2206,13 @@
             }
         } else if (vehicleData.fuel_type_name) {
             fuelType = vehicleData.fuel_type_name;
+        }
+        if (!fuelType && vehicleData.fuel_economy && typeof vehicleData.fuel_economy === 'object') {
+            const prim = vehicleData.fuel_economy.primary
+                || (vehicleData.fuel_economy.lines && vehicleData.fuel_economy.lines[0]);
+            if (prim && prim.fuel_type) {
+                fuelType = prim.fuel_type;
+            }
         }
         
         // Update display elements
@@ -1479,6 +2354,101 @@
             setFieldValue('registration-lookup', registration);
         }
         
+        // Local DMR lookup (dmr_fact_vehicle_id and/or legacy fuel_economy payload)
+        if (apiData.dmr_fact_vehicle_id || (apiData.fuel_economy && typeof apiData.fuel_economy === 'object')) {
+            sellYourCarLookupHydrating = true;
+            setFieldValue('dmr_fact_vehicle_id', apiData.dmr_fact_vehicle_id);
+            const variantSelect = document.getElementById('variant_id');
+            if (variantSelect) {
+                variantSelect.disabled = false;
+                variantSelect.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+            const variantTrigPlate = document.getElementById('manual-variant-trigger');
+            if (variantTrigPlate) {
+                variantTrigPlate.disabled = false;
+                variantTrigPlate.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+            const primary = (apiData.fuel_economy && apiData.fuel_economy.primary)
+                || (apiData.fuel_economy && apiData.fuel_economy.lines && apiData.fuel_economy.lines[0])
+                || null;
+            const kmPerL = apiData.km_per_liter != null ? apiData.km_per_liter
+                : (apiData.motor_km_per_liter != null ? apiData.motor_km_per_liter
+                    : (primary && primary.motor_km_per_liter != null ? primary.motor_km_per_liter : null));
+            const regDateDmr = apiData.firstRegistrationDate || apiData.first_registration_date
+                || apiData.registration_date || apiData.first_reg_date;
+            if (regDateDmr) {
+                try {
+                    const date = new Date(regDateDmr);
+                    if (!isNaN(date.getTime())) {
+                        setFieldValue('first_registration_month', date.getMonth() + 1);
+                        setFieldValue('first_registration_year', date.getFullYear());
+                    }
+                } catch (e) {
+                    console.warn('Invalid DMR first registration date:', regDateDmr);
+                }
+            }
+            if (apiData.maximum_weight_kg != null && apiData.maximum_weight_kg !== '') {
+                setFieldValue('maximum_weight_kg', apiData.maximum_weight_kg);
+            }
+            if (kmPerL != null && kmPerL !== '') {
+                setFieldValue('km_per_liter', kmPerL);
+            }
+            if (apiData.color) {
+                setSelectByIdOrText('colour_id', apiData.color);
+            }
+            if (apiData.euronorm) {
+                setSelectByIdOrText('emission_norm_id', apiData.euronorm);
+            }
+            if (apiData.brand) {
+                setSelectByIdOrText('manual_brand_id', apiData.brand);
+            }
+            setTimeout(function() {
+                if (apiData.model) {
+                    setSelectByIdOrText('manual_model_id', apiData.model);
+                }
+                const yearStr = apiData.model_year_effective != null
+                    ? String(apiData.model_year_effective)
+                    : (apiData.model_year != null ? String(apiData.model_year) : '');
+                if (yearStr) {
+                    setSelectByIdOrText('manual_model_year_id', yearStr);
+                }
+                const fuelForManual = apiData.fuel_type
+                    || (primary && primary.fuel_type);
+                if (fuelForManual) {
+                    if (typeof fuelForManual === 'object' && fuelForManual.id && fuelForManual.name) {
+                        addOptionIfNotExists('manual_fuel_type_id', fuelForManual.id, fuelForManual.name);
+                    }
+                    setSelectByIdOrText('manual_fuel_type_id', fuelForManual);
+                }
+                syncManualSelectionsToHidden();
+                var modelIdForVariantLoad = document.getElementById('manual_model_id')?.value || '';
+                var loadVariantsFn = window.sellYourCarLoadVariantsForModel;
+                if (typeof loadVariantsFn === 'function') {
+                    loadVariantsFn(modelIdForVariantLoad, apiData.variant).finally(function() {
+                        const variantHiddenInput = document.getElementById('variant_id_hidden');
+                        if (variantHiddenInput && document.getElementById('variant_id')) {
+                            variantHiddenInput.value = document.getElementById('variant_id').value || '';
+                        }
+                    });
+                }
+                const ftId = document.getElementById('fuel_type_id')?.value;
+                if (ftId) {
+                    updateFuelEfficiencyLabel(ftId);
+                }
+                if (typeof window.sellYourCarRefreshManualComboboxes === 'function') {
+                    window.sellYourCarRefreshManualComboboxes();
+                }
+                sellYourCarLookupHydrating = false;
+            }, 0);
+            setTimeout(function() {
+                if (!apiData.description) {
+                    generateDescription();
+                }
+            }, 1200);
+            console.log('Form prefilling completed (DMR).');
+            return;
+        }
+        
         // Numeric fields
         const price = apiData.price || apiData.price_dkk || apiData.list_price || apiData.priceDkk;
         if (price) setFieldValue('price', price);
@@ -1504,15 +2474,15 @@
         }
         
         // Fuel efficiency
-        const fuelEfficiency = apiData.fuel_efficiency || apiData.fuelEfficiency || apiData.range_km || apiData.rangeKm;
-        if (fuelEfficiency) {
-            setFieldValue('fuel_efficiency', fuelEfficiency);
+        const fuelEfficiency = apiData.km_per_liter ?? apiData.fuel_efficiency ?? apiData.fuelEfficiency ?? apiData.range_km ?? apiData.rangeKm;
+        if (fuelEfficiency !== null && fuelEfficiency !== undefined && fuelEfficiency !== '') {
+            setFieldValue('km_per_liter', fuelEfficiency);
         }
         
         // Technical total weight
-        const technicalTotalWeight = apiData.technical_total_weight || apiData.technicalTotalWeight;
+        const technicalTotalWeight = apiData.maximum_weight_kg || apiData.technical_total_weight || apiData.technicalTotalWeight;
         if (technicalTotalWeight) {
-            setFieldValue('technical_total_weight', technicalTotalWeight);
+            setFieldValue('maximum_weight_kg', technicalTotalWeight);
         }
         
         // First registration date (month/year picker)
@@ -1553,8 +2523,8 @@
             const colorName = apiData.color.name;
             if (colorId && colorName) {
                 // Add option if it doesn't exist (to handle newly created colors)
-                addOptionIfNotExists('color_id', colorId, colorName);
-                setSelectByIdOrText('color_id', colorId);
+                addOptionIfNotExists('colour_id', colorId, colorName);
+                setSelectByIdOrText('colour_id', colorId);
             }
         }
         
@@ -1581,12 +2551,12 @@
             const euronomName = apiData.euronorm.name;
             if (euronomId && euronomName) {
                 // Add option if it doesn't exist (to handle newly created euronorms)
-                addOptionIfNotExists('euronom_id', euronomId, euronomName);
-                setSelectByIdOrText('euronom_id', euronomId);
+                addOptionIfNotExists('emission_norm_id', euronomId, euronomName);
+                setSelectByIdOrText('emission_norm_id', euronomId);
             }
         }
         
-        // Gear type - prefill from API so user can change it before submit
+        // Gear type - prefill from API when present so user can change before submit
         if (apiData.gear_type_id !== null && apiData.gear_type_id !== undefined && apiData.gear_type_id !== '') {
             setSelectByIdOrText('gear_type_id', apiData.gear_type_id);
         }
@@ -1645,7 +2615,7 @@
                                 const otherDiv = document.createElement('div');
                                 otherDiv.className = 'equipment-type-group';
                                 otherDiv.innerHTML = `
-                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">Other</h4>
+                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">${escapeHtml(trans('equipmentOther', 'Other'))}</h4>
                                     <div class="flex flex-wrap gap-2"></div>
                                 `;
                                 equipmentSection.appendChild(otherDiv);
@@ -1707,7 +2677,7 @@
             'equipment_ids[]', 'servicebog', 'km_driven', 
             'first_registration_month', 'first_registration_year',
             'last_inspection_month', 'last_inspection_year',
-            'fuel_efficiency', 'euronom_id', 'technical_total_weight'
+            'km_per_liter', 'emission_norm_id', 'maximum_weight_kg'
         ];
         
         fields.forEach(fieldName => {
@@ -1737,16 +2707,76 @@
         }
         
         const parts = [];
-        
-        // Equipment
-        const equipmentCheckboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');
-        if (equipmentCheckboxes.length > 0) {
-            const equipmentNames = Array.from(equipmentCheckboxes).map(cb => {
-                return cb.nextElementSibling?.textContent || '';
-            }).filter(name => name);
-            if (equipmentNames.length > 0) {
-                parts.push('Equipment: ' + equipmentNames.join(', '));
+        const apiData = window.apiResponseData;
+
+        // Split lookup specifications: count 0/1 → equipment (1 only) or omit (0); other counts → specifications block
+        const specEquipNames = [];
+        const specLines = [];
+        if (apiData && Array.isArray(apiData.specifications) && apiData.specifications.length > 0) {
+            apiData.specifications.forEach(function(spec) {
+                if (!spec || typeof spec.name !== 'string') {
+                    return;
+                }
+                const n = spec.name.trim();
+                if (!n) {
+                    return;
+                }
+                const c = spec.count != null ? parseInt(spec.count, 10) : 0;
+                if (!Number.isNaN(c) && (c === 0 || c === 1)) {
+                    if (c === 1) {
+                        specEquipNames.push(n);
+                    }
+                    return;
+                }
+                const countStr = Number.isNaN(c) ? '0' : String(c);
+                specLines.push('• ' + n + ': ' + countStr);
+            });
+        }
+
+        const seenEquipLower = new Set();
+        const equipItems = [];
+        function pushEquipUnique(name) {
+            const trimmed = String(name).trim();
+            if (!trimmed) {
+                return;
             }
+            const key = trimmed.toLowerCase();
+            if (seenEquipLower.has(key)) {
+                return;
+            }
+            seenEquipLower.add(key);
+            equipItems.push(trimmed);
+        }
+
+        if (apiData && typeof apiData.equipments === 'string' && apiData.equipments.trim() !== '') {
+            apiData.equipments.split(',').forEach(function(s) {
+                pushEquipUnique(s);
+            });
+        }
+        specEquipNames.forEach(function(n) {
+            pushEquipUnique(n);
+        });
+
+        // Equipment from registration lookup (CSV + boolean specs with count 1)
+        if (equipItems.length > 0) {
+            parts.push(
+                'Equipment:\n' + equipItems.map(function(item) { return '• ' + item; }).join('\n')
+            );
+        } else {
+            // Equipment from form checkboxes only when register list is not present
+            const equipmentCheckboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');
+            if (equipmentCheckboxes.length > 0) {
+                const equipmentNames = Array.from(equipmentCheckboxes).map(cb => {
+                    return cb.nextElementSibling?.textContent || '';
+                }).filter(name => name);
+                if (equipmentNames.length > 0) {
+                    parts.push('Equipment: ' + equipmentNames.join(', '));
+                }
+            }
+        }
+
+        if (specLines.length > 0) {
+            parts.push('Specifications:\n' + specLines.join('\n'));
         }
         
         // Servicebog
@@ -1782,10 +2812,12 @@
         }
         
         // Fuel Efficiency / Electric Range
-        const fuelEfficiency = document.getElementById('fuel_efficiency')?.value;
+        const fuelEfficiency = document.getElementById('km_per_liter')?.value;
         if (fuelEfficiency) {
             // Get fuel_type_id to determine the correct unit
-            const fuelTypeId = window.apiResponseData?.fuel_type?.id || window.apiResponseData?.fuel_type_id;
+            const fuelTypeId = document.getElementById('fuel_type_id')?.value
+                || window.apiResponseData?.fuel_type?.id
+                || window.apiResponseData?.fuel_type_id;
             const electricFuelTypes = [3, 7]; // Electric, El
             const hybridFuelTypes = [4, 5]; // Hybrid, Plug-in Hybrid
             
@@ -1799,7 +2831,7 @@
         }
         
         // Euronom
-        const euronomSelect = document.getElementById('euronom_id');
+        const euronomSelect = document.getElementById('emission_norm_id');
         if (euronomSelect && euronomSelect.value) {
             const euronomOption = euronomSelect.options[euronomSelect.selectedIndex];
             if (euronomOption && euronomOption.text) {
@@ -1808,13 +2840,13 @@
         }
         
         // Total Technical Weight
-        const technicalWeight = document.getElementById('technical_total_weight')?.value;
+        const technicalWeight = document.getElementById('maximum_weight_kg')?.value;
         if (technicalWeight) {
             parts.push('Total technical weight: ' + parseInt(technicalWeight).toLocaleString() + ' kg');
         }
         
         if (parts.length > 0) {
-            descriptionTextarea.value = parts.join('. ') + '.';
+            descriptionTextarea.value = parts.join('\n\n');
         }
         
         // Mark as generated
@@ -1836,7 +2868,7 @@
     function initFuelEfficiencyLabelUpdater() {
         // Check if fuel_type_id select exists and listen for changes
         const fuelTypeSelect = document.getElementById('fuel_type_id');
-        const input = document.getElementById('fuel_efficiency');
+        const input = document.getElementById('km_per_liter');
         
         // Always start with step="any" as default (allows decimal values like 54.5)
         // This will be overridden only if fuel type is explicitly electric (3 or 7)
@@ -1882,7 +2914,9 @@
         // Default behavior: Always use step="any" to allow decimal values like 54.5
         // Only change to step="1" if fuel type is explicitly electric (3 or 7) AND field is empty
         if (window.apiResponseData) {
-            const fuelTypeId = window.apiResponseData.fuel_type?.id || window.apiResponseData.fuel_type_id;
+            const fuelTypeId = document.getElementById('fuel_type_id')?.value
+                || window.apiResponseData.fuel_type?.id
+                || window.apiResponseData.fuel_type_id;
             const parsedFuelTypeId = parseInt(fuelTypeId);
             
             // Default to step="any" - only change if explicitly electric and field is empty
@@ -1899,10 +2933,10 @@
                     input.setAttribute('inputmode', 'decimal');
                     if (!isElectric) {
                         // Update label/help for non-electric, but keep step="any"
-                        const label = document.getElementById('fuel_efficiency_label');
-                        const help = document.getElementById('fuel_efficiency_help');
-                        if (label) label.textContent = 'KM/L';
-                        if (help) help.textContent = 'Fuel efficiency in kilometers per liter';
+                        const label = document.getElementById('km_per_liter_label');
+                        const help = document.getElementById('km_per_liter_help');
+                        if (label) label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
+                        if (help) help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
                         input.placeholder = '0.00';
                     }
                 }
@@ -1911,7 +2945,7 @@
         
         // Final safeguard: Ensure step="any" is set after a short delay to override any late API calls
         setTimeout(function() {
-            const input = document.getElementById('fuel_efficiency');
+            const input = document.getElementById('km_per_liter');
             if (input) {
                 // Only override if it's currently set to step="1" and field is empty or has decimal value
                 const currentStep = input.getAttribute('step');
@@ -1999,15 +3033,15 @@
     // Validate a single file
     function validateFile(file) {
         if (isDuplicateFile(file)) {
-            return { valid: false, error: `File "${file.name}" is already selected.` };
+            return { valid: false, error: trans('imageAlreadySelected', 'File ":name" is already selected.', { name: file.name }) };
         }
         
         if (!imageUploadState.allowedTypes.includes(file.type)) {
-            return { valid: false, error: `File "${file.name}" is not a valid image format. Please use JPEG, PNG, or GIF.` };
+            return { valid: false, error: trans('imageInvalidFormat', 'File ":name" is not a valid image format. Please use JPEG, PNG, or GIF.', { name: file.name }) };
         }
         
         if (file.size > imageUploadState.maxSize) {
-            return { valid: false, error: `File "${file.name}" is too large. Maximum size is 20MB.` };
+            return { valid: false, error: trans('imageTooLarge', 'File ":name" is too large. Maximum size is 20MB.', { name: file.name }) };
         }
         
         return { valid: true };
@@ -2376,10 +3410,10 @@
             alert(message);
         }
     }
-    // Final safeguard: Ensure fuel_efficiency always allows decimals (step="any")
+    // Final safeguard: Ensure km_per_liter always allows decimals (step="any")
     // This runs after all initialization and watches for any changes to step attribute
     function enforceDecimalStep() {
-        const input = document.getElementById('fuel_efficiency');
+        const input = document.getElementById('km_per_liter');
         if (!input) return;
         
         const currentStep = input.getAttribute('step');
@@ -2430,7 +3464,7 @@
     
     // Watch for changes to the step attribute (set up after DOM is ready)
     function setupStepWatcher() {
-        const fuelEfficiencyInput = document.getElementById('fuel_efficiency');
+        const fuelEfficiencyInput = document.getElementById('km_per_liter');
         if (fuelEfficiencyInput) {
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {

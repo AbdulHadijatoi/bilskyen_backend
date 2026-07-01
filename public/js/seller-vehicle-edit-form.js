@@ -4,6 +4,22 @@
 (function() {
     'use strict';
 
+    const EDIT_VEHICLE_I18N = window.editVehicleTranslations || {};
+
+    function trans(key, fallback, replacements) {
+        const text = Object.prototype.hasOwnProperty.call(EDIT_VEHICLE_I18N, key)
+            ? EDIT_VEHICLE_I18N[key]
+            : fallback;
+
+        if (!replacements) {
+            return text;
+        }
+
+        return Object.keys(replacements).reduce((result, replacementKey) => {
+            return result.replace(new RegExp(':' + replacementKey, 'g'), String(replacements[replacementKey]));
+        }, text);
+    }
+
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSellerVehicleEditForm);
@@ -20,6 +36,7 @@
         
         // Initialize image upload
         initImageUpload();
+        initExistingImageRemoval();
         
         // Initialize location autocomplete
         initLocationAutocomplete();
@@ -74,11 +91,21 @@
         imageOrder: [] // Array of {id, type: 'existing'|'new', fileId?}
     };
 
+    /** @param {number|string} imageId */
+    function normalizeVehicleImageId(imageId) {
+        const n = parseInt(String(imageId), 10);
+        return Number.isInteger(n) && n > 0 ? n : null;
+    }
+
     // Initialize image order from existing images
     if (imageState.existingImages && imageState.existingImages.length > 0) {
         imageState.existingImages.forEach(img => {
+            const nid = normalizeVehicleImageId(img.id);
+            if (nid === null) {
+                return;
+            }
             imageState.imageOrder.push({
-                id: img.id,
+                id: nid,
                 type: 'existing',
                 sortOrder: img.sort_order || 0
             });
@@ -94,16 +121,20 @@
 
     // Remove existing image
     window.removeExistingImage = function(imageId) {
+        const id = normalizeVehicleImageId(imageId);
+        if (id === null) {
+            return;
+        }
         // Mark for deletion
-        imageState.deletedImageIds.add(imageId);
+        imageState.deletedImageIds.add(id);
         
         // Remove from order
         imageState.imageOrder = imageState.imageOrder.filter(item => 
-            !(item.type === 'existing' && item.id === imageId)
+            !(item.type === 'existing' && item.id === id)
         );
         
         // Hide the image element
-        const imageElement = document.querySelector(`[data-image-id="${imageId}"]`);
+        const imageElement = document.querySelector(`[data-image-id="${id}"]`);
         if (imageElement) {
             imageElement.remove();
         }
@@ -111,11 +142,26 @@
         updateImageCount();
     };
 
+    function initExistingImageRemoval() {
+        document.querySelectorAll('[data-existing-image-id]').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const imageId = this.getAttribute('data-existing-image-id');
+                if (imageId) {
+                    window.removeExistingImage(imageId);
+                }
+            });
+        });
+    }
+
     // Clear all images
     window.clearAllImages = function() {
         // Mark all existing images for deletion
         imageState.existingImages.forEach(img => {
-            imageState.deletedImageIds.add(img.id);
+            const nid = normalizeVehicleImageId(img.id);
+            if (nid !== null) {
+                imageState.deletedImageIds.add(nid);
+            }
         });
         
         // Clear new files
@@ -205,12 +251,12 @@
         Array.from(files).forEach(file => {
             // Validate file
             if (!allowedTypes.includes(file.type)) {
-                alert(`File "${file.name}" is not a valid image format. Please use JPEG, PNG, or GIF.`);
+                alert(trans('imageInvalidFormat', 'File ":name" is not a valid image format. Please use JPEG, PNG, or GIF.', { name: file.name }));
                 return;
             }
             
             if (file.size > maxSize) {
-                alert(`File "${file.name}" is too large. Maximum size is 20MB.`);
+                alert(trans('imageTooLarge', 'File ":name" is too large. Maximum size is 20MB.', { name: file.name }));
                 return;
             }
             
@@ -252,7 +298,7 @@
             previewItem.innerHTML = `
                 <img src="${e.target.result}" alt="Preview">
                 <div class="image-preview-overlay">
-                    <button type="button" class="image-remove-btn" onclick="removeNewImage('${fileId}')" title="Remove">
+                    <button type="button" class="image-remove-btn" onclick="removeNewImage('${fileId}')" title="${escapeHtml(trans('removeImage', 'Remove'))}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 6L6 18M6 6l12 12"></path>
                         </svg>
@@ -357,9 +403,12 @@
             const fileId = item.getAttribute('data-file-id');
             
             if (imageId) {
-                // Existing image
+                const nid = normalizeVehicleImageId(imageId);
+                if (nid === null) {
+                    return;
+                }
                 newOrder.push({
-                    id: parseInt(imageId),
+                    id: nid,
                     type: 'existing'
                 });
             } else if (fileId) {
@@ -432,7 +481,7 @@
                 
                 const errorElement = document.createElement('p');
                 errorElement.className = 'field-error';
-                errorElement.textContent = 'This field is required';
+                errorElement.textContent = trans('requiredFieldError', 'This field is required');
                 field.parentElement.appendChild(errorElement);
 
                 if (!firstInvalidField) {
@@ -460,8 +509,9 @@
         
         // Disable submit button
         if (submitBtn) {
+            submitBtn.dataset.originalText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Updating...';
+            submitBtn.textContent = trans('updating', 'Updating...');
         }
         
         // Create FormData - manually build to avoid including file input files
@@ -483,6 +533,9 @@
                     Array.from(element.selectedOptions).forEach(option => {
                         formData.append(element.name + '[]', option.value);
                     });
+                } else if (element.tagName === 'SELECT') {
+                    // Always send selects (including empty) so nullable FKs can be cleared on the server
+                    formData.append(element.name, element.value);
                 } else {
                     if (element.value) {
                         formData.append(element.name, element.value);
@@ -501,24 +554,22 @@
         // Update image order from DOM before submission (in case user reordered)
         updateImageOrderFromDOM();
         
-        // Add equipment IDs
-        const equipmentCheckboxes = form.querySelectorAll('input[name="equipment_ids[]"]:checked');
-        equipmentCheckboxes.forEach(checkbox => {
-            formData.append('equipment_ids[]', checkbox.value);
-        });
-        
         // Add existing image IDs (those not deleted)
         const existingImageIds = imageState.imageOrder
             .filter(item => item.type === 'existing' && !imageState.deletedImageIds.has(item.id))
-            .map(item => item.id);
+            .map(item => normalizeVehicleImageId(item.id))
+            .filter((id) => id !== null);
         existingImageIds.forEach(id => {
-            formData.append('existing_image_ids[]', id);
+            formData.append('existing_image_ids[]', String(id));
         });
         
-        // Add deleted image IDs
-        Array.from(imageState.deletedImageIds).forEach(id => {
-            formData.append('deleted_image_ids[]', id);
-        });
+        // Add deleted image IDs (only valid DB ids — avoids validation errors)
+        Array.from(imageState.deletedImageIds)
+            .map(normalizeVehicleImageId)
+            .filter((id) => id !== null)
+            .forEach((id) => {
+                formData.append('deleted_image_ids[]', String(id));
+            });
         
         // Add new images (only new files, not from file input)
         imageState.imageOrder
@@ -532,8 +583,8 @@
         
         // Add image sort order based on current order
         imageState.imageOrder.forEach((item, index) => {
-            if (item.type === 'existing') {
-                formData.append(`image_sort_order[${item.id}]`, index);
+            if (item.type === 'existing' && normalizeVehicleImageId(item.id) !== null) {
+                formData.append(`image_sort_order[${item.id}]`, String(index));
             }
         });
         
@@ -556,11 +607,11 @@
                 if (result.errors) {
                     displayErrors(result.errors);
                 } else {
-                    displayGeneralError(result.message || 'Failed to update vehicle. Please try again.');
+                    displayGeneralError(result.message || trans('updateFailed', 'Failed to update vehicle. Please try again.'));
                 }
             } else {
                 // Success
-                const successMsg = result.message || 'Vehicle updated successfully!';
+                const successMsg = result.message || trans('updateSuccess', 'Vehicle updated successfully!');
                 displaySuccess(successMsg);
                 
                 // Redirect to dashboard after 1.5 seconds
@@ -577,12 +628,13 @@
             }
         } catch (error) {
             console.error('Error updating vehicle:', error);
-            displayGeneralError('An error occurred. Please try again.');
+            displayGeneralError(trans('updateGenericError', 'An error occurred. Please try again.'));
         } finally {
             // Re-enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Update Vehicle Listing';
+                submitBtn.textContent = submitBtn.dataset.originalText || trans('updateButton', 'Update Vehicle Listing');
+                delete submitBtn.dataset.originalText;
             }
         }
     }
@@ -687,108 +739,187 @@
         return div.innerHTML;
     }
 
-    // Location autocomplete
+    // Location autocomplete (aligned with sell-your-car-form.js: city + region + postcode matching, mousedown on dropdown)
     function initLocationAutocomplete() {
-        const locationsData = window.locationsData || [];
-        if (!locationsData || locationsData.length === 0) return;
-        
-        const addressInput = document.getElementById('seller_address');
+        const locationInput = document.getElementById('seller_address');
         const postcodeInput = document.getElementById('seller_postcode');
-        
-        if (addressInput) {
-            setupAutocomplete(addressInput, 'location-autocomplete', locationsData, 'city');
-        }
-        
-        if (postcodeInput) {
-            setupAutocomplete(postcodeInput, 'postcode-autocomplete', locationsData, 'postcode');
-        }
-    }
+        const locationDropdown = document.getElementById('location-autocomplete');
+        const postcodeDropdown = document.getElementById('postcode-autocomplete');
 
-    function setupAutocomplete(input, dropdownId, data, field) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown || !input) return;
-        
-        let selectedIndex = -1;
-        let filteredData = [];
-        
-        input.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            
-            if (query.length < 2) {
-                dropdown.classList.remove('show');
-                return;
+        if (!locationInput || !postcodeInput || !locationDropdown || !postcodeDropdown) {
+            return;
+        }
+
+        const locationsData = window.locationsData || [];
+        if (!locationsData.length) {
+            return;
+        }
+
+        function createLocationAutocomplete(input, dropdown, isLocationField) {
+            let selectedIndex = -1;
+            let currentMatches = [];
+            let blurTimeout = null;
+
+            function filterLocations(query) {
+                if (!query || query.trim().length === 0) {
+                    return [];
+                }
+
+                const queryLower = query.toLowerCase().trim();
+                const matches = [];
+
+                for (let i = 0; i < locationsData.length && matches.length < 10; i++) {
+                    const location = locationsData[i];
+
+                    if (isLocationField) {
+                        const cityMatch = location.city && location.city.toLowerCase().includes(queryLower);
+                        const regionMatch = location.region && location.region.toLowerCase().includes(queryLower);
+                        if (cityMatch || regionMatch) {
+                            matches.push({
+                                ...location,
+                                displayText: `${location.city}, ${location.region}`
+                            });
+                        }
+                    } else if (
+                        location.postcode &&
+                        (location.postcode.toLowerCase().startsWith(queryLower) ||
+                            location.postcode.toLowerCase().includes(queryLower))
+                    ) {
+                        matches.push({
+                            ...location,
+                            displayText: location.postcode
+                        });
+                    }
+                }
+
+                return matches;
             }
-            
-            filteredData = data.filter(item => {
-                const value = (item[field] || '').toLowerCase();
-                return value.includes(query);
-            }).slice(0, 10);
-            
-            if (filteredData.length > 0) {
-                renderDropdown(dropdown, filteredData, field, (item) => {
-                    input.value = item[field] || '';
-                    if (field === 'postcode' && item.city) {
-                        const addressInput = document.getElementById('seller_address');
-                        if (addressInput && !addressInput.value) {
-                            addressInput.value = item.city;
+
+            function renderDropdown(matches) {
+                if (matches.length === 0) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+
+                dropdown.innerHTML = '';
+                currentMatches = matches;
+                selectedIndex = -1;
+
+                matches.forEach((location, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'location-autocomplete-item';
+                    item.dataset.index = String(index);
+                    item.innerHTML = `<div class="location-autocomplete-item-text">${escapeHtml(location.displayText)}</div>`;
+
+                    item.addEventListener('click', function () {
+                        selectLocation(location);
+                    });
+
+                    item.addEventListener('mouseenter', function () {
+                        selectedIndex = index;
+                        updateHighlight();
+                    });
+
+                    dropdown.appendChild(item);
+                });
+
+                dropdown.classList.add('show');
+            }
+
+            function updateHighlight() {
+                const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                items.forEach((item, index) => {
+                    if (index === selectedIndex) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            function selectLocation(location) {
+                if (isLocationField) {
+                    input.value = location.displayText;
+                    if (location.postcode && postcodeInput.value.trim() === '') {
+                        postcodeInput.value = location.postcode;
+                    }
+                } else {
+                    input.value = location.postcode;
+                    if (location.city && locationInput.value.trim() === '') {
+                        locationInput.value = `${location.city}, ${location.region}`;
+                    }
+                }
+
+                dropdown.classList.remove('show');
+                input.focus();
+            }
+
+            function handleInput() {
+                const query = input.value;
+                const matches = filterLocations(query);
+                renderDropdown(matches);
+            }
+
+            function handleKeyDown(e) {
+                if (!dropdown.classList.contains('show') || currentMatches.length === 0) {
+                    return;
+                }
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, currentMatches.length - 1);
+                    updateHighlight();
+                    const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                    if (items[selectedIndex]) {
+                        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateHighlight();
+                    if (selectedIndex >= 0) {
+                        const items = dropdown.querySelectorAll('.location-autocomplete-item');
+                        if (items[selectedIndex]) {
+                            items[selectedIndex].scrollIntoView({ block: 'nearest' });
                         }
                     }
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectLocation(currentMatches[selectedIndex]);
+                } else if (e.key === 'Escape') {
                     dropdown.classList.remove('show');
-                });
-                dropdown.classList.add('show');
-            } else {
-                dropdown.classList.remove('show');
+                }
             }
-        });
-        
-        input.addEventListener('blur', () => {
-            setTimeout(() => {
-                dropdown.classList.remove('show');
-            }, 200);
-        });
-        
-        // Keyboard navigation
-        input.addEventListener('keydown', (e) => {
-            if (!dropdown.classList.contains('show')) return;
-            
-            const items = dropdown.querySelectorAll('.location-autocomplete-item');
-            
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                updateSelection(items, selectedIndex);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selectedIndex = Math.max(selectedIndex - 1, -1);
-                updateSelection(items, selectedIndex);
-            } else if (e.key === 'Enter' && selectedIndex >= 0) {
-                e.preventDefault();
-                items[selectedIndex].click();
-            }
-        });
-    }
 
-    function renderDropdown(dropdown, data, field, onSelect) {
-        dropdown.innerHTML = '';
-        
-        data.forEach((item, index) => {
-            const itemElement = document.createElement('div');
-            itemElement.className = 'location-autocomplete-item';
-            itemElement.innerHTML = `<span class="location-autocomplete-item-text">${escapeHtml(item[field] || '')}</span>`;
-            itemElement.addEventListener('click', () => {
-                onSelect(item);
+            function handleFocus() {
+                if (blurTimeout) {
+                    clearTimeout(blurTimeout);
+                    blurTimeout = null;
+                }
+                const query = input.value;
+                if (query && query.trim().length > 0) {
+                    const matches = filterLocations(query);
+                    renderDropdown(matches);
+                }
+            }
+
+            function handleBlur() {
+                blurTimeout = setTimeout(function () {
+                    dropdown.classList.remove('show');
+                }, 200);
+            }
+
+            input.addEventListener('input', handleInput);
+            input.addEventListener('keydown', handleKeyDown);
+            input.addEventListener('focus', handleFocus);
+            input.addEventListener('blur', handleBlur);
+
+            dropdown.addEventListener('mousedown', function (e) {
+                e.preventDefault();
             });
-            dropdown.appendChild(itemElement);
-        });
-    }
+        }
 
-    function updateSelection(items, selectedIndex) {
-        items.forEach((item, index) => {
-            if (index === selectedIndex) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
+        createLocationAutocomplete(locationInput, locationDropdown, true);
+        createLocationAutocomplete(postcodeInput, postcodeDropdown, false);
     }
 })();

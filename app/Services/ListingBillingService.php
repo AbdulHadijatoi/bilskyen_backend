@@ -9,7 +9,7 @@ use App\Models\Dealer;
 use App\Models\ListingBillingPeriod;
 use App\Models\Vehicle;
 use Carbon\Carbon;
- 
+
 class ListingBillingService
 {
     public function __construct(

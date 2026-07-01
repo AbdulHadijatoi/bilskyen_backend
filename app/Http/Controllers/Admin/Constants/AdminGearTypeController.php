@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\GearType;
-use Illuminate\Http\Request;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin Gear Type Controller
@@ -29,13 +30,18 @@ class AdminGearTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:gear_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('gear_types', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $gearType = GearType::create($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->created($gearType);
     }
@@ -45,13 +51,18 @@ class AdminGearTypeController extends Controller
         $gearType = GearType::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:gear_types,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('gear_types', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $gearType->update($request->only(['name']));
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->success($gearType);
     }
@@ -62,7 +73,7 @@ class AdminGearTypeController extends Controller
         $gearType->delete();
 
         // Clear cache
-        Cache::forget('constants_gear_types');
+        LookupService::forgetLookupCacheGroup('gear_types');
 
         return $this->noContent();
     }

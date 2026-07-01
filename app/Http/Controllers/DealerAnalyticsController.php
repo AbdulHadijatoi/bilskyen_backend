@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Lead;
+use App\Models\Dealer;
 use App\Models\DealerSubscription;
-use App\Models\Plan;
-use App\Models\PlanFeature;
 use App\Models\FeaturedListing;
 use App\Models\ListingViewsLog;
 use App\Models\PriceHistory;
 use App\Models\Source;
-use App\Models\LeadCategory;
 use App\Models\LeadStage;
+use App\Models\FeatureValueType;
+use App\Constants\LeadCategory as LeadCategoryIds;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
 use App\Services\SubscriptionFeatureService;
@@ -43,48 +43,54 @@ class DealerAnalyticsController extends Controller
 
     private function getDealer(Request $request): ?Dealer
     {
-        $user = $request->user();
-        $dealer = $user->dealer;
-        
-        if (!$dealer) {
-            return null;
-        }
-        
-        return $dealer;
+        $dealer = $request->user()?->dealer;
+
+        return $dealer ?: null;
     }
 
-    /**
-     * Get date range from request
-     */
     private function getDateRange(?string $dateRange): array
     {
         $now = Carbon::now();
-        
+
         return match ($dateRange) {
             '7d' => [$now->copy()->subDays(7), $now],
             '30d' => [$now->copy()->subDays(30), $now],
             '3m' => [$now->copy()->subMonths(3), $now],
             '1y' => [$now->copy()->subYear(), $now],
             'all' => [null, null],
-            default => [$now->copy()->subDays(30), $now], // Default to 30 days
+            default => [$now->copy()->subDays(30), $now],
         };
     }
 
-    /**
-     * Get periods for trend charts
-     */
+    private function applyDateFilter($query, ?Carbon $startDate, ?Carbon $endDate, string $column = 'created_at')
+    {
+        if ($startDate) {
+            $query->where($column, '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where($column, '<=', $endDate);
+        }
+
+        return $query;
+    }
+
+    private function getActiveSubscription(int $dealerId): ?DealerSubscription
+    {
+        $dealer = Dealer::find($dealerId);
+
+        return $dealer ? $this->subscriptionFeatureService->getActiveSubscription($dealer) : null;
+    }
+
     private function getPeriods(?Carbon $startDate, ?Carbon $endDate): array
     {
         if (!$startDate || !$endDate) {
-            // Default to last 30 days
             $startDate = Carbon::now()->subDays(30);
             $endDate = Carbon::now();
         }
 
         $daysDiff = $startDate->diffInDays($endDate);
-        
+
         if ($daysDiff <= 7) {
-            // Daily
             $periods = [];
             $current = $startDate->copy();
             while ($current <= $endDate) {
@@ -95,9 +101,11 @@ class DealerAnalyticsController extends Controller
                 ];
                 $current->addDay();
             }
+
             return $periods;
-        } elseif ($daysDiff <= 90) {
-            // Weekly
+        }
+
+        if ($daysDiff <= 90) {
             $periods = [];
             $current = $startDate->copy()->startOfWeek();
             while ($current <= $endDate) {
@@ -108,131 +116,124 @@ class DealerAnalyticsController extends Controller
                 ];
                 $current->addWeek();
             }
-            return $periods;
-        } else {
-            // Monthly
-            $periods = [];
-            $current = $startDate->copy()->startOfMonth();
-            while ($current <= $endDate) {
-                $periods[] = [
-                    'date' => $current->format('Y-m'),
-                    'start' => $current->copy()->startOfMonth(),
-                    'end' => $current->copy()->endOfMonth(),
-                ];
-                $current->addMonth();
-            }
+
             return $periods;
         }
+
+        $periods = [];
+        $current = $startDate->copy()->startOfMonth();
+        while ($current <= $endDate) {
+            $periods[] = [
+                'date' => $current->format('Y-m'),
+                'start' => $current->copy()->startOfMonth(),
+                'end' => $current->copy()->endOfMonth(),
+            ];
+            $current->addMonth();
+        }
+
+        return $periods;
     }
 
-    /**
-     * Get overview analytics - Key metrics for dealer
-     */
+    private function mapLeadsByCategory($leadsQuery): array
+    {
+        $countsById = (clone $leadsQuery)
+            ->select('lead_category_id', DB::raw('count(*) as count'))
+            ->groupBy('lead_category_id')
+            ->pluck('count', 'lead_category_id');
+
+        return [
+            'total' => (clone $leadsQuery)->count(),
+            'by_type' => [
+                'enquiry' => (int) $countsById->get(LeadCategoryIds::ENQUIRY_FORM_SUBMISSION, 0),
+                'phone' => (int) $countsById->get(LeadCategoryIds::PHONE_NUMBER_REVEALED, 0),
+                'whatsapp' => (int) $countsById->get(LeadCategoryIds::WHATSAPP_CLICKED, 0),
+                'email' => (int) $countsById->get(LeadCategoryIds::EMAIL_CLICKED, 0),
+                'test_drive' => (int) $countsById->get(LeadCategoryIds::REQUEST_TEST_DRIVE, 0),
+                'financing' => (int) $countsById->get(LeadCategoryIds::FINANCING_REQUEST, 0),
+            ],
+        ];
+    }
+
     public function overview(Request $request): JsonResponse
     {
         $dealer = $this->getDealer($request);
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
         $dateRange = $request->get('date_range', '30d');
         [$startDate, $endDate] = $this->getDateRange($dateRange);
 
-        // Vehicle metrics
-        $totalActiveVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+        $vehicleBase = Vehicle::where('dealer_id', $dealerId);
+        $leadBase = Lead::where('dealer_id', $dealerId);
+
+        $totalActiveVehicles = (clone $vehicleBase)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->count();
-        
-        $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
-            ->count();
-        
-        // Reserved vehicles (if there's a reserved status, otherwise use a different logic)
-        $reservedVehicles = 0; // Placeholder - adjust based on your status constants
-        
+
+        $soldInPeriodQuery = (clone $vehicleBase)->where('list_status_id', VehicleListStatus::SOLD);
+        $this->applyDateFilter($soldInPeriodQuery, $startDate, $endDate, 'updated_at');
+        $soldVehicles = $soldInPeriodQuery->count();
+
         $featuredVehicles = FeaturedListing::whereHas('vehicle', function ($query) use ($dealerId) {
             $query->where('dealer_id', $dealerId);
         })->count();
 
-        // Get featured vehicle limit from subscription
-        $currentSubscription = DealerSubscription::where('dealer_id', $dealerId)
-            ->where('subscription_status_id', SubscriptionStatus::ACTIVE)
-            ->with('plan.planFeatures')
-            ->first();
-        
-        $featuredLimit = 0;
-        if ($currentSubscription && $currentSubscription->plan) {
-            $featuredFeature = $currentSubscription->plan->planFeatures()
-                ->whereHas('feature', function ($query) {
-                    $query->where('key', 'featured_listings');
-                })
-                ->first();
-            $featuredLimit = $featuredFeature ? (int)$featuredFeature->value : 0;
-        }
+        $featuredLimit = $this->subscriptionFeatureService->getFeatureLimit(
+            $dealer,
+            'max_feature_listings',
+            0
+        );
 
-        // Lead metrics by category
-        $leadsByCategory = Lead::where('dealer_id', $dealerId)
-            ->select('lead_category_id', DB::raw('count(*) as count'))
-            ->groupBy('lead_category_id')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                $category = LeadCategory::find($item->lead_category_id);
-                return [$category?->name ?? 'Unknown' => $item->count];
-            });
+        $leadsInPeriod = clone $leadBase;
+        $this->applyDateFilter($leadsInPeriod, $startDate, $endDate);
+        $leadMetrics = $this->mapLeadsByCategory($leadsInPeriod);
 
-        $totalLeads = Lead::where('dealer_id', $dealerId)->count();
-        $enquiryLeads = $leadsByCategory->get('Enquiry Form Submission', 0);
-        $phoneLeads = $leadsByCategory->get('Phone Number Revealed', 0);
-        $whatsappLeads = $leadsByCategory->get('WhatsApp Clicked', 0);
-        $emailLeads = $leadsByCategory->get('Email Clicked', 0);
-        $testDriveLeads = $leadsByCategory->get('Request Test Drive', 0);
-        $financingLeads = $leadsByCategory->get('Financing Request', 0);
-
-        // Conversion rate (sold vehicles / total vehicles)
-        $totalVehicles = Vehicle::where('dealer_id', $dealerId)->count();
-        $conversionRate = $totalVehicles > 0 
-            ? round(($soldVehicles / $totalVehicles) * 100, 2) 
+        // Conversion: leads in period linked to vehicles sold in period
+        $totalLeadsInPeriod = $leadMetrics['total'];
+        $convertedLeads = (clone $leadsInPeriod)
+            ->whereHas('vehicle', function ($query) use ($startDate, $endDate) {
+                $query->where('list_status_id', VehicleListStatus::SOLD);
+                if ($startDate) {
+                    $query->where('updated_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $query->where('updated_at', '<=', $endDate);
+                }
+            })
+            ->count();
+        $conversionRate = $totalLeadsInPeriod > 0
+            ? round(($convertedLeads / $totalLeadsInPeriod) * 100, 2)
             : 0;
 
         return $this->success([
             'vehicles' => [
                 'total_active' => $totalActiveVehicles,
                 'sold' => $soldVehicles,
-                'reserved' => $reservedVehicles,
+                'reserved' => 0,
                 'featured_count' => $featuredVehicles,
                 'featured_limit' => $featuredLimit,
             ],
-            'leads' => [
-                'total' => $totalLeads,
-                'by_type' => [
-                    'enquiry' => $enquiryLeads,
-                    'phone' => $phoneLeads,
-                    'whatsapp' => $whatsappLeads,
-                    'email' => $emailLeads,
-                    'test_drive' => $testDriveLeads,
-                    'financing' => $financingLeads,
-                ],
-            ],
+            'leads' => $leadMetrics,
             'conversion_rate' => $conversionRate,
         ]);
     }
 
-    /**
-     * Get lead analytics
-     */
     public function leads(Request $request): JsonResponse
     {
         $dealer = $this->getDealer($request);
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
         $dateRange = $request->get('date_range', '30d');
         [$startDate, $endDate] = $this->getDateRange($dateRange);
 
-        // Leads over time
+        $leadBase = Lead::where('dealer_id', $dealerId);
+        $this->applyDateFilter($leadBase, $startDate, $endDate);
+
         $leadsOverTime = [];
         $periods = $this->getPeriods($startDate, $endDate);
         foreach ($periods as $period) {
@@ -245,8 +246,7 @@ class DealerAnalyticsController extends Controller
             ];
         }
 
-        // Leads by vehicle
-        $leadsByVehicle = Lead::where('dealer_id', $dealerId)
+        $leadsByVehicle = (clone $leadBase)
             ->select('vehicle_id', DB::raw('count(*) as lead_count'))
             ->groupBy('vehicle_id')
             ->orderBy('lead_count', 'desc')
@@ -254,6 +254,7 @@ class DealerAnalyticsController extends Controller
             ->get()
             ->map(function ($item) {
                 $vehicle = Vehicle::find($item->vehicle_id);
+
                 return [
                     'vehicle_id' => $item->vehicle_id,
                     'title' => $vehicle?->title ?? 'Unknown',
@@ -262,46 +263,48 @@ class DealerAnalyticsController extends Controller
                 ];
             });
 
-        // Leads by source
-        $leadsBySource = Lead::where('dealer_id', $dealerId)
+        $leadsBySource = (clone $leadBase)
             ->select('source_id', DB::raw('count(*) as count'))
             ->groupBy('source_id')
             ->get()
             ->map(function ($item) {
                 $source = Source::find($item->source_id);
+
                 return [
+                    'source_id' => $item->source_id,
                     'source' => $source?->name ?? 'Unknown',
                     'count' => $item->count,
                 ];
             });
 
-        // Lead status breakdown
-        $leadStatusBreakdown = Lead::where('dealer_id', $dealerId)
+        $leadStatusBreakdown = (clone $leadBase)
             ->select('lead_stage_id', DB::raw('count(*) as count'))
             ->groupBy('lead_stage_id')
             ->get()
             ->map(function ($item) {
                 $stage = LeadStage::find($item->lead_stage_id);
+
                 return [
+                    'stage_id' => $item->lead_stage_id,
                     'stage' => $stage?->name ?? 'Unknown',
                     'count' => $item->count,
                 ];
             });
 
-        // Average response time
-        $leadsWithResponse = Lead::where('dealer_id', $dealerId)
+        $leadsWithResponse = (clone $leadBase)
             ->whereNotNull('last_activity_at')
-            ->whereNotNull('created_at')
+            ->whereColumn('last_activity_at', '!=', 'created_at')
             ->get();
 
         $totalResponseTime = 0;
-        $count = 0;
+        $responseCount = 0;
         foreach ($leadsWithResponse as $lead) {
-            $responseTime = $lead->created_at->diffInHours($lead->last_activity_at);
-            $totalResponseTime += $responseTime;
-            $count++;
+            $totalResponseTime += $lead->created_at->diffInHours($lead->last_activity_at);
+            $responseCount++;
         }
-        $averageResponseTime = $count > 0 ? round($totalResponseTime / $count, 2) : 0;
+        $averageResponseTime = $responseCount > 0
+            ? round($totalResponseTime / $responseCount, 2)
+            : 0;
 
         return $this->success([
             'over_time' => $leadsOverTime,
@@ -312,24 +315,23 @@ class DealerAnalyticsController extends Controller
         ]);
     }
 
-    /**
-     * Get vehicle performance analytics
-     */
     public function vehicles(Request $request): JsonResponse
     {
         $dealer = $this->getDealer($request);
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
         $dateRange = $request->get('date_range', '30d');
         [$startDate, $endDate] = $this->getDateRange($dateRange);
 
-        // Most viewed vehicles
-        $mostViewedVehicles = ListingViewsLog::whereHas('vehicle', function ($query) use ($dealerId) {
+        $viewsQuery = ListingViewsLog::whereHas('vehicle', function ($query) use ($dealerId) {
             $query->where('dealer_id', $dealerId);
-        })
+        });
+        $this->applyDateFilter($viewsQuery, $startDate, $endDate, 'viewed_at');
+
+        $mostViewedVehicles = (clone $viewsQuery)
             ->select('vehicle_id', DB::raw('count(*) as view_count'))
             ->groupBy('vehicle_id')
             ->orderBy('view_count', 'desc')
@@ -337,6 +339,7 @@ class DealerAnalyticsController extends Controller
             ->get()
             ->map(function ($item) {
                 $vehicle = Vehicle::find($item->vehicle_id);
+
                 return [
                     'vehicle_id' => $item->vehicle_id,
                     'title' => $vehicle?->title ?? 'Unknown',
@@ -346,8 +349,10 @@ class DealerAnalyticsController extends Controller
                 ];
             });
 
-        // Vehicles with highest leads
-        $vehiclesWithHighestLeads = Lead::where('dealer_id', $dealerId)
+        $leadsQuery = Lead::where('dealer_id', $dealerId);
+        $this->applyDateFilter($leadsQuery, $startDate, $endDate);
+
+        $vehiclesWithHighestLeads = (clone $leadsQuery)
             ->select('vehicle_id', DB::raw('count(*) as lead_count'))
             ->groupBy('vehicle_id')
             ->orderBy('lead_count', 'desc')
@@ -355,6 +360,7 @@ class DealerAnalyticsController extends Controller
             ->get()
             ->map(function ($item) {
                 $vehicle = Vehicle::find($item->vehicle_id);
+
                 return [
                     'vehicle_id' => $item->vehicle_id,
                     'title' => $vehicle?->title ?? 'Unknown',
@@ -364,26 +370,27 @@ class DealerAnalyticsController extends Controller
                 ];
             });
 
-        // Average days on market
-        $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)
+        $soldVehiclesQuery = Vehicle::where('dealer_id', $dealerId)
+            ->where('list_status_id', VehicleListStatus::SOLD)
             ->whereNotNull('created_at')
-            ->whereNotNull('updated_at')
-            ->get();
+            ->whereNotNull('updated_at');
+        $this->applyDateFilter($soldVehiclesQuery, $startDate, $endDate, 'updated_at');
+        $soldVehicles = $soldVehiclesQuery->get();
 
         $totalDays = 0;
-        $count = 0;
+        $soldCount = 0;
         foreach ($soldVehicles as $vehicle) {
-            $daysOnMarket = $vehicle->created_at->diffInDays($vehicle->updated_at);
-            $totalDays += $daysOnMarket;
-            $count++;
+            $totalDays += $vehicle->created_at->diffInDays($vehicle->updated_at);
+            $soldCount++;
         }
-        $averageDaysOnMarket = $count > 0 ? round($totalDays / $count, 2) : 0;
+        $averageDaysOnMarket = $soldCount > 0 ? round($totalDays / $soldCount, 2) : 0;
 
-        // Price change history
-        $priceChanges = PriceHistory::whereHas('vehicle', function ($query) use ($dealerId) {
+        $priceChangesQuery = PriceHistory::whereHas('vehicle', function ($query) use ($dealerId) {
             $query->where('dealer_id', $dealerId);
-        })
+        });
+        $this->applyDateFilter($priceChangesQuery, $startDate, $endDate, 'changed_at');
+
+        $priceChanges = $priceChangesQuery
             ->with('vehicle')
             ->orderBy('changed_at', 'desc')
             ->limit(20)
@@ -408,52 +415,48 @@ class DealerAnalyticsController extends Controller
         ]);
     }
 
-    /**
-     * Get marketing analytics (featured listings performance)
-     */
     public function marketing(Request $request): JsonResponse
     {
         $dealer = $this->getDealer($request);
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
         $dateRange = $request->get('date_range', '30d');
         [$startDate, $endDate] = $this->getDateRange($dateRange);
 
-        // Featured vehicles
         $featuredVehicleIds = FeaturedListing::whereHas('vehicle', function ($query) use ($dealerId) {
             $query->where('dealer_id', $dealerId);
         })->pluck('vehicle_id')->toArray();
 
-        // Non-featured vehicles
         $nonFeaturedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->whereNotIn('id', $featuredVehicleIds)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->whereNotIn('id', $featuredVehicleIds ?: [0])
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->count();
 
         $featuredVehicles = count($featuredVehicleIds);
 
-        // Views for featured listings
-        $featuredViews = ListingViewsLog::whereIn('vehicle_id', $featuredVehicleIds)
-            ->count();
+        $featuredViewsQuery = ListingViewsLog::whereIn('vehicle_id', $featuredVehicleIds ?: [0]);
+        $this->applyDateFilter($featuredViewsQuery, $startDate, $endDate, 'viewed_at');
+        $featuredViews = $featuredVehicleIds ? $featuredViewsQuery->count() : 0;
 
-        // Views for non-featured listings
-        $nonFeaturedViews = ListingViewsLog::whereHas('vehicle', function ($query) use ($dealerId, $featuredVehicleIds) {
+        $nonFeaturedViewsQuery = ListingViewsLog::whereHas('vehicle', function ($query) use ($dealerId, $featuredVehicleIds) {
             $query->where('dealer_id', $dealerId)
-                ->whereNotIn('id', $featuredVehicleIds);
-        })->count();
+                ->whereNotIn('id', $featuredVehicleIds ?: [0]);
+        });
+        $this->applyDateFilter($nonFeaturedViewsQuery, $startDate, $endDate, 'viewed_at');
+        $nonFeaturedViews = $nonFeaturedViewsQuery->count();
 
-        // Leads from featured listings
-        $leadsFromFeatured = Lead::where('dealer_id', $dealerId)
-            ->whereIn('vehicle_id', $featuredVehicleIds)
-            ->count();
+        $featuredLeadsQuery = Lead::where('dealer_id', $dealerId)
+            ->whereIn('vehicle_id', $featuredVehicleIds ?: [0]);
+        $this->applyDateFilter($featuredLeadsQuery, $startDate, $endDate);
+        $leadsFromFeatured = $featuredVehicleIds ? $featuredLeadsQuery->count() : 0;
 
-        // Leads from non-featured listings
-        $leadsFromNonFeatured = Lead::where('dealer_id', $dealerId)
-            ->whereNotIn('vehicle_id', $featuredVehicleIds)
-            ->count();
+        $nonFeaturedLeadsQuery = Lead::where('dealer_id', $dealerId)
+            ->whereNotIn('vehicle_id', $featuredVehicleIds ?: [0]);
+        $this->applyDateFilter($nonFeaturedLeadsQuery, $startDate, $endDate);
+        $leadsFromNonFeatured = $nonFeaturedLeadsQuery->count();
 
         return $this->success([
             'featured_vs_non_featured' => [
@@ -467,28 +470,22 @@ class DealerAnalyticsController extends Controller
         ]);
     }
 
-    /**
-     * Get subscription usage analytics
-     */
     public function subscription(Request $request): JsonResponse
     {
         $dealer = $this->getDealer($request);
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
+        $currentSubscription = $this->getActiveSubscription($dealerId);
 
-        // Get current subscription
-        $currentSubscription = DealerSubscription::where('dealer_id', $dealerId)
-            ->with(['plan.planFeatures.feature', 'subscriptionStatus'])
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if (!$currentSubscription) {
+        if (!$currentSubscription || !$currentSubscription->plan) {
             return $this->success([
                 'plan_name' => 'No Plan',
+                'plan_slug' => null,
                 'status' => 'None',
+                'status_id' => null,
                 'renewal_date' => null,
                 'features' => [],
             ]);
@@ -497,38 +494,27 @@ class DealerAnalyticsController extends Controller
         $plan = $currentSubscription->plan;
         $planFeatures = $plan->planFeatures()->with('feature')->get();
 
-        // Get feature usage
         $featureUsage = [];
         foreach ($planFeatures as $planFeature) {
             $feature = $planFeature->feature;
-            if (!$feature) {
+            if (!$feature || $feature->feature_value_type_id === FeatureValueType::BOOLEAN) {
                 continue;
             }
 
-            $limit = (int)$planFeature->value;
-            $used = 0;
-
-            // Calculate usage based on feature key
-            switch ($feature->key) {
-                case 'max_listings':
-                    $used = Vehicle::where('dealer_id', $dealerId)->count();
-                    break;
-                case 'featured_listings':
-                    $used = FeaturedListing::whereHas('vehicle', function ($query) use ($dealerId) {
-                        $query->where('dealer_id', $dealerId);
-                    })->count();
-                    break;
-                case 'max_images_per_listing':
-                    // This would require checking vehicle images, skip for now
-                    break;
-                default:
-                    // Other features
-                    break;
-            }
+            $limit = (int) $planFeature->value;
+            $used = match ($feature->key) {
+                'max_listings' => $this->listingQuotaService->countPublishedListings(Dealer::findOrFail($dealerId)),
+                'max_feature_listings' => FeaturedListing::whereHas('vehicle', function ($query) use ($dealerId) {
+                    $query->where('dealer_id', $dealerId);
+                })->count(),
+                default => 0,
+            };
 
             $featureUsage[] = [
                 'feature_key' => $feature->key,
                 'feature_name' => $feature->description ?? $feature->key,
+                'label_en' => $feature->label_en,
+                'label_da' => $feature->label_da,
                 'limit' => $limit,
                 'used' => $used,
                 'usage_percentage' => $limit > 0 ? round(($used / $limit) * 100, 2) : 0,
@@ -537,7 +523,9 @@ class DealerAnalyticsController extends Controller
 
         return $this->success([
             'plan_name' => $plan->name,
+            'plan_slug' => $plan->slug,
             'status' => $currentSubscription->subscriptionStatus?->name ?? 'Unknown',
+            'status_id' => $currentSubscription->subscription_status_id,
             'renewal_date' => $currentSubscription->ends_at?->toISOString(),
             'features' => $featureUsage,
             'payg' => $this->reportingService->paygBurn($dealerId, null, null),

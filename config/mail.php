@@ -14,7 +14,20 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    // Default should stay `smtp` in production so all Laravel mail goes through Brevo (or your relay).
+    'default' => env('MAIL_MAILER', 'smtp'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Outbound mail locale
+    |--------------------------------------------------------------------------
+    |
+    | Locale used when rendering all mailables (subjects and views), regardless
+    | of the HTTP request UI language. Override with MAIL_LOCALE in .env.
+    |
+    */
+
+    'default_locale' => env('MAIL_LOCALE', 'da'),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,10 +54,10 @@ return [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'host' => env('SMTP_SERVER', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('PORT', env('MAIL_PORT', 2525)),
+            'username' => env('LOGIN', env('MAIL_USERNAME')),
+            'password' => env('SMTP_KEY', env('MAIL_PASSWORD')),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],

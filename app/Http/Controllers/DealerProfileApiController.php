@@ -76,7 +76,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         // Define basic filter keys
@@ -103,15 +103,12 @@ class DealerProfileApiController extends Controller
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'registration' => $vehicle->registration,
-                'vin' => $vehicle->vin,
+                'vin' => $vehicle->dmrFactVehicle?->stel_nummer,
                 'price' => $vehicle->price,
-                'mileage' => $vehicle->mileage,
                 'km_driven' => $vehicle->km_driven,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-                'version' => $vehicle->version,
                 'brand_name' => $vehicle->brand_name,
                 'model_name' => $vehicle->model_name,
-                'category_name' => $vehicle->category_name,
                 'fuel_type_name' => $vehicle->fuel_type_name,
                 'gear_type_name' => $vehicle->gear_type_name,
                 'model_year_name' => $vehicle->model_year_name,
@@ -145,7 +142,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -240,7 +237,7 @@ class DealerProfileApiController extends Controller
         $dealer = $user->dealer;
 
         if (!$dealer) {
-            return $this->error('Dealer not found', null, 404);
+            return $this->error(__('messages.errors.dealer_not_found'), null, 404);
         }
 
         $dealerId = $dealer->id;
@@ -248,13 +245,13 @@ class DealerProfileApiController extends Controller
         // Vehicle Statistics
         $totalVehicles = Vehicle::where('dealer_id', $dealerId)->count();
         $publishedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)->count();
         $draftVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
+            ->where('list_status_id', VehicleListStatus::DRAFT)->count();
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+            ->where('list_status_id', VehicleListStatus::SOLD)->count();
         $archivedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count();
+            ->where('list_status_id', VehicleListStatus::ARCHIVED)->count();
 
         // Get vehicle IDs for this dealer
         $vehicleIds = Vehicle::where('dealer_id', $dealerId)->pluck('id');

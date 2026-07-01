@@ -90,6 +90,16 @@ class Dealer extends Model
         return $this->hasMany(DealerSubscription::class);
     }
 
+    public function subscriptionChangeRequests(): HasMany
+    {
+        return $this->hasMany(DealerSubscriptionChangeRequest::class);
+    }
+
+    public function pendingSubscriptionChangeRequest(): ?DealerSubscriptionChangeRequest
+    {
+        return $this->subscriptionChangeRequests()->pending()->latest('id')->first();
+    }
+
     /**
      * Get plan overrides for this dealer
      */

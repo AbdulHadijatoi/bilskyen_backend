@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Dealer;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
-use Illuminate\Http\Request;
+use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Dealer Profile Controller
@@ -18,15 +19,17 @@ class DealerProfileController extends Controller
 {
     public function __construct(
         private AuditLogService $auditLogService,
-        private DealerContextService $dealerContextService
+        private DealerContextService $dealerContextService,
+        private FileService $fileService
     ) {}
+
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
         $dealer = $user->dealer;
-        
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
+
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         // Include user data in response (use 'owner' for frontend compatibility)
@@ -64,7 +67,7 @@ class DealerProfileController extends Controller
         // Validate user fields
         $userValidation = $request->validate([
             'name' => 'sometimes|string|min:2|max:100',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'sometimes|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:15',
         ]);
 
@@ -74,20 +77,23 @@ class DealerProfileController extends Controller
         ]);
 
         // Update dealer
-        if (!empty($dealerValidation)) {
+        if (! empty($dealerValidation)) {
             $dealer->update($dealerValidation);
         }
 
         // Update user
-        if (!empty($userValidation)) {
+        if (! empty($userValidation)) {
             $user->update($userValidation);
         }
 
         // Optional logo upload
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
             $newPath = $file->storeAs('dealer-logos', $filename, 'public');
+
+            $logoUrl = Storage::disk('public')->url($newPath);
+            $this->fileService->optimizeImageForWeb($logoUrl, $file->getSize());
 
             if ($dealer->logo_path && Storage::disk('public')->exists($dealer->logo_path)) {
                 Storage::disk('public')->delete($dealer->logo_path);
@@ -104,24 +110,24 @@ class DealerProfileController extends Controller
         try {
             $changes = [];
             $before = [];
-            
+
             // Track dealer changes
             foreach ($dealerValidation as $key => $value) {
                 if (isset($dealerBefore[$key]) && $dealerBefore[$key] != $value) {
-                    $before['dealer_' . $key] = $dealerBefore[$key];
-                    $changes['dealer_' . $key] = $value;
+                    $before['dealer_'.$key] = $dealerBefore[$key];
+                    $changes['dealer_'.$key] = $value;
                 }
             }
-            
+
             // Track user changes
             foreach ($userValidation as $key => $value) {
                 if (isset($userBefore[$key]) && $userBefore[$key] != $value) {
-                    $before['user_' . $key] = $userBefore[$key];
-                    $changes['user_' . $key] = $value;
+                    $before['user_'.$key] = $userBefore[$key];
+                    $changes['user_'.$key] = $value;
                 }
             }
-            
-            if (!empty($changes)) {
+
+            if (! empty($changes)) {
                 $this->auditLogService->logUpdate(
                     $user,
                     'Dealer',
@@ -156,4 +162,3 @@ class DealerProfileController extends Controller
         return $this->success($response);
     }
 }
-

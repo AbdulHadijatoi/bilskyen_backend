@@ -2,36 +2,31 @@
 
 namespace App\Models;
 
-use App\Traits\FirstOrCreateInsensitive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Legacy `models` table (admin/seeders). Public listings use {@see DmrModel}.
+ */
 class VehicleModel extends Model
 {
-    use FirstOrCreateInsensitive;
-    public $timestamps = false;
     protected $table = 'models';
-    
+
+    public $timestamps = false;
+
     protected $fillable = [
         'brand_id',
         'name',
     ];
 
-    /**
-     * Get brand for this model
-     */
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(Brand::class);
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
-    /**
-     * Get vehicles for this model
-     */
-    public function vehicles(): HasMany
+    public function variants(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'model_id');
+        return $this->hasMany(Variant::class, 'model_id');
     }
 }
-

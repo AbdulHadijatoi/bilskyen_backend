@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\Lead;
-use App\Models\DealerSubscription;
-use App\Models\Plan;
+use App\Models\Sale;
+use App\Services\SubscriptionFeatureService;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus as SubscriptionStatusConstant;
 use Illuminate\Http\Request;
@@ -20,6 +20,10 @@ use Carbon\Carbon;
  */
 class DealerDashboardController extends Controller
 {
+    public function __construct(
+        private SubscriptionFeatureService $subscriptionFeatureService
+    ) {}
+
     /**
      * Get dashboard statistics and data for the authenticated dealer
      */
@@ -29,7 +33,7 @@ class DealerDashboardController extends Controller
         $dealer = $user->dealer;
         
         if (!$dealer) {
-            return $this->notFound('Dealer not found');
+            return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $dealerId = $dealer->id;
@@ -43,13 +47,13 @@ class DealerDashboardController extends Controller
         // Vehicle Statistics (scoped to dealer)
         $totalVehicles = Vehicle::where('dealer_id', $dealerId)->count();
         $publishedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)->count();
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)->count();
         $draftVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::DRAFT)->count();
+            ->where('list_status_id', VehicleListStatus::DRAFT)->count();
         $soldVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::SOLD)->count();
+            ->where('list_status_id', VehicleListStatus::SOLD)->count();
         $archivedVehicles = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::ARCHIVED)->count();
+            ->where('list_status_id', VehicleListStatus::ARCHIVED)->count();
         
         $newVehiclesLast7Days = Vehicle::where('dealer_id', $dealerId)
             ->where('created_at', '>=', $last7Days)->count();
@@ -73,21 +77,18 @@ class DealerDashboardController extends Controller
 
         // Subscription Information (current dealer's subscription)
 
-        $currentSubscriptionWithRelations = DealerSubscription::where('dealer_id', $dealerId)
-            ->with(['plan', 'subscriptionStatus'])
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $currentSubscriptionWithRelations = $this->subscriptionFeatureService->getActiveSubscription($dealer);
 
         $subscriptionData = [
             'has_subscription' => $currentSubscriptionWithRelations !== null,
             'plan_name' => $currentSubscriptionWithRelations?->plan?->name ?? 'No Plan',
             'status' => $currentSubscriptionWithRelations?->subscriptionStatus?->name ?? 'None',
-            'is_active' => $currentSubscriptionWithRelations && $currentSubscriptionWithRelations->subscription_status_id === SubscriptionStatusConstant::ACTIVE,
+            'is_active' => $currentSubscriptionWithRelations !== null,
         ];
 
         // Vehicle Price Statistics
         $totalVehicleValue = Vehicle::where('dealer_id', $dealerId)
-            ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->sum('price');
         $averageVehiclePrice = $publishedVehicles > 0 
             ? round($totalVehicleValue / $publishedVehicles, 2) 
@@ -106,7 +107,7 @@ class DealerDashboardController extends Controller
                     'registration' => $vehicle->registration,
                     'price' => $vehicle->price,
                     'user_name' => $vehicle->user->name ?? 'N/A',
-                    'status' => $vehicle->vehicle_list_status_id,
+                    'status' => $vehicle->list_status_id,
                     'created_at' => $vehicle->created_at?->toISOString(),
                 ];
             });
@@ -156,7 +157,7 @@ class DealerDashboardController extends Controller
 
         $leadsGrowthRate = $newLeadsLastMonth > 0 
             ? round((($newLeadsThisMonth - $newLeadsLastMonth) / $newLeadsLastMonth) * 100, 1)
-            : ($newLeadsLastMonth > 0 ? 100 : 0);
+            : ($newLeadsThisMonth > 0 ? 100 : 0);
 
         return $this->success([
             'overview' => [
@@ -194,6 +195,94 @@ class DealerDashboardController extends Controller
                 'vehicles' => $recentVehicles,
                 'leads' => $recentLeads,
             ],
+        ]);
+    }
+
+    /**
+     * Widget: vehicles overview (panel dashboard card shape, dealer-scoped)
+     */
+    public function getVehiclesOverviewWidget(Request $request): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $dealerId = $dealer->id;
+        $published = Vehicle::where('dealer_id', $dealerId)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->count();
+        $pending = Vehicle::where('dealer_id', $dealerId)
+            ->whereIn('list_status_id', [VehicleListStatus::DRAFT, VehicleListStatus::PENDING_REVIEW])
+            ->count();
+        $needsWork = Vehicle::where('dealer_id', $dealerId)
+            ->where(function ($q) {
+                $q->whereIn('list_status_id', [VehicleListStatus::DRAFT, VehicleListStatus::PENDING_REVIEW])
+                    ->orWhere(function ($sub) {
+                        $sub->where('list_status_id', VehicleListStatus::PUBLISHED)
+                            ->whereNotNull('expires_at')
+                            ->where('expires_at', '<=', now()->addDays(14));
+                    });
+            })
+            ->count();
+
+        $totalInventoryValue = Vehicle::where('dealer_id', $dealerId)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->sum('price');
+        $averageVehicleValue = $published > 0 ? round($totalInventoryValue / $published, 2) : 0;
+
+        return response()->json([
+            'totalVehicles' => Vehicle::where('dealer_id', $dealerId)->count(),
+            'availableVehicles' => $published,
+            'pendingVehicles' => $pending,
+            'vehiclesNeedingWork' => $needsWork,
+            'totalInventoryValue' => (float) $totalInventoryValue,
+            'averageVehicleValue' => $averageVehicleValue,
+        ]);
+    }
+
+    /**
+     * Widget: sales overview (dealer-scoped via vehicle)
+     */
+    public function getSalesOverviewWidget(Request $request): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $dealerId = $dealer->id;
+        $salesQuery = fn () => Sale::whereHas('vehicle', fn ($q) => $q->where('dealer_id', $dealerId));
+
+        $totalSales = $salesQuery()->count();
+        $totalRevenue = (float) $salesQuery()->sum('sale_price');
+        $averageSaleValue = $totalSales > 0 ? round($totalRevenue / $totalSales, 2) : 0;
+
+        $salesThisMonth = $salesQuery()->where('sale_date', '>=', now()->startOfMonth())->count();
+        $salesThisQuarter = $salesQuery()->where('sale_date', '>=', now()->startOfQuarter())->count();
+        $salesLast7Days = $salesQuery()->where('sale_date', '>=', now()->subDays(7))->count();
+        $salesLast24Hours = $salesQuery()->where('sale_date', '>=', now()->subDay())->count();
+
+        $averageDaysToSell = Sale::whereHas('vehicle', fn ($q) => $q->where('dealer_id', $dealerId))
+            ->selectRaw('AVG(DATEDIFF(sale_date, (SELECT published_at FROM vehicles WHERE vehicles.id = sales.vehicle_id))) as avg_days')
+            ->value('avg_days') ?? 0;
+
+        $topSellingMonth = Sale::whereHas('vehicle', fn ($q) => $q->where('dealer_id', $dealerId))
+            ->selectRaw('DATE_FORMAT(sale_date, "%M %Y") as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->orderByDesc('count')
+            ->first();
+
+        return response()->json([
+            'totalSales' => $totalSales,
+            'totalRevenue' => round($totalRevenue, 2),
+            'averageSaleValue' => $averageSaleValue,
+            'salesThisMonth' => $salesThisMonth,
+            'salesThisQuarter' => $salesThisQuarter,
+            'salesLast7Days' => $salesLast7Days,
+            'salesLast24Hours' => $salesLast24Hours,
+            'averageDaysToSell' => round((float) $averageDaysToSell, 2),
+            'topSellingMonth' => $topSellingMonth?->month,
         ]);
     }
 }

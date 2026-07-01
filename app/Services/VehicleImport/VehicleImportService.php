@@ -226,7 +226,7 @@ class VehicleImportService
         if ($listStatusId !== VehicleListStatus::PUBLISHED) {
             return;
         }
- 
+
         if (! $this->subscriptionFeatureService->isUsageDailyPlan($dealer)) {
             return;
         }

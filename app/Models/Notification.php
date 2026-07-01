@@ -15,6 +15,7 @@ class Notification extends Model
         'message',
         'target_roles',
         'sent',
+        'sent_at',
         'scheduled_at',
         'metadata',
     ];
@@ -22,6 +23,7 @@ class Notification extends Model
     protected $casts = [
         'target_roles' => 'array',
         'sent' => 'boolean',
+        'sent_at' => 'datetime',
         'scheduled_at' => 'datetime',
         'metadata' => 'array',
         'created_at' => 'datetime',

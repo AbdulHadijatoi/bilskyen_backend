@@ -2,11 +2,6 @@
 
 @section('title', __('messages.pages.vehicles.title') . ' | Bilskyen')
 
-@php
-    use App\Helpers\FormatHelper;
-    // $vehicles is provided by HomeController
-@endphp
-
 @section('content')
 <div class="container mx-auto flex flex-col gap-6 py-8 px-4 sm:px-6">
     <!-- Search Bar -->
@@ -126,32 +121,30 @@
                 </div>
                 <!-- Listing Type -->
                 @php
-                    $listingTypes = $constants['listing_types'] ?? collect();
-                    $purchaseType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Purchase') : $listingTypes->firstWhere('name', 'Purchase');
-                    $leasingType = is_array($listingTypes) ? collect($listingTypes)->firstWhere('name', 'Leasing') : $listingTypes->firstWhere('name', 'Leasing');
+                    $listingTypesRaw = $constants['listing_types'] ?? [];
+                    $listingTypesList = collect($listingTypesRaw)->map(function ($lt) {
+                        return is_array($lt) ? $lt : ['id' => $lt->id, 'name' => $lt->name];
+                    })->all();
                     $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
-                    $purchaseId = is_array($purchaseType ?? null) ? ($purchaseType['id'] ?? null) : ($purchaseType->id ?? null);
-                    $leasingId = is_array($leasingType ?? null) ? ($leasingType['id'] ?? null) : ($leasingType->id ?? null);
-                    $isPurchaseActive = $purchaseId !== null && in_array($purchaseId, $selectedListingTypes);
-                    $isLeasingActive = $leasingId !== null && in_array($leasingId, $selectedListingTypes);
+                    $selectedListingTypeStrings = collect($selectedListingTypes)->map(fn ($v) => (string) $v)->all();
                 @endphp
                 <div class="space-y-2">
                     <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.listing_type') }}</p>
-                    <div class="inline-flex items-center gap-0.5 p-1 rounded-full bg-muted border border-input">
-                        @if($purchaseType)
-                            <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isPurchaseActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
-                                <input type="checkbox" name="listing_type_id[]" value="{{ $purchaseId }}" class="sr-only peer listing-type-checkbox" @if($isPurchaseActive) checked @endif>
-                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.purchase') }}</span>
-                            </label>
-                        @endif
-                        @if($leasingType)
-                            <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isLeasingActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
-                                <input type="checkbox" name="listing_type_id[]" value="{{ $leasingId }}" class="sr-only peer listing-type-checkbox" @if($isLeasingActive) checked @endif>
-                                <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.leasing') }}</span>
-                            </label>
-                        @endif
+                    <div class="flex flex-wrap items-center gap-2">
+                        @foreach($listingTypesList as $lt)
+                            @php
+                                $ltId = $lt['id'] ?? null;
+                                $ltName = $lt['name'] ?? '';
+                                $isListingTypeActive = $ltId !== null && in_array((string) $ltId, $selectedListingTypeStrings, true);
+                            @endphp
+                            @if($ltId !== null)
+                                <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border @if($isListingTypeActive) border-transparent bg-primary text-primary-foreground font-semibold shadow-sm @else border-border bg-muted/40 text-foreground/90 hover:bg-muted/70 hover:border-muted-foreground/30 @endif">
+                                    <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif>
+                                    <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                    <span>{{ $ltName }}</span>
+                                </label>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
                 <!-- Sales Type -->
@@ -194,7 +187,7 @@
                                 <input
                                     type="text"
                                     id="brand-search-input"
-                                    placeholder="{{ __('messages.forms.search_brand') }}"
+                                    placeholder="{{ __('messages.forms.filter_brand_list') }}"
                                     class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     autocomplete="off"
                                 >
@@ -223,7 +216,7 @@
                                 <input
                                     type="text"
                                     id="model-search-input"
-                                    placeholder="{{ __('messages.forms.search_model') }}"
+                                    placeholder="{{ __('messages.forms.filter_model_list') }}"
                                     class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     autocomplete="off"
                                 >
@@ -251,8 +244,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="year-from" name="year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="year-to" name="year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -276,14 +269,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="5000000" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="5000000" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="price-slider-min" min="0" max="5000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="price-slider-max" min="0" max="5000000" step="1000" value="5000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-min" min="0" max="{{ $filterPriceMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="price-slider-max" min="0" max="{{ $filterPriceMax }}" step="1000" value="{{ $filterPriceMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="price-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="price-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -291,14 +284,14 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="2000000" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="2000000" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="mileage-slider-min" min="0" max="2000000" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="mileage-slider-max" min="0" max="2000000" step="1000" value="2000000" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-min" min="0" max="{{ $filterKmMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
+                            <input type="range" id="mileage-slider-max" min="0" max="{{ $filterKmMax }}" step="1000" value="{{ $filterKmMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="mileage-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="mileage-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
@@ -354,7 +347,7 @@
 
             <!-- More Details: Color, Variant, Type, Price type, Euronom, Use (collapsed, 2-col grid) -->
             @php
-                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['type_id']) || isset($cf['price_type_id']) || isset($cf['euronom_id']) || isset($cf['use_id']);
+                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['price_type_id']) || isset($cf['emission_norm_id']) || isset($cf['use_id']);
             @endphp
             <details @if($moreDetailsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -373,22 +366,6 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.type') }}</label>
-                            <input
-                                type="text"
-                                id="type-search-input"
-                                placeholder="{{ __('messages.common.search') }}"
-                                class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary mb-2"
-                                autocomplete="off"
-                            >
-                            <select name="type_id" id="type-select" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @if($selectedType)
-                                    <option value="{{ $selectedType->id }}" selected>{{ $selectedType->name }}</option>
-                                @endif
-                            </select>
-                        </div>
-                        <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.price_type') }}</label>
                             <select name="price_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
@@ -399,10 +376,10 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.euro_norm') }}</label>
-                            <select name="euronom_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <select name="emission_norm_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                 <option value="">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['euronorms'] ?? [] as $en)
-                                <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['euronom_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['euronom_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
+                                <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['emission_norm_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['emission_norm_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -421,7 +398,7 @@
 
             <!-- Year & Specs: first reg, owner tax, HP, battery, range, fuel efficiency (collapsed) -->
             @php
-                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_from']) || isset($cf['engine_power_to']) || isset($cf['battery_capacity_from']) || isset($cf['battery_capacity_to']) || isset($cf['range_km_from']) || isset($cf['range_km_to']) || isset($cf['fuel_efficiency_from']) || isset($cf['fuel_efficiency_to']);
+                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_kw_from']) || isset($cf['engine_power_kw_to']) || isset($cf['electrical_consumption_from']) || isset($cf['electrical_consumption_to']) || isset($cf['km_per_liter_from']) || isset($cf['km_per_liter_to']);
             @endphp
             <details @if($yearSpecsOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -462,8 +439,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.horsepower_hp') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="horsepower-min" name="engine_power_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="horsepower-max" name="engine_power_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="horsepower-min" name="engine_power_kw_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_kw_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="horsepower-max" name="engine_power_kw_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_kw_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -477,8 +454,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.battery_capacity_kwh') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="battery-capacity-min" name="battery_capacity_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['battery_capacity_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="battery-capacity-max" name="battery_capacity_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['battery_capacity_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="battery-capacity-min" name="electrical_consumption_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['electrical_consumption_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="battery-capacity-max" name="electrical_consumption_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['electrical_consumption_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -490,25 +467,10 @@
                         </div></div>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.range_km') }}</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="range-km-from" name="range_km_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['range_km_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="range-km-to" name="range_km_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['range_km_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        </div>
-                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
-                            <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="range-km-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
-                            <input type="range" id="range-km-slider-min" min="0" max="1500" step="10" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <input type="range" id="range-km-slider-max" min="0" max="1500" step="10" value="1500" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
-                            <div id="range-km-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                            <div id="range-km-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
-                        </div></div>
-                    </div>
-                    <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_efficiency') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="fuel-efficiency-from" name="fuel_efficiency_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['fuel_efficiency_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="fuel-efficiency-to" name="fuel_efficiency_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['fuel_efficiency_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="fuel-efficiency-from" name="km_per_liter_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_per_liter_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="fuel-efficiency-to" name="km_per_liter_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_per_liter_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -524,7 +486,7 @@
 
             <!-- Physical Details: top speed, weight, single inputs, drive wheels (collapsed) -->
             @php
-                $physicalOpen = isset($cf['top_speed_from']) || isset($cf['top_speed_to']) || isset($cf['weight_from']) || isset($cf['weight_to']) || isset($cf['engine_cylinders']) || isset($cf['doors']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['wheels']) || isset($cf['axles']) || isset($cf['airbags']) || !empty($cf['drive_axles']) || isset($cf['towing_weight']);
+                $physicalOpen = isset($cf['max_speed_from']) || isset($cf['max_speed_to']) || isset($cf['maximum_weight_kg_from']) || isset($cf['maximum_weight_kg_to']) || isset($cf['door_count']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['axle_count']) || isset($cf['specifications_airbags']) || isset($cf['towing_weight']);
             @endphp
             <details @if($physicalOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -535,8 +497,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.top_speed') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="top-speed-from" name="top_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['top_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="top-speed-to" name="top_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['top_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="top-speed-from" name="max_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['max_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="top-speed-to" name="max_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['max_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -550,8 +512,8 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.weight') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="weight-from" name="weight_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['weight_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="weight-to" name="weight_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['weight_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="weight-from" name="maximum_weight_kg_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['maximum_weight_kg_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="weight-to" name="maximum_weight_kg_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['maximum_weight_kg_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -563,33 +525,11 @@
                         </div></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" name="engine_cylinders" placeholder="{{ __('messages.forms.engine_cylinders') }}" min="0" value="{{ $cf['engine_cylinders'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="doors" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['doors'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" name="door_count" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="wheels" placeholder="{{ __('messages.forms.wheels') }}" min="0" value="{{ $cf['wheels'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="axles" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axles'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-medium text-muted-foreground mb-2">{{ __('messages.forms.drive_wheels') }}</p>
-                        <div class="flex flex-wrap gap-1.5">
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="fwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('fwd', $cf['drive_axles']) : $cf['drive_axles'] == 'fwd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.fwd') }}</span>
-                            </label>
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="rwd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('rwd', $cf['drive_axles']) : $cf['drive_axles'] == 'rwd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.rwd') }}</span>
-                            </label>
-                            <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                <input type="checkbox" name="drive_axles[]" value="awd" class="sr-only peer" @if(isset($cf['drive_axles']) && (is_array($cf['drive_axles']) ? in_array('awd', $cf['drive_axles']) : $cf['drive_axles'] == 'awd')) checked @endif>
-                                <span class="drive-axle-check hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                <span>{{ __('messages.forms.awd') }}</span>
-                            </label>
-                        </div>
+                        <input type="number" name="axle_count" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                     </div>
                     <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 </div>
@@ -597,7 +537,7 @@
 
             <!-- Charging, NCAP, Import, Factory New (collapsed) -->
             @php
-                $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_five']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
+                $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_test']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
             @endphp
             <details @if($extrasOpen) open @endif class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -613,9 +553,9 @@
                     </select>
                     <div class="flex flex-wrap gap-1.5 pt-1">
                         <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                            <input type="checkbox" name="ncap_five" value="1" class="sr-only peer" @if(isset($cf['ncap_five']) && $cf['ncap_five']) checked @endif>
+                            <input type="checkbox" name="ncap_test" value="1" class="sr-only peer" @if(isset($cf['ncap_test']) && $cf['ncap_test']) checked @endif>
                             <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            <span>{{ __('messages.forms.ncap_five') }}</span>
+                            <span>{{ __('messages.forms.ncap_test') }}</span>
                         </label>
                         <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
                             <input type="checkbox" name="is_import" value="1" class="sr-only peer" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif>
@@ -731,47 +671,13 @@
                 </div>
                 <!-- Sort Dropdown Container -->
                 <div class="relative text-xs font-medium">
-                    @php
-                        $sortLabels = [
-                            'best_match' => __('messages.pages.vehicles.sort.best_match'),
-                            'price_asc' => __('messages.pages.vehicles.sort.price_asc'),
-                            'price_desc' => __('messages.pages.vehicles.sort.price_desc'),
-                            'date_desc' => __('messages.pages.vehicles.sort.date_desc'),
-                            'date_asc' => __('messages.pages.vehicles.sort.date_asc'),
-                            'year_desc' => __('messages.pages.vehicles.sort.year_desc'),
-                            'year_asc' => __('messages.pages.vehicles.sort.year_asc'),
-                            'mileage_desc' => __('messages.pages.vehicles.sort.mileage_desc'),
-                            'mileage_asc' => __('messages.pages.vehicles.sort.mileage_asc'),
-                            'fuel_efficiency_desc' => __('messages.pages.vehicles.sort.fuel_efficiency_desc'),
-                            'fuel_efficiency_asc' => __('messages.pages.vehicles.sort.fuel_efficiency_asc'),
-                            'range_desc' => __('messages.pages.vehicles.sort.range_desc'),
-                            'range_asc' => __('messages.pages.vehicles.sort.range_asc'),
-                            'battery_desc' => __('messages.pages.vehicles.sort.battery_desc'),
-                            'battery_asc' => __('messages.pages.vehicles.sort.battery_asc'),
-                            'brand_asc' => __('messages.pages.vehicles.sort.brand_asc'),
-                            'brand_desc' => __('messages.pages.vehicles.sort.brand_desc'),
-                            'engine_power_desc' => __('messages.pages.vehicles.sort.engine_power_desc'),
-                            'engine_power_asc' => __('messages.pages.vehicles.sort.engine_power_asc'),
-                            'towing_weight_desc' => __('messages.pages.vehicles.sort.towing_weight_desc'),
-                            'towing_weight_asc' => __('messages.pages.vehicles.sort.towing_weight_asc'),
-                            'top_speed_desc' => __('messages.pages.vehicles.sort.top_speed_desc'),
-                            'top_speed_asc' => __('messages.pages.vehicles.sort.top_speed_asc'),
-                            'ownership_tax_desc' => __('messages.pages.vehicles.sort.ownership_tax_desc'),
-                            'ownership_tax_asc' => __('messages.pages.vehicles.sort.ownership_tax_asc'),
-                            'first_reg_desc' => __('messages.pages.vehicles.sort.first_reg_desc'),
-                            'first_reg_asc' => __('messages.pages.vehicles.sort.first_reg_asc'),
-                            'distance_asc' => __('messages.pages.vehicles.sort.distance_asc'),
-                            'distance_desc' => __('messages.pages.vehicles.sort.distance_desc')
-                        ];
-                        $currentSort = request()->query('sort', 'best_match');
-                    @endphp
                     <select
                         id="sort-select"
                         name="sort"
                         class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
                     >
-                        @foreach($sortLabels as $value => $label)
-                            <option value="{{ $value }}" @if($currentSort == $value) selected @endif>{{ $label }}</option>
+                        @foreach($vehicleSortLabels as $value => $label)
+                            <option value="{{ $value }}" @if(\App\Services\VehicleService::listingSortOptionIsSelected($value, $rawSortQuery ?? null)) selected @endif>{{ $label }}</option>
                         @endforeach
                     </select>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
@@ -829,115 +735,13 @@
         <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
     </div>
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
-        @forelse($vehicles as $vehicle)
-        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
-                <!-- Vehicle Image -->
-                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
-                    <img
-                        src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
-                        alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                        class="h-full w-full object-cover rounded-md"
-                    />
-                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
-                    @if($vehicle->dealer_id)
-                    <!-- Dealer Label - Top Left -->
-                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ __('messages.pages.vehicles.dealer') }}
-                    </span>
-                    @else
-                    <!-- Private Label - Top Left -->
-                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ __('messages.pages.vehicles.private') }}
-                    </span>
-                    @endif
-                    @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
-                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
-                    </span>
-                    @endif
-                    </div>
-                    <!-- Heart Icon - Top Right -->
-                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                        </svg>
-            </button>
-        </div>
-                
-                <!-- Vehicle Details -->
-                <div class="p-3 space-y-1">
-                    <div class="flex flex-col gap-1">
-                        <h3 class="flex items-center gap-2 text-xs">
-                            {{ $vehicle->title }}
-                        </h3>
-                        @if($vehicle->version)
-                        <p class="text-muted-foreground text-xs font-normal">
-                            {{ $vehicle->version }}
-                        </p>
-                        @endif
-                        <p class="text-lg font-bold">
-                            {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
-                        </p>
-    </div>
-
-                    <div class="flex flex-wrap gap-1 text-xs font-light">
-                        @if($vehicle->mileage || $vehicle->km_driven)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
-                        @endif
-                        @if($vehicle->engine_power_hp)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
-                        @endif
-                        @if($vehicle->first_registration_date)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
-                        @endif
-                        @if($vehicle->fuel_type_name)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->fuel_type_name }}</span>
-                        @endif
-                        @if($vehicle->gear_type_name)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
-                        @endif
-</div>
-
-                </div>
-            </a>
-            
-            <!-- Card Footer -->
-            <div class="mt-auto" onclick="event.stopPropagation()">
-                @if($vehicle->seller_address || $vehicle->seller_postcode)
-                <div class="px-3 pt-3 pb-2">
-                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span class="truncate text-right">
-                            @if($vehicle->seller_address){{ $vehicle->seller_address }}@endif
-                            @if($vehicle->seller_address && $vehicle->seller_postcode), @endif
-                            @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif
-                        </span>
-                    </div>
-                </div>
-                @endif
-                <!-- Vehicle Actions -->
-                <div class="p-3 pt-0">
-                    <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
-                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                {{ __('messages.pages.vehicles.view_details') }}
-                            </button>
-                        </a>
-                        <button 
-                            type="button"
-                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                            class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                        >
-                            {{ __('messages.pages.vehicles.enquire') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @forelse($vehicles as $row)
+            <x-vehicle-listing-item
+                :vehicle="$row['vehicle']"
+                :img-url="$row['imgUrl']"
+                :img-alt="$row['imgAlt']"
+                :sales-type-name="$row['salesTypeName']"
+            />
         @empty
         <div class="col-span-full space-y-6">
             <div class="flex flex-col items-center justify-center text-center py-12">
@@ -953,66 +757,14 @@
             @if(isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0)
             <div class="pt-4 border-t border-border">
                 <h4 class="text-sm font-semibold text-foreground mb-4">{{ __('messages.pages.vehicles.showing_all_vehicles') }}</h4>
-                <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
-                @foreach($fallbackVehicles as $vehicle)
-        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full vehicle-item">
-            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
-                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
-                    <img
-                        src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
-                        alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                        class="h-full w-full object-cover rounded-md"
+                <div class="vehicle-fallback-grid grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+                @foreach($fallbackVehicles as $row)
+                    <x-vehicle-listing-item
+                        :vehicle="$row['vehicle']"
+                        :img-url="$row['imgUrl']"
+                        :img-alt="$row['imgAlt']"
+                        :sales-type-name="$row['salesTypeName']"
                     />
-                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
-                    @if($vehicle->dealer_id)
-                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ __('messages.pages.vehicles.dealer') }}</span>
-                    @else
-                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ __('messages.pages.vehicles.private') }}</span>
-                    @endif
-                    @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
-                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">{{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}</span>
-                    @endif
-                    </div>
-                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-                    </button>
-                </div>
-                <div class="p-3 space-y-1">
-                    <div class="flex flex-col gap-1">
-                        <h3 class="flex items-center gap-2 text-xs">{{ $vehicle->title }}</h3>
-                        @if($vehicle->version)<p class="text-muted-foreground text-xs font-normal">{{ $vehicle->version }}</p>@endif
-                        <p class="text-lg font-bold">{{ FormatHelper::formatCurrency($vehicle->price ?? null) }}</p>
-                    </div>
-                    <div class="flex flex-wrap gap-1 text-xs font-light">
-                        @if($vehicle->mileage || $vehicle->km_driven)
-                        <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
-                        @endif
-                        @if($vehicle->engine_power_hp)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>@endif
-                        @if($vehicle->first_registration_date)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>@endif
-                        @if($vehicle->fuel_type_name)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ $vehicle->fuel_type_name }}</span>@endif
-                        @if($vehicle->gear_type_name)<span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs">{{ $vehicle->gear_type_name }}</span>@endif
-                    </div>
-                </div>
-            </a>
-            <div class="mt-auto" onclick="event.stopPropagation()">
-                @if($vehicle->seller_address || $vehicle->seller_postcode)
-                <div class="px-3 pt-3 pb-2">
-                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 flex-shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <span class="truncate text-right">@if($vehicle->seller_address){{ $vehicle->seller_address }}@endif @if($vehicle->seller_address && $vehicle->seller_postcode), @endif @if($vehicle->seller_postcode){{ $vehicle->seller_postcode }}@endif</span>
-                    </div>
-                </div>
-                @endif
-                <div class="p-3 pt-0">
-                    <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
-                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">{{ __('messages.pages.vehicles.view_details') }}</button>
-                        </a>
-                        <button type="button" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">{{ __('messages.pages.vehicles.enquire') }}</button>
-                    </div>
-                </div>
-            </div>
-        </div>
                 @endforeach
                 </div>
             </div>
@@ -1023,8 +775,8 @@
 
     <!-- Enquiry Dialogs for Vehicles -->
     @php $vehiclesForDialogs = (isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0) ? $fallbackVehicles : $vehicles; @endphp
-    @foreach($vehiclesForDialogs as $vehicle)
-        <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
+    @foreach($vehiclesForDialogs as $row)
+        <x-enquiry-dialog type="enquiry" :vehicle="$row['vehicle']" />
     @endforeach
 
     <!-- Login Dialog -->
@@ -1064,10 +816,22 @@
     #vehicle-container[data-view="list"] .vehicle-item {
         display: flex;
         flex-direction: row;
+        width: 100%;
         border: 1px solid hsl(var(--border));
         overflow: hidden;
         transition: all 0.2s ease;
         cursor: pointer;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-fallback-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    #vehicle-container[data-view="card"] .vehicle-fallback-grid {
+        display: grid;
     }
     
     
@@ -1085,10 +849,12 @@
         width: 200px;
         min-width: 200px;
         height: 150px;
+        padding: 0;
         overflow: hidden;
         background-color: hsl(var(--muted) / 0.3);
         display: block;
         position: relative;
+        aspect-ratio: auto;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container img {
@@ -1096,6 +862,7 @@
         height: 100%;
         object-fit: cover;
         display: block;
+        border-radius: 0.375rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item > a {
@@ -1129,7 +896,7 @@
         font-weight: 400;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-primary {
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
         font-size: 1.125rem;
         font-weight: 700;
         margin: 0;
@@ -1137,10 +904,15 @@
         color: hsl(var(--primary));
     }
     
-    #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+    #vehicle-container[data-view="list"] .vehicle-item-footer {
         margin-top: auto;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         padding: 1rem;
         padding-top: 0.5rem;
+        min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section {
@@ -1215,7 +987,7 @@
             padding: 1rem;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+        #vehicle-container[data-view="list"] .vehicle-item-footer {
             padding: 1rem;
             padding-top: 0.5rem;
         }
@@ -1337,6 +1109,7 @@
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const sortSelect = document.getElementById('sort-select');
+        const DEFAULT_LISTING_SORT = 'standard';
         const filterSidebar = document.getElementById('filter-sidebar');
         const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
         const filterResetButtonMain = document.getElementById('filter-reset-button-main');
@@ -1356,36 +1129,9 @@
             localStorage.setItem('vehicleView', 'card');
         }
         
-        const sortLabels = {
-            'best_match': '{{ __('messages.pages.vehicles.sort.best_match') }}',
-            'price_asc': '{{ __('messages.pages.vehicles.sort.price_asc') }}',
-            'price_desc': '{{ __('messages.pages.vehicles.sort.price_desc') }}',
-            'date_desc': '{{ __('messages.pages.vehicles.sort.date_desc') }}',
-            'date_asc': '{{ __('messages.pages.vehicles.sort.date_asc') }}',
-            'year_desc': '{{ __('messages.pages.vehicles.sort.year_desc') }}',
-            'year_asc': '{{ __('messages.pages.vehicles.sort.year_asc') }}',
-            'mileage_desc': '{{ __('messages.pages.vehicles.sort.mileage_desc') }}',
-            'mileage_asc': '{{ __('messages.pages.vehicles.sort.mileage_asc') }}',
-            'fuel_efficiency_desc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_desc') }}',
-            'fuel_efficiency_asc': '{{ __('messages.pages.vehicles.sort.fuel_efficiency_asc') }}',
-            'range_desc': '{{ __('messages.pages.vehicles.sort.range_desc') }}',
-            'range_asc': '{{ __('messages.pages.vehicles.sort.range_asc') }}',
-            'battery_desc': '{{ __('messages.pages.vehicles.sort.battery_desc') }}',
-            'battery_asc': '{{ __('messages.pages.vehicles.sort.battery_asc') }}',
-            'brand_asc': '{{ __('messages.pages.vehicles.sort.brand_asc') }}',
-            'brand_desc': '{{ __('messages.pages.vehicles.sort.brand_desc') }}',
-            'engine_power_desc': '{{ __('messages.pages.vehicles.sort.engine_power_desc') }}',
-            'engine_power_asc': '{{ __('messages.pages.vehicles.sort.engine_power_asc') }}',
-            'towing_weight_desc': '{{ __('messages.pages.vehicles.sort.towing_weight_desc') }}',
-            'towing_weight_asc': '{{ __('messages.pages.vehicles.sort.towing_weight_asc') }}',
-            'top_speed_desc': '{{ __('messages.pages.vehicles.sort.top_speed_desc') }}',
-            'top_speed_asc': '{{ __('messages.pages.vehicles.sort.top_speed_asc') }}',
-            'ownership_tax_desc': '{{ __('messages.pages.vehicles.sort.ownership_tax_desc') }}',
-            'ownership_tax_asc': '{{ __('messages.pages.vehicles.sort.ownership_tax_asc') }}',
-            'first_reg_desc': '{{ __('messages.pages.vehicles.sort.first_reg_desc') }}',
-            'first_reg_asc': '{{ __('messages.pages.vehicles.sort.first_reg_asc') }}',
-            'distance_asc': '{{ __('messages.pages.vehicles.sort.distance_asc') }}',
-            'distance_desc': '{{ __('messages.pages.vehicles.sort.distance_desc') }}'
+        const sortLabels = @json($vehicleSortLabels);
+        const I18N_BMV = {
+            selectBrandForModels: @json(__('messages.forms.select_brand_for_models')),
         };
         
         let searchDebounceTimer = null;
@@ -1396,18 +1142,19 @@
             if (amount === null || amount === undefined) {
                 return 'N/A';
             }
-            return new Intl.NumberFormat('en-US', {
+            return new Intl.NumberFormat('da-DK', {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2
             }).format(amount) + ' kr.';
         }
         
-        // Render single vehicle card
-        function renderVehicleCard(vehicle) {
+        // Single listing tile (card + list layouts differ only via #vehicle-container[data-view] CSS)
+        function renderVehicleItem(vehicle) {
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
             const details = vehicle.details || {};
-            
-            // Build location string from seller_address and seller_postcode
+            const slug = vehicle.slug || vehicle.id;
+            const salesTypeLabel = (details.sales_type_name || details.salesTypeName || vehicle.sales_type_name || vehicle.salesTypeName || '').trim();
+
             let locationText = '';
             if (vehicle.seller_address || vehicle.seller_postcode) {
                 const parts = [];
@@ -1415,82 +1162,72 @@
                 if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
                 locationText = parts.join(', ');
             }
-            
+
             return `
-                <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-                    <a href="/vehicles/${vehicle.slug || vehicle.id}" class="block flex-1">
-                        <!-- Vehicle Image -->
-                        <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
+                    <a href="/vehicles/${slug}" class="vehicle-item-main-link block flex-1 min-w-0">
+                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
                                 src="${imageUrl}"
                                 alt="${vehicle.title || ''}"
-                                class="h-full w-full object-cover rounded-md"
+                                class="h-full w-full object-cover rounded-md vehicle-listing-thumb"
                             />
                             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                             ${vehicle.dealer_id ? `
-                            <!-- Dealer Label - Top Left -->
                             <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 {{ __('messages.pages.vehicles.dealer') }}
                             </span>
                             ` : `
-                            <!-- Private Label - Top Left -->
                             <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 {{ __('messages.pages.vehicles.private') }}
                             </span>
                             `}
-                            ${(details && details.sales_type_name) || vehicle.sales_type_name ? `
+                            ${salesTypeLabel ? `
                             <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                ${details.sales_type_name || vehicle.sales_type_name || ''}
+                                ${salesTypeLabel}
                             </span>
                             ` : ''}
                             </div>
-                            <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
+                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring dark:bg-card/90" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
                             </button>
                         </div>
-                        
-                        <!-- Vehicle Details -->
-                        <div class="p-3 space-y-1">
+                        <div class="vehicle-content-wrapper p-3 space-y-1">
                             <div class="flex flex-col gap-1">
                                 <h3 class="flex items-center gap-2 text-xs">
                                     ${vehicle.title || ''}
                                 </h3>
-                                ${vehicle.version ? `
-                                <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
-                                    ${vehicle.version}
+                                ${vehicle.variant_name ? `
+                                <p class="text-muted-foreground text-xs font-normal">
+                                    ${vehicle.variant_name}
                                 </p>
                                 ` : ''}
-                                <p class="text-lg font-bold">
+                                <p class="vehicle-listing-price text-lg font-bold">
                                     ${formatCurrency(vehicle.price)}
                                 </p>
                             </div>
-
-                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                            <div class="vehicle-listing-badges -mt-2 flex flex-wrap gap-1 text-xs font-light">
                                 ${vehicle.mileage || vehicle.km_driven ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
                                 ` : ''}
                                 ${vehicle.engine_power_hp ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
                                 ` : ''}
                                 ${vehicle.first_registration_date ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Date(vehicle.first_registration_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Date(vehicle.first_registration_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                                 ` : ''}
                                 ${vehicle.fuel_type_name ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
                                 ` : ''}
                                 ${vehicle.gear_type_name ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
                                 ` : ''}
                             </div>
-
                         </div>
                     </a>
-                    
-                    <!-- Card Footer -->
-                    <div class="mt-auto" onclick="event.stopPropagation()">
+                    <div class="vehicle-item-footer mt-auto" onclick="event.stopPropagation()">
                         ${locationText ? `
                         <div class="px-3 pt-3 pb-2">
                             <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
@@ -1502,15 +1239,14 @@
                             </div>
                         </div>
                         ` : ''}
-                        <!-- Vehicle Actions -->
                         <div class="p-3 pt-0">
-                            <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/${vehicle.slug || vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
-                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                            <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
+                                <a href="/vehicles/${slug}" class="flex-1" onclick="event.stopPropagation()">
+                                    <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
-                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug || vehicle.id}');">
+                                <button type="button" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
                                     {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
@@ -1519,141 +1255,10 @@
                 </div>
             `;
         }
-        
-        // Render single vehicle list item - Compact design matching card view styles
-        function renderVehicleListItem(vehicle) {
-            const details = vehicle.details || {};
-            const imageUrl = vehicle.image_url || '/placeholder-vehicle.jpg';
-            
-            // Build location string from seller_address and seller_postcode
-            let locationText = '';
-            if (vehicle.seller_address || vehicle.seller_postcode) {
-                const parts = [];
-                if (vehicle.seller_address) parts.push(vehicle.seller_address);
-                if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
-                locationText = parts.join(', ');
-            }
-            
-            // Build badges (same as card view)
-            const badges = [];
-            if (vehicle.mileage || vehicle.km_driven) {
-                badges.push(`${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km`);
-            }
-            if (vehicle.engine_power_hp) {
-                badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
-            }
-            if (vehicle.first_registration_date) {
-                const regDate = new Date(vehicle.first_registration_date);
-                badges.push(regDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-            }
-            if (vehicle.fuel_type_name) {
-                badges.push(vehicle.fuel_type_name);
-            }
-            if (vehicle.gear_type_name) {
-                badges.push(vehicle.gear_type_name);
-            }
-            
-            return `
-                <div class="vehicle-item relative bg-white rounded-lg">
 
-                    <a href="/vehicles/${vehicle.slug || vehicle.id}" class="block flex-1">
-                        <!-- Vehicle Image -->
-                        <div class="vehicle-image-container relative">
-                            <img
-                                src="${imageUrl}"
-                                alt="${vehicle.title || ''}"
-                                class="h-full w-full object-cover"
-                            />
-                            
-                            <span class="flex flex-row flex-wrap items-center gap-1.5 absolute top-2 left-2 z-20">
-                            ${vehicle.dealer_id ? `
-                                <!-- Dealer Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label inline-flex items-center rounded-md bg-primary/80 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">
-                                    {{ __('messages.pages.vehicles.dealer') }}
-                                </span>
-                                ` : `
-                                <!-- Private Label - Top Left of List Item -->
-                                <span class="vehicle-dealer-label inline-flex items-center rounded-md bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background shadow-sm w-fit">
-                                    {{ __('messages.pages.vehicles.private') }}
-                                </span>
-                                `}
-                            ${(details && details.sales_type_name) || vehicle.sales_type_name ? `
-                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm w-fit">${details.sales_type_name || vehicle.sales_type_name || ''}</span>
-                            ` : ''}
-                            </span>
-
-                            <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <!-- Vehicle Content -->
-                        <div class="vehicle-content-wrapper">
-                            <!-- Header Section -->
-                            <div class="flex flex-col gap-4">
-                                <span class="flex items-center gap-2 text-sm font-semibold">
-                                    ${vehicle.title || ''}
-                                </span>
-                                
-                                    ${badges.length > 0 ? `
-                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
-                                ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
-                            </div>
-                            ` : ''}
-
-                                <p class="text-sm font-semibold">
-                                    {{ __('messages.forms.price') }}: ${formatCurrency(vehicle.price)}
-                                </p>
-
-                                <span>
-                                    ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>{{ __('messages.forms.model') }}:</span> <strong>${vehicle.version}</strong></p>` : ''}
-                                </span>
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <!-- Card Footer -->
-                    <div class="mt-auto" onclick="event.stopPropagation()">
-                        ${locationText ? `
-                        <div class="px-4 pt-3 pb-2">
-                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <span class="truncate text-right">${locationText}</span>
-                            </div>
-                        </div>
-                        ` : ''}
-                        <!-- Vehicle Actions -->
-                        <div class="vehicle-actions-section">
-                            <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/${vehicle.slug || vehicle.id}" class="flex-1" onclick="event.stopPropagation()">
-                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        {{ __('messages.pages.vehicles.view_details') }}
-                            </button>
-                        </a>
-                                <button 
-                                    type="button"
-                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug || vehicle.id}');"
-                                    class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                                >
-                                {{ __('messages.pages.vehicles.enquire') }}
-                            </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Render vehicle grid or list
         function renderVehicleGrid(vehicles) {
             if (!vehicleContainer) return;
-            
+
             if (vehicles.length === 0) {
                 vehicleContainer.innerHTML = `
                     <div class="col-span-full flex items-center justify-center py-12">
@@ -1671,12 +1276,8 @@
                 `;
                 return;
             }
-            
-            if (currentView === 'list') {
-                vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleListItem(vehicle)).join('');
-            } else {
-                vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleCard(vehicle)).join('');
-            }
+
+            vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleItem(vehicle)).join('');
         }
         
         // Load favorite status for all vehicles in batch
@@ -2000,7 +1601,7 @@
                     }
                 });
             }
-            
+
             // Fuel type (multi-select: one chip per selected fuel type)
             if (filters.fuel_type_id) {
                 const ids = Array.isArray(filters.fuel_type_id) ? filters.fuel_type_id : [filters.fuel_type_id];
@@ -2043,27 +1644,27 @@
                 }
             }
             
-            // Year range
-            if (filters.year_from || filters.year_to) {
-                const from = filters.year_from || '';
-                const to = filters.year_to || '';
+            // Model year range
+            if (filters.model_year_from || filters.model_year_to) {
+                const from = filters.model_year_from || '';
+                const to = filters.model_year_to || '';
                 if (from && to) {
                     chips.push({
-                        key: 'year_range',
+                        key: 'model_year_range',
                         label: `${from} - ${to}`,
-                        value: { from: filters.year_from, to: filters.year_to }
+                        value: { from: filters.model_year_from, to: filters.model_year_to }
                     });
                 } else if (from) {
                     chips.push({
-                        key: 'year_from',
-                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.from') }} ${from}`,
-                        value: filters.year_from
+                        key: 'model_year_from',
+                        label: `{{ __('messages.forms.model_year') }} {{ __('messages.forms.from') }} ${from}`,
+                        value: filters.model_year_from
                     });
                 } else if (to) {
                     chips.push({
-                        key: 'year_to',
-                        label: `{{ __('messages.forms.year') }} {{ __('messages.forms.to') }} ${to}`,
-                        value: filters.year_to
+                        key: 'model_year_to',
+                        label: `{{ __('messages.forms.model_year') }} {{ __('messages.forms.to') }} ${to}`,
+                        value: filters.model_year_to
                     });
                 }
             }
@@ -2103,9 +1704,9 @@
             }
 
             // Engine power range
-            if (filters.engine_power_from || filters.engine_power_to) {
-                const from = filters.engine_power_from || '';
-                const to = filters.engine_power_to || '';
+            if (filters.engine_power_kw_from || filters.engine_power_kw_to) {
+                const from = filters.engine_power_kw_from || '';
+                const to = filters.engine_power_kw_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'engine_power_range',
@@ -2113,16 +1714,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'engine_power_from', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_power_from });
+                    chips.push({ key: 'engine_power_kw_from', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.from') }} ${from}`, value: filters.engine_power_kw_from });
                 } else if (to) {
-                    chips.push({ key: 'engine_power_to', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_power_to });
+                    chips.push({ key: 'engine_power_kw_to', label: `{{ __('messages.forms.horsepower_hp') }} {{ __('messages.forms.to') }} ${to}`, value: filters.engine_power_kw_to });
                 }
             }
 
             // Battery capacity range
-            if (filters.battery_capacity_from || filters.battery_capacity_to) {
-                const from = filters.battery_capacity_from || '';
-                const to = filters.battery_capacity_to || '';
+            if (filters.electrical_consumption_from || filters.electrical_consumption_to) {
+                const from = filters.electrical_consumption_from || '';
+                const to = filters.electrical_consumption_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'battery_capacity_range',
@@ -2130,33 +1731,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'battery_capacity_from', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.from') }} ${from}`, value: filters.battery_capacity_from });
+                    chips.push({ key: 'electrical_consumption_from', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.from') }} ${from}`, value: filters.electrical_consumption_from });
                 } else if (to) {
-                    chips.push({ key: 'battery_capacity_to', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.to') }} ${to}`, value: filters.battery_capacity_to });
-                }
-            }
-
-            // Range (km) range
-            if (filters.range_km_from || filters.range_km_to) {
-                const from = filters.range_km_from || '';
-                const to = filters.range_km_to || '';
-                if (from && to) {
-                    chips.push({
-                        key: 'range_km_range',
-                        label: `{{ __('messages.forms.range_km') }}: ${from} - ${to}`,
-                        value: 'range'
-                    });
-                } else if (from) {
-                    chips.push({ key: 'range_km_from', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.from') }} ${from}`, value: filters.range_km_from });
-                } else if (to) {
-                    chips.push({ key: 'range_km_to', label: `{{ __('messages.forms.range') }} {{ __('messages.forms.to') }} ${to}`, value: filters.range_km_to });
+                    chips.push({ key: 'electrical_consumption_to', label: `{{ __('messages.forms.battery') }} {{ __('messages.forms.to') }} ${to}`, value: filters.electrical_consumption_to });
                 }
             }
 
             // Fuel efficiency range
-            if (filters.fuel_efficiency_from || filters.fuel_efficiency_to) {
-                const from = filters.fuel_efficiency_from || '';
-                const to = filters.fuel_efficiency_to || '';
+            if (filters.km_per_liter_from || filters.km_per_liter_to) {
+                const from = filters.km_per_liter_from || '';
+                const to = filters.km_per_liter_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'fuel_efficiency_range',
@@ -2164,16 +1748,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'fuel_efficiency_from', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.from') }} ${from}`, value: filters.fuel_efficiency_from });
+                    chips.push({ key: 'km_per_liter_from', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.from') }} ${from}`, value: filters.km_per_liter_from });
                 } else if (to) {
-                    chips.push({ key: 'fuel_efficiency_to', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.to') }} ${to}`, value: filters.fuel_efficiency_to });
+                    chips.push({ key: 'km_per_liter_to', label: `{{ __('messages.forms.fuel_efficiency') }} {{ __('messages.forms.to') }} ${to}`, value: filters.km_per_liter_to });
                 }
             }
 
             // Top speed range
-            if (filters.top_speed_from || filters.top_speed_to) {
-                const from = filters.top_speed_from || '';
-                const to = filters.top_speed_to || '';
+            if (filters.max_speed_from || filters.max_speed_to) {
+                const from = filters.max_speed_from || '';
+                const to = filters.max_speed_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'top_speed_range',
@@ -2181,16 +1765,16 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'top_speed_from', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }} ${from}`, value: filters.top_speed_from });
+                    chips.push({ key: 'max_speed_from', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.from') }} ${from}`, value: filters.max_speed_from });
                 } else if (to) {
-                    chips.push({ key: 'top_speed_to', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }} ${to}`, value: filters.top_speed_to });
+                    chips.push({ key: 'max_speed_to', label: `{{ __('messages.forms.top_speed') }} {{ __('messages.forms.to') }} ${to}`, value: filters.max_speed_to });
                 }
             }
 
             // Weight range
-            if (filters.weight_from || filters.weight_to) {
-                const from = filters.weight_from || '';
-                const to = filters.weight_to || '';
+            if (filters.maximum_weight_kg_from || filters.maximum_weight_kg_to) {
+                const from = filters.maximum_weight_kg_from || '';
+                const to = filters.maximum_weight_kg_to || '';
                 if (from && to) {
                     chips.push({
                         key: 'weight_range',
@@ -2198,21 +1782,19 @@
                         value: 'range'
                     });
                 } else if (from) {
-                    chips.push({ key: 'weight_from', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }} ${from}`, value: filters.weight_from });
+                    chips.push({ key: 'maximum_weight_kg_from', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.from') }} ${from}`, value: filters.maximum_weight_kg_from });
                 } else if (to) {
-                    chips.push({ key: 'weight_to', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }} ${to}`, value: filters.weight_to });
+                    chips.push({ key: 'maximum_weight_kg_to', label: `{{ __('messages.forms.weight') }} {{ __('messages.forms.to') }} ${to}`, value: filters.maximum_weight_kg_to });
                 }
             }
 
-            // Single numeric filters (engine_cylinders, doors, seats_min, seats_max, wheels, axles, airbags, towing_weight)
+            // Single numeric filters (door_count, seats_min, seats_max, axle_count, specifications_airbags, towing_weight)
             const singleNumChips = [
-                ['engine_cylinders', '{{ __('messages.forms.engine_cylinders') }}'],
-                ['doors', '{{ __('messages.forms.doors') }}'],
+                ['door_count', '{{ __('messages.forms.doors') }}'],
                 ['seats_min', '{{ __('messages.forms.seats_min') }}'],
                 ['seats_max', '{{ __('messages.forms.seats_max') }}'],
-                ['wheels', '{{ __('messages.forms.wheels') }}'],
-                ['axles', '{{ __('messages.forms.axles') }}'],
-                ['airbags', '{{ __('messages.forms.airbags') }}'],
+                ['axle_count', '{{ __('messages.forms.axles') }}'],
+                ['specifications_airbags', '{{ __('messages.forms.airbags') }}'],
                 ['towing_weight', '{{ __('messages.forms.towing_weight_min') }}']
             ];
             singleNumChips.forEach(([key, labelPrefix]) => {
@@ -2229,9 +1811,9 @@
                 }
             }
 
-            // Checkboxes: ncap_five, is_import, is_factory_new
-            if (filters.ncap_five) {
-                chips.push({ key: 'ncap_five', label: '{{ __('messages.forms.ncap_five') }}', value: '1' });
+            // Checkboxes: ncap_test, is_import, is_factory_new
+            if (filters.ncap_test) {
+                chips.push({ key: 'ncap_test', label: '{{ __('messages.forms.ncap_test') }}', value: '1' });
             }
             if (filters.is_import) {
                 chips.push({ key: 'is_import', label: '{{ __('messages.forms.is_import') }}', value: '1' });
@@ -2240,20 +1822,20 @@
                 chips.push({ key: 'is_factory_new', label: '{{ __('messages.forms.is_factory_new') }}', value: '1' });
             }
 
-            // Drive axles (checkboxes)
-            if (filters.drive_axles && Array.isArray(filters.drive_axles)) {
-                filters.drive_axles.forEach(axle => {
-                    const name = getLabelText('drive_axles[]', axle);
+            // Drive axle_count (checkboxes)
+            if (filters.drive_axle_count && Array.isArray(filters.drive_axle_count)) {
+                filters.drive_axle_count.forEach(axle => {
+                    const name = getLabelText('drive_axle_count[]', axle);
                     if (name) {
-                        chips.push({ key: 'drive_axles', label: name, value: axle, isArray: true });
+                        chips.push({ key: 'drive_axle_count', label: name, value: axle, isArray: true });
                     }
                 });
             }
             
             // KM driven range
             if (filters.km_driven_from || filters.km_driven_to) {
-                const from = filters.km_driven_from ? new Intl.NumberFormat('en-US').format(filters.km_driven_from) : '';
-                const to = filters.km_driven_to ? new Intl.NumberFormat('en-US').format(filters.km_driven_to) : '';
+                const from = filters.km_driven_from ? new Intl.NumberFormat('da-DK').format(filters.km_driven_from) : '';
+                const to = filters.km_driven_to ? new Intl.NumberFormat('da-DK').format(filters.km_driven_to) : '';
                 if (from && to) {
                     chips.push({
                         key: 'km_driven_range',
@@ -2279,15 +1861,14 @@
                 }
             }
             
-            // Single-value selects (body_type, gear_type, color, variant, type, sales_type, price_type, euronom, use, transmission)
+            // Single-value selects (body_type, gear_type, color, type, sales_type, price_type, euronom, use, transmission)
             const selectChips = [
                 ['body_type_id', '{{ __('messages.forms.body_type') }}'],
                 ['gear_type_id', '{{ __('messages.forms.gear_type') }}'],
                 ['color_id', '{{ __('messages.forms.color') }}'],
-                ['type_id', '{{ __('messages.forms.type') }}'],
                 ['sales_type_id', '{{ __('messages.forms.sales_type') }}'],
                 ['price_type_id', '{{ __('messages.forms.price_type') }}'],
-                ['euronom_id', '{{ __('messages.forms.euro_norm') }}'],
+                ['emission_norm_id', '{{ __('messages.forms.euro_norm') }}'],
                 ['use_id', '{{ __('messages.forms.use') }}']
             ];
             selectChips.forEach(([key, labelPrefix]) => {
@@ -2347,9 +1928,11 @@
                         if (checkbox) checkbox.checked = false;
                         if (key === 'brand_id' && typeof updateBrandDropdownLabel === 'function') {
                             updateBrandDropdownLabel();
-                            if (typeof filterModelListByBrands === 'function') filterModelListByBrands();
+                            if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
                         }
-                        if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
+                        if (key === 'model_id' && typeof updateModelDropdownLabel === 'function') {
+                            updateModelDropdownLabel();
+                        }
                         if (key === 'fuel_type_id' && typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
                     } else if (key === 'search') {
                         if (searchInput) searchInput.value = '';
@@ -2367,11 +1950,14 @@
                         const priceTo = document.querySelector('[name="price_to"]');
                         if (priceFrom) priceFrom.value = '';
                         if (priceTo) priceTo.value = '';
-                    } else if (key === 'year_range') {
-                        const yearFrom = document.querySelector('[name="year_from"]');
-                        const yearTo = document.querySelector('[name="year_to"]');
+                    } else if (key === 'model_year_range') {
+                        const yearFrom = document.querySelector('[name="model_year_from"]');
+                        const yearTo = document.querySelector('[name="model_year_to"]');
                         if (yearFrom) yearFrom.value = '';
                         if (yearTo) yearTo.value = '';
+                    } else if (key === 'model_year_from' || key === 'model_year_to') {
+                        const inp = document.querySelector(`[name="${key}"]`);
+                        if (inp) inp.value = '';
                     } else if (key === 'mileage_range' || key === 'km_driven_range') {
                         const from = document.querySelector('[name="km_driven_from"]');
                         const to = document.querySelector('[name="km_driven_to"]');
@@ -2386,31 +1972,27 @@
                         const b = document.querySelector('[name="ownership_tax_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'engine_power_range') {
-                        const a = document.querySelector('[name="engine_power_from"]');
-                        const b = document.querySelector('[name="engine_power_to"]');
+                        const a = document.querySelector('[name="engine_power_kw_from"]');
+                        const b = document.querySelector('[name="engine_power_kw_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'battery_capacity_range') {
-                        const a = document.querySelector('[name="battery_capacity_from"]');
-                        const b = document.querySelector('[name="battery_capacity_to"]');
-                        if (a) a.value = ''; if (b) b.value = '';
-                    } else if (key === 'range_km_range') {
-                        const a = document.querySelector('[name="range_km_from"]');
-                        const b = document.querySelector('[name="range_km_to"]');
+                        const a = document.querySelector('[name="electrical_consumption_from"]');
+                        const b = document.querySelector('[name="electrical_consumption_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'fuel_efficiency_range') {
-                        const a = document.querySelector('[name="fuel_efficiency_from"]');
-                        const b = document.querySelector('[name="fuel_efficiency_to"]');
+                        const a = document.querySelector('[name="km_per_liter_from"]');
+                        const b = document.querySelector('[name="km_per_liter_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'top_speed_range') {
-                        const a = document.querySelector('[name="top_speed_from"]');
-                        const b = document.querySelector('[name="top_speed_to"]');
+                        const a = document.querySelector('[name="max_speed_from"]');
+                        const b = document.querySelector('[name="max_speed_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
                     } else if (key === 'weight_range') {
-                        const a = document.querySelector('[name="weight_from"]');
-                        const b = document.querySelector('[name="weight_to"]');
+                        const a = document.querySelector('[name="maximum_weight_kg_from"]');
+                        const b = document.querySelector('[name="maximum_weight_kg_to"]');
                         if (a) a.value = ''; if (b) b.value = '';
-                    } else if (key === 'drive_axles' && isArray) {
-                        const checkbox = document.querySelector(`[name="drive_axles[]"][value="${value}"]`);
+                    } else if (key === 'drive_axle_count' && isArray) {
+                        const checkbox = document.querySelector(`[name="drive_axle_count[]"][value="${value}"]`);
                         if (checkbox) checkbox.checked = false;
                     } else if (key === 'condition_id') {
                         const selectedRadio = document.querySelector(`[name="condition_id"][value="${value}"]`);
@@ -2502,6 +2084,7 @@
                     }
                 }
                 renderVehicleGrid(vehicles);
+                setView(currentView);
                 await checkFavoritesBatch();
                 renderPagination({ current_page: page, last_page: totalPages, total: totalDocs });
                 const resultsCount = document.getElementById('results-count');
@@ -2510,12 +2093,12 @@
                     if (noResults && filteredTotal === 0 && vehicles.length > 0) {
                         resultsCount.innerHTML = `<strong>0</strong> {{ __('messages.forms.results') }} <span class="text-muted-foreground">({{ __('messages.pages.vehicles.showing_all_vehicles') }})</span>`;
                     } else {
-                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('en-US').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
+                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('da-DK').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
                     }
                 }
                 renderFilterChips();
                 updateResetButtonVisibility();
-                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || 'best_match';
+                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || DEFAULT_LISTING_SORT;
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
@@ -2558,7 +2141,7 @@
             sortSelect.addEventListener('change', (e) => {
                 const sortValue = e.target.value;
                     // Fetch vehicles with new sort parameter
-                    fetchVehicles({ sort: sortValue === 'best_match' ? null : sortValue, page: 1 });
+                    fetchVehicles({ sort: sortValue === DEFAULT_LISTING_SORT ? null : sortValue, page: 1 });
             });
         }
         
@@ -2957,7 +2540,7 @@
                 maxHandle: document.getElementById('price-handle-max'),
                 track: document.getElementById('price-range-track'),
                 min: 0,
-                max: 5000000
+                max: {{ $filterPriceMax }}
             },
             {
                 minSlider: document.getElementById('year-slider-min'),
@@ -2979,7 +2562,7 @@
                 maxHandle: document.getElementById('mileage-handle-max'),
                 track: document.getElementById('mileage-range-track'),
                 min: 0,
-                max: 2000000
+                max: {{ $filterKmMax }}
             },
             {
                 minSlider: document.getElementById('first-reg-year-slider-min'),
@@ -3073,6 +2656,7 @@
 
         // Reset filters function
         function resetAllFilters() {
+            document.querySelectorAll('input.js-carry-model-year').forEach((el) => el.remove());
             // Reset search input
             if (searchInput) {
                 searchInput.value = '';
@@ -3197,7 +2781,7 @@ if (config) {
             const vNum = (name, max) => { const val = v(name); if (!val) return null; const n = parseFloat(val); if (isNaN(n)) return null; if (max != null && n >= max) return null; return val; };
 
             if (searchInput?.value?.trim()) filters.search = searchInput.value.trim();
-            if (sortSelect?.value && sortSelect.value !== 'best_match') filters.sort = sortSelect.value;
+            if (sortSelect?.value && sortSelect.value !== DEFAULT_LISTING_SORT) filters.sort = sortSelect.value;
 
             const listingTypeIds = Array.from(document.querySelectorAll('[name="listing_type_id[]"]:checked')).map(cb => cb.value);
             if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
@@ -3212,51 +2796,52 @@ if (config) {
             const fuelTypeIds = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked).map(cb => cb.value);
             if (fuelTypeIds.length > 0) filters.fuel_type_id = fuelTypeIds;
             if (vNum('price_from')) filters.price_from = v('price_from');
-            if (vNum('price_to', 5000001)) filters.price_to = v('price_to');
+            if (vNum('price_to', {{ $filterPriceMax + 1 }})) filters.price_to = v('price_to');
             if (vNum('km_driven_from')) filters.km_driven_from = v('km_driven_from');
-            if (vNum('km_driven_to', 2000001)) filters.km_driven_to = v('km_driven_to');
+            if (vNum('km_driven_to', {{ $filterKmMax + 1 }})) filters.km_driven_to = v('km_driven_to');
             if (v('gear_type_id')) filters.gear_type_id = v('gear_type_id');
             if (v('body_type_id')) filters.body_type_id = v('body_type_id');
             if (v('color_id')) filters.color_id = v('color_id');
-            if (v('type_id')) filters.type_id = v('type_id');
             if (v('sales_type_id')) filters.sales_type_id = v('sales_type_id');
             if (v('price_type_id')) filters.price_type_id = v('price_type_id');
-            if (v('euronom_id')) filters.euronom_id = v('euronom_id');
+            if (v('emission_norm_id')) filters.emission_norm_id = v('emission_norm_id');
             if (v('use_id')) filters.use_id = v('use_id');
-            if (v('year_from') && parseInt(v('year_from')) > 1950) filters.year_from = v('year_from');
-            if (vNum('year_to', currentYear + 2)) filters.year_to = v('year_to');
+            if (v('model_year_from') && parseInt(v('model_year_from')) > 1950) filters.model_year_from = v('model_year_from');
+            if (vNum('model_year_to', currentYear + 2)) filters.model_year_to = v('model_year_to');
             if (v('first_registration_year_from') && parseInt(v('first_registration_year_from')) > 1950) filters.first_registration_year_from = v('first_registration_year_from');
             if (vNum('first_registration_year_to', currentYear + 1)) filters.first_registration_year_to = v('first_registration_year_to');
             if (vNum('ownership_tax_from')) filters.ownership_tax_from = v('ownership_tax_from');
             if (vNum('ownership_tax_to', 20001)) filters.ownership_tax_to = v('ownership_tax_to');
-            if (vNum('engine_power_from')) filters.engine_power_from = v('engine_power_from');
-            if (vNum('engine_power_to', 1001)) filters.engine_power_to = v('engine_power_to');
-            if (vNum('battery_capacity_from')) filters.battery_capacity_from = v('battery_capacity_from');
-            if (vNum('battery_capacity_to', 501)) filters.battery_capacity_to = v('battery_capacity_to');
-            if (vNum('range_km_from')) filters.range_km_from = v('range_km_from');
-            if (vNum('range_km_to', 1501)) filters.range_km_to = v('range_km_to');
-            if (vNum('fuel_efficiency_from')) filters.fuel_efficiency_from = v('fuel_efficiency_from');
-            if (vNum('fuel_efficiency_to', 101)) filters.fuel_efficiency_to = v('fuel_efficiency_to');
+            if (vNum('engine_power_kw_from')) filters.engine_power_kw_from = v('engine_power_kw_from');
+            if (vNum('engine_power_kw_to', 1001)) filters.engine_power_kw_to = v('engine_power_kw_to');
+            if (vNum('electrical_consumption_from')) filters.electrical_consumption_from = v('electrical_consumption_from');
+            if (vNum('electrical_consumption_to', 501)) filters.electrical_consumption_to = v('electrical_consumption_to');
+            if (vNum('km_per_liter_from')) filters.km_per_liter_from = v('km_per_liter_from');
+            if (vNum('km_per_liter_to', 101)) filters.km_per_liter_to = v('km_per_liter_to');
             if (v('charging_type')) filters.charging_type = v('charging_type');
-            if (v('top_speed_from')) filters.top_speed_from = v('top_speed_from');
-            if (v('top_speed_to')) filters.top_speed_to = v('top_speed_to');
-            if (v('weight_from')) filters.weight_from = v('weight_from');
-            if (v('weight_to')) filters.weight_to = v('weight_to');
-            if (v('engine_cylinders')) filters.engine_cylinders = v('engine_cylinders');
-            if (v('doors')) filters.doors = v('doors');
+            if (v('max_speed_from')) filters.max_speed_from = v('max_speed_from');
+            if (v('max_speed_to')) filters.max_speed_to = v('max_speed_to');
+            if (v('maximum_weight_kg_from')) filters.maximum_weight_kg_from = v('maximum_weight_kg_from');
+            if (v('maximum_weight_kg_to')) filters.maximum_weight_kg_to = v('maximum_weight_kg_to');
+            if (v('door_count')) filters.door_count = v('door_count');
             if (v('seats_min')) filters.seats_min = v('seats_min');
             if (v('seats_max')) filters.seats_max = v('seats_max');
-            if (v('wheels')) filters.wheels = v('wheels');
-            if (v('axles')) filters.axles = v('axles');
-            if (v('airbags')) filters.airbags = v('airbags');
+            if (v('axle_count')) filters.axle_count = v('axle_count');
+            if (v('specifications_airbags')) filters.specifications_airbags = v('specifications_airbags');
             if (v('towing_weight')) filters.towing_weight = v('towing_weight');
-            const driveAxles = Array.from(document.querySelectorAll('[name="drive_axles[]"]:checked')).map(cb => cb.value);
-            if (driveAxles.length > 0) filters.drive_axles = driveAxles;
-            if (document.querySelector('[name="ncap_five"]:checked')) filters.ncap_five = 1;
+            const driveAxles = Array.from(document.querySelectorAll('[name="drive_axle_count[]"]:checked')).map(cb => cb.value);
+            if (driveAxles.length > 0) filters.drive_axle_count = driveAxles;
+            if (document.querySelector('[name="ncap_test"]:checked')) filters.ncap_test = 1;
             if (document.querySelector('[name="is_import"]:checked')) filters.is_import = 1;
             if (document.querySelector('[name="is_factory_new"]:checked')) filters.is_factory_new = 1;
             const equipmentIds = Array.from(document.querySelectorAll('[name="equipment_ids[]"]:checked')).map(cb => cb.value);
             if (equipmentIds.length > 0) filters.equipment_ids = equipmentIds;
+            if (typeof window.__viewerGeo === 'object' && window.__viewerGeo
+                && typeof window.__viewerGeo.latitude === 'number'
+                && typeof window.__viewerGeo.longitude === 'number') {
+                filters.viewer_latitude = window.__viewerGeo.latitude;
+                filters.viewer_longitude = window.__viewerGeo.longitude;
+            }
             filters.limit = 15;
             return filters;
         }
@@ -3269,27 +2854,31 @@ if (config) {
             filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
         }
 
-        // Show/hide model checkboxes based on selected brand(s). If no brand selected, show all models.
-        function filterModelListByBrands() {
-            const modelList = document.getElementById('model-checkbox-list');
-            if (!modelList) return;
-            // Use getElementsByName to avoid CSS selector issues with "brand_id[]"
-            const brandInputs = document.getElementsByName('brand_id[]');
-            const selectedBrandIds = new Set(
-                Array.from(brandInputs).filter(cb => cb.checked).map(cb => String(cb.value).trim())
-            );
-            modelList.querySelectorAll('.model-checkbox-label').forEach(label => {
-                const brandId = String(label.getAttribute('data-brand-id') || '').trim();
-                const show = selectedBrandIds.size === 0 || (brandId !== '' && selectedBrandIds.has(brandId));
-                label.style.display = show ? '' : 'none';
-            });
-        }
-
-        // Partial lookup search (brands/models/types) - avoids loading full tables.
+        // Types dropdown still uses paged search; brands/models load full lists (or scoped lists) from API.
         const LOOKUP_LIMIT = 25;
         let brandLookupToken = 0;
         let modelLookupToken = 0;
         let typeLookupToken = 0;
+
+        function applyBrandClientFilter() {
+            const input = document.getElementById('brand-search-input');
+            const q = (input && input.value || '').trim().toLowerCase();
+            document.querySelectorAll('#brand-checkbox-list .brand-checkbox-label').forEach(label => {
+                const span = label.querySelector('span');
+                const t = (span && span.textContent || '').toLowerCase();
+                label.style.display = !q || t.includes(q) ? '' : 'none';
+            });
+        }
+
+        function applyModelClientFilter() {
+            const input = document.getElementById('model-search-input');
+            const q = (input && input.value || '').trim().toLowerCase();
+            document.querySelectorAll('#model-checkbox-list .model-checkbox-label').forEach(label => {
+                const span = label.querySelector('.model-checkbox-name');
+                const t = (span && span.textContent || '').toLowerCase();
+                label.style.display = !q || t.includes(q) ? '' : 'none';
+            });
+        }
 
         function getSelectedBrandMeta() {
             const meta = {};
@@ -3315,7 +2904,7 @@ if (config) {
             return meta;
         }
 
-        async function refreshBrandsFromApi(searchTerm) {
+        async function refreshBrandsFromApi() {
             const list = document.getElementById('brand-checkbox-list');
             if (!list) return;
 
@@ -3323,11 +2912,7 @@ if (config) {
             const selectedIds = new Set(Object.keys(selectedMeta));
 
             const token = ++brandLookupToken;
-            const term = (searchTerm || '').trim();
-
             const url = new URL('/api/v1/brands', window.location.origin);
-            url.searchParams.set('limit', String(LOOKUP_LIMIT));
-            if (term !== '') url.searchParams.set('search', term);
 
             try {
                 const response = await fetch(url.toString(), {
@@ -3364,7 +2949,6 @@ if (config) {
                     list.appendChild(label);
                 });
 
-                // Keep selected brands visible even if they don't match current search.
                 Object.keys(selectedMeta).forEach(id => {
                     if (resultsIds.has(id)) return;
                     const label = document.createElement('label');
@@ -3386,13 +2970,20 @@ if (config) {
                 });
 
                 updateBrandDropdownLabel();
-                filterModelListByBrands();
+                applyBrandClientFilter();
             } catch (e) {
-                console.debug('Brand lookup failed:', e);
+                console.debug('Brand load failed:', e);
             }
         }
 
-        async function refreshModelsFromApi(searchTerm) {
+        function appendModelHintRow(list, text) {
+            const p = document.createElement('p');
+            p.className = 'model-list-hint text-muted-foreground text-xs px-2 py-2';
+            p.textContent = text;
+            list.appendChild(p);
+        }
+
+        async function refreshModelsFromApi() {
             const list = document.getElementById('model-checkbox-list');
             if (!list) return;
 
@@ -3401,12 +2992,35 @@ if (config) {
             const selectedBrandIds = Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).map(cb => String(cb.value).trim()).filter(Boolean);
 
             const token = ++modelLookupToken;
-            const term = (searchTerm || '').trim();
 
-            const url = new URL('/api/v1/models', window.location.origin);
-            url.searchParams.set('limit', String(LOOKUP_LIMIT));
-            if (term !== '') url.searchParams.set('search', term);
-            if (selectedBrandIds.length > 0) url.searchParams.set('brand_ids', selectedBrandIds.join(','));
+            if (selectedBrandIds.length === 0) {
+                list.innerHTML = '';
+                appendModelHintRow(list, I18N_BMV.selectBrandForModels);
+                Object.keys(selectedMeta).forEach(id => {
+                    const meta = selectedMeta[id];
+                    const label = document.createElement('label');
+                    label.className = 'model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm';
+                    label.setAttribute('data-brand-id', String(meta.brandId || ''));
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'model_id[]';
+                    input.value = id;
+                    input.className = 'model-checkbox rounded border-input';
+                    input.checked = true;
+                    const span = document.createElement('span');
+                    span.className = 'model-checkbox-name';
+                    span.textContent = meta.text;
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    list.appendChild(label);
+                });
+                updateModelDropdownLabel();
+                applyModelClientFilter();
+                return;
+            }
+
+            const url = new URL('/api/v1/listing-models', window.location.origin);
+            url.searchParams.set('brand_ids', selectedBrandIds.join(','));
 
             try {
                 const response = await fetch(url.toString(), {
@@ -3445,7 +3059,6 @@ if (config) {
                     list.appendChild(label);
                 });
 
-                // Keep selected models visible even if they don't match current search.
                 Object.keys(selectedMeta).forEach(id => {
                     if (resultsIds.has(id)) return;
                     const meta = selectedMeta[id];
@@ -3471,9 +3084,9 @@ if (config) {
                 });
 
                 updateModelDropdownLabel();
-                filterModelListByBrands();
+                applyModelClientFilter();
             } catch (e) {
-                console.debug('Model lookup failed:', e);
+                console.debug('Model load failed:', e);
             }
         }
 
@@ -3612,7 +3225,7 @@ if (config) {
                         brandTrigger.setAttribute('aria-expanded', 'true');
                         const chev = brandTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshBrandsFromApi(brandSearchInput ? brandSearchInput.value : '');
+                        refreshBrandsFromApi();
                     }
                 });
             }
@@ -3626,7 +3239,7 @@ if (config) {
                         modelTrigger.setAttribute('aria-expanded', 'true');
                         const chev = modelTrigger.querySelector('.dropdown-chevron');
                         if (chev) chev.style.transform = 'rotate(180deg)';
-                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
+                        refreshModelsFromApi();
                     }
                 });
             }
@@ -3666,25 +3279,16 @@ if (config) {
                     });
                 }
             }
-
             document.querySelectorAll('.fuel-type-checkbox').forEach(cb => {
                 cb.addEventListener('change', updateFuelTypeDropdownLabel);
             });
 
-            // Brand/model search inputs (debounced).
+            // Brand/model: client-side filter only (full lists loaded from API).
             if (brandSearchInput) {
-                let t = null;
-                brandSearchInput.addEventListener('input', () => {
-                    clearTimeout(t);
-                    t = setTimeout(() => refreshBrandsFromApi(brandSearchInput.value), 300);
-                });
+                brandSearchInput.addEventListener('input', () => applyBrandClientFilter());
             }
             if (modelSearchInput) {
-                let t = null;
-                modelSearchInput.addEventListener('input', () => {
-                    clearTimeout(t);
-                    t = setTimeout(() => refreshModelsFromApi(modelSearchInput.value), 300);
-                });
+                modelSearchInput.addEventListener('input', () => applyModelClientFilter());
             }
 
             // Type dropdown search.
@@ -3715,9 +3319,7 @@ if (config) {
                 if (target.matches('input[type="checkbox"]')) {
                     // If brand changed, refresh model suggestions based on the new selection.
                     if (target.classList.contains('brand-checkbox')) {
-                        filterModelListByBrands();
-                        const modelSearchInput = document.getElementById('model-search-input');
-                        refreshModelsFromApi(modelSearchInput ? modelSearchInput.value : '');
+                        if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
                     }
                     autoApplyFilters();
                 }
@@ -3789,83 +3391,6 @@ if (config) {
             updateViewToggleStyles();
         }
         
-        // Convert existing card elements to list view (for initial page load)
-        function convertCardsToList() {
-            if (!vehicleContainer || currentView !== 'list') return;
-            
-            const cards = vehicleContainer.querySelectorAll('.rounded-lg.border');
-            cards.forEach(card => {
-                // Check if already converted
-                if (card.classList.contains('vehicle-item')) return;
-                
-                const imageDiv = card.querySelector('.relative.aspect-video');
-                const detailsDiv = card.querySelector('.px-4.py-4');
-                const actionsDiv = card.querySelector('.mt-auto.p-4');
-                
-                if (!imageDiv || !detailsDiv) return;
-                
-                // Extract data
-                const img = imageDiv.querySelector('img');
-                const title = detailsDiv.querySelector('h3')?.textContent || '';
-                const version = detailsDiv.querySelector('.text-muted-foreground.-mt-1\\.5')?.textContent || '';
-                const price = detailsDiv.querySelector('.text-primary.text-2xl')?.textContent || '';
-                const badges = Array.from(detailsDiv.querySelectorAll('.rounded-md.border')).map(b => b.textContent);
-                const specs = Array.from(detailsDiv.querySelectorAll('.grid.grid-cols-2 > div')).map(s => s.innerHTML);
-                const viewLink = actionsDiv?.querySelector('a[href^="/vehicles/"]')?.getAttribute('href') || '';
-                const vehicleSlug = viewLink.match(/\/vehicles\/([^/]+)/)?.[1] || '';
-                const vehicleId = card?.querySelector('.heart-icon')?.getAttribute('data-vehicle-id') || '';
-                
-                // Create list item structure - Fixed height compact design
-                const listItem = document.createElement('div');
-                listItem.className = 'vehicle-item';
-                listItem.innerHTML = `
-                    <a href="/vehicles/${vehicleSlug}" class="flex items-center gap-0.625rem flex-1 min-w-0" style="display: flex; align-items: center; gap: 0.625rem; flex: 1; min-width: 0;">
-                        <div class="vehicle-image-container relative">
-                            ${img ? `<img src="${img.src}" alt="${img.alt}" class="h-full w-full object-cover" />` : ''}
-                            <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicleId}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-foreground hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicleId}" data-dealer-id="">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="vehicle-content">
-                            <div class="vehicle-main-info">
-                                <div class="vehicle-title-row">
-                                    <div class="vehicle-title-section">
-                                        <h3>${title}</h3>
-                                        ${version ? `<p class="text-muted-foreground">${version}</p>` : ''}
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.125rem;">
-                                    <p class="vehicle-price">${price}</p>
-                                    ${badges.length > 0 ? `
-                                    <div class="vehicle-badges">
-                                        ${badges.map(b => `<span>${b}</span>`).join('')}
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            ${specs.length > 0 ? `
-                            <div class="vehicle-specs">
-                                ${specs.join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-                    </a>
-                    <div class="vehicle-actions-section" onclick="event.stopPropagation()">
-                        ${vehicleSlug ? `<a href="/vehicles/${vehicleSlug}" onclick="event.stopPropagation()"><button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View</button></a>` : ''}
-                        <a href="/vehicles/${vehicleSlug}/enquire" onclick="event.stopPropagation()">
-                            <button class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Enquire</button>
-                        </a>
-                    </div>
-                `;
-                
-                // Replace card with list item
-                card.replaceWith(listItem);
-            });
-        }
-        
         // View toggle radio button change handlers
         viewToggleRadios.forEach(radio => {
             radio.addEventListener('change', () => {
@@ -3879,14 +3404,8 @@ if (config) {
                 }
                 
                 if (radio.checked) {
-                    const newView = radio.value;
-                setView(newView);
-                // Preserve current page from URL to ensure pagination is maintained
-                const urlParams = new URLSearchParams(window.location.search);
-                const currentPage = parseInt(urlParams.get('page')) || 1;
-                // Explicitly pass page parameter as number to ensure it's preserved
-                fetchVehicles({ page: currentPage });
-        }
+                    setView(radio.value);
+                }
             });
         });
         
@@ -3897,9 +3416,6 @@ if (config) {
             resizeTimeout = setTimeout(() => {
                 if (isMobile() && currentView === 'list') {
                     setView('card');
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const currentPage = parseInt(urlParams.get('page')) || 1;
-                    fetchVehicles({ page: currentPage });
                 }
             }, 250);
         });
@@ -3912,16 +3428,6 @@ if (config) {
                 localStorage.setItem('vehicleView', 'card');
             }
             setView(currentView);
-            // If list view is saved, re-fetch to render in list format (only on desktop)
-            if (currentView === 'list' && !isMobile()) {
-                // Get current URL params to preserve filters
-                const urlParams = new URLSearchParams(window.location.search);
-                const page = urlParams.get('page') || 1;
-                // Re-fetch to get proper list view rendering
-                setTimeout(() => {
-                    fetchVehicles({ page: parseInt(page) });
-                }, 50);
-            }
         }
         
         // Initialize filter chips and reset button visibility on page load
@@ -3932,16 +3438,33 @@ if (config) {
         if (window.location.search) {
             history.replaceState({}, '', window.location.pathname || '/vehicles');
         }
+        window.__viewerGeo = window.__viewerGeo || null;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    window.__viewerGeo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                    const ss = document.getElementById('sort-select');
+                    if (ss && (ss.value === 'distance_asc' || ss.value === 'distance_desc')) {
+                        fetchVehicles({ page: 1 });
+                    }
+                },
+                function() {},
+                { maximumAge: 600000, timeout: 8000 }
+            );
+        }
         fetchVehicles({ page: 1 });
         
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();
         
-        // Filter model list by selected brands on load
-        filterModelListByBrands();
-        
         // Initialize brand/model dropdown toggles and label updates
         initBrandModelDropdowns();
+        // Prefetch full brand list for faster first open
+        if (typeof refreshBrandsFromApi === 'function') refreshBrandsFromApi();
+        // If URL/state already has brands selected, load models
+        if (document.querySelector('input[name="brand_id[]"]:checked') && typeof refreshModelsFromApi === 'function') {
+            refreshModelsFromApi();
+        }
         
         // Initialize all range sliders
         setTimeout(() => {

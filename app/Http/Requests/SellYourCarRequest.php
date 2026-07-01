@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class SellYourCarRequest extends FormRequest
 {
@@ -22,90 +21,53 @@ class SellYourCarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
-            'registration' => ['required', 'string', 'max:20'],
-            'vin' => ['nullable', 'string', 'max:17'],
-            'price' => ['required', 'integer', 'min:0'],
-            'listing_type_id' => ['nullable', 'integer', 'exists:listing_types,id'],
-            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'model_id' => ['nullable', 'integer', 'exists:models,id'],
-            'model_year_id' => ['nullable', 'integer', 'exists:model_years,id'],
-            'fuel_type_id' => ['required', 'integer', 'exists:fuel_types,id'],
-            'mileage' => ['nullable', 'integer', 'min:0'],
-            'km_driven' => ['nullable', 'integer', 'min:0'],
-            'battery_capacity' => ['nullable', 'integer', 'min:0'],
-            'range_km' => ['nullable', 'integer', 'min:0'],
-            'charging_type' => ['nullable', 'string', 'max:100'],
-            'engine_power' => ['nullable', 'integer', 'min:0'],
-            'towing_weight' => ['nullable', 'integer', 'min:0'],
-            'ownership_tax' => ['nullable', 'integer', 'min:0'],
-            'first_registration_date' => ['nullable', 'date'],
-            'vehicle_list_status_id' => ['required', 'integer', 'exists:vehicle_list_statuses,id'],
-            'published_at' => ['nullable', 'date'],
-            'equipment_ids' => ['nullable', 'array'],
-            'equipment_ids.*' => ['integer', 'exists:equipments,id'],
-            'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif', 'max:20480'], // 20MB
-            
-            // Auto-creation fields (for brands/models/years that don't exist)
-            'brand_name' => ['nullable', 'string', 'max:255'],
-            'model_name' => ['nullable', 'string', 'max:255'],
-            'model_year_name' => ['nullable', 'string', 'max:10'],
-            'model_year' => ['nullable', 'string', 'max:10'],
-            
-            // Vehicle details fields
-            'description' => ['nullable', 'string'],
-            'vin_location' => ['nullable', 'string', 'max:255'],
-            'vehicle_external_id' => ['nullable', 'string', 'max:255'],
-            'type_id' => ['nullable', 'integer', 'exists:types,id'],
-            'version' => ['nullable', 'string', 'max:100'],
-            'type_name' => ['nullable', 'string', 'max:255'],
-            'registration_status' => ['nullable', 'string', 'max:100'],
-            'registration_status_updated_date' => ['nullable', 'date'],
-            'expire_date' => ['nullable', 'date'],
-            'status_updated_date' => ['nullable', 'date'],
-            'use_id' => ['nullable', 'integer', 'exists:vehicle_uses,id'],
-            'color_id' => ['nullable', 'integer', 'exists:colors,id'],
-            'body_type_id' => ['nullable', 'integer', 'exists:body_types,id'],
-            'price_type_id' => ['nullable', 'integer', 'exists:price_types,id'],
-            'condition_id' => ['nullable', 'integer', 'exists:conditions,id'],
-            'gear_type_id' => ['nullable', 'integer', 'exists:gear_types,id'],
-            'sales_type_id' => ['nullable', 'integer', 'exists:sales_types,id'],
-            'total_weight' => ['nullable', 'integer', 'min:0'],
-            'vehicle_weight' => ['nullable', 'integer', 'min:0'],
-            'technical_total_weight' => ['nullable', 'integer', 'min:0'],
-            'coupling' => ['nullable', 'boolean'],
-            'towing_weight_brakes' => ['nullable', 'integer', 'min:0'],
-            'minimum_weight' => ['nullable', 'integer', 'min:0'],
-            'gross_combination_weight' => ['nullable', 'integer', 'min:0'],
-            'engine_displacement' => ['nullable', 'integer', 'min:0'],
-            'engine_cylinders' => ['nullable', 'integer', 'min:0'],
-            'engine_code' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'last_inspection_date' => ['nullable', 'date'],
-            'last_inspection_result' => ['nullable', 'string', 'max:100'],
-            'last_inspection_odometer' => ['nullable', 'integer', 'min:0'],
-            'type_approval_code' => ['nullable', 'string', 'max:100'],
-            'doors' => ['nullable', 'integer', 'min:0'],
-            'minimum_seats' => ['nullable', 'integer', 'min:0'],
-            'maximum_seats' => ['nullable', 'integer', 'min:0'],
-            'top_speed' => ['nullable', 'integer', 'min:0'],
-            'wheels' => ['nullable', 'integer', 'min:0'],
-            'extra_equipment' => ['nullable', 'string'],
-            'axles' => ['nullable', 'integer', 'min:0'],
-            'drive_axles' => ['nullable', 'integer', 'min:0'],
-            'wheelbase' => ['nullable', 'integer', 'min:0'],
-            'leasing_period_start' => ['nullable', 'date'],
-            'leasing_period_end' => ['nullable', 'date'],
-            'dispensations' => ['nullable', 'string'],
-            'permits' => ['nullable', 'string'],
-            'fuel_efficiency' => ['nullable', 'numeric', 'min:0'],
-            'airbags' => ['nullable', 'integer', 'min:0'],
-            'integrated_child_seats' => ['nullable', 'integer', 'min:0'],
-            'seat_belt_alarms' => ['nullable', 'integer', 'min:0'],
-            'ncap_five' => ['nullable', 'boolean'],
-            'euronorm' => ['nullable', 'string', 'max:50'],
+            // registration
+            // dmr_fact_vehicle_id
+            // vin
+            // title
+            // slug
+            // dealer_id
+            // user_id
+            // km_per_liter
+            // co2_emission
+            // electrical_consumption
+            // engine_power_kw
+            // engine_power_hp
+            // engine_size_cc
+            // engine_displacement_litres
+            // first_registration_date
+            // first_registration_year
+            // nox_emission
+            // particle_filter
+            // axle_count
+            // door_count
+            // gear_count
+            // max_speed
+            // model_year
+            // ncap_test
+            // seats_min
+            // seats_max
+            // maximum_weight_kg
+            // registration_status
+            // last_registration_change
+            // measurement_norm_id
+            // listing_type_id
+            // sales_type_id
+            // price_type_id
+            // category_id
+            // price
+            // km_driven
+            // towing_weight
+            // is_import
+            // is_factory_new
+            // charging_type
+            // gear_type_id
+            // list_status_id
+            // address
+            // postcode
+            // description
+            // condition_id
+            // servicebog
         ];
     }
 
@@ -115,16 +77,7 @@ class SellYourCarRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => __('messages.validation.sell_your_car.title_required'),
-            'registration.required' => __('messages.validation.sell_your_car.registration_required'),
-            'fuel_type_id.required' => __('messages.validation.sell_your_car.fuel_type_required'),
-            'fuel_type_id.exists' => __('messages.validation.sell_your_car.fuel_type_exists'),
-            'price.required' => __('messages.validation.sell_your_car.price_required'),
-            'price.min' => __('messages.validation.sell_your_car.price_min'),
-            'vehicle_list_status_id.required' => __('messages.validation.sell_your_car.vehicle_list_status_required'),
-            'vehicle_list_status_id.exists' => __('messages.validation.sell_your_car.vehicle_list_status_exists'),
-            'images.*.image' => __('messages.validation.sell_your_car.images_image'),
-            'images.*.max' => __('messages.validation.sell_your_car.images_max'),
+            
         ];
     }
 }

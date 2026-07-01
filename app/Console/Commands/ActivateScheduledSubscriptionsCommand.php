@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Console\Commands;
 
@@ -7,7 +7,7 @@ use App\Constants\SubscriptionStatus;
 use App\Models\DealerSubscription;
 use App\Services\ListingBillingService;
 use App\Services\SubscriptionFeatureService;
-use Illuminate\Console\Command; 
+use Illuminate\Console\Command;
 
 class ActivateScheduledSubscriptionsCommand extends Command
 {

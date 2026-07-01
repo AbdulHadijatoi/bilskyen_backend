@@ -2,136 +2,138 @@
 
 namespace App\Services;
 
-use App\Models\Dealer;
-use App\Models\FeatureValueType;
+use App\Constants\BillingModel;
+use App\Constants\ListingBillingPeriodStatus;
 use App\Constants\SubscriptionStatus;
+use App\Constants\VehicleListStatus;
+use App\Models\Dealer;
+use App\Models\DealerPlanOverride;
+use App\Models\DealerSubscription;
+use App\Models\ListingBillingPeriod;
+use App\Models\Plan;
+use App\Models\Vehicle;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-/**
- * Subscription Feature Service
- * Handles loading and checking subscription features for dealers
- */
 class SubscriptionFeatureService
 {
-    /**
-     * Get all subscription features for a dealer as key-value pairs
-     * Returns empty array if dealer has no active subscription
-     * 
-     * @param Dealer $dealer
-     * @return array<string, string> Feature key => value pairs
-     */
+    public function getActiveSubscription(Dealer $dealer): ?DealerSubscription
+    {
+        $now = now();
+
+        return $dealer->subscriptions()
+            ->with('plan')
+            ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
+            ->where('starts_at', '<=', $now)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', $now);
+            })
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
+    public function hasActiveSubscription(Dealer $dealer): bool
+    {
+        return $this->getActiveSubscription($dealer) !== null;
+    }
+
+    public function isUsageDailyPlan(Dealer $dealer): bool
+    {
+        $subscription = $this->getActiveSubscription($dealer);
+
+        return $subscription?->plan?->billing_model === BillingModel::USAGE_DAILY;
+    }
+
     public function getFeatures(Dealer $dealer): array
     {
-        // Use request-level cache to avoid repeated queries
         $cacheKey = "dealer_features_{$dealer->id}";
-        
+
         return Cache::remember($cacheKey, 60, function () use ($dealer) {
-            // Get active subscription (ACTIVE or TRIAL)
-            $subscription = $dealer->subscriptions()
-                ->whereIn('subscription_status_id', [SubscriptionStatus::ACTIVE, SubscriptionStatus::TRIAL])
-                ->latest()
-                ->first();
-            
-            if (!$subscription || !$subscription->plan) {
+            $subscription = $this->getActiveSubscription($dealer);
+
+            if (! $subscription || ! $subscription->plan) {
                 return [];
             }
-            
-            // Load plan features with feature details
+
             $planFeatures = $subscription->plan->planFeatures()
                 ->with('feature.featureValueType')
                 ->get();
-            
+
             $features = [];
             foreach ($planFeatures as $planFeature) {
                 if ($planFeature->feature) {
                     $features[$planFeature->feature->key] = $planFeature->value;
                 }
             }
-            
+
+            $overrides = DealerPlanOverride::query()
+                ->where('dealer_id', $dealer->id)
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
+                ->with('feature')
+                ->get();
+
+            foreach ($overrides as $override) {
+                if ($override->feature) {
+                    $features[$override->feature->key] = $override->override_value;
+                }
+            }
+
             return $features;
         });
     }
-    
-    /**
-     * Get a single feature value for a dealer
-     * 
-     * @param Dealer $dealer
-     * @param string $key Feature key (e.g., 'max_listings', 'audit_logs')
-     * @param mixed $default Default value if feature not found
-     * @return mixed Feature value or default
-     */
+
     public function getFeature(Dealer $dealer, string $key, $default = null)
     {
         $features = $this->getFeatures($dealer);
+
         return $features[$key] ?? $default;
     }
-    
-    /**
-     * Check if a boolean feature is enabled for a dealer
-     * 
-     * @param Dealer $dealer
-     * @param string $key Feature key
-     * @return bool True if feature exists and is enabled
-     */
+
     public function hasFeature(Dealer $dealer, string $key): bool
     {
         $value = $this->getFeature($dealer, $key, 'false');
-        
-        // Handle string 'true'/'false' or actual boolean
+
         if (is_bool($value)) {
             return $value;
         }
-        
-        return strtolower((string)$value) === 'true' || $value === '1';
+
+        return strtolower((string) $value) === 'true' || $value === '1';
     }
-    
-    /**
-     * Get a number feature limit for a dealer
-     * 
-     * @param Dealer $dealer
-     * @param string $key Feature key (e.g., 'max_listings')
-     * @param int $default Default limit if feature not found
-     * @return int Feature limit as integer
-     */
+
     public function getFeatureLimit(Dealer $dealer, string $key, int $default = 0): int
     {
         $value = $this->getFeature($dealer, $key, $default);
-        
-        // Convert to integer
+
         return (int) $value;
     }
-    
-    /**
-     * Check if a feature limit allows an action
-     * 
-     * @param Dealer $dealer
-     * @param string $key Feature key
-     * @param int $currentCount Current count (e.g., number of published vehicles)
-     * @return bool True if limit allows action (currentCount < limit)
-     */
+
     public function checkFeatureLimit(Dealer $dealer, string $key, int $currentCount): bool
     {
+        if ($this->isUsageDailyPlan($dealer) && $key === 'max_listings') {
+            return $this->hasActiveSubscription($dealer);
+        }
+
         $limit = $this->getFeatureLimit($dealer, $key, 0);
-        
-        // If limit is 0, feature is disabled
+
         if ($limit === 0) {
             return false;
         }
-        
-        // Check if current count is less than limit
+
+        if ($limit >= 9999) {
+            return true;
+        }
+
         return $currentCount < $limit;
     }
-    
-    /**
-     * Clear cached features for a dealer
-     * Call this when subscription changes
-     * 
-     * @param Dealer $dealer
-     * @return void
-     */
+
     public function clearCache(Dealer $dealer): void
     {
-        $cacheKey = "dealer_features_{$dealer->id}";
-        Cache::forget($cacheKey);
+        Cache::forget("dealer_features_{$dealer->id}");
     }
 }

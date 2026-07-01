@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\AuditActorType;
+use App\Mail\MagicLinkMail;
+use App\Mail\ResetPasswordMail;
+use App\Mail\VerifyEmailMail;
 use App\Services\AuthService;
+use App\Services\MailService;
 use App\Services\RolePermissionService;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -24,7 +26,8 @@ class AuthPageController extends Controller
     public function __construct(
         private AuthService $authService,
         private RolePermissionService $rolePermissionService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private MailService $mailService
     ) {}
 
     /**
@@ -407,8 +410,12 @@ class AuthPageController extends Controller
             // Generate reset URL
             $resetUrl = url('/auth/reset-password?token=' . $token . '&email=' . urlencode($email));
 
-            // TODO: Send email with reset link
-            // Mail::to($user)->send(new ResetPasswordMail($resetUrl));
+            $this->mailService->sendMailable(
+                $user->email,
+                new ResetPasswordMail($resetUrl),
+                ['mail_type' => 'password_reset_web'],
+                false
+            );
         }
 
         return back()->with('status', $message);
@@ -508,8 +515,12 @@ class AuthPageController extends Controller
             // Generate verification URL
             $verificationUrl = url('/auth/verify-email/' . $user->id . '/' . $verificationToken);
 
-            // TODO: Send verification email
-            // Mail::to($user)->send(new VerifyEmailMail($verificationUrl));
+            $this->mailService->sendMailable(
+                $user->email,
+                new VerifyEmailMail($verificationUrl),
+                ['mail_type' => 'verify_email_web', 'user_id' => $user->id],
+                false
+            );
 
             return back()->with('status', __('messages.messages.verification_email_sent'));
         } catch (JWTException $e) {
@@ -619,8 +630,12 @@ class AuthPageController extends Controller
             // Generate magic link URL
             $magicLinkUrl = url('/auth/magic-link/verify?token=' . $token . '&callbackURL=' . urlencode('/'));
 
-            // TODO: Send magic link email
-            // Mail::to($user)->send(new MagicLinkMail($magicLinkUrl));
+            $this->mailService->sendMailable(
+                $user->email,
+                new MagicLinkMail($magicLinkUrl),
+                ['mail_type' => 'magic_link_login_web'],
+                false
+            );
         }
 
         return back()->with('status', $message);
@@ -697,8 +712,12 @@ class AuthPageController extends Controller
         // Generate magic link URL
         $magicLinkUrl = url('/auth/magic-link/verify?token=' . $token . '&callbackURL=' . urlencode('/'));
 
-        // TODO: Send magic link email
-        // Mail::to($user)->send(new MagicLinkMail($magicLinkUrl));
+        $this->mailService->sendMailable(
+            $user->email,
+            new MagicLinkMail($magicLinkUrl),
+            ['mail_type' => 'magic_link_signup_web', 'user_id' => $user->id],
+            false
+        );
 
         return back()->with('status', __('messages.messages.magic_link_sent_signup'));
     }

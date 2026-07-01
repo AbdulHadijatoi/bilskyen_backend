@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin\Constants;
 
 use App\Http\Controllers\Controller;
 use App\Models\PriceType;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Traits\ConstantsCacheTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 
 /**
@@ -31,7 +32,12 @@ class AdminPriceTypeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:price_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('price_types', 'name')->whereNull('deleted_at'),
+            ],
         ]);
 
         $priceType = PriceType::create($request->only(['name']));
@@ -47,7 +53,12 @@ class AdminPriceTypeController extends Controller
         $priceType = PriceType::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255|unique:price_types,name,' . $id,
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('price_types', 'name')->ignore($id)->whereNull('deleted_at'),
+            ],
         ]);
 
         $priceType->update($request->only(['name']));

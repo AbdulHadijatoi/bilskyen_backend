@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleImportController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\SavedSearchController;
@@ -21,7 +22,6 @@ use App\Http\Controllers\DealerBillingController;
 use App\Http\Controllers\DealerAiController;
 use App\Http\Controllers\DealerFeedController;
 use App\Http\Controllers\DealerSyndicationController;
-use App\Http\Controllers\VehicleImportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +39,25 @@ Route::middleware('auth:api')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DealerDashboardController::class, 'index'])
         ->middleware('permission:dealer.dashboard.view');
+
+    Route::get('/get-vehicles-overview', [DealerDashboardController::class, 'getVehiclesOverviewWidget'])
+        ->middleware('permission:dealer.dashboard.view');
+
+    Route::get('/get-sales-overview', [DealerDashboardController::class, 'getSalesOverviewWidget'])
+        ->middleware('permission:dealer.dashboard.view');
+
+    Route::prefix('accounting')->group(function () {
+        Route::get('/get-financial-overview', [AccountingController::class, 'getFinancialOverview'])
+            ->middleware('permission:dealer.dashboard.view');
+        Route::get('/get-financial-overview-chart', [AccountingController::class, 'getFinancialOverviewChart'])
+            ->middleware('permission:dealer.dashboard.view');
+    });
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::get('/count', [NotificationController::class, 'getCount']);
+        Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
+    });
     
     // Vehicle Management
     Route::prefix('vehicles')->group(function () {
@@ -62,6 +81,12 @@ Route::middleware('auth:api')->group(function () {
         
         Route::post('/update-status/{id}', [VehicleController::class, 'updateStatus'])
             ->middleware('permission:dealer.vehicles.status');
+
+        Route::post('/renew-listing/{id}', [VehicleController::class, 'renewListing'])
+            ->middleware('permission:dealer.vehicles.update');
+
+        Route::post('/{id}/3d-view', [VehicleController::class, 'upload3dView'])
+            ->middleware('permission:dealer.vehicles.media');
         
         Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment'])
             ->middleware('permission:dealer.vehicles.update');
@@ -75,7 +100,7 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{id}/price', [VehicleController::class, 'updatePrice'])
             ->middleware('permission:dealer.vehicles.update');
         
-        Route::post('/fetch-from-nummerplade', [VehicleController::class, 'fetchFromNummerplade'])
+        Route::post('/lookup-by-registration', [VehicleController::class, 'lookupByRegistration'])
             ->middleware(['throttle:40,1', 'permission:dealer.vehicles.create']);
 
         Route::get('/import/template', [VehicleImportController::class, 'downloadTemplate'])
@@ -217,13 +242,17 @@ Route::middleware('auth:api')->group(function () {
     
     // Enquiry Management
     Route::prefix('enquiries')->group(function () {
-        Route::get('/', [DealerEnquiryController::class, 'index']);
-        
-        Route::get('show/{id}', [DealerEnquiryController::class, 'show']);
-        
-        Route::post('status/{id}', [DealerEnquiryController::class, 'updateStatus']);
-        
-        Route::post('type/{id}', [DealerEnquiryController::class, 'updateType']);
+        Route::get('/', [DealerEnquiryController::class, 'index'])
+            ->middleware('permission:dealer.enquiries.view');
+
+        Route::get('show/{id}', [DealerEnquiryController::class, 'show'])
+            ->middleware('permission:dealer.enquiries.view');
+
+        Route::post('status/{id}', [DealerEnquiryController::class, 'updateStatus'])
+            ->middleware('permission:dealer.enquiries.update');
+
+        Route::post('type/{id}', [DealerEnquiryController::class, 'updateType'])
+            ->middleware('permission:dealer.enquiries.update');
     });
     
     // Dealer Profile
@@ -296,10 +325,14 @@ Route::middleware('auth:api')->group(function () {
     
     // Analytics
     Route::prefix('analytics')->group(function () {
-        Route::get('/overview', [DealerAnalyticsController::class, 'overview']);
-        Route::get('/leads', [DealerAnalyticsController::class, 'leads']);
-        Route::get('/vehicles', [DealerAnalyticsController::class, 'vehicles']);
-        Route::get('/marketing', [DealerAnalyticsController::class, 'marketing']);
+        Route::get('/overview', [DealerAnalyticsController::class, 'overview'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/leads', [DealerAnalyticsController::class, 'leads'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/vehicles', [DealerAnalyticsController::class, 'vehicles'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/marketing', [DealerAnalyticsController::class, 'marketing'])
+            ->middleware('dealer.feature:analytics');
         Route::get('/subscription', [DealerAnalyticsController::class, 'subscription']);
         Route::get('/funnel', [DealerAnalyticsController::class, 'funnel'])
             ->middleware('dealer.feature:analytics');

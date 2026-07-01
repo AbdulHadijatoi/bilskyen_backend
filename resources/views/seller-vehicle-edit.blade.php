@@ -652,7 +652,7 @@
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_variant') }}</option>
                             @foreach($lookupData['variants'] as $variant)
-                                <option value="{{ $variant->id }}" {{ $vehicle->details && $vehicle->details->variant_id == $variant->id ? 'selected' : '' }}>
+                                <option value="{{ $variant->id }}" {{ (int) $vehicle->variant_id === (int) $variant->id ? 'selected' : '' }}>
                                     {{ $variant->name }}
                                 </option>
                             @endforeach
@@ -661,12 +661,12 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="color_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
-                        <select id="color_id" name="color_id"
+                        <label for="colour_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.color_label') }}</label>
+                        <select id="colour_id" name="colour_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_color') }}</option>
-                            @foreach($lookupData['colors'] as $color)
-                                <option value="{{ $color->id }}" {{ $vehicle->details && $vehicle->details->color_id == $color->id ? 'selected' : '' }}>
+                            @foreach($lookupData['dmrColours'] as $color)
+                                <option value="{{ $color->id }}" {{ (int) ($vehicle->colour_id ?? 0) === (int) $color->id ? 'selected' : '' }}>
                                     {{ $color->name }}
                                 </option>
                             @endforeach
@@ -695,10 +695,10 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="km_driven" class="text-sm font-medium required-field">{{ __('messages.forms.km_driven') }}</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0" required
+                        <input type="number" id="km_driven" name="km_driven" min="0" step="any" inputmode="decimal" required
                             value="{{ old('km_driven', $vehicle->km_driven) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.km_driven_help') }}</p>
                     </div>
 
@@ -715,7 +715,7 @@
                                     @endphp
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ $firstRegMonth == $i ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                            {{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
@@ -744,12 +744,12 @@
                                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">{{ __('messages.pages.sell_your_car.select_month') }}</option>
                                     @php
-                                        $lastInspectionDate = $vehicle->details && $vehicle->details->last_inspection_date ? \Carbon\Carbon::parse($vehicle->details->last_inspection_date) : null;
+                                        $lastInspectionDate = $vehicle->last_inspection_date ? \Carbon\Carbon::parse($vehicle->last_inspection_date) : null;
                                         $lastInspectionMonth = $lastInspectionDate ? $lastInspectionDate->month : null;
                                     @endphp
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ $lastInspectionMonth == $i ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                            {{ \Carbon\Carbon::createFromDate(null, $i, 1)->locale(app()->getLocale())->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
@@ -771,30 +771,30 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="fuel_efficiency" id="fuel_efficiency_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
-                        <input type="number" id="fuel_efficiency" name="fuel_efficiency" min="0" step="any" inputmode="decimal"
-                            value="{{ old('fuel_efficiency', $vehicle->fuel_efficiency) }}"
+                        <label for="km_per_liter" id="km_per_liter_label" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.fuel_efficiency_label') }}</label>
+                        <input type="number" id="km_per_liter" name="km_per_liter" min="0" step="any" inputmode="decimal"
+                            value="{{ old('km_per_liter', $vehicle->km_per_liter) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0.00">
-                        <p class="field-help" id="fuel_efficiency_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
+                        <p class="field-help" id="km_per_liter_help">{{ __('messages.pages.sell_your_car.fuel_efficiency_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="technical_total_weight" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
-                        <input type="number" id="technical_total_weight" name="technical_total_weight" min="0"
-                            value="{{ old('technical_total_weight', $vehicle->details ? $vehicle->details->technical_total_weight : '') }}"
+                        <label for="maximum_weight_kg" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.technical_total_weight') }}</label>
+                        <input type="number" id="maximum_weight_kg" name="maximum_weight_kg" min="0"
+                            value="{{ old('maximum_weight_kg', $vehicle->maximum_weight_kg) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="0">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.technical_total_weight_help') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="euronom_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
-                        <select id="euronom_id" name="euronom_id"
+                        <label for="emission_norm_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.euronom') }}</label>
+                        <select id="emission_norm_id" name="emission_norm_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                             <option value="">{{ __('messages.pages.sell_your_car.select_euronom') }}</option>
-                            @foreach($lookupData['euronorms'] as $euronom)
-                                <option value="{{ $euronom->id }}" {{ $vehicle->details && $vehicle->details->euronom_id == $euronom->id ? 'selected' : '' }}>
+                            @foreach($lookupData['dmrEuronorms'] as $euronom)
+                                <option value="{{ $euronom->id }}" {{ (int) ($vehicle->emission_norm_id ?? 0) === (int) $euronom->id ? 'selected' : '' }}>
                                     {{ $euronom->name }}
                                 </option>
                             @endforeach
@@ -913,7 +913,7 @@
                     <label class="text-sm font-medium mb-2 block">{{ __('messages.pages.sell_your_car.servicebog') }}</label>
                     <div class="flex gap-2 md:gap-3">
                         @php
-                            $servicebog = $vehicle->details ? $vehicle->details->servicebog : 'Default';
+                            $servicebog = $vehicle->servicebog ?? 'Default';
                         @endphp
                         <label class="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-all hover:bg-accent border border-input servicebog-radio">
                             <input type="radio" name="servicebog" value="Yes" class="h-3 w-3 md:h-4 md:w-4 text-primary" {{ $servicebog == 'Yes' ? 'checked' : '' }}>
@@ -948,10 +948,10 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="price" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.price_label') }}</label>
-                        <input type="number" id="price" name="price" required min="0"
+                        <input type="number" id="price" name="price" required min="0" step="any" inputmode="decimal"
                             value="{{ old('price', $vehicle->price) }}"
                             class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="0">
+                            placeholder="0.00">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
@@ -990,6 +990,7 @@
                 <div class="section-description">
                     {{ __('messages.pages.edit_vehicle.section_photos_description') }}
                 </div>
+                <p class="field-help mb-3">{{ __('messages.pages.edit_vehicle.photos_optional_hint') }}</p>
                 
                 <!-- Image Upload Area -->
                 <div class="image-upload-area" id="image-upload-area">
@@ -1030,7 +1031,7 @@
                             <div class="image-preview-item" data-image-id="{{ $image->id }}" data-sort-order="{{ $image->sort_order }}" draggable="true">
                                 <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ __('messages.forms.vehicle_image_alt') }}">
                                 <div class="image-preview-overlay">
-                                    <button type="button" class="image-remove-btn" onclick="removeExistingImage({{ $image->id }})" title="{{ __('messages.pages.edit_vehicle.remove_image') }}">
+                                    <button type="button" class="image-remove-btn" data-existing-image-id="{{ $image->id }}" title="{{ __('messages.pages.edit_vehicle.remove_image') }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M18 6L6 18M6 6l12 12"></path>
                                         </svg>
@@ -1059,7 +1060,7 @@
                     <label for="description" class="text-sm font-medium">{{ __('messages.forms.message') }}</label>
                     <textarea id="description" name="description" rows="6"
                         class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}">{{ old('description', $vehicle->details ? $vehicle->details->description : '') }}</textarea>
+                        placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}">{{ old('description', $vehicle->description) }}</textarea>
                     <p class="field-help">{{ __('messages.pages.sell_your_car.description_help') }}</p>
                 </div>
             </div>
@@ -1081,7 +1082,7 @@
                     <div class="space-y-2">
                         <label for="seller_phone" class="text-sm font-medium">{{ __('messages.forms.phone') }}</label>
                         <input type="text" id="seller_phone" name="seller_phone" 
-                            value="{{ old('seller_phone', $vehicle->details ? $vehicle->details->seller_phone : ($user->phone ?? '')) }}"
+                            value="{{ old('seller_phone', $vehicle->seller_phone ?? ($user->phone ?? '')) }}"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             placeholder="{{ __('messages.pages.sell_your_car.phone_placeholder') }}">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.phone_help') }}</p>
@@ -1136,17 +1137,50 @@
     </form>
 </div>
 
-@push('scripts')
-<script>
-    window.locationsData = @json($lookupData['locations'] ?? []);
-    window.vehicleId = {{ $vehicle->id }};
-    window.existingImages = @json($vehicle->images->map(function($img) {
+@php
+    $editVehicleTranslations = [
+        'requiredFieldError' => __('messages.pages.edit_vehicle.required_field_error'),
+        'updating' => __('messages.pages.edit_vehicle.updating'),
+        'updateFailed' => __('messages.pages.edit_vehicle.update_failed'),
+        'updateSuccess' => __('messages.pages.edit_vehicle.update_success'),
+        'updateGenericError' => __('messages.pages.edit_vehicle.update_generic_error'),
+        'imageInvalidFormat' => __('messages.pages.edit_vehicle.image_invalid_format'),
+        'imageTooLarge' => __('messages.pages.edit_vehicle.image_too_large'),
+        'removeImage' => __('messages.pages.edit_vehicle.remove_image'),
+        'updateButton' => __('messages.pages.edit_vehicle.update_button'),
+    ];
+
+    $editVehicleExistingImages = $vehicle->images->map(function ($img) {
         return [
             'id' => $img->id,
             'url' => asset('storage/' . $img->image_path),
-            'sort_order' => $img->sort_order
+            'sort_order' => $img->sort_order,
         ];
-    }));
+    })->values();
+@endphp
+
+@push('scripts')
+<script id="edit-vehicle-locations-data" type="application/json">
+@json($lookupData['locations'] ?? [])
+</script>
+<script id="edit-vehicle-id-data" type="application/json">
+@json($vehicle->id)
+</script>
+<script id="edit-vehicle-translations-data" type="application/json">
+@json($editVehicleTranslations)
+</script>
+<script id="edit-vehicle-existing-images-data" type="application/json">
+@json($editVehicleExistingImages)
+</script>
+<script>
+    const editVehicleLocationsEl = document.getElementById('edit-vehicle-locations-data');
+    const editVehicleIdEl = document.getElementById('edit-vehicle-id-data');
+    const editVehicleTranslationsEl = document.getElementById('edit-vehicle-translations-data');
+    const editVehicleExistingImagesEl = document.getElementById('edit-vehicle-existing-images-data');
+    window.locationsData = editVehicleLocationsEl ? JSON.parse(editVehicleLocationsEl.textContent) : [];
+    window.vehicleId = editVehicleIdEl ? JSON.parse(editVehicleIdEl.textContent) : null;
+    window.editVehicleTranslations = editVehicleTranslationsEl ? JSON.parse(editVehicleTranslationsEl.textContent) : {};
+    window.existingImages = editVehicleExistingImagesEl ? JSON.parse(editVehicleExistingImagesEl.textContent) : [];
 </script>
 <script src="{{ asset('js/seller-vehicle-edit-form.js') }}"></script>
 @endpush

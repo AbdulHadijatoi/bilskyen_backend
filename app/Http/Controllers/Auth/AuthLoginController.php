@@ -42,8 +42,8 @@ class AuthLoginController extends Controller
 
         // Attempt authentication
         if (!$token = auth('api')->attempt($credentials)) {
-            return $this->error('Invalid credentials', [
-                'email' => ['These credentials do not match our records.'],
+            return $this->error(__('messages.api.invalid_credentials'), [
+                'email' => [__('messages.errors.credentials_mismatch')],
             ], 401);
         }
 
@@ -53,7 +53,7 @@ class AuthLoginController extends Controller
         // Check if user is banned
         if ($user->banned ?? false) {
             auth('api')->logout();
-            return $this->error('Account is banned', [
+            return $this->error(__('messages.errors.account_banned_short'), [
                 'ban_reason' => $user->ban_reason ?? null,
                 'ban_expires' => $user->ban_expires ?? null,
             ], 403);
@@ -98,19 +98,19 @@ class AuthLoginController extends Controller
             $refreshToken = $request->cookie('refresh_token');
             
             if (!$refreshToken) {
-                return $this->error('Refresh token not found', null, 401);
+                return $this->error(__('messages.api.refresh_token_not_found'), null, 401);
             }
 
             // Authenticate using refresh token
             $user = JWTAuth::setToken($refreshToken)->authenticate();
             
             if (!$user) {
-                return $this->error('User not found', null, 404);
+                return $this->error(__('messages.errors.user_not_found'), null, 404);
             }
 
             // Check if user is banned
             if ($user->banned ?? false) {
-                return $this->error('Account is banned', null, 403);
+                return $this->error(__('messages.errors.account_banned_short'), null, 403);
             }
 
             // Generate new access token
@@ -137,9 +137,9 @@ class AuthLoginController extends Controller
                 'expires_in' => config('jwt.ttl', 30) * 60, // in seconds
             ])->cookie($cookie);
         } catch (JWTException $e) {
-            return $this->error('Refresh token expired or invalid', null, 401);
+            return $this->error(__('messages.api.refresh_token_expired_or_invalid'), null, 401);
         } catch (\Exception $e) {
-            return $this->error('Failed to refresh token', null, 500);
+            return $this->error(__('messages.api.failed_to_refresh_token'), null, 500);
         }
     }
 
@@ -162,7 +162,7 @@ class AuthLoginController extends Controller
             
             return $this->success(['message' => __('messages.errors.logged_out_success')])->cookie($cookie);
         } catch (\Exception $e) {
-            return $this->error('Failed to logout', null, 500);
+            return $this->error(__('messages.api.failed_to_logout'), null, 500);
         }
     }
 
@@ -175,7 +175,7 @@ class AuthLoginController extends Controller
             $user = auth('api')->user();
 
             if (!$user) {
-                return $this->unauthorized('Unauthenticated');
+                return $this->unauthorized(__('messages.api.unauthenticated'));
             }
 
             $user->load('roles');
@@ -220,7 +220,7 @@ class AuthLoginController extends Controller
             'subscription_features' => $subscriptionFeatures,
         ]);
         } catch (\Exception $e) {
-            return $this->unauthorized('Unauthenticated');
+            return $this->unauthorized(__('messages.api.unauthenticated'));
         }
     }
 
@@ -241,8 +241,8 @@ class AuthLoginController extends Controller
 
         // Attempt authentication
         if (!$token = auth('api')->attempt($credentials)) {
-            return $this->error('Invalid credentials', [
-                'email' => ['These credentials do not match our records.'],
+            return $this->error(__('messages.api.invalid_credentials'), [
+                'email' => [__('messages.errors.credentials_mismatch')],
             ], 401);
         }
 
@@ -252,7 +252,7 @@ class AuthLoginController extends Controller
         // Check if user is banned
         if ($user->banned ?? false) {
             auth('api')->logout();
-            return $this->error('Account is banned', [
+            return $this->error(__('messages.errors.account_banned_short'), [
                 'ban_reason' => $user->ban_reason ?? null,
                 'ban_expires' => $user->ban_expires ?? null,
             ], 403);
@@ -262,8 +262,8 @@ class AuthLoginController extends Controller
         // Sellers are not allowed to login via Vue.js API, but can use Laravel web login
         if (!$user->hasAnyRole(['dealer', 'staff', 'admin'])) {
             auth('api')->logout();
-            return $this->error('Invalid account, you can not login here.', [
-                'email' => ['Invalid account, you can not login here.'],
+            return $this->error(__('messages.api.invalid_account_cannot_login_here'), [
+                'email' => [__('messages.api.invalid_account_cannot_login_here')],
             ], 403);
         }
 
@@ -327,14 +327,14 @@ class AuthLoginController extends Controller
             $refreshToken = $request->cookie('refresh_token');
             
             if (!$refreshToken) {
-                return $this->error('Refresh token not found', null, 401);
+                return $this->error(__('messages.api.refresh_token_not_found'), null, 401);
             }
 
             // Authenticate using refresh token
             $user = JWTAuth::setToken($refreshToken)->authenticate();
             
             if (!$user) {
-                return $this->error('User not found', null, 404);
+                return $this->error(__('messages.errors.user_not_found'), null, 404);
             }
 
             // Load roles for validation
@@ -342,13 +342,13 @@ class AuthLoginController extends Controller
 
             // Check if user is banned
             if ($user->banned ?? false) {
-                return $this->error('Account is banned', null, 403);
+                return $this->error(__('messages.errors.account_banned_short'), null, 403);
             }
 
             // Check if user has allowed role for Vue.js panel (dealer, staff, or admin only)
             // Sellers are not allowed to refresh tokens via Vue.js API
             if (!$user->hasAnyRole(['dealer', 'staff', 'admin'])) {
-                return $this->error('Access denied. This account type cannot access the admin panel.', null, 403);
+                return $this->error(__('messages.api.panel_access_denied_account_type'), null, 403);
             }
 
             // Generate new access token
@@ -394,9 +394,9 @@ class AuthLoginController extends Controller
                 'subscription_features' => $subscriptionFeatures,
             ])->cookie($cookie);
         } catch (JWTException $e) {
-            return $this->error('Refresh token expired or invalid', null, 401);
+            return $this->error(__('messages.api.refresh_token_expired_or_invalid'), null, 401);
         } catch (\Exception $e) {
-            return $this->error('Failed to refresh token', null, 500);
+            return $this->error(__('messages.api.failed_to_refresh_token'), null, 500);
         }
     }
 
@@ -415,29 +415,29 @@ class AuthLoginController extends Controller
         $user = User::where('username', $credentials['username'])->first();
 
         if (!$user) {
-            return $this->error('Invalid credentials', [
-                'username' => ['These credentials do not match our records.'],
+            return $this->error(__('messages.api.invalid_credentials'), [
+                'username' => [__('messages.errors.credentials_mismatch')],
             ], 401);
         }
 
         // Verify password
         if (!Hash::check($credentials['password'], $user->password)) {
-            return $this->error('Invalid credentials', [
-                'username' => ['These credentials do not match our records.'],
+            return $this->error(__('messages.api.invalid_credentials'), [
+                'username' => [__('messages.errors.credentials_mismatch')],
             ], 401);
         }
 
         // Verify user belongs to a dealer (has DealerStaff record)
         $dealerStaff = DealerStaff::where('user_id', $user->id)->first();
         if (!$dealerStaff) {
-            return $this->error('Invalid account type', [
-                'username' => ['This account is not associated with any dealer.'],
+            return $this->error(__('messages.api.invalid_account_type'), [
+                'username' => [__('messages.api.staff_not_associated_with_dealer')],
             ], 403);
         }
 
         // Check if user is banned
         if ($user->banned ?? false) {
-            return $this->error('Account is banned', [
+            return $this->error(__('messages.errors.account_banned_short'), [
                 'ban_reason' => $user->ban_reason ?? null,
                 'ban_expires' => $user->ban_expires ?? null,
             ], 403);

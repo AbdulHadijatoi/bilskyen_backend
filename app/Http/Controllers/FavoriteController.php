@@ -23,8 +23,13 @@ class FavoriteController extends Controller
         $favorites = Favorite::where('user_id', $request->user()->id)
             ->with([
                 'vehicle.images',
-                'vehicle.details',
                 'vehicle.dealer',
+                'vehicle.brand',
+                'vehicle.model',
+                'vehicle.variant',
+                'vehicle.fuelType',
+                'vehicle.gearType',
+                'vehicle.dmrFactVehicle.variant.model.brand',
             ])
             ->paginate($request->get('limit', 15));
 
@@ -34,6 +39,9 @@ class FavoriteController extends Controller
             if (!$vehicle) {
                 return null;
             }
+
+            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
+            $sellerType = $isDealer ? 'Dealer' : 'Private';
 
             // Get first image
             $firstImage = $vehicle->images->first();
@@ -48,6 +56,7 @@ class FavoriteController extends Controller
                 'version' => $vehicle->version ?? '',
                 'price' => $vehicle->price ?? 0,
                 'image' => $imageUrl,
+                'seller_type' => $sellerType,
                 'km_driven' => $vehicle->km_driven ?? 0,
                 'engine_power_hp' => $vehicle->engine_power_hp,
                 'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),

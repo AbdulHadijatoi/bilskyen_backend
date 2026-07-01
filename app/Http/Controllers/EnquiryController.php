@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VehicleEnquiryReceivedMail;
 use App\Models\Lead;
 use App\Models\Vehicle;
 use App\Models\Source;
@@ -9,6 +10,9 @@ use App\Models\LeadCategory;
 use App\Models\Enquiry;
 use App\Services\AuthService;
 use App\Services\AuditLogService;
+use App\Services\MailService;
+use App\Services\MarketplaceNotifier;
+use App\Support\EnquiryMailPresenter;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -24,8 +28,69 @@ class EnquiryController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private MailService $mailService,
+        private MarketplaceNotifier $marketplaceNotifier,
     ) {}
+
+    private function resolveVehicleOwnerEmail(Vehicle $vehicle): ?string
+    {
+        $dealerOwnerEmail = $vehicle->dealer?->owner?->email;
+        if (!empty($dealerOwnerEmail)) {
+            return $dealerOwnerEmail;
+        }
+
+        $sellerEmail = $vehicle->user?->email;
+        if (!empty($sellerEmail)) {
+            return $sellerEmail;
+        }
+
+        return null;
+    }
+
+    private function sendVehicleEnquiryEmail(Vehicle $vehicle, Enquiry $enquiry): void
+    {
+        $ownerEmail = $this->resolveVehicleOwnerEmail($vehicle);
+        if (!$ownerEmail) {
+            return;
+        }
+
+        $presenter = EnquiryMailPresenter::for($vehicle, $enquiry);
+        $vehicleUrl = url('/vehicles/' . $vehicle->slug);
+
+        $this->mailService->sendMailable(
+            $ownerEmail,
+            new VehicleEnquiryReceivedMail(
+                vehicleTitle: $presenter->vehicleTitle(),
+                vehicleUrl: $vehicleUrl,
+                enquiryType: $presenter->typeLabel(),
+                enquirySubject: $presenter->subjectLabel(),
+                senderName: (string) $enquiry->name,
+                senderEmail: (string) $enquiry->email,
+                senderPhone: $enquiry->phone ? (string) $enquiry->phone : null,
+                senderMessage: $presenter->messageBody(),
+            ),
+            [
+                'mail_type' => 'vehicle_enquiry_received',
+                'vehicle_id' => $vehicle->id,
+                'enquiry_id' => $enquiry->id,
+            ],
+            false
+        );
+    }
+
+    private function notifyEnquiryRecipients(Vehicle $vehicle, Enquiry $enquiry): void
+    {
+        $title = __('messages.notifications.new_enquiry_title');
+        $message = __('messages.notifications.new_enquiry_message', ['vehicle' => $this->vehicleLabel($vehicle)]);
+        $meta = ['vehicle_id' => $vehicle->id, 'enquiry_id' => $enquiry->id];
+
+        if ($vehicle->dealer_id && $vehicle->dealer) {
+            $this->marketplaceNotifier->notifyDealerOwner($vehicle->dealer, $title, $message, $meta);
+        } elseif ($vehicle->user) {
+            $this->marketplaceNotifier->notifyUser($vehicle->user, $title, $message, $meta);
+        }
+    }
 
     /**
      * Get lead intent ID based on category name
@@ -57,6 +122,16 @@ class EnquiryController extends Controller
         return Source::WEBSITE;
     }
 
+    private function vehicleLabel(Vehicle $vehicle): string
+    {
+        return $vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $vehicle->id]);
+    }
+
+    private function enquirySubject(string $translationKey, Vehicle $vehicle): string
+    {
+        return __($translationKey, ['vehicle' => $this->vehicleLabel($vehicle)]);
+    }
+
     /**
      * Create a lead/enquiry for a vehicle
      * Allows both authenticated and guest users
@@ -66,20 +141,16 @@ class EnquiryController extends Controller
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
 
         // Get phone number with fallback logic
         $phoneNumber = null;
-        
-        // First try: vehicle details seller_phone
-        if ($vehicle->details && !empty($vehicle->details->seller_phone)) {
-            $phoneNumber = $vehicle->details->seller_phone;
-        }
-        // If empty and vehicle has dealer: Get phone from dealer owner
-        elseif (empty($phoneNumber) && $vehicle->dealer) {
+
+        // If vehicle has dealer: Get phone from dealer owner
+        if (empty($phoneNumber) && $vehicle->dealer) {
             // Load owner relationship
             $vehicle->dealer->load('owner');
             if ($vehicle->dealer->owner && !empty($vehicle->dealer->owner->phone)) {
@@ -132,7 +203,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -163,7 +234,7 @@ class EnquiryController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Lead created successfully',
+            'message' => __('messages.api.lead_created_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'phone_number' => $phoneNumber,
@@ -176,7 +247,7 @@ class EnquiryController extends Controller
      */
     public function showEnquiryForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
 
         return view('vehicle-enquiry-form', [
             'vehicle' => $vehicle,
@@ -200,7 +271,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -240,7 +311,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with the message details (user_id can be null for guest users)
-        $enquirySubject = 'Enquiry about ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.enquiry_about', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -265,7 +336,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -286,7 +357,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Enquiry submitted for vehicle',
+                __('messages.audit.enquiry_submitted_for_vehicle'),
                 ['enquiry', 'form']
             );
         } catch (\Exception $e) {
@@ -298,9 +369,12 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Your enquiry has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.messages.enquiry_submitted_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -313,7 +387,7 @@ class EnquiryController extends Controller
      */
     public function showTestDriveForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-test-drive-form', [
             'vehicle' => $vehicle,
@@ -338,7 +412,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -378,7 +452,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with type "Test Drive" (user_id can be null for guest users)
-        $enquirySubject = 'Test Drive Request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.test_drive_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -403,7 +477,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -424,7 +498,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Test drive request submitted for vehicle',
+                __('messages.audit.test_drive_submitted_for_vehicle'),
                 ['enquiry', 'test-drive']
             );
         } catch (\Exception $e) {
@@ -436,9 +510,12 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Your test drive request has been submitted successfully. We will get back to you soon to schedule your test drive.',
+            'message' => __('messages.api.test_drive_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -451,7 +528,7 @@ class EnquiryController extends Controller
      */
     public function showPriceNegotiationForm(Vehicle $vehicle): View
     {
-        $vehicle->load(['details', 'dealer.owner', 'user', 'images', 'brand', 'model']);
+        $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-price-negotiation-form', [
             'vehicle' => $vehicle,
@@ -476,7 +553,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
@@ -516,7 +593,7 @@ class EnquiryController extends Controller
         ]);
 
         // Create enquiry record with type "Price Enquiry" (user_id can be null for guest users)
-        $enquirySubject = 'Price Negotiation for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.price_negotiation_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -541,7 +618,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -562,7 +639,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Price negotiation request submitted for vehicle',
+                __('messages.audit.price_negotiation_submitted_for_vehicle'),
                 ['enquiry', 'price-negotiation']
             );
         } catch (\Exception $e) {
@@ -574,9 +651,12 @@ class EnquiryController extends Controller
         }
 
         // Return success response
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Your price negotiation has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.api.price_negotiation_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
@@ -602,7 +682,7 @@ class EnquiryController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        $vehicle->load(['details', 'dealer.owner', 'user']);
+        $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
         $dealerId = $vehicle->dealer_id;
 
         $sourceName = $this->getSourceName($request);
@@ -637,7 +717,7 @@ class EnquiryController extends Controller
         $enquiryMessage .= "Expected price (exchange vehicle): {$validated['expected_price']}\n\n";
         $enquiryMessage .= "Message:\n{$validated['message']}";
 
-        $enquirySubject = 'Exchange request for ' . ($vehicle->title ?? 'Vehicle #' . $vehicle->id);
+        $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.exchange_for', $vehicle);
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'subject' => $enquirySubject,
@@ -661,7 +741,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Lead created for vehicle',
+                __('messages.audit.lead_created_for_vehicle'),
                 ['lead', 'enquiry']
             );
         } catch (\Exception $e) {
@@ -681,7 +761,7 @@ class EnquiryController extends Controller
                 $request,
                 'Vehicle',
                 $vehicle->id,
-                'Exchange request submitted for vehicle',
+                __('messages.audit.exchange_request_submitted_for_vehicle'),
                 ['enquiry', 'exchange']
             );
         } catch (\Exception $e) {
@@ -692,9 +772,12 @@ class EnquiryController extends Controller
             ]);
         }
 
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Your exchange request has been submitted successfully. We will get back to you soon.',
+            'message' => __('messages.api.exchange_request_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,

@@ -2,249 +2,299 @@
 
 namespace App\Services;
 
-use App\Models\Brand;
-use App\Models\ModelYear;
-use App\Models\FuelType;
+use App\Models\DmrBrand;
+use App\Models\DmrFactVehicle;
+use App\Models\DmrModel;
+use App\Models\DmrVariant;
+use App\Models\DmrDriveEnergy;
 use App\Models\GearType;
 use App\Models\ListingType;
-use App\Models\BodyType;
-use App\Models\Color;
-use App\Models\Variant;
-use App\Models\Type;
 use App\Models\Condition;
 use App\Models\SalesType;
 use App\Models\PriceType;
-use App\Models\Euronom;
-use App\Models\VehicleModel;
-use App\Models\VehicleUse;
 use App\Models\VehicleListStatus;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
-use App\Models\Transmission;
 use App\Models\Category;
+use App\Models\DmrBodyType;
+use App\Models\DmrColour;
+use App\Models\DmrEmissionNorm;
+use App\Models\DmrVehicleUse;
 use App\Models\Permit;
 use App\Models\LeadIntent;
 use App\Models\LeadCategory;
+use App\Models\LeadStage;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lookup Service
- * Centralizes fetching and caching of lookup/constants data used by
+ * Centralizes fetching of lookup/constants data used by
  * LookupController (public), DealerLookupController, and AdminConstantsController.
  */
 class LookupService
 {
-    public const CACHE_TTL = 86400; // 24 hours
-
     /**
-     * Get brands (id, name, ...). Same cache key used by all APIs.
+     * No-op: lookup data is not cached. Kept so admin CRUD and traits can still call invalidate hooks.
+     *
+     * @param  string  $group  matches ConstantsCacheTrait names (e.g. body_types, colors, euronorms)
      */
-    public function getBrands(): Collection
+    public static function forgetLookupCacheGroup(string $group): void
     {
-        return Cache::remember('constants_brands', self::CACHE_TTL, function () {
-            return Brand::orderBy('name')->get();
-        });
     }
 
-    public function getModelYears(): Collection
+    /** No-op: lookup data is not cached. */
+    public static function forgetFuelTypesLookupCache(): void
     {
-        return Cache::remember('constants_model_years', self::CACHE_TTL, function () {
-            return ModelYear::orderBy('name')->get();
-        });
+    }
+
+    /** No-op: lookup data is not cached. */
+    public static function forgetBrandAndDependentLookupCaches(): void
+    {
+    }
+
+    public function getBrands(): Collection
+    {
+        return DmrBrand::orderBy('name')->get();
     }
 
     public function getFuelTypes(): Collection
     {
-        return Cache::remember('constants_fuel_types', self::CACHE_TTL, function () {
-            return FuelType::orderBy('name')->get();
-        });
+        return DmrDriveEnergy::orderBy('name')->get();
     }
 
     public function getGearTypes(): Collection
     {
-        return Cache::remember('constants_gear_types', self::CACHE_TTL, function () {
-            return GearType::orderBy('name')->get();
-        });
+        return GearType::orderBy('name')->get();
     }
 
     public function getListingTypes(): Collection
     {
-        return Cache::remember('constants_listing_types', self::CACHE_TTL, function () {
-            return ListingType::orderBy('name')->get();
-        });
+        return ListingType::orderBy('name')->get();
     }
 
     public function getBodyTypes(): Collection
     {
-        return Cache::remember('constants_body_types', self::CACHE_TTL, function () {
-            return BodyType::orderBy('name')->get();
-        });
+        return DmrBodyType::orderBy('name')->get();
     }
 
     public function getColors(): Collection
     {
-        return Cache::remember('constants_colors', self::CACHE_TTL, function () {
-            return Color::orderBy('name')->get();
-        });
+        return DmrColour::orderBy('name')->get();
     }
 
     public function getVariants(): Collection
     {
-        return Cache::remember('constants_variants', self::CACHE_TTL, function () {
-            return Variant::with('model')->orderBy('name')->get();
-        });
-    }
-
-    public function getTypes(): Collection
-    {
-        return Cache::remember('constants_types', self::CACHE_TTL, function () {
-            return Type::orderBy('name')->get();
-        });
+        return DmrVariant::with('model')->orderBy('name')->get();
     }
 
     public function getConditions(): Collection
     {
-        return Cache::remember('constants_conditions', self::CACHE_TTL, function () {
-            return Condition::orderBy('name')->get();
-        });
+        return Condition::orderBy('name')->get();
     }
 
     public function getSalesTypes(): Collection
     {
-        return Cache::remember('constants_sales_types', self::CACHE_TTL, function () {
-            return SalesType::orderBy('name')->get();
-        });
+        return SalesType::orderBy('name')->get();
     }
 
     public function getPriceTypes(): Collection
     {
-        return Cache::remember('constants_price_types', self::CACHE_TTL, function () {
-            return PriceType::orderBy('name')->get();
-        });
+        return PriceType::orderBy('name')->get();
     }
 
     public function getEuronorms(): Collection
     {
-        return Cache::remember('constants_euronorms', self::CACHE_TTL, function () {
-            return Euronom::orderBy('name')->get();
-        });
+        return DmrEmissionNorm::orderBy('name')->get();
     }
 
     public function getVehicleModels(): Collection
     {
-        return Cache::remember('constants_vehicle_models', self::CACHE_TTL, function () {
-            return VehicleModel::with('brand')->orderBy('name')->get();
-        });
+        return DmrModel::with('brand')->orderBy('name')->get();
+    }
+
+    /**
+     * Distinct model years from DMR fact data (read-only reference for admin UI).
+     *
+     * @return Collection<int, array{id:int,name:string}>
+     */
+    public function getModelYears(): Collection
+    {
+        $years = DmrFactVehicle::query()
+            ->whereNotNull('model_aar')
+            ->distinct()
+            ->orderByDesc('model_aar')
+            ->pluck('model_aar');
+
+        return $years->values()->map(fn ($y) => [
+            'id' => (int) $y,
+            'name' => (string) $y,
+        ]);
     }
 
     public function getVehicleUses(): Collection
     {
-        return Cache::remember('constants_vehicle_uses', self::CACHE_TTL, function () {
-            return VehicleUse::orderBy('name')->get();
-        });
+        return DmrVehicleUse::orderBy('name')->get();
     }
 
     public function getVehicleListStatuses(): Collection
     {
-        return Cache::rememberForever('constants_vehicle_list_statuses', function () {
-            return VehicleListStatus::orderBy('name')->get();
-        });
+        return VehicleListStatus::orderBy('name')->get();
     }
 
     public function getEquipmentTypes(): Collection
     {
-        return Cache::remember('constants_equipment_types', self::CACHE_TTL, function () {
-            return EquipmentType::with(['equipments' => function ($query) {
-                $query->orderBy('name');
-            }])->orderBy('name')->get();
-        });
+        return EquipmentType::with(['equipments' => function ($query) {
+            $query->orderBy('name');
+        }])->orderBy('name')->get();
     }
 
     public function getEquipments(): Collection
     {
-        return Cache::remember('constants_equipments', self::CACHE_TTL, function () {
-            return Equipment::with('equipmentType')->orderBy('name')->get();
-        });
+        return Equipment::with('equipmentType')->orderBy('name')->get();
     }
 
     /** Public API only: transmissions, categories, permits */
-    public function getTransmissions(): Collection
-    {
-        return Cache::remember('constants_transmissions', self::CACHE_TTL, function () {
-            return Transmission::orderBy('name')->get();
-        });
-    }
 
     public function getCategories(): Collection
     {
-        return Cache::remember('constants_categories', self::CACHE_TTL, function () {
-            return Category::orderBy('name')->get();
-        });
+        return Category::orderBy('name')->get();
     }
 
     public function getPermits(): Collection
     {
-        return Cache::remember('constants_permits', self::CACHE_TTL, function () {
-            return Permit::orderBy('name')->get();
-        });
+        return Permit::orderBy('name')->get();
+    }
+
+    /** No-op: lookup data is not cached. */
+    public static function forgetLeadStagesLookupCache(): void
+    {
     }
 
     /** Dealer API only: lead intents and categories */
     public function getLeadIntents(): Collection
     {
-        return Cache::rememberForever('constants_lead_intents', function () {
-            return LeadIntent::orderBy('id')->get();
-        });
+        return LeadIntent::orderBy('id')->get();
     }
 
     public function getLeadCategories(): Collection
     {
-        return Cache::remember('constants_lead_categories', self::CACHE_TTL, function () {
-            return LeadCategory::orderBy('name')->get();
-        });
+        return LeadCategory::orderBy('name')->get();
     }
 
-    private function normalizeSearchLimit(int $limit): int
+    public function getLeadStages(): Collection
     {
-        $limit = max(1, $limit);
-        // Hard cap to keep dropdown searches cheap.
-        return min(50, $limit);
+        return LeadStage::orderBy('id')->get();
     }
 
     /**
-     * Brands dropdown search (no full-table caching).
+     * Brands dropdown search.
      *
      * @return array<int, array{id:int,name:string}>
      */
-    public function searchBrands(?string $search, int $limit): array
+    public function searchBrands(?string $search): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = Brand::query()->select(['id', 'name'])->orderBy('name');
+        $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
         if ($searchTerm !== '') {
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (Brand $b) => ['id' => $b->id, 'name' => $b->name])
+        return $query->get()
+            ->map(fn (DmrBrand $b) => ['id' => $b->id, 'name' => $b->name])
             ->values()
             ->all();
     }
 
     /**
-     * Models dropdown search (optionally constrained by brand_ids).
+     * Distinct brand ids on published, non-deleted vehicles.
+     *
+     * @return array<int,int>
+     */
+    public function publishedListingBrandIds(): array
+    {
+        return DB::table('vehicles')
+            ->whereNull('deleted_at')
+            ->whereNotNull('brand_id')
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->distinct()
+            ->pluck('brand_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Brands for home / vehicles listing filters (published inventory only).
+     *
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function searchBrandsForListingFilters(?string $search): array
+    {
+        $searchTerm = $search !== null ? trim($search) : '';
+        $publishedBrandIds = $this->publishedListingBrandIds();
+
+        $query = DmrBrand::query()->select(['id', 'name'])->orderBy('name');
+        if ($publishedBrandIds === []) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->whereIn('id', $publishedBrandIds);
+        }
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query->get()
+            ->map(fn (DmrBrand $b) => ['id' => $b->id, 'name' => $b->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Distinct {@see DmrModel} ids that appear on published, non-deleted vehicles.
+     * When {@code $brandIds} is non-empty, only vehicles with those {@code brand_id} values are considered.
+     *
+     * @param  array<int,int>  $brandIds
+     * @return array<int,int>
+     */
+    public function publishedListingModelIds(array $brandIds): array
+    {
+        $q = DB::table('vehicles')
+            ->whereNull('deleted_at')
+            ->whereNotNull('model_id')
+            ->where('list_status_id', VehicleListStatus::PUBLISHED);
+
+        if ($brandIds !== []) {
+            $q->whereIn('brand_id', $brandIds);
+        }
+
+        $data = $q->distinct()
+            ->pluck('model_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return $data;
+    }
+
+    /**
+     * Models dropdown search (full DMR catalog; optionally constrained by brand_ids).
+     * For public listing page filters (published inventory + short labels), use {@see self::searchModelsForListingFilters} via GET /api/v1/listing-models.
      *
      * @param array<int,int> $brandIds
      * @return array<int, array{id:int,name:string,brand_id:int}>
      */
-    public function searchModels(?string $search, array $brandIds, int $limit): array
+    public function searchModels(?string $search, array $brandIds): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = VehicleModel::query()->select(['id', 'name', 'brand_id'])->orderBy('name');
+        $query = DmrModel::query()
+            ->select(['id', 'name', 'brand_id'])
+            ->whereNotIn('name', ['-', '.'])
+            ->orderBy('name');
         if (!empty($brandIds)) {
             $query->whereIn('brand_id', $brandIds);
         }
@@ -252,29 +302,47 @@ class LookupService
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (VehicleModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
+        return $query->get()
+            ->map(fn (DmrModel $m) => ['id' => $m->id, 'name' => $m->name, 'brand_id' => $m->brand_id])
             ->values()
             ->all();
     }
 
     /**
-     * Types dropdown search.
+     * Models for home / vehicles listing filters: only {@see DmrModel} ids with a published, non-deleted vehicle;
+     * optional brand filter; {@code name} shortened for dropdowns via {@see DmrModel::dropdownDisplayName}.
      *
-     * @return array<int, array{id:int,name:string}>
+     * @param array<int,int> $brandIds
+     * @return array<int, array{id:int,name:string,brand_id:int}>
      */
-    public function searchTypes(?string $search, int $limit): array
+    public function searchModelsForListingFilters(?string $search, array $brandIds): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = Type::query()->select(['id', 'name'])->orderBy('name');
+        $publishedModelIds = $this->publishedListingModelIds($brandIds);
+
+        $query = DmrModel::query()
+            ->select(['id', 'name', 'brand_id'])
+            ->whereNotIn('name', ['-', '.'])
+            ->orderBy('name');
+        if ($publishedModelIds === []) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->whereIn('id', $publishedModelIds);
+        }
+        if (!empty($brandIds)) {
+            $query->whereIn('brand_id', $brandIds);
+        }
         if ($searchTerm !== '') {
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (Type $t) => ['id' => $t->id, 'name' => $t->name])
+        return $query->get()
+            ->map(fn (DmrModel $m) => [
+                'id' => $m->id,
+                'name' => DmrModel::dropdownDisplayName((string) $m->name),
+                'brand_id' => $m->brand_id,
+            ])
             ->values()
             ->all();
     }
@@ -285,12 +353,11 @@ class LookupService
      * @param array<int,int> $modelIds
      * @return array<int, array{id:int,name:string,model_id:int}>
      */
-    public function searchVariants(?string $search, array $modelIds, int $limit): array
+    public function searchVariants(?string $search, array $modelIds): array
     {
-        $limit = $this->normalizeSearchLimit($limit);
         $searchTerm = $search !== null ? trim($search) : '';
 
-        $query = Variant::query()->select(['id', 'name', 'model_id'])->orderBy('name');
+        $query = DmrVariant::query()->select(['id', 'name', 'model_id'])->orderBy('name');
         if (!empty($modelIds)) {
             $query->whereIn('model_id', $modelIds);
         }
@@ -298,8 +365,8 @@ class LookupService
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        return $query->limit($limit)->get()
-            ->map(fn (Variant $v) => ['id' => $v->id, 'name' => $v->name, 'model_id' => $v->model_id])
+        return $query->get()
+            ->map(fn (DmrVariant $v) => ['id' => $v->id, 'name' => $v->name, 'model_id' => $v->model_id])
             ->values()
             ->all();
     }
@@ -310,7 +377,8 @@ class LookupService
     public function getPublicConstants(): array
     {
         return [
-            'model_years' => $this->getModelYears()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
+            // Curated sort keys for the public listing UI (see VehicleService::curatedPublicListingSortKeys()).
+            'vehicle_sort_keys' => VehicleService::curatedPublicListingSortKeys(),
             'fuel_types' => $this->getFuelTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'gear_types' => $this->getGearTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'listing_types' => $this->getListingTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
@@ -323,38 +391,35 @@ class LookupService
             'vehicle_uses' => $this->getVehicleUses()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'equipment_types' => $this->getEquipmentTypes()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'equipments' => $this->getEquipments()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'equipment_type_id' => $m->equipment_type_id]),
-            'transmissions' => $this->getTransmissions()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'categories' => $this->getCategories()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
             'permits' => $this->getPermits()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name]),
         ];
     }
 
     /**
-     * Return all constants for dealer API (full models, includes lead intents/categories).
+     * Return all constants for dealer API (includes lead intents/categories).
+     * Model years: derive on the client (e.g. 1975–current). Models/variants: use GET /api/v1/models|variants (full catalog). Listing filters on the site use GET /api/v1/listing-models.
      */
     public function getDealerConstants(): array
     {
         return [
             'brands' => $this->getBrands(),
-            'model_years' => $this->getModelYears(),
             'fuel_types' => $this->getFuelTypes(),
             'gear_types' => $this->getGearTypes(),
             'listing_types' => $this->getListingTypes(),
             'body_types' => $this->getBodyTypes(),
             'colors' => $this->getColors(),
-            'variants' => $this->getVariants(),
-            'types' => $this->getTypes(),
             'conditions' => $this->getConditions(),
             'sales_types' => $this->getSalesTypes(),
             'price_types' => $this->getPriceTypes(),
             'euronorms' => $this->getEuronorms(),
-            'vehicle_models' => $this->getVehicleModels(),
             'vehicle_uses' => $this->getVehicleUses(),
             'vehicle_list_statuses' => $this->getVehicleListStatuses(),
             'equipment_types' => $this->getEquipmentTypes(),
             'equipments' => $this->getEquipments(),
             'lead_intents' => $this->getLeadIntents(),
             'lead_categories' => $this->getLeadCategories(),
+            'lead_stages' => $this->getLeadStages(),
         ];
     }
 
@@ -365,19 +430,15 @@ class LookupService
     {
         return [
             'brands' => $this->getBrands(),
-            'model_years' => $this->getModelYears(),
             'fuel_types' => $this->getFuelTypes(),
             'gear_types' => $this->getGearTypes(),
             'listing_types' => $this->getListingTypes(),
             'body_types' => $this->getBodyTypes(),
             'colors' => $this->getColors(),
-            'variants' => $this->getVariants(),
-            'types' => $this->getTypes(),
             'conditions' => $this->getConditions(),
             'sales_types' => $this->getSalesTypes(),
             'price_types' => $this->getPriceTypes(),
             'euronorms' => $this->getEuronorms(),
-            'vehicle_models' => $this->getVehicleModels(),
             'vehicle_uses' => $this->getVehicleUses(),
             'vehicle_list_statuses' => $this->getVehicleListStatuses(),
             'equipment_types' => $this->getEquipmentTypes(),

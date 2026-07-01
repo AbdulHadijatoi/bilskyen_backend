@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use App\Services\AuditLogService;
+use App\Services\MailService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +23,8 @@ use Carbon\Carbon;
 class AuthPasswordController extends Controller
 {
     public function __construct(
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private MailService $mailService
     ) {}
     /**
      * Change password
@@ -34,7 +37,7 @@ class AuthPasswordController extends Controller
 
         // Security: Prevent admins from using this endpoint
         if ($user->hasRole('admin')) {
-            return $this->error('Admins must use the admin-specific password change endpoint', null, 403);
+            return $this->error(__('messages.api.password_change_admin_use_admin_endpoint'), null, 403);
         }
 
         // Match frontend API format: current_password, password, password_confirmation
@@ -125,10 +128,14 @@ class AuthPasswordController extends Controller
                 ]
             );
 
-            // TODO: Send email with reset link
-            // For now, return token in response for testing (remove in production)
-            // Mail::to($user)->send(new ResetPasswordMail($resetUrl));
-            
+            $resetUrl = url('/auth/reset-password?token=' . $token . '&email=' . urlencode($email));
+            $this->mailService->sendMailable(
+                $user->email,
+                new ResetPasswordMail($resetUrl),
+                ['mail_type' => 'password_reset_api', 'user_id' => $user->id],
+                false
+            );
+
             // Log audit trail
             try {
                 $this->auditLogService->logCreateForGuest(
@@ -150,11 +157,7 @@ class AuthPasswordController extends Controller
                 ]);
             }
 
-            // Return token in response for testing (remove in production and send via email)
-            return $this->success([
-                'message' => $message,
-                'token' => $token, // Remove this in production
-            ]);
+            return $this->success(['message' => $message]);
         }
 
         return $this->success(['message' => $message]);

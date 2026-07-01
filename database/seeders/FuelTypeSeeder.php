@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\FuelType;
+use App\Models\DmrDriveEnergy;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +23,9 @@ class FuelTypeSeeder extends Seeder
             ];
 
             foreach ($fuelTypes as $fuelType) {
-                FuelType::firstOrCreateInsensitive(['name' => $fuelType['name']]);
+                DmrDriveEnergy::query()->firstOrCreate(
+                    ['name' => $fuelType['name']]
+                );
             }
         });
     }

@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Dealer;
 use App\Constants\UserStatus;
-use App\Services\RolePermissionService;
-use App\Services\AuditLogService;
 use App\Helpers\FilterHelper;
-use Illuminate\Http\Request;
+use App\Models\Dealer;
+use App\Models\User;
+use App\Services\AuditLogService;
+use App\Services\FileService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class AdminUserController extends Controller
 {
     public function __construct(
         private RolePermissionService $rolePermissionService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private FileService $fileService
     ) {}
 
     /**
@@ -41,7 +43,7 @@ class AdminUserController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -55,7 +57,7 @@ class AdminUserController extends Controller
 
         // Apply advanced JSON filters (for backward compatibility)
         $filters = json_decode($request->input('filters', '[]'), true);
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             $joinOperator = $request->input('joinOperator', 'or');
             FilterHelper::applyFilters($query, $filters, $joinOperator);
         }
@@ -82,6 +84,7 @@ class AdminUserController extends Controller
     public function show(int $id): JsonResponse
     {
         $user = User::with('roles', 'userStatus', 'dealer')->findOrFail($id);
+
         return $this->success($user);
     }
 
@@ -117,24 +120,26 @@ class AdminUserController extends Controller
             $logoPath = null;
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
-                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
                 $logoPath = $file->storeAs('dealer-logos', $filename, 'public');
+                $logoUrl = Storage::disk('public')->url($logoPath);
+                $this->fileService->optimizeImageForWeb($logoUrl, $file->getSize());
             }
 
             DB::transaction(function () use ($user, $logoPath) {
                 // Make a unique slug
-                $baseSlug = Str::slug($user->name . '-' . $user->id);
+                $baseSlug = Str::slug($user->name.'-'.$user->id);
                 $slug = $baseSlug;
                 $count = 1;
                 while (Dealer::where('slug', $slug)->exists()) {
-                    $slug = $baseSlug . '-' . $count;
+                    $slug = $baseSlug.'-'.$count;
                     $count++;
                 }
 
                 Dealer::create([
                     'user_id' => $user->id,
                     'slug' => $slug,
-                    'cvr' => 'PENDING-' . $user->id,
+                    'cvr' => 'PENDING-'.$user->id,
                     'address' => '',
                     'city' => '',
                     'postcode' => '',
@@ -169,7 +174,7 @@ class AdminUserController extends Controller
 
         $request->validate([
             'name' => 'sometimes|string|min:2|max:100',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
+            'email' => 'sometimes|string|email|max:255|unique:users,email,'.$id,
             'phone' => 'nullable|string|max:15',
             'status_id' => ['sometimes', Rule::in(UserStatus::values())],
             'role_id' => 'sometimes|integer|exists:roles,id',
@@ -232,7 +237,7 @@ class AdminUserController extends Controller
 
         $user = User::findOrFail($id);
         $before = ['status_id' => $user->status_id];
-        
+
         $user->status_id = $request->status_id;
         $user->save();
 
@@ -358,8 +363,8 @@ class AdminUserController extends Controller
         $user = $request->user();
 
         // Verify user is an admin
-        if (!$user->hasRole('admin')) {
-            return $this->error('Only admins can use this endpoint', null, 403);
+        if (! $user->hasRole('admin')) {
+            return $this->error(__('messages.api.only_admins_endpoint'), null, 403);
         }
 
         // Match frontend API format: current_password, password, password_confirmation
@@ -379,14 +384,14 @@ class AdminUserController extends Controller
         }
 
         // Verify current password
-        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
-            return $this->error('Current password is incorrect', [
-                'current_password' => ['The current password is incorrect.'],
+        if (! \Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return $this->error(__('messages.errors.current_password_incorrect'), [
+                'current_password' => [__('messages.errors.current_password_incorrect')],
             ], 401);
         }
 
         $before = ['password' => '***'];
-        
+
         // Update password
         $user->password = $request->password;
         $user->save();
