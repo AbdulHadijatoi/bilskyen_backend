@@ -16,7 +16,11 @@ class AdminDealerInvoiceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = DealerInvoice::query()
-            ->with(['dealer:id,name', 'lines'])
+            ->with([
+                'dealer:id,user_id,slug,cvr,city',
+                'dealer.owner:id,name,email',
+                'lines',
+            ])
             ->orderByDesc('created_at');
 
         if ($request->filled('dealer_id')) {
@@ -32,7 +36,7 @@ class AdminDealerInvoiceController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $invoice = DealerInvoice::with(['dealer', 'lines.vehicle', 'approvedBy'])->findOrFail($id);
+        $invoice = DealerInvoice::with(['dealer.owner', 'lines.vehicle', 'approvedBy'])->findOrFail($id);
 
         return $this->success($invoice);
     }

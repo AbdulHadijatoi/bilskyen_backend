@@ -19,7 +19,11 @@ class AdminAiController extends Controller
     public function usage(Request $request): JsonResponse
     {
         $query = AiUsageLog::query()
-            ->with(['user:id,name,email', 'dealer:id,name'])
+            ->with([
+                'user:id,name,email',
+                'dealer:id,user_id,slug,cvr',
+                'dealer.owner:id,name,email',
+            ])
             ->orderByDesc('id');
 
         if ($request->filled('dealer_id')) {
