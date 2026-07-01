@@ -112,6 +112,12 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/import', [VehicleImportController::class, 'import'])
             ->middleware(['throttle:10,1', 'permission:dealer.vehicles.create']);
 
+        Route::get('/import/batches', [VehicleImportController::class, 'batches'])
+            ->middleware('permission:dealer.vehicles.create');
+
+        Route::get('/import/batches/{id}', [VehicleImportController::class, 'showBatch'])
+            ->middleware('permission:dealer.vehicles.create');
+
         Route::get('/export', [VehicleController::class, 'exportStock'])
             ->middleware('permission:dealer.feeds.export');
 

@@ -72,3 +72,8 @@ Schedule::command('marketing:process-abandoned')
 Schedule::command('gdpr:process-requests')
     ->hourly()
     ->timezone($timezone);
+
+Schedule::command('queue:work database --stop-when-empty --max-time=55')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->timezone($timezone);

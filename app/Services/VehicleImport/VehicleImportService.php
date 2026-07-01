@@ -9,6 +9,7 @@ use App\Services\Import\SpreadsheetImportParser;
 use App\Services\ListingBillingService;
 use App\Services\ListingExpirationService;
 use App\Services\SubscriptionFeatureService;
+use App\Services\VehicleImageUploadService;
 use App\Services\VehicleService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class VehicleImportService
     public function __construct(
         private SpreadsheetImportParser $parser,
         private VehicleService $vehicleService,
+        private VehicleImageUploadService $vehicleImageUploadService,
         private SubscriptionFeatureService $subscriptionFeatureService,
         private ListingBillingService $listingBillingService,
         private ListingExpirationService $listingExpirationService,
@@ -40,6 +42,20 @@ class VehicleImportService
             throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
+        return $this->importFromPath($path, $extension, $dealerId, $userId, $dealer, $dryRun);
+    }
+
+    /**
+     * @return array{summary: array<string, int>, rows: list<array<string, mixed>>}
+     */
+    public function importFromPath(
+        string $path,
+        string $extension,
+        int $dealerId,
+        int $userId,
+        ?Dealer $dealer,
+        bool $dryRun = false,
+    ): array {
         $rows = $this->parser->parse($path, $extension);
 
         if (count($rows) > VehicleImportColumnDefinitions::MAX_ROWS) {
@@ -93,6 +109,9 @@ class VehicleImportService
         ?Dealer $dealer,
         bool $dryRun,
     ): array {
+        $imageUrls = $this->parseImageUrls($row['image_urls'] ?? '');
+        unset($row['image_urls']);
+
         $registration = trim((string) ($row['registration'] ?? ''));
         $vin = trim((string) ($row['vin'] ?? ''));
         $dmrRequested = $registration !== '' || $vin !== '';
@@ -102,6 +121,16 @@ class VehicleImportService
         $warnings = $resolved['warnings'];
         $errors = $resolved['errors'];
         $this->appendPaygImportWarnings($warnings, $dealer, $payload);
+
+        if (count($imageUrls) > VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW) {
+            $errors[] = [
+                'field' => 'image_urls',
+                'value' => (string) count($imageUrls),
+                'message' => __('messages.api.vehicle_import_too_many_images', [
+                    'max' => VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW,
+                ]),
+            ];
+        }
 
         $base = [
             'row' => $excelRow,
@@ -139,12 +168,21 @@ class VehicleImportService
         $payload['user_id'] = $userId;
 
         try {
-            $vehicle = DB::transaction(function () use ($payload) {
+            $imageWarnings = [];
+            $vehicle = DB::transaction(function () use ($payload, $imageUrls, &$imageWarnings) {
                 $vehicle = $this->vehicleService->createVehicle($payload);
 
                 if ((int) $vehicle->list_status_id === VehicleListStatus::PUBLISHED) {
                     $this->listingExpirationService->setExpiryOnPublish($vehicle, false);
                     $this->listingBillingService->onVehiclePublished($vehicle->fresh());
+                }
+
+                if ($imageUrls !== []) {
+                    $imageResult = $this->vehicleImageUploadService->attachImagesFromRemoteUrls(
+                        $vehicle->fresh(),
+                        $imageUrls
+                    );
+                    $imageWarnings = $imageResult['warnings'];
                 }
 
                 return $vehicle;
@@ -163,11 +201,30 @@ class VehicleImportService
             ]);
         }
 
+        if ($imageWarnings !== []) {
+            $warnings = array_merge($warnings, $imageWarnings);
+        }
+
         return array_merge($base, [
             'status' => $warnings === [] ? 'created' : 'created_with_warnings',
             'vehicle_id' => $vehicle->id,
             'registration' => $vehicle->registration,
+            'warnings' => $warnings,
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function parseImageUrls(mixed $raw): array
+    {
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+
+        $parts = preg_split('/[;|,]+/', (string) $raw) ?: [];
+
+        return array_values(array_filter(array_map('trim', $parts)));
     }
 
     /**

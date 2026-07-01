@@ -19,6 +19,7 @@ return [
         'thumbnail_quality' => (int) env('VEHICLE_IMAGE_THUMBNAIL_QUALITY', 75),
         'directory' => 'vehicles',
         'disk' => 'public',
+        'remote_max_bytes' => (int) env('VEHICLE_IMAGE_REMOTE_MAX_BYTES', 10485760), // 10 MB
     ],
 
 ];

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AuditLogService;
+use App\Jobs\ProcessVehicleImportBatchJob;
+use App\Models\VehicleImportBatch;
 use App\Services\SubscriptionFeatureService;
+use App\Services\VehicleImport\VehicleImportBatchService;
 use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportService;
 use App\Services\VehicleImport\VehicleImportTemplateBuilder;
@@ -16,8 +18,8 @@ class VehicleImportController extends Controller
 {
     public function __construct(
         private VehicleImportService $vehicleImportService,
+        private VehicleImportBatchService $vehicleImportBatchService,
         private VehicleImportTemplateBuilder $templateBuilder,
-        private AuditLogService $auditLogService,
         private SubscriptionFeatureService $subscriptionFeatureService,
     ) {}
 
@@ -71,6 +73,93 @@ class VehicleImportController extends Controller
 
         $dryRun = $request->boolean('dry_run');
 
+        if ($dryRun) {
+            return $this->runSyncImport($request, $dealer, $user, true);
+        }
+
+        $pending = VehicleImportBatch::query()
+            ->where('dealer_id', $dealer->id)
+            ->whereIn('status', [VehicleImportBatch::STATUS_PENDING, VehicleImportBatch::STATUS_PROCESSING])
+            ->exists();
+
+        if ($pending) {
+            return $this->error(__('messages.api.vehicle_import_already_running'), [], 409);
+        }
+
+        try {
+            $batch = $this->vehicleImportBatchService->queueImport(
+                $request->file('file'),
+                $dealer,
+                $user,
+                false,
+            );
+            ProcessVehicleImportBatchJob::dispatch($batch->id);
+
+            return $this->success([
+                'batch_id' => $batch->id,
+                'status' => $batch->status,
+                'message' => __('messages.api.vehicle_import_queued'),
+            ], 202);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        } catch (\Throwable $e) {
+            Log::error('Vehicle bulk import queue failed', [
+                'dealer_id' => $dealer->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error(__('messages.api.vehicle_import_failed'), [], 500);
+        }
+    }
+
+    public function batches(Request $request): JsonResponse
+    {
+        $dealer = $request->user()?->dealer;
+        if ($dealer === null) {
+            return $this->error(__('messages.errors.dealer_not_found'), [], 403);
+        }
+
+        $batches = VehicleImportBatch::query()
+            ->where('dealer_id', $dealer->id)
+            ->where('dry_run', false)
+            ->orderByDesc('id')
+            ->limit(20)
+            ->get(['id', 'original_filename', 'status', 'summary', 'error_message', 'created_at', 'started_at', 'completed_at']);
+
+        return $this->success($batches);
+    }
+
+    public function showBatch(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()?->dealer;
+        if ($dealer === null) {
+            return $this->error(__('messages.errors.dealer_not_found'), [], 403);
+        }
+
+        $batch = VehicleImportBatch::query()
+            ->where('dealer_id', $dealer->id)
+            ->where('id', $id)
+            ->first();
+
+        if ($batch === null) {
+            return $this->notFound(__('messages.api.vehicle_import_batch_not_found'));
+        }
+
+        return $this->success([
+            'id' => $batch->id,
+            'original_filename' => $batch->original_filename,
+            'status' => $batch->status,
+            'summary' => $batch->summary,
+            'rows' => $batch->rows,
+            'error_message' => $batch->error_message,
+            'created_at' => $batch->created_at,
+            'started_at' => $batch->started_at,
+            'completed_at' => $batch->completed_at,
+        ]);
+    }
+
+    private function runSyncImport(Request $request, $dealer, $user, bool $dryRun): JsonResponse
+    {
         try {
             $result = $this->vehicleImportService->importFromFile(
                 $request->file('file'),
@@ -85,35 +174,9 @@ class VehicleImportController extends Controller
             Log::error('Vehicle bulk import failed', [
                 'dealer_id' => $dealer->id,
                 'error' => $e->getMessage(),
-                'exception' => $e::class,
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
-            $message = config('app.debug')
-                ? $e->getMessage()
-                : __('messages.api.vehicle_import_failed');
-
-            return $this->error($message, [], 500);
-        }
-
-        if (! $dryRun && ($result['summary']['created'] ?? 0) > 0) {
-            try {
-                $this->auditLogService->logCreate(
-                    $user,
-                    'VehicleImport',
-                    0,
-                    $result['summary'],
-                    $request,
-                    'Dealer',
-                    $dealer->id,
-                    'Bulk vehicle import completed',
-                    ['vehicle', 'dealer', 'import']
-                );
-            } catch (\Exception $e) {
-                Log::warning('Failed to audit log vehicle import', ['error' => $e->getMessage()]);
-            }
+            return $this->error(__('messages.api.vehicle_import_failed'), [], 500);
         }
 
         return $this->success($result);

@@ -97,7 +97,8 @@ class SpreadsheetImportParser
                 if ($header === '') {
                     continue;
                 }
-                $mappedRow[$header] = $row[$index] ?? '';
+                $canonicalHeader = \App\Services\VehicleImport\VehicleImportColumnDefinitions::resolveCanonicalKey($header);
+                $mappedRow[$canonicalHeader] = $row[$index] ?? '';
             }
             $mappedData[] = $mappedRow;
         }
