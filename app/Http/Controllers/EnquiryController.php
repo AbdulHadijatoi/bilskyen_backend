@@ -144,6 +144,23 @@ class EnquiryController extends Controller
         }
 
         // Return response with lead data and phone number
+        $enquiry = Enquiry::create([
+            'lead_id' => $lead->id,
+            'vehicle_id' => $vehicle->id,
+            'user_id' => $user?->id,
+            'name' => $user?->name ?? 'Guest',
+            'email' => $user?->email ?? 'noreply@example.com',
+            'phone' => $user?->phone,
+            'subject' => $this->enquirySubject('messages.api.phone_reveal_subject', $vehicle),
+            'message' => __('messages.api.phone_reveal_message'),
+            'type' => Enquiries::TYPES[0],
+            'status' => Enquiries::STATUSES[0],
+            'source' => $this->getSourceName($request),
+        ]);
+
+        $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
+        $this->notifyEnquiryRecipients($vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Lead created successfully',

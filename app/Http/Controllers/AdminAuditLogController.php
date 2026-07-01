@@ -48,7 +48,7 @@ class AdminAuditLogController extends Controller
                 $dateFrom = Carbon::parse($request->date_from)->startOfDay();
                 $query->where('created_at', '>=', $dateFrom);
             } catch (\Exception $e) {
-                return $this->validationError(['date_from' => ['Invalid date format']]);
+                return $this->validationError(['date_from' => [__('messages.api.invalid_date_format')]]);
             }
         }
 
@@ -57,7 +57,7 @@ class AdminAuditLogController extends Controller
                 $dateTo = Carbon::parse($request->date_to)->endOfDay();
                 $query->where('created_at', '<=', $dateTo);
             } catch (\Exception $e) {
-                return $this->validationError(['date_to' => ['Invalid date format']]);
+                return $this->validationError(['date_to' => [__('messages.api.invalid_date_format')]]);
             }
         }
 

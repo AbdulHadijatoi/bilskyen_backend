@@ -23,6 +23,7 @@ use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
 use App\Services\SeoService;
+use App\Services\Reputation\GoogleReviewService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
@@ -36,7 +37,8 @@ class DealerController extends Controller
         private AuthService $authService,
         private VehicleService $vehicleService,
         private AuditLogService $auditLogService,
-        private SeoService $seoService
+        private SeoService $seoService,
+        private GoogleReviewService $googleReviewService,
     ) {}
 
     /**
@@ -112,6 +114,7 @@ class DealerController extends Controller
         $filterOptions['equipmentTypes'] = $equipmentTypes;
 
         $seo = $this->seoService->getForPage('dealer', $dealer->slug);
+        $reviewSummary = $this->googleReviewService->dealerReviewSummary($dealer);
 
         return view('dealer-page', [
             'dealer' => $dealer,
@@ -119,6 +122,7 @@ class DealerController extends Controller
             'filterOptions' => $filterOptions,
             'currentFilters' => $request->all(),
             'seo' => $seo,
+            'reviewSummary' => $reviewSummary,
         ]);
     }
 

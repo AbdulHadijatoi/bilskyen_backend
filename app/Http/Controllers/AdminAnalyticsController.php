@@ -19,9 +19,12 @@ use App\Models\FuelType;
 use App\Models\AuditLog;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
-use App\Constants\LeadStage;
+use App\Services\Analytics\AnalyticsReportingService;
+use App\Support\AnalyticsDateRange;
+use App\Http\Controllers\Concerns\ExportsAnalyticsCsv;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -31,9 +34,12 @@ use Carbon\Carbon;
  */
 class AdminAnalyticsController extends Controller
 {
-    /**
-     * Get date range from request
-     */
+    use ExportsAnalyticsCsv;
+
+    public function __construct(
+        private readonly AnalyticsReportingService $reportingService,
+    ) {}
+
     private function getDateRange(?string $dateRange): array
     {
         $now = Carbon::now();
@@ -579,9 +585,54 @@ class AdminAnalyticsController extends Controller
         ]);
     }
 
-    /**
-     * Get periods for trend charts
-     */
+    public function funnel(Request $request): JsonResponse
+    {
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->funnel(null, $startDate, $endDate, $request->boolean('compare'))
+        );
+    }
+
+    public function cohort(): JsonResponse
+    {
+        return $this->success($this->reportingService->cohortAnalysis());
+    }
+
+    public function integrations(Request $request): JsonResponse
+    {
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success($this->reportingService->platformIntegrations($startDate, $endDate));
+    }
+
+    public function trends(Request $request): JsonResponse
+    {
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success($this->reportingService->dailyTrends(null, $startDate, $endDate));
+    }
+
+    public function export(Request $request): StreamedResponse|JsonResponse
+    {
+        $report = $request->get('report', 'funnel');
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        if ($report === 'cohort') {
+            $cohorts = $this->reportingService->cohortAnalysis()['cohorts'];
+            $rows = [['cohort_month', 'signups', 'still_active', 'retention_rate']];
+            foreach ($cohorts as $row) {
+                $rows[] = [$row['cohort_month'], $row['signups'], $row['still_active'], $row['retention_rate']];
+            }
+
+            return $this->csvDownload($rows, 'platform-cohort-'.now()->format('Y-m-d').'.csv');
+        }
+
+        $rows = $this->reportingService->exportDealerRows(0, $report, $startDate, $endDate);
+
+        return $this->csvDownload($rows, "platform-analytics-{$report}-".now()->format('Y-m-d').'.csv');
+    }
+
     private function getPeriods(?Carbon $startDate, ?Carbon $endDate): array
     {
         if (!$startDate || !$endDate) {

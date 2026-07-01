@@ -300,6 +300,29 @@
     </script>
     
     @stack('scripts')
+
+    @if(!empty($cookieConsent['enabled']) && !empty($cookieConsent['text']))
+    <div id="cookie-consent-banner" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900 text-white p-4 shadow-lg" style="display:none;">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm">{{ $cookieConsent['text'] }}</p>
+            <button type="button" id="cookie-consent-accept" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-medium whitespace-nowrap">
+                {{ __('messages.cms.cookie_accept') }}
+            </button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            if (localStorage.getItem('cookie_consent_accepted')) return;
+            var banner = document.getElementById('cookie-consent-banner');
+            if (banner) banner.style.display = 'block';
+            var btn = document.getElementById('cookie-consent-accept');
+            if (btn) btn.addEventListener('click', function () {
+                localStorage.setItem('cookie_consent_accepted', '1');
+                banner.style.display = 'none';
+            });
+        })();
+    </script>
+    @endif
 </body>
 </html>
 

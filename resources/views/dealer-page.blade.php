@@ -7,6 +7,18 @@
 @endphp
 
 @section('content')
+@php
+    $themePrimary = $dealer->theme_primary_color ?? null;
+    $themeSecondary = $dealer->theme_secondary_color ?? null;
+@endphp
+@if($themePrimary || $themeSecondary)
+<style>
+    :root {
+        @if($themePrimary) --primary: {{ $themePrimary }}; @endif
+        @if($themeSecondary) --secondary: {{ $themeSecondary }}; @endif
+    }
+</style>
+@endif
 <div class="bg-muted min-h-screen">
     <div class="container mx-auto space-y-4 py-6">
         <!-- Top Section: Dealer Info + Filters (Full Row) -->
@@ -24,6 +36,19 @@
                 <div class="flex-1 space-y-2">
                     <div class="flex items-start justify-between gap-4">
                         <h1 class="text-3xl font-bold text-foreground">{{ $dealer->owner?->name ?? 'Dealer' }}</h1>
+                        @if(!empty($reviewSummary['rating']))
+                        <div class="text-sm text-muted-foreground mt-1">
+                            ★ {{ number_format($reviewSummary['rating'], 1) }}
+                            @if(!empty($reviewSummary['review_count']))
+                                ({{ $reviewSummary['review_count'] }} {{ __('messages.pages.dealer_page.reviews') }})
+                            @endif
+                            @if(!empty($reviewSummary['review_url']))
+                                · <a href="{{ $reviewSummary['review_url'] }}" target="_blank" rel="noopener" class="text-primary hover:underline">{{ __('messages.pages.dealer_page.view_reviews') }}</a>
+                            @endif
+                        </div>
+                        @elseif(!empty($reviewSummary['review_url']))
+                        <a href="{{ $reviewSummary['review_url'] }}" target="_blank" rel="noopener" class="text-sm text-primary hover:underline mt-1 inline-block">{{ __('messages.pages.dealer_page.view_reviews') }}</a>
+                        @endif
                         <button 
                             type="button"
                             onclick="openDealerEnquiryDialog()"

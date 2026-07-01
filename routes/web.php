@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AuthPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\CmsPublicController;
 use App\Http\Controllers\DmrTestController;
 
 // Sitemap and robots (public, cached)
@@ -98,6 +99,11 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/seller-dashboard/{token}/vehicle/{id}/status', [\App\Http\Controllers\SellerController::class, 'updateStatus'])->name('seller.vehicle.status');
     Route::get('/seller-dashboard/{token}/vehicle/{id}/inquiries', [\App\Http\Controllers\SellerController::class, 'getInquiries'])->name('seller.vehicle.inquiries');
 });
+
+// Blog & landing pages
+Route::get('/blog', [CmsPublicController::class, 'blogIndex'])->name('blog.index');
+Route::get('/blog/{slug}', [CmsPublicController::class, 'blogShow'])->name('blog.show');
+Route::get('/lp/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show');
 
 // About Page
 Route::get('/about', [HomeController::class, 'showAbout'])->name('about');

@@ -4,8 +4,12 @@ namespace App\Services;
 
 use App\Models\SeoPage;
 use App\Models\SeoSitemap;
+use App\Models\CmsPost;
+use App\Models\LandingPage;
+use App\Constants\CmsPostStatus;
 use App\Models\Vehicle;
 use App\Models\Dealer;
+use App\Services\PlatformSettingService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
@@ -166,6 +170,36 @@ class SeoService
             ];
         }
 
+        $blogUrl = $baseUrl . '/blog';
+        if (!in_array($blogUrl, $addedUrls, true)) {
+            $entries[] = [
+                'loc' => $blogUrl,
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ];
+        }
+
+        // Blog posts
+        foreach (CmsPost::where('status', CmsPostStatus::PUBLISHED)->whereNotNull('published_at')->get() as $post) {
+            $entries[] = [
+                'loc' => $baseUrl.'/blog/'.$post->slug,
+                'lastmod' => $post->updated_at?->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ];
+        }
+
+        // Landing pages
+        foreach (LandingPage::where('status', CmsPostStatus::PUBLISHED)->whereNotNull('published_at')->get() as $lp) {
+            $entries[] = [
+                'loc' => $baseUrl.'/lp/'.$lp->slug,
+                'lastmod' => $lp->updated_at?->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.6',
+            ];
+        }
+
         // Vehicle detail URLs (published only)
         $vehicleSlugs = Vehicle::whereNotNull('published_at')->pluck('slug');
         foreach ($vehicleSlugs as $slug) {
@@ -224,6 +258,14 @@ class SeoService
      */
     public function getRobotsTxt(): string
     {
+        $settings = app(PlatformSettingService::class);
+        $mode = $settings->get('seo', 'robots_mode', 'default');
+        $custom = (string) $settings->get('seo', 'robots_custom_body', '');
+
+        if ($mode === 'custom' && trim($custom) !== '') {
+            return trim($custom);
+        }
+
         $baseUrl = rtrim(config('app.url'), '/');
         $lines = [
             'User-agent: *',

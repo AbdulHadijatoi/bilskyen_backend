@@ -14,6 +14,7 @@ class SavedSearch extends Model
 
     protected $fillable = [
         'user_id',
+        'name',
         'filters',
         'created_at',
     ];

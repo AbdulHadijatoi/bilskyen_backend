@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Set locale middleware - runs early on all web requests
         $middleware->web(prepend: [
-            \App\Http\Middleware\SetLocale::class,
+            SetLocale::class,
+            \App\Http\Middleware\SeoRedirectMiddleware::class,
+            \App\Http\Middleware\ResolveCustomDomain::class,
         ]);
         
         $middleware->alias([
@@ -37,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'auth.web' => \App\Http\Middleware\AuthenticateWeb::class,
             'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
+            'dealer.api.key' => \App\Http\Middleware\AuthenticateDealerApiKey::class,
         ]);
         
         // Global rate limiting is now handled via named rate limiters in AppServiceProvider

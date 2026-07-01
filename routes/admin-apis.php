@@ -41,6 +41,20 @@ use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
+use App\Http\Controllers\AdminCmsPostController;
+use App\Http\Controllers\AdminLandingPageController;
+use App\Http\Controllers\AdminCmsMediaController;
+use App\Http\Controllers\AdminSeoRedirectController;
+use App\Http\Controllers\AdminSeoToolsController;
+use App\Http\Controllers\AdminLocationController;
+use App\Http\Controllers\AdminOwnershipTaxRuleController;
+use App\Http\Controllers\AdminVehicleSpecDefinitionController;
+use App\Http\Controllers\AdminDmrDriveEnergyController;
+use App\Http\Controllers\Admin\AdminLeadStageController;
+use App\Http\Controllers\AdminIntegrationController;
+use App\Http\Controllers\AdminPaymentController;
+use App\Http\Controllers\AdminAiController;
+use App\Http\Controllers\AdminSyndicationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +138,38 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/list', [AdminDealerController::class, 'list']);
         Route::get('/{id}', [AdminDealerController::class, 'show']);
     });
+
+    // Platform integrations & settings
+    Route::prefix('integrations')->group(function () {
+        Route::get('/', [AdminIntegrationController::class, 'index']);
+        Route::put('/', [AdminIntegrationController::class, 'update']);
+        Route::get('/logs', [AdminIntegrationController::class, 'logs']);
+        Route::post('/test', [AdminIntegrationController::class, 'test']);
+    });
+
+    Route::prefix('syndication')->group(function () {
+        Route::get('/providers', [AdminSyndicationController::class, 'providers']);
+        Route::get('/logs', [AdminSyndicationController::class, 'logs']);
+        Route::post('/dealers/{dealerId}/sync', [AdminSyndicationController::class, 'syncDealer']);
+        Route::post('/sftp/test', [AdminSyndicationController::class, 'testSftp']);
+        Route::post('/sftp/upload', [AdminSyndicationController::class, 'uploadSftp']);
+    });
+
+    Route::prefix('marketing')->group(function () {
+        Route::get('/queue', [\App\Http\Controllers\AdminMarketingController::class, 'queue']);
+        Route::get('/gdpr-requests', [\App\Http\Controllers\AdminMarketingController::class, 'gdprRequests']);
+    });
+
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [AdminPaymentController::class, 'index']);
+    });
+
+    Route::prefix('ai')->group(function () {
+        Route::get('/usage', [AdminAiController::class, 'usage']);
+        Route::get('/prompt-templates', [AdminAiController::class, 'promptTemplates']);
+        Route::put('/prompt-templates/{id}', [AdminAiController::class, 'updatePromptTemplate']);
+        Route::post('/test', [AdminAiController::class, 'testProvider']);
+    });
     
     // Feature Management
     Route::prefix('features')->group(function () {
@@ -199,6 +245,51 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::put('/{id}', [AdminSeoPageController::class, 'update']);
         Route::delete('/{id}', [AdminSeoPageController::class, 'destroy']);
     });
+
+    // R5 CMS & SEO tools
+    Route::prefix('cms/posts')->group(function () {
+        Route::get('/categories', [AdminCmsPostController::class, 'categories']);
+        Route::post('/categories', [AdminCmsPostController::class, 'storeCategory']);
+        Route::get('/', [AdminCmsPostController::class, 'index']);
+        Route::get('/{id}', [AdminCmsPostController::class, 'show']);
+        Route::post('/', [AdminCmsPostController::class, 'store']);
+        Route::put('/{id}', [AdminCmsPostController::class, 'update']);
+        Route::delete('/{id}', [AdminCmsPostController::class, 'destroy']);
+        Route::post('/{id}/versions/{versionId}/restore', [AdminCmsPostController::class, 'restoreVersion']);
+    });
+
+    Route::prefix('cms/landing-pages')->group(function () {
+        Route::get('/', [AdminLandingPageController::class, 'index']);
+        Route::get('/{id}', [AdminLandingPageController::class, 'show']);
+        Route::post('/', [AdminLandingPageController::class, 'store']);
+        Route::put('/{id}', [AdminLandingPageController::class, 'update']);
+        Route::delete('/{id}', [AdminLandingPageController::class, 'destroy']);
+        Route::post('/{id}/versions/{versionId}/restore', [AdminLandingPageController::class, 'restoreVersion']);
+    });
+
+    Route::prefix('cms/media')->group(function () {
+        Route::get('/', [AdminCmsMediaController::class, 'index']);
+        Route::post('/', [AdminCmsMediaController::class, 'store']);
+        Route::put('/{id}', [AdminCmsMediaController::class, 'update']);
+        Route::delete('/{id}', [AdminCmsMediaController::class, 'destroy']);
+    });
+
+    Route::prefix('seo/redirects')->group(function () {
+        Route::get('/', [AdminSeoRedirectController::class, 'index']);
+        Route::post('/', [AdminSeoRedirectController::class, 'store']);
+        Route::put('/{id}', [AdminSeoRedirectController::class, 'update']);
+        Route::delete('/{id}', [AdminSeoRedirectController::class, 'destroy']);
+    });
+
+    Route::prefix('seo/tools')->group(function () {
+        Route::get('/robots', [AdminSeoToolsController::class, 'robotsShow']);
+        Route::put('/robots', [AdminSeoToolsController::class, 'robotsUpdate']);
+        Route::get('/cookie-consent', [AdminSeoToolsController::class, 'cookieConsentShow']);
+        Route::put('/cookie-consent', [AdminSeoToolsController::class, 'cookieConsentUpdate']);
+        Route::get('/audit', [AdminSeoToolsController::class, 'audit']);
+        Route::get('/schema/presets', [AdminSeoToolsController::class, 'schemaPresets']);
+        Route::post('/schema/build', [AdminSeoToolsController::class, 'buildSchema']);
+    });
     
     // Featured Vehicles Management
     Route::prefix('featured-vehicles')->group(function () {
@@ -216,6 +307,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/vehicles', [AdminAnalyticsController::class, 'vehicles']);
         Route::get('/leads', [AdminAnalyticsController::class, 'leads']);
         Route::get('/activity', [AdminAnalyticsController::class, 'activity']);
+        Route::get('/funnel', [AdminAnalyticsController::class, 'funnel']);
+        Route::get('/cohort', [AdminAnalyticsController::class, 'cohort']);
+        Route::get('/integrations', [AdminAnalyticsController::class, 'integrations']);
+        Route::get('/trends', [AdminAnalyticsController::class, 'trends']);
+        Route::get('/export', [AdminAnalyticsController::class, 'export']);
     });
     
     Route::prefix('audit-logs')->group(function () {

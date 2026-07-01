@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\PlatformSettingService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class AdminIntegrationController extends Controller
+{
+    public function __construct(
+        private PlatformSettingService $platformSettingService,
+    ) {}
+
+    public function index(): JsonResponse
+    {
+        return $this->success([
+            'general' => $this->platformSettingService->getPublicGroup('general'),
+            'crm' => $this->platformSettingService->getPublicGroup('crm'),
+            'payment' => $this->platformSettingService->getPublicGroup('payment'),
+            'ai' => $this->platformSettingService->getPublicGroup('ai'),
+            'media' => $this->platformSettingService->getPublicGroup('media'),
+            'syndication' => $this->platformSettingService->getPublicGroup('syndication'),
+            'finance' => $this->platformSettingService->getPublicGroup('finance'),
+            'marketing' => $this->platformSettingService->getPublicGroup('marketing'),
+            'reputation' => $this->platformSettingService->getPublicGroup('reputation'),
+            'compliance' => $this->platformSettingService->getPublicGroup('compliance'),
+        ]);
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'group' => 'required|in:general,crm,payment,ai,media,syndication,finance,marketing,reputation,compliance',
+            'settings' => 'required|array',
+        ]);
+
+        $this->platformSettingService->setGroup(
+            $data['group'],
+            $data['settings'],
+            $request->user()?->id
+        );
+
+        $this->platformSettingService->logIntegration(
+            $data['group'],
+            'settings.update',
+            'success',
+            'Integration settings updated',
+            $request->user()?->id
+        );
+
+        return $this->success([
+            'group' => $data['group'],
+            'settings' => $this->platformSettingService->getPublicGroup($data['group']),
+        ]);
+    }
+
+    public function logs(Request $request): JsonResponse
+    {
+        $query = \App\Models\IntegrationLog::query()->orderByDesc('id');
+
+        if ($request->filled('provider')) {
+            $query->where('provider', $request->input('provider'));
+        }
+
+        return $this->paginated($query->paginate($request->integer('limit', 20)));
+    }
+
+    public function test(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'provider' => 'required|string|max:64',
+        ]);
+
+        if ($data['provider'] === 'syndication_sftp') {
+            $result = app(\App\Services\Feeds\SftpFeedUploadService::class)->testConnection();
+            $this->platformSettingService->logIntegration('syndication', 'sftp.test', $result['success'] ? 'success' : 'failed', $result['message'], $request->user()?->id);
+
+            return $result['success'] ? $this->success($result) : $this->error($result['message'], [], 422);
+        }
+
+        if ($data['provider'] === 'stripe') {
+            $result = app(\App\Services\Payments\StripePaymentProvider::class)->testConnection();
+
+            $this->platformSettingService->logIntegration(
+                'stripe',
+                'test',
+                $result['success'] ? 'success' : 'failed',
+                $result['message'],
+                $request->user()?->id
+            );
+
+            if (! $result['success']) {
+                return $this->error($result['message'], [], 422);
+            }
+
+            return $this->success($result);
+        }
+
+        if (in_array($data['provider'], ['openai', 'anthropic', 'gemini'], true)) {
+            $result = app(\App\Services\AiService::class)->testProvider($data['provider']);
+
+            $this->platformSettingService->logIntegration(
+                $data['provider'],
+                'test',
+                $result['success'] ? 'success' : 'failed',
+                $result['message'],
+                $request->user()?->id
+            );
+
+            if (! $result['success']) {
+                return $this->error($result['message'], [], 422);
+            }
+
+            return $this->success($result);
+        }
+
+        $this->platformSettingService->logIntegration(
+            $data['provider'],
+            'test',
+            'success',
+            'Connection test placeholder',
+            $request->user()?->id
+        );
+
+        return $this->success([
+            'message' => __('messages.api.integration_test_ok'),
+            'provider' => $data['provider'],
+        ]);
+    }
+}

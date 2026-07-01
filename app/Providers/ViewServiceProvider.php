@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\AuthService;
+use App\Services\PageContentService;
+use App\Services\PlatformSettingService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -49,6 +51,22 @@ class ViewServiceProvider extends ServiceProvider
                 'user' => $user,
                 'hasSellerRole' => $user?->hasRole('seller') ?? false,
                 'sellerToken' => $sellerToken,
+            ]);
+        });
+
+        View::composer('components.footer', function ($view) {
+            $view->with(
+                'homePageContent',
+                app(PageContentService::class)->getHomePageContent('home')
+            );
+        });
+
+        View::composer('layouts.app', function ($view) {
+            $settings = app(PlatformSettingService::class);
+            $locale = app()->getLocale();
+            $view->with('cookieConsent', [
+                'enabled' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
+                'text' => $settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''),
             ]);
         });
     }

@@ -23,10 +23,13 @@ use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
-use App\Http\Requests\StoreVehicleRequest;
-use App\Http\Requests\SellYourCarRequest;
-use App\Http\Requests\UpdateVehicleRequest;
-use App\Helpers\FilterHelper;
+use App\Services\DealerListingQuotaService;
+use App\Services\ListingBillingService;
+use App\Services\ListingExpirationService;
+use App\Services\DealerInvoiceService;
+use App\Services\VehicleImageUploadService;
+use App\Services\Feeds\VehicleExportService;
+use App\Services\Media\VehicleMediaPolicyService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -44,8 +47,18 @@ class VehicleController extends Controller
         private VehicleService $vehicleService,
         FileService $fileService,
         private AuditLogService $auditLogService,
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private DealerListingQuotaService $listingQuotaService,
+        private ListingBillingService $listingBillingService,
+        private ListingExpirationService $listingExpirationService,
+        private DealerInvoiceService $dealerInvoiceService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private SellYourCarSubmissionService $sellYourCarSubmissionService,
+        private OwnershipTaxService $ownershipTaxService,
+        private VehicleImageUploadService $vehicleImageUploadService,
+        private VehicleMediaPolicyService $vehicleMediaPolicyService,
+        private VehicleExportService $vehicleExportService,
         private DealerContextService $dealerContextService,
-        private SubscriptionFeatureService $subscriptionFeatureService
     ) {
         $this->fileService = $fileService;
     }
@@ -895,11 +908,18 @@ class VehicleController extends Controller
         if ($statusId == VehicleListStatus::PUBLISHED && $oldStatusId != VehicleListStatus::PUBLISHED) {
             $dealer = $vehicle->dealer;
             if ($dealer) {
-                $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                    ->where('vehicle_list_status_id', VehicleListStatus::PUBLISHED)
-                    ->count();
-                
-                // Don't count the current vehicle if it's already published
+                try {
+                    $this->vehicleMediaPolicyService->assertCanPublish($vehicle->images()->count());
+                } catch (\RuntimeException $e) {
+                    return $this->error($e->getMessage(), [], 422);
+                }
+
+                if ($this->dealerInvoiceService->dealerHasBlockingInvoice($dealer)) {
+                    return $this->error(__('messages.api.dealer_overdue_invoice_block'), [], 403);
+                }
+
+                $publishedCount = $this->listingQuotaService->countPublishedListings($dealer);
+
                 if ($oldStatusId == VehicleListStatus::PUBLISHED) {
                     $publishedCount--;
                 }
@@ -1027,7 +1047,7 @@ class VehicleController extends Controller
     {
         $request->validate([
             'images' => 'required|array|min:1|max:20',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:'.(int) ($this->vehicleMediaPolicyService->maxImageUploadMb() * 1024),
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
@@ -1174,6 +1194,58 @@ class VehicleController extends Controller
         }
 
         return $this->success(['message' => __('messages.messages.image_deleted_successfully')]);
+    }
+
+    public function reorderImages(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'image_ids' => 'required|array|min:1',
+            'image_ids.*' => 'integer',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+
+        foreach ($request->input('image_ids') as $order => $imageId) {
+            VehicleImage::where('vehicle_id', $vehicle->id)
+                ->where('id', $imageId)
+                ->update(['sort_order' => $order]);
+        }
+
+        $vehicle->update(['cover_image_index' => $vehicle->images()->exists() ? 0 : null]);
+
+        return $this->success($vehicle->load('images'));
+    }
+
+    public function updateVideo(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'video_url' => 'nullable|url|max:500',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+        $url = $request->input('video_url');
+        $vehicle->video_url = $url;
+        $vehicle->video_provider = VehicleMediaPolicyService::detectVideoProvider($url);
+        $vehicle->save();
+
+        return $this->success($vehicle);
+    }
+
+    public function exportStock(Request $request)
+    {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $format = $request->get('format', 'csv');
+        if (! in_array($format, ['csv', 'xlsx'], true)) {
+            $format = 'csv';
+        }
+
+        $statusId = $request->integer('list_status_id') ?: null;
+
+        return $this->vehicleExportService->downloadResponse($dealer, $format, $statusId);
     }
 
     /**

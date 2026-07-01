@@ -35,8 +35,16 @@ class RequirePermission
             return $this->unauthorizedResponse();
         }
 
-        // Check if user has any of the required permissions
-        if (!$user->hasAnyPermission($permissions)) {
+        // Check if user has any of the required permissions (dealer or staff equivalent)
+        $expanded = [];
+        foreach ($permissions as $permission) {
+            $expanded[] = $permission;
+            if (str_starts_with($permission, 'dealer.')) {
+                $expanded[] = 'staff.'.substr($permission, 7);
+            }
+        }
+
+        if (!$user->hasAnyPermission(array_unique($expanded))) {
             return $this->forbiddenResponse($permissions);
         }
 

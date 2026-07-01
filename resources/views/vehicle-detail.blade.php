@@ -186,6 +186,142 @@
             </div>
             @endif
 
+            @if(!empty($vehicle->video_url))
+            @php
+                $videoEmbed = null;
+                if (($vehicle->video_provider ?? null) === 'youtube' || str_contains($vehicle->video_url, 'youtube') || str_contains($vehicle->video_url, 'youtu.be')) {
+                    preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $vehicle->video_url, $yt);
+                    $videoEmbed = isset($yt[1]) ? 'https://www.youtube.com/embed/'.$yt[1] : null;
+                } elseif (($vehicle->video_provider ?? null) === 'vimeo' || str_contains($vehicle->video_url, 'vimeo.com')) {
+                    preg_match('/vimeo\.com\/(\d+)/', $vehicle->video_url, $vm);
+                    $videoEmbed = isset($vm[1]) ? 'https://player.vimeo.com/video/'.$vm[1] : null;
+                }
+            @endphp
+            <div class="detail-section">
+                <h2 class="text-foreground mb-4 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.video') }}</h2>
+                @if($videoEmbed)
+                <div class="aspect-video overflow-hidden rounded-lg border border-border">
+                    <iframe
+                        src="{{ $videoEmbed }}"
+                        class="h-full w-full"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        title="{{ __('messages.pages.vehicles.detail.video') }}"
+                    ></iframe>
+                </div>
+                @else
+                <a href="{{ $vehicle->video_url }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
+                    {{ __('messages.pages.vehicles.detail.watch_video') }}
+                </a>
+                @endif
+            </div>
+            @endif
+
+            @if(!empty($vehicle->view_3d_url))
+            <div class="detail-section">
+                <h2 class="text-foreground mb-4 text-lg font-semibold">{{ __('messages.pages.vehicles.detail.view_3d') }}</h2>
+                <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+                <model-viewer
+                    src="{{ $vehicle->view_3d_url }}"
+                    alt="{{ __('messages.pages.vehicles.detail.view_3d') }}"
+                    camera-controls
+                    auto-rotate
+                    shadow-intensity="1"
+                    style="width: 100%; height: 400px; border-radius: 0.5rem; background: var(--muted);"
+                ></model-viewer>
+            </div>
+            @endif
+
+            <!-- Mobile Pricing + Contact Actions (below photos) -->
+            <div class="space-y-6 lg:hidden">
+                <!-- Pricing -->
+                <div class="rounded-lg bg-primary p-6">
+                    <div class="space-y-2">
+                        <p class="text-3xl font-bold text-primary-foreground">
+                            {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
+                        </p>
+                        <p class="text-sm text-primary-foreground">
+                            {{ $vd['sales_type_name'] }}
+                        </p>
+                    </div>
+                </div>
+
+
+            @if(!empty($showFinanceCalculator))
+            <div class="rounded-lg border border-border bg-card p-6 lg:hidden" id="finance-calculator-mobile">
+                @include('partials.finance-calculator', ['calculatorId' => 'finance-calculator-mobile'])
+            </div>
+            @endif
+
+                <!-- Contact Actions -->
+                @if($contactUser)
+                <div class="rounded-lg bg-gray-50 p-6 border border-border">
+                    <div class="mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-foreground">
+                            {{ __('messages.pages.vehicles.detail.contact_actions') }}
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        <button
+                            type="button"
+                            onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
+                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            {{ __('messages.pages.vehicles.detail.send_enquiry') }}
+                        </button>
+
+                        <button
+                            type="button"
+                            onclick="openEnquiryDialog('exchange', '{{ $vehicle->slug }}')"
+                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"></path>
+                            </svg>
+                            <span>{{ __('messages.pages.vehicles.detail.exchange_request') }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
+                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <rect x="3" y="11" width="18" height="6" rx="2" />
+                                <path d="M5 17l1.5 2h11L19 17" />
+                                <circle cx="7.5" cy="16" r="1" />
+                                <circle cx="16.5" cy="16" r="1" />
+                                <path d="M7 11V7a3 3 0 0 1 6 0v4" />
+                                <path d="M9 11V7a1 1 0 1 1 2 0v4" />
+                                <path d="M4 11V8" />
+                                <path d="M20 11V8" />
+                            </svg>
+                            <span>{{ __('messages.pages.vehicles.detail.request_test_drive') }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
+                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                <line x1="12" y1="2" x2="12" y2="22"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <span>{{ __('messages.pages.vehicles.detail.price_negotiation') }}</span>
+                        </button>
+                    </div>
+                </div>
+                @endif
+            </div>
+
             <!-- Dealer Information (mobile only - below photos) -->
             @if($vehicle->dealer)
             <div class="block lg:hidden">
@@ -816,6 +952,12 @@
                     </p>
                 </div>
             </div>
+
+            @if(!empty($showFinanceCalculator))
+            <div class="hidden rounded-lg border border-border bg-card p-6 lg:block" id="finance-calculator-desktop">
+                @include('partials.finance-calculator', ['calculatorId' => 'finance-calculator-desktop'])
+            </div>
+            @endif
 
             <!-- Contact Actions -->
             @if($contactUser)

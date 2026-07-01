@@ -25,6 +25,11 @@ use App\Services\AuditLogService;
 use App\Services\LookupService;
 use App\Services\PageContentService;
 use App\Services\SeoService;
+use App\Services\VehicleDetailPresentationService;
+use App\Services\VehicleViewService;
+use App\Services\MailService;
+use App\Services\Finance\FinanceCalculatorService;
+use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +41,11 @@ class HomeController extends Controller
         private AuditLogService $auditLogService,
         private PageContentService $pageContentService,
         private LookupService $lookupService,
-        private SeoService $seoService
+        private SeoService $seoService,
+        private VehicleDetailPresentationService $vehicleDetailPresentationService,
+        private VehicleViewService $vehicleViewService,
+        private MailService $mailService,
+        private FinanceCalculatorService $financeCalculatorService,
     ) {}
 
     /**
@@ -44,8 +53,13 @@ class HomeController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
+        $customDealer = $request->attributes->get('custom_domain_dealer');
+        if ($customDealer) {
+            return app(DealerController::class)->show($request, $customDealer->slug);
+        }
+
         // Fetch filter options for the view
         $filterOptions = [
             'categories' => Category::orderBy('name')->get(),
@@ -437,10 +451,22 @@ class HomeController extends Controller
         // Reload vehicle with updated details
         $vehicle->load('details');
         $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
+        $showFinanceCalculator = $this->financeCalculatorService->shouldShowCalculatorForVehicle($vehicle);
+        $financeSettings = $showFinanceCalculator ? $this->financeCalculatorService->settingsForLocale() : [];
+        $financeEstimate = $showFinanceCalculator
+            ? $this->financeCalculatorService->calculateMonthlyPayment((float) ($vehicle->price ?? 0))
+            : null;
+        $financePartnerUrl = $showFinanceCalculator
+            ? $this->financeCalculatorService->dealerFinanceUrl($vehicle->dealer)
+            : null;
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
             'seo' => $seo,
+            'showFinanceCalculator' => $showFinanceCalculator,
+            'financeSettings' => $financeSettings,
+            'financeEstimate' => $financeEstimate,
+            'financePartnerUrl' => $financePartnerUrl,
         ]);
     }
 

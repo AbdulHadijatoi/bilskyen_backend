@@ -273,6 +273,16 @@ class AdminPlanController extends Controller
         ]);
 
         $plan = Plan::findOrFail($id);
+        $feature = Feature::findOrFail((int) $validated['feature_id']);
+
+        $normalizedValue = $this->normalizeFeatureValue(
+            (int) $feature->feature_value_type_id,
+            $validated['value']
+        );
+        if ($normalizedValue === null) {
+            return $this->error(__('messages.api.invalid_feature_value'), [], 422);
+        }
+
         $plan->features()->syncWithoutDetaching([
             $request->feature_id => ['value' => $request->value ?? null]
         ]);
@@ -369,7 +379,7 @@ class AdminPlanController extends Controller
                 'dealers' => $plan->availability->where('dealer_id', '!=', null)->pluck('dealer')->filter()->values(),
             ];
             
-            return $this->success($availability, 200, 'Plan availability updated successfully');
+            return $this->success($availability, 200, __('messages.api.plan_availability_updated'));
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error('Failed to sync plan availability: ' . $e->getMessage(), 500);

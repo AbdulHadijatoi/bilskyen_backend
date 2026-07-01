@@ -22,11 +22,22 @@ class Dealer extends Model
         'postcode',
         'country_code',
         'logo_path',
+        'finance_partner_url',
+        'finance_calculator_enabled',
+        'google_review_url',
+        'google_place_id',
+        'theme_primary_color',
+        'theme_secondary_color',
+        'onboarding_step',
+        'onboarding_completed_at',
+        'stripe_customer_id',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'onboarding_completed_at' => 'datetime',
+        'finance_calculator_enabled' => 'boolean',
     ];
 
     protected $appends = ['logo_url'];

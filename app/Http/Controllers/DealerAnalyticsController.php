@@ -15,8 +15,14 @@ use App\Models\LeadCategory;
 use App\Models\LeadStage;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
+use App\Services\SubscriptionFeatureService;
+use App\Services\DealerListingQuotaService;
+use App\Services\Analytics\AnalyticsReportingService;
+use App\Support\AnalyticsDateRange;
+use App\Http\Controllers\Concerns\ExportsAnalyticsCsv;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -27,10 +33,15 @@ use Carbon\Carbon;
  */
 class DealerAnalyticsController extends Controller
 {
-    /**
-     * Get the authenticated dealer
-     */
-    private function getDealer(Request $request)
+    use ExportsAnalyticsCsv;
+
+    public function __construct(
+        private readonly SubscriptionFeatureService $subscriptionFeatureService,
+        private readonly DealerListingQuotaService $listingQuotaService,
+        private readonly AnalyticsReportingService $reportingService,
+    ) {}
+
+    private function getDealer(Request $request): ?Dealer
     {
         $user = $request->user();
         $dealer = $user->dealer;
@@ -529,6 +540,96 @@ class DealerAnalyticsController extends Controller
             'status' => $currentSubscription->subscriptionStatus?->name ?? 'Unknown',
             'renewal_date' => $currentSubscription->ends_at?->toISOString(),
             'features' => $featureUsage,
+            'payg' => $this->reportingService->paygBurn($dealerId, null, null),
         ]);
+    }
+
+    public function funnel(Request $request): JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->funnel(
+                $dealer->id,
+                $startDate,
+                $endDate,
+                $request->boolean('compare')
+            )
+        );
+    }
+
+    public function stock(Request $request): JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->stockMetrics($dealer->id, $startDate, $endDate)
+        );
+    }
+
+    public function assignees(Request $request): JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->assigneePerformance($dealer->id, $startDate, $endDate)
+        );
+    }
+
+    public function trends(Request $request): JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->dailyTrends($dealer->id, $startDate, $endDate)
+        );
+    }
+
+    public function channels(Request $request): JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+
+        return $this->success(
+            $this->reportingService->marketingBreakdown($dealer->id, $startDate, $endDate)
+        );
+    }
+
+    public function export(Request $request): StreamedResponse|JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $report = $request->get('report', 'funnel');
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+        $rows = $this->reportingService->exportDealerRows($dealer->id, $report, $startDate, $endDate);
+
+        return $this->csvDownload($rows, "dealer-analytics-{$report}-".now()->format('Y-m-d').'.csv');
     }
 }

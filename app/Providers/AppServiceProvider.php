@@ -3,7 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Vehicle;
-use App\Services\PageContentService;
+use App\Models\Lead;
+use App\Models\Enquiry;
+use App\Observers\LeadObserver;
+use App\Observers\EnquiryObserver;
+use App\Observers\VehicleSyndicationObserver;
+use App\Observers\VehicleDmsWebhookObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,12 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Login (auth) layout: inject page content for sidebar testimonial
-        View::composer('layouts.auth', function ($view) {
-            $pageContentService = app(PageContentService::class);
-            $loginPageContent = $pageContentService->getHomePageContent('login');
-            $view->with('loginPageContent', $loginPageContent);
-        });
+        Lead::observe(LeadObserver::class);
+        Enquiry::observe(EnquiryObserver::class);
+        Vehicle::observe(VehicleSyndicationObserver::class);
+        Vehicle::observe(VehicleDmsWebhookObserver::class);
 
         // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)
         Route::bind('vehicle', function (string $value) {

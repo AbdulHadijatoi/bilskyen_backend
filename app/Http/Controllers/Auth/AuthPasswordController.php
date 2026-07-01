@@ -107,7 +107,7 @@ class AuthPasswordController extends Controller
         $user = User::where('email', $email)->first();
 
         // Always return success message for security (don't reveal if email exists)
-        $message = 'If that email is in our system, we\'ll send you a password reset link. Check your inbox!';
+        $message = __('messages.api.password_reset_link_sent');
 
         if ($user) {
             // Generate password reset token

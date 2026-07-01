@@ -27,11 +27,7 @@ class LeadController extends Controller
     ) {}
     public function index(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealer;
-        
-        if (!$dealer) {
-            return $this->notFound('Dealer not found');
-        }
+        $dealer = $this->dealerContextService->requireDealer($request->user());
 
         // Check if lead_management feature is enabled
         if (!$this->subscriptionFeatureService->hasFeature($dealer, 'lead_management')) {
@@ -133,6 +129,11 @@ class LeadController extends Controller
     {
         $request->validate([
             'stage_id' => ['required', Rule::in(LeadStage::values())],
+            'lost_reason_id' => [
+                Rule::requiredIf((int) $request->input('stage_id') === LeadStage::LOST),
+                'nullable',
+                'exists:lead_lost_reasons,id',
+            ],
         ]);
 
         $user = $request->user();
@@ -152,6 +153,14 @@ class LeadController extends Controller
 
         // Update lead stage
         $lead->lead_stage_id = $request->stage_id;
+        if ((int) $request->stage_id === LeadStage::LOST) {
+            $lead->lost_reason_id = $request->lost_reason_id;
+        } else {
+            $lead->lost_reason_id = null;
+        }
+        if ((int) $request->stage_id === LeadStage::CONTACTED && ! $lead->first_contacted_at) {
+            $lead->first_contacted_at = now();
+        }
         $lead->last_activity_at = now();
         $lead->save();
         $lead->refresh();

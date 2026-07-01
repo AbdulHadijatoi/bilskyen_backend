@@ -21,7 +21,13 @@ class DealerContextService
      */
     public function getCurrentDealer(User $user): ?Dealer
     {
-        return $user->dealer;
+        if ($user->dealer) {
+            return $user->dealer;
+        }
+
+        $dealerStaff = DealerStaff::where('user_id', $user->id)->with('dealer')->first();
+
+        return $dealerStaff?->dealer;
     }
 
     /**
@@ -82,7 +88,7 @@ class DealerContextService
         $dealer = $this->getCurrentDealer($user);
         
         if (!$dealer) {
-            throw new \RuntimeException('Dealer not found', 404);
+            throw new \RuntimeException(__('messages.errors.dealer_not_found'), 404);
         }
         
         return $dealer;
@@ -131,11 +137,11 @@ class DealerContextService
             ->exists();
         
         if (!$isOwner && !$isStaff) {
-            throw new \RuntimeException('User does not belong to this dealer', 403);
+            throw new \RuntimeException(__('messages.api.dealer_access_denied'), 403);
         }
         
         if ($requireAdmin && !$this->isDealerAdmin($user, $dealer)) {
-            throw new \RuntimeException('Dealer admin access required', 403);
+            throw new \RuntimeException(__('messages.api.dealer_admin_required'), 403);
         }
         
         return $dealer;

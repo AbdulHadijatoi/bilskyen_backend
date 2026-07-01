@@ -22,12 +22,19 @@ class Lead extends Model
         'lead_intent_id',
         'source_id',
         'lead_category_id',
+        'lost_reason_id',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'referrer_url',
         'last_activity_at',
+        'first_contacted_at',
         'created_at',
     ];
 
     protected $casts = [
         'last_activity_at' => 'datetime',
+        'first_contacted_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 
@@ -121,6 +128,29 @@ class Lead extends Model
     {
         return $this->hasOne(Enquiry::class);
     }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(LeadNote::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(LeadTask::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(LeadActivity::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(LeadReminder::class);
+    }
+
+    public function lostReason(): BelongsTo
+    {
+        return $this->belongsTo(LeadLostReason::class, 'lost_reason_id');
+    }
 }
-
-

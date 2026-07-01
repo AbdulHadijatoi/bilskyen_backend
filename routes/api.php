@@ -8,6 +8,8 @@ use App\Http\Controllers\NummerpladeController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\SellYourCarController;
+use App\Http\Controllers\VehicleFeedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,6 +34,27 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::get('/featured-vehicles', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');
+
+    Route::get('/feeds/{token}/vehicles.json', [VehicleFeedController::class, 'json']);
+    Route::get('/feeds/{token}/vehicles.xml', [VehicleFeedController::class, 'xml']);
+
+    Route::prefix('finance')->group(function () {
+        Route::get('/settings', [\App\Http\Controllers\PublicFinanceController::class, 'settings']);
+        Route::post('/calculate', [\App\Http\Controllers\PublicFinanceController::class, 'calculate']);
+        Route::get('/vehicles/{vehicle}/widget', [\App\Http\Controllers\PublicFinanceController::class, 'vehicleWidget']);
+    });
+
+    Route::prefix('marketing')->group(function () {
+        Route::post('/consent', [\App\Http\Controllers\PublicMarketingController::class, 'logConsent']);
+        Route::post('/unsubscribe', [\App\Http\Controllers\PublicMarketingController::class, 'unsubscribe']);
+        Route::post('/abandoned/track', [\App\Http\Controllers\PublicMarketingController::class, 'trackAbandoned']);
+    });
+
+    Route::post('/gdpr/export-request', [\App\Http\Controllers\PublicGdprController::class, 'requestExport']);
+
+    Route::middleware('dealer.api.key')->prefix('dms')->group(function () {
+        Route::post('/vehicles/upsert', [\App\Http\Controllers\DmsInboundController::class, 'upsertVehicle']);
+    });
     
     // Sell Your Car API (authenticated users can create vehicle listings)
     Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
@@ -191,3 +214,6 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:20,1');
     });
 });
+
+// Stripe webhooks (no auth; signature verified in controller)
+Route::post('/v1/webhooks/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handle']);
