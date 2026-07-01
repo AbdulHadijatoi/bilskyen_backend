@@ -170,8 +170,6 @@ class FileService
         ];
     }
 
-    }
-
     private function applyVehicleWatermarkIfEnabled(ImageInterface $image): ImageInterface
     {
         try {
