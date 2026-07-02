@@ -204,7 +204,12 @@ class AdminAnalyticsController extends Controller
             SubscriptionStatus::EXPIRED,
             SubscriptionStatus::CANCELED,
         ]);
-        $this->applyDateFilter($churnedQuery, $startDate, $endDate, 'updated_at');
+        if ($startDate) {
+            $churnedQuery->whereRaw('COALESCE(ends_at, created_at) >= ?', [$startDate]);
+        }
+        if ($endDate) {
+            $churnedQuery->whereRaw('COALESCE(ends_at, created_at) <= ?', [$endDate]);
+        }
         $churnedSubscriptions = $churnedQuery->count();
 
         $newSubsQuery = DealerSubscription::query();
