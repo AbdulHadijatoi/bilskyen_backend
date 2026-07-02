@@ -582,6 +582,7 @@ class HomeController extends Controller
             'vehicle' => $vehicle,
             'vehicleDetail' => $this->vehicleDetailPresentationService->buildDetailPayload($vehicle),
             'seo' => $seo,
+            'showTrustReport' => $this->trustReportService->isPlatformTrustReportEnabled(),
             'showFinanceCalculator' => $showFinanceCalculator,
             'financeSettings' => $financeSettings,
             'financeEstimate' => $financeEstimate,

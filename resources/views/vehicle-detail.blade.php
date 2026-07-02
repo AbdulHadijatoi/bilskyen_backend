@@ -198,10 +198,12 @@
             </div>
             @endif
 
+            @if($showTrustReport ?? true)
             <x-trust-report-card
                 :trust-report="$vehicleDetail['trust_report'] ?? []"
                 :fair-price="$vehicleDetail['fair_price'] ?? null"
             />
+            @endif
 
             @if(!empty($vehicle->video_url))
             @php

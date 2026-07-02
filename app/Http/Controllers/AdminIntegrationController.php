@@ -23,6 +23,7 @@ class AdminIntegrationController extends Controller
             'syndication' => $this->platformSettingService->getPublicGroup('syndication'),
             'finance' => $this->platformSettingService->getPublicGroup('finance'),
             'marketing' => $this->platformSettingService->getPublicGroup('marketing'),
+            'marketplace' => $this->platformSettingService->getPublicGroup('marketplace'),
             'reputation' => $this->platformSettingService->getPublicGroup('reputation'),
             'compliance' => $this->platformSettingService->getPublicGroup('compliance'),
         ]);
@@ -31,7 +32,7 @@ class AdminIntegrationController extends Controller
     public function update(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'group' => 'required|in:general,crm,payment,ai,media,syndication,finance,marketing,reputation,compliance',
+            'group' => 'required|in:general,crm,payment,ai,media,syndication,finance,marketing,marketplace,reputation,compliance',
             'settings' => 'required|array',
         ]);
 

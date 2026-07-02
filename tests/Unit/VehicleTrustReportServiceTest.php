@@ -3,14 +3,20 @@
 namespace Tests\Unit;
 
 use App\Models\Vehicle;
+use App\Services\PlatformSettingService;
 use App\Services\VehicleTrustReportService;
 use Tests\TestCase;
 
 class VehicleTrustReportServiceTest extends TestCase
 {
+    private function service(): VehicleTrustReportService
+    {
+        return new VehicleTrustReportService(app(PlatformSettingService::class));
+    }
+
     public function test_inspection_passed_recognizes_godkendt(): void
     {
-        $service = new VehicleTrustReportService;
+        $service = $this->service();
 
         $this->assertTrue($service->inspectionPassed('Godkendt'));
         $this->assertFalse($service->inspectionPassed('Udbedring'));
@@ -18,7 +24,7 @@ class VehicleTrustReportServiceTest extends TestCase
 
     public function test_build_for_vehicle_includes_registry_flag(): void
     {
-        $service = new VehicleTrustReportService;
+        $service = $this->service();
         $vehicle = new Vehicle([
             'registration' => 'AB12345',
             'price' => 150000,

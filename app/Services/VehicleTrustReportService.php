@@ -8,6 +8,18 @@ use Carbon\Carbon;
 
 class VehicleTrustReportService
 {
+    public function __construct(
+        private PlatformSettingService $platformSettingService,
+    ) {}
+
+    public function isPlatformTrustReportEnabled(): bool
+    {
+        return filter_var(
+            $this->platformSettingService->get('marketplace', 'trust_report_enabled', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
