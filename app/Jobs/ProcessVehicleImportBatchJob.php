@@ -16,9 +16,11 @@ class ProcessVehicleImportBatchJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 1;
+    public const TIMEOUT_SECONDS = 1800;
 
-    public int $timeout = 1800;
+    public int $tries = 2;
+
+    public int $timeout = self::TIMEOUT_SECONDS;
 
     public function __construct(
         public int $batchId,
@@ -42,6 +44,8 @@ class ProcessVehicleImportBatchJob implements ShouldQueue
             'status' => VehicleImportBatch::STATUS_PROCESSING,
             'started_at' => now(),
         ]);
+
+        $result = null;
 
         try {
             $result = $batchService->processBatch($batch);
@@ -86,11 +90,22 @@ class ProcessVehicleImportBatchJob implements ShouldQueue
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            $batch->update([
+            $freshBatch = $batch->fresh();
+            $update = [
                 'status' => VehicleImportBatch::STATUS_FAILED,
                 'error_message' => $e->getMessage(),
                 'completed_at' => now(),
-            ]);
+            ];
+
+            if ($freshBatch !== null && $freshBatch->rows !== null) {
+                $update['summary'] = $freshBatch->summary;
+                $update['rows'] = $freshBatch->rows;
+            } elseif ($result !== null) {
+                $update['summary'] = $result['summary'];
+                $update['rows'] = $result['rows'];
+            }
+
+            $batch->update($update);
 
             if (! $batch->dry_run && $batch->user?->email) {
                 $mailService->sendMailable(

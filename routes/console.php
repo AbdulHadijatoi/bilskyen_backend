@@ -74,6 +74,10 @@ Schedule::command('gdpr:process-requests')
     ->hourly()
     ->timezone($timezone);
 
+Schedule::command('vehicle-import:expire-stale-batches')
+    ->everyFiveMinutes()
+    ->timezone($timezone);
+
 Schedule::command('queue:work database --stop-when-empty --max-time=55')
     ->everyMinute()
     ->withoutOverlapping()

@@ -4,15 +4,18 @@ namespace App\Services\VehicleImport;
 
 use App\Constants\VehicleListStatus;
 use App\Models\Dealer;
-use App\Models\Vehicle;
+use App\Services\DealerInvoiceService;
+use App\Services\DealerListingQuotaService;
 use App\Services\Import\SpreadsheetImportParser;
 use App\Services\ListingBillingService;
 use App\Services\ListingExpirationService;
 use App\Services\SubscriptionFeatureService;
 use App\Services\VehicleImageUploadService;
 use App\Services\VehicleService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VehicleImportService
 {
@@ -23,6 +26,8 @@ class VehicleImportService
         private SubscriptionFeatureService $subscriptionFeatureService,
         private ListingBillingService $listingBillingService,
         private ListingExpirationService $listingExpirationService,
+        private DealerListingQuotaService $listingQuotaService,
+        private DealerInvoiceService $dealerInvoiceService,
         private \App\Services\DmrFactVehicleLookupService $dmrFactVehicleLookupService,
     ) {}
 
@@ -35,6 +40,7 @@ class VehicleImportService
         int $userId,
         ?Dealer $dealer,
         bool $dryRun = false,
+        ?callable $onRowComplete = null,
     ): array {
         $extension = strtolower($file->getClientOriginalExtension());
         $path = $file->getRealPath() ?: $file->getPathname();
@@ -42,7 +48,7 @@ class VehicleImportService
             throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
-        return $this->importFromPath($path, $extension, $dealerId, $userId, $dealer, $dryRun);
+        return $this->importFromPath($path, $extension, $dealerId, $userId, $dealer, $dryRun, $onRowComplete);
     }
 
     /**
@@ -55,6 +61,7 @@ class VehicleImportService
         int $userId,
         ?Dealer $dealer,
         bool $dryRun = false,
+        ?callable $onRowComplete = null,
     ): array {
         $rows = $this->parser->parse($path, $extension);
 
@@ -69,31 +76,69 @@ class VehicleImportService
             $this->dmrFactVehicleLookupService,
         );
 
+        $initialPublishedCount = $dealer !== null
+            ? $this->listingQuotaService->countPublishedListings($dealer)
+            : 0;
+
+        $context = new VehicleImportBatchContext($initialPublishedCount);
+
         $results = [];
-        $summary = [
-            'total' => count($rows),
-            'created' => 0,
-            'failed' => 0,
-            'warnings' => 0,
-        ];
+        $summary = $this->emptySummary(count($rows));
 
         foreach ($rows as $index => $row) {
             $excelRow = $index + 2;
-            $rowResult = $this->processRow($resolver, $row, $excelRow, $dealerId, $userId, $dealer, $dryRun);
+            $rowResult = $this->processRow(
+                $resolver,
+                $row,
+                $excelRow,
+                $dealerId,
+                $userId,
+                $dealer,
+                $dryRun,
+                $context,
+            );
             $results[] = $rowResult;
+            $this->accumulateSummary($summary, $rowResult, $dryRun);
 
-            if ($rowResult['status'] === 'failed') {
-                $summary['failed']++;
-            } elseif (in_array($rowResult['status'], ['created', 'created_with_warnings'], true)) {
-                $summary['created']++;
-            }
-
-            if (! empty($rowResult['warnings'])) {
-                $summary['warnings']++;
+            if ($onRowComplete !== null) {
+                $onRowComplete($summary, $results);
             }
         }
 
         return ['summary' => $summary, 'rows' => $results];
+    }
+
+    /**
+     * @return array{total: int, created: int, validated: int, failed: int, warnings: int}
+     */
+    private function emptySummary(int $total): array
+    {
+        return [
+            'total' => $total,
+            'created' => 0,
+            'validated' => 0,
+            'failed' => 0,
+            'warnings' => 0,
+        ];
+    }
+
+    /**
+     * @param  array{total: int, created: int, validated: int, failed: int, warnings: int}  $summary
+     * @param  array<string, mixed>  $rowResult
+     */
+    private function accumulateSummary(array &$summary, array $rowResult, bool $dryRun): void
+    {
+        if ($rowResult['status'] === 'failed') {
+            $summary['failed']++;
+        } elseif ($dryRun && in_array($rowResult['status'], ['validated', 'validated_with_warnings'], true)) {
+            $summary['validated']++;
+        } elseif (! $dryRun && in_array($rowResult['status'], ['created', 'created_with_warnings'], true)) {
+            $summary['created']++;
+        }
+
+        if (! empty($rowResult['warnings'])) {
+            $summary['warnings']++;
+        }
     }
 
     /**
@@ -108,6 +153,7 @@ class VehicleImportService
         int $userId,
         ?Dealer $dealer,
         bool $dryRun,
+        VehicleImportBatchContext $context,
     ): array {
         $imageUrls = $this->parseImageUrls($row['image_urls'] ?? '');
         unset($row['image_urls']);
@@ -116,7 +162,7 @@ class VehicleImportService
         $vin = trim((string) ($row['vin'] ?? ''));
         $dmrRequested = $registration !== '' || $vin !== '';
 
-        $resolved = $resolver->resolve($row, $dealerId, $dmrRequested);
+        $resolved = $resolver->resolve($row, $dealerId, $dmrRequested, $context);
         $payload = $resolved['payload'];
         $warnings = $resolved['warnings'];
         $errors = $resolved['errors'];
@@ -146,7 +192,18 @@ class VehicleImportService
             ]);
         }
 
-        $limitError = $this->checkSubscriptionLimits($payload, $dealer);
+        $blockingInvoiceError = $this->checkBlockingInvoice($dealer, $payload);
+        if ($blockingInvoiceError !== null) {
+            $errors[] = $blockingInvoiceError;
+
+            return array_merge($base, [
+                'status' => 'failed',
+                'errors' => $errors,
+                'vehicle_id' => null,
+            ]);
+        }
+
+        $limitError = $this->checkSubscriptionLimits($payload, $dealer, $context);
         if ($limitError !== null) {
             $errors[] = $limitError;
 
@@ -157,9 +214,18 @@ class VehicleImportService
             ]);
         }
 
+        $normalizedRegistration = trim((string) ($payload['registration'] ?? ''));
+        if ($normalizedRegistration !== '') {
+            $context->markRegistrationSeen($normalizedRegistration);
+        }
+
         if ($dryRun) {
+            if ((int) ($payload['list_status_id'] ?? VehicleListStatus::PUBLISHED) === VehicleListStatus::PUBLISHED) {
+                $context->incrementPublishedCount();
+            }
+
             return array_merge($base, [
-                'status' => $warnings === [] ? 'validated' : 'validated',
+                'status' => $warnings === [] ? 'validated' : 'validated_with_warnings',
                 'vehicle_id' => null,
             ]);
         }
@@ -188,10 +254,17 @@ class VehicleImportService
                 return $vehicle;
             });
         } catch (\Throwable $e) {
+            Log::error('Vehicle import row save failed', [
+                'dealer_id' => $dealerId,
+                'row' => $excelRow,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
             $errors[] = [
                 'field' => 'row',
                 'value' => (string) $excelRow,
-                'message' => $e->getMessage(),
+                'message' => $this->rowSaveErrorMessage($e),
             ];
 
             return array_merge($base, [
@@ -199,6 +272,10 @@ class VehicleImportService
                 'errors' => $errors,
                 'vehicle_id' => null,
             ]);
+        }
+
+        if ((int) ($payload['list_status_id'] ?? VehicleListStatus::PUBLISHED) === VehicleListStatus::PUBLISHED) {
+            $context->incrementPublishedCount();
         }
 
         if ($imageWarnings !== []) {
@@ -231,19 +308,48 @@ class VehicleImportService
      * @param  array<string, mixed>  $payload
      * @return array{field: string, value: string, message: string}|null
      */
-    private function checkSubscriptionLimits(array $payload, ?Dealer $dealer): ?array
+    private function checkBlockingInvoice(?Dealer $dealer, array $payload): ?array
     {
         if ($dealer === null) {
             return null;
         }
 
         $listStatusId = (int) ($payload['list_status_id'] ?? VehicleListStatus::PUBLISHED);
-        if ($listStatusId === VehicleListStatus::PUBLISHED) {
-            $publishedCount = Vehicle::where('dealer_id', $dealer->id)
-                ->where('list_status_id', VehicleListStatus::PUBLISHED)
-                ->count();
+        if ($listStatusId !== VehicleListStatus::PUBLISHED) {
+            return null;
+        }
 
-            if (! $this->subscriptionFeatureService->checkFeatureLimit($dealer, 'max_listings', $publishedCount)) {
+        if (! $this->dealerInvoiceService->dealerHasBlockingInvoice($dealer)) {
+            return null;
+        }
+
+        return [
+            'field' => 'list_status',
+            'value' => 'published',
+            'message' => __('messages.api.dealer_overdue_invoice_block'),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{field: string, value: string, message: string}|null
+     */
+    private function checkSubscriptionLimits(
+        array $payload,
+        ?Dealer $dealer,
+        VehicleImportBatchContext $context,
+    ): ?array {
+        if ($dealer === null) {
+            return null;
+        }
+
+        $listStatusId = (int) ($payload['list_status_id'] ?? VehicleListStatus::PUBLISHED);
+        if ($listStatusId === VehicleListStatus::PUBLISHED) {
+            if (! $this->subscriptionFeatureService->checkFeatureLimit(
+                $dealer,
+                'max_listings',
+                $context->publishedCount,
+            )) {
                 $limit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_listings', 0);
 
                 return [
@@ -301,5 +407,14 @@ class VehicleImportService
                 'amount' => number_format($cents / 100, 2, ',', '.'),
             ]),
         ];
+    }
+
+    private function rowSaveErrorMessage(\Throwable $e): string
+    {
+        if ($e instanceof QueryException) {
+            return __('messages.api.vehicle_import_row_save_failed');
+        }
+
+        return __('messages.api.vehicle_import_row_save_failed');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Support\RemoteUrlGuard;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -104,9 +105,7 @@ class VehicleImageUploadService
 
     private function attachRemoteImage(Vehicle $vehicle, string $url, int $sortOrder): VehicleImage
     {
-        if (! filter_var($url, FILTER_VALIDATE_URL) || ! in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
-            throw new \InvalidArgumentException(__('messages.api.vehicle_import_image_invalid_url'));
-        }
+        RemoteUrlGuard::assertPublicHttpUrl($url);
 
         $maxBytes = (int) config('images.vehicle.remote_max_bytes', 10 * 1024 * 1024);
         $response = Http::timeout(self::REMOTE_TIMEOUT_SECONDS)

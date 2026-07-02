@@ -58,6 +58,12 @@ class VehicleImportBatchService
             (int) $batch->user_id,
             $dealer,
             (bool) $batch->dry_run,
+            function (array $summary, array $rows) use ($batch): void {
+                $batch->update([
+                    'summary' => $summary,
+                    'rows' => $rows,
+                ]);
+            },
         );
     }
 }

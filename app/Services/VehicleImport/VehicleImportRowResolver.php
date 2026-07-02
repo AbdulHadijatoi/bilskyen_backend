@@ -26,6 +26,7 @@ class VehicleImportRowResolver
         array $row,
         int $dealerId,
         bool $dmrRequested,
+        ?VehicleImportBatchContext $context = null,
     ): array {
         $warnings = [];
         $errors = [];
@@ -33,7 +34,7 @@ class VehicleImportRowResolver
 
         if ($dmrRequested) {
             try {
-                $dmr = $this->fetchDmrPayload($row);
+                $dmr = $this->fetchDmrPayload($row, $context);
                 $payload = $this->mapDmrToVehiclePayload($dmr);
             } catch (NummerpladeApiException $e) {
                 $errors[] = [
@@ -63,7 +64,13 @@ class VehicleImportRowResolver
         if ($registration !== '') {
             $normalized = $this->dmrFactVehicleLookupService->normalizeRegistration($registration);
             $payload['registration'] = $normalized;
-            if ($this->registrationExistsForDealer($dealerId, $normalized)) {
+            if ($context !== null && $context->hasSeenRegistration($normalized)) {
+                $errors[] = [
+                    'field' => 'registration',
+                    'value' => $registration,
+                    'message' => __('messages.api.vehicle_import_duplicate_registration_in_file'),
+                ];
+            } elseif ($this->registrationExistsForDealer($dealerId, $normalized)) {
                 $errors[] = [
                     'field' => 'registration',
                     'value' => $registration,
@@ -118,17 +125,35 @@ class VehicleImportRowResolver
     /**
      * @param  array<string, mixed>  $row
      */
-    private function fetchDmrPayload(array $row): array
+    private function fetchDmrPayload(array $row, ?VehicleImportBatchContext $context = null): array
     {
         $registration = trim((string) ($row['registration'] ?? ''));
         $vin = trim((string) ($row['vin'] ?? ''));
 
         if ($registration !== '') {
-            return $this->dmrFactVehicleLookupService->lookupByRegistration($registration);
+            $cacheKey = 'reg:'.strtoupper($registration);
+            $cached = $context?->getCachedDmr($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            $dmr = $this->dmrFactVehicleLookupService->lookupByRegistration($registration);
+            $context?->cacheDmr($cacheKey, $dmr);
+
+            return $dmr;
         }
 
         if ($vin !== '') {
-            return $this->dmrFactVehicleLookupService->lookupByVin($vin);
+            $cacheKey = 'vin:'.strtoupper($vin);
+            $cached = $context?->getCachedDmr($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            $dmr = $this->dmrFactVehicleLookupService->lookupByVin($vin);
+            $context?->cacheDmr($cacheKey, $dmr);
+
+            return $dmr;
         }
 
         throw NummerpladeApiException::invalidInput(__('messages.api.vehicle_import_dmr_identifier_required'));

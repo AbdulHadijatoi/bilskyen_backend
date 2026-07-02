@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ProcessVehicleImportBatchJob;
 use App\Models\VehicleImportBatch;
+use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
+use App\Services\VehicleImport\VehicleImportBatchMaintenanceService;
 use App\Services\VehicleImport\VehicleImportBatchService;
 use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportService;
@@ -21,6 +23,8 @@ class VehicleImportController extends Controller
         private VehicleImportBatchService $vehicleImportBatchService,
         private VehicleImportTemplateBuilder $templateBuilder,
         private SubscriptionFeatureService $subscriptionFeatureService,
+        private DealerContextService $dealerContextService,
+        private VehicleImportBatchMaintenanceService $batchMaintenanceService,
     ) {}
 
     public function downloadTemplate(): BinaryFileResponse
@@ -36,7 +40,7 @@ class VehicleImportController extends Controller
 
     public function sample(Request $request): JsonResponse
     {
-        $dealer = $request->user()?->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         $usageNotice = null;
 
         if ($dealer && $this->subscriptionFeatureService->isUsageDailyPlan($dealer)) {
@@ -66,7 +70,7 @@ class VehicleImportController extends Controller
         ]);
 
         $user = $request->user();
-        $dealer = $user?->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($user);
         if ($dealer === null) {
             return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
@@ -77,12 +81,7 @@ class VehicleImportController extends Controller
             return $this->runSyncImport($request, $dealer, $user, true);
         }
 
-        $pending = VehicleImportBatch::query()
-            ->where('dealer_id', $dealer->id)
-            ->whereIn('status', [VehicleImportBatch::STATUS_PENDING, VehicleImportBatch::STATUS_PROCESSING])
-            ->exists();
-
-        if ($pending) {
+        if ($this->batchMaintenanceService->hasBlockingImport($dealer->id)) {
             return $this->error(__('messages.api.vehicle_import_already_running'), [], 409);
         }
 
@@ -114,7 +113,7 @@ class VehicleImportController extends Controller
 
     public function batches(Request $request): JsonResponse
     {
-        $dealer = $request->user()?->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if ($dealer === null) {
             return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
@@ -131,7 +130,7 @@ class VehicleImportController extends Controller
 
     public function showBatch(Request $request, int $id): JsonResponse
     {
-        $dealer = $request->user()?->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if ($dealer === null) {
             return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }

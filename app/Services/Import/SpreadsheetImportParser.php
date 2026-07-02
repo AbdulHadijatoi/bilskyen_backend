@@ -52,26 +52,74 @@ class SpreadsheetImportParser
      */
     private function parseCsv(string $filePath): array
     {
-        $handle = fopen($filePath, 'r');
+        $contents = file_get_contents($filePath);
+        if ($contents === false) {
+            throw new \RuntimeException('Could not open CSV file');
+        }
+
+        $contents = $this->stripUtf8Bom($contents);
+
+        $handle = fopen('php://memory', 'r+');
         if ($handle === false) {
             throw new \RuntimeException('Could not open CSV file');
         }
 
-        $headers = fgetcsv($handle);
+        fwrite($handle, $contents);
+        rewind($handle);
+
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+
+            throw new \RuntimeException('CSV file is empty or invalid');
+        }
+
+        $delimiter = $this->detectCsvDelimiter($firstLine);
+        rewind($handle);
+
+        $headers = fgetcsv($handle, 0, $delimiter);
         if ($headers === false) {
             fclose($handle);
 
             throw new \RuntimeException('CSV file is empty or invalid');
         }
 
+        $headers = array_map(fn ($header) => $this->stripUtf8Bom((string) $header), $headers);
+
         $rows = [];
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
             $rows[] = $row;
         }
 
         fclose($handle);
 
         return $this->mapRows($headers, $rows);
+    }
+
+    public static function detectCsvDelimiter(string $line): string
+    {
+        $candidates = [';', ',', "\t", '|'];
+        $best = ',';
+        $bestCount = 0;
+
+        foreach ($candidates as $delimiter) {
+            $count = substr_count($line, $delimiter);
+            if ($count > $bestCount) {
+                $bestCount = $count;
+                $best = $delimiter;
+            }
+        }
+
+        return $best;
+    }
+
+    public static function stripUtf8Bom(string $value): string
+    {
+        if (str_starts_with($value, "\xEF\xBB\xBF")) {
+            return substr($value, 3);
+        }
+
+        return $value;
     }
 
     /**
@@ -108,6 +156,7 @@ class SpreadsheetImportParser
 
     public static function normalizeHeader(string $header): string
     {
+        $header = self::stripUtf8Bom($header);
         $header = strtolower(trim($header));
         $header = str_replace([' ', '-'], '_', $header);
 
