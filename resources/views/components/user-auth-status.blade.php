@@ -45,14 +45,19 @@
 @if($showUserMenu)
     <!-- User dropdown menu -->
     <div class="relative">
-        <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-[var(--radius-icon-btn)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="{{ __('messages.common.user_menu') }}">
-            <div class="flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-[var(--radius-icon-btn)] bg-primary">
-                <span class="text-xs md:text-sm font-medium text-primary-foreground">{{ $initials }}</span>
-            </div>
+        <button
+            id="user-menu-toggle"
+            type="button"
+            class="nav-user-avatar-btn focus-visible:outline-none"
+            aria-label="{{ __('messages.common.user_menu') }}"
+            aria-haspopup="true"
+            aria-expanded="false"
+        >
+            <span class="nav-user-avatar">{{ $initials }}</span>
         </button>
         
         <!-- Dropdown Menu -->
-        <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
+        <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 rounded-[var(--radius)] border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
             <div class="px-2 py-1.5">
                 <div class="flex flex-col space-y-1">
                     <p class="text-sm leading-none font-medium">
@@ -115,13 +120,16 @@
             // Toggle menu
             userMenuToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const isOpen = !userMenu.classList.contains('hidden');
                 userMenu.classList.toggle('hidden');
+                userMenuToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
             });
             
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!userMenuToggle.contains(e.target) && !userMenu.contains(e.target)) {
                     userMenu.classList.add('hidden');
+                    userMenuToggle.setAttribute('aria-expanded', 'false');
                 }
             });
         }
