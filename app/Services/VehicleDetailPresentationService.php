@@ -12,6 +12,10 @@ use Illuminate\Support\Carbon;
  */
 class VehicleDetailPresentationService
 {
+    public function __construct(
+        private VehicleTrustReportService $trustReportService,
+        private MarketPricingService $marketPricingService,
+    ) {}
     /**
      * Eager-load relations needed for {@see buildDetailPayload()}.
      * Controllers should merge this with route-specific loads (e.g. images, dealer.owner).
@@ -197,6 +201,8 @@ class VehicleDetailPresentationService
             'first_registration_date' => $date($v->first_registration_date),
             'first_registration_year' => $v->first_registration_year,
             'last_inspection_date' => $date($v->last_inspection_date),
+            'last_inspection_result' => $v->last_inspection_result,
+            'last_inspection_odometer' => $v->last_inspection_odometer,
 
             'model_year' => $modelYear,
             'model_year_name' => $modelYearDisplay,
@@ -267,6 +273,10 @@ class VehicleDetailPresentationService
 
             'battery_capacity' => $attrs['battery_capacity'] ?? null,
             'range_km' => $attrs['range_km'] ?? null,
+
+            'trust_report' => $this->trustReportService->buildForVehicle($v),
+            'fair_price' => $this->marketPricingService->evaluateVehicle($v),
+            'price_dropped_recently' => $this->trustReportService->hasRecentPriceDrop($v),
         ];
     }
 

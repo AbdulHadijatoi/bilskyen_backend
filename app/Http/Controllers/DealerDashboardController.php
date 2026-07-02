@@ -6,6 +6,8 @@ use App\Models\Vehicle;
 use App\Models\Lead;
 use App\Models\Sale;
 use App\Services\SubscriptionFeatureService;
+use App\Services\ListingHealthService;
+use App\Services\MarketPulseService;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus as SubscriptionStatusConstant;
 use Illuminate\Http\Request;
@@ -21,7 +23,9 @@ use Carbon\Carbon;
 class DealerDashboardController extends Controller
 {
     public function __construct(
-        private SubscriptionFeatureService $subscriptionFeatureService
+        private SubscriptionFeatureService $subscriptionFeatureService,
+        private ListingHealthService $listingHealthService,
+        private MarketPulseService $marketPulseService,
     ) {}
 
     /**
@@ -284,5 +288,32 @@ class DealerDashboardController extends Controller
             'averageDaysToSell' => round((float) $averageDaysToSell, 2),
             'topSellingMonth' => $topSellingMonth?->month,
         ]);
+    }
+
+    public function getListingHealthAttention(Request $request): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $items = $this->listingHealthService->vehiclesNeedingAttention($dealer->id, 5);
+
+        return response()->json([
+            'count' => count($items),
+            'items' => $items,
+        ]);
+    }
+
+    public function getMarketPulseWidget(Request $request): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        return response()->json(
+            $this->marketPulseService->compareDealer($dealer->id)
+        );
     }
 }

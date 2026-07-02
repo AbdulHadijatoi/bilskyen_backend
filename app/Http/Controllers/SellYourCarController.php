@@ -20,6 +20,7 @@ use App\Services\AuditLogService;
 use App\Services\DmrLookupAssociationService;
 use App\Services\FileService;
 use App\Services\SellYourCarSubmissionService;
+use App\Services\VehicleTrustReportService;
 use App\Constants\ApiStatusCode;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +37,7 @@ class SellYourCarController extends Controller
         private FileService $fileService,
         private DmrLookupAssociationService $dmrLookupAssociationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
+        private VehicleTrustReportService $trustReportService,
     ) {}
 
     /**
@@ -348,6 +350,7 @@ class SellYourCarController extends Controller
         return view('sell-your-car-success', [
             'listing' => $vehicle,
             'vehicle' => $vehicle,
+            'trustReport' => $this->trustReportService->buildForVehicle($vehicle),
             'isFeatured' => $isFeatured,
             'canFeature' => $canFeature,
             'isPendingReview' => $isPendingReview,

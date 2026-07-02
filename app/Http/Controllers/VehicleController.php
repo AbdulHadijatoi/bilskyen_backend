@@ -20,6 +20,8 @@ use App\Services\DealerInvoiceService;
 use App\Services\VehicleImageUploadService;
 use App\Services\Feeds\VehicleExportService;
 use App\Services\Media\VehicleMediaPolicyService;
+use App\Services\ListingHealthService;
+use App\Services\VehicleListingPresentationService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -49,6 +51,8 @@ class VehicleController extends Controller
         private VehicleMediaPolicyService $vehicleMediaPolicyService,
         private VehicleExportService $vehicleExportService,
         private DealerContextService $dealerContextService,
+        private ListingHealthService $listingHealthService,
+        private VehicleListingPresentationService $vehicleListingPresentationService,
     ) {
         $this->fileService = $fileService;
     }
@@ -199,38 +203,9 @@ class VehicleController extends Controller
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
-        $formattedVehicles = collect($vehicles->items())->map(function ($vehicle) {
-            $firstImage = $vehicle->images->first();
-
-            // Determine seller type (dealer or private)
-            $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
-            $sellerType = $isDealer ? 'Dealer' : 'Private';
-
-            return [
-                'id' => $vehicle->id,
-                'slug' => $vehicle->slug,
-                'dealer_id' => $vehicle->dealer_id,
-                'title' => $vehicle->title,
-                'variant_name' => $vehicle->variant_name,
-                'price' => $vehicle->price,
-                'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
-                'km_driven' => $vehicle->km_driven,
-                'engine_power_hp' => $vehicle->engine_power_hp,
-                'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-                'gear_type_name' => $vehicle->gear_type_name,
-                'fuel_type_name' => $vehicle->fuel_type_name,
-                'model_year_name' => $vehicle->model_year_name,
-                'brand_name' => $vehicle->brand_name,
-                'model_name' => $vehicle->model_name,
-                'seller_type' => $sellerType,
-                'is_dealer' => (bool) $isDealer,
-                'is_private' => ! $isDealer,
-                'seller_address' => $vehicle->seller_address,
-                'seller_postcode' => $vehicle->seller_postcode,
-                'user_id' => $vehicle->user_id,
-                'sales_type_name' => $vehicle->salesType?->name,
-            ];
-        });
+        $formattedVehicles = collect($vehicles->items())->map(
+            fn ($vehicle) => $this->vehicleListingPresentationService->formatForApiListing($vehicle)
+        );
 
         $formattedPaginator = new LengthAwarePaginator(
             $formattedVehicles,
@@ -243,35 +218,9 @@ class VehicleController extends Controller
         // When no results, include fallback list (all vehicles, first page) for better UX
         if ($vehicles->total() === 0) {
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
-            $fallbackFormatted = collect($fallbackVehicles->items())->map(function ($vehicle) {
-                $firstImage = $vehicle->images->first();
-                $isDealer = $vehicle->dealer && !str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
-                $sellerType = $isDealer ? 'Dealer' : 'Private';
-                return [
-                    'id' => $vehicle->id,
-                    'slug' => $vehicle->slug,
-                    'dealer_id' => $vehicle->dealer_id,
-                    'title' => $vehicle->title,
-                    'variant_name' => $vehicle->variant_name,
-                    'price' => $vehicle->price,
-                    'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
-                    'km_driven' => $vehicle->km_driven,
-                    'engine_power_hp' => $vehicle->engine_power_hp,
-                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-                    'gear_type_name' => $vehicle->gear_type_name,
-                    'fuel_type_name' => $vehicle->fuel_type_name,
-                    'model_year_name' => $vehicle->model_year_name,
-                    'brand_name' => $vehicle->brand_name,
-                    'model_name' => $vehicle->model_name,
-                    'seller_type' => $sellerType,
-                    'is_dealer' => (bool) $isDealer,
-                    'is_private' => ! $isDealer,
-                    'seller_address' => $vehicle->seller_address,
-                    'seller_postcode' => $vehicle->seller_postcode,
-                    'user_id' => $vehicle->user_id,
-                    'sales_type_name' => $vehicle->salesType?->name,
-                ];
-            });
+            $fallbackFormatted = collect($fallbackVehicles->items())->map(
+                fn ($vehicle) => $this->vehicleListingPresentationService->formatForApiListing($vehicle)
+            );
             $paginationData = [
                 'docs' => $formattedPaginator->items(),
                 'limit' => $formattedPaginator->perPage(),
@@ -460,9 +409,22 @@ class VehicleController extends Controller
             $taxFromRules = $this->ownershipTaxService->calculateForVehicle($vehicle);
             $response['ownership_tax'] = $taxFromRules;
             $response['calculated_ownership_tax'] = $taxFromRules;
+            $response['listing_health'] = $this->listingHealthService->scoreVehicle($vehicle);
         }
 
         return $this->success($response);
+    }
+
+    public function listingHealth(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()?->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $vehicle = Vehicle::with('images')->where('dealer_id', $dealer->id)->findOrFail($id);
+
+        return $this->success($this->listingHealthService->scoreVehicle($vehicle));
     }
     /**
      * Get vehicles list (legacy method for backward compatibility)

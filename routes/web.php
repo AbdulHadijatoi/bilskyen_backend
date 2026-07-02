@@ -73,6 +73,11 @@ Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controlle
 // Exchange Routes - Public (guests can submit exchange requests)
 Route::post('/vehicles/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])->name('vehicles.exchange.submit');
 
+// Marketplace in-app notifications (cookie auth via AuthService; same pattern as favorites)
+Route::get('/marketplace-notifications/count', [\App\Http\Controllers\MarketplaceNotificationController::class, 'unreadCount'])->name('marketplace-notifications.count');
+Route::get('/marketplace-notifications', [\App\Http\Controllers\MarketplaceNotificationController::class, 'index'])->name('marketplace-notifications.index');
+Route::post('/marketplace-notifications/mark-read', [\App\Http\Controllers\MarketplaceNotificationController::class, 'markRead'])->name('marketplace-notifications.mark-read');
+
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
     // Profile Routes

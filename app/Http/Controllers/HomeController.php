@@ -31,6 +31,8 @@ use App\Services\VehicleDetailPresentationService;
 use App\Services\VehicleViewService;
 use App\Services\MailService;
 use App\Services\Finance\FinanceCalculatorService;
+use App\Services\VehicleTrustReportService;
+use App\Services\MarketPricingService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -48,6 +50,8 @@ class HomeController extends Controller
         private VehicleViewService $vehicleViewService,
         private MailService $mailService,
         private FinanceCalculatorService $financeCalculatorService,
+        private VehicleTrustReportService $trustReportService,
+        private MarketPricingService $marketPricingService,
     ) {}
 
     /**
@@ -495,7 +499,7 @@ class HomeController extends Controller
     /**
      * Presentation fields for the vehicle listing card component (initial SSR).
      *
-     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null}
+     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null, trustBadge: bool, priceDroppedRecently: bool, fairPriceLabel: string|null}
      */
     private function vehicleListingItemRow(Vehicle $vehicle): array
     {
@@ -509,11 +513,17 @@ class HomeController extends Controller
             $salesTypeName = $vehicle->salesType()->value('name');
         }
 
+        $trust = $this->trustReportService->buildForVehicle($vehicle);
+        $fairPrice = $this->marketPricingService->evaluateVehicle($vehicle);
+
         return [
             'vehicle' => $vehicle,
             'imgUrl' => $imgUrl,
             'imgAlt' => $imgAlt,
             'salesTypeName' => $salesTypeName,
+            'trustBadge' => (bool) ($trust['trust_badge'] ?? false),
+            'priceDroppedRecently' => $this->trustReportService->hasRecentPriceDrop($vehicle),
+            'fairPriceLabel' => $fairPrice['label'] ?? null,
         ];
     }
 

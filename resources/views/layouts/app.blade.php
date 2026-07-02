@@ -66,7 +66,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     @include('layouts.partials.tailwind-config')
     @include('layouts.partials.design-tokens')
-    @vite(['resources/css/panel-blade.css'])
+    @include('layouts.partials.panel-blade-styles')
     <style>
         * {
             border-color: var(--border);

@@ -45,6 +45,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/get-sales-overview', [DealerDashboardController::class, 'getSalesOverviewWidget'])
         ->middleware('permission:dealer.dashboard.view');
+    Route::get('/listing-health-attention', [DealerDashboardController::class, 'getListingHealthAttention'])
+        ->middleware('permission:dealer.dashboard.view');
+    Route::get('/market-pulse', [DealerDashboardController::class, 'getMarketPulseWidget'])
+        ->middleware('permission:dealer.dashboard.view');
 
     Route::prefix('accounting')->group(function () {
         Route::get('/get-financial-overview', [AccountingController::class, 'getFinancialOverview'])
@@ -65,6 +69,9 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.vehicles.view');
         
         Route::get('/show/{id}', [VehicleController::class, 'show'])
+            ->middleware('permission:dealer.vehicles.view');
+
+        Route::get('/{id}/listing-health', [VehicleController::class, 'listingHealth'])
             ->middleware('permission:dealer.vehicles.view');
         
         Route::post('/', [VehicleController::class, 'store'])
@@ -351,6 +358,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/channels', [DealerAnalyticsController::class, 'channels'])
             ->middleware('dealer.feature:analytics');
         Route::get('/export', [DealerAnalyticsController::class, 'export'])
+            ->middleware('dealer.feature:analytics');
+        Route::get('/market-pulse', [DealerAnalyticsController::class, 'marketPulse'])
             ->middleware('dealer.feature:analytics');
     });
 

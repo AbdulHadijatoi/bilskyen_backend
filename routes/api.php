@@ -152,6 +152,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'check']);
         Route::post('/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatch']);
     });
+
+    Route::middleware('auth:api')->prefix('marketplace-notifications')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MarketplaceNotificationController::class, 'index']);
+        Route::get('/count', [\App\Http\Controllers\MarketplaceNotificationController::class, 'unreadCount']);
+        Route::post('/mark-read', [\App\Http\Controllers\MarketplaceNotificationController::class, 'markRead']);
+    });
     
     // Vehicle enquiry routes - Public (guests and auth users can submit, same as web)
     Route::prefix('vehicles')->group(function () {

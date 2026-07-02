@@ -3,6 +3,9 @@
     'imgUrl',
     'imgAlt',
     'salesTypeName' => null,
+    'trustBadge' => false,
+    'priceDroppedRecently' => false,
+    'fairPriceLabel' => null,
 ])
 <div {{ $attributes->merge(['class' => 'vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <a href="/vehicles/{{ $vehicle->slug }}" class="vehicle-item-main-link block flex-1 min-w-0">
@@ -25,6 +28,21 @@
                 @if($salesTypeName)
                     <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         {{ $salesTypeName }}
+                    </span>
+                @endif
+                @if($trustBadge)
+                    <span class="inline-flex items-center rounded-md bg-emerald-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                        {{ __('messages.pages.vehicles.detail.trust_verified_badge') }}
+                    </span>
+                @endif
+                @if($priceDroppedRecently)
+                    <span class="inline-flex items-center rounded-md bg-rose-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                        {{ __('messages.pages.vehicles.detail.price_dropped_badge') }}
+                    </span>
+                @endif
+                @if($fairPriceLabel === 'below_market')
+                    <span class="inline-flex items-center rounded-md bg-sky-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                        {{ __('messages.pages.vehicles.detail.fair_price_below_market') }}
                     </span>
                 @endif
             </div>

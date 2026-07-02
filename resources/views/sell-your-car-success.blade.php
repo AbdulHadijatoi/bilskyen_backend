@@ -335,6 +335,67 @@
             </div>
         </div>
 
+        @php
+            $registry = $trustReport['registry'] ?? [];
+            $showTrustReport = !empty($registry)
+                || !empty($trustReport['inspection_date'])
+                || !empty($trustReport['inspection_result'])
+                || !empty($trustReport['inspection_odometer']);
+        @endphp
+        @if($showTrustReport)
+        <div class="vehicle-preview mt-4 text-left" style="margin-top: 1rem;">
+            <h4 class="text-sm font-semibold text-foreground mb-1">{{ __('messages.pages.vehicles.detail.trust_report_title') }}</h4>
+            <p class="text-xs text-muted-foreground mb-3">{{ __('messages.pages.vehicles.detail.trust_report_subtitle') }}</p>
+            <div class="grid gap-2 text-sm text-muted-foreground">
+                @if(!empty($registry['brand_name']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.forms.brand') }}:</span>
+                        {{ $registry['brand_name'] }}
+                    </div>
+                @endif
+                @if(!empty($registry['model_name']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.forms.model') }}:</span>
+                        {{ $registry['model_name'] }}
+                    </div>
+                @endif
+                @if(!empty($registry['variant_name']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.forms.variant') }}:</span>
+                        {{ $registry['variant_name'] }}
+                    </div>
+                @endif
+                @if(!empty($registry['model_year']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.forms.model_year') }}:</span>
+                        {{ $registry['model_year'] }}
+                    </div>
+                @endif
+                @if(!empty($registry['first_registration_date']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.pages.vehicles.detail.first_registration_date') }}:</span>
+                        {{ \Carbon\Carbon::parse($registry['first_registration_date'])->format('M Y') }}
+                    </div>
+                @endif
+                @if(!empty($registry['km_driven']))
+                    <div>
+                        <span class="font-medium text-foreground">{{ __('messages.forms.km_driven') }}:</span>
+                        {{ number_format((float) $registry['km_driven']) }} km
+                    </div>
+                @endif
+                @if(!empty($trustReport['inspection_date']))
+                    <div>{{ __('messages.pages.vehicles.detail.last_inspection_date') }}: {{ \Carbon\Carbon::parse($trustReport['inspection_date'])->format('M Y') }}</div>
+                @endif
+                @if(!empty($trustReport['inspection_result']))
+                    <div>{{ $trustReport['inspection_result'] }}</div>
+                @endif
+                @if(!empty($trustReport['inspection_odometer']))
+                    <div>{{ number_format((int) $trustReport['inspection_odometer']) }} km</div>
+                @endif
+            </div>
+        </div>
+        @endif
+
         <!-- Action Buttons -->
         <div class="action-buttons">
             @if(!$isPendingReview && !$isFeatured && $canFeature)
