@@ -3,15 +3,11 @@
 @section('title', __('messages.pages.profile.title') . ' | Bilskyen')
 
 @section('content')
-<div class="container py-4 md:py-8">
-    <div>
-        <h2 class="text-xl font-bold">{{ __('messages.pages.profile.title') }}</h2>
-        <p class="text-muted-foreground max-w-xl">
-            {{ __('messages.pages.profile.description') }}
-        </p>
-    </div>
-
-    <hr class="mt-3 mb-6 border-border" />
+<div class="panel-content panel-page">
+    <x-panel.page-header
+        :title="__('messages.pages.profile.title')"
+        :subtitle="__('messages.pages.profile.description')"
+    />
 
     <div class="flex h-full w-full flex-col items-center justify-center gap-4">
         @if(session('status'))

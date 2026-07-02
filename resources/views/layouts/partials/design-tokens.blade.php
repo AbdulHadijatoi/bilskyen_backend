@@ -1,0 +1,43 @@
+<style>
+    :root {
+        --radius: 5px;
+        --radius-lg: 5px;
+        --radius-xl: 5px;
+        --radius-icon-btn: 0.625rem;
+        --background: #ffffff;
+        --foreground: #1a1d21;
+        --card: #ffffff;
+        --card-foreground: #1a1d21;
+        --popover: #ffffff;
+        --popover-foreground: #1a1d21;
+        --primary: #03418b;
+        --primary-foreground: #ffffff;
+        --primary-hover: #022a5c;
+        --primary-light: #e6eef7;
+        --secondary: #f0f1f4;
+        --secondary-foreground: #1a1d21;
+        --muted: #f0f1f4;
+        --muted-foreground: #6b7280;
+        --accent: #e6eef7;
+        --accent-foreground: #03418b;
+        --accent-hover: #d4e3f2;
+        --destructive: #ef4444;
+        --destructive-foreground: #ffffff;
+        --success: #10b981;
+        --success-light: #d1fae5;
+        --info: #03418b;
+        --info-light: #e6eef7;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --border: #e5e7eb;
+        --input: #e5e7eb;
+        --ring: #03418b;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+        --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .site-page--marketing {
+        --background: #ffffff;
+    }
+</style>

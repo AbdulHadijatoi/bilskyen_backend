@@ -1,0 +1,419 @@
+@import './tokens.css';
+
+/* ── Page shell ── */
+.panel-page {
+  width: 100%;
+}
+
+.panel-content {
+  padding: 1.25rem 1rem 3rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .panel-content {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .panel-content {
+    padding-inline: 2rem;
+  }
+}
+
+.panel-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel-page-header__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.25;
+}
+
+.panel-page-header__subtitle {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.45;
+  max-width: 42rem;
+}
+
+.panel-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Cards ── */
+.panel-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.panel-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-card__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.panel-card__body {
+  padding: 1.25rem;
+}
+
+.panel-card__body--flush {
+  padding: 0;
+}
+
+/* ── Stat cards ── */
+.panel-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .panel-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .panel-stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.panel-stat-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  height: 100%;
+}
+
+.panel-stat-card__label {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.panel-stat-card__value {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.panel-stat-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-icon-btn);
+  background: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.panel-stat-card__icon--success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.panel-stat-card__icon--info {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.panel-stat-card__icon--warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+/* ── Buttons ── */
+.panel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.panel-btn--primary {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.panel-btn--primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #ffffff;
+}
+
+.panel-btn--outline {
+  background: var(--card);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.panel-btn--outline:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
+}
+
+.panel-btn--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: var(--radius);
+}
+
+.panel-btn--ghost {
+  background: transparent;
+  color: var(--muted-foreground);
+  border-color: transparent;
+}
+
+.panel-btn--ghost:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ── Tabs ── */
+.panel-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.panel-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.panel-tabs__btn:hover {
+  color: var(--foreground);
+}
+
+.panel-tabs__btn--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+.panel-tabs__count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.panel-tabs__btn--active .panel-tabs__count {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── Tables ── */
+.panel-table-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.panel-table-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-table-card__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.panel-table-card__meta {
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.panel-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.panel-data-table thead th {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-data-table tbody td {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.panel-data-table tbody tr:hover td {
+  background: color-mix(in oklch, var(--primary) 4%, var(--card));
+}
+
+.panel-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Form fields ── */
+.panel-field {
+  margin-bottom: 1rem;
+}
+
+.panel-field__label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.panel-input,
+.panel-select,
+.panel-textarea {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--foreground);
+  background: var(--muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  outline: none;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.panel-input:hover,
+.panel-select:hover,
+.panel-textarea:hover {
+  background: color-mix(in oklch, var(--muted) 65%, var(--card));
+}
+
+.panel-input:focus,
+.panel-select:focus,
+.panel-textarea:focus {
+  background: var(--card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+.panel-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+/* ── Status chips ── */
+.panel-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-chip--primary {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.panel-chip--success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.panel-chip--muted {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+/* ── Section spacing ── */
+.panel-section {
+  margin-bottom: 1.5rem;
+}
+
+.panel-section:last-child {
+  margin-bottom: 0;
+}

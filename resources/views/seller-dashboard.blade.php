@@ -8,134 +8,118 @@
 @endphp
 
 @section('content')
-<div class="bg-muted min-h-screen">
-    <div class="container mx-auto space-y-4 py-6">
-        <!-- Statistics Section -->
-        <div class="rounded-lg bg-card p-6">
-            <h1 class="text-3xl font-bold text-foreground mb-6">{{ __('messages.pages.seller_dashboard.title') }}</h1>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Total Vehicles -->
-                <div class="rounded-lg border border-border bg-background p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_vehicles') }}</p>
-                            <p class="text-2xl font-bold text-foreground mt-1">{{ $statistics['total_vehicles'] }}</p>
-                        </div>
-                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
+<div class="min-h-screen" style="background: #f4f5f7;">
+    <div class="panel-content panel-page">
+        <x-panel.page-header :title="__('messages.pages.seller_dashboard.title')" />
+
+        <div class="panel-card panel-section">
+            <div class="panel-card__body">
+                <div class="panel-stat-grid">
+                    <x-panel.stat-card
+                        :label="__('messages.pages.seller_dashboard.total_vehicles')"
+                        :value="$statistics['total_vehicles']"
+                    >
+                        <x-slot:icon>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
                                 <polygon points="12 15 17 21 7 21 12 15"></polygon>
                             </svg>
-                        </div>
-                    </div>
-                </div>
+                        </x-slot:icon>
+                    </x-panel.stat-card>
 
-                <!-- Total Worth -->
-                <div class="rounded-lg border border-border bg-background p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_worth') }}</p>
-                            <p class="text-2xl font-bold text-foreground mt-1">{{ FormatHelper::formatCurrency($statistics['total_worth']) }}</p>
-                        </div>
-                        <div class="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-500">
+                    <x-panel.stat-card
+                        :label="__('messages.pages.seller_dashboard.total_worth')"
+                        :value="FormatHelper::formatCurrency($statistics['total_worth'])"
+                        icon-variant="success"
+                    >
+                        <x-slot:icon>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" x2="12" y1="2" y2="22"></line>
                                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                             </svg>
-                        </div>
-                    </div>
-                </div>
+                        </x-slot:icon>
+                    </x-panel.stat-card>
 
-                <!-- Total Inquiries -->
-                <div class="rounded-lg border border-border bg-background p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_inquiries') }}</p>
-                            <p class="text-2xl font-bold text-foreground mt-1">{{ $statistics['total_inquiries'] }}</p>
-                        </div>
-                        <div class="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-500">
+                    <x-panel.stat-card
+                        :label="__('messages.pages.seller_dashboard.total_inquiries')"
+                        :value="$statistics['total_inquiries']"
+                        icon-variant="info"
+                    >
+                        <x-slot:icon>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
-                        </div>
-                    </div>
-                </div>
+                        </x-slot:icon>
+                    </x-panel.stat-card>
 
-                <!-- Total Views -->
-                <div class="rounded-lg border border-border bg-background p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-muted-foreground">{{ __('messages.pages.seller_dashboard.total_views') }}</p>
-                            <p class="text-2xl font-bold text-foreground mt-1">{{ number_format($statistics['total_views']) }}</p>
-                        </div>
-                        <div class="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-purple-500">
+                    <x-panel.stat-card
+                        :label="__('messages.pages.seller_dashboard.total_views')"
+                        :value="number_format($statistics['total_views'])"
+                        icon-variant="warning"
+                    >
+                        <x-slot:icon>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
-                        </div>
-                    </div>
+                        </x-slot:icon>
+                    </x-panel.stat-card>
                 </div>
             </div>
         </div>
 
-        <!-- Vehicle Listings Section -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-foreground">{{ __('messages.pages.seller_dashboard.my_vehicles') }}</h2>
-                <span id="vehicle-count" class="text-muted-foreground text-sm">{{ $vehicles->total() }} {{ __('messages.pages.seller_dashboard.vehicles_count') }}</span>
+        <div class="panel-section">
+            <div class="panel-table-card__header" style="border: none; padding: 0 0 0.75rem 0; background: transparent;">
+                <h2 class="panel-table-card__title">{{ __('messages.pages.seller_dashboard.my_vehicles') }}</h2>
+                <span id="vehicle-count" class="panel-table-card__meta">{{ $vehicles->total() }} {{ __('messages.pages.seller_dashboard.vehicles_count') }}</span>
             </div>
 
-            <!-- Status Tabs -->
-            <div class="border-b border-border">
-                <nav class="flex space-x-1" aria-label="{{ __('messages.pages.seller_dashboard.status_tabs') }}">
-                    <button
-                        type="button"
-                        onclick="filterByStatus(null, '{{ $token }}')"
-                        class="status-tab active inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:text-foreground hover:border-border transition-colors"
-                        data-status="all"
-                    >
-                        {{ __('messages.pages.seller_dashboard.all') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-muted text-muted-foreground">{{ $statistics['total_vehicles'] }}</span>
-                    </button>
-                    <button
-                        type="button"
-                        onclick="filterByStatus({{ VehicleListStatus::PUBLISHED }}, '{{ $token }}')"
-                        class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-                        data-status="{{ VehicleListStatus::PUBLISHED }}"
-                    >
-                        {{ __('messages.pages.seller_dashboard.published') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700" id="count-published">{{ $vehicles->where('list_status_id', VehicleListStatus::PUBLISHED)->count() }}</span>
-                    </button>
-                    <button
-                        type="button"
-                        onclick="filterByStatus({{ VehicleListStatus::DRAFT }}, '{{ $token }}')"
-                        class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-                        data-status="{{ VehicleListStatus::DRAFT }}"
-                    >
-                        {{ __('messages.pages.seller_dashboard.draft') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700" id="count-draft">{{ $vehicles->where('list_status_id', VehicleListStatus::DRAFT)->count() }}</span>
-                    </button>
-                    <button
-                        type="button"
-                        onclick="filterByStatus({{ VehicleListStatus::SOLD }}, '{{ $token }}')"
-                        class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-                        data-status="{{ VehicleListStatus::SOLD }}"
-                    >
-                        {{ __('messages.pages.seller_dashboard.sold') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700" id="count-sold">{{ $vehicles->where('list_status_id', VehicleListStatus::SOLD)->count() }}</span>
-                    </button>
-                    <button
-                        type="button"
-                        onclick="filterByStatus({{ VehicleListStatus::ARCHIVED }}, '{{ $token }}')"
-                        class="status-tab inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-                        data-status="{{ VehicleListStatus::ARCHIVED }}"
-                    >
-                        {{ __('messages.pages.seller_dashboard.archived') }}
-                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700" id="count-archived">{{ $vehicles->where('list_status_id', VehicleListStatus::ARCHIVED)->count() }}</span>
-                    </button>
-                </nav>
+            <div class="panel-tabs" aria-label="{{ __('messages.pages.seller_dashboard.status_tabs') }}">
+                <button
+                    type="button"
+                    onclick="filterByStatus(null, '{{ $token }}')"
+                    class="panel-tabs__btn panel-tabs__btn--active status-tab"
+                    data-status="all"
+                >
+                    {{ __('messages.pages.seller_dashboard.all') }}
+                    <span class="panel-tabs__count">{{ $statistics['total_vehicles'] }}</span>
+                </button>
+                <button
+                    type="button"
+                    onclick="filterByStatus({{ VehicleListStatus::PUBLISHED }}, '{{ $token }}')"
+                    class="panel-tabs__btn status-tab"
+                    data-status="{{ VehicleListStatus::PUBLISHED }}"
+                >
+                    {{ __('messages.pages.seller_dashboard.published') }}
+                    <span class="panel-tabs__count" id="count-published">{{ $vehicles->where('list_status_id', VehicleListStatus::PUBLISHED)->count() }}</span>
+                </button>
+                <button
+                    type="button"
+                    onclick="filterByStatus({{ VehicleListStatus::DRAFT }}, '{{ $token }}')"
+                    class="panel-tabs__btn status-tab"
+                    data-status="{{ VehicleListStatus::DRAFT }}"
+                >
+                    {{ __('messages.pages.seller_dashboard.draft') }}
+                    <span class="panel-tabs__count" id="count-draft">{{ $vehicles->where('list_status_id', VehicleListStatus::DRAFT)->count() }}</span>
+                </button>
+                <button
+                    type="button"
+                    onclick="filterByStatus({{ VehicleListStatus::SOLD }}, '{{ $token }}')"
+                    class="panel-tabs__btn status-tab"
+                    data-status="{{ VehicleListStatus::SOLD }}"
+                >
+                    {{ __('messages.pages.seller_dashboard.sold') }}
+                    <span class="panel-tabs__count" id="count-sold">{{ $vehicles->where('list_status_id', VehicleListStatus::SOLD)->count() }}</span>
+                </button>
+                <button
+                    type="button"
+                    onclick="filterByStatus({{ VehicleListStatus::ARCHIVED }}, '{{ $token }}')"
+                    class="panel-tabs__btn status-tab"
+                    data-status="{{ VehicleListStatus::ARCHIVED }}"
+                >
+                    {{ __('messages.pages.seller_dashboard.archived') }}
+                    <span class="panel-tabs__count" id="count-archived">{{ $vehicles->where('list_status_id', VehicleListStatus::ARCHIVED)->count() }}</span>
+                </button>
             </div>
 
             <!-- Vehicle Grid -->
@@ -626,14 +610,12 @@ window.filterByStatus = function(statusId, token) {
     
     // Update active tab
     document.querySelectorAll('.status-tab').forEach(tab => {
-        tab.classList.remove('active', 'border-primary', 'text-foreground');
-        tab.classList.add('text-muted-foreground', 'border-transparent');
+        tab.classList.remove('panel-tabs__btn--active', 'active');
     });
     
     const activeTab = document.querySelector(`.status-tab[data-status="${statusId || 'all'}"]`);
     if (activeTab) {
-        activeTab.classList.add('active', 'border-primary', 'text-foreground');
-        activeTab.classList.remove('text-muted-foreground', 'border-transparent');
+        activeTab.classList.add('panel-tabs__btn--active', 'active');
     }
     
     // Filter vehicles
@@ -669,36 +651,10 @@ window.filterByStatus = function(statusId, token) {
 
 // Initialize: show all vehicles by default
 document.addEventListener('DOMContentLoaded', function() {
-    // Set active tab styling
     const activeTab = document.querySelector('.status-tab.active');
     if (activeTab) {
-        activeTab.classList.add('border-primary', 'text-foreground');
-        activeTab.classList.remove('text-muted-foreground', 'border-transparent');
+        activeTab.classList.add('panel-tabs__btn--active');
     }
 });
 </script>
-
-@push('styles')
-<style>
-    /* Status Tab Styles */
-    .status-tab {
-        position: relative;
-        transition: all 0.2s ease;
-    }
-    
-    .status-tab.active {
-        color: hsl(var(--foreground));
-        border-bottom-color: hsl(var(--primary)) !important;
-    }
-    
-    .status-tab:hover:not(.active) {
-        color: hsl(var(--foreground));
-        border-bottom-color: hsl(var(--border));
-    }
-    
-    .status-tab span {
-        transition: all 0.2s ease;
-    }
-</style>
-@endpush
 @endsection

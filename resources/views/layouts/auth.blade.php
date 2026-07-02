@@ -10,80 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
-                    },
-                    colors: {
-                        border: "var(--border)",
-                        input: "var(--input)",
-                        ring: "var(--ring)",
-                        background: "var(--background)",
-                        foreground: "var(--foreground)",
-                        primary: {
-                            DEFAULT: "var(--primary)",
-                            foreground: "var(--primary-foreground)",
-                        },
-                        secondary: {
-                            DEFAULT: "var(--secondary)",
-                            foreground: "var(--secondary-foreground)",
-                        },
-                        destructive: {
-                            DEFAULT: "var(--destructive)",
-                            foreground: "var(--destructive-foreground)",
-                        },
-                        muted: {
-                            DEFAULT: "var(--muted)",
-                            foreground: "var(--muted-foreground)",
-                        },
-                        accent: {
-                            DEFAULT: "var(--accent)",
-                            foreground: "var(--accent-foreground)",
-                        },
-                        popover: {
-                            DEFAULT: "var(--popover)",
-                            foreground: "var(--popover-foreground)",
-                        },
-                        card: {
-                            DEFAULT: "var(--card)",
-                            foreground: "var(--card-foreground)",
-                        },
-                    },
-                    borderRadius: {
-                        lg: "var(--radius)",
-                        md: "calc(var(--radius) - 2px)",
-                        sm: "calc(var(--radius) - 4px)",
-                    },
-                },
-            },
-        }
-    </script>
+    @include('layouts.partials.tailwind-config')
+    @include('layouts.partials.design-tokens')
+    @vite(['resources/css/panel-blade.css'])
     <style>
-        :root {
-            --radius: 0.5rem;
-            --background: oklch(1 0 0);
-            --foreground: oklch(0.145 0 0);
-            --card: oklch(1 0 0);
-            --card-foreground: oklch(0.145 0 0);
-            --popover: oklch(1 0 0);
-            --popover-foreground: oklch(0.145 0 0);
-            --primary: #004aad;
-            --primary-foreground: oklch(0.985 0 0);
-            --secondary: oklch(0.97 0 0);
-            --secondary-foreground: oklch(0.145 0 0);
-            --muted: oklch(0.97 0 0);
-            --muted-foreground: oklch(0.556 0 0);
-            --accent: oklch(0.97 0 0);
-            --accent-foreground: oklch(0.145 0 0);
-            --destructive: oklch(0.577 0.245 27.325);
-            --border: oklch(0.922 0 0);
-            --input: oklch(0.922 0 0);
-            --ring: oklch(0.708 0 0);
-        }
-        
         * {
             border-color: var(--border);
         }
