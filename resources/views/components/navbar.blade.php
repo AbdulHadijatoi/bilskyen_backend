@@ -142,13 +142,11 @@
                     </a>
                 </div>
                 <div class="relative">
-                    <button id="user-menu-toggle" class="relative inline-flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full transition-colors hover:bg-[#002d6b]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="{{ __('messages.common.user_menu') }}">
-                        <div class="flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-md bg-[#002d6b]">
-                            <span class="text-xs md:text-sm font-medium text-white">${initials}</span>
-                        </div>
+                    <button id="user-menu-toggle" type="button" class="nav-user-avatar-btn focus-visible:outline-none" aria-label="{{ __('messages.common.user_menu') }}" aria-haspopup="true" aria-expanded="false">
+                        <span class="nav-user-avatar">${initials}</span>
                     </button>
                     
-                    <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
+                    <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 rounded-[var(--radius)] border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
                         <div class="px-2 py-1.5">
                             <div class="flex flex-col space-y-1">
                                 <p class="text-sm leading-none font-medium">${name}</p>
@@ -216,12 +214,15 @@
                     
                     toggle.addEventListener('click', (e) => {
                         e.stopPropagation();
+                        const isOpen = !menu.classList.contains('hidden');
                         menu.classList.toggle('hidden');
+                        toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
                     });
                     
                     document.addEventListener('click', (e) => {
                         if (!toggle.contains(e.target) && !menu.contains(e.target)) {
                             menu.classList.add('hidden');
+                            toggle.setAttribute('aria-expanded', 'false');
                         }
                     });
                 }
