@@ -120,28 +120,24 @@ Route::prefix('v1')->group(function () {
             Route::delete('/account', [AuthController::class, 'deleteAccount']);
         });
         
-        // TODO: Implement remaining endpoints
-        Route::post('/sign-in/magic-link', function () {
-            return response()->json(['message' => 'Magic link endpoint - to be implemented'], 501);
-        });
-        
-        Route::get('/verify-magic-link', function () {
-            return response()->json(['message' => 'Verify magic link endpoint - to be implemented'], 501);
-        });
-        
+        // Magic link, email verification, and change email
+        Route::post('/sign-in/magic-link', [AuthController::class, 'signInMagicLink'])
+            ->middleware('throttle:auth.login');
+
+        Route::get('/verify-magic-link', [AuthController::class, 'verifyMagicLink'])
+            ->middleware('throttle:auth.login');
+
+        Route::get('/verify-email', [AuthController::class, 'verifyEmail'])
+            ->middleware('throttle:auth.login');
+
+        Route::post('/change-email', [AuthController::class, 'changeEmail'])
+            ->middleware('auth:api');
+
         Route::post('/forget-password', [AuthController::class, 'forgetPassword'])
             ->middleware('throttle:auth.login'); // 10 requests per minute
-        
+
         Route::post('/reset-password', [AuthController::class, 'resetPassword'])
             ->middleware('throttle:auth.login'); // 10 requests per minute
-        
-        Route::get('/verify-email', function () {
-            return response()->json(['message' => 'Verify email endpoint - to be implemented'], 501);
-        });
-        
-        Route::post('/change-email', function () {
-            return response()->json(['message' => 'Change email endpoint - to be implemented'], 501);
-        })->middleware('auth:api');
     });
     
     // Favorites API routes (for authenticated users)

@@ -47,8 +47,12 @@ class SendDealerMarketPulseDigestCommand extends Command
                             false
                         );
                         $sent++;
-                    } catch (\Throwable) {
-                        // continue
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('Failed to send dealer market pulse digest', [
+                            'dealer_id' => $dealer->id,
+                            'email' => $email,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
             });

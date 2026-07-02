@@ -119,14 +119,15 @@ class AdminIntegrationController extends Controller
         $this->platformSettingService->logIntegration(
             $data['provider'],
             'test',
-            'success',
-            'Connection test placeholder',
+            'failed',
+            'Connection test not supported for this provider',
             $request->user()?->id
         );
 
-        return $this->success([
-            'message' => __('messages.api.integration_test_ok'),
-            'provider' => $data['provider'],
-        ]);
+        return $this->error(
+            __('messages.errors.integration_test_not_supported'),
+            [],
+            422
+        );
     }
 }

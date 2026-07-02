@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\AuditActorType;
-use App\Mail\MagicLinkMail;
 use App\Mail\ResetPasswordMail;
-use App\Mail\VerifyEmailMail;
 use App\Services\AuthService;
+use App\Services\AuthVerificationService;
 use App\Services\MailService;
 use App\Services\RolePermissionService;
 use App\Services\AuditLogService;
@@ -27,7 +26,8 @@ class AuthPageController extends Controller
         private AuthService $authService,
         private RolePermissionService $rolePermissionService,
         private AuditLogService $auditLogService,
-        private MailService $mailService
+        private MailService $mailService,
+        private AuthVerificationService $authVerificationService
     ) {}
 
     /**
@@ -305,7 +305,6 @@ class AuthPageController extends Controller
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => $request->password,
-            'email_verified' => false,
         ]);
 
         // Assign default role
@@ -494,33 +493,11 @@ class AuthPageController extends Controller
                 return redirect('/auth/login')->with('error', __('messages.errors.please_login_verify_email'));
             }
 
-            if ($user->email_verified) {
+            if ($user->email_verified_at !== null) {
                 return redirect('/')->with('status', __('messages.messages.email_already_verified'));
             }
 
-            // Generate verification token
-            $verificationToken = Str::random(64);
-            
-            // Store in verifications table with prefix
-            $identifier = 'email_verify:' . $user->email;
-            DB::table('verifications')->updateOrInsert(
-                ['identifier' => $identifier],
-                [
-                    'value' => Hash::make($verificationToken),
-                    'expires_at' => Carbon::now()->addHours(24),
-                    'created_at' => Carbon::now(),
-                ]
-            );
-
-            // Generate verification URL
-            $verificationUrl = url('/auth/verify-email/' . $user->id . '/' . $verificationToken);
-
-            $this->mailService->sendMailable(
-                $user->email,
-                new VerifyEmailMail($verificationUrl),
-                ['mail_type' => 'verify_email_web', 'user_id' => $user->id],
-                false
-            );
+            $this->authVerificationService->sendEmailVerification($user, false);
 
             return back()->with('status', __('messages.messages.verification_email_sent'));
         } catch (JWTException $e) {
@@ -538,40 +515,21 @@ class AuthPageController extends Controller
      */
     public function verifyEmail(Request $request, $id, $hash)
     {
-        $user = User::find($id);
-        if (!$user) {
-            return redirect('/auth/login')->with('error', __('messages.errors.invalid_verification_link'));
-        }
-
-        // Check verification token
-        $identifier = 'email_verify:' . $user->email;
-        $verification = DB::table('verifications')
-            ->where('identifier', $identifier)
-            ->where('expires_at', '>', Carbon::now())
-            ->first();
-
-        if (!$verification || !Hash::check($hash, $verification->value)) {
+        $user = $this->authVerificationService->verifyEmailByUserIdAndHash((int) $id, $hash);
+        if (! $user) {
             return redirect('/auth/verify-email')->with('error', __('messages.errors.invalid_expired_verification_link'));
         }
 
-        // Capture before state for audit log
-        $beforeData = ['email_verified' => $user->email_verified];
-
-        // Mark email as verified
-        $user->email_verified = true;
-        $user->save();
-
         // Log audit trail (use SYSTEM actor type as it's automated verification)
         try {
-            $afterData = ['email_verified' => $user->email_verified];
             $this->auditLogService->log(
                 0, // System actor ID
                 AuditActorType::SYSTEM,
                 'update',
                 'User',
                 $user->id,
-                $beforeData,
-                $afterData,
+                ['email_verified_at' => null],
+                ['email_verified_at' => $user->email_verified_at],
                 $request,
                 null,
                 null,
@@ -586,9 +544,6 @@ class AuthPageController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
-
-        // Delete verification token
-        DB::table('verifications')->where('identifier', $identifier)->delete();
 
         // Redirect all users to home page
         return redirect('/')->with('status', __('messages.messages.email_verified_successfully'));
@@ -607,36 +562,9 @@ class AuthPageController extends Controller
         ]);
 
         $email = strtolower($request->email);
-        $user = User::where('email', $email)->first();
-
-        // Always return success for security
         $message = __('messages.messages.magic_link_sent');
 
-        if ($user) {
-            // Generate magic link token
-            $token = Str::random(64);
-            
-            // Store in verifications table with prefix
-            $identifier = 'magic_link:' . $email;
-            DB::table('verifications')->updateOrInsert(
-                ['identifier' => $identifier],
-                [
-                    'value' => Hash::make($token),
-                    'expires_at' => Carbon::now()->addMinutes(15), // Magic links expire in 15 minutes
-                    'created_at' => Carbon::now(),
-                ]
-            );
-
-            // Generate magic link URL
-            $magicLinkUrl = url('/auth/magic-link/verify?token=' . $token . '&callbackURL=' . urlencode('/'));
-
-            $this->mailService->sendMailable(
-                $user->email,
-                new MagicLinkMail($magicLinkUrl),
-                ['mail_type' => 'magic_link_login_web'],
-                false
-            );
-        }
+        $this->authVerificationService->requestMagicLink($email, false);
 
         return back()->with('status', $message);
     }
@@ -659,7 +587,6 @@ class AuthPageController extends Controller
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => Str::random(32), // Temporary random password
-            'email_verified' => false,
         ]);
 
         // Assign default role
@@ -695,29 +622,8 @@ class AuthPageController extends Controller
             ]);
         }
 
-        // Generate magic link token
-        $token = Str::random(64);
-        
-        // Store in verifications table with prefix
-        $identifier = 'magic_link:' . $user->email;
-        DB::table('verifications')->updateOrInsert(
-            ['identifier' => $identifier],
-            [
-                'value' => Hash::make($token),
-                'expires_at' => Carbon::now()->addMinutes(15),
-                'created_at' => Carbon::now(),
-            ]
-        );
-
-        // Generate magic link URL
-        $magicLinkUrl = url('/auth/magic-link/verify?token=' . $token . '&callbackURL=' . urlencode('/'));
-
-        $this->mailService->sendMailable(
-            $user->email,
-            new MagicLinkMail($magicLinkUrl),
-            ['mail_type' => 'magic_link_signup_web', 'user_id' => $user->id],
-            false
-        );
+        // Generate magic link for new user
+        $this->authVerificationService->sendMagicLinkForUser($user, false);
 
         return back()->with('status', __('messages.messages.magic_link_sent_signup'));
     }
@@ -737,34 +643,15 @@ class AuthPageController extends Controller
         $token = $request->token;
         $callbackURL = $request->input('callbackURL', '/');
 
-        // Find verification records with magic_link prefix
-        $verifications = DB::table('verifications')
-            ->where('identifier', 'like', 'magic_link:%')
-            ->where('expires_at', '>', Carbon::now())
-            ->get();
+        $result = $this->authVerificationService->verifyMagicLinkToken($token);
 
-        $verification = null;
-        foreach ($verifications as $v) {
-            if (Hash::check($token, $v->value)) {
-                $verification = $v;
-                break;
-            }
-        }
-
-        if (!$verification) {
+        if (! $result) {
             return redirect('/auth/magic-link/verify')
                 ->with('error', __('messages.errors.invalid_expired_magic_link'))
                 ->withInput($request->only('token', 'callbackURL'));
         }
 
-        // Extract email from identifier (magic_link:email)
-        $email = str_replace('magic_link:', '', $verification->identifier);
-        
-        // Find user by email
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            return redirect('/auth/login')->with('error', __('messages.errors.user_not_found'));
-        }
+        $user = $result['user'];
 
         // Check if user is banned
         if ($user->banned) {
@@ -774,15 +661,6 @@ class AuthPageController extends Controller
         // Generate JWT tokens
         $accessToken = auth('api')->login($user);
         $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($user);
-
-        // Mark email as verified if not already
-        if (!$user->email_verified) {
-            $user->email_verified = true;
-            $user->save();
-        }
-
-        // Delete verification token
-        DB::table('verifications')->where('identifier', $verification->identifier)->delete();
 
         // Set cookies
         $refreshCookie = cookie(

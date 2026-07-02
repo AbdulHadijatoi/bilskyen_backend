@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Auth\AuthLoginController;
 use App\Http\Controllers\Auth\AuthRegisterController;
 use App\Http\Controllers\Auth\AuthPasswordController;
+use App\Http\Controllers\Auth\AuthVerificationController;
 use App\Http\Controllers\Auth\AuthSessionController;
 use App\Services\RolePermissionService;
 use Illuminate\Http\Request;
@@ -22,7 +23,8 @@ class AuthController extends Controller
         private AuthLoginController $loginController,
         private AuthRegisterController $registerController,
         private AuthPasswordController $passwordController,
-        private AuthSessionController $sessionController
+        private AuthSessionController $sessionController,
+        private AuthVerificationController $verificationController
     ) {}
 
     /**
@@ -153,5 +155,25 @@ class AuthController extends Controller
     public function deleteAccount(Request $request): JsonResponse
     {
         return $this->sessionController->deleteAccount($request);
+    }
+
+    public function signInMagicLink(Request $request): JsonResponse
+    {
+        return $this->verificationController->signInMagicLink($request);
+    }
+
+    public function verifyMagicLink(Request $request): JsonResponse
+    {
+        return $this->verificationController->verifyMagicLink($request);
+    }
+
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        return $this->verificationController->verifyEmail($request);
+    }
+
+    public function changeEmail(Request $request): JsonResponse
+    {
+        return $this->verificationController->changeEmail($request);
     }
 }
