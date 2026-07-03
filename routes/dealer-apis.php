@@ -94,6 +94,9 @@ Route::middleware('auth:api')->group(function () {
 
         Route::post('/{id}/3d-view', [VehicleController::class, 'upload3dView'])
             ->middleware('permission:dealer.vehicles.media');
+
+        Route::delete('/{id}/3d-view', [VehicleController::class, 'delete3dView'])
+            ->middleware('permission:dealer.vehicles.media');
         
         Route::post('/update-equipment/{id}', [VehicleController::class, 'updateEquipment'])
             ->middleware('permission:dealer.vehicles.update');

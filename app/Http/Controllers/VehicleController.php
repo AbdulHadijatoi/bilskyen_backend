@@ -912,22 +912,53 @@ class VehicleController extends Controller
         }
 
         $request->validate([
-            'view_3d_url' => 'required_without:file|nullable|url|max:500',
-            'file' => 'required_without:view_3d_url|nullable|file|mimes:glb,gltf,zip|max:51200',
+            'file' => 'required|file|mimes:glb,gltf,zip|max:51200',
         ]);
 
         $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
 
-        if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('vehicles/3d-views', 'public');
-            $vehicle->view_3d_url = Storage::disk('public')->url($path);
-        } else {
-            $vehicle->view_3d_url = $request->input('view_3d_url');
-        }
-
+        $this->deleteStored3dViewFileIfLocal($vehicle->getRawOriginal('view_3d_url'));
+        $path = $request->file('file')->store('vehicles/3d-views', 'public');
+        $vehicle->view_3d_url = $path;
         $vehicle->save();
 
         return $this->success($vehicle);
+    }
+
+    public function delete3dView(Request $request, int $id): JsonResponse
+    {
+        $dealer = $request->user()->dealer;
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        if (! $this->subscriptionFeatureService->hasFeature($dealer, 'upload_3d_view')) {
+            return $this->error(__('messages.api.subscription_feature_required', ['feature' => 'upload_3d_view']), [], 403);
+        }
+
+        $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
+
+        if (empty($vehicle->getRawOriginal('view_3d_url'))) {
+            return $this->success($vehicle);
+        }
+
+        $this->deleteStored3dViewFileIfLocal($vehicle->getRawOriginal('view_3d_url'));
+        $vehicle->view_3d_url = null;
+        $vehicle->save();
+
+        return $this->success($vehicle);
+    }
+
+    private function deleteStored3dViewFileIfLocal(?string $view3dUrl): void
+    {
+        $path = Vehicle::normalizeView3dStoragePath($view3dUrl);
+        if ($path === null) {
+            return;
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     /**

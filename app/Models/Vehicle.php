@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\ViewModels\VehicleDetailPresenter;
 use App\Models\DmrBrand;
@@ -232,6 +233,64 @@ class Vehicle extends Model
         $v = $this->attributes['postcode'] ?? null;
 
         return $v !== null && $v !== '' ? (string) $v : null;
+    }
+
+    public static function normalizeView3dStoragePath(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (preg_match('#(?:^|/storage/)(vehicles/3d-views/[^?]+)$#', $value, $matches)) {
+            return $matches[1];
+        }
+
+        if (str_starts_with($value, 'vehicles/3d-views/')) {
+            return $value;
+        }
+
+        return null;
+    }
+
+    public static function publicUrlForView3dStoragePath(string $path): string
+    {
+        $normalizedPath = ltrim($path, '/');
+
+        if (! app()->runningInConsole()) {
+            try {
+                $host = request()->getSchemeAndHttpHost();
+                if ($host) {
+                    return $host.'/storage/'.$normalizedPath;
+                }
+            } catch (\Throwable) {
+                // Fall back to filesystem disk URL.
+            }
+        }
+
+        return Storage::disk('public')->url($normalizedPath);
+    }
+
+    public function getView3dUrlAttribute(?string $value): ?string
+    {
+        $path = self::normalizeView3dStoragePath($value);
+
+        if ($path === null) {
+            return $value;
+        }
+
+        return self::publicUrlForView3dStoragePath($path);
+    }
+
+    public function setView3dUrlAttribute(?string $value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['view_3d_url'] = null;
+
+            return;
+        }
+
+        $path = self::normalizeView3dStoragePath($value);
+        $this->attributes['view_3d_url'] = $path ?? $value;
     }
 
     /**

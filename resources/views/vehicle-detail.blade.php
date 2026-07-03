@@ -247,6 +247,7 @@
                     camera-controls
                     auto-rotate
                     shadow-intensity="1"
+                    crossorigin="anonymous"
                     style="width: 100%; height: 400px; border-radius: 0.5rem; background: var(--muted);"
                 ></model-viewer>
             </div>

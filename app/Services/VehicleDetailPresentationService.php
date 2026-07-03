@@ -168,6 +168,9 @@ class VehicleDetailPresentationService
             'cover_image_index' => $v->cover_image_index,
             'engine_type' => $v->engine_type,
             'views_count' => $v->views_count,
+            'view_3d_url' => $v->view_3d_url,
+            'video_url' => $v->video_url,
+            'video_provider' => $v->video_provider,
 
             'address' => $v->address,
             'postcode' => $v->postcode,
