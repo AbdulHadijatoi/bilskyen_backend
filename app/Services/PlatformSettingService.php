@@ -58,7 +58,13 @@ class PlatformSettingService
         $shouldEncrypt = $this->shouldEncryptKey($key) || is_string($value) && str_contains($key, 'secret');
 
         $stored = is_array($value) ? json_encode($value) : (string) $value;
-        if ($shouldEncrypt && $stored !== '' && $stored !== '********') {
+
+        // Preserve existing secret when admin UI sends the masked placeholder back.
+        if ($shouldEncrypt && $stored === '********') {
+            return;
+        }
+
+        if ($shouldEncrypt && $stored !== '') {
             $stored = Crypt::encryptString($stored);
         }
 

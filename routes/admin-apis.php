@@ -184,10 +184,16 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     });
 
     Route::prefix('ai')->group(function () {
-        Route::get('/usage', [AdminAiController::class, 'usage']);
-        Route::get('/prompt-templates', [AdminAiController::class, 'promptTemplates']);
-        Route::put('/prompt-templates/{id}', [AdminAiController::class, 'updatePromptTemplate']);
-        Route::post('/test', [AdminAiController::class, 'testProvider']);
+        Route::get('/usage', [AdminAiController::class, 'usage'])
+            ->middleware('permission:admin.ai.view');
+        Route::get('/prompt-templates', [AdminAiController::class, 'promptTemplates'])
+            ->middleware('permission:admin.ai.view');
+        Route::put('/prompt-templates/{id}', [AdminAiController::class, 'updatePromptTemplate'])
+            ->middleware('permission:admin.ai.manage');
+        Route::post('/generate', [AdminAiController::class, 'generate'])
+            ->middleware(['permission:admin.ai.manage', 'throttle:10,1']);
+        Route::post('/test', [AdminAiController::class, 'testProvider'])
+            ->middleware('permission:admin.ai.manage');
     });
     
     // Feature Management

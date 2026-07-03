@@ -1492,6 +1492,7 @@ return [
         'ai_provider_empty_response' => 'AI-udbyder :provider returnerede et tomt svar.',
         'ai_connection_ok' => 'Forbindelse til :provider oprettet.',
         'ai_unknown_provider' => 'Ukendt AI-udbyder.',
+        'ai_context_too_large' => 'AI-kontekst er for stor.',
         'subscription_change_request_pending_exists' => 'Du har allerede en abonnementsændring, der afventer administratorgodkendelse. Annuller den, eller vent til den er godkendt eller afvist, før du sender en ny.',
         'subscription_change_already_on_plan' => 'Du abonnerer allerede på denne plan.',
         'subscription_change_request_submitted' => 'Din anmodning om abonnementsændring er sendt til en administrator. Du modtager en e-mail, når den er godkendt.',

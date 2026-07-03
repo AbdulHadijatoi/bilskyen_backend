@@ -112,7 +112,7 @@ abstract class AbstractAiProvider implements AiProviderInterface
             throw new \RuntimeException(__('messages.api.ai_provider_not_configured', ['provider' => $this->getName()]));
         }
 
-        return $this->callApi(
+        $result = $this->callApi(
             $apiKey,
             (string) ($options['model'] ?? $this->configuredModel()),
             $systemPrompt,
@@ -120,6 +120,17 @@ abstract class AbstractAiProvider implements AiProviderInterface
             (int) ($options['max_tokens'] ?? $this->maxTokens()),
             (float) ($options['temperature'] ?? $this->temperature()),
         );
+
+        $this->assertNonEmptyResult($result);
+
+        return $result;
+    }
+
+    protected function assertNonEmptyResult(AiCompletionResult $result): void
+    {
+        if (trim($result->text) === '') {
+            throw new \RuntimeException(__('messages.api.ai_provider_empty_response', ['provider' => $this->getName()]));
+        }
     }
 
     protected function httpClient(string $apiKey): \Illuminate\Http\Client\PendingRequest

@@ -70,6 +70,9 @@
         
         // Initialize location autocomplete
         initLocationAutocomplete();
+
+        // AI listing description suggestion
+        initAiDescriptionSuggestion();
         
         // Ensure km_per_liter field always allows decimals (step="any") unless explicitly electric
         // This runs after all initialization to override any API-driven changes
@@ -3688,5 +3691,61 @@
         // Initialize autocomplete for both fields
         createLocationAutocomplete(locationInput, locationDropdown, true);
         createLocationAutocomplete(postcodeInput, postcodeDropdown, false);
+    }
+
+    function initAiDescriptionSuggestion() {
+        var btn = document.getElementById('ai-suggest-description-btn');
+        var statusEl = document.getElementById('ai-suggest-description-status');
+        var descriptionEl = document.getElementById('description');
+        if (!btn || !descriptionEl) {
+            return;
+        }
+
+        btn.addEventListener('click', function() {
+            var context = {
+                make: (document.getElementById('manual_brand_id') && document.getElementById('manual_brand_id').selectedOptions[0])
+                    ? document.getElementById('manual_brand_id').selectedOptions[0].text
+                    : (document.getElementById('brand_name') ? document.getElementById('brand_name').value : ''),
+                model: (document.getElementById('manual_model_id') && document.getElementById('manual_model_id').selectedOptions[0])
+                    ? document.getElementById('manual_model_id').selectedOptions[0].text
+                    : (document.getElementById('model_name') ? document.getElementById('model_name').value : ''),
+                registration: document.getElementById('registration_number') ? document.getElementById('registration_number').value : '',
+                km_driven: document.getElementById('km_driven') ? document.getElementById('km_driven').value : '',
+                price: document.getElementById('price') ? document.getElementById('price').value : '',
+            };
+
+            btn.disabled = true;
+            if (statusEl) {
+                statusEl.textContent = trans('aiSuggestLoading', 'Generating…');
+            }
+
+            fetch('/api/v1/sell-your-car/ai/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ context: context, locale: document.documentElement.lang || 'da' }),
+            })
+                .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+                .then(function(result) {
+                    if (!result.ok || !result.data || !result.data.success) {
+                        throw new Error((result.data && result.data.message) || trans('aiSuggestFailed', 'Could not generate description.'));
+                    }
+                    descriptionEl.value = result.data.data.text || '';
+                    if (statusEl) {
+                        statusEl.textContent = '';
+                    }
+                })
+                .catch(function(err) {
+                    if (statusEl) {
+                        statusEl.textContent = err.message || trans('aiSuggestFailed', 'Could not generate description.');
+                    }
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                });
+        });
     }
 })();
