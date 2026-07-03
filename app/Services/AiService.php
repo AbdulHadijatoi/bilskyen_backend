@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Constants\AiGenerationTask;
 use App\Contracts\AiProviderInterface;
 use App\Data\AiCompletionResult;
+use App\Exceptions\AiGenerationException;
 use App\Models\AiPromptTemplate;
 use App\Models\AiUsageLog;
 use App\Models\Dealer;
@@ -13,6 +14,7 @@ use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\GeminiProvider;
 use App\Services\Ai\OpenAiProvider;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AiService
@@ -116,19 +118,102 @@ class AiService
         ?string $contextType = null,
         ?int $contextId = null,
     ): array {
+        if (! $dealer) {
+            throw new AiGenerationException(__('messages.api.dealer_not_found'), 404);
+        }
+
+        if (! $this->dealerCanUseAi($dealer)) {
+            throw new AiGenerationException(__('messages.api.ai_not_in_plan'), 403);
+        }
+
+        return $this->runGeneration(
+            task: $task,
+            context: $context,
+            user: $user,
+            dealer: $dealer,
+            locale: $locale,
+            contextType: $contextType,
+            contextId: $contextId,
+            enforceDealerQuota: true,
+        );
+    }
+
+    /**
+     * Admin CMS copy rewrite — no dealer quota, global budget still applies.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateForAdmin(
+        string $task,
+        array $context,
+        User $user,
+        string $locale = 'da',
+        ?string $contextType = null,
+        ?int $contextId = null,
+    ): array {
+        if (! $this->isGloballyEnabled()) {
+            throw new AiGenerationException(__('messages.api.ai_not_enabled'), 422);
+        }
+
+        return $this->runGeneration(
+            task: $task,
+            context: $context,
+            user: $user,
+            dealer: null,
+            locale: $locale,
+            contextType: $contextType,
+            contextId: $contextId,
+            enforceDealerQuota: false,
+        );
+    }
+
+    /**
+     * Public sell-your-car listing help — no auth, no dealer quota.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateForPublic(
+        string $task,
+        array $context,
+        string $locale = 'da',
+    ): array {
+        if (! $this->isGloballyEnabled()) {
+            throw new AiGenerationException(__('messages.api.ai_not_enabled'), 422);
+        }
+
+        return $this->runGeneration(
+            task: $task,
+            context: $context,
+            user: null,
+            dealer: null,
+            locale: $locale,
+            contextType: 'public_listing',
+            contextId: null,
+            enforceDealerQuota: false,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function runGeneration(
+        string $task,
+        array $context,
+        ?User $user,
+        ?Dealer $dealer,
+        string $locale,
+        ?string $contextType,
+        ?int $contextId,
+        bool $enforceDealerQuota,
+    ): array {
         if (! AiGenerationTask::isValid($task)) {
-            throw new \InvalidArgumentException(__('messages.api.ai_invalid_task'));
+            throw new AiGenerationException(__('messages.api.ai_invalid_task'), 422);
         }
 
         if (! $this->isGloballyEnabled()) {
-            throw new \RuntimeException(__('messages.api.ai_not_enabled'));
+            throw new AiGenerationException(__('messages.api.ai_not_enabled'), 422);
         }
 
-        if ($dealer && ! $this->dealerCanUseAi($dealer)) {
-            throw new \RuntimeException(__('messages.api.ai_not_in_plan'));
-        }
-
-        $this->assertWithinQuota($dealer);
         $this->assertWithinGlobalBudget();
 
         $template = AiPromptTemplate::query()
@@ -137,51 +222,72 @@ class AiService
             ->first();
 
         if (! $template) {
-            throw new \RuntimeException(__('messages.api.ai_prompt_not_found'));
+            throw new AiGenerationException(__('messages.api.ai_prompt_not_found'), 422);
         }
 
         [$systemPrompt, $userPrompt] = $this->renderPrompts($template, $context, $locale);
 
-        $lastError = null;
-        foreach ($this->providerClasses as $class) {
-            /** @var AiProviderInterface $provider */
-            $provider = app($class);
-            if (! $provider->isEnabled()) {
-                continue;
+        $runner = function () use ($user, $dealer, $task, $systemPrompt, $userPrompt, $contextType, $contextId, $enforceDealerQuota): array {
+            if ($enforceDealerQuota && $dealer) {
+                $this->assertWithinQuota($dealer);
             }
 
-            try {
-                $result = $provider->complete($systemPrompt, $userPrompt);
-                $this->logUsage($user, $dealer, $task, $result, 'success', null, $contextType, $contextId);
+            $lastError = null;
+            foreach ($this->providerClasses as $class) {
+                /** @var AiProviderInterface $provider */
+                $provider = app($class);
+                if (! $provider->isEnabled()) {
+                    continue;
+                }
 
-                return [
-                    'text' => $result->text,
-                    'provider' => $result->provider,
-                    'model' => $result->model,
-                    'task' => $task,
-                    'tokens' => $result->totalTokens(),
-                ];
-            } catch (\Throwable $e) {
-                $lastError = $e;
-                $this->logUsage(
-                    $user,
-                    $dealer,
-                    $task,
-                    new AiCompletionResult('', $provider->getName(), '', 0, 0),
-                    'failed',
-                    $e->getMessage(),
-                    $contextType,
-                    $contextId
-                );
-                Log::warning('AI provider failed, trying next', [
-                    'provider' => $provider->getName(),
-                    'task' => $task,
-                    'error' => $e->getMessage(),
-                ]);
+                try {
+                    $result = $provider->complete($systemPrompt, $userPrompt);
+                    $this->logUsage($user, $dealer, $task, $result, 'success', null, $contextType, $contextId);
+
+                    return [
+                        'text' => $result->text,
+                        'provider' => $result->provider,
+                        'model' => $result->model,
+                        'task' => $task,
+                        'tokens' => $result->totalTokens(),
+                    ];
+                } catch (\Throwable $e) {
+                    $lastError = $e;
+                    $this->logUsage(
+                        $user,
+                        $dealer,
+                        $task,
+                        new AiCompletionResult('', $provider->getName(), '', 0, 0),
+                        'failed',
+                        $e->getMessage(),
+                        $contextType,
+                        $contextId
+                    );
+                    Log::warning('AI provider failed, trying next', [
+                        'provider' => $provider->getName(),
+                        'task' => $task,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
+
+            Log::error('All AI providers failed', [
+                'task' => $task,
+                'last_error' => $lastError?->getMessage(),
+            ]);
+
+            throw new AiGenerationException(__('messages.api.ai_all_providers_failed'), 503);
+        };
+
+        if ($enforceDealerQuota && $dealer) {
+            return DB::transaction(function () use ($dealer, $runner): array {
+                Dealer::query()->whereKey($dealer->id)->lockForUpdate()->first();
+
+                return $runner();
+            });
         }
 
-        throw new \RuntimeException($lastError?->getMessage() ?? __('messages.api.ai_all_providers_failed'));
+        return $runner();
     }
 
     /**
@@ -248,7 +354,7 @@ class AiService
 
         $remaining = $this->remainingRequestsForDealer($dealer);
         if ($remaining !== null && $remaining <= 0) {
-            throw new \RuntimeException(__('messages.api.ai_monthly_quota_exceeded'));
+            throw new AiGenerationException(__('messages.api.ai_monthly_quota_exceeded'), 422);
         }
     }
 
@@ -266,7 +372,7 @@ class AiService
             ->value('total');
 
         if ((int) $used >= $cap) {
-            throw new \RuntimeException(__('messages.api.ai_global_budget_exceeded'));
+            throw new AiGenerationException(__('messages.api.ai_global_budget_exceeded'), 422);
         }
     }
 
@@ -280,7 +386,7 @@ class AiService
     }
 
     private function logUsage(
-        User $user,
+        ?User $user,
         ?Dealer $dealer,
         string $task,
         AiCompletionResult $result,
@@ -290,7 +396,7 @@ class AiService
         ?int $contextId,
     ): void {
         AiUsageLog::create([
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'dealer_id' => $dealer?->id,
             'provider' => $result->provider,
             'model' => $result->model,

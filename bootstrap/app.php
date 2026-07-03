@@ -54,5 +54,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // $middleware->throttleApi('120,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\App\Exceptions\AiGenerationException $e, $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'failed' => true,
+                    'message' => $e->getMessage(),
+                    'data' => null,
+                    'errors' => [],
+                ], $e->statusCode(), [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        });
     })->create();

@@ -36,6 +36,23 @@ class AdminIntegrationController extends Controller
             'settings' => 'required|array',
         ]);
 
+        if ($data['group'] === 'ai') {
+            $request->validate([
+                'settings.openai_enabled' => 'sometimes|boolean',
+                'settings.anthropic_enabled' => 'sometimes|boolean',
+                'settings.gemini_enabled' => 'sometimes|boolean',
+                'settings.openai_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.anthropic_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.gemini_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.openai_model' => 'sometimes|nullable|string|max:100',
+                'settings.anthropic_model' => 'sometimes|nullable|string|max:100',
+                'settings.gemini_model' => 'sometimes|nullable|string|max:100',
+                'settings.max_tokens' => 'sometimes|integer|min:256|max:8000',
+                'settings.temperature' => 'sometimes|numeric|min:0|max:1',
+                'settings.monthly_token_budget' => 'sometimes|integer|min:0',
+            ]);
+        }
+
         $this->platformSettingService->setGroup(
             $data['group'],
             $data['settings'],

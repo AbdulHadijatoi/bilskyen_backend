@@ -370,6 +370,6 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/config', [DealerAiController::class, 'config'])
             ->middleware('permission:dealer.ai.use,staff.ai.use');
         Route::post('/generate', [DealerAiController::class, 'generate'])
-            ->middleware('permission:dealer.ai.use,staff.ai.use');
+            ->middleware(['permission:dealer.ai.use,staff.ai.use', 'throttle:10,1']);
     });
 });
