@@ -3,6 +3,7 @@
 namespace App\Services\Marketing;
 
 use App\Mail\AbandonedEnquiryMail;
+use App\Mail\DealerCampaignMail;
 use App\Mail\EnquiryFollowUpMail;
 use App\Models\Enquiry;
 use App\Models\Lead;
@@ -138,6 +139,22 @@ class MarketingAutomationService
                 }
 
                 $enquiry = $item->enquiry;
+                if (! $enquiry && in_array($item->sequence_key, ['dealer_campaign', 'dealer_retargeting'], true)) {
+                    $meta = $item->meta ?? [];
+                    $this->mailService->sendMailable(
+                        $item->recipient_email,
+                        new DealerCampaignMail(
+                            (string) ($meta['subject'] ?? ''),
+                            (string) ($meta['body'] ?? ''),
+                            (string) ($meta['campaign_name'] ?? 'Campaign'),
+                        ),
+                        ['campaign_id' => $meta['campaign_id'] ?? null]
+                    );
+                    $item->update(['status' => 'sent', 'sent_at' => now()]);
+                    $processed++;
+                    continue;
+                }
+
                 if (! $enquiry && $item->sequence_key === 'abandoned_enquiry') {
                     $this->mailService->sendMailable(
                         $item->recipient_email,

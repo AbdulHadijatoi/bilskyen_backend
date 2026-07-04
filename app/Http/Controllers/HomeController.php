@@ -33,6 +33,7 @@ use App\Services\MailService;
 use App\Services\Finance\FinanceCalculatorService;
 use App\Services\VehicleTrustReportService;
 use App\Services\MarketPricingService;
+use App\Services\VehicleListingPresentationService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -52,6 +53,7 @@ class HomeController extends Controller
         private FinanceCalculatorService $financeCalculatorService,
         private VehicleTrustReportService $trustReportService,
         private MarketPricingService $marketPricingService,
+        private VehicleListingPresentationService $vehicleListingPresentationService,
     ) {}
 
     /**
@@ -513,17 +515,18 @@ class HomeController extends Controller
             $salesTypeName = $vehicle->salesType()->value('name');
         }
 
-        $trust = $this->trustReportService->buildForVehicle($vehicle);
-        $fairPrice = $this->marketPricingService->evaluateVehicle($vehicle);
+        $badges = $this->vehicleListingPresentationService->badgeFields($vehicle);
 
         return [
             'vehicle' => $vehicle,
             'imgUrl' => $imgUrl,
             'imgAlt' => $imgAlt,
             'salesTypeName' => $salesTypeName,
-            'trustBadge' => (bool) ($trust['trust_badge'] ?? false),
-            'priceDroppedRecently' => $this->trustReportService->hasRecentPriceDrop($vehicle),
-            'fairPriceLabel' => $fairPrice['label'] ?? null,
+            'trustBadge' => (bool) ($badges['trust_badge'] ?? false),
+            'priceDroppedRecently' => (bool) ($badges['price_dropped_recently'] ?? false),
+            'fairPriceLabel' => $badges['fair_price_label'] ?? null,
+            'premiumDealerBadge' => (bool) ($badges['premium_dealer_badge'] ?? false),
+            'isBoosted' => (bool) ($badges['is_boosted'] ?? false),
         ];
     }
 

@@ -744,6 +744,8 @@
                 :trust-badge="$row['trustBadge'] ?? false"
                 :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
                 :fair-price-label="$row['fairPriceLabel'] ?? null"
+                :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
+                :is-boosted="$row['isBoosted'] ?? false"
             />
         @empty
         <div class="col-span-full space-y-6">
@@ -770,6 +772,8 @@
                         :trust-badge="$row['trustBadge'] ?? false"
                         :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
                         :fair-price-label="$row['fairPriceLabel'] ?? null"
+                        :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
+                        :is-boosted="$row['isBoosted'] ?? false"
                     />
                 @endforeach
                 </div>

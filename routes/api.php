@@ -56,6 +56,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/sell-your-car/ai/generate', [\App\Http\Controllers\PublicAiController::class, 'generateListingDescription'])
         ->middleware('throttle:3,1');
 
+    Route::post('/public/listing-health-audit', [\App\Http\Controllers\PublicListingHealthController::class, 'audit'])
+        ->middleware('throttle:10,1');
+
     Route::middleware('dealer.api.key')->prefix('dms')->group(function () {
         Route::post('/vehicles/upsert', [\App\Http\Controllers\DmsInboundController::class, 'upsertVehicle']);
     });

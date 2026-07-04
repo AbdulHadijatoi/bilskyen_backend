@@ -20,12 +20,16 @@ use App\Services\DealerInvoiceService;
 use App\Services\VehicleImageUploadService;
 use App\Services\Feeds\VehicleExportService;
 use App\Services\Media\VehicleMediaPolicyService;
+use App\Services\ListingBoostService;
+use App\Services\ListingHealthEventService;
 use App\Services\ListingHealthService;
+use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use App\Constants\ApiStatusCode;
@@ -52,6 +56,9 @@ class VehicleController extends Controller
         private VehicleExportService $vehicleExportService,
         private DealerContextService $dealerContextService,
         private ListingHealthService $listingHealthService,
+        private ListingHealthEventService $listingHealthEventService,
+        private MarketPricingService $marketPricingService,
+        private ListingBoostService $listingBoostService,
         private VehicleListingPresentationService $vehicleListingPresentationService,
     ) {
         $this->fileService = $fileService;
@@ -286,8 +293,8 @@ class VehicleController extends Controller
      */
     public function dealerIndex(Request $request): JsonResponse
     {
-        $dealer = $request->user()?->dealer;
-        if (!$dealer) {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
             $emptyPaginator = new LengthAwarePaginator([], 0, $request->input('limit', 15), $request->input('page', 1));
             return $this->paginated($emptyPaginator);
         }
@@ -312,8 +319,8 @@ class VehicleController extends Controller
         // Stat cards always show dealer-wide counts (ignore list_status_id filter).
         $countFilters = $filters;
         unset($countFilters['list_status_id']);
-        $countQuery = $this->vehicleService->buildDealerVehiclesQuery($dealer->id, $countFilters);
-        $listStatusCounts = $this->vehicleService->aggregateListStatusCounts(clone $countQuery);
+        $countQuery = $this->vehicleService->buildDealerVehiclesQuery($dealer->id, $countFilters, withSorting: false);
+        $listStatusCounts = $this->vehicleService->aggregateListStatusCounts($countQuery);
 
         $paginator = $this->vehicleService->buildDealerVehiclesQuery($dealer->id, $filters)
             ->paginate($perPage, ['*'], 'page', $page);
@@ -353,7 +360,7 @@ class VehicleController extends Controller
             },
         ]))->findOrFail($id);
 
-        $dealerViewer = $request->user()?->dealer;
+        $dealerViewer = $this->dealerContextService->getCurrentDealer($request->user());
         if ($dealerViewer) {
             $vehicle->loadMissing(['dmrFactVehicle.drivmiddelLines']);
         }
@@ -405,11 +412,35 @@ class VehicleController extends Controller
             'seller_type' => $sellerType,
         ]);
 
-        if ($dealerViewer) {
+        if ($dealerViewer && (int) $vehicle->dealer_id === (int) $dealerViewer->id) {
             $taxFromRules = $this->ownershipTaxService->calculateForVehicle($vehicle);
             $response['ownership_tax'] = $taxFromRules;
             $response['calculated_ownership_tax'] = $taxFromRules;
-            $response['listing_health'] = $this->listingHealthService->scoreVehicle($vehicle);
+            $health = $this->listingHealthService->scoreVehicle($vehicle, 20, $dealerViewer);
+            $response['listing_health'] = $this->listingHealthService->sanitizeHealthForDealer($health, $dealerViewer);
+
+            if ($this->subscriptionFeatureService->hasFeature($dealerViewer, 'pricing_intelligence')) {
+                $response['pricing_intelligence'] = array_merge(
+                    $health['pricing'] ?? [],
+                    [
+                        'metrics' => [
+                            'days_since_price_change' => $health['metrics']['days_since_price_change'] ?? null,
+                            'days_on_market' => $health['metrics']['days_on_market'] ?? null,
+                            'views_30d' => $health['metrics']['views_30d'] ?? 0,
+                            'enquiries_30d' => $health['metrics']['enquiries_30d'] ?? 0,
+                        ],
+                    ]
+                );
+            }
+
+            if ($this->subscriptionFeatureService->hasFeature($dealerViewer, 'listing_boost')) {
+                $response['listing_boost'] = [
+                    'active' => $this->listingBoostService->boostStatusForVehicle($vehicle->id),
+                    'can_boost' => $this->listingBoostService->canBoost($vehicle),
+                    'active_count' => $this->listingBoostService->activeBoostCount($dealerViewer->id),
+                    'max_active' => ListingBoostService::MAX_ACTIVE_BOOSTS,
+                ];
+            }
         }
 
         return $this->success($response);
@@ -417,15 +448,139 @@ class VehicleController extends Controller
 
     public function listingHealth(Request $request, int $id): JsonResponse
     {
-        $dealer = $request->user()?->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if (! $dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
         $vehicle = Vehicle::with('images')->where('dealer_id', $dealer->id)->findOrFail($id);
+        $health = $this->listingHealthService->scoreVehicle($vehicle, 20, $dealer);
 
-        return $this->success($this->listingHealthService->scoreVehicle($vehicle));
+        return $this->success($this->listingHealthService->sanitizeHealthForDealer($health, $dealer));
     }
+
+    public function applySuggestedPrice(Request $request, int $id): JsonResponse
+    {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
+        $pricing = $this->marketPricingService->evaluateVehicle($vehicle);
+
+        if (! $pricing || empty($pricing['median_price'])) {
+            return $this->error('No market pricing data available for this vehicle.', [], 422);
+        }
+
+        $suggestedPrice = (int) round((float) $pricing['median_price']);
+        if ($suggestedPrice <= 0) {
+            return $this->error('Suggested price is invalid.', [], 422);
+        }
+
+        $oldPrice = $vehicle->price;
+        if ((int) $oldPrice === $suggestedPrice) {
+            return $this->error('Vehicle is already priced at the suggested market median.', [], 422);
+        }
+
+        $healthBefore = $this->listingHealthService->scoreVehicle($vehicle, 20, $dealer);
+        $issueKey = collect($healthBefore['issues'] ?? [])->contains(fn ($issue) => ($issue['key'] ?? '') === 'price_above_market')
+            ? 'price_above_market'
+            : 'stale_price';
+
+        $beforeMetrics = null;
+        if ($this->subscriptionFeatureService->hasFeature($dealer, 'listing_health_before_after')) {
+            $beforeMetrics = $this->listingHealthEventService->captureMetrics($vehicle);
+        }
+
+        DB::transaction(function () use ($vehicle, $suggestedPrice, $oldPrice, $request, $dealer, $beforeMetrics, $issueKey) {
+            $vehicle->price = $suggestedPrice;
+            $vehicle->save();
+
+            \App\Models\PriceHistory::create([
+                'vehicle_id' => $vehicle->id,
+                'old_price' => $oldPrice,
+                'new_price' => $suggestedPrice,
+                'changed_by_user_id' => $request->user()->id,
+                'changed_at' => now(),
+            ]);
+
+            if ($beforeMetrics !== null) {
+                $this->listingHealthEventService->recordFix(
+                    $vehicle,
+                    $dealer->id,
+                    'price_apply',
+                    $issueKey,
+                    $request->user()->id,
+                    $beforeMetrics,
+                );
+            }
+        });
+
+        try {
+            $this->auditLogService->logUpdate(
+                $request->user(),
+                'Vehicle',
+                $vehicle->id,
+                ['price' => $oldPrice],
+                ['price' => $suggestedPrice],
+                $request,
+                'Dealer',
+                $vehicle->dealer_id,
+                "Suggested market price applied: {$oldPrice} -> {$suggestedPrice}",
+                ['vehicle', 'dealer', 'price', 'listing_health']
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to create audit log for suggested price apply', [
+                'vehicle_id' => $vehicle->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $health = $this->listingHealthService->scoreVehicle($vehicle->fresh(['images', 'equipment']), 20, $dealer);
+
+        return $this->success([
+            'vehicle_id' => $vehicle->id,
+            'old_price' => $oldPrice,
+            'new_price' => $suggestedPrice,
+            'pricing' => $pricing,
+            'listing_health' => $this->listingHealthService->sanitizeHealthForDealer($health, $dealer),
+        ]);
+    }
+
+    public function boostListing(Request $request, int $id): JsonResponse
+    {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        if (! $this->subscriptionFeatureService->hasFeature($dealer, 'listing_boost')) {
+            return $this->error(
+                __('messages.api.subscription_feature_required', ['feature' => 'listing_boost']),
+                [],
+                403
+            );
+        }
+
+        $vehicle = Vehicle::where('dealer_id', $dealer->id)->findOrFail($id);
+
+        try {
+            $boost = $this->listingBoostService->boostVehicle($vehicle, $request->user()->id);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
+
+        return $this->success([
+            'vehicle_id' => $vehicle->id,
+            'boost' => [
+                'expires_at' => $boost->expires_at->format('Y-m-d H:i:s'),
+                'days_remaining' => max(0, (int) now()->diffInDays($boost->expires_at, false)),
+            ],
+            'active_count' => $this->listingBoostService->activeBoostCount($dealer->id),
+        ]);
+    }
+
     /**
      * Get vehicles list (legacy method for backward compatibility)
      */
@@ -982,6 +1137,7 @@ class VehicleController extends Controller
             'old_price' => $oldPrice,
             'new_price' => $request->price,
             'changed_by_user_id' => $request->user()->id,
+            'changed_at' => now(),
         ]);
 
         // Audit log

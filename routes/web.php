@@ -117,6 +117,9 @@ Route::get('/lp/{slug}', [CmsPublicController::class, 'landingShow'])->name('lan
 // About Page
 Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
 
+Route::get('/inventory-audit', [\App\Http\Controllers\InventoryAuditController::class, 'show'])->name('inventory-audit');
+Route::get('/inventory-audit/{slug}', [\App\Http\Controllers\InventoryAuditController::class, 'brandedShow'])->name('inventory-audit.branded');
+
 // Contact Page
 Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');

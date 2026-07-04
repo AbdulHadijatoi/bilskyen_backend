@@ -46,9 +46,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/get-sales-overview', [DealerDashboardController::class, 'getSalesOverviewWidget'])
         ->middleware('permission:dealer.dashboard.view');
     Route::get('/listing-health-attention', [DealerDashboardController::class, 'getListingHealthAttention'])
-        ->middleware('permission:dealer.dashboard.view');
+        ->middleware(['permission:dealer.dashboard.view', 'dealer.feature:listing_health_inbox']);
     Route::get('/market-pulse', [DealerDashboardController::class, 'getMarketPulseWidget'])
-        ->middleware('permission:dealer.dashboard.view');
+        ->middleware(['permission:dealer.dashboard.view', 'dealer.feature:market_pulse']);
 
     Route::prefix('accounting')->group(function () {
         Route::get('/get-financial-overview', [AccountingController::class, 'getFinancialOverview'])
@@ -109,9 +109,18 @@ Route::middleware('auth:api')->group(function () {
         
         Route::put('/{id}/price', [VehicleController::class, 'updatePrice'])
             ->middleware('permission:dealer.vehicles.update');
+
+        Route::post('/{id}/apply-suggested-price', [VehicleController::class, 'applySuggestedPrice'])
+            ->middleware(['permission:dealer.vehicles.update', 'dealer.feature:listing_health_price_apply']);
+
+        Route::post('/{id}/boost', [VehicleController::class, 'boostListing'])
+            ->middleware(['permission:dealer.vehicles.update', 'dealer.feature:listing_boost']);
         
         Route::post('/lookup-by-registration', [VehicleController::class, 'lookupByRegistration'])
             ->middleware(['throttle:40,1', 'permission:dealer.vehicles.create']);
+
+        Route::post('/bulk-price-update', [\App\Http\Controllers\DealerBulkPriceController::class, 'update'])
+            ->middleware(['permission:dealer.vehicles.update', 'dealer.feature:bulk_price_update']);
 
         Route::get('/import/template', [VehicleImportController::class, 'downloadTemplate'])
             ->middleware('permission:dealer.vehicles.create');
@@ -138,7 +147,7 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.vehicles.media');
     });
 
-    Route::prefix('feeds')->group(function () {
+    Route::prefix('feeds')->middleware('dealer.feature:inventory_feeds')->group(function () {
         Route::get('/tokens', [DealerFeedController::class, 'index'])
             ->middleware('permission:dealer.feeds.export');
         Route::post('/tokens', [DealerFeedController::class, 'store'])
@@ -147,7 +156,7 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.feeds.export');
     });
 
-    Route::prefix('syndication')->group(function () {
+    Route::prefix('syndication')->middleware('dealer.feature:syndication')->group(function () {
         Route::get('/', [DealerSyndicationController::class, 'index'])
             ->middleware('permission:dealer.syndication.manage');
         Route::put('/', [DealerSyndicationController::class, 'update'])
@@ -174,19 +183,49 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:dealer.branding.manage');
         Route::delete('/domains/{id}', [\App\Http\Controllers\DealerBrandingController::class, 'deleteDomain'])
             ->middleware('permission:dealer.branding.manage');
+        Route::get('/audit-link', [\App\Http\Controllers\DealerBrandingController::class, 'auditLink'])
+            ->middleware(['permission:dealer.branding.manage', 'dealer.feature:branded_inventory_audit']);
+        Route::get('/review-summary', [\App\Http\Controllers\DealerBrandingController::class, 'reviewSummary'])
+            ->middleware(['permission:dealer.branding.manage', 'dealer.feature:review_management']);
     });
 
     Route::prefix('dms')->group(function () {
         Route::get('/', [\App\Http\Controllers\DealerDmsController::class, 'index'])
             ->middleware('permission:dealer.dms.manage');
         Route::post('/api-keys', [\App\Http\Controllers\DealerDmsController::class, 'createApiKey'])
-            ->middleware('permission:dealer.dms.manage');
+            ->middleware(['permission:dealer.dms.manage', 'dealer.feature:api_access']);
         Route::delete('/api-keys/{id}', [\App\Http\Controllers\DealerDmsController::class, 'deleteApiKey'])
-            ->middleware('permission:dealer.dms.manage');
+            ->middleware(['permission:dealer.dms.manage', 'dealer.feature:api_access']);
         Route::post('/webhooks', [\App\Http\Controllers\DealerDmsController::class, 'createWebhook'])
-            ->middleware('permission:dealer.dms.manage');
+            ->middleware(['permission:dealer.dms.manage', 'dealer.feature:dms_sync']);
         Route::delete('/webhooks/{id}', [\App\Http\Controllers\DealerDmsController::class, 'deleteWebhook'])
-            ->middleware('permission:dealer.dms.manage');
+            ->middleware(['permission:dealer.dms.manage', 'dealer.feature:dms_sync']);
+    });
+
+    Route::prefix('marketing/campaigns')->middleware('dealer.feature:marketing_campaigns')->group(function () {
+        Route::get('/', [\App\Http\Controllers\DealerMarketingCampaignController::class, 'index'])
+            ->middleware('permission:dealer.branding.manage');
+        Route::post('/', [\App\Http\Controllers\DealerMarketingCampaignController::class, 'store'])
+            ->middleware('permission:dealer.branding.manage');
+        Route::put('/{id}', [\App\Http\Controllers\DealerMarketingCampaignController::class, 'update'])
+            ->middleware('permission:dealer.branding.manage');
+        Route::post('/{id}/send', [\App\Http\Controllers\DealerMarketingCampaignController::class, 'send'])
+            ->middleware('permission:dealer.branding.manage');
+        Route::delete('/{id}', [\App\Http\Controllers\DealerMarketingCampaignController::class, 'destroy'])
+            ->middleware('permission:dealer.branding.manage');
+    });
+
+    Route::prefix('leads/{leadId}/deal-quotes')->middleware('dealer.feature:deal_builder')->group(function () {
+        Route::get('/', [\App\Http\Controllers\DealerDealQuoteController::class, 'index'])
+            ->middleware('permission:dealer.leads.view');
+        Route::post('/', [\App\Http\Controllers\DealerDealQuoteController::class, 'store'])
+            ->middleware('permission:dealer.leads.view');
+        Route::put('/{id}', [\App\Http\Controllers\DealerDealQuoteController::class, 'update'])
+            ->middleware('permission:dealer.leads.view');
+        Route::post('/{id}/send', [\App\Http\Controllers\DealerDealQuoteController::class, 'send'])
+            ->middleware('permission:dealer.leads.view');
+        Route::delete('/{id}', [\App\Http\Controllers\DealerDealQuoteController::class, 'destroy'])
+            ->middleware('permission:dealer.leads.view');
     });
 
     Route::get('/compliance/lead-pii-export', [\App\Http\Controllers\DealerComplianceController::class, 'exportLeadPiiAccess'])
@@ -351,19 +390,21 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('dealer.feature:analytics');
         Route::get('/subscription', [DealerAnalyticsController::class, 'subscription']);
         Route::get('/funnel', [DealerAnalyticsController::class, 'funnel'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:analytics_listing_funnel']);
         Route::get('/stock', [DealerAnalyticsController::class, 'stock'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:advanced_analytics']);
         Route::get('/assignees', [DealerAnalyticsController::class, 'assignees'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:advanced_analytics']);
         Route::get('/trends', [DealerAnalyticsController::class, 'trends'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:advanced_analytics']);
         Route::get('/channels', [DealerAnalyticsController::class, 'channels'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:advanced_analytics']);
         Route::get('/export', [DealerAnalyticsController::class, 'export'])
             ->middleware('dealer.feature:analytics');
+        Route::get('/export-pdf', [DealerAnalyticsController::class, 'exportPdf'])
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:analytics_pdf_export']);
         Route::get('/market-pulse', [DealerAnalyticsController::class, 'marketPulse'])
-            ->middleware('dealer.feature:analytics');
+            ->middleware(['dealer.feature:analytics', 'dealer.feature:analytics_dealer_benchmark']);
     });
 
     Route::prefix('ai')->group(function () {

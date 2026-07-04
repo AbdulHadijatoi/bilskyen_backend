@@ -18,6 +18,8 @@ class AiGenerationTask
 
     public const LISTING_DESCRIPTION = 'listing_description';
 
+    public const LISTING_HEALTH_REWRITE = 'listing_health_rewrite';
+
     public const CMS_REWRITE = 'cms_rewrite';
 
     public static function values(): array
@@ -30,6 +32,7 @@ class AiGenerationTask
             self::ENQUIRY_REPLY,
             self::LEAD_SUMMARY,
             self::LISTING_DESCRIPTION,
+            self::LISTING_HEALTH_REWRITE,
             self::CMS_REWRITE,
         ];
     }

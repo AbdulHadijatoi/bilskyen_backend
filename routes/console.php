@@ -50,6 +50,30 @@ Schedule::command('analytics:aggregate-daily')
     ->dailyAt('01:30')
     ->timezone($timezone);
 
+Schedule::command('listings:compute-health-scores')
+    ->dailyAt('02:00')
+    ->timezone($timezone);
+
+Schedule::command('listings:measure-health-events')
+    ->dailyAt('02:30')
+    ->timezone($timezone);
+
+Schedule::command('dealers:price-change-alerts')
+    ->weeklyOn(2, '09:00')
+    ->timezone($timezone);
+
+Schedule::command('dealers:lead-sla-alerts')
+    ->dailyAt('09:30')
+    ->timezone($timezone);
+
+Schedule::command('listings:auto-feature')
+    ->weeklyOn(1, '03:00')
+    ->timezone($timezone);
+
+Schedule::command('listings:expire-boosts')
+    ->dailyAt('01:00')
+    ->timezone($timezone);
+
 Schedule::command('cms:publish-scheduled')
     ->everyFiveMinutes()
     ->timezone($timezone);

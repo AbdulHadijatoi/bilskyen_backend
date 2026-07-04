@@ -6,6 +6,8 @@
     'trustBadge' => false,
     'priceDroppedRecently' => false,
     'fairPriceLabel' => null,
+    'premiumDealerBadge' => false,
+    'isBoosted' => false,
 ])
 <div {{ $attributes->merge(['class' => 'vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <a href="/vehicles/{{ $vehicle->slug }}" class="vehicle-item-main-link block flex-1 min-w-0">
@@ -28,6 +30,16 @@
                 @if($salesTypeName)
                     <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                         {{ $salesTypeName }}
+                    </span>
+                @endif
+                @if($premiumDealerBadge)
+                    <span class="inline-flex items-center rounded-md bg-violet-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                        Premium
+                    </span>
+                @endif
+                @if($isBoosted)
+                    <span class="inline-flex items-center rounded-md bg-amber-500/90 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                        Boosted
                     </span>
                 @endif
                 @if($trustBadge)

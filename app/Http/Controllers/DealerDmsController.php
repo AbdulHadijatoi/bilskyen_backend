@@ -31,6 +31,8 @@ class DealerDmsController extends Controller
                 'webhook_endpoint_id',
                 DealerWebhookEndpoint::where('dealer_id', $dealer->id)->pluck('id')
             )->orderByDesc('id')->limit(20)->get(),
+            'api_endpoint' => url('/api/v1/dms/vehicles/upsert'),
+            'webhook_events' => ['vehicle.published', 'vehicle.updated', 'vehicle.unpublished'],
         ]);
     }
 

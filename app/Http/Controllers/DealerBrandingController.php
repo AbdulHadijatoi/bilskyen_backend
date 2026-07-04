@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DealerDomain;
+use App\Services\Branding\BrandedInventoryAuditService;
 use App\Services\Branding\DealerDomainService;
 use App\Services\DealerContextService;
 use App\Services\Finance\FinanceCalculatorService;
@@ -15,6 +16,7 @@ class DealerBrandingController extends Controller
         private DealerContextService $dealerContextService,
         private DealerDomainService $dealerDomainService,
         private FinanceCalculatorService $financeCalculatorService,
+        private BrandedInventoryAuditService $brandedInventoryAuditService,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -103,5 +105,38 @@ class DealerBrandingController extends Controller
         DealerDomain::where('dealer_id', $dealer->id)->where('id', $id)->delete();
 
         return $this->noContent();
+    }
+
+    public function auditLink(Request $request): JsonResponse
+    {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        if (trim((string) $dealer->slug) === '') {
+            return $this->error('A dealer slug is required before generating a branded audit link.', [], 422);
+        }
+
+        try {
+            return $this->success($this->brandedInventoryAuditService->brandingPayload($dealer));
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
+    }
+
+    public function reviewSummary(Request $request): JsonResponse
+    {
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        return $this->success([
+            'google_review_url' => $dealer->google_review_url,
+            'google_place_id' => $dealer->google_place_id,
+            'configured' => ! empty($dealer->google_review_url) || ! empty($dealer->google_place_id),
+            'widget_url' => $dealer->google_review_url,
+        ]);
     }
 }

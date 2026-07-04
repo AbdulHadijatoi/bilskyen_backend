@@ -7,7 +7,9 @@ use App\Models\Lead;
 use App\Models\Sale;
 use App\Services\SubscriptionFeatureService;
 use App\Services\ListingHealthService;
+use App\Services\ListingHealthEventService;
 use App\Services\MarketPulseService;
+use App\Services\DealerContextService;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus as SubscriptionStatusConstant;
 use Illuminate\Http\Request;
@@ -25,7 +27,9 @@ class DealerDashboardController extends Controller
     public function __construct(
         private SubscriptionFeatureService $subscriptionFeatureService,
         private ListingHealthService $listingHealthService,
+        private ListingHealthEventService $listingHealthEventService,
         private MarketPulseService $marketPulseService,
+        private DealerContextService $dealerContextService,
     ) {}
 
     /**
@@ -34,7 +38,7 @@ class DealerDashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $dealer = $user->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($user);
         
         if (!$dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
@@ -207,7 +211,7 @@ class DealerDashboardController extends Controller
      */
     public function getVehiclesOverviewWidget(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if (! $dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }
@@ -250,7 +254,7 @@ class DealerDashboardController extends Controller
      */
     public function getSalesOverviewWidget(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if (! $dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }
@@ -292,22 +296,23 @@ class DealerDashboardController extends Controller
 
     public function getListingHealthAttention(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if (! $dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }
 
-        $items = $this->listingHealthService->vehiclesNeedingAttention($dealer->id, 5);
+        $payload = $this->listingHealthService->getAttentionInbox($dealer->id, 8, $dealer);
 
-        return response()->json([
-            'count' => count($items),
-            'items' => $items,
-        ]);
+        if ($this->subscriptionFeatureService->hasFeature($dealer, 'listing_health_before_after')) {
+            $payload['fix_impact'] = $this->listingHealthEventService->getFixImpactReports($dealer->id, 5);
+        }
+
+        return response()->json($payload);
     }
 
     public function getMarketPulseWidget(Request $request): JsonResponse
     {
-        $dealer = $request->user()->dealer;
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
         if (! $dealer) {
             return $this->notFound(__('messages.errors.dealer_not_found'));
         }

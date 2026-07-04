@@ -849,6 +849,7 @@ class VehicleService
      */
     protected function applyPublicListingFilters(Builder $query, array $filters): void
     {
+        $table = $query->getModel()->getTable();
         $f = $this->normalizePublicListingFilters($filters);
 
         if (! empty($f['search'])) {
@@ -1079,14 +1080,14 @@ class VehicleService
         }
 
         if (isset($f['dealer_id'])) {
-            $query->where('dealer_id', (int) $f['dealer_id']);
+            $query->where("{$table}.dealer_id", (int) $f['dealer_id']);
         }
 
         if (isset($f['seller_type'])) {
             $st = strtolower((string) $f['seller_type']);
             if ($st === 'private' || $st === '0') {
-                $query->where(function (Builder $q) {
-                    $q->whereNull('dealer_id')
+                $query->where(function (Builder $q) use ($table) {
+                    $q->whereNull("{$table}.dealer_id")
                         ->orWhereHas('dealer', function (Builder $dq) {
                             $dq->where('cvr', 'like', 'INDIVIDUAL-%');
                         });
@@ -1244,10 +1245,12 @@ class VehicleService
      * @param  array<string, mixed>  $filters
      * @return Builder<\App\Models\Vehicle>
      */
-    public function buildDealerVehiclesQuery(int $dealerId, array $filters = []): Builder
+    public function buildDealerVehiclesQuery(int $dealerId, array $filters = [], bool $withSorting = true): Builder
     {
+        $table = (new Vehicle)->getTable();
+
         $query = Vehicle::query()
-            ->where('dealer_id', $dealerId)
+            ->where("{$table}.dealer_id", $dealerId)
             ->with([
                 'images' => function ($query) {
                     $query->orderBy('sort_order');
@@ -1275,10 +1278,12 @@ class VehicleService
         }
 
         if (! empty($filters['list_status_id'])) {
-            $query->where('list_status_id', $filters['list_status_id']);
+            $query->where("{$table}.list_status_id", $filters['list_status_id']);
         }
 
-        $this->applySorting($query, $filters['sort'] ?? null, []);
+        if ($withSorting) {
+            $this->applySorting($query, $filters['sort'] ?? null, []);
+        }
 
         return $query;
     }
@@ -1291,13 +1296,17 @@ class VehicleService
      */
     public function aggregateListStatusCounts(Builder $query): array
     {
-        $rows = (clone $query)
+        $table = $query->getModel()->getTable();
+
+        $countQuery = (clone $query)
             ->withoutGlobalScope('defaultOrder')
             ->withoutEagerLoads()
-            ->reorder()
-            ->selectRaw('list_status_id, COUNT(*) as aggregate')
-            ->groupBy('list_status_id')
-            ->orderBy('list_status_id')
+            ->reorder();
+
+        $rows = $countQuery
+            ->selectRaw("{$table}.list_status_id, COUNT(*) as aggregate")
+            ->groupBy("{$table}.list_status_id")
+            ->orderBy("{$table}.list_status_id")
             ->pluck('aggregate', 'list_status_id');
 
         $out = [];
@@ -1342,6 +1351,7 @@ class VehicleService
         $sort = self::normalizePublicListingSort($sort);
 
         $query->reorder();
+        $this->applyBoostPriority($query);
 
         if ($sort === 'distance_asc' || $sort === 'distance_desc') {
             $this->applySellerDistanceSort($query, $sort, $filters);
@@ -1371,6 +1381,30 @@ class VehicleService
         if ($column !== 'id') {
             $query->orderByDesc($table.'.id');
         }
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Vehicle>  $query
+     */
+    private function applyBoostPriority(Builder $query): void
+    {
+        if (! Schema::hasTable('listing_boosts')) {
+            return;
+        }
+
+        $table = $query->getModel()->getTable();
+        $baseQuery = $query->getQuery();
+
+        // Avoid SELECT * with a join — both tables have `id`, which would null out vehicle ids.
+        if ($baseQuery->columns === null || $baseQuery->columns === ['*']) {
+            $query->select("{$table}.*");
+        }
+
+        $query->leftJoin('listing_boosts as listing_boost_active', function ($join) use ($table) {
+            $join->on('listing_boost_active.vehicle_id', '=', $table.'.id')
+                ->where('listing_boost_active.expires_at', '>', now());
+        });
+        $query->orderByRaw('CASE WHEN listing_boost_active.id IS NOT NULL THEN 0 ELSE 1 END');
     }
 
     /**

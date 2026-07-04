@@ -126,6 +126,8 @@ class AiService
             throw new AiGenerationException(__('messages.api.ai_not_in_plan'), 403);
         }
 
+        $this->assertTaskFeature($dealer, $task, $context, $contextType);
+
         return $this->runGeneration(
             task: $task,
             context: $context,
@@ -306,6 +308,41 @@ class AiService
             'success' => false,
             'message' => __('messages.api.ai_unknown_provider'),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function assertTaskFeature(Dealer $dealer, string $task, array $context, ?string $contextType): void
+    {
+        $taskFeatureMap = [
+            AiGenerationTask::ENQUIRY_REPLY => 'enquiry_ai_replies',
+            AiGenerationTask::LEAD_SUMMARY => 'lead_ai_summary',
+            AiGenerationTask::LISTING_HEALTH_REWRITE => 'listing_health_ai_briefing',
+        ];
+
+        if (isset($taskFeatureMap[$task]) && ! $this->subscriptionFeatureService->hasFeature($dealer, $taskFeatureMap[$task])) {
+            throw new AiGenerationException(__('messages.api.subscription_feature_required', [
+                'feature' => $taskFeatureMap[$task],
+            ]), 403);
+        }
+
+        $listingHealthTasks = [
+            AiGenerationTask::VEHICLE_DESCRIPTION,
+            AiGenerationTask::VEHICLE_TITLE,
+            AiGenerationTask::VEHICLE_HIGHLIGHTS,
+            AiGenerationTask::SEO_META,
+            AiGenerationTask::LISTING_DESCRIPTION,
+        ];
+
+        if ($contextType === 'vehicle'
+            && isset($context['issues'])
+            && in_array($task, $listingHealthTasks, true)
+            && ! $this->subscriptionFeatureService->hasFeature($dealer, 'listing_health_ai_fixes')) {
+            throw new AiGenerationException(__('messages.api.subscription_feature_required', [
+                'feature' => 'listing_health_ai_fixes',
+            ]), 403);
+        }
     }
 
     /**

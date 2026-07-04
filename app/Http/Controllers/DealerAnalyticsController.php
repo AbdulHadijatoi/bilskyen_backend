@@ -18,7 +18,9 @@ use App\Constants\SubscriptionStatus;
 use App\Services\SubscriptionFeatureService;
 use App\Services\DealerListingQuotaService;
 use App\Services\Analytics\AnalyticsReportingService;
+use App\Services\Analytics\AnalyticsPdfExportService;
 use App\Services\MarketPulseService;
+use App\Services\DealerContextService;
 use App\Support\AnalyticsDateRange;
 use App\Http\Controllers\Concerns\ExportsAnalyticsCsv;
 use Illuminate\Http\Request;
@@ -40,14 +42,14 @@ class DealerAnalyticsController extends Controller
         private readonly SubscriptionFeatureService $subscriptionFeatureService,
         private readonly DealerListingQuotaService $listingQuotaService,
         private readonly AnalyticsReportingService $reportingService,
+        private readonly AnalyticsPdfExportService $pdfExportService,
         private readonly MarketPulseService $marketPulseService,
+        private readonly DealerContextService $dealerContextService,
     ) {}
 
     private function getDealer(Request $request): ?Dealer
     {
-        $dealer = $request->user()?->dealer;
-
-        return $dealer ?: null;
+        return $this->dealerContextService->getCurrentDealer($request->user());
     }
 
     private function getDateRange(?string $dateRange): array
@@ -621,6 +623,41 @@ class DealerAnalyticsController extends Controller
         $rows = $this->reportingService->exportDealerRows($dealer->id, $report, $startDate, $endDate);
 
         return $this->csvDownload($rows, "dealer-analytics-{$report}-".now()->format('Y-m-d').'.csv');
+    }
+
+    public function exportPdf(Request $request): StreamedResponse|JsonResponse
+    {
+        $dealer = $this->getDealer($request);
+        if (! $dealer) {
+            return $this->notFound(__('messages.errors.dealer_not_found'));
+        }
+
+        if (! $this->subscriptionFeatureService->hasFeature($dealer, 'analytics_pdf_export')) {
+            return $this->error(
+                __('messages.api.subscription_feature_required', ['feature' => 'analytics_pdf_export']),
+                [],
+                403
+            );
+        }
+
+        try {
+            $pdf = $this->pdfExportService->generate($dealer, $request->get('date_range', '30d'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Dealer analytics PDF export failed', [
+                'dealer_id' => $dealer->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error('Unable to generate PDF export. Please try again or contact support.', [], 500);
+        }
+
+        $filename = 'dealer-analytics-'.now()->format('Y-m-d').'.pdf';
+
+        return response()->streamDownload(
+            fn () => print($pdf),
+            $filename,
+            ['Content-Type' => 'application/pdf']
+        );
     }
 
     public function marketPulse(Request $request): JsonResponse
