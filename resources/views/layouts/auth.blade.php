@@ -32,9 +32,9 @@
             <p class="relative z-10 text-sm text-white/60">© {{ date('Y') }} {{ __('messages.common.site_name') }}</p>
         </aside>
 
-        <div class="site-auth-panel">
+        <div class="site-auth-panel relative flex min-h-screen flex-col !p-0">
             <header class="shrink-0 border-b border-border bg-card/90 backdrop-blur-md">
-                <div class="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                <div class="mx-auto flex h-16 w-full max-w-none items-center justify-between px-4 md:px-6">
                     <a href="/" class="inline-flex items-center lg:hidden">
                         <img src="/images/logo.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-7 w-auto">
                     </a>
@@ -50,7 +50,7 @@
                 </div>
             </header>
 
-            <main class="site-auth-main">
+            <main class="site-auth-main flex flex-1 items-center justify-center px-6 pb-12 pt-8 sm:px-10">
                 <div class="site-auth-card">
                     @yield('content')
                 </div>
