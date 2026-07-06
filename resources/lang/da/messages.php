@@ -1400,6 +1400,8 @@ return [
         'default_title' => 'Bilskyen | Revolutionerer forhandlerstyring',
         'logo_alt' => 'Bilskyen',
         'testimonial_quote' => 'Bilskyen har revolutioneret måden, vi administrerer vores forhandleroperationer på, hvilket gør alt enkelt og effektivt.',
+        'auth_headline' => 'Din betroede bilmarkedsplads',
+        'auth_subheadline' => 'Log ind for at administrere favoritter, annoncer og henvendelser med en moderne og sikker oplevelse.',
     ],
 
     // API Messages

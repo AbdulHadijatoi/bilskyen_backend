@@ -2,7 +2,7 @@
     $panelUrl = $panelUrl ?? config('payments.panel_url');
     $activeNav = $activeNav ?? '';
 @endphp
-<header class="bg-background w-full border-b border-border sticky top-0 z-40" id="marketing-navbar">
+<header class="site-header" id="marketing-navbar">
     <div class="container mx-auto px-4 md:px-6">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-6">
@@ -10,10 +10,10 @@
                     <img src="/images/logo.png" alt="{{ __('messages.common.site_name') }}" class="h-6 md:h-8">
                 </a>
                 <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                    <a href="{{ route('for-dealers.landing') }}" class="{{ $activeNav === 'home' ? 'text-primary font-semibold' : 'text-foreground/80 hover:text-foreground' }} transition-colors">{{ __('messages.dealer_marketing.nav.overview') }}</a>
-                    <a href="{{ route('for-dealers.pricing') }}" class="{{ $activeNav === 'pricing' ? 'text-primary font-semibold' : 'text-foreground/80 hover:text-foreground' }} transition-colors">{{ __('messages.dealer_marketing.nav.pricing') }}</a>
-                    <a href="{{ route('for-dealers.resources') }}" class="{{ $activeNav === 'resources' ? 'text-primary font-semibold' : 'text-foreground/80 hover:text-foreground' }} transition-colors">{{ __('messages.dealer_marketing.nav.resources') }}</a>
-                    <a href="{{ route('for-dealers.contact') }}" class="{{ $activeNav === 'contact' ? 'text-primary font-semibold' : 'text-foreground/80 hover:text-foreground' }} transition-colors">{{ __('messages.dealer_marketing.nav.contact') }}</a>
+                    <a href="{{ route('for-dealers.landing') }}" class="site-nav-link {{ $activeNav === 'home' ? 'site-nav-link--active' : '' }}">{{ __('messages.dealer_marketing.nav.overview') }}</a>
+                    <a href="{{ route('for-dealers.pricing') }}" class="site-nav-link {{ $activeNav === 'pricing' ? 'site-nav-link--active' : '' }}">{{ __('messages.dealer_marketing.nav.pricing') }}</a>
+                    <a href="{{ route('for-dealers.resources') }}" class="site-nav-link {{ $activeNav === 'resources' ? 'site-nav-link--active' : '' }}">{{ __('messages.dealer_marketing.nav.resources') }}</a>
+                    <a href="{{ route('for-dealers.contact') }}" class="site-nav-link {{ $activeNav === 'contact' ? 'site-nav-link--active' : '' }}">{{ __('messages.dealer_marketing.nav.contact') }}</a>
                 </nav>
             </div>
             <div class="flex items-center gap-2 md:gap-3">

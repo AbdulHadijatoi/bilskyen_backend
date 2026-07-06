@@ -8,86 +8,52 @@
     <title>@yield('title', __('messages.layouts.default_title'))</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     @include('layouts.partials.tailwind-config')
     @include('layouts.partials.design-tokens')
+    @include('layouts.partials.site-styles')
     @include('layouts.partials.panel-blade-styles')
-    <style>
-        * {
-            border-color: var(--border);
-        }
-        
-        body {
-            background-color: var(--background);
-            color: var(--foreground);
-            font-family: 'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-        }
-        
-        .container {
-            padding-inline: 1rem;
-            margin-inline: auto;
-            max-width: 1280px;
-        }
-        
-        @media (min-width: 640px) {
-            .container {
-                padding-inline: 1.5rem;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .container {
-                padding-inline: 2rem;
-            }
-        }
-        
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-    </style>
+    @stack('styles')
 </head>
-<body class="antialiased selection:bg-muted selection:text-muted-foreground">
-    <!-- Header for Auth Pages -->
-    <header class="bg-primary absolute top-0 right-0 left-0 z-50 w-full border-b border-primary-foreground/20 sm:absolute">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="flex h-16 items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <a href="/" class="flex items-center space-x-2">
-                        <img src="/images/logo_white.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-6 md:h-8">
+<body class="site-page--auth antialiased selection:bg-accent selection:text-accent-foreground">
+    <div class="site-auth-shell">
+        <aside class="site-auth-brand">
+            <div class="relative z-10">
+                <a href="/" class="inline-flex items-center">
+                    <img src="/images/logo_white.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-8 w-auto">
+                </a>
+            </div>
+            <div class="relative z-10 max-w-md space-y-4">
+                <p class="text-sm font-medium uppercase tracking-[0.18em] text-white/70">{{ __('messages.common.site_name') }}</p>
+                <h1 class="text-4xl font-bold tracking-tight">{{ __('messages.layouts.auth_headline') }}</h1>
+                <p class="text-base leading-relaxed text-white/80">{{ __('messages.layouts.auth_subheadline') }}</p>
+            </div>
+            <p class="relative z-10 text-sm text-white/60">© {{ date('Y') }} {{ __('messages.common.site_name') }}</p>
+        </aside>
+
+        <div class="site-auth-panel">
+            <header class="absolute left-0 right-0 top-0 z-20 border-b border-border bg-card/90 backdrop-blur-md">
+                <div class="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                    <a href="/" class="inline-flex items-center lg:hidden">
+                        <img src="/images/logo.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-7 w-auto">
                     </a>
-                </div>
-                <div class="flex items-center gap-4">
-                    <nav class="hidden items-center space-x-6 text-sm font-medium md:flex">
-                        <a href="/vehicles" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.vehicles') }}</a>
-                        <a href="/about" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.about_us') }}</a>
-                        <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.contact') }}</a>
+                    <nav class="hidden items-center gap-6 text-sm font-medium md:flex">
+                        <a href="/vehicles" class="site-nav-link">{{ __('messages.navigation.vehicles') }}</a>
+                        <a href="/about" class="site-nav-link">{{ __('messages.navigation.about_us') }}</a>
+                        <a href="/contact" class="site-nav-link">{{ __('messages.navigation.contact') }}</a>
                     </nav>
                     <div class="flex items-center gap-2">
-                        @include('components.language-switcher', ['variant' => 'dark'])
+                        @include('components.language-switcher')
                         @include('components.user-auth-status')
                     </div>
                 </div>
+            </header>
+
+            <div class="site-auth-card">
+                @yield('content')
             </div>
         </div>
-    </header>
-
-    <div class="relative container flex flex-col items-center justify-center min-h-screen">
-        <div class="mx-auto h-full w-full py-[10vh] sm:max-w-[350px]">
-            @yield('content')
-        </div>
     </div>
-    
-    <!-- Footer for Auth Pages -->
-    @include('components.footer')
 </body>
 </html>
-

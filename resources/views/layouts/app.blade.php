@@ -62,107 +62,15 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     @include('layouts.partials.tailwind-config')
     @include('layouts.partials.design-tokens')
+    @include('layouts.partials.site-styles')
     @include('layouts.partials.panel-blade-styles')
-    <style>
-        * {
-            border-color: var(--border);
-        }
-        
-        body {
-            background-color: var(--background);
-            color: var(--foreground);
-            font-family: 'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-        }
-        
-        main {
-        }
-        
-        .container {
-            padding-inline: 1rem;
-            margin-inline: auto;
-            max-width: 1280px;
-        }
-        
-        @media (min-width: 640px) {
-            .container {
-                padding-inline: 1.5rem;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .container {
-                padding-inline: 2rem;
-            }
-        }
-        
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-        
-        /* Remove all focus outlines and add subtle background change instead */
-        input:focus,
-        input:focus-visible,
-        textarea:focus,
-        textarea:focus-visible,
-        select:focus,
-        select:focus-visible,
-        button:focus,
-        button:focus-visible,
-        *:focus,
-        *:focus-visible {
-            outline: none !important;
-            box-shadow: none !important;
-            --tw-ring-shadow: none !important;
-        }
-        
-        /* Remove ring utilities on focus */
-        .focus\:ring-0:focus,
-        .focus\:ring-1:focus,
-        .focus\:ring-2:focus,
-        .focus\:ring-4:focus,
-        .focus-visible\:ring-0:focus-visible,
-        .focus-visible\:ring-1:focus-visible,
-        .focus-visible\:ring-2:focus-visible,
-        .focus-visible\:ring-4:focus-visible {
-            --tw-ring-shadow: none !important;
-            box-shadow: none !important;
-        }
-        
-        /* Input focus background change - light mode (slightly lighter than default input) */
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="password"]:focus,
-        input[type="number"]:focus,
-        input[type="tel"]:focus,
-        input[type="url"]:focus,
-        input[type="search"]:focus,
-        input[type="date"]:focus,
-        input[type="datetime-local"]:focus,
-        input[type="month"]:focus,
-        input[type="time"]:focus,
-        input[type="week"]:focus,
-        textarea:focus,
-        select:focus {
-            background-color: oklch(0.95 0 0);
-            transition: background-color 0.15s ease-in-out;
-        }
-        
-    </style>
     @stack('styles')
 </head>
-<body class="antialiased selection:bg-muted selection:text-muted-foreground">
+<body class="antialiased selection:bg-accent selection:text-accent-foreground">
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
         @include($navComponent ?? 'components.navbar')
     @endif
@@ -172,12 +80,9 @@
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
         @include($footerComponent ?? 'components.footer')
     @endif
-    
-    <!-- Global Snackbar Notification System -->
+
     <script>
-        // Snackbar notification system
         window.showSnackbar = function(message, type = 'success') {
-            // Remove existing snackbar if any
             const existingSnackbar = document.getElementById('snackbar');
             if (existingSnackbar) {
                 existingSnackbar.remove();
@@ -185,61 +90,50 @@
 
             const snackbar = document.createElement('div');
             snackbar.id = 'snackbar';
-            snackbar.className = `fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all transform translate-y-0 opacity-100 ${
-                type === 'success' 
-                    ? 'bg-green-50 border-green-200 text-green-900'
-                    : 'bg-red-50 border-red-200 text-red-900'
-            }`;
-            
+            snackbar.className = `site-snackbar ${type === 'success' ? 'site-snackbar--success' : 'site-snackbar--error'}`;
             snackbar.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
-                    ${type === 'success' 
+                    ${type === 'success'
                         ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
                         : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
                     }
                 </svg>
                 <span class="text-sm font-medium">${message}</span>
             `;
-            
+
             document.body.appendChild(snackbar);
-            
-            // Auto remove after 5 seconds
+
             setTimeout(() => {
-                snackbar.style.transform = 'translateY(100%)';
                 snackbar.style.opacity = '0';
+                snackbar.style.transform = 'translateX(-50%) translateY(12px)';
                 setTimeout(() => snackbar.remove(), 300);
             }, 5000);
         };
-        
-        // Enquiry Dialog Management
+
         window.openEnquiryDialog = function(type, vehicleId) {
             const dialogId = `${type}-dialog-${vehicleId}`;
             const dialog = document.getElementById(dialogId);
             if (dialog) {
                 dialog.classList.remove('hidden');
                 dialog.setAttribute('aria-hidden', 'false');
-                // Prevent body scroll when dialog is open
                 document.body.style.overflow = 'hidden';
-                // Focus on first input
                 const firstInput = dialog.querySelector('input[type="text"]');
                 if (firstInput) {
                     setTimeout(() => firstInput.focus(), 100);
                 }
             }
         };
-        
+
         window.closeEnquiryDialog = function(type, vehicleId) {
             const dialogId = `${type}-dialog-${vehicleId}`;
             const dialog = document.getElementById(dialogId);
             if (dialog) {
                 dialog.classList.add('hidden');
                 dialog.setAttribute('aria-hidden', 'true');
-                // Restore body scroll
                 document.body.style.overflow = '';
             }
         };
-        
-        // Close dialog on ESC key (handled per dialog in component)
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const openDialogs = document.querySelectorAll('[role="dialog"]:not(.hidden)');
@@ -254,14 +148,14 @@
             }
         });
     </script>
-    
+
     @stack('scripts')
 
     @if(!empty($cookieConsent['enabled']) && !empty($cookieConsent['text']))
-    <div id="cookie-consent-banner" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900 text-white p-4 shadow-lg" style="display:none;">
-        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="text-sm">{{ $cookieConsent['text'] }}</p>
-            <button type="button" id="cookie-consent-accept" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-medium whitespace-nowrap">
+    <div id="cookie-consent-banner" class="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 p-4 shadow-nav backdrop-blur-md" style="display:none;">
+        <div class="container mx-auto flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p class="text-sm text-muted-foreground">{{ $cookieConsent['text'] }}</p>
+            <button type="button" id="cookie-consent-accept" class="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover">
                 {{ __('messages.cms.cookie_accept') }}
             </button>
         </div>
@@ -281,4 +175,3 @@
     @endif
 </body>
 </html>
-

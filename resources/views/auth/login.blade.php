@@ -3,9 +3,9 @@
 @section('title', __('messages.pages.login.title') . ' - Bilskyen')
 
 @section('content')
-<div class="flex h-full w-full flex-col items-center justify-center gap-4">
-    <div class="flex w-full flex-col space-y-2">
-        <h1 class="text-2xl font-semibold tracking-tight">
+<div class="flex w-full flex-col gap-6">
+    <div class="space-y-2">
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">
             {{ __('messages.pages.login.title') }}
         </h1>
         <p class="text-sm text-muted-foreground">
@@ -14,43 +14,33 @@
     </div>
 
     @if ($errors->any())
-        <div class="w-full rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-            <div class="flex">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" x2="12" y1="8" y2="12"></line>
-                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
-                </svg>
-                <div>
-                    <h3 class="font-semibold">{{ __('messages.pages.login.login_error') }}</h3>
-                    <ul class="mt-1 text-sm">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
+        <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+            <h3 class="font-semibold">{{ __('messages.pages.login.login_error') }}</h3>
+            <ul class="mt-2 space-y-1 text-sm">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login.post') }}" class="grid w-full gap-3.5">
+    <form method="POST" action="{{ route('login.post') }}" class="grid gap-4">
         @csrf
         <div class="grid gap-2">
-            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }}</label>
-            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" tabindex="1" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-            <p id="email-error" class="hidden text-sm text-destructive"></p>
+            <label for="email" class="text-sm font-medium">{{ __('messages.forms.email') }}</label>
+            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" tabindex="1" required class="site-input">
         </div>
 
         <div class="grid gap-2">
-            <div class="flex items-center justify-between">
-                <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.password') }}</label>
-                <a href="/auth/forgot-password" class="ml-auto inline-block text-sm underline" tabindex="3">
+            <div class="flex items-center justify-between gap-3">
+                <label for="password" class="text-sm font-medium">{{ __('messages.forms.password') }}</label>
+                <a href="/auth/forgot-password" class="text-sm text-primary hover:underline" tabindex="3">
                     {{ __('messages.forms.forgot_password') }}
                 </a>
             </div>
             <div class="relative">
-                <input id="password" name="password" type="password" placeholder="{{ __('messages.forms.placeholders.password') }}" autocomplete="current-password" tabindex="2" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <input id="password" name="password" type="password" placeholder="{{ __('messages.forms.placeholders.password') }}" autocomplete="current-password" tabindex="2" required class="site-input pr-10">
+                <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground" aria-label="Toggle password visibility">
                     <svg id="password-eye" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -66,22 +56,24 @@
             <p id="password-error" class="hidden text-sm text-destructive"></p>
         </div>
 
-        <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+        <button type="submit" class="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover">
             {{ __('messages.navigation.login') }}
         </button>
     </form>
 
-    <div class="relative my-4 w-full text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-        <span class="relative z-10 bg-background px-2 text-muted-foreground">{{ __('messages.forms.or_continue_with') }}</span>
+    <div class="relative text-center text-sm">
+        <span class="relative z-10 bg-card px-3 text-muted-foreground">{{ __('messages.forms.or_continue_with') }}</span>
+        <div class="absolute inset-x-0 top-1/2 h-px bg-border"></div>
     </div>
 
-    <a href="/auth/magic-link/login" class="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+    <a href="/auth/magic-link/login" class="inline-flex h-11 w-full items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted">
         {{ __('messages.pages.login.magic_link_login') }}
     </a>
 
-    <div class="mt-4 text-center text-sm">
-        {{ __('messages.pages.login.no_account') }} <a href="/auth/signup" class="underline">{{ __('messages.navigation.signup') }}</a>
-    </div>
+    <p class="text-center text-sm text-muted-foreground">
+        {{ __('messages.pages.login.no_account') }}
+        <a href="/auth/signup" class="font-medium text-primary hover:underline">{{ __('messages.navigation.signup') }}</a>
+    </p>
 </div>
 
 <script>

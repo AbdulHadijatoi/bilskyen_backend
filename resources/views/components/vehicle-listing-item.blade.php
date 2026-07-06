@@ -9,7 +9,7 @@
     'premiumDealerBadge' => false,
     'isBoosted' => false,
 ])
-<div {{ $attributes->merge(['class' => 'vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
+<div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <a href="/vehicles/{{ $vehicle->slug }}" class="vehicle-item-main-link block flex-1 min-w-0">
         <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
             <img
@@ -19,11 +19,11 @@
             />
             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                 @if($vehicle->dealer_id)
-                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="inline-flex items-center rounded-md bg-primary/90 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
                         {{ __('messages.pages.vehicles.dealer') }}
                     </span>
                 @else
-                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                    <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                         {{ __('messages.pages.vehicles.private') }}
                     </span>
                 @endif

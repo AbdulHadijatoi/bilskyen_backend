@@ -2,7 +2,7 @@
     $panelUrl = $panelUrl ?? config('payments.panel_url');
     $activeNav = $activeNav ?? '';
 @endphp
-<header class="bg-background w-full border-b border-border sticky top-0 z-40" id="marketing-navbar">
+<header class="site-header" id="marketing-navbar">
     <div class="container mx-auto px-4 md:px-6">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-6">

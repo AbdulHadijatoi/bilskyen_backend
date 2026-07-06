@@ -1404,6 +1404,8 @@ return [
         'default_title' => 'Bilskyen | Revolutionizing Dealership Management',
         'logo_alt' => 'Bilskyen',
         'testimonial_quote' => 'Bilskyen has revolutionized the way we manage our dealership operations, making everything simple and efficient.',
+        'auth_headline' => 'Your trusted automotive marketplace',
+        'auth_subheadline' => 'Sign in to manage favorites, listings, and enquiries with a modern, secure experience.',
     ],
 
     // API Messages

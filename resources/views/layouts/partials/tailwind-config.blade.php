@@ -3,7 +3,7 @@
         theme: {
             extend: {
                 fontFamily: {
-                    sans: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
+                    sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
                 },
                 colors: {
                     border: "var(--border)",
@@ -14,6 +14,7 @@
                     primary: {
                         DEFAULT: "var(--primary)",
                         foreground: "var(--primary-foreground)",
+                        hover: "var(--primary-hover)",
                     },
                     secondary: {
                         DEFAULT: "var(--secondary)",
@@ -41,9 +42,15 @@
                     },
                 },
                 borderRadius: {
-                    lg: "var(--radius)",
+                    lg: "var(--radius-lg)",
                     md: "var(--radius)",
-                    sm: "var(--radius)",
+                    sm: "calc(var(--radius) - 2px)",
+                    xl: "var(--radius-xl)",
+                },
+                boxShadow: {
+                    card: "var(--shadow-card)",
+                    'card-hover': "var(--shadow-card-hover)",
+                    nav: "var(--shadow-nav)",
                 },
             },
         },
