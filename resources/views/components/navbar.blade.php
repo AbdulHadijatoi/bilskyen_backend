@@ -17,6 +17,7 @@
                     @endif
                 </nav>
                 <div class="flex items-center gap-2">
+                    @include('components.language-switcher', ['variant' => 'dark'])
                     @include('components.marketplace-notifications')
                     @include('components.user-auth-status')
                     <!-- Mobile Menu Button -->

@@ -16,6 +16,7 @@
                 </nav>
             </div>
             <div class="flex items-center gap-2 md:gap-3">
+                @include('components.language-switcher')
                 <a href="{{ route('for-dealers.landing') }}" class="hidden lg:inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
                     {{ __('messages.staff_marketing.nav.for_dealers') }}
                 </a>

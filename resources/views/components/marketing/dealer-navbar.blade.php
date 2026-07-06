@@ -17,6 +17,7 @@
                 </nav>
             </div>
             <div class="flex items-center gap-2 md:gap-3">
+                @include('components.language-switcher')
                 <a href="{{ $panelUrl }}/auth/login" class="hidden sm:inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors">
                     {{ __('messages.dealer_marketing.nav.login') }}
                 </a>

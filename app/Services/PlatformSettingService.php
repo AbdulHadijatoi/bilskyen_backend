@@ -118,6 +118,14 @@ class PlatformSettingService
         }
     }
 
+    public function isLanguageSwitcherEnabled(): bool
+    {
+        return filter_var(
+            $this->get('general', 'language_switcher_enabled', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    }
+
     private function decodeValue(PlatformSetting $setting, bool $decrypt): mixed
     {
         $raw = $setting->value;

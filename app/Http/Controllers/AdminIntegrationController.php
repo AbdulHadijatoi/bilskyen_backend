@@ -36,6 +36,12 @@ class AdminIntegrationController extends Controller
             'settings' => 'required|array',
         ]);
 
+        if ($data['group'] === 'general') {
+            $request->validate([
+                'settings.language_switcher_enabled' => 'sometimes|boolean',
+            ]);
+        }
+
         if ($data['group'] === 'ai') {
             $request->validate([
                 'settings.openai_enabled' => 'sometimes|boolean',

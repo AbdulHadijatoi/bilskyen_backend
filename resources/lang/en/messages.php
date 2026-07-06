@@ -29,10 +29,14 @@ return [
         'no' => 'No',
         'default' => 'Default',
         'language_menu' => 'Language menu',
+        'english' => 'English',
+        'danish' => 'Danish',
         'toggle_menu' => 'Toggle menu',
         'user_menu' => 'User menu',
         'user_email' => 'User email',
         'site_name' => 'Bilskyen',
+        'dealer_fallback' => 'Dealer',
+        'private_seller' => 'Private',
     ],
 
     // Navigation
@@ -1705,11 +1709,6 @@ return [
         'summary_comparison' => 'Your :label is :percent% :direction the market average.',
         'direction_above' => 'above',
         'direction_below' => 'below',
-    ],
-
-    'common' => [
-        'dealer_fallback' => 'Dealer',
-        'private_seller' => 'Private',
     ],
 
     'enquiries' => [

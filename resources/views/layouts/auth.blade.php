@@ -72,6 +72,7 @@
                         <a href="/contact" class="text-primary-foreground hover:text-primary-foreground/80 transition-colors">{{ __('messages.navigation.contact') }}</a>
                     </nav>
                     <div class="flex items-center gap-2">
+                        @include('components.language-switcher', ['variant' => 'dark'])
                         @include('components.user-auth-status')
                     </div>
                 </div>

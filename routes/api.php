@@ -8,6 +8,7 @@ use App\Http\Controllers\DmrFactVehicleLookupController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\PublicPlatformController;
 use App\Http\Controllers\PublicPlansController;
 use App\Http\Controllers\SellYourCarController;
 use App\Http\Controllers\VehicleFeedController;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
 Route::prefix('v1')->group(function () {
     // Public routes
     Route::get('/version.json', [VersionController::class, 'getVersion']);
+    Route::get('/platform/ui-settings', [PublicPlatformController::class, 'uiSettings']);
     
     // Public vehicle listings (uses database data)
     Route::get('/vehicles/count', [VehicleController::class, 'count'])->name('vehicles.count');

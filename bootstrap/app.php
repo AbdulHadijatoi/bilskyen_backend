@@ -31,11 +31,18 @@ return Application::configure(basePath: dirname(__DIR__))
             SanitizeInput::class,
         ]);
 
-        // Set locale middleware - runs early on all web requests
+        // Set locale after session/cookies are available on web requests
         $middleware->web(prepend: [
-            SetLocale::class,
             \App\Http\Middleware\SeoRedirectMiddleware::class,
             \App\Http\Middleware\ResolveCustomDomain::class,
+        ]);
+
+        $middleware->web(append: [
+            SetLocale::class,
+        ]);
+
+        $middleware->api(prepend: [
+            SetLocale::class,
         ]);
         
         $middleware->alias([

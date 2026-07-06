@@ -63,6 +63,13 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
 
+        View::composer('components.language-switcher', function ($view) {
+            $view->with(
+                'languageSwitcherEnabled',
+                app(PlatformSettingService::class)->isLanguageSwitcherEnabled()
+            );
+        });
+
         View::composer('components.footer', function ($view) {
             $view->with(
                 'homePageContent',

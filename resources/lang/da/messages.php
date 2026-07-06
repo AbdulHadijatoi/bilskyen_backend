@@ -28,10 +28,14 @@ return [
         'no' => 'Nej',
         'default' => 'Standard',
         'language_menu' => 'Sprogmenu',
+        'english' => 'Engelsk',
+        'danish' => 'Dansk',
         'toggle_menu' => 'Skift menu',
         'user_menu' => 'Brugermenu',
         'user_email' => 'Bruger e-mail',
         'site_name' => 'Bilskyen',
+        'dealer_fallback' => 'Forhandler',
+        'private_seller' => 'Privat',
     ],
 
     // Navigation
@@ -1701,11 +1705,6 @@ return [
         'summary_comparison' => 'Din :label er :percent% :direction markedsgennemsnittet.',
         'direction_above' => 'over',
         'direction_below' => 'under',
-    ],
-
-    'common' => [
-        'dealer_fallback' => 'Forhandler',
-        'private_seller' => 'Privat',
     ],
 
     'enquiries' => [

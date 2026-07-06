@@ -10,6 +10,10 @@ use App\Http\Controllers\SeoController;
 use App\Http\Controllers\CmsPublicController;
 use App\Http\Controllers\DmrTestController;
 use App\Http\Controllers\DealerMarketingController;
+use App\Http\Controllers\LocaleController;
+
+// Locale switcher (session + cookie persistence)
+Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 // Sitemap and robots (public, cached)
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
