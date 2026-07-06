@@ -8,20 +8,16 @@
     /* Expandable Section Styles */
     .expandable-section {
         background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        margin-bottom: 3rem;
+        border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        margin-bottom: 1rem;
         overflow: hidden;
-        transition: all 0.3s ease;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     
     .expandable-section:hover {
-        border-color: var(--primary);
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.05);
-    }
-    
-    .dark .expandable-section:hover {
-        box-shadow: 0 2px 8px oklch(0 0 0 / 0.2);
+        border-color: color-mix(in oklch, var(--primary) 25%, var(--border));
     }
     
     .section-header {
@@ -179,10 +175,12 @@
     
     /* Submit Section */
     .submit-section {
-        background: var(--muted);
-        border-radius: 0.5rem;
-        padding: 1.25rem;
-        margin-top: 1.25rem;
+        background: var(--card);
+        border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        padding: 1.5rem;
+        margin-top: 1.5rem;
         text-align: center;
     }
     
@@ -190,33 +188,35 @@
         font-size: 1.125rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
+        color: var(--foreground);
     }
     
     .submit-section p {
-        font-size: 0.75rem;
+        font-size: 0.8125rem;
         color: var(--muted-foreground);
         margin-bottom: 1rem;
     }
     
     .btn-submit {
-        padding: 0.75rem 1.5rem;
-        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        font-family: inherit;
         background: var(--primary);
-        color: var(--primary-foreground);
-        border-radius: 0.5rem;
-        font-weight: 600;
+        color: #ffffff;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-lg);
         cursor: pointer;
-        border: none;
+        transition: background-color 0.15s, border-color 0.15s;
     }
     
     .btn-submit:hover:not(:disabled) {
-        opacity: 0.9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px oklch(0 0 0 / 0.15);
-    }
-    
-    .dark .btn-submit:hover:not(:disabled) {
-        box-shadow: 0 4px 12px oklch(0 0 0 / 0.4);
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
     }
     
     /* Field Error */
@@ -585,22 +585,17 @@
 @endpush
 
 @section('content')
-<div class="container py-3 md:py-6">
-    <div class="mb-6">
-        <a href="{{ route('seller.dashboard', ['token' => $token]) }}" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                <path d="m12 19-7-7 7-7"></path>
-                <path d="M19 12H5"></path>
-            </svg>
-            {{ __('messages.pages.edit_vehicle.back_to_dashboard') }}
-        </a>
-        <h1 class="text-2xl font-bold tracking-tight mb-2">
-            {{ __('messages.pages.edit_vehicle.title') }}
-        </h1>
-        <p class="text-muted-foreground">
-            {{ __('messages.pages.edit_vehicle.description') }}
-        </p>
-    </div>
+<div class="min-h-screen" style="background: #f4f5f7;">
+    <div class="panel-content panel-page">
+        <x-panel.breadcrumb :items="[
+            ['label' => __('messages.pages.seller_dashboard.breadcrumb_dashboard'), 'url' => route('seller.dashboard', ['token' => $token])],
+            ['label' => __('messages.pages.edit_vehicle.breadcrumb_edit'), 'current' => true],
+        ]" />
+
+        <x-panel.page-header
+            :title="__('messages.pages.edit_vehicle.title')"
+            :subtitle="$vehicle->title"
+        />
 
     @if($errors->any())
         <div class="w-full rounded-md border p-3 mb-4 error-container">
@@ -1130,11 +1125,17 @@
         <div class="submit-section">
             <h3>{{ __('messages.pages.edit_vehicle.ready_to_update') }}</h3>
             <p>{{ __('messages.pages.edit_vehicle.ready_to_update_description') }}</p>
-            <button type="submit" class="btn btn-submit">
-                {{ __('messages.pages.edit_vehicle.update_button') }}
-            </button>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center">
+                <a href="{{ route('seller.dashboard', ['token' => $token]) }}" class="panel-btn panel-btn--outline">
+                    {{ __('messages.pages.edit_vehicle.back_to_dashboard') }}
+                </a>
+                <button type="submit" class="btn-submit">
+                    {{ __('messages.pages.edit_vehicle.update_button') }}
+                </button>
+            </div>
         </div>
     </form>
+    </div>
 </div>
 
 @php

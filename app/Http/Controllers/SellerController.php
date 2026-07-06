@@ -43,7 +43,7 @@ class SellerController extends Controller
         }
 
         // Get all vehicles for this seller (eager-load relations used by Blade + Vehicle accessors)
-        $vehicles = Vehicle::where('user_id', $user->id)
+        $query = Vehicle::where('user_id', $user->id)
             ->with([
                 'images' => function ($q) {
                     $q->orderBy('sort_order');
@@ -61,18 +61,30 @@ class SellerController extends Controller
                 'enquiries as enquiries_count',
                 'viewLogs as views_count',
             ])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->orderBy('created_at', 'desc');
+
+        $currentStatus = $request->filled('status') ? (int) $request->input('status') : null;
+        if ($currentStatus !== null) {
+            $query->where('list_status_id', $currentStatus);
+        }
+
+        $vehicles = $query->paginate(15)->withQueryString();
 
         // Calculate statistics
         $vehicleIds = Vehicle::where('user_id', $user->id)->pluck('id');
-        
+
         $statistics = [
             'total_vehicles' => Vehicle::where('user_id', $user->id)->count(),
             'total_worth' => Vehicle::where('user_id', $user->id)->sum('price') ?? 0,
             'total_inquiries' => Enquiry::whereIn('vehicle_id', $vehicleIds)->count(),
             'total_views' => ListingViewsLog::whereIn('vehicle_id', $vehicleIds)->count(),
         ];
+
+        $statusCounts = Vehicle::withoutGlobalScope('defaultOrder')
+            ->where('user_id', $user->id)
+            ->selectRaw('list_status_id, count(*) as count')
+            ->groupBy('list_status_id')
+            ->pluck('count', 'list_status_id');
 
         // Get all enquiries for display
         $enquiries = Enquiry::whereIn('vehicle_id', $vehicleIds)
@@ -85,6 +97,8 @@ class SellerController extends Controller
             'user' => $user,
             'vehicles' => $vehicles,
             'statistics' => $statistics,
+            'statusCounts' => $statusCounts,
+            'currentStatus' => $currentStatus,
             'enquiries' => $enquiries,
             'token' => $token,
         ]);
