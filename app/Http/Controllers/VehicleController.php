@@ -470,7 +470,7 @@ class VehicleController extends Controller
         $pricing = $this->marketPricingService->evaluateVehicle($vehicle);
 
         if (! $pricing || empty($pricing['median_price'])) {
-            return $this->error('No market pricing data available for this vehicle.', [], 422);
+            return $this->error(__('messages.api.no_market_pricing_data'), [], 422);
         }
 
         $suggestedPrice = (int) round((float) $pricing['median_price']);
@@ -812,7 +812,7 @@ class VehicleController extends Controller
             ]);
         }
 
-        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'specifications', 'dmrFactVehicle.variant.model.brand']), 'Vehicle draft saved successfully');
+        return $this->created($vehicle->load(['dealer', 'images', 'equipment', 'specifications', 'dmrFactVehicle.variant.model.brand']), __('messages.api.vehicle_draft_saved'));
     }
 
     /**

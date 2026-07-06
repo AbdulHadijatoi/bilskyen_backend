@@ -3,6 +3,6 @@
 
 {!! nl2br(e($body)) !!}
 
-Thanks,<br>
+{{ __('messages.mail.subscription_thanks') }}<br>
 {{ config('app.name') }}
 </x-mail::message>

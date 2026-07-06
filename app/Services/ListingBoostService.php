@@ -45,7 +45,7 @@ class ListingBoostService
 
         return DB::transaction(function () use ($vehicle, $userId, $source) {
             if (ListingBoost::query()->where('vehicle_id', $vehicle->id)->active()->exists()) {
-                throw new \InvalidArgumentException('Vehicle cannot be boosted.');
+                throw new \InvalidArgumentException(__('messages.errors.vehicle_cannot_be_boosted'));
             }
 
             $activeCount = ListingBoost::query()
@@ -55,12 +55,12 @@ class ListingBoostService
                 ->count();
 
             if ($activeCount >= self::MAX_ACTIVE_BOOSTS) {
-                throw new \InvalidArgumentException('Vehicle cannot be boosted.');
+                throw new \InvalidArgumentException(__('messages.errors.vehicle_cannot_be_boosted'));
             }
 
             if (! $this->subscriptionFeatureService->hasFeature($vehicle->dealer, 'listing_boost')
                 || $vehicle->list_status_id !== VehicleListStatus::PUBLISHED) {
-                throw new \InvalidArgumentException('Vehicle cannot be boosted.');
+                throw new \InvalidArgumentException(__('messages.errors.vehicle_cannot_be_boosted'));
             }
 
             return ListingBoost::create([

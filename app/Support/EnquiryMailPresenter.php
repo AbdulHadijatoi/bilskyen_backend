@@ -48,6 +48,10 @@ final class EnquiryMailPresenter
             'Test Drive Request for ' => 'messages.enquiries.subjects.test_drive_for',
             'Price Negotiation for ' => 'messages.enquiries.subjects.price_negotiation_for',
             'Exchange request for ' => 'messages.enquiries.subjects.exchange_for',
+            'Henvendelse om ' => 'messages.enquiries.subjects.enquiry_about',
+            'Anmodning om prøvekørsel for ' => 'messages.enquiries.subjects.test_drive_for',
+            'Prisforhandling for ' => 'messages.enquiries.subjects.price_negotiation_for',
+            'Bytteanmodning for ' => 'messages.enquiries.subjects.exchange_for',
         ];
 
         foreach ($prefixes as $prefix => $translationKey) {

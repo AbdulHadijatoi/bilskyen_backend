@@ -42,7 +42,7 @@ class DealerDealQuoteService
     public function update(DealerDealQuote $quote, array $data): DealerDealQuote
     {
         if ($quote->status !== 'draft') {
-            throw new \InvalidArgumentException('Only draft quotes can be edited.');
+            throw new \InvalidArgumentException(__('messages.errors.only_draft_quotes_editable'));
         }
 
         $quote->update(collect($data)->only([

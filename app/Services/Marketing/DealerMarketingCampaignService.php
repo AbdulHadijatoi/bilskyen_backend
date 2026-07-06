@@ -37,7 +37,7 @@ class DealerMarketingCampaignService
     public function update(DealerMarketingCampaign $campaign, array $data): DealerMarketingCampaign
     {
         if ($campaign->status !== 'draft') {
-            throw new \InvalidArgumentException('Only draft campaigns can be edited.');
+            throw new \InvalidArgumentException(__('messages.errors.only_draft_campaigns_editable'));
         }
 
         $campaign->update(collect($data)->only([
@@ -50,11 +50,11 @@ class DealerMarketingCampaignService
     public function sendNow(DealerMarketingCampaign $campaign, MarketingAutomationService $automation): int
     {
         if ($campaign->status === 'sent') {
-            throw new \InvalidArgumentException('Campaign was already sent.');
+            throw new \InvalidArgumentException(__('messages.errors.campaign_already_sent'));
         }
 
         if (trim((string) $campaign->subject) === '' || trim((string) $campaign->body) === '') {
-            throw new \InvalidArgumentException('Campaign subject and body are required before sending.');
+            throw new \InvalidArgumentException(__('messages.errors.campaign_subject_body_required'));
         }
 
         $recipients = $this->resolveAudience($campaign);
@@ -93,7 +93,7 @@ class DealerMarketingCampaignService
             }
 
             if ($queued === 0) {
-                throw new \InvalidArgumentException('No eligible recipients found for this campaign audience.');
+                throw new \InvalidArgumentException(__('messages.errors.no_campaign_recipients'));
             }
 
             $campaign->update([

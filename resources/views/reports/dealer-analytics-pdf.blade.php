@@ -14,59 +14,59 @@
     </style>
 </head>
 <body>
-    <h1>Dealer analytics report</h1>
+    <h1>{{ __('messages.reports.title') }}</h1>
     <div class="meta">
-        {{ $dealerName }} · {{ $periodLabel }} · Generated {{ $generatedAt }}
+        {{ $dealerName }} · {{ $periodLabel }} · {{ __('messages.reports.generated') }} {{ $generatedAt }}
     </div>
 
-    <h2>Conversion funnel</h2>
+    <h2>{{ __('messages.reports.conversion_funnel') }}</h2>
     <div class="metrics">
-        Views: {{ $funnel['current']['views'] ?? 0 }} ·
-        Enquiries: {{ $funnel['current']['enquiries'] ?? 0 }} ·
-        Leads: {{ $funnel['current']['leads'] ?? 0 }} ·
-        Won: {{ $funnel['current']['won'] ?? 0 }} ·
-        View → won: {{ $funnel['rates']['view_to_won'] ?? 0 }}%
+        {{ __('messages.reports.views') }}: {{ $funnel['current']['views'] ?? 0 }} ·
+        {{ __('messages.reports.enquiries') }}: {{ $funnel['current']['enquiries'] ?? 0 }} ·
+        {{ __('messages.reports.leads') }}: {{ $funnel['current']['leads'] ?? 0 }} ·
+        {{ __('messages.reports.won') }}: {{ $funnel['current']['won'] ?? 0 }} ·
+        {{ __('messages.reports.view_to_won') }}: {{ $funnel['rates']['view_to_won'] ?? 0 }}%
     </div>
 
-    <h2>Stock metrics</h2>
+    <h2>{{ __('messages.reports.stock_metrics') }}</h2>
     <div class="metrics">
-        Sold rate: {{ $stock['sold_rate_percent'] ?? 0 }}% ·
-        Avg days on market: {{ $stock['average_days_on_market'] ?? 0 }} ·
-        Price drops: {{ $stock['price_drops_in_period'] ?? 0 }}
+        {{ __('messages.reports.sold_rate') }}: {{ $stock['sold_rate_percent'] ?? 0 }}% ·
+        {{ __('messages.reports.avg_days_on_market') }}: {{ $stock['average_days_on_market'] ?? 0 }} ·
+        {{ __('messages.reports.price_drops') }}: {{ $stock['price_drops_in_period'] ?? 0 }}
     </div>
 
-    <h2>Assignee performance</h2>
+    <h2>{{ __('messages.reports.assignee_performance') }}</h2>
     <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Leads</th>
-                <th>Win rate</th>
-                <th>Avg time to contact (h)</th>
+                <th>{{ __('messages.reports.name') }}</th>
+                <th>{{ __('messages.reports.leads') }}</th>
+                <th>{{ __('messages.reports.win_rate') }}</th>
+                <th>{{ __('messages.reports.avg_time_to_contact') }}</th>
             </tr>
         </thead>
         <tbody>
             @forelse($assignees['assignees'] ?? [] as $row)
                 <tr>
-                    <td>{{ $row['name'] ?? 'Unassigned' }}</td>
+                    <td>{{ $row['name'] ?? __('messages.reports.unassigned') }}</td>
                     <td>{{ $row['total_leads'] ?? 0 }}</td>
                     <td>{{ $row['win_rate'] ?? 0 }}%</td>
                     <td>{{ $row['avg_time_to_contact_hours'] ?? '—' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="4">No assignee data</td></tr>
+                <tr><td colspan="4">{{ __('messages.reports.no_assignee_data') }}</td></tr>
             @endforelse
         </tbody>
     </table>
 
-    <h2>Daily trends (last rows)</h2>
+    <h2>{{ __('messages.reports.daily_trends') }}</h2>
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Views</th>
-                <th>Leads</th>
-                <th>Won</th>
+                <th>{{ __('messages.reports.date') }}</th>
+                <th>{{ __('messages.reports.views') }}</th>
+                <th>{{ __('messages.reports.leads') }}</th>
+                <th>{{ __('messages.reports.won') }}</th>
             </tr>
         </thead>
         <tbody>

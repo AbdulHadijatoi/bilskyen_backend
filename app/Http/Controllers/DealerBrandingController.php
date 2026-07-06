@@ -115,7 +115,7 @@ class DealerBrandingController extends Controller
         }
 
         if (trim((string) $dealer->slug) === '') {
-            return $this->error('A dealer slug is required before generating a branded audit link.', [], 422);
+            return $this->error(__('messages.api.dealer_slug_required_audit'), [], 422);
         }
 
         try {

@@ -410,7 +410,7 @@
                         @endif
                         @if($dealer->address || $dealer->city || $dealer->postcode)
                         <div class="sm:col-span-2">
-                            <span class="text-xs text-muted-foreground">Address</span>
+                            <span class="text-xs text-muted-foreground">{{ __('messages.forms.address') }}</span>
                             <p class="text-foreground font-medium text-sm">
                                 @if($dealer->address){{ $dealer->address }}, @endif
                                 @if($dealer->postcode){{ $dealer->postcode }} @endif

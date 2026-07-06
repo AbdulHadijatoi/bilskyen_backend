@@ -22,13 +22,13 @@
 
     /** Fixed option placeholders for sell-your-car selects (not from server copy). */
     var SELL_YC_SELECT_PH = {
-        manual_brand_id: trans('selectBrand', 'Select brand'),
-        manual_model_id: trans('selectModel', 'Select model'),
-        manual_model_year_id: trans('selectModelYear', 'Select model year'),
-        manual_fuel_type_id: trans('selectFuelType', 'Select fuel type'),
-        variant_id: trans('selectVariant', 'Select variant'),
-        colour_id: trans('selectColor', 'Select colour'),
-        emission_norm_id: trans('selectEmissionStandard', 'Select emission standard'),
+        manual_brand_id: trans('selectBrand', 'Vælg mærke'),
+        manual_model_id: trans('selectModel', 'Vælg model'),
+        manual_model_year_id: trans('selectModelYear', 'Vælg modelår'),
+        manual_fuel_type_id: trans('selectFuelType', 'Vælg brændstoftype'),
+        variant_id: trans('selectVariant', 'Vælg Variant'),
+        colour_id: trans('selectColor', 'Vælg farve'),
+        emission_norm_id: trans('selectEmissionStandard', 'Vælg Euronom'),
     };
     // Guard transient clear/reset events while lookup-prefill is still hydrating async fields.
     var sellYourCarLookupHydrating = false;
@@ -285,7 +285,7 @@
             const registration = registrationInput.value.trim();
             
             if (!registration) {
-                lookupError.textContent = trans('lookupEnterRegistration', 'Please enter a license plate number');
+                lookupError.textContent = trans('lookupEnterRegistration', 'Indtast venligst et nummerpladenummer');
                 lookupError.style.color = 'var(--destructive)';
                 return;
             }
@@ -317,12 +317,12 @@
 
                 // Check for error status first (legacy + ApiResponse shape)
                 if (data.status === 'error' || data.success === false || data.failed === true) {
-                    let errorMessage = data.message || trans('lookupFetchFailed', 'Failed to fetch vehicle information');
+                    let errorMessage = data.message || trans('lookupFetchFailed', 'Kunne ikke hente køretøjsinformation');
                     
                     if (data.errors && data.errors.code === 'TIMEOUT') {
-                        errorMessage = trans('lookupTimeout', 'The vehicle lookup is taking longer than expected. Please try again in a moment.');
+                        errorMessage = trans('lookupTimeout', 'Køretøjsopslaget tager længere tid end forventet. Prøv igen om et øjeblik.');
                     } else if (data.errors && data.errors.retryable) {
-                        errorMessage = trans('lookupServiceUnavailable', 'The vehicle lookup service is temporarily unavailable. Please try again in a moment.');
+                        errorMessage = trans('lookupServiceUnavailable', 'Køretøjsopslagstjenesten er midlertidigt utilgængelig. Prøv igen om et øjeblik.');
                     }
                     
                     lookupError.textContent = errorMessage;
@@ -359,7 +359,7 @@
                 
                 if (!vehicleData || typeof vehicleData !== 'object' || !vehicleData.registration) {
                     console.error('Vehicle data extraction failed. Response structure:', JSON.stringify(data, null, 2));
-                    const errorMsg = trans('lookupNoVehicleData', 'No vehicle data found in API response. Please try again.');
+                    const errorMsg = trans('lookupNoVehicleData', 'Ingen køretøjsdata fundet i API-svaret. Prøv igen.');
                     lookupError.textContent = errorMsg;
                     lookupError.style.color = 'var(--destructive)';
                     finishLookupLoading();
@@ -368,7 +368,7 @@
                 
                 const dmrId = vehicleData.dmr_fact_vehicle_id;
                 if (!dmrId) {
-                    lookupError.textContent = trans('lookupMissingReference', 'Missing vehicle reference. Please try again.');
+                    lookupError.textContent = trans('lookupMissingReference', 'Manglende køretøjsreference. Prøv igen.');
                     lookupError.style.color = 'var(--destructive)';
                     finishLookupLoading();
                     return;
@@ -388,14 +388,14 @@
                     .then(function(res) {
                         if (!res.ok) {
                             return res.json().then(function(body) {
-                                throw new Error((body && body.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
+                                throw new Error((body && body.message) || trans('lookupContextLoadFailed', 'Kunne ikke indlæse opslagets kontekst. Prøv igen.'));
                             });
                         }
                         return res.json();
                     })
                     .then(function(ctx) {
                         if (!ctx || !ctx.success) {
-                            throw new Error((ctx && ctx.message) || trans('lookupContextLoadFailed', 'Failed to load lookup context. Please try again.'));
+                            throw new Error((ctx && ctx.message) || trans('lookupContextLoadFailed', 'Kunne ikke indlæse opslagets kontekst. Prøv igen.'));
                         }
                         applySellYourCarLookupContextPayload(ctx);
 
@@ -476,7 +476,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span>${escapeHtml(trans('lookupSuccess', 'Vehicle information loaded successfully! Review and complete the form below.'))}</span>
+                    <span>${escapeHtml(trans('lookupSuccess', 'Køretøjsinformationen blev indlæst. Gennemgå og udfyld formularen nedenfor.'))}</span>
                 `;
                         if (vehicleForm) {
                             vehicleForm.insertBefore(successMsg, vehicleForm.firstChild);
@@ -494,7 +494,7 @@
                 console.error('Lookup error:', error);
                 
                 // Try to extract error message from error object
-                let errorMessage = trans('lookupGenericError', 'An error occurred while fetching vehicle information. Please try again.');
+                let errorMessage = trans('lookupGenericError', 'Der opstod en fejl under hentning af køretøjsinformation. Prøv igen.');
                 
                 if (error && typeof error === 'object') {
                     if (error.message) {
@@ -801,7 +801,7 @@
             }
 
             if (!res.ok || (json && json.success === false)) {
-                const msg = (json && (json.message || (json.errors && json.errors.code) || json.errors)) ? (json.message || 'Failed to load options') : 'Failed to load options';
+                const msg = (json && (json.message || (json.errors && json.errors.code) || json.errors)) ? (json.message || 'Kunne ikke indlæse valgmuligheder') : 'Kunne ikke indlæse valgmuligheder';
                 throw new Error(msg);
             }
 
@@ -889,7 +889,7 @@
             // Load limited dropdown data (initial 10 per dropdown).
             loadManualDropdownInitialOptions().catch(err => {
                 console.error('Manual dropdown load failed:', err);
-                displayGeneralError(err.message || 'Failed to load manual dropdown options. Please try again.');
+                displayGeneralError(err.message || 'Kunne ikke indlæse manuelle rullemenuer. Prøv igen.');
             }).then(function() {
                 if (manualBrand && manualBrand.value) {
                     setManualModelTriggerEnabled(true);
@@ -1322,7 +1322,7 @@
                 
                 const errorElement = document.createElement('p');
                 errorElement.className = 'field-error';
-                errorElement.textContent = trans('requiredFieldError', 'This field is required');
+                errorElement.textContent = trans('requiredFieldError', 'Dette felt er påkrævet');
                 field.parentElement.appendChild(errorElement);
 
                 if (!firstInvalidField) {
@@ -1342,7 +1342,7 @@
             const manualModelYear = document.getElementById('manual_model_year_id');
             const manualFuelType = document.getElementById('manual_fuel_type_id');
             if (!brandId || !brandId.value || !modelId || !modelId.value || !modelYearId || !modelYearId.value || !fuelTypeId || !fuelTypeId.value) {
-                displayGeneralError(trans('manualEntryRequiredError', 'Please select Brand, Model, Year and Fuel Type in the Basic Vehicle Information section.'));
+                displayGeneralError(trans('manualEntryRequiredError', 'Vælg venligst mærke, model, år og brændstoftype i sektionen Grundlæggende køretøjsinformation.'));
                 const basicSection = document.querySelector('[data-section="basic-info"]');
                 if (basicSection) {
                     const header = basicSection.querySelector('.section-header');
@@ -1655,7 +1655,7 @@
             const fb = formData.get('brand_id');
             const fm = formData.get('model_id');
             if (!fb || String(fb).trim() === '' || !fm || String(fm).trim() === '') {
-                displayGeneralError(trans('lookupBrandModelRequired', 'Brand and model are required. Please run the registration lookup again or enter your vehicle manually.'));
+                displayGeneralError(trans('lookupBrandModelRequired', 'Mærke og model er påkrævet. Kør nummerpladeopslaget igen, eller indtast køretøjet manuelt.'));
                 const basicSection = document.querySelector('[data-section="basic-info"]');
                 if (basicSection) {
                     const header = basicSection.querySelector('.section-header');
@@ -1735,7 +1735,7 @@
             
             if (validFileCount === 0) {
                 hideLoadingState(submitBtn, form);
-                displayGeneralError(trans('noValidImages', 'No valid images found. Please upload at least one image.'));
+                displayGeneralError(trans('noValidImages', 'Ingen gyldige billeder fundet. Upload venligst mindst ét billede.'));
                 return;
             }
             
@@ -1771,7 +1771,7 @@
                 data = await response.json();
             } catch (jsonError) {
                 hideLoadingState(submitBtn, form);
-                displayGeneralError('An unexpected error occurred. Please try again.');
+                displayGeneralError(trans('unexpectedError', 'Der opstod en uventet fejl. Prøv igen.'));
                 return;
             }
 
@@ -1798,7 +1798,7 @@
                         field.focus();
                     }
                 } else {
-                    displayGeneralError(data.message || 'An error occurred while saving the vehicle.');
+                    displayGeneralError(data.message || trans('unexpectedError', 'Der opstod en uventet fejl. Prøv igen.'));
                 }
                 return;
             }
@@ -1810,15 +1810,15 @@
                 window.location.href = `/sell-your-car/success/${data.token}`;
             } else if (data.vehicle_id) {
                 // Fallback: if token is missing, redirect with error message
-                displayGeneralError(trans('saveMissingToken', 'Vehicle saved successfully, but access token is missing. Please contact support.'));
+                displayGeneralError(trans('saveMissingToken', 'Køretøjet blev gemt, men adgangstoken mangler. Kontakt venligst support.'));
             } else {
-                displayGeneralError(trans('saveMissingRedirect', 'Vehicle saved successfully, but redirect URL is missing.'));
+                displayGeneralError(trans('saveMissingRedirect', 'Køretøjet blev gemt, men redirect-URL mangler.'));
             }
 
         } catch (error) {
             console.error('Form submission error:', error);
             hideLoadingState(submitBtn, form);
-            displayGeneralError(trans('unexpectedError', 'An unexpected error occurred. Please try again.'));
+            displayGeneralError(trans('unexpectedError', 'Der opstod en uventet fejl. Prøv igen.'));
         }
     }
 
@@ -1832,7 +1832,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                ${escapeHtml(trans('saving', 'Saving...'))}
+                ${escapeHtml(trans('saving', 'Gemmer...'))}
             `;
         }
 
@@ -1846,7 +1846,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="mt-2 text-sm text-muted-foreground">${escapeHtml(trans('savingVehicle', 'Saving vehicle...'))}</p>
+                    <p class="mt-2 text-sm text-muted-foreground">${escapeHtml(trans('savingVehicle', 'Gemmer køretøj...'))}</p>
                 </div>
             `;
             document.body.appendChild(overlay);
@@ -1979,7 +1979,7 @@
         const formattedMessages = errorMessages.map(msg => {
             // Replace technical messages with user-friendly ones
             if (msg.includes('failed to upload')) {
-                return trans('imageUploadFailedFriendly', 'One or more images failed to upload. Please check file size (max 20MB) and format (JPEG, PNG, GIF only), then try again.');
+                return trans('imageUploadFailedFriendly', 'Et eller flere billeder kunne ikke uploades. Kontrollér filstørrelsen (maks. 20MB) og formatet (kun JPEG, PNG, GIF), og prøv igen.');
             }
             return msg;
         });
@@ -1993,7 +1993,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-red-800 mb-1">${escapeHtml(trans('imageUploadErrorTitle', 'Image Upload Error'))}</p>
+                    <p class="text-sm font-medium text-red-800 mb-1">${escapeHtml(trans('imageUploadErrorTitle', 'Fejl ved billedupload'))}</p>
                     <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
                         ${uniqueMessages.map(msg => `<li>${escapeHtml(msg)}</li>`).join('')}
                     </ul>
@@ -2074,7 +2074,7 @@
         if (!fuelTypeId || isNaN(parsedFuelTypeId) || parsedFuelTypeId <= 0) {
             // Default to decimal step if fuel type is invalid or not provided
             label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
-            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
+            help.textContent = trans('fuelEfficiencyHelp', 'Brændstofeffektivitet i kilometer per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
@@ -2095,36 +2095,36 @@
             // If user has entered or wants to enter decimals, always use step="any"
             if (hasDecimalValue) {
                 // User has entered decimal - keep step="any"
-                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
-                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
+                label.textContent = trans('electricRangeLabel', 'Elektrisk rækkevidde (km)');
+                help.textContent = trans('electricRangeHelp', 'Angiv den elektriske rækkevidde i kilometer.');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             } else if (!currentValue) {
                 // Field is empty - can use step="1" for electric
-                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
-                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
+                label.textContent = trans('electricRangeLabel', 'Elektrisk rækkevidde (km)');
+                help.textContent = trans('electricRangeHelp', 'Angiv den elektriske rækkevidde i kilometer.');
                 input.placeholder = '0';
                 input.setAttribute('step', '1');
                 input.setAttribute('inputmode', 'numeric');
             } else {
                 // Field has whole number - keep step="any" to allow user to change to decimal
-                label.textContent = trans('electricRangeLabel', 'Electric Range (km)');
-                help.textContent = trans('electricRangeHelp', 'Electric range in kilometers');
+                label.textContent = trans('electricRangeLabel', 'Elektrisk rækkevidde (km)');
+                help.textContent = trans('electricRangeHelp', 'Angiv den elektriske rækkevidde i kilometer.');
                 input.placeholder = '0.00';
                 input.setAttribute('step', 'any');
                 input.setAttribute('inputmode', 'decimal');
             }
         } else if (hybridFuelTypes.includes(parsedFuelTypeId)) {
-            label.textContent = trans('hybridEfficiencyLabel', 'Electric Range / KM/L');
-            help.textContent = trans('hybridEfficiencyHelp', 'Electric range in km (for EV mode) or fuel efficiency in km/l');
+            label.textContent = trans('hybridEfficiencyLabel', 'Elektrisk rækkevidde / KM/L');
+            help.textContent = trans('hybridEfficiencyHelp', 'Elektrisk rækkevidde i km (for EV-tilstand) eller brændstofeffektivitet i km/l');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
         } else {
             // Petrol, Diesel, Benzin, or any other fuel type - always allow decimals
             label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
-            help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
+            help.textContent = trans('fuelEfficiencyHelp', 'Brændstofeffektivitet i kilometer per liter');
             input.placeholder = '0.00';
             input.setAttribute('step', 'any');
             input.setAttribute('inputmode', 'decimal');
@@ -2618,7 +2618,7 @@
                                 const otherDiv = document.createElement('div');
                                 otherDiv.className = 'equipment-type-group';
                                 otherDiv.innerHTML = `
-                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">${escapeHtml(trans('equipmentOther', 'Other'))}</h4>
+                                    <h4 class="text-sm font-semibold uppercase tracking-wide mb-3 text-foreground">${escapeHtml(trans('equipmentOther', 'Andet'))}</h4>
                                     <div class="flex flex-wrap gap-2"></div>
                                 `;
                                 equipmentSection.appendChild(otherDiv);
@@ -2939,7 +2939,7 @@
                         const label = document.getElementById('km_per_liter_label');
                         const help = document.getElementById('km_per_liter_help');
                         if (label) label.textContent = trans('fuelEfficiencyLabel', 'KM/L');
-                        if (help) help.textContent = trans('fuelEfficiencyHelp', 'Fuel efficiency in kilometers per liter');
+                        if (help) help.textContent = trans('fuelEfficiencyHelp', 'Brændstofeffektivitet i kilometer per liter');
                         input.placeholder = '0.00';
                     }
                 }
@@ -3036,15 +3036,15 @@
     // Validate a single file
     function validateFile(file) {
         if (isDuplicateFile(file)) {
-            return { valid: false, error: trans('imageAlreadySelected', 'File ":name" is already selected.', { name: file.name }) };
+            return { valid: false, error: trans('imageAlreadySelected', 'Filen ":name" er allerede valgt.', { name: file.name }) };
         }
         
         if (!imageUploadState.allowedTypes.includes(file.type)) {
-            return { valid: false, error: trans('imageInvalidFormat', 'File ":name" is not a valid image format. Please use JPEG, PNG, or GIF.', { name: file.name }) };
+            return { valid: false, error: trans('imageInvalidFormat', 'Filen ":name" er ikke et gyldigt billedformat. Brug venligst JPEG, PNG eller GIF.', { name: file.name }) };
         }
         
         if (file.size > imageUploadState.maxSize) {
-            return { valid: false, error: trans('imageTooLarge', 'File ":name" is too large. Maximum size is 20MB.', { name: file.name }) };
+            return { valid: false, error: trans('imageTooLarge', 'Filen ":name" er for stor. Maksimal størrelse er 20MB.', { name: file.name }) };
         }
         
         return { valid: true };
@@ -3716,7 +3716,7 @@
 
             btn.disabled = true;
             if (statusEl) {
-                statusEl.textContent = trans('aiSuggestLoading', 'Generating…');
+                statusEl.textContent = trans('aiSuggestLoading', 'Genererer…');
             }
 
             fetch('/api/v1/sell-your-car/ai/generate', {
@@ -3731,7 +3731,7 @@
                 .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
                 .then(function(result) {
                     if (!result.ok || !result.data || !result.data.success) {
-                        throw new Error((result.data && result.data.message) || trans('aiSuggestFailed', 'Could not generate description.'));
+                        throw new Error((result.data && result.data.message) || trans('aiSuggestFailed', 'Kunne ikke generere beskrivelse. Prøv igen senere.'));
                     }
                     descriptionEl.value = result.data.data.text || '';
                     if (statusEl) {
@@ -3740,7 +3740,7 @@
                 })
                 .catch(function(err) {
                     if (statusEl) {
-                        statusEl.textContent = err.message || trans('aiSuggestFailed', 'Could not generate description.');
+                        statusEl.textContent = err.message || trans('aiSuggestFailed', 'Kunne ikke generere beskrivelse. Prøv igen senere.');
                     }
                 })
                 .finally(function() {

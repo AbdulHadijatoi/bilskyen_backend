@@ -63,7 +63,7 @@ class SendDealerLeadSlaAlertsCommand extends Command
                         $mailService->sendMailable(
                             $email,
                             new DealerLeadSlaAlertMail(
-                                dealerName: $dealer->name ?? 'Dealer',
+                                dealerName: $dealer->name ?? __('messages.common.dealer_fallback'),
                                 leads: $overdueLeads->map(fn (Lead $lead) => [
                                     'id' => $lead->id,
                                     'vehicle_title' => $lead->vehicle?->title,

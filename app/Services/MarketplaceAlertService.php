@@ -55,7 +55,7 @@ class MarketplaceAlertService
 
             $vehicleUrl = url('/vehicles/'.$vehicle->slug);
             $newPrice = (float) $latest->new_price;
-            $title = $vehicle->title ?? ('Vehicle #'.$vehicle->id);
+            $title = $vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $vehicle->id]);
 
             try {
                 if ($user->email) {

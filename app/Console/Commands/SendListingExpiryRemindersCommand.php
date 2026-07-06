@@ -40,7 +40,7 @@ class SendListingExpiryRemindersCommand extends Command
             $mailService->sendMailable(
                 $email,
                 new ListingExpiryReminderMail(
-                    vehicleTitle: $vehicle->title ?? ('Vehicle #'.$vehicle->id),
+                    vehicleTitle: $vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $vehicle->id]),
                     daysRemaining: $warningDays,
                     manageUrl: $manageUrl,
                 ),

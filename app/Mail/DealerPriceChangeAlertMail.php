@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesMailLocale;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -10,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 class DealerPriceChangeAlertMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesMailLocale;
 
     /**
      * @param  array<int, array<string, mixed>>  $vehicles
@@ -18,12 +19,14 @@ class DealerPriceChangeAlertMail extends Mailable
     public function __construct(
         public string $dealerName,
         public array $vehicles,
-    ) {}
+    ) {
+        $this->applyMailLocale();
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Stale pricing alert — review your listings',
+            subject: __('messages.mail.dealer_price_change_alert_subject'),
         );
     }
 

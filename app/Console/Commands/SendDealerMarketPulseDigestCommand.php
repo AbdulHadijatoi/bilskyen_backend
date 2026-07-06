@@ -90,7 +90,7 @@ class SendDealerMarketPulseDigestCommand extends Command
                         $mailService->sendMailable(
                             $email,
                             new DealerMarketPulseDigestMail(
-                                dealerName: $dealer->name ?? 'Dealer',
+                                dealerName: $dealer->name ?? __('messages.common.dealer_fallback'),
                                 summaries: $summaries,
                                 attentionSummaries: $attentionSummaries,
                                 portfolio: $portfolio,

@@ -56,7 +56,7 @@ class SendDealerPriceChangeAlertsCommand extends Command
                         $mailService->sendMailable(
                             $email,
                             new DealerPriceChangeAlertMail(
-                                dealerName: $dealer->name ?? 'Dealer',
+                                dealerName: $dealer->name ?? __('messages.common.dealer_fallback'),
                                 vehicles: $vehicles,
                             ),
                             ['mail_type' => 'dealer_price_change_alert', 'dealer_id' => $dealer->id],

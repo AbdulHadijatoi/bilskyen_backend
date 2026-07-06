@@ -92,7 +92,7 @@ class DealerDealQuoteController extends Controller
         $quote = $this->findQuote($dealer->id, $leadId, $id);
 
         if ($quote->status !== 'draft') {
-            return $this->error('Only draft quotes can be sent.', [], 422);
+            return $this->error(__('messages.api.quote_send_draft_only'), [], 422);
         }
 
         $quote = $this->dealQuoteService->markSent($quote);
@@ -107,7 +107,7 @@ class DealerDealQuoteController extends Controller
         $quote = $this->findQuote($dealer->id, $leadId, $id);
 
         if ($quote->status !== 'draft') {
-            return $this->error('Only draft quotes can be deleted.', [], 422);
+            return $this->error(__('messages.api.quote_delete_draft_only'), [], 422);
         }
 
         $quote->delete();

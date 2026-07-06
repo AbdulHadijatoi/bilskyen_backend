@@ -106,7 +106,7 @@ class DealerMarketingCampaignController extends Controller
         $campaign = $this->findCampaign($dealer->id, $id);
 
         if ($campaign->status === 'sent') {
-            return $this->error('Sent campaigns cannot be deleted.', [], 422);
+            return $this->error(__('messages.api.campaign_delete_sent_forbidden'), [], 422);
         }
 
         $campaign->delete();

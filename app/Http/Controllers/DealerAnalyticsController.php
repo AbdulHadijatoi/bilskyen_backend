@@ -648,7 +648,7 @@ class DealerAnalyticsController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return $this->error('Unable to generate PDF export. Please try again or contact support.', [], 500);
+            return $this->error(__('messages.api.pdf_export_failed'), [], 500);
         }
 
         $filename = 'dealer-analytics-'.now()->format('Y-m-d').'.pdf';

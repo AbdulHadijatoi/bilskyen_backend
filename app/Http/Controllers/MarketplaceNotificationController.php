@@ -59,7 +59,7 @@ class MarketplaceNotificationController extends Controller
                 ->update(['read_at' => now()]);
         }
 
-        return $this->success(['message' => 'Notifications marked as read']);
+        return $this->success(['message' => __('messages.api.notifications_marked_read')]);
     }
 
     private function resolveUser(Request $request): ?User

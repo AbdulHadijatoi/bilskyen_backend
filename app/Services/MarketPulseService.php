@@ -33,19 +33,19 @@ class MarketPulseService
                 'enquiry_rate' => $this->compareMetric(
                     $dealer['enquiry_rate'],
                     $platform['enquiry_rate'],
-                    'enquiry conversion',
+                    'enquiry_conversion',
                     true
                 ),
                 'days_on_market' => $this->compareMetric(
                     $dealer['avg_days_on_market'],
                     $platform['avg_days_on_market'],
-                    'days on market',
+                    'days_on_market',
                     false
                 ),
                 'photos_per_listing' => $this->compareMetric(
                     $dealer['avg_photos_per_listing'],
                     $platform['avg_photos_per_listing'],
-                    'photos per listing',
+                    'photos_per_listing',
                     true
                 ),
             ],
@@ -184,8 +184,10 @@ class MarketPulseService
     /**
      * @return array<string, mixed>
      */
-    private function compareMetric(?float $dealerValue, ?float $platformValue, string $label, bool $higherIsBetter): array
+    private function compareMetric(?float $dealerValue, ?float $platformValue, string $metricKey, bool $higherIsBetter): array
     {
+        $label = __('messages.market_pulse.metrics.'.$metricKey);
+
         if ($dealerValue === null || $platformValue === null || $platformValue == 0.0) {
             return [
                 'label' => $label,
@@ -199,16 +201,18 @@ class MarketPulseService
         $diffPercent = round((($dealerValue - $platformValue) / $platformValue) * 100, 1);
         $better = $higherIsBetter ? $diffPercent >= 0 : $diffPercent <= 0;
 
-        $direction = $diffPercent > 0 ? 'above' : ($diffPercent < 0 ? 'below' : 'at');
-        $summary = $diffPercent == 0.0
-            ? "Your {$label} matches the market average."
-            : sprintf(
-                'Your %s is %s%.1f%% %s market average.',
-                $label,
-                $direction === 'at' ? '' : abs($diffPercent),
-                $direction === 'at' ? 'at' : $direction,
-                $direction === 'at' ? '' : 'the'
-            );
+        if ($diffPercent == 0.0) {
+            $summary = __('messages.market_pulse.summary_matches', ['label' => $label]);
+        } else {
+            $direction = $diffPercent > 0
+                ? __('messages.market_pulse.direction_above')
+                : __('messages.market_pulse.direction_below');
+            $summary = __('messages.market_pulse.summary_comparison', [
+                'label' => $label,
+                'percent' => abs($diffPercent),
+                'direction' => $direction,
+            ]);
+        }
 
         return [
             'label' => $label,
@@ -216,7 +220,7 @@ class MarketPulseService
             'platform_value' => $platformValue,
             'diff_percent' => $diffPercent,
             'better_than_market' => $better,
-            'summary' => trim(str_replace('  ', ' ', $summary)),
+            'summary' => $summary,
         ];
     }
 }

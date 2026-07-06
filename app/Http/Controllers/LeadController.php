@@ -363,8 +363,8 @@ class LeadController extends Controller
                     $this->mailService->sendMailable(
                         $buyerEmail,
                         new LeadBuyerMessageMail(
-                            vehicleTitle: $lead->vehicle->title ?? ('Vehicle #'.$lead->vehicle_id),
-                            dealerName: $dealer->owner?->name ?? $dealer->name ?? 'Dealer',
+                            vehicleTitle: $lead->vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $lead->vehicle_id]),
+                            dealerName: $dealer->owner?->name ?? $dealer->name ?? __('messages.common.dealer_fallback'),
                             messageBody: $request->message,
                         ),
                         ['mail_type' => 'lead_buyer_message', 'lead_id' => $lead->id],

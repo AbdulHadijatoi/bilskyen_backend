@@ -39,7 +39,7 @@ class SellerController extends Controller
         
         // Security: Verify token matches authenticated user
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
-            abort(403, 'Unauthorized access');
+            abort(403, __('messages.api.unauthorized_access'));
         }
 
         // Get all vehicles for this seller (eager-load relations used by Blade + Vehicle accessors)
@@ -114,7 +114,7 @@ class SellerController extends Controller
         $authenticatedUser = $this->authService->getAuthenticatedUser($request);
         
         if (!$user || !$authenticatedUser || $user->id !== $authenticatedUser->id) {
-            abort(403, 'Unauthorized access');
+            abort(403, __('messages.api.unauthorized_access'));
         }
 
         // Get vehicle and verify ownership - load all necessary relationships

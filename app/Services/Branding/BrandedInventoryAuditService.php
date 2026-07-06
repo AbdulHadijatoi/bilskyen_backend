@@ -10,7 +10,7 @@ class BrandedInventoryAuditService
     {
         $slug = trim((string) $dealer->slug);
         if ($slug === '') {
-            throw new \RuntimeException('Dealer slug is required for branded inventory audit links.');
+            throw new \RuntimeException(__('messages.errors.dealer_slug_required_audit'));
         }
 
         return url('/inventory-audit/'.$slug);

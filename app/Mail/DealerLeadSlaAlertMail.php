@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesMailLocale;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -10,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 class DealerLeadSlaAlertMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesMailLocale;
 
     /**
      * @param  array<int, array<string, mixed>>  $leads
@@ -19,12 +20,14 @@ class DealerLeadSlaAlertMail extends Mailable
         public string $dealerName,
         public array $leads,
         public int $slaHours = 24,
-    ) {}
+    ) {
+        $this->applyMailLocale();
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Lead SLA alert — contacts overdue',
+            subject: __('messages.mail.dealer_lead_sla_alert_subject'),
         );
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesMailLocale;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -10,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 class DealerMarketPulseDigestMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesMailLocale;
 
     /**
      * @param  array<int, string>  $summaries
@@ -23,12 +24,14 @@ class DealerMarketPulseDigestMail extends Mailable
         public array $attentionSummaries = [],
         public array $portfolio = [],
         public ?string $aiBriefing = null,
-    ) {}
+    ) {
+        $this->applyMailLocale();
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your weekly Bilskyen dealer briefing',
+            subject: __('messages.mail.dealer_market_pulse_digest_subject'),
         );
     }
 

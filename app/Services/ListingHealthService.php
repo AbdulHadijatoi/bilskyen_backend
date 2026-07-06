@@ -41,34 +41,34 @@ class ListingHealthService
         $minPhotos = 5;
         if ($imageCount < $minPhotos) {
             $needed = $minPhotos - $imageCount;
-            $issues[] = $this->issue('add_photos', "Add {$needed} more photo(s)", 'high');
+            $issues[] = $this->issue('add_photos', 'high', ['count' => $needed]);
             $score -= min(25, $needed * 5);
         } elseif ($maxImages > 0 && $imageCount < (int) floor($maxImages * 0.5)) {
-            $issues[] = $this->issue('more_photos', 'Add more photos to stand out', 'medium');
+            $issues[] = $this->issue('more_photos', 'medium');
             $score -= 10;
         }
 
         $descriptionLength = mb_strlen(trim((string) ($vehicle->description ?? '')));
         if ($descriptionLength < 80) {
-            $issues[] = $this->issue('improve_description', 'Write a fuller description', 'medium');
+            $issues[] = $this->issue('improve_description', 'medium');
             $score -= 15;
         }
 
         $highlightsLength = mb_strlen(trim((string) ($vehicle->highlights ?? '')));
         if ($highlightsLength < 20) {
-            $issues[] = $this->issue('add_highlights', 'Add key highlights to attract buyers', 'medium');
+            $issues[] = $this->issue('add_highlights', 'medium');
             $score -= 8;
         }
 
         if (empty($vehicle->video_url)) {
-            $issues[] = $this->issue('add_video', 'Add a video tour to boost engagement', 'low');
+            $issues[] = $this->issue('add_video', 'low');
             $score -= 5;
         }
 
         $metaTitleLength = mb_strlen(trim((string) ($vehicle->meta_title ?? '')));
         $metaDescLength = mb_strlen(trim((string) ($vehicle->meta_description ?? '')));
         if ($metaTitleLength < 10 || $metaDescLength < 40) {
-            $issues[] = $this->issue('improve_seo', 'Complete SEO title and description', 'low');
+            $issues[] = $this->issue('improve_seo', 'low');
             $score -= 5;
         }
 
@@ -79,8 +79,8 @@ class ListingHealthService
         if ($daysOnMarket !== null && $daysOnMarket > 45) {
             $issues[] = $this->issue(
                 'stale_listing',
-                "Listed for {$daysOnMarket} days — consider refreshing price or photos",
-                'medium'
+                'medium',
+                ['days' => $daysOnMarket]
             );
             $score -= 10;
         }
@@ -88,11 +88,9 @@ class ListingHealthService
         if ($vehicle->expires_at && Carbon::parse($vehicle->expires_at)->lte(now()->addDays(14))) {
             $daysLeft = max(0, (int) now()->diffInDays(Carbon::parse($vehicle->expires_at), false));
             $issues[] = $this->issue(
-                'expiring_soon',
-                $daysLeft === 0
-                    ? 'Listing expires today — renew to stay visible'
-                    : "Listing expires in {$daysLeft} day(s)",
-                'high'
+                $daysLeft === 0 ? 'expiring_soon_today' : 'expiring_soon_days',
+                'high',
+                $daysLeft === 0 ? [] : ['days' => $daysLeft]
             );
             $score -= 15;
         }
@@ -101,8 +99,8 @@ class ListingHealthService
         if ($daysSincePriceChange !== null && $daysSincePriceChange >= 14 && $daysOnMarket !== null && $daysOnMarket >= 14) {
             $issues[] = $this->issue(
                 'stale_price',
-                "No price change in {$daysSincePriceChange} days — market may have moved",
-                'medium'
+                'medium',
+                ['days' => $daysSincePriceChange]
             );
             $score -= 8;
         }
@@ -113,19 +111,15 @@ class ListingHealthService
         $enquiries = $this->enquiryCount($vehicle->id);
 
         if ($views >= 20 && $enquiries === 0) {
-            $issues[] = $this->issue(
-                'low_conversion',
-                'Many views but no enquiries — review price and photos',
-                'high'
-            );
+            $issues[] = $this->issue('low_conversion', 'high');
             $score -= 15;
         }
 
         if ($views30 >= 10 && $enquiries30 === 0) {
             $issues[] = $this->issue(
                 'low_conversion_recent',
-                "Likely losing enquiries — {$views30} views, 0 leads in 30 days",
-                'high'
+                'high',
+                ['views' => $views30]
             );
             $score -= 10;
         }
@@ -134,14 +128,14 @@ class ListingHealthService
         if ($pricing && $pricing['label'] === 'above_market') {
             $issues[] = $this->issue(
                 'price_above_market',
-                sprintf('Price is %.1f%% above market median', $pricing['diff_percent']),
-                'high'
+                'high',
+                ['percent' => $pricing['diff_percent']]
             );
             $score -= 20;
         }
 
         if (empty($vehicle->view_3d_url)) {
-            $issues[] = $this->issue('add_3d_view', 'Add a 3D view for premium presentation', 'low');
+            $issues[] = $this->issue('add_3d_view', 'low');
             $score -= 5;
         }
 
@@ -150,7 +144,7 @@ class ListingHealthService
             : $vehicle->equipment()->count();
 
         if ($equipmentCount < 3) {
-            $issues[] = $this->issue('add_equipment', 'Add equipment details buyers filter on', 'medium');
+            $issues[] = $this->issue('add_equipment', 'medium');
             $score -= 10;
         }
 
@@ -213,13 +207,13 @@ class ListingHealthService
         $imageCount = (int) ($snapshot['image_count'] ?? 0);
         if ($imageCount < 5) {
             $needed = 5 - $imageCount;
-            $issues[] = $this->issue('add_photos', "Add {$needed} more photo(s)", 'high');
+            $issues[] = $this->issue('add_photos', 'high', ['count' => $needed]);
             $score -= min(25, $needed * 5);
         }
 
         $descriptionLength = mb_strlen(trim((string) ($snapshot['description'] ?? '')));
         if ($descriptionLength < 80) {
-            $issues[] = $this->issue('improve_description', 'Write a fuller description', 'medium');
+            $issues[] = $this->issue('improve_description', 'medium');
             $score -= 15;
         }
 
@@ -230,8 +224,8 @@ class ListingHealthService
             if ($diffPercent >= 5) {
                 $issues[] = $this->issue(
                     'price_above_market',
-                    sprintf('Price is %.1f%% above market median', $diffPercent),
-                    'high'
+                    'high',
+                    ['percent' => $diffPercent]
                 );
                 $score -= 20;
             }
@@ -239,7 +233,7 @@ class ListingHealthService
 
         $equipmentCount = (int) ($snapshot['equipment_count'] ?? 0);
         if ($equipmentCount < 3) {
-            $issues[] = $this->issue('add_equipment', 'Add equipment details buyers filter on', 'medium');
+            $issues[] = $this->issue('add_equipment', 'medium');
             $score -= 10;
         }
 
@@ -438,10 +432,14 @@ class ListingHealthService
     {
         return collect($this->vehiclesNeedingAttention($dealerId, $limit))
             ->map(function (array $item) {
-                $title = $item['title'] ?? ('Vehicle #'.$item['vehicle_id']);
-                $issue = $item['issues'][0]['message'] ?? 'Needs improvement';
+                $title = $item['title'] ?? __('messages.mail.vehicle_fallback', ['id' => $item['vehicle_id']]);
+                $issue = $item['issues'][0]['message'] ?? __('messages.listing_health.needs_improvement');
 
-                return "{$title}: {$issue} (score {$item['score']})";
+                return __('messages.listing_health.attention_summary', [
+                    'title' => $title,
+                    'issue' => $issue,
+                    'score' => $item['score'],
+                ]);
             })
             ->values()
             ->all();
@@ -499,9 +497,9 @@ class ListingHealthService
 
             $category = $isExpiring ? 'expiring' : 'incomplete';
             $message = match (true) {
-                $isExpiring => 'Listing expiring soon — renew to stay visible',
-                $vehicle->list_status_id === VehicleListStatus::PENDING_REVIEW => 'Pending review — complete and publish',
-                default => 'Draft listing — finish and publish',
+                $isExpiring => __('messages.listing_health.operational.expiring_soon'),
+                $vehicle->list_status_id === VehicleListStatus::PENDING_REVIEW => __('messages.listing_health.operational.pending_review'),
+                default => __('messages.listing_health.operational.draft_listing'),
             };
 
             return [
@@ -520,7 +518,7 @@ class ListingHealthService
                     'actions' => $this->filterActionsForDealer([[
                         'type' => 'navigate',
                         'target' => 'vehicle_edit',
-                        'label' => 'Complete listing',
+                        'label' => __('messages.listing_health.actions.complete_listing'),
                     ]], $dealer),
                 ]],
                 'metrics' => [],
@@ -652,19 +650,17 @@ class ListingHealthService
     {
         $metrics = $health['metrics'] ?? [];
         if (($metrics['views_30d'] ?? 0) >= 10 && ($metrics['enquiries_30d'] ?? 0) === 0) {
-            return sprintf(
-                'Likely losing enquiries — %d views, 0 leads in 30 days',
-                $metrics['views_30d']
-            );
+            return __('messages.listing_health.impact.losing_enquiries', [
+                'views' => $metrics['views_30d'],
+            ]);
         }
 
         foreach ($health['issues'] as $issue) {
             if ($issue['key'] === 'price_above_market' && ! empty($health['pricing']['cohort_count'])) {
-                return sprintf(
-                    'Priced %.1f%% above %d similar listings',
-                    $health['pricing']['diff_percent'],
-                    $health['pricing']['cohort_count']
-                );
+                return __('messages.listing_health.impact.priced_above', [
+                    'percent' => $health['pricing']['diff_percent'],
+                    'count' => $health['pricing']['cohort_count'],
+                ]);
             }
         }
 
@@ -675,19 +671,17 @@ class ListingHealthService
     {
         $metrics = $row->metrics ?? [];
         if (($metrics['views_30d'] ?? 0) >= 10 && ($metrics['enquiries_30d'] ?? 0) === 0) {
-            return sprintf(
-                'Likely losing enquiries — %d views, 0 leads in 30 days',
-                $metrics['views_30d']
-            );
+            return __('messages.listing_health.impact.losing_enquiries', [
+                'views' => $metrics['views_30d'],
+            ]);
         }
 
         $pricing = $row->pricing ?? [];
         if (! empty($pricing['diff_percent']) && ($pricing['label'] ?? '') === 'above_market') {
-            return sprintf(
-                'Priced %.1f%% above %d similar listings',
-                $pricing['diff_percent'],
-                $pricing['cohort_count'] ?? 0
-            );
+            return __('messages.listing_health.impact.priced_above', [
+                'percent' => $pricing['diff_percent'],
+                'count' => $pricing['cohort_count'] ?? 0,
+            ]);
         }
 
         return $row->issues[0]['message'] ?? null;
@@ -703,43 +697,43 @@ class ListingHealthService
             'improve_description', 'low_conversion', 'low_conversion_recent' => [[
                 'type' => 'ai',
                 'task' => 'vehicle_description',
-                'label' => 'Generate description',
+                'label' => __('messages.listing_health.actions.generate_description'),
             ]],
             'add_highlights' => [[
                 'type' => 'ai',
                 'task' => 'vehicle_highlights',
-                'label' => 'Generate highlights',
+                'label' => __('messages.listing_health.actions.generate_highlights'),
             ]],
             'improve_seo' => [[
                 'type' => 'ai',
                 'task' => 'seo_meta',
-                'label' => 'Generate SEO fields',
+                'label' => __('messages.listing_health.actions.generate_seo'),
             ]],
             'price_above_market', 'stale_price', 'stale_listing' => $this->priceIssueActions($health, $dealer),
             'add_photos', 'more_photos' => [[
                 'type' => 'navigate',
                 'target' => 'vehicle_photos',
-                'label' => 'Upload photos',
+                'label' => __('messages.listing_health.actions.upload_photos'),
             ]],
             'add_equipment', 'equipment_gap' => [[
                 'type' => 'navigate',
                 'target' => 'vehicle_equipment',
-                'label' => 'Add equipment',
+                'label' => __('messages.listing_health.actions.add_equipment'),
             ]],
             'add_video', 'add_3d_view' => [[
                 'type' => 'navigate',
                 'target' => 'vehicle_media',
-                'label' => 'Add media',
+                'label' => __('messages.listing_health.actions.add_media'),
             ]],
-            'expiring_soon' => [[
+            'expiring_soon', 'expiring_soon_today', 'expiring_soon_days' => [[
                 'type' => 'navigate',
                 'target' => 'vehicle_edit',
-                'label' => 'Renew listing',
+                'label' => __('messages.listing_health.actions.renew_listing'),
             ]],
             default => [[
                 'type' => 'navigate',
                 'target' => 'vehicle_edit',
-                'label' => 'Edit listing',
+                'label' => __('messages.listing_health.actions.edit_listing'),
             ]],
         };
     }
@@ -768,9 +762,9 @@ class ListingHealthService
         $medianEquipment = (int) floor($cohortEquipmentCounts->median());
         if ($medianEquipment >= 5 && $equipmentCount < (int) floor($medianEquipment * 0.6)) {
             $issues[] = $this->issue(
-                'equipment_gap',
-                "Similar listings include ~{$medianEquipment} equipment items — you have {$equipmentCount}",
-                'medium'
+                'equipment_gap_count',
+                'medium',
+                ['median' => $medianEquipment, 'count' => $equipmentCount]
             );
         }
 
@@ -795,9 +789,9 @@ class ListingHealthService
         if ($missing->isNotEmpty()) {
             $names = $missing->pluck('name')->implode(', ');
             $issues[] = $this->issue(
-                'equipment_gap',
-                "Competitors often list: {$names}",
-                'high'
+                'equipment_gap_competitors',
+                'high',
+                ['names' => $names]
             );
         }
 
@@ -923,11 +917,11 @@ class ListingHealthService
     /**
      * @return array{key: string, message: string, severity: string}
      */
-    private function issue(string $key, string $message, string $severity): array
+    private function issue(string $key, string $severity, array $replace = []): array
     {
         return [
             'key' => $key,
-            'message' => $message,
+            'message' => __('messages.listing_health.issues.'.$key, $replace),
             'severity' => $severity,
         ];
     }
@@ -998,7 +992,7 @@ class ListingHealthService
         $actions = [[
             'type' => 'navigate',
             'target' => 'vehicle_price',
-            'label' => 'Adjust price',
+            'label' => __('messages.listing_health.actions.adjust_price'),
             'suggested_min' => $health['pricing']['suggested_min'] ?? null,
             'suggested_max' => $health['pricing']['suggested_max'] ?? null,
         ]];
@@ -1007,7 +1001,7 @@ class ListingHealthService
         if ($medianPrice && $dealer && $this->dealerHasFeature($dealer, 'listing_health_price_apply', false)) {
             $actions[] = [
                 'type' => 'apply_price',
-                'label' => 'Apply suggested price',
+                'label' => __('messages.listing_health.actions.apply_suggested_price'),
                 'suggested_price' => (int) round((float) $medianPrice),
             ];
         }

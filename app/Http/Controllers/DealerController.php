@@ -45,7 +45,7 @@ class DealerController extends Controller
         $dealer = Dealer::where('slug', $slug)->first();
         
         if (!$dealer) {
-            abort(404, 'Dealer not found');
+            abort(404, __('messages.api.dealer_not_found'));
         }
 
         // Load dealer relationships

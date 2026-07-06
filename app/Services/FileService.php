@@ -210,7 +210,7 @@ class FileService
         $filePath = Storage::disk($disk)->path($mainRelativePath);
 
         if (! file_exists($filePath)) {
-            throw new \RuntimeException('Main image not found for thumbnail generation.');
+            throw new \RuntimeException(__('messages.errors.main_image_not_found'));
         }
 
         $maxLongEdge = (int) ($profile['thumbnail_max_long_edge'] ?? 480);
@@ -306,11 +306,11 @@ class FileService
         $maxSize = 20 * 1024 * 1024; // 20MB
 
         if (! in_array($file->getMimeType(), $allowedTypes)) {
-            throw new \Exception('Invalid file type. Allowed types: '.implode(', ', $allowedTypes));
+            throw new \Exception(__('messages.errors.invalid_file_type', ['types' => implode(', ', $allowedTypes)]));
         }
 
         if ($file->getSize() > $maxSize) {
-            throw new \Exception('File size exceeds maximum allowed size of 20MB');
+            throw new \Exception(__('messages.errors.file_size_exceeded'));
         }
     }
 
@@ -320,7 +320,7 @@ class FileService
     public function validateFiles(array $files): void
     {
         if (count($files) > 20) {
-            throw new \Exception('Maximum 20 files allowed');
+            throw new \Exception(__('messages.errors.max_files_exceeded'));
         }
 
         foreach ($files as $file) {
@@ -519,7 +519,7 @@ class FileService
         $filePath = $this->retrieveFile($fileUrl, $disk);
 
         if (! $filePath || ! $this->isImageUrl($fileUrl)) {
-            throw new \Exception('File not found or is not an image');
+            throw new \Exception(__('messages.errors.file_not_image'));
         }
 
         try {
@@ -547,7 +547,7 @@ class FileService
             // Return thumbnail URL
             return Storage::disk($disk)->url($thumbnailPath);
         } catch (\Exception $e) {
-            throw new \Exception('Failed to create thumbnail: '.$e->getMessage());
+            throw new \Exception(__('messages.errors.thumbnail_failed', ['message' => $e->getMessage()]));
         }
     }
 

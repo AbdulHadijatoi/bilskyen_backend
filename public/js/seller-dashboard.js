@@ -49,14 +49,14 @@
         if (!drawerContent || !drawerSubtitle) {
             return;
         }
-        drawerSubtitle.textContent = t.loadingInquiries || 'Loading inquiries...';
+        drawerSubtitle.textContent = t.loadingInquiries || 'Indlæser henvendelser...';
         drawerContent.innerHTML = `
             <div class="panel-table-empty">
                 <svg class="animate-spin" style="width:2rem;height:2rem;color:var(--primary)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p>${t.loadingInquiries || 'Loading inquiries...'}</p>
+                <p>${t.loadingInquiries || 'Indlæser henvendelser...'}</p>
             </div>
         `;
     }
@@ -76,16 +76,16 @@
         }
 
         const countLabel = inquiries.length === 1
-            ? (t.inquiryCount || ':count inquiry').replace(':count', inquiries.length)
-            : (t.inquiriesCount || ':count inquiries').replace(':count', inquiries.length);
+            ? (t.inquiryCount || ':count henvendelse').replace(':count', inquiries.length)
+            : (t.inquiriesCount || ':count henvendelser').replace(':count', inquiries.length);
 
-        drawerSubtitle.textContent = `${inquiries.length} ${countLabel} ${t.forThisVehicle || 'for this vehicle'}`;
+        drawerSubtitle.textContent = `${inquiries.length} ${countLabel} ${t.forThisVehicle || 'til dette køretøj'}`;
 
         if (inquiries.length === 0) {
             drawerContent.innerHTML = `
                 <div class="panel-table-empty">
-                    <p class="panel-table-empty__title">${t.noInquiriesYet || 'No inquiries yet'}</p>
-                    <p>${t.noInquiriesDescription || 'This vehicle has not received any inquiries.'}</p>
+                    <p class="panel-table-empty__title">${t.noInquiriesYet || 'Ingen henvendelser endnu'}</p>
+                    <p>${t.noInquiriesDescription || 'Dette køretøj har ikke modtaget nogen henvendelser.'}</p>
                 </div>
             `;
             return;
@@ -99,21 +99,21 @@
                 day: 'numeric',
                 year: 'numeric',
             });
-            const name = escapeHtml(enquiry.name || t.anonymous || 'Anonymous');
+            const name = escapeHtml(enquiry.name || t.anonymous || 'Anonym');
             const email = enquiry.email ? escapeHtml(enquiry.email) : '';
             const phone = enquiry.phone ? escapeHtml(enquiry.phone) : '';
             const subject = enquiry.subject ? `<p style="font-weight:600;margin:0 0 0.5rem;font-size:0.8125rem">${escapeHtml(enquiry.subject)}</p>` : '';
-            const message = escapeHtml(enquiry.message || t.noMessageProvided || 'No message provided');
+            const message = escapeHtml(enquiry.message || t.noMessageProvided || 'Ingen besked angivet');
             const typeBadge = enquiry.type
                 ? `<span class="panel-status-chip panel-status-chip--info" style="margin-top:0.375rem">${escapeHtml(enquiry.type)}</span>`
                 : '';
 
             const contactActions = [];
             if (enquiry.email) {
-                contactActions.push(`<a href="mailto:${encodeURIComponent(enquiry.email)}" class="panel-btn panel-btn--outline panel-btn--sm">${t.sendEmail || 'Send email'}</a>`);
+                contactActions.push(`<a href="mailto:${encodeURIComponent(enquiry.email)}" class="panel-btn panel-btn--outline panel-btn--sm">${t.sendEmail || 'Send e-mail'}</a>`);
             }
             if (enquiry.phone) {
-                contactActions.push(`<a href="tel:${encodeURIComponent(enquiry.phone)}" class="panel-btn panel-btn--outline panel-btn--sm">${t.call || 'Call'}</a>`);
+                contactActions.push(`<a href="tel:${encodeURIComponent(enquiry.phone)}" class="panel-btn panel-btn--outline panel-btn--sm">${t.call || 'Ring op'}</a>`);
             }
 
             html += `
@@ -159,26 +159,26 @@
                 } else {
                     drawerContent.innerHTML = `
                         <div class="panel-table-empty">
-                            <p class="panel-table-empty__title" style="color:var(--destructive)">${t.failedToLoadInquiries || 'Failed to load inquiries.'}</p>
+                            <p class="panel-table-empty__title" style="color:var(--destructive)">${t.failedToLoadInquiries || 'Kunne ikke indlæse henvendelser. Prøv venligst igen.'}</p>
                         </div>
                     `;
-                    drawerSubtitle.textContent = t.errorLoadingInquiries || 'Error loading inquiries';
+                    drawerSubtitle.textContent = t.errorLoadingInquiries || 'Fejl ved indlæsning af henvendelser';
                 }
             })
             .catch(() => {
                 drawerContent.innerHTML = `
                     <div class="panel-table-empty">
-                        <p class="panel-table-empty__title" style="color:var(--destructive)">${t.errorOccurredLoading || 'An error occurred while loading inquiries.'}</p>
+                        <p class="panel-table-empty__title" style="color:var(--destructive)">${t.errorOccurredLoading || 'Der opstod en fejl under indlæsning af henvendelser. Prøv venligst igen.'}</p>
                     </div>
                 `;
-                drawerSubtitle.textContent = t.errorLoadingInquiries || 'Error loading inquiries';
+                drawerSubtitle.textContent = t.errorLoadingInquiries || 'Fejl ved indlæsning af henvendelser';
             });
     };
 
     window.closeInquiriesDrawer = closeDrawer;
 
     window.unpublishVehicle = function (vehicleId) {
-        if (!confirm(t.confirmUnpublish || 'Are you sure you want to unpublish this vehicle?')) {
+        if (!confirm(t.confirmUnpublish || 'Er du sikker på, at du vil afpublicere dette køretøj? Det vil blive fjernet fra offentlige annoncer.')) {
             return;
         }
 
@@ -195,14 +195,14 @@
             .then((response) => response.json())
             .then((data) => {
                 if (data.status === 'success') {
-                    showSnackbar(t.vehicleUnpublishedSuccessfully || 'Vehicle unpublished successfully', 'success');
+                    showSnackbar(t.vehicleUnpublishedSuccessfully || 'Køretøj afpubliceret med succes', 'success');
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    showSnackbar(data.message || t.failedToUnpublish || 'Failed to unpublish vehicle', 'error');
+                    showSnackbar(data.message || t.failedToUnpublish || 'Kunne ikke afpublicere køretøj', 'error');
                 }
             })
             .catch(() => {
-                showSnackbar(t.genericError || 'An error occurred', 'error');
+                showSnackbar(t.genericError || 'Der opstod en fejl. Prøv venligst igen.', 'error');
             });
     };
 
@@ -221,19 +221,19 @@
             .then((response) => response.json())
             .then((data) => {
                 if (data.status === 'success') {
-                    showSnackbar(t.vehicleStatusUpdated || 'Vehicle status updated successfully', 'success');
+                    showSnackbar(t.vehicleStatusUpdated || 'Køretøjsstatus opdateret med succes', 'success');
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    showSnackbar(data.message || t.failedToUpdateStatus || 'Failed to update vehicle status', 'error');
+                    showSnackbar(data.message || t.failedToUpdateStatus || 'Kunne ikke opdatere køretøjsstatus', 'error');
                 }
             })
             .catch(() => {
-                showSnackbar(t.genericError || 'An error occurred', 'error');
+                showSnackbar(t.genericError || 'Der opstod en fejl. Prøv venligst igen.', 'error');
             });
     };
 
     window.deleteVehicle = function (vehicleId) {
-        if (!confirm(t.confirmDelete || 'Are you sure you want to delete this vehicle?')) {
+        if (!confirm(t.confirmDelete || 'Er du sikker på, at du vil slette dette køretøj? Denne handling kan ikke fortrydes.')) {
             return;
         }
 
@@ -249,14 +249,14 @@
             .then((response) => response.json())
             .then((data) => {
                 if (data.status === 'success') {
-                    showSnackbar(t.vehicleDeletedSuccessfully || 'Vehicle deleted successfully', 'success');
+                    showSnackbar(t.vehicleDeletedSuccessfully || 'Køretøj slettet med succes', 'success');
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    showSnackbar(data.message || t.failedToDelete || 'Failed to delete vehicle', 'error');
+                    showSnackbar(data.message || t.failedToDelete || 'Kunne ikke slette køretøj', 'error');
                 }
             })
             .catch(() => {
-                showSnackbar(t.genericError || 'An error occurred', 'error');
+                showSnackbar(t.genericError || 'Der opstod en fejl. Prøv venligst igen.', 'error');
             });
     };
 
