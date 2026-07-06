@@ -164,13 +164,13 @@
 </head>
 <body class="antialiased selection:bg-muted selection:text-muted-foreground">
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
-        @include('components.navbar')
+        @include($navComponent ?? 'components.navbar')
     @endif
     <main @if(request()->is('vehicles*') || request()->is('favorites*')) class="bg-muted" @endif>
         @yield('content')
     </main>
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
-        @include('components.footer')
+        @include($footerComponent ?? 'components.footer')
     @endif
     
     <!-- Global Snackbar Notification System -->

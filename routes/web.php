@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\CmsPublicController;
 use App\Http\Controllers\DmrTestController;
+use App\Http\Controllers\DealerMarketingController;
 
 // Sitemap and robots (public, cached)
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
@@ -113,6 +114,21 @@ Route::middleware('auth.web')->group(function () {
 Route::get('/blog', [CmsPublicController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [CmsPublicController::class, 'blogShow'])->name('blog.show');
 Route::get('/lp/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show');
+
+// Dealer marketing pages
+Route::prefix('for-dealers')->name('for-dealers.')->group(function () {
+    Route::get('/', [DealerMarketingController::class, 'dealerLanding'])->name('landing');
+    Route::get('/pricing', [DealerMarketingController::class, 'dealerPricing'])->name('pricing');
+    Route::get('/resources', [DealerMarketingController::class, 'dealerResources'])->name('resources');
+    Route::get('/contact', [DealerMarketingController::class, 'dealerContact'])->name('contact');
+    Route::post('/contact', [DealerMarketingController::class, 'submitDealerContact'])->name('contact.submit');
+});
+
+// Staff marketing pages
+Route::prefix('for-staff')->name('for-staff.')->group(function () {
+    Route::get('/', [DealerMarketingController::class, 'staffLanding'])->name('landing');
+    Route::get('/resources', [DealerMarketingController::class, 'staffResources'])->name('resources');
+});
 
 // About Page
 Route::get('/about', [HomeController::class, 'showAbout'])->name('about');

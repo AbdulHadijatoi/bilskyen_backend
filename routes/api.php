@@ -8,6 +8,7 @@ use App\Http\Controllers\DmrFactVehicleLookupController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\HomePageContentController;
 use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\PublicPlansController;
 use App\Http\Controllers\SellYourCarController;
 use App\Http\Controllers\VehicleFeedController;
 use Illuminate\Http\Request;
@@ -89,6 +90,11 @@ Route::prefix('v1')->group(function () {
     // Privacy & Terms page content (public, cached; same content as Blade views: privacy_body / terms_body)
     Route::get('/privacy-policy', [PageContentController::class, 'getPrivacyContent']);
     Route::get('/terms-of-service', [PageContentController::class, 'getTermsContent']);
+
+    Route::prefix('public')->group(function () {
+        Route::get('/plans', [PublicPlansController::class, 'index']);
+        Route::get('/pricing-faq', [PublicPlansController::class, 'pricingFaq']);
+    });
 
     // Authentication routes
     Route::prefix('auth')->group(function () {

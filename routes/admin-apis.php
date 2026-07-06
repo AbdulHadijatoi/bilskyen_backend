@@ -39,6 +39,7 @@ use App\Http\Controllers\AdminHomePageController;
 use App\Http\Controllers\AdminAboutPageController;
 use App\Http\Controllers\AdminContactPageController;
 use App\Http\Controllers\AdminPrivacyPageController;
+use App\Http\Controllers\AdminPricingPageController;
 use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
@@ -252,6 +253,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/', [AdminTermsPageController::class, 'index']);
         Route::post('/bulk-update', [AdminTermsPageController::class, 'updateBulk']);
         Route::post('/{sectionKey}', [AdminTermsPageController::class, 'update']);
+    });
+
+    // Dealer pricing page content (FAQ, hero, footnote)
+    Route::prefix('pricing-page-content')->group(function () {
+        Route::get('/', [AdminPricingPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminPricingPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminPricingPageController::class, 'update']);
     });
 
     // Login Page Content Management (auth layout sidebar testimonial)

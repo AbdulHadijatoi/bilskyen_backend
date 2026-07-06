@@ -102,6 +102,8 @@
             <div>
                 <h3 class="mb-4 text-sm font-medium text-white">{{ __('messages.pages.footer.pages') }}</h3>
                 <ul class="space-y-2 text-sm">
+                    <li><a href="{{ route('for-dealers.landing') }}" class="text-white transition hover:text-white/80">{{ __('messages.navigation.for_dealers') }}</a></li>
+                    <li><a href="{{ route('for-staff.landing') }}" class="text-white transition hover:text-white/80">{{ __('messages.navigation.for_staff') }}</a></li>
                     <li><a href="/privacy-policy" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
                     <li><a href="/account-deletion" class="text-white transition hover:text-white/80">{{ __('messages.pages.footer.account_deletion') }}</a></li>
@@ -124,6 +126,8 @@
                 © {{ date('Y') }} {{ __('messages.common.site_name') }}. {{ __('messages.pages.footer.all_rights_reserved') }}.
             </p>
             <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
+                <a href="{{ route('for-dealers.landing') }}" class="text-xs text-white transition hover:text-white/80">{{ __('messages.navigation.for_dealers') }}</a>
+                <a href="{{ route('for-staff.landing') }}" class="text-xs text-white transition hover:text-white/80">{{ __('messages.navigation.for_staff') }}</a>
                 <a href="/privacy-policy" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.privacy_policy') }}</a>
                 <a href="/terms-of-service" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.terms_of_service') }}</a>
                 <a href="/account-deletion" class="text-xs text-white transition hover:text-white/80">{{ __('messages.pages.footer.account_deletion') }}</a>
