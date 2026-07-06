@@ -260,6 +260,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-height: 100vh;
     padding: 3rem;
   }
 }
@@ -275,14 +276,22 @@ body {
 }
 
 .site-auth-panel {
+  position: relative;
   display: flex;
+  min-height: 100vh;
   flex-direction: column;
+}
+
+.site-auth-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
   justify-content: center;
-  padding: 6rem 1.5rem 3rem;
+  padding: 2rem 1.5rem 3rem;
 }
 
 @media (min-width: 640px) {
-  .site-auth-panel {
+  .site-auth-main {
     padding-inline: 2.5rem;
   }
 }

@@ -33,26 +33,28 @@
         </aside>
 
         <div class="site-auth-panel">
-            <header class="absolute left-0 right-0 top-0 z-20 border-b border-border bg-card/90 backdrop-blur-md">
+            <header class="shrink-0 border-b border-border bg-card/90 backdrop-blur-md">
                 <div class="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                     <a href="/" class="inline-flex items-center lg:hidden">
                         <img src="/images/logo.png" alt="{{ __('messages.layouts.logo_alt') }}" class="h-7 w-auto">
                     </a>
-                    <nav class="hidden items-center gap-6 text-sm font-medium md:flex">
+                    <nav class="hidden items-center gap-6 text-sm font-medium md:flex md:ml-auto">
                         <a href="/vehicles" class="site-nav-link">{{ __('messages.navigation.vehicles') }}</a>
                         <a href="/about" class="site-nav-link">{{ __('messages.navigation.about_us') }}</a>
                         <a href="/contact" class="site-nav-link">{{ __('messages.navigation.contact') }}</a>
                     </nav>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 md:ml-4">
                         @include('components.language-switcher')
                         @include('components.user-auth-status')
                     </div>
                 </div>
             </header>
 
-            <div class="site-auth-card">
-                @yield('content')
-            </div>
+            <main class="site-auth-main">
+                <div class="site-auth-card">
+                    @yield('content')
+                </div>
+            </main>
         </div>
     </div>
 </body>
