@@ -54,14 +54,14 @@ class SpreadsheetImportParser
     {
         $contents = file_get_contents($filePath);
         if ($contents === false) {
-            throw new \RuntimeException('Could not open CSV file');
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
         $contents = $this->stripUtf8Bom($contents);
 
         $handle = fopen('php://memory', 'r+');
         if ($handle === false) {
-            throw new \RuntimeException('Could not open CSV file');
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
         fwrite($handle, $contents);
@@ -71,7 +71,7 @@ class SpreadsheetImportParser
         if ($firstLine === false) {
             fclose($handle);
 
-            throw new \RuntimeException('CSV file is empty or invalid');
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
         $delimiter = $this->detectCsvDelimiter($firstLine);
@@ -81,7 +81,7 @@ class SpreadsheetImportParser
         if ($headers === false) {
             fclose($handle);
 
-            throw new \RuntimeException('CSV file is empty or invalid');
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
         }
 
         $headers = array_map(fn ($header) => $this->stripUtf8Bom((string) $header), $headers);

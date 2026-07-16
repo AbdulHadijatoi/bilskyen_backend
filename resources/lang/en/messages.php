@@ -1568,7 +1568,7 @@ return [
         'vehicle_import_too_many_rows' => 'Import file exceeds the maximum of :max rows.',
         'vehicle_import_failed' => 'Vehicle import failed. Please try again or contact support.',
         'vehicle_import_file_unreadable' => 'The uploaded file could not be read. Please try again.',
-        'vehicle_import_queued' => 'Your import has been queued. You will receive an email when it completes.',
+        'vehicle_import_queued' => 'Your import has been queued. You will receive an email when it completes. You can close this page anytime.',
         'vehicle_import_already_running' => 'An import is already in progress for your dealership. Please wait for it to finish.',
         'vehicle_import_batch_not_found' => 'Import batch not found.',
         'vehicle_import_too_many_images' => 'A row may include at most :max image URLs.',

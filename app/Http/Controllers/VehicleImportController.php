@@ -169,6 +169,8 @@ class VehicleImportController extends Controller
             );
         } catch (\InvalidArgumentException $e) {
             return $this->error($e->getMessage(), [], 422);
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), [], 422);
         } catch (\Throwable $e) {
             Log::error('Vehicle bulk import failed', [
                 'dealer_id' => $dealer->id,

@@ -1535,7 +1535,7 @@ return [
         'vehicle_import_too_many_rows' => 'Importfilen overstiger maksimum på :max rækker.',
         'vehicle_import_failed' => 'Køretøjsimport mislykkedes. Prøv igen eller kontakt support.',
         'vehicle_import_file_unreadable' => 'Den uploadede fil kunne ikke læses. Prøv igen.',
-        'vehicle_import_queued' => 'Din import er sat i kø. Du modtager en e-mail, når den er færdig.',
+        'vehicle_import_queued' => 'Din import er sat i kø. Du modtager en e-mail, når den er færdig. Du kan lukke siden når som helst.',
         'vehicle_import_already_running' => 'En import kører allerede for din forhandler. Vent til den er færdig.',
         'vehicle_import_batch_not_found' => 'Importbatch blev ikke fundet.',
         'vehicle_import_too_many_images' => 'En række må højst indeholde :max billed-URL\'er.',

@@ -116,7 +116,8 @@ class ProcessVehicleImportBatchJob implements ShouldQueue
                 );
             }
 
-            throw $e;
+            // Do not rethrow — batch is already marked failed and the user notified.
+            // Rethrowing would trigger a useless retry (status is no longer pending).
         } finally {
             if (Storage::disk('local')->exists($batch->file_path)) {
                 Storage::disk('local')->delete($batch->file_path);
