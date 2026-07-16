@@ -20,6 +20,11 @@
         }, text);
     }
 
+    function formatListingTitle(title) {
+        if (!title) return '';
+        return String(title).toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    }
+
     /** Fixed option placeholders for sell-your-car selects (not from server copy). */
     var SELL_YC_SELECT_PH = {
         manual_brand_id: trans('selectBrand', 'Vælg mærke'),
@@ -441,22 +446,14 @@
 
                         let titleText = vehicleData.title;
                         if (!titleText) {
-                            const y = vehicleData.model_year_effective != null
-                                ? String(vehicleData.model_year_effective)
-                                : (vehicleData.model_year != null ? String(vehicleData.model_year) : '');
                             const b = vehicleData.brand && typeof vehicleData.brand === 'object' ? vehicleData.brand.name : vehicleData.brand;
                             const m = vehicleData.model && typeof vehicleData.model === 'object' ? vehicleData.model.name : vehicleData.model;
-                            const parts = [b, m, y].filter(function(p) { return p; });
-                            titleText = parts.join(' ');
+                            titleText = [b, m].filter(function(p) { return p; }).join(' ');
                         }
                         if (titleText) {
-                            const titleDisplay = document.getElementById('title-display');
                             const titleInput = document.getElementById('title');
-                            if (titleDisplay) {
-                                titleDisplay.textContent = titleText;
-                            }
                             if (titleInput) {
-                                titleInput.value = titleText;
+                                titleInput.value = formatListingTitle(titleText);
                             }
                         }
 
@@ -558,7 +555,6 @@
         const modelIdHidden = document.getElementById('model_id');
         const modelYearIdHidden = document.getElementById('model_year');
         const fuelTypeIdHidden = document.getElementById('fuel_type_id');
-        const titleDisplay = document.getElementById('title-display');
         const titleInput = document.getElementById('title');
         const manualSearchLimit = 10;
         const manualModelsLimit = 500;
@@ -924,7 +920,6 @@
             if (manualModelYear) manualModelYear.value = '';
             if (manualFuelType) manualFuelType.value = '';
             syncManualToHidden();
-            if (titleDisplay) titleDisplay.textContent = '';
             if (titleInput) titleInput.value = '';
             if (variantSelect) {
                 variantSelect.disabled = true;
@@ -962,16 +957,11 @@
         }
 
         function updateTitleFromManual() {
-            if (!titleDisplay || !titleInput) return;
+            if (!titleInput) return;
             var parts = [];
             if (manualBrand && manualBrand.selectedIndex > 0) parts.push(manualBrand.options[manualBrand.selectedIndex].text);
             if (manualModel && manualModel.selectedIndex > 0) parts.push(manualModel.options[manualModel.selectedIndex].text);
-            if (variantSelect && variantSelect.selectedIndex > 0) parts.push(variantSelect.options[variantSelect.selectedIndex].text);
-            if (manualFuelType && manualFuelType.selectedIndex > 0) parts.push(manualFuelType.options[manualFuelType.selectedIndex].text);
-            if (manualModelYear && manualModelYear.selectedIndex > 0) parts.push(manualModelYear.options[manualModelYear.selectedIndex].text);
-            var title = parts.join(' ');
-            titleDisplay.textContent = title;
-            titleInput.value = title;
+            titleInput.value = formatListingTitle(parts.join(' '));
         }
 
         function filterModelsByBrand() {

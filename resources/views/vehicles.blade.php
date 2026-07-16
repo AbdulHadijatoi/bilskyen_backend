@@ -428,6 +428,7 @@
                             <div id="first-reg-year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="first-reg-year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="first-reg-year-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.owner_tax') }}</label>
@@ -443,6 +444,7 @@
                             <div id="owner-tax-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="owner-tax-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="owner-tax-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.horsepower_hp') }}</label>
@@ -458,6 +460,7 @@
                             <div id="horsepower-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="horsepower-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="horsepower-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.battery_capacity_kwh') }}</label>
@@ -473,6 +476,7 @@
                             <div id="battery-capacity-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="battery-capacity-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="battery-capacity-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_efficiency') }}</label>
@@ -488,6 +492,7 @@
                             <div id="fuel-efficiency-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="fuel-efficiency-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="fuel-efficiency-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                 </div>
             </details>
@@ -516,6 +521,7 @@
                             <div id="top-speed-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="top-speed-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="top-speed-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.weight') }}</label>
@@ -531,6 +537,7 @@
                             <div id="weight-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="weight-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="weight-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -691,8 +698,12 @@
             <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
-                        <strong>{{ number_format($vehicles->total()) }}</strong> 
-                        {{ __('messages.forms.results') }}
+                        @if(!empty($showNoResultsMessage))
+                            <strong>0</strong> {{ __('messages.pages.vehicles.matching_results') }}
+                        @else
+                            <strong>{{ number_format($vehicles->total()) }}</strong>
+                            {{ __('messages.forms.results') }}
+                        @endif
                     </p>
                 </div>
                 <!-- Sort Dropdown Container -->
@@ -756,14 +767,29 @@
         </div>
     </div>
     
-    <!-- Vehicle Grid/List -->
-    <div id="no-results-message" class="hidden col-span-full py-6 text-center rounded-lg bg-muted/50 border border-border space-y-3">
-        <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
-        <p class="text-muted-foreground text-sm">{{ __('messages.forms.try_adjusting_filters') }}</p>
-        <button type="button" id="no-results-reset-filters" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            {{ __('messages.pages.vehicles.reset_filters') }}
-        </button>
+    <!-- No filter matches (shown above results when filters return zero) -->
+    <div
+        id="no-results-message"
+        class="@if(empty($showNoResultsMessage)) hidden @endif mb-6 rounded-xl border border-amber-200 bg-amber-50 px-6 py-8 text-center dark:border-amber-900/50 dark:bg-amber-950/30"
+        role="status"
+        aria-live="polite"
+    >
+        <div class="mx-auto flex max-w-lg flex-col items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">{{ __('messages.pages.vehicles.no_matching_filters') }}</h3>
+            <p class="text-sm text-muted-foreground">{{ __('messages.forms.try_adjusting_filters') }}</p>
+            <button type="button" id="no-results-reset-filters" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                {{ __('messages.pages.vehicles.reset_filters') }}
+            </button>
+        </div>
     </div>
+
+    <!-- Vehicle Grid/List (filter matches only) -->
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
         @forelse($vehicles as $row)
             <x-vehicle-listing-item
@@ -778,24 +804,36 @@
                 :is-boosted="$row['isBoosted'] ?? false"
             />
         @empty
-        <div class="col-span-full space-y-6">
-            <div class="flex flex-col items-center justify-center text-center py-12">
+            @if(empty($showNoResultsMessage))
+            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.3-4.3"></path>
                 </svg>
                 <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
-                <p class="text-muted-foreground mt-1">
+                <p class="mt-1 text-muted-foreground">
                     {{ __('messages.forms.try_adjusting_filters') }}
                 </p>
                 <button type="button" onclick="document.getElementById('filter-reset-button-main')?.click()" class="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                     {{ __('messages.pages.vehicles.reset_filters') }}
                 </button>
             </div>
-            @if(isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0)
-            <div class="pt-4 border-t border-border">
-                <h4 class="text-sm font-semibold text-foreground mb-4">{{ __('messages.pages.vehicles.showing_all_vehicles') }}</h4>
-                <div class="vehicle-fallback-grid grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            @endif
+        @endforelse
+    </div>
+
+    <!-- Suggested vehicles when filters match nothing -->
+    <div
+        id="vehicle-fallback-section"
+        data-view="card"
+        class="@if(empty($showNoResultsMessage) || empty($fallbackVehicles) || $fallbackVehicles->count() === 0) hidden @endif mt-8 rounded-xl border border-border bg-muted/20 p-4 sm:p-6"
+    >
+        <div class="mb-4 border-b border-border pb-4">
+            <h4 class="text-base font-semibold text-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_heading') }}</h4>
+            <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_intro') }}</p>
+        </div>
+        <div id="vehicle-fallback-grid" class="vehicle-fallback-grid grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            @if(!empty($showNoResultsMessage) && !empty($fallbackVehicles))
                 @foreach($fallbackVehicles as $row)
                     <x-vehicle-listing-item
                         :vehicle="$row['vehicle']"
@@ -809,11 +847,8 @@
                         :is-boosted="$row['isBoosted'] ?? false"
                     />
                 @endforeach
-                </div>
-            </div>
             @endif
         </div>
-        @endforelse
     </div>
 
     <!-- Enquiry Dialogs for Vehicles -->
@@ -866,19 +901,30 @@
         cursor: pointer;
     }
 
-    #vehicle-container[data-view="list"] .vehicle-fallback-grid {
+    #vehicle-fallback-section[data-view="list"] .vehicle-fallback-grid {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         width: 100%;
     }
 
-    #vehicle-container[data-view="card"] .vehicle-fallback-grid {
+    #vehicle-fallback-section[data-view="card"] .vehicle-fallback-grid {
         display: grid;
+    }
+
+    #vehicle-fallback-section[data-view="list"] .vehicle-item {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        border: 1px solid hsl(var(--border));
+        overflow: hidden;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
     
     
-    #vehicle-container[data-view="list"] .vehicle-dealer-label {
+    #vehicle-container[data-view="list"] .vehicle-dealer-label,
+    #vehicle-fallback-section[data-view="list"] .vehicle-dealer-label {
         position: absolute;
         top: 0.5rem;
         right: 0.5rem;
@@ -1148,6 +1194,8 @@
     (function() {
         // Constants
         const vehicleContainer = document.getElementById('vehicle-container');
+        const vehicleFallbackSection = document.getElementById('vehicle-fallback-section');
+        const vehicleFallbackGrid = document.getElementById('vehicle-fallback-grid');
         const vehicleGrid = vehicleContainer; // Keep for backward compatibility
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
@@ -1181,6 +1229,13 @@
             chipsMore: @json(__('messages.forms.chips_more')),
             chipsShowLess: @json(__('messages.forms.chips_show_less')),
             resetFilters: @json(__('messages.pages.vehicles.reset_filters')),
+            noMatchingFilters: @json(__('messages.pages.vehicles.no_matching_filters')),
+            tryAdjustingFilters: @json(__('messages.forms.try_adjusting_filters')),
+            matchingResults: @json(__('messages.pages.vehicles.matching_results')),
+            suggestedVehiclesHeading: @json(__('messages.pages.vehicles.suggested_vehicles_heading')),
+            suggestedVehiclesIntro: @json(__('messages.pages.vehicles.suggested_vehicles_intro')),
+            noVehiclesFound: @json(__('messages.forms.no_vehicles_found')),
+            results: @json(__('messages.forms.results')),
         };
         const CHIP_COLLAPSE_LIMIT = 5;
         
@@ -1354,10 +1409,17 @@
             `;
         }
 
-        function renderVehicleGrid(vehicles) {
+        function renderVehicleGrid(vehicles, options = {}) {
             if (!vehicleContainer) return;
 
+            const { skipEmptyState = false } = options;
+
             if (vehicles.length === 0) {
+                if (skipEmptyState) {
+                    vehicleContainer.innerHTML = '';
+                    return;
+                }
+
                 vehicleContainer.innerHTML = `
                     <div class="col-span-full flex items-center justify-center py-12">
                         <div class="flex flex-col items-center justify-center text-center">
@@ -1365,12 +1427,12 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </svg>
-                <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
+                <h3 class="text-lg font-semibold">${I18N_BMV.noVehiclesFound}</h3>
                 <p class="text-muted-foreground mt-1">
-                    {{ __('messages.forms.try_adjusting_filters') }}
+                    ${I18N_BMV.tryAdjustingFilters}
                 </p>
                 <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                    {{ __('messages.pages.vehicles.reset_filters') }}
+                    ${I18N_BMV.resetFilters}
                 </button>
             </div>
                     </div>
@@ -1380,6 +1442,48 @@
             }
 
             vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleItem(vehicle)).join('');
+        }
+
+        function renderNoResultsBanner(show) {
+            const noResultsMessageEl = document.getElementById('no-results-message');
+            if (!noResultsMessageEl) return;
+
+            if (show) {
+                noResultsMessageEl.classList.remove('hidden');
+                noResultsMessageEl.innerHTML = `
+                    <div class="mx-auto flex max-w-lg flex-col items-center gap-3">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-foreground">${I18N_BMV.noMatchingFilters}</h3>
+                        <p class="text-sm text-muted-foreground">${I18N_BMV.tryAdjustingFilters}</p>
+                        <button type="button" class="empty-state-reset-btn inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">${I18N_BMV.resetFilters}</button>
+                    </div>
+                `;
+                noResultsMessageEl.querySelector('.empty-state-reset-btn')?.addEventListener('click', resetAllFilters);
+            } else {
+                noResultsMessageEl.classList.add('hidden');
+                noResultsMessageEl.innerHTML = '';
+            }
+        }
+
+        function renderFallbackVehicles(vehicles) {
+            if (!vehicleFallbackSection || !vehicleFallbackGrid) return;
+
+            if (!Array.isArray(vehicles) || vehicles.length === 0) {
+                vehicleFallbackSection.classList.add('hidden');
+                vehicleFallbackGrid.innerHTML = '';
+                return;
+            }
+
+            vehicleFallbackSection.classList.remove('hidden');
+            vehicleFallbackGrid.innerHTML = vehicles.map(vehicle => renderVehicleItem(vehicle)).join('');
+            if (currentView) {
+                vehicleFallbackSection.setAttribute('data-view', currentView);
+            }
         }
         
         // Load favorite status for all vehicles in batch
@@ -2215,44 +2319,37 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const json = await response.json();
                 const data = json.data || {};
-                let vehicles = data.docs || [];
-                let totalDocs = data.totalDocs ?? 0;
+                const vehicles = data.docs || [];
+                const filteredTotal = data.totalDocs ?? vehicles.length;
                 let page = data.page ?? 1;
                 let totalPages = data.totalPages ?? 1;
                 const noResults = data.no_results === true && Array.isArray(data.fallback_docs);
-                if (noResults && totalDocs === 0 && data.fallback_docs.length > 0) {
-                    vehicles = data.fallback_docs;
-                    totalDocs = data.fallback_totalDocs ?? vehicles.length;
-                    page = data.fallback_page ?? 1;
-                    totalPages = data.fallback_totalPages ?? 1;
-                }
-                const noResultsMessageEl = document.getElementById('no-results-message');
-                if (noResultsMessageEl) {
-                    if (noResults && data.totalDocs === 0) {
-                        noResultsMessageEl.classList.remove('hidden');
-                        noResultsMessageEl.innerHTML = `
-                            <h3 class="text-lg font-semibold">{{ __("messages.forms.no_vehicles_found") }}</h3>
-                            <p class="text-muted-foreground text-sm mt-1">{{ __("messages.forms.try_adjusting_filters") }} {{ __("messages.pages.vehicles.showing_all_vehicles") }}</p>
-                            <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">${I18N_BMV.resetFilters}</button>
-                        `;
-                        noResultsMessageEl.querySelector('.empty-state-reset-btn')?.addEventListener('click', resetAllFilters);
-                    } else {
-                        noResultsMessageEl.classList.add('hidden');
-                        noResultsMessageEl.innerHTML = '';
-                    }
-                }
+                const fallbackVehicles = noResults && filteredTotal === 0 ? (data.fallback_docs || []) : [];
+                const showingFilteredEmptyWithFallback = noResults && filteredTotal === 0 && fallbackVehicles.length > 0;
+
+                renderNoResultsBanner(showingFilteredEmptyWithFallback);
+                renderFallbackVehicles(fallbackVehicles);
+
                 hideLoading();
-                renderVehicleGrid(vehicles);
+                if (showingFilteredEmptyWithFallback) {
+                    renderVehicleGrid([], { skipEmptyState: true });
+                } else {
+                    renderVehicleGrid(vehicles);
+                    renderFallbackVehicles([]);
+                }
                 setView(currentView);
                 await checkFavoritesBatch();
-                renderPagination({ current_page: page, last_page: totalPages, total: totalDocs });
+                if (showingFilteredEmptyWithFallback) {
+                    renderPagination(null);
+                } else {
+                    renderPagination({ current_page: page, last_page: totalPages, total: filteredTotal });
+                }
                 const resultsCount = document.getElementById('results-count');
                 if (resultsCount) {
-                    const filteredTotal = data.totalDocs ?? 0;
-                    if (noResults && filteredTotal === 0 && vehicles.length > 0) {
-                        resultsCount.innerHTML = `<strong>0</strong> {{ __('messages.forms.results') }} <span class="text-muted-foreground">({{ __('messages.pages.vehicles.showing_all_vehicles') }})</span>`;
+                    if (showingFilteredEmptyWithFallback) {
+                        resultsCount.innerHTML = `<strong>0</strong> ${I18N_BMV.matchingResults}`;
                     } else {
-                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('da-DK').format(totalDocs)}</strong> {{ __('messages.forms.results') }}`;
+                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('da-DK').format(filteredTotal)}</strong> ${I18N_BMV.results}`;
                     }
                 }
                 renderFilterChips();
@@ -2564,6 +2661,8 @@
             const formatDisplay = typeof formatValue === 'function'
                 ? formatValue
                 : (v) => new Intl.NumberFormat('da-DK').format(v);
+            let isDragging = false;
+            let activeHandle = null;
 
             function isRangeFilterActive() {
                 return minInput.value !== '' || maxInput.value !== '';
@@ -2617,7 +2716,11 @@
                 const finalMin = Math.min(minVal, maxVal);
                 const finalMax = Math.max(minVal, maxVal);
                 const active = isRangeFilterActive();
-                const sliderDriving = document.activeElement === minSlider || document.activeElement === maxSlider;
+                const sliderDriving = document.activeElement === minSlider
+                    || document.activeElement === maxSlider
+                    || isDragging
+                    || activeHandle === minSlider
+                    || activeHandle === maxSlider;
 
                 if (sliderDriving) {
                     if (finalMin === min || finalMin === 0) minInput.value = '';
@@ -2710,9 +2813,6 @@
             maxInput.addEventListener('blur', () => updateSlider());
             
             // Handle drag events for visual handles
-            let isDragging = false;
-            let activeHandle = null;
-            
             [minHandle, maxHandle].forEach((handle, index) => {
                 handle.addEventListener('mousedown', (e) => {
                     isDragging = true;
@@ -2795,6 +2895,8 @@
                 minHandle: document.getElementById('first-reg-year-handle-min'),
                 maxHandle: document.getElementById('first-reg-year-handle-max'),
                 track: document.getElementById('first-reg-year-range-track'),
+                valueLabel: document.getElementById('first-reg-year-slider-label'),
+                formatValue: (v) => String(Math.round(v)),
                 min: 1950,
                 max: 2027
             },
@@ -2806,6 +2908,8 @@
                 minHandle: document.getElementById('horsepower-handle-min'),
                 maxHandle: document.getElementById('horsepower-handle-max'),
                 track: document.getElementById('horsepower-range-track'),
+                valueLabel: document.getElementById('horsepower-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' HP',
                 min: 0,
                 max: 1000
             },
@@ -2817,6 +2921,8 @@
                 minHandle: document.getElementById('battery-capacity-handle-min'),
                 maxHandle: document.getElementById('battery-capacity-handle-max'),
                 track: document.getElementById('battery-capacity-range-track'),
+                valueLabel: document.getElementById('battery-capacity-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' kWh',
                 min: 0,
                 max: 500
             },
@@ -2828,6 +2934,8 @@
                 minHandle: document.getElementById('owner-tax-handle-min'),
                 maxHandle: document.getElementById('owner-tax-handle-max'),
                 track: document.getElementById('owner-tax-range-track'),
+                valueLabel: document.getElementById('owner-tax-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' kr.',
                 min: 0,
                 max: 20000
             },
@@ -2850,6 +2958,8 @@
                 minHandle: document.getElementById('fuel-efficiency-handle-min'),
                 maxHandle: document.getElementById('fuel-efficiency-handle-max'),
                 track: document.getElementById('fuel-efficiency-range-track'),
+                valueLabel: document.getElementById('fuel-efficiency-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' km/l',
                 min: 0,
                 max: 100
             },
@@ -2861,6 +2971,8 @@
                 minHandle: document.getElementById('top-speed-handle-min'),
                 maxHandle: document.getElementById('top-speed-handle-max'),
                 track: document.getElementById('top-speed-range-track'),
+                valueLabel: document.getElementById('top-speed-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' km/h',
                 min: 0,
                 max: 400
             },
@@ -2872,6 +2984,8 @@
                 minHandle: document.getElementById('weight-handle-min'),
                 maxHandle: document.getElementById('weight-handle-max'),
                 track: document.getElementById('weight-range-track'),
+                valueLabel: document.getElementById('weight-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' kg',
                 min: 0,
                 max: 5000
             }
@@ -3647,6 +3761,9 @@ if (config) {
             
             // Update container data attribute and classes
             vehicleContainer.setAttribute('data-view', view);
+            if (vehicleFallbackSection) {
+                vehicleFallbackSection.setAttribute('data-view', view);
+            }
             if (view === 'list') {
                 vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-3');
                 vehicleContainer.classList.add('flex', 'flex-col');

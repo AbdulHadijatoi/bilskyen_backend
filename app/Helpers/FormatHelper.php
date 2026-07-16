@@ -151,6 +151,19 @@ class FormatHelper
     }
 
     /**
+     * Build a listing title from brand and model names.
+     */
+    public static function generateListingTitleFromBrandAndModel(?string $brandName, ?string $modelName): string
+    {
+        $parts = array_values(array_filter([
+            trim((string) $brandName),
+            trim((string) $modelName),
+        ], static fn (string $part): bool => $part !== ''));
+
+        return self::formatListingTitle(implode(' ', $parts));
+    }
+
+    /**
      * Format a short location line for vehicle cards (postcode + city/address).
      */
     public static function formatListingLocation(?string $address = null, ?string $postcode = null, ?string $city = null): string
@@ -208,6 +221,52 @@ class FormatHelper
         } catch (\Throwable) {
             return $date->format('M Y');
         }
+    }
+
+    /**
+     * Format model/spec definition values with inferred units when the source value is unitless.
+     */
+    public static function formatVehicleSpecValue(?string $name, mixed $value): string
+    {
+        $label = trim((string) $name);
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return '';
+        }
+
+        // Preserve values that already carry explicit units/text.
+        if (preg_match('/[a-zA-Z%°\/]/u', $raw)) {
+            return $raw;
+        }
+
+        if (! is_numeric($raw)) {
+            return $raw;
+        }
+
+        $numeric = (float) $raw;
+        $formatted = fmod($numeric, 1.0) === 0.0
+            ? number_format((int) round($numeric), 0, '.', ',')
+            : rtrim(rtrim(number_format($numeric, 2, '.', ','), '0'), '.');
+
+        $normalizedLabel = mb_strtolower($label, 'UTF-8');
+
+        $unitMatchers = [
+            'km/h' => ['top speed', 'max speed', 'maks hastighed', 'maksimum hastighed', 'hastighed'],
+            'cm' => ['length', 'width', 'height', 'wheelbase', 'track width', 'bredde', 'længde', 'hojde', 'højde', 'akselafstand'],
+            'mm' => ['ground clearance', 'frigang'],
+            'kg' => ['weight', 'total weight', 'kerb weight', 'payload', 'vægt', 'totalvægt', 'egenvægt'],
+            'L' => ['tank capacity', 'fuel tank', 'boot volume', 'bagagerum', 'tank'],
+        ];
+
+        foreach ($unitMatchers as $unit => $needles) {
+            foreach ($needles as $needle) {
+                if (str_contains($normalizedLabel, $needle)) {
+                    return $formatted . ' ' . $unit;
+                }
+            }
+        }
+
+        return $formatted;
     }
 
     /**

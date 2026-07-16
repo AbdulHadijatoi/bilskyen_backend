@@ -11,7 +11,7 @@
         ? 'inline-flex h-8 items-center gap-1.5 rounded-md border border-primary-foreground/25 bg-primary-foreground/10 px-2 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary-foreground/20 transition-colors'
         : 'inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground shadow-sm hover:bg-muted transition-colors';
 @endphp
-<details class="relative language-switcher" data-language-switcher>
+<details class="relative language-switcher {{ $variant === 'dark' ? 'language-switcher--dark' : 'language-switcher--light' }}" data-language-switcher>
     <summary
         class="{{ $buttonClass }} list-none cursor-pointer [&::-webkit-details-marker]:hidden"
         aria-label="{{ __('messages.common.language_menu') }}"
@@ -31,20 +31,20 @@
         </svg>
     </summary>
     <div
-        class="absolute right-0 z-[200] mt-2 w-40 rounded-[var(--radius)] border border-slate-200 bg-white p-1 text-slate-900 shadow-lg"
+        class="absolute right-0 z-[200] mt-2 w-40 rounded-[var(--radius)] border border-slate-200 bg-white p-1 text-slate-900 shadow-lg language-switcher__menu"
         role="menu"
         aria-label="{{ __('messages.navigation.language') }}"
     >
         <a
             href="{{ route('locale.switch', ['locale' => 'da']) }}"
-            class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-slate-900 transition-colors hover:bg-slate-100 {{ $currentLocale === 'da' ? 'bg-slate-100 font-medium' : '' }}"
+            class="language-switcher__item flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-slate-900 transition-colors hover:bg-slate-100 {{ $currentLocale === 'da' ? 'bg-slate-100 font-medium' : '' }}"
             role="menuitem"
         >
             {{ __('messages.common.danish') }}
         </a>
         <a
             href="{{ route('locale.switch', ['locale' => 'en']) }}"
-            class="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-slate-900 transition-colors hover:bg-slate-100 {{ $currentLocale === 'en' ? 'bg-slate-100 font-medium' : '' }}"
+            class="language-switcher__item flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-slate-900 transition-colors hover:bg-slate-100 {{ $currentLocale === 'en' ? 'bg-slate-100 font-medium' : '' }}"
             role="menuitem"
         >
             {{ __('messages.common.english') }}
@@ -55,7 +55,27 @@
     .language-switcher > summary:focus {
         outline: none;
     }
+    /* Open state uses a light muted background — keep text dark for contrast */
     .language-switcher[open] > summary {
-        background-color: var(--muted, rgba(0, 0, 0, 0.05));
+        background-color: var(--muted, #f1f5f9);
+        color: #0f172a;
+    }
+    .language-switcher--dark[open] > summary {
+        background-color: rgba(255, 255, 255, 0.92);
+        color: #0f172a;
+        border-color: rgba(15, 23, 42, 0.15);
+    }
+    .language-switcher__menu {
+        background-color: #fff;
+        color: #0f172a;
+    }
+    .language-switcher__item,
+    .language-switcher__item:visited {
+        color: #0f172a;
+    }
+    .language-switcher__item:hover,
+    .language-switcher__item:focus {
+        background-color: #f1f5f9;
+        color: #0f172a;
     }
 </style>

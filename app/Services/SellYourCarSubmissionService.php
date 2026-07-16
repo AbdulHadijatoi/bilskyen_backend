@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Constants\VehicleListStatus as VehicleListStatusConstant;
-use App\Models\DmrColour;
+use App\Helpers\FormatHelper;
+use App\Models\DmrBrand;
+use App\Models\DmrModel;
 use App\Models\DmrEmissionNorm;
 use App\Models\GearType;
 use App\Models\Condition;
@@ -282,6 +284,14 @@ class SellYourCarSubmissionService
         return DB::transaction(function () use ($request, $user, $description) {
             $title = $request->input('title');
             $title = is_string($title) ? trim($title) : '';
+            if ($title === '') {
+                $brand = DmrBrand::query()->find((int) $request->input('brand_id'));
+                $model = DmrModel::query()->find((int) $request->input('model_id'));
+                $title = FormatHelper::generateListingTitleFromBrandAndModel(
+                    $brand?->name,
+                    $model?->name
+                );
+            }
             $title = $title !== '' ? $title : null;
 
             $rawDmr = $request->input('dmr_fact_vehicle_id');

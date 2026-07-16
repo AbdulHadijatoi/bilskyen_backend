@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessVehicleImportBatchJob;
 use App\Models\VehicleImportBatch;
+use App\Services\AuditLogService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
-use App\Services\VehicleImport\VehicleImportBatchMaintenanceService;
-use App\Services\VehicleImport\VehicleImportBatchService;
 use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportService;
 use App\Services\VehicleImport\VehicleImportTemplateBuilder;
@@ -20,11 +18,10 @@ class VehicleImportController extends Controller
 {
     public function __construct(
         private VehicleImportService $vehicleImportService,
-        private VehicleImportBatchService $vehicleImportBatchService,
         private VehicleImportTemplateBuilder $templateBuilder,
         private SubscriptionFeatureService $subscriptionFeatureService,
         private DealerContextService $dealerContextService,
-        private VehicleImportBatchMaintenanceService $batchMaintenanceService,
+        private AuditLogService $auditLogService,
     ) {}
 
     public function downloadTemplate(): BinaryFileResponse
@@ -75,40 +72,12 @@ class VehicleImportController extends Controller
             return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
 
-        $dryRun = $request->boolean('dry_run');
-
-        if ($dryRun) {
-            return $this->runSyncImport($request, $dealer, $user, true);
-        }
-
-        if ($this->batchMaintenanceService->hasBlockingImport($dealer->id)) {
-            return $this->error(__('messages.api.vehicle_import_already_running'), [], 409);
-        }
-
-        try {
-            $batch = $this->vehicleImportBatchService->queueImport(
-                $request->file('file'),
-                $dealer,
-                $user,
-                false,
-            );
-            ProcessVehicleImportBatchJob::dispatch($batch->id);
-
-            return $this->success([
-                'batch_id' => $batch->id,
-                'status' => $batch->status,
-                'message' => __('messages.api.vehicle_import_queued'),
-            ], 202);
-        } catch (\InvalidArgumentException $e) {
-            return $this->error($e->getMessage(), [], 422);
-        } catch (\Throwable $e) {
-            Log::error('Vehicle bulk import queue failed', [
-                'dealer_id' => $dealer->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return $this->error(__('messages.api.vehicle_import_failed'), [], 500);
-        }
+        return $this->runSyncImport(
+            $request,
+            $dealer,
+            $user,
+            $request->boolean('dry_run'),
+        );
     }
 
     public function batches(Request $request): JsonResponse
@@ -159,6 +128,8 @@ class VehicleImportController extends Controller
 
     private function runSyncImport(Request $request, $dealer, $user, bool $dryRun): JsonResponse
     {
+        set_time_limit(600);
+
         try {
             $result = $this->vehicleImportService->importFromFile(
                 $request->file('file'),
@@ -167,6 +138,27 @@ class VehicleImportController extends Controller
                 $dealer,
                 $dryRun,
             );
+
+            if (! $dryRun && ($result['summary']['created'] ?? 0) > 0) {
+                try {
+                    $this->auditLogService->logCreate(
+                        $user,
+                        'VehicleImport',
+                        0,
+                        $result['summary'],
+                        $request,
+                        'Dealer',
+                        $dealer->id,
+                        'Bulk vehicle import completed',
+                        ['vehicle', 'dealer', 'import']
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to audit log vehicle import', [
+                        'dealer_id' => $dealer->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         } catch (\InvalidArgumentException $e) {
             return $this->error($e->getMessage(), [], 422);
         } catch (\RuntimeException $e) {

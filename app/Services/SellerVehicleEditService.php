@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\FormatHelper;
 use App\Models\DmrColour;
 use App\Models\DmrEmissionNorm;
 use App\Models\DmrVariant;
@@ -187,9 +188,11 @@ class SellerVehicleEditService
         $beforeState = $vehicle->toArray();
 
         $vehicleData = [];
-            if ($request->has('title')) {
-                $vehicleData['title'] = $request->input('title');
-            }
+            $vehicle->loadMissing(['brand', 'model']);
+            $vehicleData['title'] = FormatHelper::generateListingTitleFromBrandAndModel(
+                $vehicle->brand?->name,
+                $vehicle->model?->name
+            ) ?: $vehicle->title;
             if ($request->has('price')) {
                 $vehicleData['price'] = $request->input('price');
             }

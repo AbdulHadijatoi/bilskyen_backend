@@ -634,14 +634,6 @@
                 
                 <div class="form-grid">
                     <div class="space-y-2">
-                        <label for="title" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.title_label') }}</label>
-                        <input type="text" id="title" name="title" value="{{ old('title', $vehicle->title) }}"
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="{{ __('messages.pages.edit_vehicle.title_placeholder') }}">
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.title_help') }}</p>
-                    </div>
-
-                    <div class="space-y-2">
                         <label for="variant_id" class="text-sm font-medium">{{ __('messages.pages.sell_your_car.variant_label') }}</label>
                         <select id="variant_id" name="variant_id"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">

@@ -728,7 +728,7 @@
                     @if(!empty($def['name']))
                     <div class="detail-item">
                         <span class="detail-label">{{ $def['name'] }}</span>
-                        <span class="detail-value whitespace-pre-wrap">{{ $def['value'] }}</span>
+                        <span class="detail-value whitespace-pre-wrap">{{ \App\Helpers\FormatHelper::formatVehicleSpecValue($def['name'] ?? null, $def['value'] ?? null) }}</span>
                     </div>
                     @endif
                     @endforeach

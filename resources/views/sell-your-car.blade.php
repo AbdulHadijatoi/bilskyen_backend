@@ -1538,18 +1538,11 @@
                     </div>
                 </div>
 
-                <div class="basic-info-follow-grid">
-                    <div class="basic-info-follow-field space-y-2">
-                        <label class="text-sm font-medium">{{ __('messages.pages.sell_your_car.title_label') }}</label>
-                        <div id="title-display" class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center text-muted-foreground min-h-[2.25rem]"></div>
-                        <input type="hidden" id="title" name="title" value="">
-                        <input type="hidden" id="brand_id" name="brand_id" value="">
-                        <input type="hidden" id="model_id" name="model_id" value="">
-                        <input type="hidden" id="model_year" name="model_year" value="">
-                        <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="">
-                        <p class="field-help">{{ __('messages.pages.sell_your_car.title_help') }}</p>
-                    </div>
-                </div>
+                <input type="hidden" id="title" name="title" value="">
+                <input type="hidden" id="brand_id" name="brand_id" value="">
+                <input type="hidden" id="model_id" name="model_id" value="">
+                <input type="hidden" id="model_year" name="model_year" value="">
+                <input type="hidden" id="fuel_type_id" name="fuel_type_id" value="">
             </div>
         </div>
 
