@@ -114,6 +114,11 @@ class DealerController extends Controller
         $seo = $this->seoService->getForPage('dealer', $dealer->slug);
         $reviewSummary = $this->googleReviewService->dealerReviewSummary($dealer);
 
+        // Whether the dealer has any published inventory at all (independent of
+        // the current filters). Used to hide/disable filter controls and show
+        // an informative empty-state message when there is nothing to filter.
+        $hasVehicles = $dealer->vehicles->isNotEmpty();
+
         return view('dealer-page', [
             'dealer' => $dealer,
             'vehicles' => $vehicles,
@@ -121,6 +126,7 @@ class DealerController extends Controller
             'currentFilters' => $request->all(),
             'seo' => $seo,
             'reviewSummary' => $reviewSummary,
+            'hasVehicles' => $hasVehicles,
         ]);
     }
 

@@ -42,7 +42,7 @@
                         {{ $aboutPageContent['about_mission_description_2'] ?? __('messages.pages.about.mission_description_2') }}
                     </p>
                 </div>
-                <div class="relative h-80 w-full overflow-hidden rounded-lg shadow-lg">
+                <div class="relative min-h-64 w-full overflow-hidden rounded-lg shadow-lg md:min-h-80 lg:min-h-96">
                     @php
                         $missionImage = isset($aboutPageImages['about_mission_image']) && count($aboutPageImages['about_mission_image']) > 0 
                             ? $aboutPageImages['about_mission_image'][0] 
@@ -51,7 +51,7 @@
                     <img
                         src="{{ $missionImage && isset($missionImage['image_url']) ? $missionImage['image_url'] : '/images/showroom.jpg' }}"
                         alt="{{ $missionImage && isset($missionImage['alt_text']) ? $missionImage['alt_text'] : __('messages.pages.about.modern_car_dealership_interior') }}"
-                        class="h-full w-full object-cover"
+                        class="h-full min-h-64 w-full object-cover object-center md:min-h-80 lg:min-h-96"
                         onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop'"
                     />
                 </div>
@@ -137,76 +137,86 @@
             </div>
             <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 @php
-                    $teamMember1Image = isset($aboutPageImages['about_team_member_1_image']) && count($aboutPageImages['about_team_member_1_image']) > 0 
-                        ? $aboutPageImages['about_team_member_1_image'][0] 
-                        : null;
-                    $teamMember2Image = isset($aboutPageImages['about_team_member_2_image']) && count($aboutPageImages['about_team_member_2_image']) > 0 
-                        ? $aboutPageImages['about_team_member_2_image'][0] 
-                        : null;
-                    $teamMember3Image = isset($aboutPageImages['about_team_member_3_image']) && count($aboutPageImages['about_team_member_3_image']) > 0 
-                        ? $aboutPageImages['about_team_member_3_image'][0] 
-                        : null;
+                    $getTeamInitials = function (string $name): string {
+                        $name = trim($name);
+                        if ($name === '') {
+                            return '?';
+                        }
+                        $words = preg_split('/\s+/', $name);
+                        if (count($words) >= 2) {
+                            return mb_strtoupper(mb_substr($words[0], 0, 1) . mb_substr(end($words), 0, 1));
+                        }
+                        return mb_strtoupper(mb_substr($name, 0, 2));
+                    };
+
+                    $hasTeamImage = function (?array $image): bool {
+                        if (!$image || empty($image['image_url'])) {
+                            return false;
+                        }
+                        $url = strtolower($image['image_url']);
+                        $alt = strtolower($image['alt_text'] ?? '');
+                        return !str_contains($url, 'placeholder') && !str_contains($alt, 'placeholder');
+                    };
+
+                    $teamMembers = [
+                        [
+                            'image' => isset($aboutPageImages['about_team_member_1_image']) && count($aboutPageImages['about_team_member_1_image']) > 0
+                                ? $aboutPageImages['about_team_member_1_image'][0]
+                                : null,
+                            'name' => $aboutPageContent['about_team_member_1_name'] ?? __('messages.pages.about.team_member_1_name'),
+                            'role' => $aboutPageContent['about_team_member_1_role'] ?? __('messages.pages.about.team_member_1_role'),
+                            'description' => $aboutPageContent['about_team_member_1_description'] ?? __('messages.pages.about.team_member_1_description'),
+                        ],
+                        [
+                            'image' => isset($aboutPageImages['about_team_member_2_image']) && count($aboutPageImages['about_team_member_2_image']) > 0
+                                ? $aboutPageImages['about_team_member_2_image'][0]
+                                : null,
+                            'name' => $aboutPageContent['about_team_member_2_name'] ?? __('messages.pages.about.team_member_2_name'),
+                            'role' => $aboutPageContent['about_team_member_2_role'] ?? __('messages.pages.about.team_member_2_role'),
+                            'description' => $aboutPageContent['about_team_member_2_description'] ?? __('messages.pages.about.team_member_2_description'),
+                        ],
+                        [
+                            'image' => isset($aboutPageImages['about_team_member_3_image']) && count($aboutPageImages['about_team_member_3_image']) > 0
+                                ? $aboutPageImages['about_team_member_3_image'][0]
+                                : null,
+                            'name' => $aboutPageContent['about_team_member_3_name'] ?? __('messages.pages.about.team_member_3_name'),
+                            'role' => $aboutPageContent['about_team_member_3_role'] ?? __('messages.pages.about.team_member_3_role'),
+                            'description' => $aboutPageContent['about_team_member_3_description'] ?? __('messages.pages.about.team_member_3_description'),
+                        ],
+                    ];
                 @endphp
-                <div class="rounded-lg border border-border bg-card overflow-hidden">
+                @foreach($teamMembers as $member)
+                @php
+                    $initials = $getTeamInitials($member['name']);
+                    $showImage = $hasTeamImage($member['image']);
+                @endphp
+                <div class="overflow-hidden rounded-lg border border-border bg-card">
                     <div class="bg-muted/50 p-5 text-center">
-                        <div class="border-background mx-auto h-24 w-24 rounded-full border-4 bg-muted flex items-center justify-center">
-                            @if($teamMember1Image && isset($teamMember1Image['image_url']))
-                                <img src="{{ $teamMember1Image['image_url'] }}" alt="{{ $teamMember1Image['alt_text'] ?? ($aboutPageContent['about_team_member_1_name'] ?? __('messages.pages.about.team_member_1')) }}" class="h-full w-full rounded-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-lg font-semibold\'>{{ substr($aboutPageContent['about_team_member_1_name'] ?? __('messages.pages.about.tm1'), 0, 2) }}</span>'">
+                        <div class="border-background mx-auto flex h-24 w-24 items-center justify-center rounded-full border-4 bg-primary/10">
+                            @if($showImage)
+                                <img
+                                    src="{{ $member['image']['image_url'] }}"
+                                    alt="{{ $member['image']['alt_text'] ?? $member['name'] }}"
+                                    class="h-full w-full rounded-full object-cover"
+                                    onerror="this.remove(); this.parentElement.insertAdjacentHTML('beforeend', '<span class=\'text-lg font-semibold text-primary\' aria-hidden=\'true\'>{{ $initials }}<\/span>');"
+                                />
                             @else
-                                <span class="text-lg font-semibold">{{ substr($aboutPageContent['about_team_member_1_name'] ?? __('messages.pages.about.tm1'), 0, 2) }}</span>
+                                <span class="text-lg font-semibold text-primary" aria-hidden="true">{{ $initials }}</span>
+                                <span class="sr-only">{{ $member['name'] }}</span>
                             @endif
                         </div>
                         <div class="pt-4">
-                            <h3 class="text-xl font-semibold">{{ $aboutPageContent['about_team_member_1_name'] ?? __('messages.pages.about.team_member_1_name') }}</h3>
-                            <p class="text-primary text-sm">{{ $aboutPageContent['about_team_member_1_role'] ?? __('messages.pages.about.team_member_1_role') }}</p>
+                            <h3 class="text-xl font-semibold">{{ $member['name'] }}</h3>
+                            <p class="text-primary text-sm">{{ \Illuminate\Support\Str::title($member['role']) }}</p>
                         </div>
                     </div>
                     <div class="p-4">
                         <p class="text-muted-foreground">
-                            {{ $aboutPageContent['about_team_member_1_description'] ?? __('messages.pages.about.team_member_1_description') }}
+                            {{ $member['description'] }}
                         </p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card overflow-hidden">
-                    <div class="bg-muted/50 p-5 text-center">
-                        <div class="border-background mx-auto h-24 w-24 rounded-full border-4 bg-muted flex items-center justify-center">
-                            @if($teamMember2Image && isset($teamMember2Image['image_url']))
-                                <img src="{{ $teamMember2Image['image_url'] }}" alt="{{ $teamMember2Image['alt_text'] ?? ($aboutPageContent['about_team_member_2_name'] ?? __('messages.pages.about.team_member_2')) }}" class="h-full w-full rounded-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-lg font-semibold\'>{{ substr($aboutPageContent['about_team_member_2_name'] ?? __('messages.pages.about.tm2'), 0, 2) }}</span>'">
-                            @else
-                                <span class="text-lg font-semibold">{{ substr($aboutPageContent['about_team_member_2_name'] ?? __('messages.pages.about.tm2'), 0, 2) }}</span>
-                            @endif
-                        </div>
-                        <div class="pt-4">
-                            <h3 class="text-xl font-semibold">{{ $aboutPageContent['about_team_member_2_name'] ?? __('messages.pages.about.team_member_2_name') }}</h3>
-                            <p class="text-primary text-sm">{{ $aboutPageContent['about_team_member_2_role'] ?? __('messages.pages.about.team_member_2_role') }}</p>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-muted-foreground">
-                            {{ $aboutPageContent['about_team_member_2_description'] ?? __('messages.pages.about.team_member_2_description') }}
-                        </p>
-                    </div>
-                </div>
-                <div class="rounded-lg border border-border bg-card overflow-hidden">
-                    <div class="bg-muted/50 p-5 text-center">
-                        <div class="border-background mx-auto h-24 w-24 rounded-full border-4 bg-muted flex items-center justify-center">
-                            @if($teamMember3Image && isset($teamMember3Image['image_url']))
-                                <img src="{{ $teamMember3Image['image_url'] }}" alt="{{ $teamMember3Image['alt_text'] ?? ($aboutPageContent['about_team_member_3_name'] ?? __('messages.pages.about.team_member_3')) }}" class="h-full w-full rounded-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-lg font-semibold\'>{{ substr($aboutPageContent['about_team_member_3_name'] ?? __('messages.pages.about.tm3'), 0, 2) }}</span>'">
-                            @else
-                                <span class="text-lg font-semibold">{{ substr($aboutPageContent['about_team_member_3_name'] ?? __('messages.pages.about.tm3'), 0, 2) }}</span>
-                            @endif
-                        </div>
-                        <div class="pt-4">
-                            <h3 class="text-xl font-semibold">{{ $aboutPageContent['about_team_member_3_name'] ?? __('messages.pages.about.team_member_3_name') }}</h3>
-                            <p class="text-primary text-sm">{{ $aboutPageContent['about_team_member_3_role'] ?? __('messages.pages.about.team_member_3_role') }}</p>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-muted-foreground">
-                            {{ $aboutPageContent['about_team_member_3_description'] ?? __('messages.pages.about.team_member_3_description') }}
-                        </p>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -220,7 +230,7 @@
             </p>
             <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                 <a href="/vehicles"
-                   class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                   class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     {{ __('messages.pages.about.explore_vehicles') }}
                 </a>
                 <a href="/contact"

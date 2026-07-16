@@ -13,10 +13,10 @@
                 </p>
             </div>
             <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <a href="/vehicles" class="site-footer__cta-primary inline-flex h-11 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-white/90">
+                <a href="/vehicles" class="site-footer__cta-primary inline-flex h-11 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-primary shadow-sm transition-all hover:bg-white/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
                     {{ __('messages.pages.footer.browse_inventory') }}
                 </a>
-                <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 text-sm font-medium text-[var(--footer-foreground)] transition-colors hover:bg-white/10">
+                <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 text-sm font-medium text-[var(--footer-foreground)] transition-all hover:bg-white/10 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
                     {{ __('messages.pages.footer.contact_us') }}
                 </a>
             </div>
@@ -36,15 +36,16 @@
                 <ul class="flex items-center gap-4">
                     @php
                         $socialLinks = [
-                            'instagram' => isset($homePageContent) ? ($homePageContent['footer_social_instagram_url'] ?? '#') : '#',
-                            'facebook' => isset($homePageContent) ? ($homePageContent['footer_social_facebook_url'] ?? '#') : '#',
-                            'twitter' => isset($homePageContent) ? ($homePageContent['footer_social_twitter_url'] ?? '#') : '#',
-                            'linkedin' => isset($homePageContent) ? ($homePageContent['footer_social_linkedin_url'] ?? '#') : '#',
+                            'instagram' => isset($homePageContent) ? ($homePageContent['footer_social_instagram_url'] ?? '') : '',
+                            'facebook' => isset($homePageContent) ? ($homePageContent['footer_social_facebook_url'] ?? '') : '',
+                            'twitter' => isset($homePageContent) ? ($homePageContent['footer_social_twitter_url'] ?? '') : '',
+                            'linkedin' => isset($homePageContent) ? ($homePageContent['footer_social_linkedin_url'] ?? '') : '',
                         ];
                     @endphp
                     @foreach ($socialLinks as $network => $url)
+                    @if(! empty($url) && $url !== '#' && preg_match('/^https?:\/\//i', $url))
                     <li>
-                        <a href="{{ !empty($url) ? $url : '#' }}" target="_blank" rel="noopener noreferrer" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-colors hover:bg-white/10" aria-label="{{ __('messages.pages.footer.social_' . $network) }}">
+                        <a href="{{ $url }}" target="_blank" rel="noopener noreferrer" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-colors hover:bg-white/10" aria-label="{{ __('messages.pages.footer.social_' . $network) }}" title="{{ __('messages.pages.footer.social_' . $network) }}">
                             @if($network === 'instagram')
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
                             @elseif($network === 'facebook')
@@ -56,6 +57,7 @@
                             @endif
                         </a>
                     </li>
+                    @endif
                     @endforeach
                 </ul>
             </div>

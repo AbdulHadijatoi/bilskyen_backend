@@ -46,6 +46,34 @@
         const menuIcon = document.getElementById('menu-icon');
         const closeIcon = document.getElementById('close-icon');
 
+        function closeLanguageSwitcher() {
+            document.querySelectorAll('details[data-language-switcher]').forEach(function(el) {
+                el.removeAttribute('open');
+            });
+        }
+
+        function closeNotificationPanel() {
+            const notificationPanel = document.getElementById('notification-panel');
+            if (notificationPanel) {
+                notificationPanel.classList.add('hidden');
+            }
+        }
+
+        document.querySelectorAll('details[data-language-switcher]').forEach(function(details) {
+            details.addEventListener('toggle', function() {
+                if (details.open) {
+                    closeNotificationPanel();
+                }
+            });
+        });
+
+        const notificationBell = document.getElementById('notification-bell');
+        if (notificationBell) {
+            notificationBell.addEventListener('click', function() {
+                closeLanguageSwitcher();
+            }, true);
+        }
+
         if (mobileMenuToggle && mobileMenu) {
             mobileMenuToggle.addEventListener('click', function() {
                 const isHidden = mobileMenu.classList.contains('hidden');

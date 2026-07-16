@@ -4,12 +4,16 @@
 
 @php
     use App\Helpers\FormatHelper;
+    use App\Helpers\DealerDisplayHelper;
 @endphp
 
 @section('content')
 @php
     $themePrimary = $dealer->theme_primary_color ?? null;
     $themeSecondary = $dealer->theme_secondary_color ?? null;
+    $publicCvr = FormatHelper::isValidPublicCvr($dealer->cvr) ? $dealer->cvr : null;
+    $dealerAddressLine = DealerDisplayHelper::formatDealerAddressLine($dealer);
+    $dealerOwnerName = $dealer->owner?->name ? trim($dealer->owner->name) : null;
 @endphp
 @if($themePrimary || $themeSecondary)
 <style>
@@ -35,7 +39,17 @@
                 <!-- Dealer Details -->
                 <div class="flex-1 space-y-2">
                     <div class="flex items-start justify-between gap-4">
-                        <h1 class="text-3xl font-bold text-foreground">{{ $dealer->owner?->name ?? 'Dealer' }}</h1>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h1 class="text-3xl font-bold text-foreground">{{ $dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label') }}</h1>
+                            @if(DealerDisplayHelper::isDealerVerified($dealer))
+                            <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg>
+                                {{ __('messages.pages.dealer_page.verified_dealer') }}
+                            </span>
+                            @endif
+                        </div>
                         @if(!empty($reviewSummary['rating']))
                         <div class="text-sm text-muted-foreground mt-1">
                             ★ {{ number_format($reviewSummary['rating'], 1) }}
@@ -60,37 +74,37 @@
                             {{ __('messages.pages.dealer_page.send_enquiry') }}
                         </button>
                     </div>
-                    @if($dealer->cvr)
-                    <p class="text-muted-foreground">CVR: {{ $dealer->cvr }}</p>
-                    @endif
-                    @if($dealer->address || $dealer->city || $dealer->postcode)
-                    <div class="flex items-center gap-2 text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span>
-                            @if($dealer->address){{ $dealer->address }}, @endif
-                            @if($dealer->postcode){{ $dealer->postcode }} @endif
-                            @if($dealer->city){{ $dealer->city }}@endif
-                        </span>
-                    </div>
-                    @endif
-                    @if($dealer->owner && $dealer->owner->phone)
-                    <div class="flex items-center gap-2 text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                        </svg>
-                        <span>{{ $dealer->owner->phone }}</span>
-                    </div>
-                    @endif
-                    @if($dealer->owner && $dealer->owner->email)
-                    <div class="flex items-center gap-2 text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                        </svg>
-                        <span>{{ $dealer->owner->email }}</span>
+                    @if($publicCvr || $dealerAddressLine || ($dealer->owner && $dealer->owner->phone) || ($dealer->owner && $dealer->owner->email))
+                    <div class="divide-y divide-border [&>*]:py-2 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
+                        @if($publicCvr)
+                        <p class="text-muted-foreground">CVR: {{ $publicCvr }}</p>
+                        @endif
+                        @if($dealerAddressLine)
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ $dealerAddressLine }}</span>
+                        </div>
+                        @endif
+                        @if($dealer->owner && $dealer->owner->phone)
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <span>{{ $dealer->owner->phone }}</span>
+                        </div>
+                        @endif
+                        @if($dealer->owner && $dealer->owner->email)
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                            </svg>
+                            <span>{{ $dealer->owner->email }}</span>
+                        </div>
+                        @endif
                     </div>
                     @endif
                 </div>
@@ -98,6 +112,15 @@
 
             <!-- Search/Filter Section -->
             <div class="border-t border-border pt-4">
+            @if(!$hasVehicles)
+            <div class="rounded-lg border border-dashed border-border bg-muted/40 px-4 py-6 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2 h-6 w-6 text-muted-foreground">
+                    <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"></path>
+                </svg>
+                <p class="text-sm font-medium text-foreground">{{ __('messages.pages.dealer_page.no_vehicles_found') }}</p>
+                <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.dealer_page.no_vehicles_description') }}</p>
+            </div>
+            @else
             <form id="search-form" class="flex flex-col sm:flex-row gap-3 items-end">
                 <!-- Search Input -->
                 <div class="relative flex-1 w-full sm:w-auto">
@@ -161,11 +184,13 @@
 
                 <button 
                     type="submit"
-                    class="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
+                    id="dealer-apply-filters"
+                    class="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
                 >
                     {{ __('messages.pages.dealer_page.apply_filters') }}
                 </button>
             </form>
+            @endif
             </div>
         </div>
 
@@ -246,11 +271,11 @@
                         <!-- Vehicle Details -->
                         <div class="p-3 space-y-4">
                             <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-xs">
-                                    {{ $vehicle->title }}
+                                <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2">
+                                    {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
                                 </h3>
                                 @if($vehicle->version)
-                                <p class="text-muted-foreground text-xs font-normal">
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
                                     {{ $vehicle->version }}
                                 </p>
                                 @endif
@@ -267,7 +292,7 @@
                                 <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
                                 @endif
                                 @if($vehicle->first_registration_date)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ \Carbon\Carbon::parse($vehicle->first_registration_date)->format('M Y') }}</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ \App\Helpers\FormatHelper::formatMonthYear($vehicle->first_registration_date) }}</span>
                                 @endif
                                 @if($vehicle->fuel_type_name)
                                 <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ $vehicle->fuel_type_name }}</span>
@@ -281,25 +306,28 @@
                     
                     <!-- Card Footer -->
                     <div class="mt-auto" onclick="event.stopPropagation()">
-                        @if($vehicle->address || $vehicle->postcode)
+                        @php
+                            $dealerListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
+                                $vehicle->address ?? null,
+                                $vehicle->postcode ?? null,
+                                $vehicle->city ?? null
+                            );
+                        @endphp
+                        @if($dealerListingLocation !== '')
                         <div class="px-3 pt-3 pb-2">
                             <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate text-right">
-                                    @if($vehicle->address){{ $vehicle->address }}@endif
-                                    @if($vehicle->address && $vehicle->postcode), @endif
-                                    @if($vehicle->postcode){{ $vehicle->postcode }}@endif
-                                </span>
+                                <span class="truncate text-right" title="{{ $dealerListingLocation }}">{{ $dealerListingLocation }}</span>
                             </div>
                         </div>
                         @endif
                         <div class="p-3 pt-0">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1">
-                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90">
+                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
@@ -397,25 +425,23 @@
                 <!-- Dealer Information Card -->
                 <div class="bg-gray-50 rounded-lg p-4 mb-4">
                     <h3 class="text-foreground text-sm font-semibold mb-3">{{ __('messages.pages.dealer_page.dealer_information') }}</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 divide-y sm:divide-y-0 sm:gap-3 divide-border">
+                        @if($dealerOwnerName)
                         <div>
                             <span class="text-xs text-muted-foreground">{{ __('messages.pages.dealer_page.dealer_label') }}</span>
-                            <p class="text-foreground font-medium text-sm">{{ $dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label') }}</p>
-                        </div>
-                        @if($dealer->cvr)
-                        <div>
-                            <span class="text-xs text-muted-foreground">CVR</span>
-                            <p class="text-foreground font-medium text-sm">{{ $dealer->cvr }}</p>
+                            <p class="text-foreground font-medium text-sm">{{ $dealerOwnerName }}</p>
                         </div>
                         @endif
-                        @if($dealer->address || $dealer->city || $dealer->postcode)
+                        @if($publicCvr)
+                        <div>
+                            <span class="text-xs text-muted-foreground">CVR</span>
+                            <p class="text-foreground font-medium text-sm">{{ $publicCvr }}</p>
+                        </div>
+                        @endif
+                        @if($dealerAddressLine)
                         <div class="sm:col-span-2">
                             <span class="text-xs text-muted-foreground">{{ __('messages.forms.address') }}</span>
-                            <p class="text-foreground font-medium text-sm">
-                                @if($dealer->address){{ $dealer->address }}, @endif
-                                @if($dealer->postcode){{ $dealer->postcode }} @endif
-                                @if($dealer->city){{ $dealer->city }}@endif
-                            </p>
+                            <p class="text-foreground font-medium text-sm">{{ $dealerAddressLine }}</p>
                         </div>
                         @endif
                     </div>
@@ -621,7 +647,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         if (errorContainer) errorContainer.classList.remove('hidden');
                     } else {
-                        const errorMsg = result.message || '{{ __('messages.pages.dealer_page.failed_to_submit_enquiry') }}';
+                        let errorMsg = result.message || '{{ __('messages.pages.dealer_page.failed_to_submit_enquiry') }}';
+                        if (typeof errorMsg === 'string' && errorMsg.startsWith('messages.')) {
+                            errorMsg = '{{ __('messages.pages.dealer_page.failed_to_submit_enquiry') }}';
+                        }
                         if (window.showSnackbar) {
                             window.showSnackbar(errorMsg, 'error');
                         } else if (errorList) {
@@ -630,8 +659,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 } else {
-                    // Success
-                    const successMsg = result.message || '{{ __('messages.pages.dealer_page.enquiry_submitted_successfully') }}';
+                    // Success — resolve message; never show raw translation keys
+                    const defaultSuccessMsg = '{{ __('messages.pages.dealer_page.enquiry_submitted_successfully') }}';
+                    let successMsg = result.message || defaultSuccessMsg;
+                    if (typeof successMsg === 'string' && successMsg.startsWith('messages.')) {
+                        successMsg = defaultSuccessMsg;
+                    }
                     if (successMessage) {
                         successMessage.querySelector('p').textContent = successMsg;
                         successMessage.classList.remove('hidden');
@@ -1079,21 +1112,42 @@ document.addEventListener('DOMContentLoaded', function() {
             maximumFractionDigits: 2
         }).format(amount) + ' kr.';
     }
+
+    const listingLocale = document.documentElement.lang || '{{ app()->getLocale() }}' || 'da';
+
+    function formatListingTitle(title) {
+        if (!title) return '';
+        return String(title).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    function formatMonthYear(dateStr) {
+        if (!dateStr) return '';
+        if (typeof dateStr === 'string' && dateStr.match(/^[A-Z][a-z]{2} \d{4}$/)) {
+            return dateStr;
+        }
+        try {
+            return new Date(dateStr).toLocaleDateString(listingLocale, { month: 'short', year: 'numeric' });
+        } catch (e) {
+            return dateStr;
+        }
+    }
+
+    function formatListingLocation(vehicle) {
+        const parts = [];
+        const pc = vehicle.postcode || vehicle.seller_postcode;
+        const city = vehicle.city || vehicle.seller_city;
+        const addr = vehicle.address || vehicle.seller_address;
+        if (pc) parts.push(String(pc).trim());
+        if (city) parts.push(String(city).trim());
+        else if (addr) parts.push(String(addr).trim());
+        return parts.filter(Boolean).join(' ');
+    }
     
     // Render single vehicle list item
     function renderVehicleListItem(vehicle) {
         const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
-        
-        // Build location string (vehicles.address / postcode; API may also send seller_* aliases)
-        let locationText = '';
-        const addr = vehicle.address || vehicle.seller_address;
-        const pc = vehicle.postcode || vehicle.seller_postcode;
-        if (addr || pc) {
-            const parts = [];
-            if (addr) parts.push(addr);
-            if (pc) parts.push(pc);
-            locationText = parts.join(', ');
-        }
+        const titleText = formatListingTitle(vehicle.title || '');
+        const locationText = formatListingLocation(vehicle);
         
         // Build badges
         const badges = [];
@@ -1105,18 +1159,7 @@ document.addEventListener('DOMContentLoaded', function() {
             badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
         }
         if (vehicle.first_registration_date) {
-            // Handle both date strings and Date objects
-            let dateStr = vehicle.first_registration_date;
-            if (typeof dateStr === 'string' && dateStr.match(/^[A-Z][a-z]{2} \d{4}$/)) {
-                badges.push(dateStr);
-            } else {
-                try {
-                    const regDate = new Date(dateStr);
-                    badges.push(regDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-                } catch (e) {
-                    badges.push(dateStr);
-                }
-            }
+            badges.push(formatMonthYear(vehicle.first_registration_date));
         }
         if (vehicle.fuel_type_name) {
             badges.push(vehicle.fuel_type_name);
@@ -1132,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="vehicle-image-container relative">
                         <img
                             src="${imageUrl}"
-                            alt="${vehicle.title || ''}"
+                            alt="${titleText}"
                             class="h-full w-full object-cover"
                         />
                         
@@ -1149,7 +1192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <!-- Header Section -->
                         <div class="flex flex-col gap-4">
                             <span class="flex items-center gap-2 text-sm font-semibold">
-                                ${vehicle.title || ''}
+                                ${titleText}
                             </span>
                             
                             ${badges.length > 0 ? `
@@ -1178,12 +1221,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate">${locationText}</span>
+                                <span class="truncate" title="${locationText}">${locationText}</span>
                             </div>
                             ` : ''}
                             <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
                                 <a href="/vehicles/${vehicle.slug}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
-                                    <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                    <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>

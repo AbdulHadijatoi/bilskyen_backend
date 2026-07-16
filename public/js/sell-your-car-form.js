@@ -2992,10 +2992,61 @@
         // Update label styling based on checked state
         if (isChecked) {
             label.classList.add('bg-accent', 'border-primary');
+            enforceEquipmentExclusiveGroups(checkbox, equipmentName || '');
         } else {
             label.classList.remove('bg-accent', 'border-primary');
         }
     };
+
+    const EQUIPMENT_EXCLUSIVE_GROUPS = [
+        ['led headlight', 'xenon', 'halogen', 'matrix led', 'laser light', 'adaptive headlight'],
+        ['inch', '" wheels', 'alu fælge', 'alloy wheel'],
+        ['leather', 'læder', 'alcantara', 'fabric seat', 'stof', 'velour'],
+        ['seat configuration', 'sædekonfiguration', '2 seats', '4 seats', '5 seats', '7 seats', '2 sæder', '4 sæder', '5 sæder', '7 sæder'],
+        ['panoramic', 'sunroof', 'soltag', 'convertible', 'cabriolet', 'soft top', 'hard top'],
+        ['climate zone', 'klima', '1-zone', '2-zone', '3-zone', '4-zone'],
+        ['automatic', 'manual', 'automatisk', 'manuel', 'cvt', 'dsg'],
+        ['airbag', 'airbags'],
+        ['four-wheel', '4wd', 'awd', '4x4', 'front-wheel', 'rear-wheel', 'fwd', 'rwd'],
+    ];
+
+    function normalizeEquipmentName(name) {
+        return String(name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function findExclusiveGroup(equipmentName) {
+        const normalized = normalizeEquipmentName(equipmentName);
+        for (let g = 0; g < EQUIPMENT_EXCLUSIVE_GROUPS.length; g++) {
+            const patterns = EQUIPMENT_EXCLUSIVE_GROUPS[g] || [];
+            for (let p = 0; p < patterns.length; p++) {
+                if (normalized.includes(String(patterns[p]).toLowerCase())) {
+                    return patterns;
+                }
+            }
+        }
+        return null;
+    }
+
+    function enforceEquipmentExclusiveGroups(checkedBox, equipmentName) {
+        const groupPatterns = findExclusiveGroup(equipmentName);
+        if (!groupPatterns) return;
+
+        document.querySelectorAll('input[name="equipment_ids[]"]').forEach(function(input) {
+            if (input === checkedBox || !input.checked) return;
+            const otherName = input.closest('label')?.querySelector('span')?.textContent || '';
+            const otherNorm = normalizeEquipmentName(otherName);
+            const inSameGroup = groupPatterns.some(function(pattern) {
+                return otherNorm.includes(String(pattern).toLowerCase());
+            });
+            if (inSameGroup) {
+                input.checked = false;
+                const otherLabel = input.closest('label');
+                if (otherLabel) {
+                    otherLabel.classList.remove('bg-accent', 'border-primary');
+                }
+            }
+        });
+    }
     
     window.clearAllEquipment = function() {
         const checkboxes = document.querySelectorAll('input[name="equipment_ids[]"]:checked');

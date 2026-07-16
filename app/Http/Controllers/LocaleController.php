@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\PlatformSettingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class LocaleController extends Controller
 {
@@ -25,6 +26,9 @@ class LocaleController extends Controller
         }
 
         $request->session()->put('locale', $locale);
+        $request->session()->save();
+
+        App::setLocale($locale);
 
         $redirectTo = $request->headers->get('referer');
         if (! is_string($redirectTo) || $redirectTo === '' || str_contains($redirectTo, '/locale/')) {
@@ -33,6 +37,7 @@ class LocaleController extends Controller
 
         return redirect()
             ->to($redirectTo)
-            ->withCookie(cookie('app_locale', $locale, 60 * 24 * 365));
+            ->withCookie(cookie()->forever('app_locale', $locale, '/'))
+            ->withHeaders(['Cache-Control' => 'no-store']);
     }
 }

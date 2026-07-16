@@ -616,6 +616,22 @@
     [data-dropdown]:has(.home-filter-dropdown-menu.is-open) {
         z-index: 70;
     }
+
+    .testimonial-quote {
+        position: relative;
+        padding-left: 1.25rem;
+    }
+
+    .testimonial-quote::before {
+        content: '\201C';
+        position: absolute;
+        left: 0;
+        top: -0.125rem;
+        font-size: 1.5rem;
+        line-height: 1;
+        color: hsl(var(--primary));
+        font-weight: 700;
+    }
 </style>
 @endpush
 
@@ -864,7 +880,7 @@
                     {{ $homePageContent['hero_description'] ?? __('messages.pages.home.hero_description') }}
                 </p>
                 <div class="flex flex-col gap-4 sm:flex-row">
-                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         {{ __('messages.pages.home.browse_vehicles') }}
                     </a>
                     <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
@@ -952,11 +968,11 @@
                                 <!-- Vehicle Details -->
                                 <div class="p-3 space-y-1">
                                     <div class="flex flex-col gap-1">
-                                        <h3 class="flex items-center gap-2 text-xs">
-                                            {{ $vehicle['title'] }}
+                                        <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2">
+                                            {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle['title'] ?? '') }}
                                         </h3>
                                         @if(!empty($vehicle['variant_name']))
-                                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal">
+                                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal line-clamp-1">
                                             {{ $vehicle['variant_name'] }}
                                         </p>
                                         @endif
@@ -973,10 +989,7 @@
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format(round($vehicle['engine_power_hp']), 0) }} HP</span>
                                         @endif
                                         @if($vehicle['first_registration_date'])
-                                        @php
-                                            $regDate = \Carbon\Carbon::parse($vehicle['first_registration_date']);
-                                        @endphp
-                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $regDate->format('M Y') }}</span>
+                                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \App\Helpers\FormatHelper::formatMonthYear($vehicle['first_registration_date']) }}</span>
                                         @endif
                                         @if($vehicle['fuel_type_name'])
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['fuel_type_name'] }}</span>
@@ -991,18 +1004,21 @@
                             
                             <!-- Card Footer -->
                             <div class="mt-auto" onclick="event.stopPropagation()">
-                                @if((isset($vehicle['seller_address']) && $vehicle['seller_address']) || (isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']))
+                                @php
+                                    $homeListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
+                                        $vehicle['seller_address'] ?? null,
+                                        $vehicle['seller_postcode'] ?? null,
+                                        $vehicle['seller_city'] ?? ($vehicle['city'] ?? null)
+                                    );
+                                @endphp
+                                @if($homeListingLocation !== '')
                                 <div class="px-3 pt-3 pb-2">
                                     <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                             <circle cx="12" cy="10" r="3"></circle>
                                         </svg>
-                                        <span class="truncate text-right">
-                                            @if(isset($vehicle['seller_address']) && $vehicle['seller_address']){{ $vehicle['seller_address'] }}@endif
-                                            @if(isset($vehicle['seller_address']) && $vehicle['seller_address'] && isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']), @endif
-                                            @if(isset($vehicle['seller_postcode']) && $vehicle['seller_postcode']){{ $vehicle['seller_postcode'] }}@endif
-                                        </span>
+                                        <span class="truncate text-right" title="{{ $homeListingLocation }}">{{ $homeListingLocation }}</span>
                                     </div>
                                 </div>
                                 @endif
@@ -1010,7 +1026,7 @@
                                 <div class="p-3 pt-0">
                                     <div class="flex w-full flex-col gap-2 sm:flex-row">
                                         <a href="/vehicles/{{ $vehicle['slug'] ?? $vehicle['id'] }}" class="flex-1" onclick="event.stopPropagation()">
-                                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                                 {{ __('messages.pages.vehicles.view_details') }}
                                             </button>
                                         </a>
@@ -1056,9 +1072,9 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="py-16">
+    <section class="py-10 md:py-12">
         <div class="container mx-auto px-4 md:px-6">
-            <div class="mb-12 text-center">
+            <div class="mb-8 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
                     {{ $homePageContent['stats_title'] ?? __('messages.pages.home.why_choose_title') }}
                 </h2>
@@ -1066,9 +1082,9 @@
                     {{ $homePageContent['stats_description'] ?? __('messages.pages.home.why_choose_description') }}
                 </p>
             </div>
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg border border-border bg-card">
-                    <div class="flex flex-col items-center p-6 text-center">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                    <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
                                 <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.7L18.7 4c-.3-.8-1-1.3-1.7-1.3H8.7c-.7 0-1.4.5-1.7 1.3L5.5 11.3C4.7 11.3 4 12.1 4 13v3c0 .6.4 1 1 1h2"></path>
@@ -1082,8 +1098,8 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? __('messages.pages.home.stat_1_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card">
-                    <div class="flex flex-col items-center p-6 text-center">
+                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                    <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -1097,8 +1113,8 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? __('messages.pages.home.stat_2_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card">
-                    <div class="flex flex-col items-center p-6 text-center">
+                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                    <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
                                 <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -1112,8 +1128,8 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? __('messages.pages.home.stat_3_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card">
-                    <div class="flex flex-col items-center p-6 text-center">
+                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                    <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
                                 <path d="M7 10v12M17 10v12M3 10h2a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h2"></path>
@@ -1130,9 +1146,9 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-16 bg-muted">
+    <section class="py-10 md:py-12 bg-muted">
         <div class="container mx-auto px-4 md:px-6">
-            <div class="mb-12 text-center">
+            <div class="mb-8 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
                     {{ $homePageContent['features_title'] ?? __('messages.pages.home.our_services_title') }}
                 </h2>
@@ -1140,52 +1156,60 @@
                     {{ $homePageContent['features_description'] ?? __('messages.pages.home.our_services_description') }}
                 </p>
             </div>
-            <div class="grid gap-8 md:grid-cols-3">
-                <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
-                    <div class="mb-4 rounded-full bg-primary/10 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary">
+            <div class="grid gap-6 md:grid-cols-3">
+                @php
+                    $feature1Title = $homePageContent['feature_1_title'] ?? __('messages.pages.home.feature_1_title');
+                    $feature2Title = $homePageContent['feature_2_title'] ?? __('messages.pages.home.feature_2_title');
+                    $feature3Title = $homePageContent['feature_3_title'] ?? __('messages.pages.home.feature_3_title');
+                @endphp
+                <a href="/vehicles" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature1Title }}" title="{{ $feature1Title }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <rect width="20" height="14" x="2" y="5" rx="2"></rect>
                             <line x1="2" x2="22" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_1_title'] ?? __('messages.pages.home.feature_1_title') }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $feature1Title }}</h3>
                     <p class="text-muted-foreground">
                         {{ $homePageContent['feature_1_description'] ?? __('messages.pages.home.feature_1_description') }}
                     </p>
-                </div>
-                <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
-                    <div class="mb-4 rounded-full bg-primary/10 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary">
+                    <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
+                </a>
+                <a href="/contact" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature2Title }}" title="{{ $feature2Title }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_2_title'] ?? __('messages.pages.home.feature_2_title') }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $feature2Title }}</h3>
                     <p class="text-muted-foreground">
                         {{ $homePageContent['feature_2_description'] ?? __('messages.pages.home.feature_2_description') }}
                     </p>
-                </div>
-                <div class="bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center">
-                    <div class="mb-4 rounded-full bg-primary/10 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary">
+                    <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
+                </a>
+                <a href="/about" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature3Title }}" title="{{ $feature3Title }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
                             <line x1="16" x2="16" y1="2" y2="6"></line>
                             <line x1="8" x2="8" y1="2" y2="6"></line>
                             <line x1="3" x2="21" y1="10" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-xl font-bold">{{ $homePageContent['feature_3_title'] ?? __('messages.pages.home.feature_3_title') }}</h3>
+                    <h3 class="mb-2 text-xl font-bold">{{ $feature3Title }}</h3>
                     <p class="text-muted-foreground">
                         {{ $homePageContent['feature_3_description'] ?? __('messages.pages.home.feature_3_description') }}
                     </p>
-                </div>
+                    <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Testimonials Section -->
-    <section class="py-16">
+    <section class="py-10 md:py-12">
         <div class="container mx-auto px-4 md:px-6">
-            <div class="mb-12 text-center">
+            <div class="mb-8 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
                     {{ $homePageContent['testimonials_title'] ?? __('messages.pages.home.testimonials_title') }}
                 </h2>
@@ -1193,32 +1217,41 @@
                     {{ $homePageContent['testimonials_description'] ?? __('messages.pages.home.testimonials_description') }}
                 </p>
             </div>
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                @php
-                    $testimonials = [
-                        [
-                            'name' => $homePageContent['testimonial_1_name'] ?? __('messages.pages.home.testimonial_1_name'),
-                            'location' => $homePageContent['testimonial_1_location'] ?? __('messages.pages.home.testimonial_1_location'),
-                            'quote' => $homePageContent['testimonial_1_quote'] ?? __('messages.pages.home.testimonial_1_quote'),
-                            'rating' => (int)($homePageContent['testimonial_1_rating'] ?? 5)
-                        ],
-                        [
-                            'name' => $homePageContent['testimonial_2_name'] ?? __('messages.pages.home.testimonial_2_name'),
-                            'location' => $homePageContent['testimonial_2_location'] ?? __('messages.pages.home.testimonial_2_location'),
-                            'quote' => $homePageContent['testimonial_2_quote'] ?? __('messages.pages.home.testimonial_2_quote'),
-                            'rating' => (int)($homePageContent['testimonial_2_rating'] ?? 5)
-                        ],
-                        [
-                            'name' => $homePageContent['testimonial_3_name'] ?? __('messages.pages.home.testimonial_3_name'),
-                            'location' => $homePageContent['testimonial_3_location'] ?? __('messages.pages.home.testimonial_3_location'),
-                            'quote' => $homePageContent['testimonial_3_quote'] ?? __('messages.pages.home.testimonial_3_quote'),
-                            'rating' => (int)($homePageContent['testimonial_3_rating'] ?? 4)
-                        ],
-                    ];
-                @endphp
-                @foreach($testimonials as $testimonial)
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
-                    <div class="p-6">
+            @php
+                $cleanTestimonialQuote = function (string $quote): string {
+                    $quote = trim($quote);
+                    return preg_replace('/^[\s"\'\x{201C}\x{201D}\x{2018}\x{2019}\x{00AB}\x{00BB}]+|[\s"\'\x{201C}\x{201D}\x{2018}\x{2019}\x{00AB}\x{00BB}]+$/u', '', $quote);
+                };
+
+                $testimonials = [
+                    [
+                        'name' => $homePageContent['testimonial_1_name'] ?? __('messages.pages.home.testimonial_1_name'),
+                        'location' => $homePageContent['testimonial_1_location'] ?? __('messages.pages.home.testimonial_1_location'),
+                        'quote' => $cleanTestimonialQuote($homePageContent['testimonial_1_quote'] ?? __('messages.pages.home.testimonial_1_quote')),
+                        'rating' => (int)($homePageContent['testimonial_1_rating'] ?? 5),
+                        'date' => $homePageContent['testimonial_1_date'] ?? null,
+                    ],
+                    [
+                        'name' => $homePageContent['testimonial_2_name'] ?? __('messages.pages.home.testimonial_2_name'),
+                        'location' => $homePageContent['testimonial_2_location'] ?? __('messages.pages.home.testimonial_2_location'),
+                        'quote' => $cleanTestimonialQuote($homePageContent['testimonial_2_quote'] ?? __('messages.pages.home.testimonial_2_quote')),
+                        'rating' => (int)($homePageContent['testimonial_2_rating'] ?? 5),
+                        'date' => $homePageContent['testimonial_2_date'] ?? null,
+                    ],
+                    [
+                        'name' => $homePageContent['testimonial_3_name'] ?? __('messages.pages.home.testimonial_3_name'),
+                        'location' => $homePageContent['testimonial_3_location'] ?? __('messages.pages.home.testimonial_3_location'),
+                        'quote' => $cleanTestimonialQuote($homePageContent['testimonial_3_quote'] ?? __('messages.pages.home.testimonial_3_quote')),
+                        'rating' => (int)($homePageContent['testimonial_3_rating'] ?? 4),
+                        'date' => $homePageContent['testimonial_3_date'] ?? null,
+                    ],
+                ];
+            @endphp
+            <div class="relative">
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="testimonials-grid">
+                @foreach($testimonials as $index => $testimonial)
+                <div class="testimonial-card overflow-hidden rounded-lg border border-border bg-card {{ $index > 0 ? 'hidden md:block' : '' }}" data-testimonial-index="{{ $index }}">
+                    <div class="p-5">
                         <div class="flex flex-col gap-4">
                             <div class="flex gap-1">
                                 @for($i = 0; $i < 5; $i++)
@@ -1228,23 +1261,51 @@
                                 @endfor
                             </div>
 
-                            <blockquote class="text-muted-foreground">
-                                &ldquo;{{ $testimonial['quote'] }}&rdquo;
+                            <blockquote class="testimonial-quote text-muted-foreground">
+                                {{ $testimonial['quote'] }}
                             </blockquote>
 
                             <div class="mt-2 flex items-center gap-3">
-                                <div class="bg-muted h-10 w-10 overflow-hidden rounded-full flex items-center justify-center">
-                                    <span class="text-muted-foreground">{{ substr($testimonial['name'], 0, 1) }}</span>
+                                <div class="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
+                                    <span class="text-muted-foreground">{{ mb_strtoupper(mb_substr($testimonial['name'], 0, 1)) }}</span>
                                 </div>
                                 <div>
                                     <p class="font-medium">{{ $testimonial['name'] }}</p>
                                     <p class="text-xs text-muted-foreground">{{ $testimonial['location'] }}</p>
+                                    @if(!empty($testimonial['date']))
+                                    <p class="text-xs text-muted-foreground/80">{{ $testimonial['date'] }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 @endforeach
+                </div>
+                @if(count($testimonials) >= 3)
+                <div class="mt-6 flex items-center justify-center gap-4 md:hidden">
+                    <button
+                        type="button"
+                        id="testimonial-prev"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-all hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="{{ __('messages.common.previous') }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
+                        id="testimonial-next"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-all hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="{{ __('messages.common.next') }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 18l6-6-6-6"></path>
+                        </svg>
+                    </button>
+                </div>
+                @endif
             </div>
         </div>
     </section>
@@ -2706,6 +2767,36 @@
         (async function() {
             await checkFavoritesBatch();
         })();
+
+        // Mobile testimonials carousel
+        const testimonialCards = document.querySelectorAll('.testimonial-card');
+        const testimonialPrev = document.getElementById('testimonial-prev');
+        const testimonialNext = document.getElementById('testimonial-next');
+        let activeTestimonialIndex = 0;
+
+        const showTestimonial = (index) => {
+            if (!testimonialCards.length) return;
+            activeTestimonialIndex = (index + testimonialCards.length) % testimonialCards.length;
+            testimonialCards.forEach((card, cardIndex) => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                    card.classList.toggle('hidden', cardIndex !== activeTestimonialIndex);
+                } else {
+                    card.classList.remove('hidden');
+                    card.classList.add('md:block');
+                }
+            });
+        };
+
+        if (testimonialPrev) {
+            testimonialPrev.addEventListener('click', () => showTestimonial(activeTestimonialIndex - 1));
+        }
+
+        if (testimonialNext) {
+            testimonialNext.addEventListener('click', () => showTestimonial(activeTestimonialIndex + 1));
+        }
+
+        window.addEventListener('resize', () => showTestimonial(activeTestimonialIndex));
+        showTestimonial(0);
     })();
 </script>
 @endpush

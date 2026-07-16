@@ -45,6 +45,10 @@ class SetLocale
 
         $cookieLocale = $request->cookie('app_locale');
         if (is_string($cookieLocale) && in_array($cookieLocale, self::SUPPORTED_LOCALES, true)) {
+            if ($request->hasSession()) {
+                $request->session()->put('locale', $cookieLocale);
+            }
+
             return $cookieLocale;
         }
 

@@ -1347,6 +1347,7 @@
                         <span class="lookup-button-text">{{ __('messages.pages.sell_your_car.enter_manually') }}</span>
                     </button>
                 </div>
+                <p class="text-xs mt-2 text-muted-foreground">{{ __('messages.pages.sell_your_car.license_plate_format_hint') }}</p>
                 <p class="text-xs mt-2 text-muted-foreground">{{ __('messages.pages.sell_your_car.enter_manually_lead') }}</p>
                 <p class="text-xs mt-2" id="lookup-error" style="opacity: 0.8; min-height: 1.25rem;"></p>
             </div>
@@ -1570,9 +1571,9 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="km_driven" class="text-sm font-medium required-field">{{ __('messages.forms.km_driven') }}</label>
-                        <input type="number" id="km_driven" name="km_driven" min="0" step="any" inputmode="decimal" required
+                        <input type="number" id="km_driven" name="km_driven" min="0" step="1" inputmode="numeric" required
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder="0.00">
+                            placeholder="{{ __('messages.pages.sell_your_car.km_driven_placeholder') }}">
                         <p class="field-help">{{ __('messages.pages.sell_your_car.km_driven_help') }}</p>
                     </div>
 
@@ -1737,11 +1738,13 @@
                 <div class="form-grid">
                     <div class="space-y-2">
                         <label for="price" class="text-sm font-medium required-field">{{ __('messages.pages.sell_your_car.price_label') }}</label>
-                        <input type="number" id="price" name="price" required min="0" step="any" inputmode="decimal"
+                        <input type="number" id="price" name="price" required min="1" max="99999999" step="1" inputmode="numeric"
                             class="flex h-9 w-full rounded-md border {{ $errors->has('price') ? 'border-red-500' : 'border-input' }} bg-background px-3 py-2 text-sm"
-                            placeholder="0.00">
+                            placeholder="{{ __('messages.pages.sell_your_car.price_placeholder') }}">
                         @error('price')
                             <p class="field-error">{{ $message }}</p>
+                        @else
+                            <p id="price-inline-error" class="field-error hidden">{{ __('messages.pages.sell_your_car.price_required_positive') }}</p>
                         @enderror
                         <p class="field-help">{{ __('messages.pages.sell_your_car.price_help') }}</p>
                     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\VehicleListStatus;
 use App\Models\Dealer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,15 @@ class AdminDealerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Dealer::with('staff.user.roles');
+        $query = Dealer::with([
+            'owner',
+            'staff.user.roles',
+            'subscriptions' => fn ($q) => $q->latest('id')->limit(1)->with('plan'),
+            'subscriptionChangeRequests' => fn ($q) => $q->pending()->latest('id')->limit(1),
+        ])->withCount([
+            'vehicles',
+            'vehicles as published_vehicles_count' => fn ($q) => $q->where('list_status_id', VehicleListStatus::PUBLISHED),
+        ]);
 
         // Apply search filter
         if ($request->has('search') && $request->input('search')) {
@@ -24,11 +33,15 @@ class AdminDealerController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('cvr', 'like', "%{$search}%")
                   ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%");
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhereHas('owner', function ($ownerQuery) use ($search) {
+                      $ownerQuery->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%");
+                  });
             });
         }
 
-        $dealers = $query->paginate($request->get('limit', 15));
+        $dealers = $query->orderByDesc('id')->paginate($request->get('limit', 15));
 
         return $this->paginated($dealers);
     }
@@ -61,7 +74,16 @@ class AdminDealerController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $dealer = Dealer::with(['staff.user.roles', 'subscriptions.plan', 'vehicles'])
+        $dealer = Dealer::with([
+            'owner',
+            'staff.user.roles',
+            'subscriptions.plan',
+            'subscriptionChangeRequests' => fn ($q) => $q->pending()->latest('id')->limit(1),
+            'vehicles',
+        ])
+            ->withCount([
+                'vehicles as published_vehicles_count' => fn ($q) => $q->where('list_status_id', VehicleListStatus::PUBLISHED),
+            ])
             ->findOrFail($id);
 
         return $this->success($dealer);

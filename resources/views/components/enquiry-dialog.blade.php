@@ -370,7 +370,10 @@
                     }
                     if (errorContainer) errorContainer.classList.remove('hidden');
                 } else {
-                    const errorMsgText = result.message || '{{ __('messages.dialogs.failed_to_submit') }}';
+                    let errorMsgText = result.message || '{{ __('messages.dialogs.failed_to_submit') }}';
+                    if (typeof errorMsgText === 'string' && errorMsgText.startsWith('messages.')) {
+                        errorMsgText = '{{ __('messages.dialogs.failed_to_submit') }}';
+                    }
                     if (window.showSnackbar) {
                         window.showSnackbar(errorMsgText, 'error');
                     } else if (errorList) {
@@ -379,8 +382,11 @@
                     }
                 }
             } else {
-                // Success
-                const successMsg = result.message || '{{ __('messages.dialogs.request_submitted') }}';
+                // Success — never display raw translation keys
+                let successMsg = result.message || '{{ __('messages.dialogs.request_submitted') }}';
+                if (typeof successMsg === 'string' && /^messages\./.test(successMsg.trim())) {
+                    successMsg = '{{ __('messages.dialogs.request_submitted') }}';
+                }
                 if (successMessage) {
                     successMessage.querySelector('p').textContent = successMsg;
                     successMessage.classList.remove('hidden');

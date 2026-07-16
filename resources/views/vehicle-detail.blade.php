@@ -24,13 +24,14 @@
         /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
         padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        /* Vertical spacing between sections is handled by the parent's
+           `space-y-6` utility; a margin here would double up the gap. */
     }
     
     .detail-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        gap: 1rem;
     }
     
     .detail-item {
@@ -76,6 +77,7 @@
 
 @php
     use App\Helpers\FormatHelper;
+    use App\Helpers\DealerDisplayHelper;
     use Illuminate\Support\Carbon;
     /** @var array<string, mixed> $vehicleDetail */
     $vd = $vehicleDetail ?? [];
@@ -83,7 +85,7 @@
 @endphp
 
 @section('content')
-<div class="container space-y-8 py-6">
+<div class="container space-y-4 py-6">
     <!-- Header Section -->
     <div class="space-y-4">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -117,19 +119,24 @@
         $dealerDisplayAddress = null;
         $dealerDisplayPostcode = null;
         $dealerDisplayCity = null;
+        $dealerPublicCvr = null;
 
-        if ($vehicle->dealer && $vehicle->dealer->owner) {
-            $dealerOwner = $vehicle->dealer->owner;
-            $contactUser = $dealerOwner;
-            $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
-            $contactEmail = $dealerOwner->email ?? null;
-            if ($dealerOwner && $dealerOwner->phone) {
-                $dealerPhone = $dealerOwner->phone;
-            }
+        if ($vehicle->dealer) {
             // From dealers table: address, city, postcode (vehicle address/postcode overrides when set)
-            $dealerDisplayAddress = $vehicle->address ? trim($vehicle->address) : trim($vehicle->dealer->address ?? '');
+            $dealerDisplayAddress = ($vehicle->address ? trim($vehicle->address) : trim($vehicle->dealer->address ?? '')) ?: null;
             $dealerDisplayCity = trim($vehicle->dealer->city ?? '') ?: null;
-            $dealerDisplayPostcode = $vehicle->postcode ? trim($vehicle->postcode) : (trim($vehicle->dealer->postcode ?? '') ?: null);
+            $dealerDisplayPostcode = ($vehicle->postcode ? trim($vehicle->postcode) : trim($vehicle->dealer->postcode ?? '')) ?: null;
+            $dealerPublicCvr = FormatHelper::isValidPublicCvr($vehicle->dealer->cvr) ? $vehicle->dealer->cvr : null;
+
+            if ($vehicle->dealer->owner) {
+                $dealerOwner = $vehicle->dealer->owner;
+                $contactUser = $dealerOwner;
+                $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
+                $contactEmail = $dealerOwner->email ?? null;
+                if ($dealerOwner->phone) {
+                    $dealerPhone = $dealerOwner->phone;
+                }
+            }
         } elseif ($vehicle->user) {
             $dealerDisplayAddress = $vehicle->address ? trim($vehicle->address) : null;
             $contactUser = $vehicle->user;
@@ -139,7 +146,7 @@
     @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
-        <div class="space-y-6 lg:col-span-2">
+        <div class="space-y-4 lg:col-span-2">
             <!-- Images Carousel Section -->
             @if($vehicle->images && $vehicle->images->count() > 0)
             <div class="relative">
@@ -199,8 +206,36 @@
             @endif
 
             @if($showTrustReport ?? true)
+            @php
+                $trustReportRaw = $vehicleDetail['trust_report'] ?? [];
+                $trustReportDisplay = $trustReportRaw;
+
+                $daysListed = isset($trustReportDisplay['days_listed']) ? (int) $trustReportDisplay['days_listed'] : null;
+                if ($daysListed === null || $daysListed <= 0 || $daysListed > 3650) {
+                    $trustReportDisplay['days_listed'] = null;
+                }
+
+                $priceReduction = isset($trustReportDisplay['price_reduction_percent'])
+                    ? (float) $trustReportDisplay['price_reduction_percent']
+                    : null;
+                if ($priceReduction === null || $priceReduction <= 0 || $priceReduction > 99) {
+                    $trustReportDisplay['has_price_reduction'] = false;
+                    $trustReportDisplay['price_reduction_percent'] = null;
+                }
+
+                $inspectionOdometer = isset($trustReportDisplay['inspection_odometer'])
+                    ? (int) $trustReportDisplay['inspection_odometer']
+                    : null;
+                if ($inspectionOdometer !== null && $inspectionOdometer <= 0) {
+                    $trustReportDisplay['inspection_odometer'] = null;
+                }
+
+                if (!empty($trustReportDisplay['registry']['km_driven']) && (float) $trustReportDisplay['registry']['km_driven'] <= 0) {
+                    unset($trustReportDisplay['registry']['km_driven']);
+                }
+            @endphp
             <x-trust-report-card
-                :trust-report="$vehicleDetail['trust_report'] ?? []"
+                :trust-report="$trustReportDisplay"
                 :fair-price="$vehicleDetail['fair_price'] ?? null"
             />
             @endif
@@ -256,14 +291,16 @@
             <!-- Mobile Pricing + Contact Actions (below photos) -->
             <div class="space-y-6 lg:hidden">
                 <!-- Pricing -->
-                <div class="rounded-lg bg-primary p-6">
-                    <div class="space-y-2">
-                        <p class="text-3xl font-bold text-primary-foreground">
+                <div class="rounded-lg bg-primary px-4 py-3">
+                    <div class="space-y-0.5">
+                        <p class="text-3xl font-bold leading-tight text-primary-foreground">
                             {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                         </p>
-                        <p class="text-sm text-primary-foreground">
+                        @if(!empty($vd['sales_type_name']))
+                        <p class="text-sm text-primary-foreground/90">
                             {{ $vd['sales_type_name'] }}
                         </p>
+                        @endif
                     </div>
                 </div>
 
@@ -284,24 +321,24 @@
                             {{ __('messages.pages.vehicles.detail.contact_actions') }}
                         </h2>
                     </div>
-                    <div class="space-y-3">
+                    <div class="flex flex-col gap-3">
                         <button
                             type="button"
                             onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            {{ __('messages.pages.vehicles.detail.send_enquiry') }}
+                            <span>{{ __('messages.pages.vehicles.detail.send_enquiry') }}</span>
                         </button>
 
                         <button
                             type="button"
                             onclick="openEnquiryDialog('exchange', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                                 <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"></path>
                             </svg>
                             <span>{{ __('messages.pages.vehicles.detail.exchange_request') }}</span>
@@ -310,9 +347,9 @@
                         <button
                             type="button"
                             onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                                 <rect x="3" y="11" width="18" height="6" rx="2" />
                                 <path d="M5 17l1.5 2h11L19 17" />
                                 <circle cx="7.5" cy="16" r="1" />
@@ -328,9 +365,9 @@
                         <button
                             type="button"
                             onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                                 <line x1="12" y1="2" x2="12" y2="22"></line>
                                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                             </svg>
@@ -353,7 +390,7 @@
                             {{ __('messages.pages.vehicles.detail.dealer_information') }}
                         </h2>
                     </div>
-                    <div class="space-y-3">
+                    <div class="divide-y divide-border [&>*]:py-3 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
                         @if($dealerOwner && $dealerOwner->name)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
@@ -455,14 +492,14 @@
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->dealer && $vehicle->dealer->cvr)
+                        @if($dealerPublicCvr)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                 </svg>
                                 <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground">{{ $vehicle->dealer->cvr }}</p>
+                                    <p class="text-sm font-medium text-foreground">{{ $dealerPublicCvr }}</p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.cvr') }}</p>
                                 </div>
                             </div>
@@ -622,7 +659,7 @@
                 @if(!empty($vd['first_registration_date']))
                 <div class="detail-item">
                     <span class="detail-label">{{ __('messages.pages.vehicles.detail.first_registration_date') }}</span>
-                    <span class="detail-value">{{ Carbon::parse($vd['first_registration_date'])->format('F j, Y') }}</span>
+                    <span class="detail-value">{{ \App\Helpers\FormatHelper::formatDateDisplay($vd['first_registration_date']) }}</span>
                 </div>
                 @endif
                 @php
@@ -719,7 +756,7 @@
                 @endif
                 @if(!empty($vd['use_name']))
                 <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.use') }}</span>
+                    <span class="detail-label cursor-help" title="{{ __('messages.pages.vehicles.detail.use_help') }}">{{ __('messages.pages.vehicles.detail.use') }}</span>
                     <span class="detail-value">{{ $vd['use_name'] }}</span>
                 </div>
                 @endif
@@ -781,13 +818,13 @@
                 @endif
                 @if(isset($vd['engine_displacement_litres']) && $vd['engine_displacement_litres'] !== null && $vd['engine_displacement_litres'] !== '')
                 <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.engine_displacement_litres') }}</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.engine_displacement_litres') }}</span>
                     <span class="detail-value">{{ number_format((float) $vd['engine_displacement_litres'], 2) }} L</span>
                 </div>
                 @endif
                 @if($vehicle->gear_count !== null)
                 <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.sort.columns.gear_count') }}</span>
+                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.gear_count') }}</span>
                     <span class="detail-value">{{ $vehicle->gear_count }}</span>
                 </div>
                 @endif
@@ -948,19 +985,21 @@
             $equipmentChips = [];
             if ($vehicle->equipment && $vehicle->equipment->count() > 0) {
                 foreach ($vehicle->equipment as $equip) {
-                    $equipmentChips[] = $equip->name;
+                    if (\App\Helpers\FormatHelper::isDisplayableFeatureLabel($equip->name ?? null)) {
+                        $equipmentChips[] = $equip->name;
+                    }
                 }
             } elseif (! empty($vd['equipment']) && is_array($vd['equipment'])) {
                 foreach ($vd['equipment'] as $row) {
                     $n = is_array($row) ? ($row['name'] ?? null) : null;
-                    if ($n !== null && $n !== '') {
+                    if (\App\Helpers\FormatHelper::isDisplayableFeatureLabel($n)) {
                         $equipmentChips[] = $n;
                     }
                 }
             }
 
             foreach ($vd['specifications'] ?? [] as $spec) {
-                if ((int) ($spec['count'] ?? 0) === 1 && ! empty($spec['name'])) {
+                if ((int) ($spec['count'] ?? 0) === 1 && \App\Helpers\FormatHelper::isDisplayableFeatureLabel($spec['name'] ?? null)) {
                     $equipmentChips[] = $spec['name'];
                 }
             }
@@ -997,22 +1036,16 @@
         <div class="space-y-6">
 
              <!-- Pricing -->
-             <div class="hidden rounded-lg bg-primary p-6 lg:block">
-                <!-- <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-foreground">
-                        <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold text-primary-foreground">
-                        {{ __('messages.pages.vehicles.detail.pricing') }}
-                    </h2>
-                </div> -->
-                <div class="space-y-2">
-                    <p class="text-3xl font-bold text-primary-foreground">
+             <div class="hidden rounded-lg bg-primary px-4 py-3 lg:block">
+                <div class="space-y-0.5">
+                    <p class="text-3xl font-bold leading-tight text-primary-foreground">
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
-                    <p class="text-sm text-primary-foreground">
+                    @if(!empty($vd['sales_type_name']))
+                    <p class="text-sm text-primary-foreground/90">
                         {{ $vd['sales_type_name'] }}
                     </p>
+                    @endif
                 </div>
             </div>
 
@@ -1033,26 +1066,26 @@
                         {{ __('messages.pages.vehicles.detail.contact_actions') }}
                     </h2>
                 </div>
-                <div class="space-y-3">
+                <div class="flex flex-col gap-3">
                     <!-- Enquiry Form Button -->
                     <button 
                         type="button"
                         onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        {{ __('messages.pages.vehicles.detail.send_enquiry') }}
+                        <span>{{ __('messages.pages.vehicles.detail.send_enquiry') }}</span>
                     </button>
 
                     <!-- Exchange Button -->
                     <button 
                         type="button"
                         onclick="openEnquiryDialog('exchange', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                             <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"></path>
                         </svg>
                         <span>{{ __('messages.pages.vehicles.detail.exchange_request') }}</span>
@@ -1062,9 +1095,9 @@
                     <button 
                         type="button"
                         onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                             <rect x="3" y="11" width="18" height="6" rx="2" />
                             <path d="M5 17l1.5 2h11L19 17" />
                             <circle cx="7.5" cy="16" r="1" />
@@ -1081,9 +1114,9 @@
                     <button 
                         type="button"
                         onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
                             <line x1="12" y1="2" x2="12" y2="22"></line>
                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
@@ -1137,7 +1170,7 @@
                             {{ __('messages.pages.vehicles.detail.dealer_information') }}
                         </h2>
                     </div>
-                    <div class="space-y-3">
+                    <div class="divide-y divide-border [&>*]:py-3 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
                         @if($dealerOwner && $dealerOwner->name)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
@@ -1211,14 +1244,14 @@
                                 </div>
                             </div>
                         @endif
-                        @if($vehicle->dealer && $vehicle->dealer->cvr)
+                        @if($dealerPublicCvr)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                 </svg>
                                 <div class="flex-1">
-                                    <p class="text-sm font-medium text-foreground">{{ $vehicle->dealer->cvr }}</p>
+                                    <p class="text-sm font-medium text-foreground">{{ $dealerPublicCvr }}</p>
                                     <p class="text-xs text-muted-foreground">{{ __('messages.pages.vehicles.detail.cvr') }}</p>
                                 </div>
                             </div>
@@ -1245,7 +1278,7 @@
                             </p>
                             <a 
                                 href="/dealer-{{ $vehicle->dealer->slug }}" 
-                                class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:translate-y-0"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                     <path d="M5 12h14"></path>
@@ -1468,7 +1501,7 @@
                                 </p>
                             </div>
                         @endif
-                        @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && ($vd['views_count'] ?? null) !== null)
+                        @if(auth()->user()->hasAnyRole(['admin', 'dealer']) && ($vd['views_count'] ?? null) !== null && (int) $vd['views_count'] > 0)
                             <div class="space-y-1">
                                 <label class="text-sm font-medium">
                                     {{ __('messages.pages.vehicles.detail.views_count') }}

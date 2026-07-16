@@ -2,7 +2,13 @@
 
 @php
     $tr = $trustReport ?? [];
-    $hasContent = !empty($tr['has_registry_data']) || !empty($tr['inspection_date']) || !empty($tr['has_price_reduction']) || !empty($fairPrice);
+    $reg = $tr['registry'] ?? [];
+    $hasRegistryCard = !empty($reg['brand_name']) || !empty($reg['model_name']) || !empty($reg['first_registration_date']) || !empty($reg['km_driven']);
+    $hasInspectionCard = !empty($tr['inspection_date']);
+    $hasPricingCard = !empty($tr['days_listed'])
+        || (!empty($tr['has_price_reduction']) && !empty($tr['price_reduction_percent']))
+        || !empty($fairPrice['label']);
+    $hasContent = $hasRegistryCard || $hasInspectionCard || $hasPricingCard;
 @endphp
 
 @if($hasContent)
@@ -21,10 +27,9 @@
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
-        @if(!empty($tr['registry']))
+        @if($hasRegistryCard)
         <div class="rounded-lg border border-border bg-white/80 p-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{{ __('messages.pages.vehicles.detail.registration_status') }}</p>
-            @php $reg = $tr['registry']; @endphp
             @if(!empty($reg['brand_name']))
                 <p class="text-sm text-foreground"><span class="font-medium">{{ __('messages.forms.brand') }}:</span> {{ $reg['brand_name'] }}</p>
             @endif
@@ -32,23 +37,23 @@
                 <p class="text-sm text-foreground mt-1"><span class="font-medium">{{ __('messages.forms.model') }}:</span> {{ $reg['model_name'] }}</p>
             @endif
             @if(!empty($reg['first_registration_date']))
-                <p class="text-sm text-muted-foreground mt-1">{{ __('messages.pages.vehicles.detail.first_registration_date') }}: {{ \Illuminate\Support\Carbon::parse($reg['first_registration_date'])->format('M Y') }}</p>
+                <p class="text-sm text-muted-foreground mt-1">{{ __('messages.pages.vehicles.detail.first_registration_date') }}: {{ \App\Helpers\FormatHelper::formatMonthYear($reg['first_registration_date']) }}</p>
             @endif
-            @if(!empty($reg['km_driven']))
-                <p class="text-sm text-muted-foreground mt-1">{{ __('messages.forms.km_driven') }}: {{ number_format((float) $reg['km_driven']) }} km</p>
+            @if(!empty($reg['km_driven']) && (float) $reg['km_driven'] > 0)
+                <p class="text-sm text-muted-foreground mt-1">{{ __('messages.pages.vehicles.detail.kilometers_driven') }}: {{ number_format((float) $reg['km_driven']) }} km</p>
             @endif
         </div>
         @endif
 
-        @if(!empty($tr['inspection_date']))
+        @if($hasInspectionCard)
         <div class="rounded-lg border border-border bg-white/80 p-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{{ __('messages.pages.vehicles.detail.inspection_details') }}</p>
             <p class="text-sm font-medium text-foreground">{{ \Illuminate\Support\Carbon::parse($tr['inspection_date'])->format('F j, Y') }}</p>
             @if(!empty($tr['inspection_result']))
                 <p class="text-sm text-muted-foreground mt-1">{{ $tr['inspection_result'] }}</p>
             @endif
-            @if(!empty($tr['inspection_odometer']))
-                <p class="text-sm text-muted-foreground mt-1">{{ number_format((int) $tr['inspection_odometer']) }} km</p>
+            @if(!empty($tr['inspection_odometer']) && (int) $tr['inspection_odometer'] > 0)
+                <p class="text-sm text-muted-foreground mt-1">{{ __('messages.pages.vehicles.detail.last_inspection_odometer') }}: {{ number_format((int) $tr['inspection_odometer']) }} km</p>
             @endif
             @if(!empty($tr['inspection_passed']))
                 <span class="inline-flex mt-2 items-center rounded-md bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">{{ __('messages.pages.vehicles.detail.trust_inspection_passed') }}</span>
@@ -56,12 +61,13 @@
         </div>
         @endif
 
+        @if($hasPricingCard)
         <div class="rounded-lg border border-border bg-white/80 p-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{{ __('messages.pages.vehicles.detail.pricing') }}</p>
-            @if(!empty($tr['days_listed']))
+            @if(!empty($tr['days_listed']) && (int) $tr['days_listed'] > 0)
                 <p class="text-sm text-foreground">{{ __('messages.pages.vehicles.detail.trust_listed_days', ['days' => $tr['days_listed']]) }}</p>
             @endif
-            @if(!empty($tr['has_price_reduction']) && !empty($tr['price_reduction_percent']))
+            @if(!empty($tr['has_price_reduction']) && !empty($tr['price_reduction_percent']) && (float) $tr['price_reduction_percent'] > 0)
                 <p class="text-sm text-green-700 font-medium mt-1">{{ __('messages.pages.vehicles.detail.trust_price_reduced', ['percent' => $tr['price_reduction_percent']]) }}</p>
             @endif
             @if(!empty($fairPrice['label']))
@@ -75,6 +81,7 @@
                 <span class="inline-flex mt-2 items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">{{ $fairLabel }}</span>
             @endif
         </div>
+        @endif
     </div>
 </div>
 @endif

@@ -167,6 +167,11 @@
                 $modelsList = $selectedModels ?? [];
                 $selectedBrandNames = collect($brandsList)->filter(fn($b) => in_array(is_array($b) ? $b['id'] : $b->id, $selectedBrandIds))->map(fn($b) => is_array($b) ? $b['name'] : $b->name)->values()->all();
                 $selectedModelNames = collect($modelsList)->filter(fn($m) => in_array(is_array($m) ? $m['id'] : $m->id, $selectedModelIds))->map(fn($m) => is_array($m) ? $m['name'] : $m->name)->values()->all();
+                $brandDropdownSummary = count($selectedBrandNames) === 0
+                    ? __('messages.common.all')
+                    : (count($selectedBrandNames) === 1
+                        ? $selectedBrandNames[0]
+                        : implode(', ', array_slice($selectedBrandNames, 0, 3)) . (count($selectedBrandNames) > 3 ? '…' : ''));
             @endphp
             <details open class="border-b border-border">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
@@ -177,8 +182,8 @@
                     <div class="relative" data-multiselect-dropdown>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.brand') }}</label>
                         <button type="button" id="brand-dropdown-trigger" class="brand-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="brand-dropdown-label">
-                            <span id="brand-dropdown-label" class="truncate">
-                                @if(count($selectedBrandNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedBrandNames) === 1){{ $selectedBrandNames[0] }}@else{{ count($selectedBrandNames) }} {{ __('messages.forms.selected') }}@endif
+                            <span id="brand-dropdown-label" class="truncate" title="{{ $brandDropdownSummary }}">
+                                {{ $brandDropdownSummary }}
                             </span>
                             <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                         </button>
@@ -205,7 +210,7 @@
                     </div>
                     <div class="relative" data-multiselect-dropdown>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.model') }}</label>
-                        <button type="button" id="model-dropdown-trigger" class="model-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-dropdown-label">
+                        <button type="button" id="model-dropdown-trigger" class="model-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-dropdown-label" @if(count($selectedBrandIds) === 0) disabled @endif>
                             <span id="model-dropdown-label" class="truncate">
                                 @if(count($selectedModelNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedModelNames) === 1){{ $selectedModelNames[0] }}@else{{ count($selectedModelNames) }} {{ __('messages.forms.selected') }}@endif
                             </span>
@@ -249,12 +254,13 @@
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                            <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary transition-opacity"></div>
                             <input type="range" id="year-slider-min" min="1950" max="2027" step="1" value="1950" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <input type="range" id="year-slider-max" min="1950" max="2027" step="1" value="2027" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="year-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="year-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="year-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                 </div>
             </details>
@@ -269,17 +275,18 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.price_from') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.to') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.minimum') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                            <div id="price-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary transition-opacity"></div>
                             <input type="range" id="price-slider-min" min="0" max="{{ $filterPriceMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <input type="range" id="price-slider-max" min="0" max="{{ $filterPriceMax }}" step="1000" value="{{ $filterPriceMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="price-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="price-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="price-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
@@ -289,12 +296,13 @@
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
-                            <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"></div>
+                            <div id="mileage-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary transition-opacity"></div>
                             <input type="range" id="mileage-slider-min" min="0" max="{{ $filterKmMax }}" step="1000" value="0" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <input type="range" id="mileage-slider-max" min="0" max="{{ $filterKmMax }}" step="1000" value="{{ $filterKmMax }}" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
                             <div id="mileage-handle-min" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                             <div id="mileage-handle-max" class="absolute w-5 h-5 rounded-full border-2 border-primary bg-background shadow pointer-events-auto z-20 cursor-grab active:cursor-grabbing" style="top:50%;transform:translateY(-50%);"></div>
                         </div></div>
+                        <p id="mileage-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                 </div>
             </details>
@@ -525,13 +533,31 @@
                         </div></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" name="door_count" placeholder="{{ __('messages.forms.doors') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="seats_min" placeholder="{{ __('messages.forms.seats_min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="seats_max" placeholder="{{ __('messages.forms.seats_max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="axle_count" placeholder="{{ __('messages.forms.axles') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                        <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.airbags') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        <div>
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.doors') }}</label>
+                            <input type="number" name="door_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.seats_min') }}</label>
+                            <input type="number" name="seats_min" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.seats_max') }}</label>
+                            <input type="number" name="seats_max" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.axles') }}</label>
+                            <input type="number" name="axle_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.airbags') }}</label>
+                            <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                        </div>
                     </div>
-                    <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.towing_weight_min') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <div>
+                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.towing_weight_min') }}</label>
+                        <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    </div>
                 </div>
             </details>
 
@@ -731,8 +757,12 @@
     </div>
     
     <!-- Vehicle Grid/List -->
-    <div id="no-results-message" class="hidden col-span-full py-4 text-center rounded-lg bg-muted/50 border border-border">
+    <div id="no-results-message" class="hidden col-span-full py-6 text-center rounded-lg bg-muted/50 border border-border space-y-3">
         <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
+        <p class="text-muted-foreground text-sm">{{ __('messages.forms.try_adjusting_filters') }}</p>
+        <button type="button" id="no-results-reset-filters" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            {{ __('messages.pages.vehicles.reset_filters') }}
+        </button>
     </div>
     <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
         @forelse($vehicles as $row)
@@ -758,6 +788,9 @@
                 <p class="text-muted-foreground mt-1">
                     {{ __('messages.forms.try_adjusting_filters') }}
                 </p>
+                <button type="button" onclick="document.getElementById('filter-reset-button-main')?.click()" class="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    {{ __('messages.pages.vehicles.reset_filters') }}
+                </button>
             </div>
             @if(isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0)
             <div class="pt-4 border-t border-border">
@@ -1142,7 +1175,14 @@
         const sortLabels = @json($vehicleSortLabels);
         const I18N_BMV = {
             selectBrandForModels: @json(__('messages.forms.select_brand_for_models')),
+            all: @json(__('messages.common.all')),
+            from: @json(__('messages.forms.from')),
+            to: @json(__('messages.forms.to')),
+            chipsMore: @json(__('messages.forms.chips_more')),
+            chipsShowLess: @json(__('messages.forms.chips_show_less')),
+            resetFilters: @json(__('messages.pages.vehicles.reset_filters')),
         };
+        const CHIP_COLLAPSE_LIMIT = 5;
         
         let searchDebounceTimer = null;
         let isLoading = false;
@@ -1157,6 +1197,35 @@
                 maximumFractionDigits: 2
             }).format(amount) + ' kr.';
         }
+
+        const listingLocale = document.documentElement.lang || '{{ app()->getLocale() }}' || 'da';
+
+        function formatListingTitle(title) {
+            if (!title) return '';
+            return String(title).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+        }
+
+        function formatMonthYear(dateStr) {
+            if (!dateStr) return '';
+            try {
+                return new Date(dateStr).toLocaleDateString(listingLocale, { month: 'short', year: 'numeric' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function formatListingLocation(vehicle) {
+            const parts = [];
+            if (vehicle.seller_postcode) parts.push(String(vehicle.seller_postcode).trim());
+            if (vehicle.seller_city) {
+                parts.push(String(vehicle.seller_city).trim());
+            } else if (vehicle.city) {
+                parts.push(String(vehicle.city).trim());
+            } else if (vehicle.seller_address) {
+                parts.push(String(vehicle.seller_address).trim());
+            }
+            return parts.filter(Boolean).join(' ');
+        }
         
         // Single listing tile (card + list layouts differ only via #vehicle-container[data-view] CSS)
         function renderVehicleItem(vehicle) {
@@ -1164,14 +1233,8 @@
             const details = vehicle.details || {};
             const slug = vehicle.slug || vehicle.id;
             const salesTypeLabel = (details.sales_type_name || details.salesTypeName || vehicle.sales_type_name || vehicle.salesTypeName || '').trim();
-
-            let locationText = '';
-            if (vehicle.seller_address || vehicle.seller_postcode) {
-                const parts = [];
-                if (vehicle.seller_address) parts.push(vehicle.seller_address);
-                if (vehicle.seller_postcode) parts.push(vehicle.seller_postcode);
-                locationText = parts.join(', ');
-            }
+            const titleText = formatListingTitle(vehicle.title || '');
+            const locationText = formatListingLocation(vehicle);
 
             return `
                 <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
@@ -1179,7 +1242,7 @@
                         <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
                                 src="${imageUrl}"
-                                alt="${vehicle.title || ''}"
+                                alt="${titleText}"
                                 class="h-full w-full object-cover rounded-md vehicle-listing-thumb"
                             />
                             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
@@ -1195,6 +1258,16 @@
                             ${salesTypeLabel ? `
                             <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
                                 ${salesTypeLabel}
+                            </span>
+                            ` : ''}
+                            ${vehicle.premium_dealer_badge ? `
+                            <span class="inline-flex items-center rounded-md bg-violet-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                                {{ __('messages.pages.vehicles.premium_badge') }}
+                            </span>
+                            ` : ''}
+                            ${vehicle.is_boosted ? `
+                            <span class="inline-flex items-center rounded-md bg-amber-500/90 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                                {{ __('messages.pages.vehicles.boosted_badge') }}
                             </span>
                             ` : ''}
                             ${vehicle.trust_badge ? `
@@ -1219,21 +1292,21 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="vehicle-content-wrapper p-3 space-y-1">
+                        <div class="vehicle-content-wrapper flex flex-1 flex-col p-3 space-y-1 min-h-[7.5rem]">
                             <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-xs">
-                                    ${vehicle.title || ''}
+                                <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2 min-h-[2rem]">
+                                    ${titleText}
                                 </h3>
                                 ${vehicle.variant_name ? `
-                                <p class="text-muted-foreground text-xs font-normal">
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
                                     ${vehicle.variant_name}
                                 </p>
-                                ` : ''}
+                                ` : `<p class="text-xs font-normal invisible select-none" aria-hidden="true">&nbsp;</p>`}
                                 <p class="vehicle-listing-price text-lg font-bold">
                                     ${formatCurrency(vehicle.price)}
                                 </p>
                             </div>
-                            <div class="vehicle-listing-badges -mt-2 flex flex-wrap gap-1 text-xs font-light">
+                            <div class="vehicle-listing-badges mt-auto flex min-h-[2rem] flex-wrap content-start gap-1 text-xs font-light">
                                 ${vehicle.mileage || vehicle.km_driven ? `
                                 <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
                                 ` : ''}
@@ -1241,7 +1314,7 @@
                                 <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
                                 ` : ''}
                                 ${vehicle.first_registration_date ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Date(vehicle.first_registration_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${formatMonthYear(vehicle.first_registration_date)}</span>
                                 ` : ''}
                                 ${vehicle.fuel_type_name ? `
                                 <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
@@ -1253,25 +1326,25 @@
                         </div>
                     </a>
                     <div class="vehicle-item-footer mt-auto" onclick="event.stopPropagation()">
-                        ${locationText ? `
-                        <div class="px-3 pt-3 pb-2">
+                        <div class="px-3 pt-3 pb-2 min-h-[2.25rem]">
+                            ${locationText ? `
                             <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate text-right">${locationText}</span>
+                                <span class="truncate text-right" title="${locationText}">${locationText}</span>
                             </div>
+                            ` : ''}
                         </div>
-                        ` : ''}
                         <div class="p-3 pt-0">
                             <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
                                 <a href="/vehicles/${slug}" class="flex-1" onclick="event.stopPropagation()">
-                                    <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                    <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
                                 </a>
-                                <button type="button" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
+                                <button type="button" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
                                     {{ __('messages.pages.vehicles.enquire') }}
                                 </button>
                             </div>
@@ -1292,13 +1365,17 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </svg>
-                            <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
-                            <p class="text-muted-foreground mt-1">
-                                {{ __('messages.forms.try_adjusting_filters') }}
-                            </p>
-                        </div>
+                <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
+                <p class="text-muted-foreground mt-1">
+                    {{ __('messages.forms.try_adjusting_filters') }}
+                </p>
+                <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    {{ __('messages.pages.vehicles.reset_filters') }}
+                </button>
+            </div>
                     </div>
                 `;
+                vehicleContainer.querySelector('.empty-state-reset-btn')?.addEventListener('click', resetAllFilters);
                 return;
             }
 
@@ -1501,21 +1578,35 @@
             });
         }
         
-        // Show loading state
+        // Show loading overlay without clearing filter sidebar or chips
         function showLoading() {
             if (!vehicleGrid) return;
             isLoading = true;
-            vehicleGrid.innerHTML = `
-                <div class="col-span-full flex items-center justify-center py-12">
-                    <div class="flex flex-col items-center justify-center text-center">
-                        <svg class="animate-spin h-8 w-8 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            vehicleGrid.classList.add('relative', 'opacity-60', 'pointer-events-none');
+            let overlay = document.getElementById('vehicle-loading-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'vehicle-loading-overlay';
+                overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-background/40';
+                overlay.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-center rounded-lg bg-card/90 px-6 py-4 shadow-sm">
+                        <svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12 h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-muted-foreground">{{ __('messages.forms.loading_vehicles') }}</p>
+                        <p class="text-sm text-muted-foreground">{{ __('messages.forms.loading_vehicles') }}</p>
                     </div>
-                </div>
-            `;
+                `;
+                vehicleGrid.appendChild(overlay);
+            }
+            overlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            if (!vehicleGrid) return;
+            vehicleGrid.classList.remove('opacity-60', 'pointer-events-none');
+            const overlay = document.getElementById('vehicle-loading-overlay');
+            if (overlay) overlay.classList.add('hidden');
         }
         
         // Show error state
@@ -1537,6 +1628,22 @@
             `;
         }
         
+        function formatMultiSelectSummary(names, maxVisible = 3) {
+            if (!names.length) return I18N_BMV.all;
+            if (names.length === 1) return names[0];
+            const visible = names.slice(0, maxVisible).join(', ');
+            return names.length > maxVisible ? visible + '…' : visible;
+        }
+
+        function isResolvableChipLabel(label, rawValue) {
+            if (!label || !String(label).trim()) return false;
+            const trimmed = String(label).trim();
+            const valueStr = rawValue === undefined || rawValue === null ? '' : String(rawValue);
+            if (valueStr && trimmed === valueStr) return false;
+            if (/^\d+$/.test(trimmed) && valueStr && trimmed === valueStr) return false;
+            return true;
+        }
+
         // Render filter chips
         function renderFilterChips() {
             const container = document.getElementById('applied-filters-container');
@@ -1553,7 +1660,8 @@
                 }
                 if (!select) return null;
                 const option = Array.from(select.options).find(opt => opt.value == value);
-                return option ? option.textContent : null;
+                const text = option ? option.textContent.trim() : null;
+                return isResolvableChipLabel(text, value) ? text : null;
             }
             
             // Helper to get label text for checkbox/radio
@@ -1562,13 +1670,11 @@
                 const input = document.querySelector(`[name="${name}"][value="${value}"]`);
                 if (!input) return null;
                 const label = input.closest('label');
-                if (label) {
-                    const spans = Array.from(label.querySelectorAll('span'));
-                    const textSpan = spans.find(s => s.textContent.trim() && !s.querySelector('svg'));
-                    if (textSpan) return textSpan.textContent.trim();
-                    return label.textContent.trim();
-                }
-                return null;
+                if (!label) return null;
+                const spans = Array.from(label.querySelectorAll('span'));
+                const textSpan = spans.find(s => s.textContent.trim() && !s.querySelector('svg'));
+                const text = textSpan ? textSpan.textContent.trim() : label.textContent.trim();
+                return isResolvableChipLabel(text, value) ? text : null;
             }
             
             // Search
@@ -1920,7 +2026,12 @@
             }
             
             // Render chips (always keep reset button in DOM for updateResetButtonVisibility)
-            const chipsHTML = chips.length === 0 ? '' : chips.map(chip => `
+            const chipsExpanded = container.dataset.chipsExpanded === '1';
+            const visibleChips = (!chipsExpanded && chips.length > CHIP_COLLAPSE_LIMIT)
+                ? chips.slice(0, CHIP_COLLAPSE_LIMIT)
+                : chips;
+            const hiddenCount = chips.length - visibleChips.length;
+            const chipsHTML = visibleChips.map(chip => `
                 <div class="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground">
                     <span>${chip.label}</span>
                     <button 
@@ -1937,9 +2048,22 @@
                     </button>
                 </div>
             `).join('');
+            const moreBtnHtml = hiddenCount > 0
+                ? `<button type="button" id="filter-chips-more" class="inline-flex items-center rounded-full border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted">${I18N_BMV.chipsMore.replace(':count', hiddenCount)}</button>`
+                : (chipsExpanded && chips.length > CHIP_COLLAPSE_LIMIT
+                    ? `<button type="button" id="filter-chips-less" class="inline-flex items-center rounded-full border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted">${I18N_BMV.chipsShowLess}</button>`
+                    : '');
             const resetBtnHtml = `<button id="filter-reset-button-main" type="button" class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">{{ __('messages.pages.vehicles.reset_filters') }}</button>`;
-            container.innerHTML = chipsHTML + resetBtnHtml;
+            container.innerHTML = chipsHTML + moreBtnHtml + resetBtnHtml;
             updateResetButtonVisibility();
+            container.querySelector('#filter-chips-more')?.addEventListener('click', () => {
+                container.dataset.chipsExpanded = '1';
+                renderFilterChips();
+            });
+            container.querySelector('#filter-chips-less')?.addEventListener('click', () => {
+                container.dataset.chipsExpanded = '0';
+                renderFilterChips();
+            });
             container.querySelectorAll('.filter-chip-remove').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const key = btn.getAttribute('data-filter-key');
@@ -2066,8 +2190,12 @@
         async function fetchVehicles(params = {}) {
             if (isLoading) return;
             const payload = { ...collectFilters(), ...params };
-            // Prune empty
+            if (sortSelect?.value) {
+                payload.sort = sortSelect.value;
+            }
+            // Prune empty (keep sort so API can apply default normalization)
             Object.keys(payload).forEach(k => {
+                if (k === 'sort') return;
                 if (payload[k] === '' || payload[k] === null || payload[k] === undefined) delete payload[k];
                 if (Array.isArray(payload[k]) && payload[k].length === 0) delete payload[k];
             });
@@ -2102,12 +2230,18 @@
                 if (noResultsMessageEl) {
                     if (noResults && data.totalDocs === 0) {
                         noResultsMessageEl.classList.remove('hidden');
-                        noResultsMessageEl.innerHTML = '<h3 class="text-lg font-semibold">{{ __("messages.forms.no_vehicles_found") }}</h3><p class="text-muted-foreground text-sm mt-1">{{ __("messages.forms.try_adjusting_filters") }} {{ __("messages.pages.vehicles.showing_all_vehicles") }}</p>';
+                        noResultsMessageEl.innerHTML = `
+                            <h3 class="text-lg font-semibold">{{ __("messages.forms.no_vehicles_found") }}</h3>
+                            <p class="text-muted-foreground text-sm mt-1">{{ __("messages.forms.try_adjusting_filters") }} {{ __("messages.pages.vehicles.showing_all_vehicles") }}</p>
+                            <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">${I18N_BMV.resetFilters}</button>
+                        `;
+                        noResultsMessageEl.querySelector('.empty-state-reset-btn')?.addEventListener('click', resetAllFilters);
                     } else {
                         noResultsMessageEl.classList.add('hidden');
                         noResultsMessageEl.innerHTML = '';
                     }
                 }
+                hideLoading();
                 renderVehicleGrid(vehicles);
                 setView(currentView);
                 await checkFavoritesBatch();
@@ -2123,10 +2257,10 @@
                 }
                 renderFilterChips();
                 updateResetButtonVisibility();
-                if (params.sort !== undefined && sortSelect) sortSelect.value = params.sort || DEFAULT_LISTING_SORT;
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
+                hideLoading();
                 showError('{{ __('messages.pages.vehicles.failed_to_load_vehicles') }}');
                 isLoading = false;
             }
@@ -2164,9 +2298,7 @@
         // Sort select functionality
         if (sortSelect) {
             sortSelect.addEventListener('change', (e) => {
-                const sortValue = e.target.value;
-                    // Fetch vehicles with new sort parameter
-                    fetchVehicles({ sort: sortValue === DEFAULT_LISTING_SORT ? null : sortValue, page: 1 });
+                fetchVehicles({ sort: e.target.value, page: 1 });
             });
         }
         
@@ -2425,9 +2557,40 @@
 
         // Dual-handle range slider functionality
         function initRangeSlider(config) {
-            const { minSlider, maxSlider, minInput, maxInput, minHandle, maxHandle, track, min, max } = config;
+            const { minSlider, maxSlider, minInput, maxInput, minHandle, maxHandle, track, min, max, valueLabel, formatValue } = config;
             
             if (!minSlider || !maxSlider || !minInput || !maxInput || !minHandle || !maxHandle || !track) return;
+
+            const formatDisplay = typeof formatValue === 'function'
+                ? formatValue
+                : (v) => new Intl.NumberFormat('da-DK').format(v);
+
+            function isRangeFilterActive() {
+                return minInput.value !== '' || maxInput.value !== '';
+            }
+
+            function updateValueLabel(finalMin, finalMax, active) {
+                if (!valueLabel) return;
+                if (!active) {
+                    valueLabel.textContent = '';
+                    return;
+                }
+                const fromText = minInput.value !== '' ? formatDisplay(finalMin) : '—';
+                const toText = maxInput.value !== '' ? formatDisplay(finalMax) : '—';
+                valueLabel.textContent = `${fromText} – ${toText}`;
+            }
+
+            function setTrackActive(active) {
+                if (active) {
+                    track.classList.remove('opacity-0');
+                    minHandle.classList.remove('opacity-40');
+                    maxHandle.classList.remove('opacity-40');
+                } else {
+                    track.classList.add('opacity-0');
+                    minHandle.classList.add('opacity-40');
+                    maxHandle.classList.add('opacity-40');
+                }
+            }
             
             // Sync from server-rendered number inputs to sliders on init
             const minVal = parseFloat(minInput.value);
@@ -2436,65 +2599,94 @@
             if (!isNaN(maxVal) && maxVal < max) maxSlider.value = Math.max(min, maxVal);
             
             function updateSlider() {
-                const minVal = parseFloat(minSlider.value) || min;
-                const maxVal = parseFloat(maxSlider.value) || max;
+                let minVal = parseFloat(minSlider.value);
+                let maxVal = parseFloat(maxSlider.value);
+                if (isNaN(minVal)) minVal = min;
+                if (isNaN(maxVal)) maxVal = max;
                 
-                // Ensure min doesn't exceed max and vice versa
                 if (minVal > maxVal) {
-                    minSlider.value = maxVal;
-                    maxSlider.value = minVal;
+                    if (document.activeElement === minSlider) {
+                        minSlider.value = maxVal;
+                        minVal = maxVal;
+                    } else {
+                        maxSlider.value = minVal;
+                        maxVal = minVal;
+                    }
                 }
                 
                 const finalMin = Math.min(minVal, maxVal);
                 const finalMax = Math.max(minVal, maxVal);
-                
-                // Update input fields - clear if at default values (0 for min, max for max)
-                if (finalMin === min || finalMin === 0) {
-                    minInput.value = '';
-                } else {
-                    minInput.value = finalMin;
+                const active = isRangeFilterActive();
+                const sliderDriving = document.activeElement === minSlider || document.activeElement === maxSlider;
+
+                if (sliderDriving) {
+                    if (finalMin === min || finalMin === 0) minInput.value = '';
+                    else minInput.value = finalMin;
+                    if (finalMax === max) maxInput.value = '';
+                    else maxInput.value = finalMax;
                 }
                 
-                if (finalMax === max) {
-                    maxInput.value = '';
-                } else {
-                    maxInput.value = finalMax;
-                }
-                
-                // Calculate percentages
                 const minPercent = ((finalMin - min) / (max - min)) * 100;
                 const maxPercent = ((finalMax - min) / (max - min)) * 100;
                 
-                // Update handle positions (w-5 h-5 = 20px, so -10px to center)
                 minHandle.style.left = `calc(${minPercent}% - 10px)`;
                 maxHandle.style.left = `calc(${maxPercent}% - 10px)`;
                 
-                // Update track fill
-                track.style.left = `${minPercent}%`;
-                track.style.width = `${maxPercent - minPercent}%`;
+                if (active) {
+                    track.style.left = `${minPercent}%`;
+                    track.style.width = `${Math.max(0, maxPercent - minPercent)}%`;
+                } else {
+                    track.style.left = '0%';
+                    track.style.width = '0%';
+                }
+                setTrackActive(active);
+                updateValueLabel(finalMin, finalMax, active);
             }
             
             // Update only the visual track and handles without touching input values
             function updateTrackOnly() {
-                const minVal = parseFloat(minSlider.value) || min;
-                const maxVal = parseFloat(maxSlider.value) || max;
+                let minVal = parseFloat(minSlider.value);
+                let maxVal = parseFloat(maxSlider.value);
+                if (isNaN(minVal)) minVal = min;
+                if (isNaN(maxVal)) maxVal = max;
+                if (minVal > maxVal) {
+                    if (document.activeElement === minSlider) {
+                        minSlider.value = maxVal;
+                        minVal = maxVal;
+                    } else {
+                        maxSlider.value = minVal;
+                        maxVal = minVal;
+                    }
+                }
                 const finalMin = Math.min(minVal, maxVal);
                 const finalMax = Math.max(minVal, maxVal);
+                const active = isRangeFilterActive();
                 const minPercent = ((finalMin - min) / (max - min)) * 100;
                 const maxPercent = ((finalMax - min) / (max - min)) * 100;
                 minHandle.style.left = `calc(${minPercent}% - 10px)`;
                 maxHandle.style.left = `calc(${maxPercent}% - 10px)`;
-                track.style.left = `${minPercent}%`;
-                track.style.width = `${maxPercent - minPercent}%`;
+                if (active) {
+                    track.style.left = `${minPercent}%`;
+                    track.style.width = `${Math.max(0, maxPercent - minPercent)}%`;
+                } else {
+                    track.style.left = '0%';
+                    track.style.width = '0%';
+                }
+                setTrackActive(active);
+                updateValueLabel(finalMin, finalMax, active);
             }
 
             function updateFromInput(input, slider) {
                 const value = parseFloat(input.value);
                 if (!isNaN(value) && value >= 0) {
-                    // Move the slider to match what's typed without overwriting the input,
-                    // so the user can continue typing freely
                     const clampedValue = Math.max(min, Math.min(max, value));
                     slider.value = clampedValue;
+                    if (slider === minSlider && parseFloat(maxSlider.value) < clampedValue) {
+                        maxSlider.value = clampedValue;
+                    }
+                    if (slider === maxSlider && parseFloat(minSlider.value) > clampedValue) {
+                        minSlider.value = clampedValue;
+                    }
                     updateTrackOnly();
                 } else if (input.value === '') {
                     slider.value = (slider === minSlider) ? min : max;
@@ -2564,6 +2756,8 @@
                 minHandle: document.getElementById('price-handle-min'),
                 maxHandle: document.getElementById('price-handle-max'),
                 track: document.getElementById('price-range-track'),
+                valueLabel: document.getElementById('price-slider-label'),
+                formatValue: (v) => formatCurrency(v).replace(' kr.', ''),
                 min: 0,
                 max: {{ $filterPriceMax }}
             },
@@ -2575,6 +2769,8 @@
                 minHandle: document.getElementById('year-handle-min'),
                 maxHandle: document.getElementById('year-handle-max'),
                 track: document.getElementById('year-range-track'),
+                valueLabel: document.getElementById('year-slider-label'),
+                formatValue: (v) => String(Math.round(v)),
                 min: 1950,
                 max: 2027
             },
@@ -2586,6 +2782,8 @@
                 minHandle: document.getElementById('mileage-handle-min'),
                 maxHandle: document.getElementById('mileage-handle-max'),
                 track: document.getElementById('mileage-range-track'),
+                valueLabel: document.getElementById('mileage-slider-label'),
+                formatValue: (v) => new Intl.NumberFormat('da-DK').format(v) + ' km',
                 min: 0,
                 max: {{ $filterKmMax }}
             },
@@ -2681,10 +2879,15 @@
 
         // Reset filters function
         function resetAllFilters() {
+            const chipsContainer = document.getElementById('applied-filters-container');
+            if (chipsContainer) chipsContainer.dataset.chipsExpanded = '0';
             document.querySelectorAll('input.js-carry-model-year').forEach((el) => el.remove());
             // Reset search input
             if (searchInput) {
                 searchInput.value = '';
+            }
+            if (sortSelect) {
+                sortSelect.value = DEFAULT_LISTING_SORT;
             }
             
             // Reset all inputs in filter sidebar
@@ -2746,8 +2949,12 @@ if (config) {
             
             // Reset model options
             if (typeof updateModelOptions === 'function') {
-            updateModelOptions();
+                updateModelOptions();
             }
+            updateBrandDropdownLabel();
+            setModelDropdownEnabled(false);
+            if (typeof updateModelDropdownLabel === 'function') updateModelDropdownLabel();
+            if (typeof updateFuelTypeDropdownLabel === 'function') updateFuelTypeDropdownLabel();
             
             // Reinitialize sliders after reset
             setTimeout(() => {
@@ -2769,6 +2976,15 @@ if (config) {
             }, 100);
         }
         
+        // Wire empty-state reset buttons (SSR + dynamically injected)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.empty-state-reset-btn, #no-results-reset-filters');
+            if (btn) {
+                e.preventDefault();
+                resetAllFilters();
+            }
+        });
+
         // Attach reset handler to initial button
         if (filterResetButtonMain) {
             filterResetButtonMain.addEventListener('click', resetAllFilters);
@@ -2806,7 +3022,7 @@ if (config) {
             const vNum = (name, max) => { const val = v(name); if (!val) return null; const n = parseFloat(val); if (isNaN(n)) return null; if (max != null && n >= max) return null; return val; };
 
             if (searchInput?.value?.trim()) filters.search = searchInput.value.trim();
-            if (sortSelect?.value && sortSelect.value !== DEFAULT_LISTING_SORT) filters.sort = sortSelect.value;
+            if (sortSelect?.value) filters.sort = sortSelect.value;
 
             const listingTypeIds = Array.from(document.querySelectorAll('[name="listing_type_id[]"]:checked')).map(cb => cb.value);
             if (listingTypeIds.length > 0) filters.listing_type_id = listingTypeIds;
@@ -3195,9 +3411,33 @@ if (config) {
             if (!labelEl) return;
             const checked = Array.from(document.getElementsByName('brand_id[]')).filter(cb => cb.checked);
             const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('span:last-child')) ? cb.closest('label').querySelector('span:last-child').textContent.trim() : '').filter(Boolean);
-            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
-            else if (names.length === 1) labelEl.textContent = names[0];
-            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
+            const summary = formatMultiSelectSummary(names);
+            labelEl.textContent = summary;
+            labelEl.title = names.join(', ');
+            setModelDropdownEnabled(names.length > 0);
+        }
+
+        function setModelDropdownEnabled(enabled) {
+            const modelTrigger = document.getElementById('model-dropdown-trigger');
+            const modelPanel = document.getElementById('model-dropdown-panel');
+            if (modelTrigger) {
+                modelTrigger.disabled = !enabled;
+                modelTrigger.classList.toggle('opacity-50', !enabled);
+                modelTrigger.classList.toggle('cursor-not-allowed', !enabled);
+            }
+            if (!enabled && modelPanel) {
+                modelPanel.classList.add('hidden');
+                if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false');
+            }
+            if (!enabled) {
+                document.querySelectorAll('input[name="model_id[]"]:checked').forEach(cb => {
+                    const label = cb.closest('.model-checkbox-label');
+                    const brandId = label ? String(label.getAttribute('data-brand-id') || '') : '';
+                    const selectedBrandIds = new Set(Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).map(b => String(b.value)));
+                    if (!selectedBrandIds.has(brandId)) cb.checked = false;
+                });
+                updateModelDropdownLabel();
+            }
         }
 
         // Update model dropdown trigger label from checked checkboxes
@@ -3292,7 +3532,10 @@ if (config) {
                 const brandList = brandPanel.querySelector('#brand-checkbox-list');
                 if (brandList) {
                     brandList.addEventListener('change', (e) => {
-                        if (e.target && e.target.classList && e.target.classList.contains('brand-checkbox')) updateBrandDropdownLabel();
+                        if (e.target && e.target.classList && e.target.classList.contains('brand-checkbox')) {
+                            updateBrandDropdownLabel();
+                            if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
+                        }
                     });
                 }
             }
@@ -3342,8 +3585,8 @@ if (config) {
                 if (!(target instanceof Element)) return;
 
                 if (target.matches('input[type="checkbox"]')) {
-                    // If brand changed, refresh model suggestions based on the new selection.
                     if (target.classList.contains('brand-checkbox')) {
+                        updateBrandDropdownLabel();
                         if (typeof refreshModelsFromApi === 'function') refreshModelsFromApi();
                     }
                     autoApplyFilters();
@@ -3458,6 +3701,8 @@ if (config) {
         // Initialize filter chips and reset button visibility on page load
         renderFilterChips();
         updateResetButtonVisibility();
+        updateBrandDropdownLabel();
+        setModelDropdownEnabled(document.querySelectorAll('input[name="brand_id[]"]:checked').length > 0);
 
         // Clear filter params from URL (state lives in sidebar + POST only) then run first search
         if (window.location.search) {

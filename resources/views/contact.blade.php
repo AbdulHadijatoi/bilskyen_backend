@@ -55,7 +55,7 @@
                             @csrf
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div class="space-y-2">
-                                    <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.full_name') }}</label>
+                                    <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.full_name') }} <span class="text-red-500" aria-hidden="true">*</span></label>
                                     <input
                                         id="name"
                                         name="name"
@@ -63,11 +63,12 @@
                                         value="{{ old('name') }}"
                                         placeholder="{{ __('messages.forms.enter_full_name') }}"
                                         required
+                                        aria-required="true"
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div class="space-y-2">
-                                    <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }}</label>
+                                    <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.email') }} <span class="text-red-500" aria-hidden="true">*</span></label>
                                     <input
                                         id="email"
                                         name="email"
@@ -75,16 +76,18 @@
                                         value="{{ old('email') }}"
                                         placeholder="{{ __('messages.forms.enter_email') }}"
                                         required
+                                        aria-required="true"
                                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <label for="subject" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.subject') }}</label>
+                                <label for="subject" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.subject') }} <span class="text-red-500" aria-hidden="true">*</span></label>
                                 <select
                                     id="subject"
                                     name="subject"
                                     required
+                                    aria-required="true"
                                     class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <option value="" @selected(old('subject') === '')>{{ __('messages.pages.contact.select_subject') }}</option>
@@ -95,17 +98,18 @@
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.message') }}</label>
+                                <label for="message" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ __('messages.forms.message') }} <span class="text-red-500" aria-hidden="true">*</span></label>
                                 <textarea
                                     id="message"
                                     name="message"
                                     placeholder="{{ __('messages.pages.contact.write_message_here') }}"
                                     rows="6"
                                     required
+                                    aria-required="true"
                                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >{{ old('message') }}</textarea>
                             </div>
-                            <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                            <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
                                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                                     <path d="M22 2 11 13"></path>
@@ -154,9 +158,13 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.phone') }}</h3>
-                                <p class="text-muted-foreground">
-                                    {{ $contactPageContent['contact_phone'] ?? '+45 12 34 56 78' }}
-                                </p>
+                                @php
+                                    $contactPhone = $contactPageContent['contact_phone'] ?? '+45 12 34 56 78';
+                                    $contactPhoneHref = \App\Helpers\FormatHelper::formatPhoneNumber($contactPhone);
+                                @endphp
+                                <a href="tel:{{ $contactPhoneHref }}" class="text-muted-foreground hover:text-primary transition-colors">
+                                    {{ $contactPhone }}
+                                </a>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">
@@ -168,9 +176,10 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.email') }}</h3>
-                                <p class="text-muted-foreground">
-                                    {{ $contactPageContent['contact_email'] ?? 'info@bilskyen.dk' }}
-                                </p>
+                                @php $contactEmail = $contactPageContent['contact_email'] ?? 'info@bilskyen.dk'; @endphp
+                                <a href="mailto:{{ $contactEmail }}" class="text-muted-foreground hover:text-primary transition-colors">
+                                    {{ $contactEmail }}
+                                </a>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">

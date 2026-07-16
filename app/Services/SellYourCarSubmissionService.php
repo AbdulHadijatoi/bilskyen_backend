@@ -134,8 +134,8 @@ class SellYourCarSubmissionService
             'registration' => $dmrFactVehicleId !== null
                 ? ['required', 'string', 'max:20']
                 : ['nullable', 'string', 'max:20'],
-            'price' => 'required|numeric|min:0',
-            'km_driven' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:1|max:99999999',
+            'km_driven' => 'required|numeric|min:0|max:9999999',
             'charging_type' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'equipment_ids' => 'nullable|array',

@@ -39,6 +39,46 @@ class FormatHelper
     }
 
     /**
+     * Whether a CVR is safe to show on public pages (not placeholder/test data).
+     */
+    public static function isValidPublicCvr(?string $cvr): bool
+    {
+        if ($cvr === null) {
+            return false;
+        }
+
+        $trimmed = trim($cvr);
+        if ($trimmed === '' || strcasecmp($trimmed, '#') === 0) {
+            return false;
+        }
+
+        if (preg_match('/^pending/i', $trimmed)) {
+            return false;
+        }
+
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+        if ($digits === '' || preg_match('/^0+$/', $digits)) {
+            return false;
+        }
+
+        // Obviously fake / repeated sequences used in test data
+        if (in_array($digits, ['123123123123', '00000000', '11111111', '1234567890'], true)) {
+            return false;
+        }
+
+        if (preg_match('/^(123){3,}$/', $digits) || preg_match('/^(0123)+$/', $digits)) {
+            return false;
+        }
+
+        // Danish CVR is typically 8 digits; allow 8–10 after stripping
+        if (strlen($digits) < 8 || strlen($digits) > 10) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Format phone number
      * Currently returns as-is, can be enhanced for specific formats
      *
@@ -75,7 +115,66 @@ class FormatHelper
     }
 
     /**
-     * Format date for display (human-readable format)
+     * Whether an equipment/feature label is safe to show (skip bare numeric IDs).
+     */
+    public static function isDisplayableFeatureLabel(?string $label): bool
+    {
+        $label = trim((string) $label);
+        if ($label === '') {
+            return false;
+        }
+
+        // Skip keys that are only digits / dots / dashes (equipment ID leaks)
+        if (preg_match('/^[0-9.\-]+$/', $label)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Format a vehicle listing title with consistent capitalization.
+     */
+    public static function formatListingTitle(?string $title): string
+    {
+        $title = trim((string) $title);
+        if ($title === '') {
+            return '';
+        }
+
+        // Prefer mb_convert_case for UTF-8 brand/model names
+        if (function_exists('mb_convert_case')) {
+            return mb_convert_case(mb_strtolower($title, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        }
+
+        return ucwords(strtolower($title));
+    }
+
+    /**
+     * Format a short location line for vehicle cards (postcode + city/address).
+     */
+    public static function formatListingLocation(?string $address = null, ?string $postcode = null, ?string $city = null): string
+    {
+        $parts = [];
+        $postcode = trim((string) $postcode);
+        $city = trim((string) $city);
+        $address = trim((string) $address);
+
+        if ($postcode !== '') {
+            $parts[] = $postcode;
+        }
+        if ($city !== '') {
+            $parts[] = $city;
+        } elseif ($address !== '') {
+            // Prefer city when available; otherwise show address without duplicating postcode
+            $parts[] = $address;
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * Format date for display (human-readable format, locale-aware when possible).
      *
      * @param Carbon|string $date
      * @return string
@@ -86,7 +185,29 @@ class FormatHelper
             $date = Carbon::parse($date);
         }
 
-        return $date->format('M d, Y');
+        $locale = app()->getLocale();
+        try {
+            return $date->locale($locale)->isoFormat('D MMM YYYY');
+        } catch (\Throwable) {
+            return $date->format('d M Y');
+        }
+    }
+
+    /**
+     * Format month/year for listing badges (e.g. first registration).
+     */
+    public static function formatMonthYear(Carbon|string $date): string
+    {
+        if (is_string($date)) {
+            $date = Carbon::parse($date);
+        }
+
+        $locale = app()->getLocale();
+        try {
+            return $date->locale($locale)->isoFormat('MMM YYYY');
+        } catch (\Throwable) {
+            return $date->format('M Y');
+        }
     }
 
     /**
