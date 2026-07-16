@@ -66,12 +66,12 @@ return new class extends Migration
         ];
 
         foreach ($homeUpdates as $sectionKey => $content) {
-            DB::table('page_content')->updateOrInsert(
+            DB::table('page_contents')->updateOrInsert(
                 ['page_name' => 'home', 'section_key' => $sectionKey],
                 ['content' => $content, 'updated_at' => now(), 'created_at' => now()]
             );
         }
-        DB::table('page_content')
+        DB::table('page_contents')
             ->where('page_name', 'about')
             ->where('section_key', 'about_team_member_1_role')
             ->where(function ($query) {
