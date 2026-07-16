@@ -199,6 +199,7 @@ return [
         'engine_displacement' => 'Engine Displacement',
         'engine_displacement_short' => 'Displ.',
         'ncap_five' => 'NCAP 5',
+        'ncap_test' => 'NCAP tested',
         'is_import' => 'Import',
         'is_factory_new' => 'Factory New',
         'charging_ac' => 'AC',
@@ -238,6 +239,11 @@ return [
             'full_name' => 'John Doe',
             'confirm_password' => 'Confirm Your Password',
         ],
+    ],
+
+    'favorites' => [
+        'login_to_save_favorites' => 'Please login to save favorites',
+        'removed_from_favorites' => 'Removed from favorites',
     ],
     
     // Dialogs
@@ -1387,6 +1393,19 @@ return [
         'logged_out_success' => 'Logged out successfully',
         'no_required_roles' => 'You do not have the required role(s): :roles. Please contact your administrator if you believe this is an error.',
         'no_required_permissions' => 'You do not have the required permission(s): :permissions. Please contact your administrator if you believe this is an error.',
+        'vehicle_cannot_be_boosted' => 'Vehicle cannot be boosted.',
+        'only_draft_campaigns_editable' => 'Only draft campaigns can be edited.',
+        'campaign_already_sent' => 'Campaign was already sent.',
+        'campaign_subject_body_required' => 'Campaign subject and body are required before sending.',
+        'no_campaign_recipients' => 'No eligible recipients found for this campaign audience.',
+        'only_draft_quotes_editable' => 'Only draft quotes can be edited.',
+        'dealer_slug_required_audit' => 'Dealer slug is required for branded inventory audit links.',
+        'invalid_file_type' => 'Invalid file type. Allowed types: :types',
+        'file_size_exceeded' => 'File size exceeds maximum allowed size of 20MB',
+        'max_files_exceeded' => 'Maximum 20 files allowed',
+        'file_not_image' => 'File not found or is not an image',
+        'thumbnail_failed' => 'Failed to create thumbnail: :message',
+        'main_image_not_found' => 'Main image not found for thumbnail generation.',
     ],
 
     // CMS (R5)
@@ -1629,22 +1648,6 @@ return [
         'subscription_created_stripe' => 'Subscription activated via Stripe payment #:payment_id',
     ],
 
-    'errors' => [
-        'vehicle_cannot_be_boosted' => 'Vehicle cannot be boosted.',
-        'only_draft_campaigns_editable' => 'Only draft campaigns can be edited.',
-        'campaign_already_sent' => 'Campaign was already sent.',
-        'campaign_subject_body_required' => 'Campaign subject and body are required before sending.',
-        'no_campaign_recipients' => 'No eligible recipients found for this campaign audience.',
-        'only_draft_quotes_editable' => 'Only draft quotes can be edited.',
-        'dealer_slug_required_audit' => 'Dealer slug is required for branded inventory audit links.',
-        'invalid_file_type' => 'Invalid file type. Allowed types: :types',
-        'file_size_exceeded' => 'File size exceeds maximum allowed size of 20MB',
-        'max_files_exceeded' => 'Maximum 20 files allowed',
-        'file_not_image' => 'File not found or is not an image',
-        'thumbnail_failed' => 'Failed to create thumbnail: :message',
-        'main_image_not_found' => 'Main image not found for thumbnail generation.',
-    ],
-
     'payments' => [
         'invoice_product' => 'Dealer invoice #:id',
         'invoice_period' => 'Period :start — :end',
@@ -1875,9 +1878,6 @@ return [
         'sale_payment_pending_message' => 'The sale of vehicle :vehicle has a pending payment of :amount. Please follow up with :contact to complete the payment.',
         'new_enquiry_title' => 'New enquiry received',
         'new_enquiry_message' => 'You received a new enquiry for :vehicle.',
-    ],
-
-    'notifications' => [
         'title' => 'Notifications',
         'empty' => 'No notifications yet',
         'mark_all_read' => 'Mark all as read',

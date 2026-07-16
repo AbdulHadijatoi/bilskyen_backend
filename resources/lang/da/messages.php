@@ -8,6 +8,7 @@ return [
         'reset' => 'Nulstil',
         'submit' => 'Indsend',
         'cancel' => 'Annuller',
+        'customer' => 'Kunde',
         'save' => 'Gem',
         'delete' => 'Slet',
         'edit' => 'Rediger',
@@ -198,6 +199,7 @@ return [
         'engine_displacement' => 'Motorslagvolumen',
         'engine_displacement_short' => 'Slagvol.',
         'ncap_five' => 'NCAP 5',
+        'ncap_test' => 'NCAP-testet',
         'is_import' => 'Import',
         'is_factory_new' => 'Fabriksny',
         'charging_ac' => 'AC',
@@ -237,6 +239,11 @@ return [
             'full_name' => 'Fulde navn',
             'confirm_password' => 'Bekræft din adgangskode',
         ],
+    ],
+
+    'favorites' => [
+        'login_to_save_favorites' => 'Log venligst ind for at gemme favoritter',
+        'removed_from_favorites' => 'Fjernet fra favoritter',
     ],
     
     // Dialogs
@@ -1038,6 +1045,9 @@ return [
             'section_description_subtitle' => 'Køretøjsbeskrivelse',
             'description_placeholder' => 'Indtast køretøjsbeskrivelse...',
             'description_help' => 'Beskriv dit køretøj',
+            'ai_suggest_description' => 'Foreslå beskrivelse med AI',
+            'ai_suggest_loading' => 'Genererer…',
+            'ai_suggest_failed' => 'Kunne ikke generere beskrivelse. Prøv igen senere.',
             'section_seller_title' => 'Sælgerinformation',
             'section_seller_subtitle' => 'Dine kontaktoplysninger',
             'phone_placeholder' => 'Dit telefonnummer',
@@ -1383,6 +1393,19 @@ return [
         'logged_out_success' => 'Logget ud med succes',
         'no_required_roles' => 'Du har ikke den/de påkrævede rolle(r): :roles. Kontakt din administrator, hvis du mener, at dette er en fejl.',
         'no_required_permissions' => 'Du har ikke den/de påkrævede tilladelse(r): :permissions. Kontakt din administrator, hvis du mener, at dette er en fejl.',
+        'vehicle_cannot_be_boosted' => 'Køretøjet kan ikke boosts.',
+        'only_draft_campaigns_editable' => 'Kun kladdekampagner kan redigeres.',
+        'campaign_already_sent' => 'Kampagnen er allerede sendt.',
+        'campaign_subject_body_required' => 'Kampagneemne og -indhold er påkrævet før afsendelse.',
+        'no_campaign_recipients' => 'Ingen kvalificerede modtagere fundet for denne kampagnemålgruppe.',
+        'only_draft_quotes_editable' => 'Kun kladder kan redigeres.',
+        'dealer_slug_required_audit' => 'Forhandler-slug er påkrævet for branded audit-links.',
+        'invalid_file_type' => 'Ugyldig filtype. Tilladte typer: :types',
+        'file_size_exceeded' => 'Filstørrelsen overstiger den maksimalt tilladte størrelse på 20 MB',
+        'max_files_exceeded' => 'Maksimum 20 filer tilladt',
+        'file_not_image' => 'Filen blev ikke fundet eller er ikke et billede',
+        'thumbnail_failed' => 'Kunne ikke oprette miniature: :message',
+        'main_image_not_found' => 'Hovedbillede blev ikke fundet til miniaturegenerering.',
     ],
 
     // CMS (R5)
@@ -1574,22 +1597,6 @@ return [
         'notifications_marked_read' => 'Notifikationer markeret som læst',
         'unauthorized_access' => 'Uautoriseret adgang',
         'dealer_not_found' => 'Forhandler ikke fundet',
-    ],
-
-    'errors' => [
-        'vehicle_cannot_be_boosted' => 'Køretøjet kan ikke boosts.',
-        'only_draft_campaigns_editable' => 'Kun kladdekampagner kan redigeres.',
-        'campaign_already_sent' => 'Kampagnen er allerede sendt.',
-        'campaign_subject_body_required' => 'Kampagneemne og -indhold er påkrævet før afsendelse.',
-        'no_campaign_recipients' => 'Ingen kvalificerede modtagere fundet for denne kampagnemålgruppe.',
-        'only_draft_quotes_editable' => 'Kun kladder kan redigeres.',
-        'dealer_slug_required_audit' => 'Forhandler-slug er påkrævet for branded audit-links.',
-        'invalid_file_type' => 'Ugyldig filtype. Tilladte typer: :types',
-        'file_size_exceeded' => 'Filstørrelsen overstiger den maksimalt tilladte størrelse på 20 MB',
-        'max_files_exceeded' => 'Maksimum 20 filer tilladt',
-        'file_not_image' => 'Filen blev ikke fundet eller er ikke et billede',
-        'thumbnail_failed' => 'Kunne ikke oprette miniature: :message',
-        'main_image_not_found' => 'Hovedbillede blev ikke fundet til miniaturegenerering.',
     ],
 
     'payments' => [
@@ -1870,9 +1877,6 @@ return [
         'sale_payment_pending_message' => 'Salet af køretøj :vehicle har en afventende betaling på :amount. Følg op med :contact for at gennemføre betalingen.',
         'new_enquiry_title' => 'Ny henvendelse modtaget',
         'new_enquiry_message' => 'Du har modtaget en ny henvendelse om :vehicle.',
-    ],
-
-    'notifications' => [
         'title' => 'Notifikationer',
         'empty' => 'Ingen notifikationer endnu',
         'mark_all_read' => 'Markér alle som læst',
