@@ -40,7 +40,7 @@
 @endforeach
 @endif
 
-<x-mail::button :url="config('app.dealer_panel_url', config('app.url')).'/vehicles'">
+<x-mail::button :url="rtrim((string) config('payments.panel_url', config('app.url')), '/').'/vehicles'">
 {{ __('messages.mail.vehicle_import_view_vehicles') }}
 </x-mail::button>
 

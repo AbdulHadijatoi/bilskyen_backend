@@ -3,7 +3,7 @@
     // $user, $initials, $showUserMenu
     $userName = $user?->name ?? '';
     $userEmail = $user?->email ?? '';
-    $panelUrl = env('VUE_PANEL_URL', 'http://localhost:5173');
+    $panelUrl = rtrim((string) config('payments.panel_url'), '/');
     
     // Check user roles using Spatie Permission
     $hasAdminRole = $user?->hasRole('admin') ?? false;

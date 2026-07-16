@@ -144,7 +144,7 @@
             const panelButtonText = hasAdminRole
                 ? "{{ __('messages.navigation.admin_panel') }}"
                 : "{{ __('messages.navigation.dealer_panel') }}";
-            const panelUrl = '{{ env("VUE_PANEL_URL", "http://localhost:5173") }}';
+            const panelUrl = @json(rtrim((string) config('payments.panel_url'), '/'));
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             authContainer.innerHTML = `
