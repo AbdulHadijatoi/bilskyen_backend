@@ -1093,7 +1093,7 @@
                                 <path d="M12 8v6M9 11h6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_1_value'] ?? '100+' }}</h3>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_1_value'] ?? '10+' }}</h3>
                         <p class="mb-2 font-medium">{{ $homePageContent['stat_1_title'] ?? __('messages.pages.home.stat_1_title') }}</p>
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? __('messages.pages.home.stat_1_description') }}</p>
                     </div>
@@ -1108,7 +1108,7 @@
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_2_value'] ?? '500+' }}</h3>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_2_value'] ?? '30+' }}</h3>
                         <p class="mb-2 font-medium">{{ $homePageContent['stat_2_title'] ?? __('messages.pages.home.stat_2_title') }}</p>
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? __('messages.pages.home.stat_2_description') }}</p>
                     </div>
@@ -1123,7 +1123,7 @@
                                 <line x1="3" x2="21" y1="10" y2="10"></line>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_3_value'] ?? '15+' }}</h3>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_3_value'] ?? '24/7' }}</h3>
                         <p class="mb-2 font-medium">{{ $homePageContent['stat_3_title'] ?? __('messages.pages.home.stat_3_title') }}</p>
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? __('messages.pages.home.stat_3_description') }}</p>
                     </div>
@@ -1136,7 +1136,7 @@
                                 <path d="M12 2v6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_4_value'] ?? '98%' }}</h3>
+                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_4_value'] ?? 'DK' }}</h3>
                         <p class="mb-2 font-medium">{{ $homePageContent['stat_4_title'] ?? __('messages.pages.home.stat_4_title') }}</p>
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_4_description'] ?? __('messages.pages.home.stat_4_description') }}</p>
                     </div>

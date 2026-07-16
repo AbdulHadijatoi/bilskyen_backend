@@ -10,6 +10,7 @@ use App\Models\DealerSubscription;
 use App\Models\Plan;
 use App\Constants\VehicleListStatus;
 use App\Constants\SubscriptionStatus;
+use App\Helpers\FormatHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -88,7 +89,7 @@ class AdminDashboardController extends Controller
             : 0;
 
         // Recent Activity - Last 10 items
-        $recentVehicles = Vehicle::with(['dealer', 'user'])
+        $recentVehicles = Vehicle::with(['dealer.owner', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
@@ -98,7 +99,7 @@ class AdminDashboardController extends Controller
                     'title' => $vehicle->title,
                     'registration' => $vehicle->registration,
                     'price' => $vehicle->price,
-                    'dealer_name' => $vehicle->dealer->cvr ?? 'N/A',
+                    'dealer_name' => $this->formatDealerLabel($vehicle->dealer),
                     'user_name' => $vehicle->user->name ?? 'N/A',
                     'status' => $vehicle->list_status_id,
                     'created_at' => $vehicle->created_at?->toISOString(),
@@ -119,20 +120,23 @@ class AdminDashboardController extends Controller
                 ];
             });
 
-        $recentDealers = Dealer::orderBy('created_at', 'desc')
+        $recentDealers = Dealer::with('owner')
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($dealer) {
                 return [
                     'id' => $dealer->id,
-                    'cvr' => $dealer->cvr,
+                    'name' => $dealer->owner?->name,
+                    'cvr' => FormatHelper::isValidPublicCvr($dealer->cvr) ? $dealer->cvr : null,
+                    'cvr_pending' => ! FormatHelper::isValidPublicCvr($dealer->cvr),
                     'address' => $dealer->address,
                     'city' => $dealer->city,
                     'created_at' => $dealer->created_at?->toISOString(),
                 ];
             });
 
-        $recentLeads = Lead::with(['vehicle', 'dealer', 'buyerUser'])
+        $recentLeads = Lead::with(['vehicle', 'dealer.owner', 'buyerUser'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
@@ -141,7 +145,7 @@ class AdminDashboardController extends Controller
                     'id' => $lead->id,
                     'vehicle_id' => $lead->vehicle_id,
                     'vehicle_title' => $lead->vehicle->title ?? 'N/A',
-                    'dealer_cvr' => $lead->dealer->cvr ?? 'N/A',
+                    'dealer_cvr' => $this->formatDealerLabel($lead->dealer),
                     'buyer_name' => $lead->buyerUser->name ?? 'N/A',
                     'stage_id' => $lead->lead_stage_id,
                     'created_at' => $lead->created_at?->toISOString(),
@@ -270,5 +274,26 @@ class AdminDashboardController extends Controller
                 'leads' => $recentLeads,
             ],
         ]);
+    }
+
+    /**
+     * Human-readable dealer label for admin dashboard lists (never expose PENDING-* CVRs).
+     */
+    private function formatDealerLabel(?Dealer $dealer): string
+    {
+        if (! $dealer) {
+            return 'N/A';
+        }
+
+        $name = trim((string) ($dealer->owner?->name ?? ''));
+        if ($name !== '' && ! preg_match('/^0+$/', $name) && ! preg_match('/^\d+$/', $name)) {
+            return $name;
+        }
+
+        if (FormatHelper::isValidPublicCvr($dealer->cvr)) {
+            return (string) $dealer->cvr;
+        }
+
+        return __('messages.common.pending_cvr');
     }
 }

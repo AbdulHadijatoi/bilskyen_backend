@@ -62,7 +62,7 @@ class FormatHelper
         }
 
         // Obviously fake / repeated sequences used in test data
-        if (in_array($digits, ['123123123123', '00000000', '11111111', '1234567890'], true)) {
+        if (in_array($digits, ['123123123123', '12312312', '12345678', '00000000', '11111111', '1234567890', '87654321'], true)) {
             return false;
         }
 
@@ -87,9 +87,12 @@ class FormatHelper
      */
     public static function formatPhoneNumber(string $phone): string
     {
+        // If CMS stores multiple numbers, use the first one for tel: links.
+        $first = preg_split('/[\s,;\/|]+/', trim($phone))[0] ?? $phone;
+
         // Remove any non-digit characters except + at the start
-        $cleaned = preg_replace('/[^\d+]/', '', $phone);
-        
+        $cleaned = preg_replace('/[^\d+]/', '', $first) ?? '';
+
         // If it starts with +, keep it
         if (str_starts_with($cleaned, '+')) {
             return $cleaned;

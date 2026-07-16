@@ -65,7 +65,9 @@ class AdminVehicleController extends Controller
     private function adminVehicleShowEagerLoads(): array
     {
         return array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
-            'dealer',
+            'dealer' => function ($q) {
+                $q->with('owner');
+            },
             'user',
             'images' => function ($q) {
                 $q->orderBy('sort_order');
@@ -83,6 +85,7 @@ class AdminVehicleController extends Controller
     private function buildAdminVehicleShowPayload(Vehicle $vehicle): array
     {
         $payload = $this->vehicleDetailPresentationService->buildDetailPayload($vehicle);
+        $dealer = $vehicle->dealer;
 
         return array_merge($payload, [
             'dealer_id' => $vehicle->dealer_id,
@@ -95,7 +98,20 @@ class AdminVehicleController extends Controller
             'created_at' => $vehicle->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $vehicle->updated_at?->format('Y-m-d H:i:s'),
             'deleted_at' => $vehicle->deleted_at?->format('Y-m-d H:i:s'),
-            'dealer' => $vehicle->dealer,
+            'dealer' => $dealer ? [
+                'id' => $dealer->id,
+                'cvr' => $dealer->cvr,
+                'city' => $dealer->city,
+                'address' => $dealer->address,
+                'slug' => $dealer->slug,
+                'name' => $dealer->owner?->name,
+                'email' => $dealer->owner?->email,
+                'owner' => $dealer->owner ? [
+                    'id' => $dealer->owner->id,
+                    'name' => $dealer->owner->name,
+                    'email' => $dealer->owner->email,
+                ] : null,
+            ] : null,
             'user' => $vehicle->user,
             'images' => $vehicle->images->map(function ($image) {
                 return [
@@ -116,7 +132,7 @@ class AdminVehicleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Vehicle::with([
-            'dealer',
+            'dealer.owner',
             'user',
             'images',
             'equipment',
@@ -133,13 +149,17 @@ class AdminVehicleController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        // Filter by dealer name (searches CVR, address, city)
+        // Filter by dealer name (owner name, CVR, address, city)
         if ($request->has('dealer_name') && $request->input('dealer_name')) {
             $dealerName = $request->input('dealer_name');
             $query->whereHas('dealer', function ($q) use ($dealerName) {
                 $q->where('cvr', 'like', "%{$dealerName}%")
                   ->orWhere('address', 'like', "%{$dealerName}%")
-                  ->orWhere('city', 'like', "%{$dealerName}%");
+                  ->orWhere('city', 'like', "%{$dealerName}%")
+                  ->orWhereHas('owner', function ($ownerQuery) use ($dealerName) {
+                      $ownerQuery->where('name', 'like', "%{$dealerName}%")
+                          ->orWhere('email', 'like', "%{$dealerName}%");
+                  });
             });
         }
 

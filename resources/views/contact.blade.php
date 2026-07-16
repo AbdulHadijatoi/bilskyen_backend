@@ -160,11 +160,16 @@
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.phone') }}</h3>
                                 @php
                                     $contactPhone = $contactPageContent['contact_phone'] ?? '+45 12 34 56 78';
-                                    $contactPhoneHref = \App\Helpers\FormatHelper::formatPhoneNumber($contactPhone);
+                                    $phoneParts = preg_split('/\s*(?:\/|,|;|\||\s{2,})\s*/', trim($contactPhone)) ?: [$contactPhone];
+                                    $phoneParts = array_values(array_filter(array_map('trim', $phoneParts)));
                                 @endphp
-                                <a href="tel:{{ $contactPhoneHref }}" class="text-muted-foreground hover:text-primary transition-colors">
-                                    {{ $contactPhone }}
-                                </a>
+                                <div class="flex flex-col gap-1">
+                                    @foreach($phoneParts as $phonePart)
+                                        <a href="tel:{{ \App\Helpers\FormatHelper::formatPhoneNumber($phonePart) }}" class="text-muted-foreground hover:text-primary transition-colors">
+                                            {{ $phonePart }}
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">

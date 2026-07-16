@@ -411,6 +411,29 @@ class HomeController extends Controller
     }
 
     /**
+     * Whether the request has real search filters (not just pagination/sort).
+     */
+    private function hasActiveVehicleFilters(array $filters): bool
+    {
+        $ignored = ['limit', 'page', 'sort', 'view'];
+        foreach ($filters as $key => $value) {
+            if (in_array($key, $ignored, true)) {
+                continue;
+            }
+            if ($value === null || $value === '' || $value === []) {
+                continue;
+            }
+            if (is_array($value) && count(array_filter($value, fn ($v) => $v !== null && $v !== '')) === 0) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Show the vehicles listing page. GET params populate sidebar (currentFilters); initial list uses same filters.
      */
     public function showVehicles(Request $request)
@@ -445,7 +468,8 @@ class HomeController extends Controller
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 
-        $showNoResultsMessage = $vehicles->total() === 0;
+        $hasFilters = $this->hasActiveVehicleFilters($currentFilters);
+        $showNoResultsMessage = $vehicles->total() === 0 && $hasFilters;
         $fallbackVehicles = null;
         if ($showNoResultsMessage) {
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);

@@ -20,6 +20,7 @@ return [
         'loading' => 'Loading...',
         'no_data' => 'No data available',
         'not_available' => 'N/A',
+        'pending_cvr' => 'Pending CVR',
         'all' => 'All',
         'select' => 'Select',
         'required' => 'Required',

@@ -20,6 +20,7 @@ return [
         'loading' => 'Indlæser...',
         'no_data' => 'Ingen data tilgængelig',
         'not_available' => 'Ikke tilgængelig',
+        'pending_cvr' => 'CVR afventer',
         'all' => 'Alle',
         'select' => 'Vælg',
         'required' => 'Påkrævet',

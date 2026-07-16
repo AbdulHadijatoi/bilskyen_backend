@@ -222,8 +222,23 @@ class VehicleController extends Controller
             ['path' => $path ?: url('/api/v1/vehicles'), 'query' => $query]
         );
 
-        // When no results, include fallback list (all vehicles, first page) for better UX
-        if ($vehicles->total() === 0) {
+        // When filtered search returns nothing, include fallback suggestions for better UX.
+        // Do not treat an empty unfiltered inventory as "no matching filters".
+        $filterKeys = array_diff(array_keys($input), ['limit', 'page', 'sort', 'view']);
+        $hasFilters = false;
+        foreach ($filterKeys as $key) {
+            $value = $input[$key] ?? null;
+            if ($value === null || $value === '' || $value === []) {
+                continue;
+            }
+            if (is_array($value) && count(array_filter($value, fn ($v) => $v !== null && $v !== '')) === 0) {
+                continue;
+            }
+            $hasFilters = true;
+            break;
+        }
+
+        if ($vehicles->total() === 0 && $hasFilters) {
             $fallbackVehicles = $this->vehicleService->getPublicVehicles([], $limit, 1);
             $fallbackFormatted = collect($fallbackVehicles->items())->map(
                 fn ($vehicle) => $this->vehicleListingPresentationService->formatForApiListing($vehicle)
