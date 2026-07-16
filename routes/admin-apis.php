@@ -108,6 +108,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/update-images/{id}', [AdminVehicleController::class, 'updateImages']);
         Route::post('/delete-image/{id}', [AdminVehicleController::class, 'deleteImage']);
         Route::post('/update-equipment/{id}', [AdminVehicleController::class, 'updateEquipment']);
+        Route::post('/bulk-delete', [AdminVehicleController::class, 'bulkDelete']);
         Route::post('/delete/{id}', [AdminVehicleController::class, 'delete']); // Soft delete
     });
     

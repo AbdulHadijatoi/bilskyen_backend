@@ -297,7 +297,7 @@
                             {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                         </p>
                         @if(!empty($vd['sales_type_name']))
-                        <p class="text-sm text-primary-foreground/90">
+                        <p class="text-sm text-primary-foreground">
                             {{ $vd['sales_type_name'] }}
                         </p>
                         @endif
@@ -1042,7 +1042,7 @@
                         {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                     </p>
                     @if(!empty($vd['sales_type_name']))
-                    <p class="text-sm text-primary-foreground/90">
+                    <p class="text-sm text-primary-foreground">
                         {{ $vd['sales_type_name'] }}
                     </p>
                     @endif

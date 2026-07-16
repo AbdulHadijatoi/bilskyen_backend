@@ -83,6 +83,9 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/update/{id}', [VehicleController::class, 'update'])
             ->middleware('permission:dealer.vehicles.update');
         
+        Route::post('/bulk-delete', [VehicleController::class, 'bulkDestroy'])
+            ->middleware('permission:dealer.vehicles.delete');
+
         Route::post('/delete/{id}', [VehicleController::class, 'destroy'])
             ->middleware('permission:dealer.vehicles.delete');
         

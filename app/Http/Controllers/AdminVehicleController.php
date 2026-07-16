@@ -494,6 +494,25 @@ class AdminVehicleController extends Controller
         return $this->noContent();
     }
 
+    /**
+     * Soft-delete multiple vehicles at once.
+     */
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+        $deleted = Vehicle::query()->whereIn('id', $ids)->delete();
+
+        return $this->success([
+            'deleted' => (int) $deleted,
+            'requested' => count($ids),
+        ]);
+    }
+
     public function getImages(int $id): JsonResponse
     {
         $vehicle = Vehicle::findOrFail($id);

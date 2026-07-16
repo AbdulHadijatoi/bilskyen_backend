@@ -942,6 +942,58 @@ class VehicleController extends Controller
     }
 
     /**
+     * Soft-delete multiple vehicles owned by the authenticated dealer.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $dealer = $this->dealerContextService->requireDealer($request->user());
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+        $vehicles = Vehicle::query()
+            ->where('dealer_id', $dealer->id)
+            ->whereIn('id', $ids)
+            ->get();
+
+        $deleted = 0;
+        foreach ($vehicles as $vehicle) {
+            $beforeState = $vehicle->toArray();
+            $vehicleId = $vehicle->id;
+
+            $this->vehicleService->deleteVehicle($vehicle);
+            $deleted++;
+
+            try {
+                $this->auditLogService->logDelete(
+                    $request->user(),
+                    'Vehicle',
+                    $vehicleId,
+                    $beforeState,
+                    $request,
+                    'Dealer',
+                    $dealer->id,
+                    'Vehicle deleted: '.($beforeState['title'] ?? 'N/A'),
+                    ['vehicle', 'dealer', 'delete', 'bulk']
+                );
+            } catch (\Exception $e) {
+                Log::warning('Failed to create audit log for bulk vehicle deletion', [
+                    'vehicle_id' => $vehicleId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $this->success([
+            'deleted' => $deleted,
+            'requested' => count($ids),
+        ]);
+    }
+
+    /**
      * Update vehicle status (single endpoint replaces publish/unpublish)
      */
     public function updateStatus(Request $request, int $id): JsonResponse
