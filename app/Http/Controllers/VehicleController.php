@@ -375,7 +375,8 @@ class VehicleController extends Controller
             },
         ]))->findOrFail($id);
 
-        $dealerViewer = $this->dealerContextService->getCurrentDealer($request->user());
+        $user = $request->user();
+        $dealerViewer = $user ? $this->dealerContextService->getCurrentDealer($user) : null;
         if ($dealerViewer) {
             $vehicle->loadMissing(['dmrFactVehicle.drivmiddelLines']);
         }
