@@ -141,6 +141,14 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/import/batches/{id}', [VehicleImportController::class, 'showBatch'])
             ->middleware('permission:dealer.vehicles.create');
 
+        // Bilbasen URL import — keep under /import/* (static paths before /{id} routes)
+        Route::post('/import/from-url/preview', [BilbasenVehicleImportController::class, 'preview'])
+            ->middleware(['throttle:20,1', 'permission:dealer.vehicles.create']);
+
+        Route::post('/import/from-url', [BilbasenVehicleImportController::class, 'import'])
+            ->middleware(['throttle:10,1', 'idempotency', 'permission:dealer.vehicles.create']);
+
+        // Back-compat aliases (older panel builds)
         Route::post('/import-from-url/preview', [BilbasenVehicleImportController::class, 'preview'])
             ->middleware(['throttle:20,1', 'permission:dealer.vehicles.create']);
 

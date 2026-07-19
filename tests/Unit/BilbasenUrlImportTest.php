@@ -222,8 +222,10 @@ class BilbasenUrlImportTest extends TestCase
     public function test_import_from_url_route_registers_idempotency_middleware(): void
     {
         $route = collect(Route::getRoutes())->first(
-            static fn ($route) => $route->uri() === 'api/v1/dealer/vehicles/import-from-url'
-                && in_array('POST', $route->methods(), true)
+            static fn ($route) => (
+                $route->uri() === 'api/v1/dealer/vehicles/import/from-url'
+                || $route->uri() === 'api/v1/dealer/vehicles/import-from-url'
+            ) && in_array('POST', $route->methods(), true)
         );
 
         $this->assertNotNull($route);
