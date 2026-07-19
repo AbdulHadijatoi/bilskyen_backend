@@ -673,9 +673,19 @@ class VehicleController extends Controller
             'annual_tax' => 'nullable|numeric|min:0',
             'price' => ['required', 'numeric', 'min:0'],
             'sales_type_id' => ['required', 'integer', 'exists:sales_types,id'],
+            'image_urls' => 'nullable|array|max:10',
+            'image_urls.*' => 'nullable|string|url|max:2048',
         ]);
 
         $data = $request->all();
+        $rawImageUrls = $request->input('image_urls', []);
+        $imageUrls = is_array($rawImageUrls)
+            ? array_values(array_filter(
+                array_map(static fn ($url) => is_string($url) ? trim($url) : '', $rawImageUrls),
+                static fn ($url) => $url !== ''
+            ))
+            : [];
+        unset($data['image_urls']);
 
         // Set dealer_id from authenticated user
         $dealer = null;
@@ -729,10 +739,14 @@ class VehicleController extends Controller
             }
         }
 
-        // Check max_vehicle_images limit on create
-        if ($dealer && $request->hasFile('images')) {
-            $images = $request->file('images');
-            $newImageCount = is_array($images) ? count($images) : 1;
+        // Check max_vehicle_images limit on create (uploaded files + remote URLs)
+        if ($dealer) {
+            $uploadedCount = 0;
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                $uploadedCount = is_array($images) ? count($images) : 1;
+            }
+            $newImageCount = $uploadedCount + count($imageUrls);
             $maxImages = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
             if ($maxImages > 0 && $newImageCount > $maxImages) {
                 return $this->error(
@@ -753,6 +767,15 @@ class VehicleController extends Controller
         if ($vehicle->list_status_id == VehicleListStatus::PUBLISHED) {
             $this->listingExpirationService->setExpiryOnPublish($vehicle, false);
             $this->listingBillingService->onVehiclePublished($vehicle->fresh());
+        }
+
+        if ($imageUrls !== []) {
+            $startSort = (int) ($vehicle->images()->max('sort_order') ?? -1) + 1;
+            $this->vehicleImageUploadService->attachImagesFromRemoteUrls(
+                $vehicle->fresh(),
+                $imageUrls,
+                $startSort
+            );
         }
 
         // Audit log
@@ -786,9 +809,19 @@ class VehicleController extends Controller
         $request->validate([
             'brand_id' => ['required', 'integer', 'exists:dmr_brands,id'],
             'model_id' => ['required', 'integer', 'exists:dmr_models,id'],
+            'image_urls' => 'nullable|array|max:10',
+            'image_urls.*' => 'nullable|string|url|max:2048',
         ]);
 
         $data = $request->all();
+        $rawImageUrls = $request->input('image_urls', []);
+        $imageUrls = is_array($rawImageUrls)
+            ? array_values(array_filter(
+                array_map(static fn ($url) => is_string($url) ? trim($url) : '', $rawImageUrls),
+                static fn ($url) => $url !== ''
+            ))
+            : [];
+        unset($data['image_urls']);
 
         // Set dealer_id from authenticated user
         if ($request->user() && $request->user()->dealer) {
@@ -807,6 +840,15 @@ class VehicleController extends Controller
         }
 
         $vehicle = $this->vehicleService->createVehicle($data);
+
+        if ($imageUrls !== []) {
+            $startSort = (int) ($vehicle->images()->max('sort_order') ?? -1) + 1;
+            $this->vehicleImageUploadService->attachImagesFromRemoteUrls(
+                $vehicle->fresh(),
+                $imageUrls,
+                $startSort
+            );
+        }
 
         // Audit log
         try {

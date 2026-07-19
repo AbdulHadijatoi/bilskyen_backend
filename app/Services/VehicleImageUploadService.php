@@ -13,6 +13,8 @@ class VehicleImageUploadService
 {
     private const REMOTE_TIMEOUT_SECONDS = 30;
 
+    private const MAX_REDIRECTS = 3;
+
     public function __construct(
         private FileService $fileService
     ) {}
@@ -105,12 +107,8 @@ class VehicleImageUploadService
 
     private function attachRemoteImage(Vehicle $vehicle, string $url, int $sortOrder): VehicleImage
     {
-        RemoteUrlGuard::assertPublicHttpUrl($url);
-
         $maxBytes = (int) config('images.vehicle.remote_max_bytes', 10 * 1024 * 1024);
-        $response = Http::timeout(self::REMOTE_TIMEOUT_SECONDS)
-            ->withOptions(['allow_redirects' => ['max' => 3]])
-            ->get($url);
+        $response = $this->fetchRemoteImageResponse($url);
 
         if (! $response->successful()) {
             throw new \RuntimeException(__('messages.api.vehicle_import_image_http_error', ['status' => $response->status()]));
@@ -131,7 +129,7 @@ class VehicleImageUploadService
 
         $tmp = tempnam(sys_get_temp_dir(), 'veh_img_');
         if ($tmp === false) {
-            throw new \RuntimeException('Could not create temp file');
+            throw new \RuntimeException(__('messages.api.vehicle_import_image_temp_failed'));
         }
 
         $tmpPath = $tmp.'.'.$extension;
@@ -153,6 +151,76 @@ class VehicleImageUploadService
                 @unlink($tmpPath);
             }
         }
+    }
+
+    /**
+     * Fetch a remote image while validating every redirect hop before following it.
+     *
+     * @return \Illuminate\Http\Client\Response
+     */
+    private function fetchRemoteImageResponse(string $url)
+    {
+        $currentUrl = $url;
+        RemoteUrlGuard::assertPublicHttpUrl($currentUrl);
+        $redirects = 0;
+
+        while (true) {
+            $response = Http::timeout(self::REMOTE_TIMEOUT_SECONDS)
+                ->withOptions([
+                    'allow_redirects' => false,
+                    'http_errors' => false,
+                ])
+                ->get($currentUrl);
+
+            if (! $response->redirect()) {
+                return $response;
+            }
+
+            if ($redirects >= self::MAX_REDIRECTS) {
+                throw new \InvalidArgumentException(__('messages.api.vehicle_import_image_blocked_host'));
+            }
+
+            $location = $response->header('Location');
+            $location = is_array($location) ? ($location[0] ?? '') : (string) $location;
+            $location = trim($location);
+            if ($location === '') {
+                throw new \InvalidArgumentException(__('messages.api.vehicle_import_image_blocked_host'));
+            }
+
+            $currentUrl = $this->resolveRedirectUrl($currentUrl, $location);
+            RemoteUrlGuard::assertPublicHttpUrl($currentUrl);
+            $redirects++;
+        }
+    }
+
+    private function resolveRedirectUrl(string $currentUrl, string $location): string
+    {
+        if (preg_match('#^https?://#i', $location) === 1) {
+            return $location;
+        }
+
+        $parts = parse_url($currentUrl);
+        if ($parts === false || empty($parts['scheme']) || empty($parts['host'])) {
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_image_invalid_url'));
+        }
+
+        $scheme = $parts['scheme'];
+        $host = $parts['host'];
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+        $base = $scheme.'://'.$host.$port;
+
+        if (str_starts_with($location, '//')) {
+            return $scheme.':'.$location;
+        }
+
+        if (str_starts_with($location, '/')) {
+            return $base.$location;
+        }
+
+        $path = $parts['path'] ?? '/';
+        $dir = preg_replace('#/[^/]*$#', '/', $path) ?: '/';
+
+        return $base.$dir.$location;
     }
 
     private function extensionFromMime(string $mime): ?string

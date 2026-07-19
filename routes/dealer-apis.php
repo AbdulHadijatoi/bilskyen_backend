@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleImportController;
+use App\Http\Controllers\BilbasenVehicleImportController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\SavedSearchController;
@@ -139,6 +140,12 @@ Route::middleware('auth:api')->group(function () {
 
         Route::get('/import/batches/{id}', [VehicleImportController::class, 'showBatch'])
             ->middleware('permission:dealer.vehicles.create');
+
+        Route::post('/import-from-url/preview', [BilbasenVehicleImportController::class, 'preview'])
+            ->middleware(['throttle:20,1', 'permission:dealer.vehicles.create']);
+
+        Route::post('/import-from-url', [BilbasenVehicleImportController::class, 'import'])
+            ->middleware(['throttle:10,1', 'idempotency', 'permission:dealer.vehicles.create']);
 
         Route::get('/export', [VehicleController::class, 'exportStock'])
             ->middleware('permission:dealer.feeds.export');
