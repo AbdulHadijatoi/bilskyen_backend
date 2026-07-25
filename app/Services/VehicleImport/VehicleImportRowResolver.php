@@ -277,6 +277,12 @@ class VehicleImportRowResolver
                     continue;
                 }
                 $resolved = $this->lookupCache->resolveModel($raw, (int) $brandId);
+                if ($resolved === null) {
+                    $alt = $this->normalizeModelLabel($raw);
+                    if ($alt !== '' && strcasecmp($alt, $raw) !== 0) {
+                        $resolved = $this->lookupCache->resolveModel($alt, (int) $brandId);
+                    }
+                }
             } elseif ($header === 'variant') {
                 $modelId = $payload['model_id'] ?? null;
                 if ($modelId === null) {
@@ -420,6 +426,24 @@ class VehicleImportRowResolver
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Normalize common scraped model labels (e.g. VW ID3 → ID.3).
+     */
+    private function normalizeModelLabel(string $raw): string
+    {
+        $t = trim($raw);
+        $compact = strtoupper(preg_replace('/\s+/', '', $t) ?? $t);
+
+        return match ($compact) {
+            'ID3' => 'ID.3',
+            'ID4' => 'ID.4',
+            'ID5' => 'ID.5',
+            'ID7' => 'ID.7',
+            'IDBUZZ', 'ID.BUZZ' => 'ID. BUZZ',
+            default => $t,
+        };
     }
 
     private function registrationExistsForDealer(int $dealerId, string $normalizedRegistration): bool
