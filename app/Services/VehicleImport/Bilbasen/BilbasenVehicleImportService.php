@@ -7,6 +7,7 @@ use App\Exceptions\NummerpladeApiException;
 use App\Models\Dealer;
 use App\Services\DealerInvoiceService;
 use App\Services\DealerListingQuotaService;
+use App\Services\DealerVehicleAddressService;
 use App\Services\DmrFactVehicleLookupService;
 use App\Services\ListingBillingService;
 use App\Services\ListingExpirationService;
@@ -33,6 +34,7 @@ class BilbasenVehicleImportService
         private ListingExpirationService $listingExpirationService,
         private DealerListingQuotaService $listingQuotaService,
         private DealerInvoiceService $dealerInvoiceService,
+        private DealerVehicleAddressService $dealerVehicleAddressService,
     ) {}
 
     /**
@@ -248,6 +250,7 @@ class BilbasenVehicleImportService
 
         $payload['dealer_id'] = $dealerId;
         $payload['user_id'] = $userId;
+        $payload = $this->dealerVehicleAddressService->applyToPayload($payload, $dealer);
 
         try {
             $vehicle = DB::transaction(function () use ($payload) {

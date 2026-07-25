@@ -138,6 +138,39 @@ class VehicleImportTest extends TestCase
         $this->assertTrue(RemoteUrlGuard::isPublicIp('8.8.8.8'));
     }
 
+    public function test_row_resolver_normalizes_bilbasen_month_year_dates(): void
+    {
+        $dmr = Mockery::mock(DmrFactVehicleLookupService::class);
+        $lookupCache = Mockery::mock(VehicleImportLookupCache::class);
+        $lookupCache->shouldReceive('resolveBrand')->with('Peugeot')->andReturn(1);
+        $lookupCache->shouldReceive('resolveModel')->with('206', 1)->andReturn(2);
+        $lookupCache->shouldReceive('resolveFlat')->andReturnUsing(function (string $column, string $value) {
+            return match ($column) {
+                'sales_type_id' => 4,
+                'fuel_type_id' => 2,
+                default => null,
+            };
+        });
+
+        $resolver = new VehicleImportRowResolver($lookupCache, $dmr);
+        $result = $resolver->resolve(
+            [
+                'price' => '9900',
+                'sales_type' => 'Kontantpris',
+                'brand' => 'Peugeot',
+                'model' => '206',
+                'fuel_type' => 'Benzin',
+                'first_registration_date' => '2/2001',
+            ],
+            1,
+            false,
+            null,
+        );
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('2001-02-01', $result['payload']['first_registration_date']);
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();

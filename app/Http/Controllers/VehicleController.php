@@ -12,6 +12,7 @@ use App\Services\FileService;
 use App\Services\AuditLogService;
 use App\Services\SellYourCarSubmissionService;
 use App\Services\DealerContextService;
+use App\Services\DealerVehicleAddressService;
 use App\Services\SubscriptionFeatureService;
 use App\Services\DealerListingQuotaService;
 use App\Services\ListingBillingService;
@@ -55,6 +56,7 @@ class VehicleController extends Controller
         private VehicleMediaPolicyService $vehicleMediaPolicyService,
         private VehicleExportService $vehicleExportService,
         private DealerContextService $dealerContextService,
+        private DealerVehicleAddressService $dealerVehicleAddressService,
         private ListingHealthService $listingHealthService,
         private ListingHealthEventService $listingHealthEventService,
         private MarketPricingService $marketPricingService,
@@ -687,12 +689,13 @@ class VehicleController extends Controller
             : [];
         unset($data['image_urls']);
 
-        // Set dealer_id from authenticated user
-        $dealer = null;
-        if ($request->user() && $request->user()->dealer) {
-            $dealer = $request->user()->dealer;
-            $data['dealer_id'] = $dealer->id;
+        // Dealer identity and listing address are server-controlled.
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if ($dealer === null) {
+            return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
+        $data['dealer_id'] = $dealer->id;
+        $data = $this->dealerVehicleAddressService->applyToPayload($data, $dealer);
 
         // Set user_id (creator)
         $data['user_id'] = $request->user()->id;
@@ -823,10 +826,13 @@ class VehicleController extends Controller
             : [];
         unset($data['image_urls']);
 
-        // Set dealer_id from authenticated user
-        if ($request->user() && $request->user()->dealer) {
-            $data['dealer_id'] = $request->user()->dealer->id;
+        // Dealer identity and listing address are server-controlled.
+        $dealer = $this->dealerContextService->getCurrentDealer($request->user());
+        if ($dealer === null) {
+            return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
+        $data['dealer_id'] = $dealer->id;
+        $data = $this->dealerVehicleAddressService->applyToPayload($data, $dealer);
 
         // Set user_id (creator)
         $data['user_id'] = $request->user()->id;

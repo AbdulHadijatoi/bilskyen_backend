@@ -347,7 +347,79 @@ class VehicleImportRowResolver
             return is_numeric($value) ? (int) $value : $value;
         }
 
+        // Bilbasen and similar sources often use month/year ("2/2001") which Eloquent date casts reject.
+        if (in_array($column, ['first_registration_date', 'production_date', 'last_inspection_date'], true)) {
+            return $this->normalizeImportDate($value);
+        }
+
         return is_string($value) ? trim($value) : $value;
+    }
+
+    /**
+     * Normalize spreadsheet dates for Eloquent date columns.
+     * Accepts Y-m-d, d-m-Y, d/m/Y, and month/year forms like 2/2001 or 02-2001.
+     */
+    private function normalizeImportDate(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        if (is_numeric($value)) {
+            // Excel serial date
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $value)->format('Y-m-d');
+            } catch (\Throwable) {
+                return $value;
+            }
+        }
+
+        $raw = trim((string) $value);
+        if ($raw === '' || in_array($raw, ['-', '--', '—', '–', '-/-', './.', 'n/a', 'N/A', 'ukendt'], true)) {
+            return null;
+        }
+
+        // Month/year only (Bilbasen "1. registrering"): 2/2001, 02/2001, 2-2001
+        if (preg_match('/^(\d{1,2})[\/.\-](\d{4})$/', $raw, $m)) {
+            $month = (int) $m[1];
+            $year = (int) $m[2];
+            if ($month >= 1 && $month <= 12 && $year >= 1950 && $year <= 2100) {
+                return sprintf('%04d-%02d-01', $year, $month);
+            }
+        }
+
+        // Year only
+        if (preg_match('/^(\d{4})$/', $raw, $m)) {
+            $year = (int) $m[1];
+            if ($year >= 1950 && $year <= 2100) {
+                return sprintf('%04d-01-01', $year);
+            }
+        }
+
+        // Already ISO
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $raw)) {
+            return substr($raw, 0, 10);
+        }
+
+        // d/m/Y or d-m-Y
+        if (preg_match('/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/', $raw, $m)) {
+            $day = (int) $m[1];
+            $month = (int) $m[2];
+            $year = (int) $m[3];
+            if (checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::parse($raw)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function registrationExistsForDealer(int $dealerId, string $normalizedRegistration): bool

@@ -80,7 +80,59 @@ class VehicleImportLookupCache
             return null;
         }
 
+        $aliases = $this->aliasesFor($column);
+        if (isset($aliases[$key])) {
+            $key = $aliases[$key];
+        }
+
         return $this->flatMaps[$column][$key] ?? null;
+    }
+
+    /**
+     * Common Bilbasen / extension labels → DB lookup names.
+     *
+     * @return array<string, string>
+     */
+    private function aliasesFor(string $column): array
+    {
+        return match ($column) {
+            'sales_type_id' => [
+                'køb' => 'kontantpris',
+                'koeb' => 'kontantpris',
+                'kob' => 'kontantpris',
+                'cash' => 'kontantpris',
+                'purchase' => 'kontantpris',
+                'leasing' => 'leasingdetaljer',
+                'lease' => 'leasingdetaljer',
+            ],
+            'fuel_type_id' => [
+                'plugin hybrid (benzin + el)' => 'benzin',
+                'plugin hybrid (benzin+el)' => 'benzin',
+                'plugin hybrid' => 'benzin',
+                'plugin-hybrid' => 'benzin',
+                'plug-in hybrid' => 'benzin',
+                'hybrid (benzin + el)' => 'benzin',
+                'hybrid (benzin+el)' => 'benzin',
+                'hybrid (diesel + el)' => 'diesel',
+                'hybrid (diesel+el)' => 'diesel',
+                'electricandbenzinplugin' => 'benzin',
+                'electric and benzin plugin' => 'benzin',
+                'hybrid' => 'benzin',
+                'electric' => 'el',
+                'elektrisk' => 'el',
+                'ev' => 'el',
+                'petrol' => 'benzin',
+                'gasoline' => 'benzin',
+            ],
+            'gear_type_id' => [
+                'manuel' => 'manual',
+                'manuelt' => 'manual',
+                'automatisk' => 'automatic',
+                'automatgear' => 'automatic',
+                'auto' => 'automatic',
+            ],
+            default => [],
+        };
     }
 
     public function resolveBrand(string $value): ?int

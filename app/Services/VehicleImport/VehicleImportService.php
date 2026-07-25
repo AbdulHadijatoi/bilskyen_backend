@@ -4,6 +4,7 @@ namespace App\Services\VehicleImport;
 
 use App\Constants\VehicleListStatus;
 use App\Models\Dealer;
+use App\Services\DealerVehicleAddressService;
 use App\Services\DealerInvoiceService;
 use App\Services\DealerListingQuotaService;
 use App\Services\Import\SpreadsheetImportParser;
@@ -29,6 +30,7 @@ class VehicleImportService
         private DealerListingQuotaService $listingQuotaService,
         private DealerInvoiceService $dealerInvoiceService,
         private \App\Services\DmrFactVehicleLookupService $dmrFactVehicleLookupService,
+        private DealerVehicleAddressService $dealerVehicleAddressService,
     ) {}
 
     /**
@@ -203,13 +205,14 @@ class VehicleImportService
             ]);
         }
 
-        $limitError = $this->checkSubscriptionLimits($payload, $dealer, $context);
+        $limitError = $this->checkSubscriptionLimits($payload, $dealer, $context, $warnings);
         if ($limitError !== null) {
             $errors[] = $limitError;
 
             return array_merge($base, [
                 'status' => 'failed',
                 'errors' => $errors,
+                'warnings' => $warnings,
                 'vehicle_id' => null,
             ]);
         }
@@ -232,6 +235,10 @@ class VehicleImportService
 
         $payload['dealer_id'] = $dealerId;
         $payload['user_id'] = $userId;
+        if ($dealer !== null) {
+            // Spreadsheet address columns must never override the dealer profile.
+            $payload = $this->dealerVehicleAddressService->applyToPayload($payload, $dealer);
+        }
 
         try {
             $imageWarnings = [];
@@ -332,12 +339,14 @@ class VehicleImportService
 
     /**
      * @param  array<string, mixed>  $payload
+     * @param  list<array{field: string, value: string, message: string}>  $warnings
      * @return array{field: string, value: string, message: string}|null
      */
     private function checkSubscriptionLimits(
-        array $payload,
+        array &$payload,
         ?Dealer $dealer,
         VehicleImportBatchContext $context,
+        array &$warnings,
     ): ?array {
         if ($dealer === null) {
             return null;
@@ -362,12 +371,15 @@ class VehicleImportService
 
         if (! empty($payload['lookup_equipments'])) {
             $equipmentLimit = $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_equipment_per_vehicle', 999);
-            $segments = array_filter(array_map('trim', explode(',', (string) $payload['lookup_equipments'])));
+            $segments = array_values(array_filter(array_map('trim', explode(',', (string) $payload['lookup_equipments']))));
             if (count($segments) > $equipmentLimit) {
-                return [
+                // Bilbasen exports often exceed plan caps — keep the first N rather than failing the row.
+                $payload['lookup_equipments'] = implode(', ', array_slice($segments, 0, max(0, (int) $equipmentLimit)));
+                $warnings[] = [
                     'field' => 'equipment',
                     'value' => (string) count($segments),
-                    'message' => __('messages.api.max_equipment_per_vehicle_exceeded', ['limit' => $equipmentLimit]),
+                    'message' => __('messages.api.max_equipment_per_vehicle_exceeded', ['limit' => $equipmentLimit])
+                        .' Equipment list was truncated to the plan limit.',
                 ];
             }
         }
