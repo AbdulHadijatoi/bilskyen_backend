@@ -39,6 +39,9 @@ class AdminPrivacyPageController extends Controller
 
         $pageName = $request->get('page_name', 'privacy');
         $content = $request->get('content');
+        if (is_string($content)) {
+            $content = app(\App\Services\HtmlSanitizer::class)->purify($content);
+        }
         
         $pageContent = $this->pageContentService->updateSection(
             $pageName,
@@ -62,6 +65,12 @@ class AdminPrivacyPageController extends Controller
 
         $pageName = $request->get('page_name', 'privacy');
         $sections = $request->get('sections', []);
+        $sanitizer = app(\App\Services\HtmlSanitizer::class);
+        foreach ($sections as $key => $value) {
+            if (is_string($value)) {
+                $sections[$key] = $sanitizer->purify($value);
+            }
+        }
         
         $updated = $this->pageContentService->updateBulk($pageName, $sections);
 

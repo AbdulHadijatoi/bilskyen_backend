@@ -141,9 +141,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Get form data
         const formData = new FormData(form);
+        const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
         const data = {
             name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
             message: formData.get('message'),
+            ...bot,
         };
 
         // Get CSRF token

@@ -455,9 +455,7 @@
                                 <div class="flex-1">
                                     <div class="dealer-phone-display-mobile hidden">
                                         <p class="text-sm font-medium text-foreground">
-                                            <a href="tel:{{ $dealerPhone }}" class="hover:underline">
-                                                {{ $dealerPhone }}
-                                            </a>
+                                            <a class="dealer-phone-display-mobile-link hover:underline" href="#"></a>
                                         </p>
                                     </div>
                                     <button 
@@ -465,7 +463,6 @@
                                         onclick="showDealerPhoneAndCreateLead('{{ $vehicle->slug }}', event)"
                                         class="show-dealer-phone-btn-mobile text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
                                         data-vehicle-id="{{ $vehicle->id }}"
-                                        data-phone="{{ $dealerPhone }}"
                                     >
                                         {{ __('messages.pages.vehicles.detail.show_phone_number') }}
                                     </button>
@@ -1207,9 +1204,7 @@
                                 <div class="flex-1">
                                     <div id="dealer-phone-display" class="hidden">
                                         <p class="text-sm font-medium text-foreground">
-                                            <a href="tel:{{ $dealerPhone }}" class="hover:underline">
-                                                {{ $dealerPhone }}
-                                            </a>
+                                            <a id="dealer-phone-display-link" href="#" class="hover:underline"></a>
                                         </p>
                                     </div>
                                     <button 
@@ -1372,9 +1367,7 @@
                                 <div class="flex-1">
                                     <div id="phone-display" class="hidden">
                                         <p class="text-sm font-medium text-foreground">
-                                            <a href="tel:{{ $sellerPhone }}" class="hover:underline">
-                                                {{ $sellerPhone }}
-                                            </a>
+                                            <a id="phone-display-link" href="#" class="hover:underline"></a>
                                         </p>
                                     </div>
                                     <button 
@@ -1668,7 +1661,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if user is authenticated
     function isUserAuthenticated() {
-        return getCookie('access_token') !== null;
+        return getCookie('bilskyen_auth') !== null;
     }
     
     // Toggle phone number visibility
@@ -1689,45 +1682,56 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show phone number and create lead (available to guests and authenticated users)
     window.showPhoneAndCreateLead = async function(vehicleId, event) {
-        // Prevent any default behavior and stop propagation
         if (event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
         }
-        
-        // Get button element
+
         const button = event?.target?.closest('button') || event?.target;
-        
-        // Show phone number immediately (before creating lead)
-        togglePhone();
-        
-        // Hide the button after showing phone
-        if (button) {
-            button.style.display = 'none';
-        }
-        
-        // Create lead in the background (don't wait for it)
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        
-        // Make API call to create lead asynchronously (fire and forget)
-        fetch(`/vehicles/${vehicleId}/enquire`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                category: '{{ __('messages.forms.phone_number_revealed') }}'
-            }),
-            credentials: 'same-origin'
-        }).catch(error => {
-            // Silently handle errors - phone is already shown
-            console.error('Error creating lead:', error);
-        });
-        
+
+        try {
+            const guest = await window.bilskyenCollectGuestContact?.() || {};
+            const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
+            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    category: '{{ __('messages.forms.phone_number_revealed') }}',
+                    ...guest,
+                    ...bot,
+                }),
+                credentials: 'same-origin'
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const msg = payload?.message || Object.values(payload?.errors || {}).flat()[0] || 'Request failed';
+                window.showSnackbar?.(msg, 'error');
+                return false;
+            }
+
+            const phone = payload?.data?.phone_number || '';
+            const link = document.getElementById('phone-display-link');
+            if (link && phone) {
+                link.textContent = phone;
+                link.setAttribute('href', `tel:${phone}`);
+            }
+            togglePhone();
+            if (button) button.style.display = 'none';
+        } catch (error) {
+            if (error?.message !== 'cancelled') {
+                console.error('Error creating lead:', error);
+                window.showSnackbar?.(error?.message || 'Request failed', 'error');
+            }
+        }
+
         return false;
     };
     
@@ -1755,45 +1759,62 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show dealer phone number and create lead (available to guests and authenticated users)
     window.showDealerPhoneAndCreateLead = async function(vehicleId, event) {
-        // Prevent any default behavior and stop propagation
         if (event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
         }
-        
-        // Get button element
+
         const button = event?.target?.closest('button') || event?.target;
-        
-        // Show phone number immediately (before creating lead)
-        toggleDealerPhone(button);
-        
-        // Hide the button after showing phone
-        if (button) {
-            button.style.display = 'none';
-        }
-        
-        // Create lead in the background (don't wait for it)
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        
-        // Make API call to create lead asynchronously (fire and forget)
-        fetch(`/vehicles/${vehicleId}/enquire`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                category: '{{ __('messages.forms.phone_number_revealed') }}'
-            }),
-            credentials: 'same-origin'
-        }).catch(error => {
-            // Silently handle errors - phone is already shown
-            console.error('Error creating lead:', error);
-        });
-        
+
+        try {
+            const guest = await window.bilskyenCollectGuestContact?.() || {};
+            const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
+            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    category: '{{ __('messages.forms.phone_number_revealed') }}',
+                    ...guest,
+                    ...bot,
+                }),
+                credentials: 'same-origin'
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const msg = payload?.message || Object.values(payload?.errors || {}).flat()[0] || 'Request failed';
+                window.showSnackbar?.(msg, 'error');
+                return false;
+            }
+
+            const phone = payload?.data?.phone_number || '';
+            const desktopLink = document.getElementById('dealer-phone-display-link');
+            if (desktopLink && phone) {
+                desktopLink.textContent = phone;
+                desktopLink.setAttribute('href', `tel:${phone}`);
+            }
+            document.querySelectorAll('.dealer-phone-display-mobile-link').forEach((link) => {
+                if (phone) {
+                    link.textContent = phone;
+                    link.setAttribute('href', `tel:${phone}`);
+                }
+            });
+            toggleDealerPhone(button);
+            if (button) button.style.display = 'none';
+        } catch (error) {
+            if (error?.message !== 'cancelled') {
+                console.error('Error creating lead:', error);
+                window.showSnackbar?.(error?.message || 'Request failed', 'error');
+            }
+        }
+
         return false;
     };
     
@@ -1824,6 +1845,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+            const guest = await window.bilskyenCollectGuestContact?.() || {};
+            const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
             const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
                 method: 'POST',
                 headers: {
@@ -1832,7 +1855,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ category }),
+                body: JSON.stringify({ category, ...guest, ...bot }),
                 credentials: 'same-origin'
             });
 

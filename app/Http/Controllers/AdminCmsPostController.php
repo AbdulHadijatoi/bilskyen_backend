@@ -100,6 +100,10 @@ class AdminCmsPostController extends Controller
 
         $data['author_user_id'] = $request->user()?->id;
 
+        if (array_key_exists('content_html', $data) && is_string($data['content_html'])) {
+            $data['content_html'] = app(\App\Services\HtmlSanitizer::class)->purify($data['content_html']);
+        }
+
         if ($data['status'] === CmsPostStatus::PUBLISHED && empty($data['published_at'])) {
             $data['published_at'] = now();
         }

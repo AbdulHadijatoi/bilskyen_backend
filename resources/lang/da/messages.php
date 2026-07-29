@@ -1434,7 +1434,11 @@ return [
         'blog_title' => 'Nyheder og indsigt',
         'blog_description' => 'Seneste opdateringer fra Bilskyen.',
         'no_posts' => 'Ingen indlæg publiceret endnu.',
+        'read_more' => 'Læs mere',
         'back_to_blog' => 'Tilbage til blog',
+        'by_author' => 'Af :name',
+        'min_read' => ':count min. læsning',
+        'browse_vehicles' => 'Se køretøjer',
         'cookie_accept' => 'Accepter',
     ],
 
@@ -2085,5 +2089,13 @@ return [
             'need_access' => 'Brug for en konto?',
             'contact_admin' => 'Bed din forhandlers administrator om at invitere dig som medarbejder.',
         ],
+    ],
+
+    'security' => [
+        'turnstile_required' => 'Gennemfør venligst sikkerhedstjekket.',
+        'turnstile_failed' => 'Sikkerhedstjekket mislykkedes. Prøv igen.',
+        'turnstile_unavailable' => 'Sikkerhedstjekket er midlertidigt utilgængeligt. Prøv igen senere.',
+        'too_many_requests' => 'For mange forespørgsler. Vent venligst og prøv igen.',
+        'feed_ip_denied' => 'Dette feed er ikke tilgængeligt fra dit netværk.',
     ],
 ];

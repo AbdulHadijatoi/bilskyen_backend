@@ -141,6 +141,13 @@ class EnquiryController extends Controller
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
+        $validated = $request->validate([
+            'name' => ($user ? 'nullable' : 'required').'|string|max:150',
+            'email' => ($user ? 'nullable' : 'required').'|email|max:150',
+            'phone' => ($user ? 'nullable' : 'required').'|string|max:30',
+            'category' => 'nullable|string|max:100',
+        ]);
+
         $vehicle->load(['dealer.owner', 'user']);
 
         // Get dealer_id (can be null for private listings)
@@ -169,7 +176,7 @@ class EnquiryController extends Controller
         $source = Source::firstOrCreate(['name' => $sourceName]);
 
         // Get lead category from request (default to 'Enquire' if not specified)
-        $categoryName = $request->input('category', 'Enquire');
+        $categoryName = $validated['category'] ?? $request->input('category', 'Enquire');
         $leadCategory = LeadCategory::where('name', $categoryName)->first();
         
         // If category doesn't exist, default to 'Enquire'
@@ -219,9 +226,9 @@ class EnquiryController extends Controller
             'lead_id' => $lead->id,
             'vehicle_id' => $vehicle->id,
             'user_id' => $user?->id,
-            'name' => $user?->name ?? 'Guest',
-            'email' => $user?->email ?? 'noreply@example.com',
-            'phone' => $user?->phone,
+            'name' => $validated['name'] ?? $user?->name ?? 'Guest',
+            'email' => $validated['email'] ?? $user?->email ?? 'noreply@example.com',
+            'phone' => $validated['phone'] ?? $user?->phone,
             'subject' => $this->enquirySubject('messages.api.phone_reveal_subject', $vehicle),
             'message' => __('messages.api.phone_reveal_message'),
             'type' => Enquiries::TYPES[0],

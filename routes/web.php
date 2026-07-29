@@ -26,35 +26,51 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::prefix('auth')->group(function () {
     // Login
     Route::get('/login', [AuthPageController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthPageController::class, 'handleLogin'])->name('login.post');
+    Route::post('/login', [AuthPageController::class, 'handleLogin'])
+        ->middleware(['throttle:auth.login', 'honeypot', 'turnstile'])
+        ->name('login.post');
     
     // Signup
     Route::get('/signup', [AuthPageController::class, 'showSignup'])->name('signup');
-    Route::post('/signup', [AuthPageController::class, 'handleSignup'])->name('signup.post');
+    Route::post('/signup', [AuthPageController::class, 'handleSignup'])
+        ->middleware(['throttle:auth.register', 'honeypot', 'turnstile'])
+        ->name('signup.post');
     
     // Forgot Password
     Route::get('/forgot-password', [AuthPageController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthPageController::class, 'handleForgotPassword'])->name('password.email');
+    Route::post('/forgot-password', [AuthPageController::class, 'handleForgotPassword'])
+        ->middleware(['throttle:auth.login', 'honeypot', 'turnstile'])
+        ->name('password.email');
     
     // Reset Password
     Route::get('/reset-password', [AuthPageController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password', [AuthPageController::class, 'handleResetPassword'])->name('password.update');
+    Route::post('/reset-password', [AuthPageController::class, 'handleResetPassword'])
+        ->middleware(['throttle:auth.login', 'honeypot', 'turnstile'])
+        ->name('password.update');
     
     // Verify Email
     Route::get('/verify-email', [AuthPageController::class, 'showVerifyEmail'])->name('verification.notice');
-    Route::post('/verify-email/resend', [AuthPageController::class, 'resendVerificationEmail'])->name('verification.send');
+    Route::post('/verify-email/resend', [AuthPageController::class, 'resendVerificationEmail'])
+        ->middleware('throttle:auth.login')
+        ->name('verification.send');
     Route::get('/verify-email/{id}/{hash}', [AuthPageController::class, 'verifyEmail'])->name('verification.verify');
     
     // Magic Link Routes
     Route::prefix('magic-link')->group(function () {
         Route::get('/login', [AuthPageController::class, 'showMagicLinkLogin'])->name('magic-link.login');
-        Route::post('/login', [AuthPageController::class, 'handleMagicLinkLogin'])->name('magic-link.login.post');
+        Route::post('/login', [AuthPageController::class, 'handleMagicLinkLogin'])
+            ->middleware(['throttle:auth.login', 'honeypot', 'turnstile'])
+            ->name('magic-link.login.post');
         
         Route::get('/signup', [AuthPageController::class, 'showMagicLinkSignup'])->name('magic-link.signup');
-        Route::post('/signup', [AuthPageController::class, 'handleMagicLinkSignup'])->name('magic-link.signup.post');
+        Route::post('/signup', [AuthPageController::class, 'handleMagicLinkSignup'])
+            ->middleware(['throttle:auth.register', 'honeypot', 'turnstile'])
+            ->name('magic-link.signup.post');
         
         Route::get('/verify', [AuthPageController::class, 'showMagicLinkVerify'])->name('magic-link.verify');
-        Route::post('/verify', [AuthPageController::class, 'handleMagicLinkVerify'])->name('magic-link.verify.post');
+        Route::post('/verify', [AuthPageController::class, 'handleMagicLinkVerify'])
+            ->middleware('throttle:auth.login')
+            ->name('magic-link.verify.post');
     });
 });
 
@@ -63,20 +79,30 @@ Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout
 Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
 // Enquiry Routes - Public (guests can submit enquiries)
-Route::post('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])->name('vehicles.enquire');
+Route::post('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('vehicles.enquire');
 Route::get('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
-Route::post('/vehicles/{vehicle}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])->name('vehicles.enquire.submit');
+Route::post('/vehicles/{vehicle}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('vehicles.enquire.submit');
 
 // Test Drive Routes - Public (guests can submit test drive requests)
 Route::get('/vehicles/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
-Route::post('/vehicles/{vehicle}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])->name('vehicles.test-drive.submit');
+Route::post('/vehicles/{vehicle}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('vehicles.test-drive.submit');
 
 // Price Negotiation Routes - Public (guests can submit price negotiations)
 Route::get('/vehicles/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
-Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])->name('vehicles.price-negotiation.submit');
+Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('vehicles.price-negotiation.submit');
 
 // Exchange Routes - Public (guests can submit exchange requests)
-Route::post('/vehicles/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])->name('vehicles.exchange.submit');
+Route::post('/vehicles/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('vehicles.exchange.submit');
 
 // Marketplace in-app notifications (cookie auth via AuthService; same pattern as favorites)
 Route::get('/marketplace-notifications/count', [\App\Http\Controllers\MarketplaceNotificationController::class, 'unreadCount'])->name('marketplace-notifications.count');
@@ -100,7 +126,9 @@ Route::middleware('auth.web')->group(function () {
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
     Route::get('/sell-your-car/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
         ->name('sell-your-car.lookup-context');
-    Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])->name('sell-your-car.store');
+    Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])
+        ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+        ->name('sell-your-car.store');
     Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
     Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
     
@@ -125,7 +153,9 @@ Route::prefix('for-dealers')->name('for-dealers.')->group(function () {
     Route::get('/pricing', [DealerMarketingController::class, 'dealerPricing'])->name('pricing');
     Route::get('/resources', [DealerMarketingController::class, 'dealerResources'])->name('resources');
     Route::get('/contact', [DealerMarketingController::class, 'dealerContact'])->name('contact');
-    Route::post('/contact', [DealerMarketingController::class, 'submitDealerContact'])->name('contact.submit');
+    Route::post('/contact', [DealerMarketingController::class, 'submitDealerContact'])
+        ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+        ->name('contact.submit');
 });
 
 // Staff marketing pages
@@ -142,7 +172,9 @@ Route::get('/inventory-audit/{slug}', [\App\Http\Controllers\InventoryAuditContr
 
 // Contact Page
 Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
-Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
+Route::post('/contact', [HomeController::class, 'submitContact'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('contact.submit');
 
 // Privacy Policy Page
 Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
@@ -161,8 +193,12 @@ Route::get('/vehicles/{vehicle}', [HomeController::class, 'showVehicleDetail'])-
 
 // Dealer Public Page
 Route::get('/dealer-{slug}', [\App\Http\Controllers\DealerController::class, 'show'])->name('dealer.show');
-Route::post('/dealer-{slug}/enquire', [\App\Http\Controllers\DealerController::class, 'submitEnquiry'])->name('dealer.enquire');
-Route::get('/dealer-{slug}/vehicles', [\App\Http\Controllers\DealerController::class, 'getVehicles'])->name('dealer.vehicles');
+Route::post('/dealer-{slug}/enquire', [\App\Http\Controllers\DealerController::class, 'submitEnquiry'])
+    ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
+    ->name('dealer.enquire');
+Route::get('/dealer-{slug}/vehicles', [\App\Http\Controllers\DealerController::class, 'getVehicles'])
+    ->middleware(['throttle:public.listings', 'abuse.detect'])
+    ->name('dealer.vehicles');
 
 
 if (app()->environment('local', 'testing')) {

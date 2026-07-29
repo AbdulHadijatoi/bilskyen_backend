@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\SanitizeInput;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,7 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append([
             SanitizeInput::class,
+            SecurityHeaders::class,
         ]);
+
+        // Trust Cloudflare / reverse-proxy headers when behind a CDN.
+        $middleware->trustProxies(at: '*');
 
         // Set locale after session/cookies are available on web requests
         $middleware->web(prepend: [
@@ -54,11 +59,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.web' => \App\Http\Middleware\AuthenticateWeb::class,
             'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
             'dealer.api.key' => \App\Http\Middleware\AuthenticateDealerApiKey::class,
+            'turnstile' => \App\Http\Middleware\VerifyTurnstile::class,
+            'honeypot' => \App\Http\Middleware\RejectHoneypot::class,
+            'abuse.detect' => \App\Http\Middleware\DetectAbusiveClient::class,
+            'feed.ip' => \App\Http\Middleware\RestrictFeedIpAllowlist::class,
         ]);
         
-        // Global rate limiting is now handled via named rate limiters in AppServiceProvider
-        // This allows each endpoint to have isolated rate limits without affecting others
-        // $middleware->throttleApi('120,1');
+        // Modest global API ceiling; named limiters still isolate hot endpoints.
+        $middleware->throttleApi('api');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\App\Exceptions\AiGenerationException $e, $request) {

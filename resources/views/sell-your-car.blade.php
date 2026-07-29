@@ -1367,6 +1367,7 @@
     <!-- Vehicle Form -->
     <form id="vehicle-form" data-action="{{ route('sell-your-car.store') }}" enctype="multipart/form-data" class="form-hidden">
         @csrf
+        @include('components.bot-protection')
 
         <!-- Error Display Container -->
         <div id="form-errors-top" class="hidden w-full rounded-md border p-3 mb-4 error-container"></div>

@@ -7,7 +7,6 @@
                 </a>
                 <nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
                     <a href="/vehicles" class="site-nav-link {{ request()->is('vehicles*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
-                    <a href="{{ route('blog.index') }}" class="site-nav-link {{ request()->is('blog*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.blog') }}</a>
                     <a href="/about" class="site-nav-link {{ request()->is('about') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
                     <a href="/contact" class="site-nav-link {{ request()->is('contact') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
                     @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
@@ -30,7 +29,6 @@
         <nav id="mobile-menu" class="hidden border-t border-primary-foreground/15 py-4 md:hidden" aria-label="Mobile navigation">
             <div class="flex flex-col gap-1">
                 <a href="/vehicles" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
-                <a href="{{ route('blog.index') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.blog') }}</a>
                 <a href="/about" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
                 <a href="/contact" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>
                 @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)

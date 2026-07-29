@@ -2556,7 +2556,7 @@
         
         // Check if user is authenticated
         function isUserAuthenticated() {
-            return getCookie('access_token') !== null;
+            return getCookie('bilskyen_auth') !== null;
         }
         
         // Load favorite status for all vehicles in batch

@@ -103,6 +103,10 @@ class AdminSeoPageController extends Controller
             'breadcrumbs_json' => 'nullable|array',
         ]);
 
+        if (array_key_exists('content_html', $validated) && is_string($validated['content_html'])) {
+            $validated['content_html'] = app(\App\Services\HtmlSanitizer::class)->purify($validated['content_html']);
+        }
+
         $page = $this->seoService->updateOrCreate($validated);
         return $this->created($page);
     }
@@ -138,6 +142,10 @@ class AdminSeoPageController extends Controller
             'faq_json' => 'nullable|array',
             'breadcrumbs_json' => 'nullable|array',
         ]);
+
+        if (array_key_exists('content_html', $validated) && is_string($validated['content_html'])) {
+            $validated['content_html'] = app(\App\Services\HtmlSanitizer::class)->purify($validated['content_html']);
+        }
 
         $page->fill($validated);
         $page->save();

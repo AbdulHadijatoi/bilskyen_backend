@@ -207,8 +207,9 @@ class VehicleController extends Controller
      */
     private function getVehiclesListResponse(array $input, string $path = '', array $query = []): JsonResponse
     {
-        $limit = (int) ($input['limit'] ?? 15);
-        $page = (int) ($input['page'] ?? 1);
+        $maxLimit = (int) config('security.max_public_page_size', 48);
+        $limit = max(1, min((int) ($input['limit'] ?? 15), $maxLimit));
+        $page = max(1, (int) ($input['page'] ?? 1));
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
 

@@ -1434,7 +1434,11 @@ return [
         'blog_title' => 'News & insights',
         'blog_description' => 'Latest updates from Bilskyen.',
         'no_posts' => 'No posts published yet.',
+        'read_more' => 'Read more',
         'back_to_blog' => 'Back to blog',
+        'by_author' => 'By :name',
+        'min_read' => ':count min read',
+        'browse_vehicles' => 'Browse vehicles',
         'cookie_accept' => 'Accept',
     ],
 
@@ -2086,5 +2090,13 @@ return [
             'need_access' => 'Need an account?',
             'contact_admin' => 'Ask your dealership administrator to invite you as staff.',
         ],
+    ],
+
+    'security' => [
+        'turnstile_required' => 'Please complete the security check.',
+        'turnstile_failed' => 'Security check failed. Please try again.',
+        'turnstile_unavailable' => 'Security check is temporarily unavailable. Please try again later.',
+        'too_many_requests' => 'Too many requests. Please wait and try again.',
+        'feed_ip_denied' => 'This feed is not available from your network.',
     ],
 ];

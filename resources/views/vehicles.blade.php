@@ -3870,7 +3870,7 @@ if (config) {
         
         // Check if user is authenticated
         function isUserAuthenticated() {
-            return getCookie('access_token') !== null;
+            return getCookie('bilskyen_auth') !== null;
         }
         
         // Toggle favorite function

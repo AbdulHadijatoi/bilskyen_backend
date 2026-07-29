@@ -9,10 +9,20 @@ use Symfony\Component\HttpFoundation\Response;
 class SanitizeInput
 {
     /**
-     * Handle an incoming request.
+     * Keys that may contain intentional HTML (CMS / rich text). Skipped here;
+     * purified on save via HtmlSanitizer.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @var list<string>
      */
+    private const HTML_ALLOWLIST_KEYS = [
+        'content_html',
+        'body_html',
+        'privacy_body',
+        'terms_body',
+        'description_html',
+        'og_description_html',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $clean = $this->sanitizeValue($request->all());
@@ -21,30 +31,41 @@ class SanitizeInput
         return $next($request);
     }
 
-    /**
-     * Sanitize recursively for arrays and string values.
-     */
-    private function sanitizeValue(mixed $value): mixed
+    private function sanitizeValue(mixed $value, ?string $key = null): mixed
     {
         if (is_array($value)) {
-            foreach ($value as $key => $item) {
-                $value[$key] = $this->sanitizeValue($item);
+            foreach ($value as $childKey => $item) {
+                $value[$childKey] = $this->sanitizeValue($item, is_string($childKey) ? $childKey : $key);
             }
 
             return $value;
         }
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $value;
         }
 
-        return $this->sanitizeString($value);
+        if ($key !== null && in_array($key, self::HTML_ALLOWLIST_KEYS, true)) {
+            return $this->sanitizeRichTextShell($value);
+        }
+
+        return $this->sanitizePlainString($value);
     }
 
     /**
-     * Remove common XSS and SQL injection payload patterns.
+     * Light pass for rich HTML fields: strip null bytes only.
+     * Full allowlisting happens in HtmlSanitizer on write.
      */
-    private function sanitizeString(string $value): string
+    private function sanitizeRichTextShell(string $value): string
+    {
+        return str_replace("\0", '', $value);
+    }
+
+    /**
+     * Neutralize common XSS vectors on plain-text inputs.
+     * SQL injection is prevented by Eloquent/parameter bindings — do not strip SQL keywords.
+     */
+    private function sanitizePlainString(string $value): string
     {
         $clean = trim($value);
         $clean = str_replace("\0", '', $clean);
@@ -56,12 +77,8 @@ class SanitizeInput
         $clean = preg_replace('/on\w+\s*=\s*("|\').*?\1/is', '', $clean) ?? $clean;
         $clean = preg_replace('/\b(javascript|vbscript|data:text\/html)\s*:/i', '', $clean) ?? $clean;
 
-        // Remove any remaining HTML tags.
+        // Remove any remaining HTML tags from plain fields.
         $clean = strip_tags($clean);
-
-        // Neutralize common SQL injection control sequences.
-        $clean = preg_replace('/(--|#|\/\*|\*\/|;)/', ' ', $clean) ?? $clean;
-        $clean = preg_replace('/\b(union|select|insert|update|delete|drop|alter|truncate|exec|sleep|benchmark)\b/i', '', $clean) ?? $clean;
 
         // Collapse excessive whitespace after cleaning.
         $clean = preg_replace('/\s+/', ' ', $clean) ?? $clean;

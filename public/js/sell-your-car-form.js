@@ -1744,8 +1744,16 @@
         
         // Show loading state AFTER creating FormData
         showLoadingState(submitBtn, form);
-        
+
         try {
+            if (typeof window.bilskyenBotFields === 'function') {
+                const bot = await window.bilskyenBotFields();
+                Object.keys(bot).forEach((key) => {
+                    if (formData.has(key)) formData.delete(key);
+                    formData.append(key, bot[key]);
+                });
+            }
+
             const response = await fetch(form.getAttribute('data-action') || '/sell-your-car', {
                 method: 'POST',
                 headers: {

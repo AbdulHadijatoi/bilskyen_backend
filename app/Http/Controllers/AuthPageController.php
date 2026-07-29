@@ -239,6 +239,18 @@ class AuthPageController extends Controller
         );
 
         // Set access token in cookie for web sessions
+        $authPresentCookie = cookie(
+            'bilskyen_auth',
+            '1',
+            config('jwt.ttl', 30),
+            null,
+            null,
+            true,
+            false,
+            false,
+            'Strict'
+        );
+
         $accessCookie = cookie(
             'access_token',
             $token,
@@ -246,7 +258,7 @@ class AuthPageController extends Controller
             null,
             null,
             true, // secure
-            false, // httpOnly (false so JS can access if needed)
+            true, // httpOnly
             false, // raw
             'Strict' // sameSite
         );
@@ -268,12 +280,13 @@ class AuthPageController extends Controller
             // Set cookies on the response
             $response->cookie($refreshCookie);
             $response->cookie($accessCookie);
+            $response->cookie($authPresentCookie);
             
             return $response;
         }
 
         // Redirect all users to home page after login
-        return redirect('/')->withCookies([$refreshCookie, $accessCookie]);
+        return redirect('/')->withCookies([$refreshCookie, $accessCookie, $authPresentCookie]);
     }
 
     /**
@@ -357,9 +370,9 @@ class AuthPageController extends Controller
             'Strict'
         );
 
-        $accessCookie = cookie(
-            'access_token',
-            $token,
+        $authPresentCookie = cookie(
+            'bilskyen_auth',
+            '1',
             config('jwt.ttl', 30),
             null,
             null,
@@ -369,8 +382,20 @@ class AuthPageController extends Controller
             'Strict'
         );
 
+        $accessCookie = cookie(
+            'access_token',
+            $token,
+            config('jwt.ttl', 30),
+            null,
+            null,
+            true, // secure
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        );
+
         // Redirect to verify email page
-        return redirect('/auth/verify-email')->withCookies([$refreshCookie, $accessCookie]);
+        return redirect('/auth/verify-email')->withCookies([$refreshCookie, $accessCookie, $authPresentCookie]);
     }
 
     /**
@@ -675,9 +700,9 @@ class AuthPageController extends Controller
             'Strict'
         );
 
-        $accessCookie = cookie(
-            'access_token',
-            $accessToken,
+        $authPresentCookie = cookie(
+            'bilskyen_auth',
+            '1',
             config('jwt.ttl', 30),
             null,
             null,
@@ -687,8 +712,20 @@ class AuthPageController extends Controller
             'Strict'
         );
 
+        $accessCookie = cookie(
+            'access_token',
+            $accessToken,
+            config('jwt.ttl', 30),
+            null,
+            null,
+            true, // secure
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        );
+
         // Redirect all users to callback URL or home
-        return redirect($callbackURL)->withCookies([$refreshCookie, $accessCookie])
+        return redirect($callbackURL)->withCookies([$refreshCookie, $accessCookie, $authPresentCookie])
             ->with('status', __('messages.messages.magic_link_verified_successfully'));
     }
 
@@ -727,15 +764,17 @@ class AuthPageController extends Controller
             // Clear cookies
             $accessCookie = cookie()->forget('access_token');
             $refreshCookie = cookie()->forget('refresh_token');
+            $authPresentCookie = cookie()->forget('bilskyen_auth');
 
-            return redirect('/')->withCookies([$accessCookie, $refreshCookie])
+            return redirect('/')->withCookies([$accessCookie, $refreshCookie, $authPresentCookie])
                 ->with('status', __('messages.errors.logged_out_success'));
         } catch (\Exception $e) {
             // Clear cookies anyway
             $accessCookie = cookie()->forget('access_token');
             $refreshCookie = cookie()->forget('refresh_token');
+            $authPresentCookie = cookie()->forget('bilskyen_auth');
             
-            return redirect('/')->withCookies([$accessCookie, $refreshCookie])
+            return redirect('/')->withCookies([$accessCookie, $refreshCookie, $authPresentCookie])
                 ->with('status', __('messages.errors.logged_out_success'));
         }
     }

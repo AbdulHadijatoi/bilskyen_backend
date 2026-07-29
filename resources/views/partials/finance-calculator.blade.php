@@ -60,6 +60,7 @@
             down_payment: Number(downEl?.value || 0),
             term_months: Number(termEl?.value || 60),
             annual_rate_pct: Number(rateEl?.value || 4.9),
+            website: '',
         };
         const res = await fetch('/api/v1/finance/calculate', {
             method: 'POST',

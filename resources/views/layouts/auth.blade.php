@@ -6,6 +6,8 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/favicon.jpeg') }}">
     <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
     <title>@yield('title', __('messages.layouts.default_title'))</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('layouts.partials.bot-protection-scripts')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,7 +42,6 @@
                     </a>
                     <nav class="hidden items-center gap-6 text-sm font-medium md:flex md:ml-auto">
                         <a href="/vehicles" class="site-nav-link">{{ __('messages.navigation.vehicles') }}</a>
-                        <a href="{{ route('blog.index') }}" class="site-nav-link">{{ __('messages.navigation.blog') }}</a>
                         <a href="/about" class="site-nav-link">{{ __('messages.navigation.about_us') }}</a>
                         <a href="/contact" class="site-nav-link">{{ __('messages.navigation.contact') }}</a>
                     </nav>
@@ -58,5 +59,6 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>

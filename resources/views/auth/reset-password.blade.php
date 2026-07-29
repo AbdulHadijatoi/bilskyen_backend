@@ -46,6 +46,7 @@
     @else
     <form method="POST" action="{{ route('password.update') }}" class="grid w-full gap-3.5">
         @csrf
+        @include('components.bot-protection')
         <input type="hidden" name="token" value="{{ $token }}">
         <input type="hidden" name="email" value="{{ $email ?? '' }}">
 

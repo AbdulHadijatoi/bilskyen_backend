@@ -26,6 +26,7 @@
 
     <form method="POST" action="{{ route('login.post') }}" class="grid gap-4">
         @csrf
+        @include('components.bot-protection')
         <div class="grid gap-2">
             <label for="email" class="text-sm font-medium">{{ __('messages.forms.email') }}</label>
             <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" tabindex="1" required class="site-input">
