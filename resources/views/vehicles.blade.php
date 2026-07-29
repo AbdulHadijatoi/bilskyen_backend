@@ -2290,6 +2290,35 @@
             }
         }
         
+        // Keep the address bar in sync so filters can be shared (GET /vehicles?…).
+        // Live results still use POST /api/v1/search-vehicles.
+        function syncFiltersToUrl(filters = {}) {
+            const params = new URLSearchParams();
+            const skip = new Set(['viewer_latitude', 'viewer_longitude', 'limit']);
+            Object.keys(filters).forEach((key) => {
+                if (skip.has(key)) return;
+                const value = filters[key];
+                if (value === '' || value === null || value === undefined) return;
+                if (Array.isArray(value)) {
+                    if (value.length === 0) return;
+                    value.forEach((item) => {
+                        if (item === '' || item === null || item === undefined) return;
+                        params.append(`${key}[]`, String(item));
+                    });
+                    return;
+                }
+                if (key === 'page' && (String(value) === '1' || Number(value) === 1)) return;
+                params.set(key, String(value));
+            });
+            const qs = params.toString();
+            const nextUrl = qs
+                ? `${window.location.pathname || '/vehicles'}?${qs}`
+                : (window.location.pathname || '/vehicles');
+            if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
+                history.replaceState({}, '', nextUrl);
+            }
+        }
+
         // POST search-vehicles: single source of truth is sidebar state (collectFilters).
         async function fetchVehicles(params = {}) {
             if (isLoading) return;
@@ -2354,6 +2383,7 @@
                 }
                 renderFilterChips();
                 updateResetButtonVisibility();
+                syncFiltersToUrl({ ...payload, page });
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
@@ -3821,25 +3851,23 @@ if (config) {
         updateBrandDropdownLabel();
         setModelDropdownEnabled(document.querySelectorAll('input[name="brand_id[]"]:checked').length > 0);
 
-        // Clear filter params from URL (state lives in sidebar + POST only) then run first search
-        if (window.location.search) {
-            history.replaceState({}, '', window.location.pathname || '/vehicles');
-        }
+        // Keep URL query params so filtered links are shareable; sidebar already seeds from GET.
         window.__viewerGeo = window.__viewerGeo || null;
+        const initialPage = Math.max(1, parseInt(new URLSearchParams(window.location.search).get('page') || '1', 10) || 1);
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     window.__viewerGeo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
                     const ss = document.getElementById('sort-select');
                     if (ss && (ss.value === 'distance_asc' || ss.value === 'distance_desc')) {
-                        fetchVehicles({ page: 1 });
+                        fetchVehicles({ page: initialPage });
                     }
                 },
                 function() {},
                 { maximumAge: 600000, timeout: 8000 }
             );
         }
-        fetchVehicles({ page: 1 });
+        fetchVehicles({ page: initialPage });
         
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();

@@ -123,8 +123,8 @@ class VehicleController extends Controller
         'listing_type_id', 'list_status_id',
         'category_id', 'sales_type_id', 'price_type_id', 'condition_id',
         'body_type_id', 'fuel_type_id', 'gear_type_id',
-        'dealer_id', 'vehicle_use_id', 'measurement_norm_id',
-        'colour_id', 'emission_norm_id',
+        'dealer_id', 'vehicle_use_id', 'use_id', 'measurement_norm_id',
+        'colour_id', 'color_id', 'emission_norm_id',
         'model_year_from', 'model_year_to',
         'first_registration_year_from', 'first_registration_year_to',
         'price_from', 'price_to',
@@ -133,6 +133,7 @@ class VehicleController extends Controller
         'engine_power_kw_from', 'engine_power_kw_to',
         'engine_power_hp_from', 'engine_power_hp_to',
         'calculated_ownership_tax_from', 'calculated_ownership_tax_to',
+        'ownership_tax_from', 'ownership_tax_to',
         'battery_capacity_from', 'battery_capacity_to',
         'electrical_consumption_from', 'electrical_consumption_to',
         'km_per_liter_from', 'km_per_liter_to',
@@ -142,7 +143,7 @@ class VehicleController extends Controller
         'engine_displacement_litres_from', 'engine_displacement_litres_to',
         'charging_type', 'ncap_test',
         'is_import', 'is_factory_new',
-        'equipment_ids',
+        'equipment_ids', 'drive_axle_count', 'specifications_airbags',
     ];
 
     /**
