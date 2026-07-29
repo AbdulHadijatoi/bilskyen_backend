@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminVehicleController;
+use App\Http\Controllers\AdminLeadController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AdminFeatureController;
 use App\Http\Controllers\AdminSubscriptionController;
@@ -92,6 +93,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     // Admin self password change
     Route::post('/change-password', [AdminUserController::class, 'changeOwnPassword']);
     
+    // Lead Management (Admin can see all dealer leads)
+    Route::prefix('leads')->group(function () {
+        Route::get('/', [AdminLeadController::class, 'index']);
+        Route::get('/show/{id}', [AdminLeadController::class, 'show']);
+    });
+
     // Vehicle Management (Admin can see all dealer listings)
     Route::prefix('vehicles')->group(function () {
         Route::get('/', [AdminVehicleController::class, 'index']);

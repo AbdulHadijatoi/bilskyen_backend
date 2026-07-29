@@ -77,6 +77,7 @@
                 <ul class="space-y-3 text-sm">
                     <li><a href="{{ route('for-dealers.landing') }}">{{ __('messages.navigation.for_dealers') }}</a></li>
                     <li><a href="{{ route('for-staff.landing') }}">{{ __('messages.navigation.for_staff') }}</a></li>
+                    <li><a href="{{ route('blog.index') }}">{{ __('messages.pages.footer.blog') }}</a></li>
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
                     <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>

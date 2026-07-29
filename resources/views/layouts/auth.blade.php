@@ -40,6 +40,7 @@
                     </a>
                     <nav class="hidden items-center gap-6 text-sm font-medium md:flex md:ml-auto">
                         <a href="/vehicles" class="site-nav-link">{{ __('messages.navigation.vehicles') }}</a>
+                        <a href="{{ route('blog.index') }}" class="site-nav-link">{{ __('messages.navigation.blog') }}</a>
                         <a href="/about" class="site-nav-link">{{ __('messages.navigation.about_us') }}</a>
                         <a href="/contact" class="site-nav-link">{{ __('messages.navigation.contact') }}</a>
                     </nav>

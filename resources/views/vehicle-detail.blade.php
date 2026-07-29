@@ -1687,38 +1687,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show phone number and create lead
+    // Show phone number and create lead (available to guests and authenticated users)
     window.showPhoneAndCreateLead = async function(vehicleId, event) {
         // Prevent any default behavior and stop propagation
         if (event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-        }
-        
-        // Check if user is authenticated
-        if (!isUserAuthenticated()) {
-            // Store action for after login
-            sessionStorage.setItem('pendingAction', JSON.stringify({
-                type: 'showPhone',
-                vehicleId: vehicleId
-            }));
-            
-            // Open login dialog with callback to show phone after login
-            if (window.openLoginDialog) {
-                window.openLoginDialog(() => {
-                    // After successful login, automatically show phone
-                    window.showPhoneAndCreateLead(vehicleId, event);
-                });
-            } else {
-                    if (window.showSnackbar) {
-                        window.showSnackbar('{{ __('messages.forms.please_login_view_phone') }}', 'error');
-                    }
-                setTimeout(() => {
-                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                }, 1500);
-            }
-            return false;
         }
         
         // Get button element
@@ -1778,38 +1753,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show dealer phone number and create lead
+    // Show dealer phone number and create lead (available to guests and authenticated users)
     window.showDealerPhoneAndCreateLead = async function(vehicleId, event) {
         // Prevent any default behavior and stop propagation
         if (event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-        }
-        
-        // Check if user is authenticated
-        if (!isUserAuthenticated()) {
-            // Store action for after login
-            sessionStorage.setItem('pendingAction', JSON.stringify({
-                type: 'showDealerPhone',
-                vehicleId: vehicleId
-            }));
-            
-            // Open login dialog with callback to show phone after login
-            if (window.openLoginDialog) {
-                window.openLoginDialog(() => {
-                    // After successful login, automatically show phone
-                    window.showDealerPhoneAndCreateLead(vehicleId, event);
-                });
-            } else {
-                    if (window.showSnackbar) {
-                        window.showSnackbar('{{ __('messages.forms.please_login_view_phone') }}', 'error');
-                    }
-                setTimeout(() => {
-                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                }, 1500);
-            }
-            return false;
         }
         
         // Get button element
@@ -1960,41 +1910,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
     };
 
-    // Handle Email click
+    // Handle Email click (available to guests and authenticated users)
     window.handleEmailClick = async function(vehicleId, event) {
         // Prevent any default behavior and stop propagation
         if (event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-        }
-        
-        // Check if user is authenticated
-        if (!isUserAuthenticated()) {
-            // Store action for after login
-            const button = event?.target?.closest('button');
-            const email = button?.dataset?.email;
-            sessionStorage.setItem('pendingAction', JSON.stringify({
-                type: 'handleEmail',
-                vehicleId: vehicleId,
-                email: email
-            }));
-            
-            // Open login dialog with callback to open email after login
-            if (window.openLoginDialog) {
-                window.openLoginDialog(() => {
-                    // After successful login, automatically open email
-                    window.handleEmailClick(vehicleId, event);
-                });
-            } else {
-                if (window.showSnackbar) {
-                    window.showSnackbar('{{ __('messages.forms.please_login_contact_email') }}', 'error');
-                }
-                setTimeout(() => {
-                    window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname);
-                }, 1500);
-            }
-            return false;
         }
         
         const button = event?.target?.closest('button');
@@ -2007,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        // Create lead first
+        // Create lead first (works for guests and authenticated users)
         const leadResult = await createLead(vehicleId, '{{ __('messages.forms.email_clicked') }}', event);
         
         if (leadResult) {

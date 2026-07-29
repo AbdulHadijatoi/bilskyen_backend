@@ -43,6 +43,7 @@ return [
     // Navigation
     'navigation' => [
         'vehicles' => 'Køretøjer',
+        'blog' => 'Blog',
         'about_us' => 'Om Os',
         'contact' => 'Kontakt',
         'my_listings' => 'Mine annoncer',
@@ -798,6 +799,7 @@ return [
             'new_arrivals' => 'Nyankomne',
             'special_offers' => 'Særlige tilbud',
             'pages' => 'Sider',
+            'blog' => 'Blog',
             'privacy_policy' => 'Fortrolighedspolitik',
             'terms_of_service' => 'Servicevilkår',
             'account_deletion' => 'Sletning af konto',

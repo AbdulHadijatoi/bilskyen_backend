@@ -43,6 +43,7 @@ return [
     // Navigation
     'navigation' => [
         'vehicles' => 'Vehicles',
+        'blog' => 'Blog',
         'about_us' => 'About Us',
         'contact' => 'Contact',
         'my_listings' => 'My Listings',
@@ -798,6 +799,7 @@ return [
             'new_arrivals' => 'New Arrivals',
             'special_offers' => 'Special Offers',
             'pages' => 'Pages',
+            'blog' => 'Blog',
             'privacy_policy' => 'Privacy Policy',
             'terms_of_service' => 'Terms of Service',
             'account_deletion' => 'Account deletion',

@@ -576,6 +576,7 @@ class VehicleService
 
     /**
      * Leasing columns apply only when sales type is "Leasingdetaljer"; otherwise clear them and disable the flag.
+     * Also aligns listing_type to "Leasing" so public listing-type filters match Salgstype=leasing imports.
      *
      * @param  array<string, mixed>  $vehicleData
      */
@@ -597,11 +598,33 @@ class VehicleService
 
         if ($isLeasingDetails) {
             $vehicleData['leasing_enabled'] = true;
+            $this->ensureLeasingListingType($vehicleData);
 
             return;
         }
 
         $this->clearLeasingVehicleAttributes($vehicleData);
+    }
+
+    /**
+     * When sales type is Leasingdetaljer, ensure listing_type is Leasing (unless already a non-purchase type).
+     *
+     * @param  array<string, mixed>  $vehicleData
+     */
+    private function ensureLeasingListingType(array &$vehicleData): void
+    {
+        $current = $vehicleData['listing_type_id'] ?? null;
+        if ($current !== null && $current !== '' && (int) $current !== ListingType::PURCHASE_ID) {
+            return;
+        }
+
+        $leasingListingTypeId = ListingType::query()
+            ->whereRaw('LOWER(name) = ?', ['leasing'])
+            ->value('id');
+
+        if ($leasingListingTypeId !== null) {
+            $vehicleData['listing_type_id'] = (int) $leasingListingTypeId;
+        }
     }
 
     /**
