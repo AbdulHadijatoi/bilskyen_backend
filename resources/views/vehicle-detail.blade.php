@@ -1717,6 +1717,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
 
+            if (typeof window.bilskyenTrackMetaLead === 'function') {
+                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, vehicleId);
+            }
+
             const phone = payload?.data?.phone_number || '';
             const link = document.getElementById('phone-display-link');
             if (link && phone) {
@@ -1792,6 +1796,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const msg = payload?.message || Object.values(payload?.errors || {}).flat()[0] || 'Request failed';
                 window.showSnackbar?.(msg, 'error');
                 return false;
+            }
+
+            if (typeof window.bilskyenTrackMetaLead === 'function') {
+                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, vehicleId);
             }
 
             const phone = payload?.data?.phone_number || '';
@@ -1882,6 +1890,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
+            if (typeof window.bilskyenTrackMetaLead === 'function') {
+                window.bilskyenTrackMetaLead(data?.data?.meta_lead_event_id, vehicleId);
+            }
             return data;
         } catch (error) {
             console.error('Error creating lead:', error);
@@ -2019,3 +2030,30 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+@if(!empty($metaPixelEnabled) && !empty($metaViewContentEventId))
+@push('scripts')
+<script>
+window.bilskyenTrackMetaLead = function (eventId, vehicleId) {
+    if (typeof fbq !== 'function' || !eventId) return;
+    fbq('track', 'Lead', {
+        content_ids: [String(vehicleId)],
+        content_type: 'vehicle',
+        content_name: @json($vehicle->title),
+        value: @json((float) ($vehicle->price ?? 0)),
+        currency: 'DKK'
+    }, { eventID: eventId });
+};
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof fbq !== 'function') return;
+    fbq('track', 'ViewContent', {
+        content_ids: [@json((string) $vehicle->id)],
+        content_type: 'vehicle',
+        content_name: @json($vehicle->title),
+        value: @json((float) ($vehicle->price ?? 0)),
+        currency: 'DKK'
+    }, { eventID: @json($metaViewContentEventId) });
+});
+</script>
+@endpush
+@endif

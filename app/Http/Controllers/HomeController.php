@@ -34,6 +34,7 @@ use App\Services\Finance\FinanceCalculatorService;
 use App\Services\VehicleTrustReportService;
 use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
+use App\Services\Marketing\MetaConversionsApiService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,7 @@ class HomeController extends Controller
         private VehicleTrustReportService $trustReportService,
         private MarketPricingService $marketPricingService,
         private VehicleListingPresentationService $vehicleListingPresentationService,
+        private MetaConversionsApiService $metaConversionsApiService,
     ) {}
 
     /**
@@ -605,6 +607,18 @@ class HomeController extends Controller
             ? $this->financeCalculatorService->dealerFinanceUrl($vehicle->dealer)
             : null;
 
+        $metaViewContentEventId = null;
+        if ($this->metaConversionsApiService->isEnabled()) {
+            $metaViewContentEventId = $this->metaConversionsApiService->newEventId();
+            $this->metaConversionsApiService->trackViewContent(
+                $vehicle,
+                $metaViewContentEventId,
+                url()->current(),
+                $request->ip(),
+                $request->userAgent()
+            );
+        }
+
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
             'vehicleDetail' => $this->vehicleDetailPresentationService->buildDetailPayload($vehicle),
@@ -614,6 +628,8 @@ class HomeController extends Controller
             'financeSettings' => $financeSettings,
             'financeEstimate' => $financeEstimate,
             'financePartnerUrl' => $financePartnerUrl,
+            'metaViewContentEventId' => $metaViewContentEventId,
+            'metaPixelEnabled' => $this->metaConversionsApiService->isEnabled(),
         ]);
     }
 

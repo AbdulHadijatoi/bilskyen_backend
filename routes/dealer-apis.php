@@ -23,6 +23,7 @@ use App\Http\Controllers\DealerBillingController;
 use App\Http\Controllers\DealerAiController;
 use App\Http\Controllers\DealerFeedController;
 use App\Http\Controllers\DealerSyndicationController;
+use App\Http\Controllers\DealerMetaCatalogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -180,6 +181,13 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/', [DealerSyndicationController::class, 'update'])
             ->middleware('permission:dealer.syndication.manage');
         Route::post('/sync', [DealerSyndicationController::class, 'syncNow'])
+            ->middleware('permission:dealer.syndication.manage');
+    });
+
+    Route::prefix('syndication')->group(function () {
+        Route::get('/meta-preview/{vehicle}', [DealerMetaCatalogController::class, 'preview'])
+            ->middleware('permission:dealer.syndication.manage');
+        Route::get('/meta-feed-url', [DealerMetaCatalogController::class, 'feedUrl'])
             ->middleware('permission:dealer.syndication.manage');
     });
 

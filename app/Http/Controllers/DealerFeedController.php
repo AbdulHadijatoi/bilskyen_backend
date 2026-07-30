@@ -29,6 +29,7 @@ class DealerFeedController extends Controller
                 'name' => $t->name,
                 'json' => "{$baseUrl}/api/v1/feeds/{$t->token}/vehicles.json",
                 'xml' => "{$baseUrl}/api/v1/feeds/{$t->token}/vehicles.xml",
+                'csv' => "{$baseUrl}/api/v1/feeds/{$t->token}/vehicles.csv",
             ]),
         ]);
     }

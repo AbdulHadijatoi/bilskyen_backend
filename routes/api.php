@@ -44,8 +44,10 @@ Route::prefix('v1')->group(function () {
         ->name('vehicles.show');
 
     Route::middleware(['throttle:public.feeds', 'feed.ip', 'abuse.detect'])->group(function () {
+        Route::get('/feeds/platform/{token}/vehicles.csv', [VehicleFeedController::class, 'platformCsv']);
         Route::get('/feeds/{token}/vehicles.json', [VehicleFeedController::class, 'json']);
         Route::get('/feeds/{token}/vehicles.xml', [VehicleFeedController::class, 'xml']);
+        Route::get('/feeds/{token}/vehicles.csv', [VehicleFeedController::class, 'csv']);
     });
 
     Route::prefix('finance')->middleware('throttle:public.reads')->group(function () {
