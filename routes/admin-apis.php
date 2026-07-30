@@ -58,6 +58,7 @@ use App\Http\Controllers\AdminIntegrationController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminAiController;
 use App\Http\Controllers\AdminSyndicationController;
+use App\Http\Controllers\AdminMetaCatalogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -181,6 +182,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/dealers/{dealerId}/sync', [AdminSyndicationController::class, 'syncDealer']);
         Route::post('/sftp/test', [AdminSyndicationController::class, 'testSftp']);
         Route::post('/sftp/upload', [AdminSyndicationController::class, 'uploadSftp']);
+    });
+
+    Route::prefix('meta-catalog')->middleware('permission:admin.integrations.view')->group(function () {
+        Route::get('/feed-url', [AdminMetaCatalogController::class, 'feedUrl']);
+        Route::get('/preview/{vehicle}', [AdminMetaCatalogController::class, 'preview']);
     });
 
     Route::prefix('marketing')->group(function () {
