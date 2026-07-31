@@ -83,6 +83,13 @@
                     <li><a href="/for-dealers">{{ __('messages.navigation.for_dealers') }}</a></li>
                     <li><a href="/for-staff">{{ __('messages.navigation.for_staff') }}</a></li>
                     <li><a href="/blog">{{ __('messages.pages.footer.blog') }}</a></li>
+                    @if(!empty($footerLandingPages) && $footerLandingPages->isNotEmpty())
+                        @foreach($footerLandingPages as $landingPage)
+                            <li>
+                                <a href="{{ route('landing.show', $landingPage->slug) }}">{{ $landingPage->title }}</a>
+                            </li>
+                        @endforeach
+                    @endif
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
                     @if(!empty($faqPageEnabled))

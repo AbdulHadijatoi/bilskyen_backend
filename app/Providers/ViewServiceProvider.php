@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Constants\CmsPostStatus;
+use App\Models\LandingPage;
 use App\Services\AuthService;
 use App\Services\AiService;
 use App\Services\PageContentService;
@@ -53,6 +55,13 @@ class ViewServiceProvider extends ServiceProvider
                 'homePageContent' => app(PageContentService::class)->getHomePageContent('home'),
                 'footerCities' => app(\App\Services\CityIndexService::class)->topCities(8),
                 'faqPageEnabled' => $settings->isFaqPageEnabled() && Route::has('faq'),
+                'footerLandingPages' => LandingPage::query()
+                    ->where('status', CmsPostStatus::PUBLISHED)
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '<=', now())
+                    ->orderByDesc('published_at')
+                    ->limit(6)
+                    ->get(['id', 'slug', 'title']),
             ]);
         });
 
