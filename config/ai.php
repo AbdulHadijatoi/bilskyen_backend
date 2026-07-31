@@ -16,6 +16,9 @@ return [
         'gemini' => [
             'default_model' => env('AI_GEMINI_MODEL', 'gemini-1.5-flash'),
         ],
+        'deepseek' => [
+            'default_model' => env('AI_DEEPSEEK_MODEL', 'deepseek-v4-flash'),
+        ],
     ],
 
 ];

@@ -11,6 +11,7 @@ use App\Models\AiUsageLog;
 use App\Models\Dealer;
 use App\Models\User;
 use App\Services\Ai\AnthropicProvider;
+use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\GeminiProvider;
 use App\Services\Ai\OpenAiProvider;
 use Carbon\Carbon;
@@ -24,6 +25,7 @@ class AiService
         OpenAiProvider::class,
         AnthropicProvider::class,
         GeminiProvider::class,
+        DeepSeekProvider::class,
     ];
 
     public function __construct(
