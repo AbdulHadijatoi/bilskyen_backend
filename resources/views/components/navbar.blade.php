@@ -290,7 +290,7 @@
             });
         }
 
-        // Helpers may load after this script (layout order: navbar scripts early, helpers before @stack).
+        // Helpers may load after this script (layout order: navbar scripts early, helpers before the scripts stack).
         // Defer bind until DOM ready + short tick so layout helpers exist.
         function boot() {
             bindForm('navbar-ai-search-form', 'navbar-search-input', 'navbar-ai-suggest');
