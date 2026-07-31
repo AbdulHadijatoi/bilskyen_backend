@@ -308,6 +308,4 @@ class VehicleImportColumnDefinitions
     ];
 
     public const MAX_ROWS = 200;
-
-    public const MAX_IMAGE_URLS_PER_ROW = 10;
 }

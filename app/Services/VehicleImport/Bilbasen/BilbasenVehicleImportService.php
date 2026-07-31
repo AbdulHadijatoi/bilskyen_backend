@@ -14,7 +14,6 @@ use App\Services\ListingExpirationService;
 use App\Services\SubscriptionFeatureService;
 use App\Services\VehicleImageUploadService;
 use App\Services\VehicleImport\VehicleImportBatchContext;
-use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportLookupCache;
 use App\Services\VehicleImport\VehicleImportRowResolver;
 use App\Services\VehicleService;
@@ -75,13 +74,10 @@ class BilbasenVehicleImportService
         }
 
         $planImageLimit = (int) $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
-        $maxImages = VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW;
-        if ($planImageLimit > 0) {
-            $maxImages = min($maxImages, $planImageLimit);
-        }
+        $maxImages = $planImageLimit > 0 ? $planImageLimit : null;
 
         $warnings = [];
-        if (count($rawImageUrls) > $maxImages) {
+        if ($maxImages !== null && count($rawImageUrls) > $maxImages) {
             $warnings[] = [
                 'field' => 'image_urls',
                 'value' => (string) count($rawImageUrls),
@@ -89,8 +85,10 @@ class BilbasenVehicleImportService
                     'max' => $maxImages,
                 ]),
             ];
+            $imageUrls = array_slice($rawImageUrls, 0, $maxImages);
+        } else {
+            $imageUrls = $rawImageUrls;
         }
-        $imageUrls = array_slice($rawImageUrls, 0, $maxImages);
 
         $hasMappedIdentity = ! empty($preview['mapped']['brand_id']) && ! empty($preview['mapped']['model_id']);
 
@@ -399,7 +397,10 @@ class BilbasenVehicleImportService
             $registration = $normalized;
         }
 
-        $imageUrls = array_slice($scraped['image_urls'] ?? [], 0, VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW);
+        $imageUrls = array_values(array_filter(
+            is_array($scraped['image_urls'] ?? null) ? $scraped['image_urls'] : [],
+            static fn ($url) => is_string($url) && trim($url) !== ''
+        ));
 
         return [
             'source_url' => $scraped['source_url'],

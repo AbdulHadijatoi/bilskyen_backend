@@ -455,7 +455,7 @@ class BilbasenListingParser
             $normalized[] = $url;
         }
 
-        return array_values(array_slice(array_unique($normalized), 0, 20));
+        return array_values(array_unique($normalized));
     }
 
     private function normalizeRegistration(?string $value): ?string
