@@ -1121,6 +1121,38 @@ class VehicleService
                 });
             }
         }
+
+        $citySlug = $f['city_slug'] ?? $f['city'] ?? null;
+        if (is_string($citySlug) && trim($citySlug) !== '') {
+            $city = app(\App\Services\CityIndexService::class)->findBySlug(trim($citySlug));
+            if (! $city && ! str_contains($citySlug, '-')) {
+                // Allow city name as well as slug.
+                $city = app(\App\Services\CityIndexService::class)->ensureCityFromName($citySlug);
+            }
+            if ($city) {
+                $names = $city->matchNames();
+                $postcodes = app(\App\Services\CityIndexService::class)->postcodesForCity($city);
+                $query->where(function (Builder $q) use ($table, $city, $names, $postcodes) {
+                    $q->whereHas('dealer', function (Builder $dealer) use ($city, $names) {
+                        $dealer->where('marketplace_city_id', $city->id);
+                        if ($names !== []) {
+                            $dealer->orWhere(function (Builder $inner) use ($names) {
+                                foreach ($names as $name) {
+                                    $inner->orWhereRaw('LOWER(city) = ?', [$name]);
+                                }
+                            });
+                        }
+                    });
+                    if ($postcodes !== []) {
+                        $q->orWhereIn("{$table}.postcode", $postcodes);
+                    }
+                });
+            }
+        }
+
+        if (! empty($f['postcode'])) {
+            $query->where("{$table}.postcode", (string) $f['postcode']);
+        }
     }
 
     /**

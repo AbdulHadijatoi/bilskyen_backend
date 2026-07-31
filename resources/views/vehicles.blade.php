@@ -767,6 +767,10 @@
         </div>
     </div>
     
+    <div class="mb-6">
+        <x-popular-cities class="rounded-xl border border-border bg-card p-4" />
+    </div>
+
     <!-- No filter matches (shown above results when filters return zero) -->
     <div
         id="no-results-message"

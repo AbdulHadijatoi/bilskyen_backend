@@ -65,4 +65,20 @@ class PlatformSettingServiceTest extends TestCase
         $this->assertNotSame('sk-new-key', $row->value);
         $this->assertSame('sk-new-key', Crypt::decryptString($row->value));
     }
+
+    public function test_faq_toggles_default_and_parse(): void
+    {
+        $service = app(PlatformSettingService::class);
+        Cache::flush();
+
+        $this->assertTrue($service->isFaqPageEnabled());
+        $this->assertFalse($service->isFaqChatbotEnabled());
+
+        $service->set('general', 'faq_page_enabled', 'false');
+        $service->set('general', 'faq_chatbot_enabled', 'true');
+        Cache::flush();
+
+        $this->assertFalse($service->isFaqPageEnabled());
+        $this->assertTrue($service->isFaqChatbotEnabled());
+    }
 }

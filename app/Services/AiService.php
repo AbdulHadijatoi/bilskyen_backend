@@ -178,6 +178,7 @@ class AiService
         string $task,
         array $context,
         string $locale = 'da',
+        string $contextType = 'public_listing',
     ): array {
         if (! $this->isGloballyEnabled()) {
             throw new AiGenerationException(__('messages.api.ai_not_enabled'), 422);
@@ -189,9 +190,24 @@ class AiService
             user: null,
             dealer: null,
             locale: $locale,
-            contextType: 'public_listing',
+            contextType: $contextType,
             contextId: null,
             enforceDealerQuota: false,
+        );
+    }
+
+    /**
+     * Public FAQ chatbot — grounded on FAQ page content, uses active Integrations AI providers.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateFaqChat(array $context, string $locale = 'da'): array
+    {
+        return $this->generateForPublic(
+            task: AiGenerationTask::FAQ_CHAT,
+            context: $context,
+            locale: $locale,
+            contextType: 'faq_chat',
         );
     }
 

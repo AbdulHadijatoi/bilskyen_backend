@@ -15,6 +15,8 @@ class PublicPlatformController extends Controller
     {
         return $this->success([
             'language_switcher_enabled' => $this->platformSettingService->isLanguageSwitcherEnabled(),
+            'faq_page_enabled' => $this->platformSettingService->isFaqPageEnabled(),
+            'faq_chatbot_enabled' => $this->platformSettingService->isFaqChatbotEnabled(),
         ]);
     }
 }

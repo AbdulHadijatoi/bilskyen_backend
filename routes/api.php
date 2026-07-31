@@ -72,6 +72,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/sell-your-car/ai/generate', [\App\Http\Controllers\PublicAiController::class, 'generateListingDescription'])
         ->middleware(['throttle:3,1', 'honeypot', 'turnstile']);
 
+    Route::post('/faq/chat', [\App\Http\Controllers\FaqChatController::class, 'chat'])
+        ->middleware(['throttle:20,1', 'honeypot']);
+
     Route::post('/public/listing-health-audit', [\App\Http\Controllers\PublicListingHealthController::class, 'audit'])
         ->middleware('throttle:10,1');
 

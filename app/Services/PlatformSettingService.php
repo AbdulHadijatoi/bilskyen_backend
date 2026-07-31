@@ -126,6 +126,22 @@ class PlatformSettingService
         );
     }
 
+    public function isFaqPageEnabled(): bool
+    {
+        return filter_var(
+            $this->get('general', 'faq_page_enabled', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    }
+
+    public function isFaqChatbotEnabled(): bool
+    {
+        return filter_var(
+            $this->get('general', 'faq_chatbot_enabled', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    }
+
     private function decodeValue(PlatformSetting $setting, bool $decrypt): mixed
     {
         $raw = $setting->value;

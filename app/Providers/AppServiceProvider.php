@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Models\Vehicle;
+use App\Models\Dealer;
 use App\Models\Lead;
 use App\Models\Enquiry;
 use App\Observers\LeadObserver;
 use App\Observers\EnquiryObserver;
 use App\Observers\VehicleSyndicationObserver;
 use App\Observers\VehicleDmsWebhookObserver;
+use App\Observers\VehicleCityObserver;
+use App\Observers\DealerCityObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         Enquiry::observe(EnquiryObserver::class);
         Vehicle::observe(VehicleSyndicationObserver::class);
         Vehicle::observe(VehicleDmsWebhookObserver::class);
+        Vehicle::observe(VehicleCityObserver::class);
+        Dealer::observe(DealerCityObserver::class);
 
         // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)
         Route::bind('vehicle', function (string $value) {

@@ -71,6 +71,7 @@
     @include('layouts.partials.site-styles')
     @include('layouts.partials.panel-blade-styles')
     @stack('styles')
+    @stack('head')
 </head>
 <body class="antialiased selection:bg-accent selection:text-accent-foreground">
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))

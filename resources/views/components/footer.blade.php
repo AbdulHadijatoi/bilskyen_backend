@@ -66,9 +66,14 @@
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.vehicles') }}</h3>
                 <ul class="space-y-3 text-sm">
                     <li><a href="/vehicles">{{ __('messages.pages.footer.browse_vehicles') }}</a></li>
+                    <li><a href="{{ route('cities.index') }}">{{ __('messages.pages.footer.cars_by_city') }}</a></li>
                     <li><a href="/vehicles">{{ __('messages.pages.footer.pre_owned') }}</a></li>
                     <li><a href="/vehicles">{{ __('messages.pages.footer.new_arrivals') }}</a></li>
-                    <li><a href="/vehicles">{{ __('messages.pages.footer.special_offers') }}</a></li>
+                    @if(!empty($footerCities) && $footerCities->isNotEmpty())
+                        @foreach($footerCities->take(4) as $city)
+                            <li><a href="{{ route('cities.cars', $city->slug) }}">{{ __('messages.pages.cities.cars_heading', ['city' => $city->name]) }}</a></li>
+                        @endforeach
+                    @endif
                 </ul>
             </div>
 
@@ -80,6 +85,9 @@
                     <li><a href="{{ route('blog.index') }}">{{ __('messages.pages.footer.blog') }}</a></li>
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
+                    @if(!empty($faqPageEnabled))
+                    <li><a href="{{ route('faq') }}">{{ __('messages.pages.footer.faq') }}</a></li>
+                    @endif
                     <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>
                     <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>
                     <li><a href="/about">{{ __('messages.pages.footer.about_us') }}</a></li>

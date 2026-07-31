@@ -83,25 +83,11 @@
     };
 
     /**
-     * Guests must provide contact details before phone reveal / lead create.
+     * Optional guest contact for phone reveal / email / WhatsApp lead create.
+     * No browser prompts — anonymous guests are allowed.
      */
     window.bilskyenCollectGuestContact = async function () {
-        function getCookie(name) {
-            var value = '; ' + document.cookie;
-            var parts = value.split('; ' + name + '=');
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-        if (getCookie('bilskyen_auth')) {
-            return {};
-        }
-        var name = window.prompt('{{ __("messages.forms.full_name") }}');
-        if (!name) throw new Error('cancelled');
-        var email = window.prompt('{{ __("messages.forms.email") }}');
-        if (!email) throw new Error('cancelled');
-        var phone = window.prompt('{{ __("messages.forms.phone") }}');
-        if (!phone) throw new Error('cancelled');
-        return { name: name.trim(), email: email.trim(), phone: phone.trim() };
+        return {};
     };
 })();
 </script>

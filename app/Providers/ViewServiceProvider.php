@@ -45,21 +45,30 @@ class ViewServiceProvider extends ServiceProvider
         });
 
         // Share authenticated user data to navbar component
+        View::composer('components.footer', function ($view) {
+            $settings = app(PlatformSettingService::class);
+            $view->with([
+                'homePageContent' => app(PageContentService::class)->getHomePageContent('home'),
+                'footerCities' => app(\App\Services\CityIndexService::class)->topCities(8),
+                'faqPageEnabled' => $settings->isFaqPageEnabled(),
+            ]);
+        });
+
         View::composer('components.navbar', function ($view) {
             $authService = app(AuthService::class);
             $user = $authService->getAuthenticatedUser(request());
-            
-            // Generate seller token if user is a seller
+
             $sellerToken = null;
             if ($user && $user->hasRole('seller')) {
                 $sellerTokenService = app(\App\Services\SellerTokenService::class);
                 $sellerToken = $sellerTokenService->generateToken($user);
             }
-            
+
             $view->with([
                 'user' => $user,
                 'hasSellerRole' => $user?->hasRole('seller') ?? false,
                 'sellerToken' => $sellerToken,
+                'faqPageEnabled' => app(PlatformSettingService::class)->isFaqPageEnabled(),
             ]);
         });
 
@@ -67,13 +76,6 @@ class ViewServiceProvider extends ServiceProvider
             $view->with(
                 'languageSwitcherEnabled',
                 app(PlatformSettingService::class)->isLanguageSwitcherEnabled()
-            );
-        });
-
-        View::composer('components.footer', function ($view) {
-            $view->with(
-                'homePageContent',
-                app(PageContentService::class)->getHomePageContent('home')
             );
         });
 

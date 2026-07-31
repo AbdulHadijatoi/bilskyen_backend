@@ -41,6 +41,7 @@ use App\Http\Controllers\AdminAboutPageController;
 use App\Http\Controllers\AdminContactPageController;
 use App\Http\Controllers\AdminPrivacyPageController;
 use App\Http\Controllers\AdminPricingPageController;
+use App\Http\Controllers\AdminFaqPageController;
 use App\Http\Controllers\AdminTermsPageController;
 use App\Http\Controllers\AdminLoginPageController;
 use App\Http\Controllers\AdminSeoPageController;
@@ -274,6 +275,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/', [AdminPricingPageController::class, 'index']);
         Route::post('/bulk-update', [AdminPricingPageController::class, 'updateBulk']);
         Route::post('/{sectionKey}', [AdminPricingPageController::class, 'update']);
+    });
+
+    // Public FAQ / help page content
+    Route::prefix('faq-page-content')->group(function () {
+        Route::get('/', [AdminFaqPageController::class, 'index']);
+        Route::post('/bulk-update', [AdminFaqPageController::class, 'updateBulk']);
+        Route::post('/{sectionKey}', [AdminFaqPageController::class, 'update']);
     });
 
     // Login Page Content Management (auth layout sidebar testimonial)

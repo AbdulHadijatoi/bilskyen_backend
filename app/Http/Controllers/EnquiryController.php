@@ -144,9 +144,9 @@ class EnquiryController extends Controller
         $user = $this->authService->getAuthenticatedUser($request);
 
         $validated = $request->validate([
-            'name' => ($user ? 'nullable' : 'required').'|string|max:150',
-            'email' => ($user ? 'nullable' : 'required').'|email|max:150',
-            'phone' => ($user ? 'nullable' : 'required').'|string|max:30',
+            'name' => 'nullable|string|max:150',
+            'email' => 'nullable|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'category' => 'nullable|string|max:100',
         ]);
 

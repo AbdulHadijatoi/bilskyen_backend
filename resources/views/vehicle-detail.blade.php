@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('messages.pages.vehicles.detail.page_title') . ' | Bilskyen')
+@section('title', trim((string) ($vehicle->title ?: __('messages.pages.vehicles.detail.page_title'))))
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
@@ -93,6 +93,16 @@
                     <h1 class="text-foreground text-3xl font-bold tracking-tight">
                     {{ $vehicle->title }}
                     </h1>
+                @php
+                    $vehicleCity = app(\App\Services\CityIndexService::class)->resolveCityForVehicle($vehicle);
+                @endphp
+                @if($vehicleCity)
+                <p class="text-sm text-muted-foreground">
+                    <a href="{{ route('cities.cars', $vehicleCity->slug) }}" class="text-primary hover:underline font-medium">
+                        {{ __('messages.pages.cities.cars_nearby', ['city' => $vehicleCity->name]) }}
+                    </a>
+                </p>
+                @endif
                 {{-- <p class="text-muted-foreground text-xl">
                     Registration: <span class="text-foreground font-mono">{{ $vehicle->registration }}</span>
                 </p> --}}
@@ -143,6 +153,15 @@
             $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
             $contactEmail = $vehicle->user->email ?? null;
         }
+
+        $imageAlt = trim(implode(' ', array_filter([
+            $vehicle->brand_name ?? null,
+            $vehicle->model_name ?? null,
+            $vehicle->variant_name ?? null,
+        ], static fn ($p) => $p !== null && trim((string) $p) !== '')));
+        if ($imageAlt === '') {
+            $imageAlt = trim((string) ($vehicle->title ?: __('messages.pages.vehicles.detail.page_title')));
+        }
     @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
@@ -170,7 +189,7 @@
                                     <div class="border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
                                         <img
                                             src="{{ $image->image_url }}"
-                                            alt="{{ __('messages.pages.vehicles.detail.photos') }} {{ $index + 1 }}"
+                                            alt="{{ $imageAlt }}"
                                             class="h-full w-full object-cover"
                                         />
                                     </div>
@@ -198,7 +217,7 @@
                 <div class="border-border bg-muted/50 relative aspect-[4/3] overflow-hidden rounded-lg border">
                     <img
                         src="/placeholder-vehicle.jpg"
-                        alt="{{ $vehicle->title }}"
+                        alt="{{ $imageAlt }}"
                         class="h-full w-full object-cover"
                     />
                 </div>

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'google_search_console' => [
+        // Property URL as shown in GSC, e.g. https://bilskyen.dk/ or sc-domain:bilskyen.dk
+        'property' => env('GOOGLE_SEARCH_CONSOLE_PROPERTY'),
+        // Absolute path to service-account JSON, raw JSON string, or base64-encoded JSON
+        'credentials' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+    ],
+
 ];

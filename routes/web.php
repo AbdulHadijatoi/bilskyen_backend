@@ -179,11 +179,19 @@ Route::post('/contact', [HomeController::class, 'submitContact'])
 // Privacy Policy Page
 Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
 
+// FAQ / Help
+Route::get('/faq', [HomeController::class, 'showFaq'])->name('faq');
+
 // Terms of Service Page
 Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
 
 // Account deletion (App Store / Play Store compliance)
 Route::get('/account-deletion', [HomeController::class, 'showAccountDeletion'])->name('account-deletion');
+
+// City SEO hubs (programmatic local landing pages)
+Route::get('/byer', [\App\Http\Controllers\CitySeoController::class, 'index'])->name('cities.index');
+Route::get('/biler-i/{city}', [\App\Http\Controllers\CitySeoController::class, 'cars'])->name('cities.cars');
+Route::get('/forhandlere-i/{city}', [\App\Http\Controllers\CitySeoController::class, 'dealers'])->name('cities.dealers');
 
 // Vehicles Page (DMR-linked Vehicle records)
 Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');

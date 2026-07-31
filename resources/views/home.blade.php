@@ -1071,6 +1071,12 @@
         </div>
     </section>
 
+    <section class="py-8 md:py-10 bg-background">
+        <div class="container mx-auto px-4 md:px-6">
+            <x-popular-cities />
+        </div>
+    </section>
+
     <!-- Stats Section -->
     <section class="py-10 md:py-12">
         <div class="container mx-auto px-4 md:px-6">

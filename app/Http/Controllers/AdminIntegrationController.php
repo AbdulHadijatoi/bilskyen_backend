@@ -39,6 +39,8 @@ class AdminIntegrationController extends Controller
         if ($data['group'] === 'general') {
             $request->validate([
                 'settings.language_switcher_enabled' => 'sometimes|boolean',
+                'settings.faq_page_enabled' => 'sometimes|boolean',
+                'settings.faq_chatbot_enabled' => 'sometimes|boolean',
             ]);
         }
 
