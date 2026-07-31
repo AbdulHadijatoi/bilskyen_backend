@@ -9,7 +9,7 @@
                     <a href="/vehicles" class="site-nav-link {{ request()->is('vehicles*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
                     <a href="/about" class="site-nav-link {{ request()->is('about') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
                     @if(!empty($faqPageEnabled))
-                    <a href="{{ route('faq') }}" class="site-nav-link {{ request()->is('faq') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.faq') }}</a>
+                    <a href="/faq" class="site-nav-link {{ request()->is('faq') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.faq') }}</a>
                     @endif
                     <a href="/contact" class="site-nav-link {{ request()->is('contact') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
                     @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
@@ -68,7 +68,7 @@
                 <a href="/vehicles" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
                 <a href="/about" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
                 @if(!empty($faqPageEnabled))
-                <a href="{{ route('faq') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.faq') }}</a>
+                <a href="/faq" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.faq') }}</a>
                 @endif
                 <a href="/contact" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>
                 @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)

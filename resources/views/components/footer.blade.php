@@ -86,7 +86,7 @@
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
                     @if(!empty($faqPageEnabled))
-                    <li><a href="{{ route('faq') }}">{{ __('messages.pages.footer.faq') }}</a></li>
+                    <li><a href="/faq">{{ __('messages.pages.footer.faq') }}</a></li>
                     @endif
                     <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>
                     <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\AuthService;
 use App\Services\PageContentService;
 use App\Services\PlatformSettingService;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -50,7 +51,7 @@ class ViewServiceProvider extends ServiceProvider
             $view->with([
                 'homePageContent' => app(PageContentService::class)->getHomePageContent('home'),
                 'footerCities' => app(\App\Services\CityIndexService::class)->topCities(8),
-                'faqPageEnabled' => $settings->isFaqPageEnabled(),
+                'faqPageEnabled' => $settings->isFaqPageEnabled() && Route::has('faq'),
             ]);
         });
 
@@ -68,7 +69,7 @@ class ViewServiceProvider extends ServiceProvider
                 'user' => $user,
                 'hasSellerRole' => $user?->hasRole('seller') ?? false,
                 'sellerToken' => $sellerToken,
-                'faqPageEnabled' => app(PlatformSettingService::class)->isFaqPageEnabled(),
+                'faqPageEnabled' => app(PlatformSettingService::class)->isFaqPageEnabled() && Route::has('faq'),
             ]);
         });
 
