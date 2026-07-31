@@ -18,14 +18,14 @@
                 <div class="navbar-ai-search relative hidden md:block" data-public-ai="{{ !empty($publicAiEnabled) ? '1' : '0' }}">
                     <form id="navbar-ai-search-form" class="flex items-center gap-1" role="search" aria-label="{{ __('messages.pages.home.navbar_search_aria') }}">
                         <div class="relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-primary-foreground/70">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </svg>
                             <input
                                 type="search"
                                 id="navbar-search-input"
-                                class="h-9 w-44 lg:w-56 rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 pl-8 pr-2 text-sm text-primary-foreground placeholder:text-primary-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary-foreground/30"
+                                class="h-9 w-44 lg:w-56 rounded-lg border border-border bg-card pl-8 pr-2 text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
                                 placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.navbar_search_placeholder_ai') : __('messages.pages.home.navbar_search_placeholder') }}"
                                 autocomplete="off"
                                 aria-label="{{ __('messages.pages.home.navbar_search_aria') }}"
@@ -56,7 +56,7 @@
                     <input
                         type="search"
                         id="navbar-search-input-mobile"
-                        class="h-10 flex-1 rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 px-3 text-sm text-primary-foreground placeholder:text-primary-foreground/60"
+                        class="h-10 flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground caret-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
                         placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.navbar_search_placeholder_ai') : __('messages.pages.home.navbar_search_placeholder') }}"
                         autocomplete="off"
                     >
