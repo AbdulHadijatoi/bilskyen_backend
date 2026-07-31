@@ -36,6 +36,7 @@ class FaqPageAndChatTest extends TestCase
         PlatformSettingService $settings,
         FaqContentService $faq,
         ?SeoService $seo = null,
+        ?AiService $ai = null,
     ): HomeController {
         return new HomeController(
             Mockery::mock(AuthService::class),
@@ -56,6 +57,9 @@ class FaqPageAndChatTest extends TestCase
             Mockery::mock(MetaConversionsApiService::class),
             $faq,
             $settings,
+            $ai ?? tap(Mockery::mock(AiService::class), function ($mock) {
+                $mock->shouldReceive('isGloballyEnabled')->andReturn(false);
+            }),
         );
     }
 
@@ -110,6 +114,29 @@ class FaqPageAndChatTest extends TestCase
         $this->assertNotNull($view->getData()['faqSchema']);
     }
 
+    public function test_faq_page_hides_chatbot_when_ai_not_configured(): void
+    {
+        $settings = Mockery::mock(PlatformSettingService::class);
+        $settings->shouldReceive('isFaqPageEnabled')->andReturn(true);
+        $settings->shouldReceive('isFaqChatbotEnabled')->andReturn(true);
+
+        $faq = Mockery::mock(FaqContentService::class);
+        $faq->shouldReceive('getPublicContent')->andReturn([
+            'header_title' => 'Help & FAQ',
+            'header_description' => 'Answers',
+            'sections' => [],
+        ]);
+        $faq->shouldReceive('flattenQaPairs')->andReturn([]);
+
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(false);
+
+        $controller = $this->makeHomeController($settings, $faq, null, $ai);
+        $view = $controller->showFaq();
+
+        $this->assertFalse($view->getData()['faqChatbotEnabled']);
+    }
+
     public function test_faq_chat_forbidden_when_chatbot_disabled(): void
     {
         $settings = Mockery::mock(PlatformSettingService::class);
@@ -135,6 +162,7 @@ class FaqPageAndChatTest extends TestCase
         $this->app->instance(FaqContentService::class, $faq);
 
         $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
         $ai->shouldReceive('generateFaqChat')
             ->once()
             ->andReturn([
@@ -156,6 +184,23 @@ class FaqPageAndChatTest extends TestCase
         $response->assertJsonPath('data.reply', 'Browse the Vehicles page.');
     }
 
+    public function test_faq_chat_forbidden_when_ai_not_configured(): void
+    {
+        $settings = Mockery::mock(PlatformSettingService::class);
+        $settings->shouldReceive('isFaqPageEnabled')->andReturn(true);
+        $settings->shouldReceive('isFaqChatbotEnabled')->andReturn(true);
+        $this->app->instance(PlatformSettingService::class, $settings);
+
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(false);
+        $this->app->instance(AiService::class, $ai);
+
+        $this->postJson('/api/v1/faq/chat', [
+            'message' => 'How do I buy a car?',
+            'website' => '',
+        ])->assertStatus(422);
+    }
+
     public function test_faq_chat_rejects_empty_knowledge(): void
     {
         $settings = Mockery::mock(PlatformSettingService::class);
@@ -166,6 +211,10 @@ class FaqPageAndChatTest extends TestCase
         $faq = Mockery::mock(FaqContentService::class);
         $faq->shouldReceive('buildKnowledgeBaseText')->andReturn('');
         $this->app->instance(FaqContentService::class, $faq);
+
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
+        $this->app->instance(AiService::class, $ai);
 
         $this->postJson('/api/v1/faq/chat', [
             'message' => 'Hello',

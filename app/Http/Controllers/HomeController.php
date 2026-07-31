@@ -35,6 +35,7 @@ use App\Services\VehicleTrustReportService;
 use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
 use App\Services\Marketing\MetaConversionsApiService;
+use App\Services\AiService;
 use App\Services\FaqContentService;
 use App\Services\PlatformSettingService;
 use App\Mail\ContactMessageMail;
@@ -60,6 +61,7 @@ class HomeController extends Controller
         private MetaConversionsApiService $metaConversionsApiService,
         private FaqContentService $faqContentService,
         private PlatformSettingService $platformSettingService,
+        private AiService $aiService,
     ) {}
 
     /**
@@ -412,7 +414,8 @@ class HomeController extends Controller
                 ? $faq['header_description']
                 : __('messages.pages.faq.header_description'),
             'faqSections' => $faq['sections'],
-            'faqChatbotEnabled' => $this->platformSettingService->isFaqChatbotEnabled(),
+            'faqChatbotEnabled' => $this->platformSettingService->isFaqChatbotEnabled()
+                && $this->aiService->isGloballyEnabled(),
             'faqSchema' => $faqSchema,
             'seo' => $seo,
         ]);

@@ -19,20 +19,26 @@
                         name="search"
                         id="search-input"
                         value="{{ $currentFilters['search'] ?? request('q', '') }}"
-                        placeholder="{{ __('messages.forms.search_placeholder') }}"
+                        placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.forms.search_placeholder') }}"
                         class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
                         autocomplete="off"
+                        @if(!empty($publicAiEnabled))
                         aria-autocomplete="list"
                         aria-controls="vehicles-ai-suggest"
+                        @endif
                     />
+                    @if(!empty($publicAiEnabled))
                     <div id="vehicles-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                    @endif
                 </div>
             </form>
         </div>
+        @if(!empty($publicAiEnabled))
         <div id="vehicles-ai-examples" class="ai-search-examples px-1 pb-1" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
+        @endif
     </div>
 
-    @if(request()->boolean('ai_search') || filled(request('q')))
+    @if(!empty($publicAiEnabled) && (request()->boolean('ai_search') || filled(request('q'))))
     <div id="ai-understood-banner" class="ai-understood-banner" aria-live="polite">
         <div class="ai-understood-inner flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -50,7 +56,7 @@
         </div>
         <p id="save-ai-search-msg" class="mt-2 text-xs text-muted-foreground hidden" role="status"></p>
     </div>
-    @else
+    @elseif(!empty($publicAiEnabled))
     <div id="ai-understood-banner" class="ai-understood-banner hidden" aria-live="polite"></div>
     @endif
 
@@ -2422,7 +2428,9 @@
             }
         }
         
-        // Search form handler with debounce (keyword) + Enter triggers AI parse
+        const publicAiEnabled = @json(!empty($publicAiEnabled));
+
+        // Search form handler with debounce (keyword) + Enter triggers AI parse when AI is active
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchDebounceTimer);
@@ -2437,7 +2445,7 @@
                     e.preventDefault();
                     clearTimeout(searchDebounceTimer);
                     const searchValue = e.target.value.trim();
-                    if (searchValue && window.BilskyenAiSearch) {
+                    if (publicAiEnabled && searchValue && window.BilskyenAiSearch) {
                         searchInput.disabled = true;
                         try {
                             const result = await window.BilskyenAiSearch.parseQuery(searchValue);
@@ -2466,7 +2474,7 @@
             });
         }
 
-        if (window.BilskyenAiSearch) {
+        if (publicAiEnabled && window.BilskyenAiSearch) {
             window.BilskyenAiSearch.renderExampleChips(document.getElementById('vehicles-ai-examples'));
             window.BilskyenAiSearch.bindAutocomplete(
                 searchInput,

@@ -31,10 +31,14 @@ class AiService
         private SubscriptionFeatureService $subscriptionFeatureService,
     ) {}
 
+    /**
+     * True when at least one AI provider is enabled and has an API key configured.
+     * Used for public UI gating and generation eligibility.
+     */
     public function isGloballyEnabled(): bool
     {
         foreach ($this->providerClasses as $class) {
-            if (app($class)->isEnabled()) {
+            if (app($class)->isConfigured()) {
                 return true;
             }
         }
@@ -50,7 +54,7 @@ class AiService
         $names = [];
         foreach ($this->providerClasses as $class) {
             $provider = app($class);
-            if ($provider->isEnabled()) {
+            if ($provider->isConfigured()) {
                 $names[] = $provider->getName();
             }
         }
@@ -269,7 +273,7 @@ class AiService
             foreach ($this->providerClasses as $class) {
                 /** @var AiProviderInterface $provider */
                 $provider = app($class);
-                if (! $provider->isEnabled()) {
+                if (! $provider->isConfigured()) {
                     continue;
                 }
 

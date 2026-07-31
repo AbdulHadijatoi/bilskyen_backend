@@ -32,6 +32,10 @@ class FaqChatController extends Controller
                 return $this->error(__('messages.api.faq_chatbot_disabled'), [], 403);
             }
 
+            if (! $this->aiService->isGloballyEnabled()) {
+                return $this->error(__('messages.api.ai_not_enabled'), [], 422);
+            }
+
             $data = $request->validate([
                 'message' => 'required|string|max:'.self::MAX_MESSAGE_LENGTH,
                 'locale' => 'sometimes|string|in:da,en',

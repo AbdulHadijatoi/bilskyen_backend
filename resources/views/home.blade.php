@@ -677,19 +677,25 @@
                                 id="home-search-input"
                                 name="search"
                                 class="home-filter-search-input"
-                                placeholder="{{ __('messages.pages.home.search_placeholder') }}"
+                                placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.pages.home.search_placeholder') }}"
                                 autocomplete="off"
+                                @if(!empty($publicAiEnabled))
                                 aria-autocomplete="list"
                                 aria-controls="home-ai-suggest"
+                                @endif
                             >
+                            @if(!empty($publicAiEnabled))
                             <div id="home-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                            @endif
                         </div>
                         <button type="submit" id="home-search-submit" class="home-filter-cta">
                             {{ __('messages.common.search') }}
                         </button>
                     </div>
+                    @if(!empty($publicAiEnabled))
                     <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
                     <div id="home-ai-understood" class="ai-understood-banner hidden mt-3" aria-live="polite"></div>
+                    @endif
                 </div>
 
                 <div class="home-filter-toolbar">
@@ -2367,33 +2373,22 @@
         }
     }
     
-    // Form submission: AI-parse free text when present, merge with facet filters
+    // Form submission: AI-parse free text when AI is enabled; otherwise keyword search
     const filterForm = document.getElementById('filter-form');
+    const publicAiEnabled = @json(!empty($publicAiEnabled));
     if (filterForm) {
         filterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('home-search-submit');
             const searchQuery = document.getElementById('home-search-input')?.value?.trim() || '';
             const facetParams = buildHomeFilterParams();
-            // Remove raw search — AI parse will re-add structured filters
-            facetParams.delete('search');
 
-            const extras = {};
-            facetParams.forEach((value, key) => {
-                if (!extras[key]) extras[key] = [];
-                extras[key].push(value);
-            });
-            // Flatten single-value arrays for non-multi keys
-            Object.keys(extras).forEach((key) => {
-                if (!key.includes('[]') && !['brand_id[]', 'model_id[]', 'fuel_type_id[]', 'listing_type_id[]'].includes(key) && extras[key].length === 1) {
-                    extras[key] = extras[key][0];
-                }
-            });
-
-            if (!searchQuery) {
+            if (!publicAiEnabled || !searchQuery || !window.BilskyenAiSearch) {
                 window.location.href = '/vehicles' + (facetParams.toString() ? '?' + facetParams.toString() : '');
                 return;
             }
+
+            facetParams.delete('search');
 
             if (submitBtn) {
                 submitBtn.classList.add('is-loading');
@@ -2402,33 +2397,27 @@
             }
 
             try {
-                if (window.BilskyenAiSearch) {
-                    const result = await window.BilskyenAiSearch.parseQuery(searchQuery);
-                    window.BilskyenAiSearch.renderAiBanner(
-                        document.getElementById('home-ai-understood'),
-                        result.labels,
-                        result.query
-                    );
-                    const merged = Object.assign({}, result.filters || {});
-                    // Facet selections override / extend AI when user picked them
-                    facetParams.forEach((value, key) => {
-                        const baseKey = key.replace(/\[\]$/, '');
-                        if (['brand_id', 'model_id', 'fuel_type_id', 'listing_type_id'].includes(baseKey)) {
-                            if (!Array.isArray(merged[baseKey])) merged[baseKey] = merged[baseKey] ? [merged[baseKey]] : [];
-                            merged[baseKey].push(value);
-                        } else if (merged[baseKey] === undefined) {
-                            merged[baseKey] = value;
-                        }
-                    });
-                    const url = window.BilskyenAiSearch.buildVehiclesUrl(merged, {
-                        ai_search: '1',
-                        q: result.query || searchQuery,
-                    });
-                    window.location.href = url;
-                } else {
-                    facetParams.set('search', searchQuery);
-                    window.location.href = '/vehicles?' + facetParams.toString();
-                }
+                const result = await window.BilskyenAiSearch.parseQuery(searchQuery);
+                window.BilskyenAiSearch.renderAiBanner(
+                    document.getElementById('home-ai-understood'),
+                    result.labels,
+                    result.query
+                );
+                const merged = Object.assign({}, result.filters || {});
+                facetParams.forEach((value, key) => {
+                    const baseKey = key.replace(/\[\]$/, '');
+                    if (['brand_id', 'model_id', 'fuel_type_id', 'listing_type_id'].includes(baseKey)) {
+                        if (!Array.isArray(merged[baseKey])) merged[baseKey] = merged[baseKey] ? [merged[baseKey]] : [];
+                        merged[baseKey].push(value);
+                    } else if (merged[baseKey] === undefined) {
+                        merged[baseKey] = value;
+                    }
+                });
+                const url = window.BilskyenAiSearch.buildVehiclesUrl(merged, {
+                    ai_search: '1',
+                    q: result.query || searchQuery,
+                });
+                window.location.href = url;
             } catch (err) {
                 facetParams.set('search', searchQuery);
                 window.location.href = '/vehicles?' + facetParams.toString();
@@ -2436,8 +2425,8 @@
         });
     }
 
-    // AI examples + autocomplete
-    if (window.BilskyenAiSearch) {
+    // AI examples + autocomplete (only when helpers are loaded)
+    if (publicAiEnabled && window.BilskyenAiSearch) {
         window.BilskyenAiSearch.renderExampleChips(document.getElementById('home-ai-examples'));
         window.BilskyenAiSearch.bindAutocomplete(
             document.getElementById('home-search-input'),

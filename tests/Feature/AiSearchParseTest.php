@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\AiSearchParseService;
+use App\Services\AiService;
 use Mockery;
 use Tests\TestCase;
 
@@ -16,6 +17,10 @@ class AiSearchParseTest extends TestCase
 
     public function test_search_parse_returns_filters_from_service(): void
     {
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
+        $this->app->instance(AiService::class, $ai);
+
         $service = Mockery::mock(AiSearchParseService::class);
         $service->shouldReceive('parse')
             ->once()
@@ -44,8 +49,24 @@ class AiSearchParseTest extends TestCase
         $response->assertJsonPath('data.ai_search', 1);
     }
 
+    public function test_search_parse_rejects_when_ai_not_configured(): void
+    {
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(false);
+        $this->app->instance(AiService::class, $ai);
+
+        $this->postJson('/api/v1/ai/search-parse', [
+            'query' => 'elbil under 200000',
+            'website' => '',
+        ])->assertStatus(422);
+    }
+
     public function test_search_parse_validates_query(): void
     {
+        $ai = Mockery::mock(AiService::class);
+        $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
+        $this->app->instance(AiService::class, $ai);
+
         $this->postJson('/api/v1/ai/search-parse', [
             'website' => '',
         ])->assertStatus(422);

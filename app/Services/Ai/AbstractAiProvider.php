@@ -27,6 +27,11 @@ abstract class AbstractAiProvider implements AiProviderInterface
         return $enabled === true || $enabled === 'true' || $enabled === '1';
     }
 
+    public function isConfigured(): bool
+    {
+        return $this->isEnabled() && $this->apiKey() !== null;
+    }
+
     protected function apiKey(): ?string
     {
         $key = $this->platformSettingService->get('ai', $this->settingPrefix().'_api_key');

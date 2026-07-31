@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\AuthService;
+use App\Services\AiService;
 use App\Services\PageContentService;
 use App\Services\PlatformSettingService;
 use Illuminate\Support\Facades\Route;
@@ -69,7 +70,7 @@ class ViewServiceProvider extends ServiceProvider
                 'user' => $user,
                 'hasSellerRole' => $user?->hasRole('seller') ?? false,
                 'sellerToken' => $sellerToken,
-                'faqPageEnabled' => app(PlatformSettingService::class)->isFaqPageEnabled() && Route::has('faq'),
+                'publicAiEnabled' => app(AiService::class)->isGloballyEnabled(),
             ]);
         });
 
@@ -80,13 +81,21 @@ class ViewServiceProvider extends ServiceProvider
             );
         });
 
-        View::composer('layouts.app', function ($view) {
+        View::composer(['layouts.app', 'layouts.auth'], function ($view) {
             $settings = app(PlatformSettingService::class);
             $locale = app()->getLocale();
-            $view->with('cookieConsent', [
-                'enabled' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
-                'text' => $settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''),
+            $view->with([
+                'cookieConsent' => [
+                    'enabled' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
+                    'text' => $settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''),
+                ],
+                'publicAiEnabled' => app(AiService::class)->isGloballyEnabled(),
             ]);
+        });
+
+        // Child page views (rendered before the layout) need the flag for @if gates in content.
+        View::composer(['home', 'vehicles', 'faq', 'sell-your-car'], function ($view) {
+            $view->with('publicAiEnabled', app(AiService::class)->isGloballyEnabled());
         });
     }
 }

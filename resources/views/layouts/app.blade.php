@@ -152,7 +152,9 @@
         });
     </script>
 
+    @if(!empty($publicAiEnabled))
     @include('components.ai-search-helpers')
+    @endif
 
     @stack('scripts')
 

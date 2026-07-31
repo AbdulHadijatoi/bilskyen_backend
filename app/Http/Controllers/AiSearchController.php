@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\AiGenerationException;
 use App\Models\SavedSearch;
 use App\Services\AiSearchParseService;
+use App\Services\AiService;
 use App\Services\AuthService;
 use App\Services\VehicleSearchSynonymService;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +20,7 @@ class AiSearchController extends Controller
         private AiSearchParseService $aiSearchParseService,
         private VehicleSearchSynonymService $synonymService,
         private AuthService $authService,
+        private AiService $aiService,
     ) {}
 
     /**
@@ -27,6 +29,10 @@ class AiSearchController extends Controller
     public function parse(Request $request): JsonResponse
     {
         try {
+            if (! $this->aiService->isGloballyEnabled()) {
+                return $this->error(__('messages.api.ai_not_enabled'), [], 422);
+            }
+
             $data = $request->validate([
                 'query' => 'required|string|max:'.self::MAX_QUERY_LENGTH,
                 'locale' => 'sometimes|string|in:da,en',
