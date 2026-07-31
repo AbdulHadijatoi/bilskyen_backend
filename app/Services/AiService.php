@@ -212,6 +212,21 @@ class AiService
     }
 
     /**
+     * Public AI vehicle search parse — maps natural language to listing filters.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateSearchParse(array $context, string $locale = 'da'): array
+    {
+        return $this->generateForPublic(
+            task: AiGenerationTask::SEARCH_PARSE,
+            context: $context,
+            locale: $locale,
+            contextType: 'ai_search_parse',
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $context
      */
     private function runGeneration(

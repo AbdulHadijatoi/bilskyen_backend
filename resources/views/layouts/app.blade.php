@@ -152,6 +152,8 @@
         });
     </script>
 
+    @include('components.ai-search-helpers')
+
     @stack('scripts')
 
     @if(!empty($cookieConsent['enabled']) && !empty($cookieConsent['text']))

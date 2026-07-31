@@ -75,6 +75,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/faq/chat', [\App\Http\Controllers\FaqChatController::class, 'chat'])
         ->middleware(['throttle:20,1', 'honeypot']);
 
+    Route::post('/ai/search-parse', [\App\Http\Controllers\AiSearchController::class, 'parse'])
+        ->middleware(['throttle:20,1', 'honeypot']);
+
+    Route::get('/search/suggest', [\App\Http\Controllers\AiSearchController::class, 'suggest'])
+        ->middleware(['throttle:public.reads', 'abuse.detect']);
+
+    Route::get('/search/examples', [\App\Http\Controllers\AiSearchController::class, 'examples'])
+        ->middleware(['throttle:public.reads']);
+
     Route::post('/public/listing-health-audit', [\App\Http\Controllers\PublicListingHealthController::class, 'audit'])
         ->middleware('throttle:10,1');
 
@@ -89,6 +98,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/sell-your-car', [VehicleController::class, 'sellYourCar'])
             ->middleware(['idempotency', 'throttle:public.writes'])
             ->name('api.sell-your-car');
+        Route::post('/saved-searches', [\App\Http\Controllers\AiSearchController::class, 'saveSearch'])
+            ->middleware('throttle:public.writes')
+            ->name('api.saved-searches.store');
     });
     
     

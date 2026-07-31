@@ -18,6 +18,28 @@
                 </nav>
             </div>
             <div class="flex items-center gap-2 md:gap-3">
+                <div class="navbar-ai-search relative hidden md:block">
+                    <form id="navbar-ai-search-form" class="flex items-center gap-1" role="search" aria-label="{{ __('messages.pages.home.navbar_search_aria') }}">
+                        <div class="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-primary-foreground/70">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </svg>
+                            <input
+                                type="search"
+                                id="navbar-search-input"
+                                class="h-9 w-44 lg:w-56 rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 pl-8 pr-2 text-sm text-primary-foreground placeholder:text-primary-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary-foreground/30"
+                                placeholder="{{ __('messages.pages.home.navbar_search_placeholder') }}"
+                                autocomplete="off"
+                                aria-label="{{ __('messages.pages.home.navbar_search_aria') }}"
+                            >
+                            <div id="navbar-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                        </div>
+                        <button type="submit" class="navbar-ai-search-btn inline-flex h-9 items-center rounded-lg border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 text-xs font-semibold text-primary-foreground hover:bg-primary-foreground/25">
+                            {{ __('messages.common.search') }}
+                        </button>
+                    </form>
+                </div>
                 @include('components.language-switcher', ['variant' => 'dark'])
                 @include('components.marketplace-notifications')
                 @include('components.user-auth-status')
@@ -31,6 +53,18 @@
         </div>
         <nav id="mobile-menu" class="hidden border-t border-primary-foreground/15 py-4 md:hidden" aria-label="Mobile navigation">
             <div class="flex flex-col gap-1">
+                <form id="navbar-ai-search-form-mobile" class="mb-2 flex gap-2 px-1" role="search">
+                    <input
+                        type="search"
+                        id="navbar-search-input-mobile"
+                        class="h-10 flex-1 rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 px-3 text-sm text-primary-foreground placeholder:text-primary-foreground/60"
+                        placeholder="{{ __('messages.pages.home.navbar_search_placeholder') }}"
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="navbar-ai-search-btn inline-flex h-10 items-center rounded-lg bg-primary-foreground/15 px-3 text-xs font-semibold text-primary-foreground">
+                        {{ __('messages.common.search') }}
+                    </button>
+                </form>
                 <a href="/vehicles" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
                 <a href="/about" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
                 @if(!empty($faqPageEnabled))
@@ -215,5 +249,57 @@
                 }
             }, 100);
         };
+    })();
+
+    (function initNavbarAiSearch() {
+        function bindForm(formId, inputId, suggestId) {
+            const form = document.getElementById(formId);
+            const input = document.getElementById(inputId);
+            if (!form || !input) return;
+
+            if (window.BilskyenAiSearch && suggestId) {
+                window.BilskyenAiSearch.bindAutocomplete(
+                    input,
+                    document.getElementById(suggestId),
+                    {
+                        onExample: function (label) { input.value = label; },
+                        onBrand: function (item) { input.value = item.name || ''; },
+                        onModel: function (item) { input.value = item.name || ''; },
+                    }
+                );
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const q = input.value.trim();
+                if (!q) {
+                    window.location.href = '/vehicles';
+                    return;
+                }
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn) btn.classList.add('is-loading');
+                try {
+                    if (window.BilskyenAiSearch) {
+                        await window.BilskyenAiSearch.navigateWithAiSearch(q);
+                    } else {
+                        window.location.href = '/vehicles?search=' + encodeURIComponent(q);
+                    }
+                } catch (err) {
+                    window.location.href = '/vehicles?search=' + encodeURIComponent(q);
+                }
+            });
+        }
+
+        // Helpers may load after this script (layout order: navbar scripts early, helpers before @stack).
+        // Defer bind until DOM ready + short tick so layout helpers exist.
+        function boot() {
+            bindForm('navbar-ai-search-form', 'navbar-search-input', 'navbar-ai-suggest');
+            bindForm('navbar-ai-search-form-mobile', 'navbar-search-input-mobile', null);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 0); });
+        } else {
+            setTimeout(boot, 0);
+        }
     })();
 </script>

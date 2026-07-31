@@ -121,6 +121,9 @@ Route::middleware('auth.web')->group(function () {
     Route::delete('/favorites/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
     Route::get('/favorites/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
     Route::post('/favorites/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
+    Route::post('/saved-searches', [\App\Http\Controllers\AiSearchController::class, 'saveSearchWeb'])
+        ->middleware('throttle:public.writes')
+        ->name('saved-searches.store');
     
     // Sell Your Car Routes
     Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');

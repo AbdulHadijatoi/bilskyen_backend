@@ -10,7 +10,7 @@
             <!-- Search Input -->
             <form class="flex w-full sm:flex-1 focus:bg-none bg-none min-w-0" id="search-form">
                 <div class="relative w-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.3-4.3"></path>
                     </svg>
@@ -18,16 +18,41 @@
                         type="text"
                         name="search"
                         id="search-input"
-                        value="{{ $currentFilters['search'] ?? '' }}"
+                        value="{{ $currentFilters['search'] ?? request('q', '') }}"
                         placeholder="{{ __('messages.forms.search_placeholder') }}"
                         class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
                         autocomplete="off"
+                        aria-autocomplete="list"
+                        aria-controls="vehicles-ai-suggest"
                     />
+                    <div id="vehicles-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
                 </div>
             </form>
-            
         </div>
+        <div id="vehicles-ai-examples" class="ai-search-examples px-1 pb-1" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
     </div>
+
+    @if(request()->boolean('ai_search') || filled(request('q')))
+    <div id="ai-understood-banner" class="ai-understood-banner" aria-live="polite">
+        <div class="ai-understood-inner flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <span class="ai-understood-title">{{ __('messages.pages.vehicles.ai_understood_heading') }}
+                    @if(filled(request('q')))
+                        “{{ request('q') }}”
+                    @endif
+                </span>
+                <p class="text-xs text-muted-foreground mt-0.5">{{ __('messages.pages.vehicles.ai_understood_intro') }}</p>
+                <div id="ai-understood-chips" class="ai-understood-chips mt-2"></div>
+            </div>
+            <button type="button" id="save-ai-search-btn" class="inline-flex shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted">
+                {{ __('messages.pages.vehicles.save_search') }}
+            </button>
+        </div>
+        <p id="save-ai-search-msg" class="mt-2 text-xs text-muted-foreground hidden" role="status"></p>
+    </div>
+    @else
+    <div id="ai-understood-banner" class="ai-understood-banner hidden" aria-live="polite"></div>
+    @endif
 
     <!-- Mobile Filter Toggle Button -->
             <button 
@@ -2397,7 +2422,7 @@
             }
         }
         
-        // Search form handler with debounce
+        // Search form handler with debounce (keyword) + Enter triggers AI parse
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchDebounceTimer);
@@ -2407,12 +2432,28 @@
                 }, 300);
             });
             
-            searchInput.addEventListener('keydown', (e) => {
+            searchInput.addEventListener('keydown', async (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     clearTimeout(searchDebounceTimer);
                     const searchValue = e.target.value.trim();
-                    fetchVehicles({ search: searchValue || null, page: 1 });
+                    if (searchValue && window.BilskyenAiSearch) {
+                        searchInput.disabled = true;
+                        try {
+                            const result = await window.BilskyenAiSearch.parseQuery(searchValue);
+                            window.location.href = window.BilskyenAiSearch.buildVehiclesUrl(result.filters || {}, {
+                                ai_search: '1',
+                                q: result.query || searchValue,
+                            });
+                            return;
+                        } catch (err) {
+                            fetchVehicles({ search: searchValue || null, page: 1 });
+                        } finally {
+                            searchInput.disabled = false;
+                        }
+                    } else {
+                        fetchVehicles({ search: searchValue || null, page: 1 });
+                    }
                 }
             });
         }
@@ -2421,9 +2462,68 @@
             searchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 clearTimeout(searchDebounceTimer);
-                const searchValue = searchInput?.value.trim();
-                fetchVehicles({ search: searchValue || null, page: 1 });
+                searchInput?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
             });
+        }
+
+        if (window.BilskyenAiSearch) {
+            window.BilskyenAiSearch.renderExampleChips(document.getElementById('vehicles-ai-examples'));
+            window.BilskyenAiSearch.bindAutocomplete(
+                searchInput,
+                document.getElementById('vehicles-ai-suggest'),
+                {
+                    onExample: function (label) { if (searchInput) searchInput.value = label; },
+                    onBrand: function (item) { if (searchInput) searchInput.value = item.name || ''; },
+                    onModel: function (item) { if (searchInput) searchInput.value = item.name || ''; },
+                }
+            );
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const chipsHost = document.getElementById('ai-understood-chips');
+            if (chipsHost && (urlParams.get('ai_search') === '1' || urlParams.get('q'))) {
+                [
+                    ['price_to', 'Max ', ' kr'],
+                    ['price_from', 'Fra ', ' kr'],
+                    ['km_driven_to', 'Under ', ' km'],
+                    ['km_driven_from', 'Fra ', ' km'],
+                    ['model_year_from', 'Fra ', ''],
+                    ['model_year_to', 'Til ', ''],
+                    ['city_slug', '', ''],
+                    ['search', '', ''],
+                ].forEach(function (pair) {
+                    const val = urlParams.get(pair[0]);
+                    if (!val) return;
+                    const span = document.createElement('span');
+                    span.className = 'ai-understood-chip';
+                    span.textContent = pair[1] + val + pair[2];
+                    chipsHost.appendChild(span);
+                });
+            }
+
+            const saveBtn = document.getElementById('save-ai-search-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function () {
+                    const filters = {};
+                    new URLSearchParams(window.location.search).forEach(function (value, key) {
+                        if (['ai_search', 'q', 'page', 'view'].includes(key)) return;
+                        const base = key.replace(/\[\]$/, '');
+                        if (filters[base] === undefined) {
+                            filters[base] = value;
+                        } else if (Array.isArray(filters[base])) {
+                            filters[base].push(value);
+                        } else {
+                            filters[base] = [filters[base], value];
+                        }
+                    });
+                    const name = urlParams.get('q') || @json(__('messages.pages.vehicles.save_search'));
+                    const result = await window.BilskyenAiSearch.saveCurrentSearch(name, filters);
+                    const msg = document.getElementById('save-ai-search-msg');
+                    if (msg) {
+                        msg.textContent = result.message;
+                        msg.classList.remove('hidden');
+                    }
+                });
+            }
         }
         
         // Sort select functionality

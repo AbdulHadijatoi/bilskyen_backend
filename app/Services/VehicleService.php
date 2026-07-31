@@ -877,16 +877,23 @@ class VehicleService
 
         if (! empty($f['search'])) {
             $term = trim((string) $f['search']);
-            $query->where(function (Builder $q) use ($term) {
-                $q->where('title', 'like', '%'.$term.'%')
-                    ->orWhere('registration', 'like', '%'.$term.'%')
-                    ->orWhere('description', 'like', '%'.$term.'%')
-                    ->orWhereHas('brand', function (Builder $b) use ($term): void {
-                        $b->where('name', 'like', '%'.$term.'%');
-                    })
-                    ->orWhereHas('model', function (Builder $m) use ($term): void {
-                        $m->where('name', 'like', '%'.$term.'%');
+            $expanded = app(VehicleSearchSynonymService::class)->expand($term);
+            $terms = array_values(array_unique(array_filter([$term, $expanded], fn ($t) => $t !== '')));
+            $query->where(function (Builder $q) use ($terms) {
+                foreach ($terms as $index => $searchTerm) {
+                    $method = $index === 0 ? 'where' : 'orWhere';
+                    $q->{$method}(function (Builder $inner) use ($searchTerm) {
+                        $inner->where('title', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('registration', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('description', 'like', '%'.$searchTerm.'%')
+                            ->orWhereHas('brand', function (Builder $b) use ($searchTerm): void {
+                                $b->where('name', 'like', '%'.$searchTerm.'%');
+                            })
+                            ->orWhereHas('model', function (Builder $m) use ($searchTerm): void {
+                                $m->where('name', 'like', '%'.$searchTerm.'%');
+                            });
                     });
+                }
             });
         }
 
