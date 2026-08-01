@@ -229,11 +229,11 @@
                 {{ $aboutPageContent['about_cta_description'] ?? __('messages.pages.about.cta_description') }}
             </p>
             <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-                <a href="/vehicles"
+                <a href="{{ route('vehicles') }}"
                    class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     {{ __('messages.pages.about.explore_vehicles') }}
                 </a>
-                <a href="/contact"
+                <a href="{{ route('contact') }}"
                    class="inline-flex h-10 items-center justify-center rounded-md border border-primary px-8 text-sm font-medium bg-muted text-primary hover:bg-primary hover:text-primary-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     {{ __('messages.pages.about.contact_us') }}
                 </a>

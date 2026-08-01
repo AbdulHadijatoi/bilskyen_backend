@@ -105,7 +105,7 @@ class SeoService
             $ogImage = $firstImage->image_url ?? $firstImage->thumbnail_url ?? null;
         }
 
-        $canonical = url('/vehicles/' . $vehicle->slug);
+        $canonical = route('vehicle.detail', $vehicle);
         $schema = app(SchemaBuilderService::class)->build('Vehicle', [
             'name' => trim(implode(' ', array_filter([$brand, $model, $variant], fn ($p) => $p !== '')))
                 ?: ($vehicle->title ?? null),
@@ -577,7 +577,7 @@ class SeoService
                 'priority' => '1.0',
             ];
         }
-        $vehiclesUrl = $baseUrl . '/vehicles';
+        $vehiclesUrl = route('vehicles');
         if (!in_array($vehiclesUrl, $addedUrls, true)) {
             $entries[] = [
                 'loc' => $vehiclesUrl,
@@ -610,7 +610,7 @@ class SeoService
         // Landing pages
         foreach (LandingPage::where('status', CmsPostStatus::PUBLISHED)->whereNotNull('published_at')->get() as $lp) {
             $entries[] = [
-                'loc' => $baseUrl.'/lp/'.$lp->slug,
+                'loc' => route('landing.show', $lp->slug),
                 'lastmod' => $lp->updated_at?->format('Y-m-d'),
                 'changefreq' => 'monthly',
                 'priority' => '0.6',
@@ -626,7 +626,7 @@ class SeoService
             ->chunkById(500, function ($vehicles) use ($baseUrl, &$entries) {
                 foreach ($vehicles as $vehicle) {
                     $entries[] = [
-                        'loc' => $baseUrl . '/vehicles/' . $vehicle->slug,
+                        'loc' => route('vehicle.detail', $vehicle),
                         'lastmod' => $vehicle->updated_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
                         'changefreq' => 'weekly',
                         'priority' => '0.8',
@@ -722,13 +722,13 @@ class SeoService
         $lines = [
             'User-agent: *',
             'Allow: /',
-            'Allow: /vehicles',
-            'Allow: /vehicles/',
+            'Allow: /biler',
+            'Allow: /biler/',
             'Allow: /dealer-',
             'Allow: /byer',
             'Allow: /biler-i/',
             'Allow: /forhandlere-i/',
-            'Disallow: /vehicles?',  // filter params
+            'Disallow: /biler?',  // filter params
             'Disallow: /admin',
             'Disallow: /api',
             'Disallow: /auth',

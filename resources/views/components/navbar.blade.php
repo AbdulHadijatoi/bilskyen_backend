@@ -6,9 +6,9 @@
                     <img src="/images/logo_white.png" alt="{{ __('messages.common.site_name') }}" class="h-7 md:h-8 w-auto">
                 </a>
                 <nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-                    <a href="/vehicles" class="site-nav-link {{ request()->is('vehicles*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
-                    <a href="/about" class="site-nav-link {{ request()->is('about') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
-                    <a href="/contact" class="site-nav-link {{ request()->is('contact') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
+                    <a href="{{ route('vehicles') }}" class="site-nav-link {{ request()->is('biler') || request()->is('biler/*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
+                    <a href="{{ route('about') }}" class="site-nav-link {{ request()->is('om-os') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
+                    <a href="{{ route('contact') }}" class="site-nav-link {{ request()->is('kontakt') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
                     @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
                     <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="site-nav-link {{ request()->is('seller-dashboard*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.my_listings') }}</a>
                     @endif
@@ -64,9 +64,9 @@
                         {{ __('messages.common.search') }}
                     </button>
                 </form>
-                <a href="/vehicles" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
-                <a href="/about" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
-                <a href="/contact" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>
+                <a href="{{ route('vehicles') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
+                <a href="{{ route('about') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
+                <a href="{{ route('contact') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>
                 @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
                 <a href="{{ route('seller.dashboard', ['token' => $sellerToken]) }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.my_listings') }}</a>
                 @endif
@@ -183,9 +183,13 @@
             const panelUrl = @json(rtrim((string) config('payments.panel_url'), '/'));
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+            const sellYourCarUrl = @json(route('sell-your-car'));
+            const profileUrl = @json(route('profile'));
+            const favoritesUrl = @json(route('favorites'));
+
             authContainer.innerHTML = `
                 <div class="flex items-center gap-2 md:gap-3">
-                    <a href="/sell-your-car">
+                    <a href="${sellYourCarUrl}">
                         <button type="button" class="panel-btn panel-btn--outline panel-btn--sm h-9 md:h-10">
                             <span class="hidden sm:inline">{{ __('messages.navigation.sell_your_car') }}</span>
                             <span class="sm:hidden">{{ __('messages.navigation.sell') }}</span>
@@ -202,10 +206,10 @@
                             <p class="mt-1 text-xs text-muted-foreground">${email}</p>
                         </div>
                         <div class="my-1 h-px bg-border"></div>
-                        <a href="/profile" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+                        <a href="${profileUrl}" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
                             {{ __('messages.navigation.profile') }}
                         </a>
-                        <a href="/favorites" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+                        <a href="${favoritesUrl}" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
                             {{ __('messages.navigation.my_favorites') }}
                         </a>
                         ${showPanelButton ? `
@@ -249,6 +253,7 @@
 
     (function initNavbarAiSearch() {
         const publicAiEnabled = @json(!empty($publicAiEnabled));
+        const vehiclesUrl = @json(route('vehicles'));
 
         function bindForm(formId, inputId, suggestId) {
             const form = document.getElementById(formId);
@@ -271,7 +276,7 @@
                 e.preventDefault();
                 const q = input.value.trim();
                 if (!q) {
-                    window.location.href = '/vehicles';
+                    window.location.href = vehiclesUrl;
                     return;
                 }
                 const btn = form.querySelector('button[type="submit"]');
@@ -280,10 +285,10 @@
                     if (publicAiEnabled && window.BilskyenAiSearch) {
                         await window.BilskyenAiSearch.navigateWithAiSearch(q);
                     } else {
-                        window.location.href = '/vehicles?search=' + encodeURIComponent(q);
+                        window.location.href = vehiclesUrl + '?search=' + encodeURIComponent(q);
                     }
                 } catch (err) {
-                    window.location.href = '/vehicles?search=' + encodeURIComponent(q);
+                    window.location.href = vehiclesUrl + '?search=' + encodeURIComponent(q);
                 }
             });
         }

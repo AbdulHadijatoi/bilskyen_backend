@@ -7,9 +7,14 @@ use Illuminate\Support\Facades\Cache;
 
 class SeoRedirect extends Model
 {
+    public const MATCH_EXACT = 'exact';
+
+    public const MATCH_PREFIX = 'prefix';
+
     protected $fillable = [
         'from_path',
         'to_path',
+        'match_type',
         'redirect_type',
         'is_active',
         'hit_count',
@@ -19,6 +24,10 @@ class SeoRedirect extends Model
         'is_active' => 'boolean',
         'redirect_type' => 'integer',
         'hit_count' => 'integer',
+    ];
+
+    protected $attributes = [
+        'match_type' => self::MATCH_EXACT,
     ];
 
     protected static function boot(): void

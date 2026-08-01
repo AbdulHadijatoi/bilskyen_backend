@@ -1616,6 +1616,10 @@
 <script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 <script>
+
+        const vehicleEnquireUrl = (id) => @json(rtrim(route('vehicles.enquire', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
+        const vehicleTestDriveUrl = (id) => @json(rtrim(route('vehicles.test-drive.form', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
+        const vehiclePriceNegotiationUrl = (id) => @json(rtrim(route('vehicles.price-negotiation.form', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Embla Carousel
     const emblaNode = document.querySelector('#vehicle-images-carousel');
@@ -1713,7 +1717,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const guest = await window.bilskyenCollectGuestContact?.() || {};
             const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
-            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+            const response = await fetch(vehicleEnquireUrl(vehicleId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1794,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const guest = await window.bilskyenCollectGuestContact?.() || {};
             const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
-            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+            const response = await fetch(vehicleEnquireUrl(vehicleId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1874,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const guest = await window.bilskyenCollectGuestContact?.() || {};
             const bot = typeof window.bilskyenBotFields === 'function' ? await window.bilskyenBotFields() : {};
-            const response = await fetch(`/vehicles/${vehicleId}/enquire`, {
+            const response = await fetch(vehicleEnquireUrl(vehicleId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2005,14 +2009,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle Test Drive Request - Now handled by form page, keeping for backward compatibility
     window.handleTestDriveRequest = async function(vehicleId, event) {
         // Redirect to test drive form instead of creating lead directly
-        window.location.href = `/vehicles/${vehicleId}/test-drive`;
+        window.location.href = vehicleTestDriveUrl(vehicleId);
         return false;
     };
 
     // Handle Price Negotiation - Now handled by form page, keeping for backward compatibility
     window.handlePriceNegotiation = async function(vehicleId, event) {
         // Redirect to price negotiation form instead of creating lead directly
-        window.location.href = `/vehicles/${vehicleId}/price-negotiation`;
+        window.location.href = vehiclePriceNegotiationUrl(vehicleId);
         return false;
     };
     

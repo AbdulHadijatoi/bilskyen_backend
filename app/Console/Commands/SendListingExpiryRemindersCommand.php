@@ -34,7 +34,7 @@ class SendListingExpiryRemindersCommand extends Command
             }
 
             $manageUrl = $vehicle->dealer_id
-                ? url('/vehicles/'.$vehicle->slug)
+                ? route('vehicle.detail', $vehicle)
                 : url('/seller-dashboard');
 
             $mailService->sendMailable(

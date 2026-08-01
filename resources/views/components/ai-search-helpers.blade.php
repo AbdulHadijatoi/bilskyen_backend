@@ -53,7 +53,7 @@ window.BilskyenAiSearch = (function () {
     }
 
     /**
-     * Build /vehicles query string from parse API filters + optional extras.
+     * Build /biler query string from parse API filters + optional extras.
      */
     function filtersToParams(filters, extras) {
         const params = new URLSearchParams();
@@ -80,7 +80,7 @@ window.BilskyenAiSearch = (function () {
     function buildVehiclesUrl(filters, extras) {
         const params = filtersToParams(filters, extras);
         const qs = params.toString();
-        return '/vehicles' + (qs ? '?' + qs : '');
+        return @json(route('vehicles')) + (qs ? '?' + qs : '');
     }
 
     /**

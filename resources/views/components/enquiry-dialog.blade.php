@@ -19,7 +19,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.forms.enter_message'),
             'submitText' => __('messages.dialogs.submit_enquiry'),
-            'endpoint' => "/vehicles/{$slug}/enquire/submit",
+            'endpoint' => $slug ? route('vehicles.enquire.submit', ['vehicle' => $slug]) : '',
             'errorMessage' => __('messages.dialogs.please_login_enquiry'),
         ],
         'test-drive' => [
@@ -29,7 +29,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.dialogs.test_drive_message_placeholder'),
             'submitText' => __('messages.dialogs.submit_test_drive'),
-            'endpoint' => "/vehicles/{$slug}/test-drive/submit",
+            'endpoint' => $slug ? route('vehicles.test-drive.submit', ['vehicle' => $slug]) : '',
             'errorMessage' => __('messages.dialogs.please_login_test_drive'),
         ],
         'price-negotiation' => [
@@ -39,7 +39,7 @@
             'messageLabel' => __('messages.dialogs.your_offer_message'),
             'messagePlaceholder' => __('messages.dialogs.price_negotiation_message_placeholder'),
             'submitText' => __('messages.dialogs.submit_offer'),
-            'endpoint' => "/vehicles/{$slug}/price-negotiation/submit",
+            'endpoint' => $slug ? route('vehicles.price-negotiation.submit', ['vehicle' => $slug]) : '',
             'errorMessage' => __('messages.dialogs.please_login_price_negotiation'),
         ],
         'exchange' => [
@@ -49,7 +49,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.dialogs.exchange_message_placeholder'),
             'submitText' => __('messages.dialogs.submit_exchange'),
-            'endpoint' => "/vehicles/{$slug}/exchange/submit",
+            'endpoint' => $slug ? route('vehicles.exchange.submit', ['vehicle' => $slug]) : '',
             'errorMessage' => __('messages.dialogs.please_login_exchange'),
         ],
     ];

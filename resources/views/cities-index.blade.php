@@ -23,7 +23,7 @@
 
     @if($cities->isEmpty())
         <p class="text-muted-foreground">{{ __('messages.pages.cities.no_cars', ['city' => 'Danmark']) }}</p>
-        <a href="/vehicles" class="mt-4 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{{ __('messages.pages.footer.browse_vehicles') }}</a>
+        <a href="{{ route('vehicles') }}" class="mt-4 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{{ __('messages.pages.footer.browse_vehicles') }}</a>
     @else
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($cities as $city)

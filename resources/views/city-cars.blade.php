@@ -37,7 +37,7 @@
             @endif
         </p>
         <div class="mt-4 flex flex-wrap gap-2">
-            <a href="/vehicles?city_slug={{ urlencode($city->slug) }}" class="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <a href="{{ route('vehicles', ['city_slug' => $city->slug]) }}" class="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                 {{ __('messages.pages.cities.see_all_cars', ['city' => $city->name]) }}
             </a>
             @if($city->dealer_count > 0)
@@ -51,7 +51,7 @@
     @if($vehicles->isEmpty())
         <div class="rounded-xl border border-border bg-muted/30 p-8 text-center">
             <p class="text-muted-foreground">{{ __('messages.pages.cities.no_cars', ['city' => $city->name]) }}</p>
-            <a href="/vehicles" class="mt-4 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{{ __('messages.pages.footer.browse_vehicles') }}</a>
+            <a href="{{ route('vehicles') }}" class="mt-4 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{{ __('messages.pages.footer.browse_vehicles') }}</a>
         </div>
     @else
         <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">

@@ -58,7 +58,7 @@ class EnquiryController extends Controller
         }
 
         $presenter = EnquiryMailPresenter::for($vehicle, $enquiry);
-        $vehicleUrl = url('/vehicles/' . $vehicle->slug);
+        $vehicleUrl = route('vehicle.detail', $vehicle);
 
         $this->mailService->sendMailable(
             $ownerEmail,
@@ -247,7 +247,7 @@ class EnquiryController extends Controller
             $this->metaConversionsApiService->trackLead(
                 $vehicle,
                 $metaLeadEventId,
-                url('/vehicles/'.$vehicle->slug),
+                route('vehicle.detail', $vehicle),
                 $request->ip(),
                 $request->userAgent(),
                 $enquiry->email,
@@ -402,7 +402,7 @@ class EnquiryController extends Controller
             $this->metaConversionsApiService->trackLead(
                 $vehicle,
                 $metaLeadEventId,
-                url('/vehicles/'.$vehicle->slug.'/enquire'),
+                route('vehicles.enquire.form', $vehicle),
                 $request->ip(),
                 $request->userAgent(),
                 $enquiry->email,

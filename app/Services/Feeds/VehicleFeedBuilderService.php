@@ -68,7 +68,7 @@ class VehicleFeedBuilderService
             'images' => $images,
             'primary_image' => $images[0] ?? null,
             'video_url' => $vehicle->video_url,
-            'url' => url('/vehicles/'.$vehicle->slug),
+            'url' => route('vehicle.detail', $vehicle),
             'published_at' => $vehicle->published_at?->toIso8601String(),
             'dealer' => $dealer ? [
                 'id' => $dealer->id,

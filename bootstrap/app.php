@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend([
+            \App\Http\Middleware\SeoRedirectMiddleware::class,
+        ]);
+
         $middleware->append([
             SanitizeInput::class,
             SecurityHeaders::class,
@@ -38,7 +42,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Set locale after session/cookies are available on web requests
         $middleware->web(prepend: [
-            \App\Http\Middleware\SeoRedirectMiddleware::class,
             \App\Http\Middleware\ResolveCustomDomain::class,
         ]);
 

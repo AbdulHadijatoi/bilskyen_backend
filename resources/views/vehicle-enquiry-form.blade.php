@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
         try {
-            const response = await fetch(`/vehicles/{{ $vehicle->slug }}/enquire/submit`, {
+            const response = await fetch(@json(route('vehicles.enquire.submit', ['vehicle' => $vehicle->slug])), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

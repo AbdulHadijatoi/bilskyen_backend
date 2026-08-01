@@ -28,7 +28,7 @@ class AdminMetaCatalogController extends Controller
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'slug' => $vehicle->slug,
-                'detail_url' => url('/vehicles/'.$vehicle->slug),
+                'detail_url' => route('vehicle.detail', $vehicle),
                 'list_status_id' => $vehicle->list_status_id,
                 'is_published' => (int) $vehicle->list_status_id === VehicleListStatus::PUBLISHED,
             ],

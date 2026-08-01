@@ -23,7 +23,7 @@
         @endphp
         @if($vehicle)
         <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-            <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
+            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="block flex-1">
                 <!-- Vehicle Image -->
                 <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                     <img
@@ -117,7 +117,7 @@
                 <!-- Vehicle Actions -->
                 <div class="p-3 pt-0">
                     <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
+                        <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex-1" onclick="event.stopPropagation()">
                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                 {{ __('messages.pages.vehicles.view_details') }}
                             </button>
@@ -197,7 +197,7 @@
             <p class="text-muted-foreground mt-1">
                 {{ __('messages.pages.vehicles.no_favorites_description') }}
             </p>
-            <a href="/vehicles" class="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
+            <a href="{{ route('vehicles') }}" class="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
                 {{ __('messages.pages.vehicles.browse_vehicles') }}
             </a>
         </div>
@@ -207,6 +207,9 @@
 
 @push('scripts')
 <script>
+    const favoritesUrl = @json(route('favorites'));
+    const favoritesStoreUrl = @json(route('favorites.store'));
+    const favoritesDestroyUrl = (id) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
     // Toggle favorite function
     window.toggleFavorite = async function(vehicleId, event) {
         // Prevent any default behavior and stop propagation
@@ -231,7 +234,7 @@
 
             if (isFavorited) {
                 // Remove from favorites
-                const response = await fetch(`/favorites/${vehicleId}`, {
+                const response = await fetch(favoritesDestroyUrl(vehicleId), {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
@@ -260,7 +263,7 @@
                     }
                     
                     // If on favorites page, reload to update list
-                    if (window.location.pathname === '/favorites') {
+                    if (window.location.pathname === @json(parse_url(route('favorites'), PHP_URL_PATH))) {
                         setTimeout(() => window.location.reload(), 500);
                     }
                 } else {
@@ -280,7 +283,7 @@
                 }
             } else {
                 // Add to favorites
-                const response = await fetch('/favorites', {
+                const response = await fetch(favoritesStoreUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -13,10 +13,10 @@
                 </p>
             </div>
             <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <a href="/vehicles" class="site-footer__cta-primary inline-flex h-11 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-primary shadow-sm transition-all hover:bg-white/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
+                <a href="{{ route('vehicles') }}" class="site-footer__cta-primary inline-flex h-11 items-center justify-center rounded-lg bg-white px-6 text-sm font-medium text-primary shadow-sm transition-all hover:bg-white/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
                     {{ __('messages.pages.footer.browse_inventory') }}
                 </a>
-                <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 text-sm font-medium text-[var(--footer-foreground)] transition-all hover:bg-white/10 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
+                <a href="{{ route('contact') }}" class="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 text-sm font-medium text-[var(--footer-foreground)] transition-all hover:bg-white/10 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
                     {{ __('messages.pages.footer.contact_us') }}
                 </a>
             </div>
@@ -68,10 +68,10 @@
             <div>
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.vehicles') }}</h3>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="/vehicles">{{ __('messages.pages.footer.browse_vehicles') }}</a></li>
+                    <li><a href="{{ route('vehicles') }}">{{ __('messages.pages.footer.browse_vehicles') }}</a></li>
                     <li><a href="/byer">{{ __('messages.pages.footer.cars_by_city') }}</a></li>
-                    <li><a href="/vehicles">{{ __('messages.pages.footer.pre_owned') }}</a></li>
-                    <li><a href="/vehicles">{{ __('messages.pages.footer.new_arrivals') }}</a></li>
+                    <li><a href="{{ route('vehicles') }}">{{ __('messages.pages.footer.pre_owned') }}</a></li>
+                    <li><a href="{{ route('vehicles') }}">{{ __('messages.pages.footer.new_arrivals') }}</a></li>
                     @if(!empty($footerCities) && $footerCities->isNotEmpty())
                         @foreach($footerCities->take(4) as $city)
                             <li><a href="/biler-i/{{ $city->slug }}">{{ __('messages.pages.cities.cars_heading', ['city' => $city->name]) }}</a></li>
@@ -83,13 +83,13 @@
             <div>
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.company') }}</h3>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="/about">{{ __('messages.pages.footer.about_us') }}</a></li>
-                    <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>
+                    <li><a href="{{ route('about') }}">{{ __('messages.pages.footer.about_us') }}</a></li>
+                    <li><a href="{{ route('contact') }}">{{ __('messages.pages.footer.contact_us') }}</a></li>
                     @if(!empty($faqPageEnabled))
                     <li><a href="/faq">{{ __('messages.pages.footer.faq') }}</a></li>
                     @endif
-                    <li><a href="/for-dealers">{{ __('messages.navigation.for_dealers') }}</a></li>
-                    <li><a href="/for-staff">{{ __('messages.navigation.for_staff') }}</a></li>
+                    <li><a href="{{ route('for-dealers.landing') }}">{{ __('messages.navigation.for_dealers') }}</a></li>
+                    <li><a href="{{ route('for-staff.landing') }}">{{ __('messages.navigation.for_staff') }}</a></li>
                 </ul>
             </div>
 
@@ -110,9 +110,9 @@
             <div>
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.legal') }}</h3>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
-                    <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
-                    <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>
+                    <li><a href="{{ route('privacy-policy') }}">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
+                    <li><a href="{{ route('terms-of-service') }}">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
+                    <li><a href="{{ route('account-deletion') }}">{{ __('messages.pages.footer.account_deletion') }}</a></li>
                 </ul>
             </div>
 
@@ -131,11 +131,11 @@
                 © {{ date('Y') }} {{ __('messages.common.site_name') }}. {{ __('messages.pages.footer.all_rights_reserved') }}.
             </p>
             <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
-                <a href="/for-dealers" class="text-xs">{{ __('messages.navigation.for_dealers') }}</a>
-                <a href="/for-staff" class="text-xs">{{ __('messages.navigation.for_staff') }}</a>
-                <a href="/privacy-policy" class="text-xs">{{ __('messages.pages.footer.privacy_policy') }}</a>
-                <a href="/terms-of-service" class="text-xs">{{ __('messages.pages.footer.terms_of_service') }}</a>
-                <a href="/account-deletion" class="text-xs">{{ __('messages.pages.footer.account_deletion') }}</a>
+                <a href="{{ route('for-dealers.landing') }}" class="text-xs">{{ __('messages.navigation.for_dealers') }}</a>
+                <a href="{{ route('for-staff.landing') }}" class="text-xs">{{ __('messages.navigation.for_staff') }}</a>
+                <a href="{{ route('privacy-policy') }}" class="text-xs">{{ __('messages.pages.footer.privacy_policy') }}</a>
+                <a href="{{ route('terms-of-service') }}" class="text-xs">{{ __('messages.pages.footer.terms_of_service') }}</a>
+                <a href="{{ route('account-deletion') }}" class="text-xs">{{ __('messages.pages.footer.account_deletion') }}</a>
             </div>
         </div>
     </div>

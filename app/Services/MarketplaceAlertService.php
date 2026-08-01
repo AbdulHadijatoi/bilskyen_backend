@@ -53,7 +53,7 @@ class MarketplaceAlertService
                 continue;
             }
 
-            $vehicleUrl = url('/vehicles/'.$vehicle->slug);
+            $vehicleUrl = route('vehicle.detail', $vehicle);
             $newPrice = (float) $latest->new_price;
             $title = $vehicle->title ?? __('messages.mail.vehicle_fallback', ['id' => $vehicle->id]);
 
@@ -129,7 +129,7 @@ class MarketplaceAlertService
                         continue;
                     }
 
-                    $vehiclesUrl = url('/vehicles');
+                    $vehiclesUrl = route('vehicles');
 
                     try {
                         if ($user->email) {

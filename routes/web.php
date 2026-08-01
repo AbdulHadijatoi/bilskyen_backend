@@ -79,28 +79,28 @@ Route::post('/auth/logout', [AuthPageController::class, 'logout'])->name('logout
 Route::get('/auth/logout', [AuthPageController::class, 'logout'])->name('logout.get');
 
 // Enquiry Routes - Public (guests can submit enquiries)
-Route::post('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])
+Route::post('/biler/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'enquire'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('vehicles.enquire');
-Route::get('/vehicles/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
-Route::post('/vehicles/{vehicle}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])
+Route::get('/biler/{vehicle}/enquire', [\App\Http\Controllers\EnquiryController::class, 'showEnquiryForm'])->name('vehicles.enquire.form');
+Route::post('/biler/{vehicle}/enquire/submit', [\App\Http\Controllers\EnquiryController::class, 'submitEnquiryForm'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('vehicles.enquire.submit');
 
 // Test Drive Routes - Public (guests can submit test drive requests)
-Route::get('/vehicles/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
-Route::post('/vehicles/{vehicle}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])
+Route::get('/biler/{vehicle}/test-drive', [\App\Http\Controllers\EnquiryController::class, 'showTestDriveForm'])->name('vehicles.test-drive.form');
+Route::post('/biler/{vehicle}/test-drive/submit', [\App\Http\Controllers\EnquiryController::class, 'submitTestDriveForm'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('vehicles.test-drive.submit');
 
 // Price Negotiation Routes - Public (guests can submit price negotiations)
-Route::get('/vehicles/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
-Route::post('/vehicles/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])
+Route::get('/biler/{vehicle}/price-negotiation', [\App\Http\Controllers\EnquiryController::class, 'showPriceNegotiationForm'])->name('vehicles.price-negotiation.form');
+Route::post('/biler/{vehicle}/price-negotiation/submit', [\App\Http\Controllers\EnquiryController::class, 'submitPriceNegotiationForm'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('vehicles.price-negotiation.submit');
 
 // Exchange Routes - Public (guests can submit exchange requests)
-Route::post('/vehicles/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])
+Route::post('/biler/{vehicle}/exchange/submit', [\App\Http\Controllers\EnquiryController::class, 'submitExchangeForm'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('vehicles.exchange.submit');
 
@@ -112,28 +112,28 @@ Route::post('/marketplace-notifications/mark-read', [\App\Http\Controllers\Marke
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
     // Profile Routes
-    Route::get('/profile', [HomeController::class, 'showProfile'])->name('profile');
-    Route::post('/profile', [HomeController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profil', [HomeController::class, 'showProfile'])->name('profile');
+    Route::post('/profil', [HomeController::class, 'updateProfile'])->name('profile.update');
     
     // Favorites Routes
-    Route::get('/favorites', [HomeController::class, 'showFavorites'])->name('favorites');
-    Route::post('/favorites', [\App\Http\Controllers\FavoriteController::class, 'storeWeb'])->name('favorites.store');
-    Route::delete('/favorites/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
-    Route::get('/favorites/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
-    Route::post('/favorites/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
+    Route::get('/favoritter', [HomeController::class, 'showFavorites'])->name('favorites');
+    Route::post('/favoritter', [\App\Http\Controllers\FavoriteController::class, 'storeWeb'])->name('favorites.store');
+    Route::delete('/favoritter/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
+    Route::get('/favoritter/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
+    Route::post('/favoritter/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
     Route::post('/saved-searches', [\App\Http\Controllers\AiSearchController::class, 'saveSearchWeb'])
         ->middleware('throttle:public.writes')
         ->name('saved-searches.store');
     
     // Sell Your Car Routes
-    Route::get('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
-    Route::get('/sell-your-car/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
+    Route::get('/saelg-din-bil', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+    Route::get('/saelg-din-bil/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
         ->name('sell-your-car.lookup-context');
-    Route::post('/sell-your-car', [\App\Http\Controllers\SellYourCarController::class, 'store'])
+    Route::post('/saelg-din-bil', [\App\Http\Controllers\SellYourCarController::class, 'store'])
         ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
         ->name('sell-your-car.store');
-    Route::get('/sell-your-car/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
-    Route::post('/sell-your-car/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
+    Route::get('/saelg-din-bil/success/{token}', [\App\Http\Controllers\SellYourCarController::class, 'showSuccess'])->name('sell-your-car.success');
+    Route::post('/saelg-din-bil/feature/{token}', [\App\Http\Controllers\SellYourCarController::class, 'feature'])->name('sell-your-car.feature');
     
     // Seller Dashboard Routes (Private with encrypted token)
     Route::get('/seller-dashboard/{token}', [\App\Http\Controllers\SellerController::class, 'dashboard'])->name('seller.dashboard');
@@ -148,10 +148,10 @@ Route::middleware('auth.web')->group(function () {
 // Blog & landing pages
 Route::get('/blog', [CmsPublicController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [CmsPublicController::class, 'blogShow'])->name('blog.show');
-Route::get('/lp/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show');
+Route::get('/guides/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show');
 
 // Dealer marketing pages
-Route::prefix('for-dealers')->name('for-dealers.')->group(function () {
+Route::prefix('for-forhandlere')->name('for-dealers.')->group(function () {
     Route::get('/', [DealerMarketingController::class, 'dealerLanding'])->name('landing');
     Route::get('/pricing', [DealerMarketingController::class, 'dealerPricing'])->name('pricing');
     Route::get('/resources', [DealerMarketingController::class, 'dealerResources'])->name('resources');
@@ -162,34 +162,34 @@ Route::prefix('for-dealers')->name('for-dealers.')->group(function () {
 });
 
 // Staff marketing pages
-Route::prefix('for-staff')->name('for-staff.')->group(function () {
+Route::prefix('for-medarbejdere')->name('for-staff.')->group(function () {
     Route::get('/', [DealerMarketingController::class, 'staffLanding'])->name('landing');
     Route::get('/resources', [DealerMarketingController::class, 'staffResources'])->name('resources');
 });
 
 // About Page
-Route::get('/about', [HomeController::class, 'showAbout'])->name('about');
+Route::get('/om-os', [HomeController::class, 'showAbout'])->name('about');
 
 Route::get('/inventory-audit', [\App\Http\Controllers\InventoryAuditController::class, 'show'])->name('inventory-audit');
 Route::get('/inventory-audit/{slug}', [\App\Http\Controllers\InventoryAuditController::class, 'brandedShow'])->name('inventory-audit.branded');
 
 // Contact Page
-Route::get('/contact', [HomeController::class, 'showContact'])->name('contact');
-Route::post('/contact', [HomeController::class, 'submitContact'])
+Route::get('/kontakt', [HomeController::class, 'showContact'])->name('contact');
+Route::post('/kontakt', [HomeController::class, 'submitContact'])
     ->middleware(['throttle:public.writes', 'honeypot', 'turnstile'])
     ->name('contact.submit');
 
 // Privacy Policy Page
-Route::get('/privacy-policy', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
+Route::get('/privatlivspolitik', [HomeController::class, 'showPrivacyPolicy'])->name('privacy-policy');
 
 // FAQ / Help
 Route::get('/faq', [HomeController::class, 'showFaq'])->name('faq');
 
 // Terms of Service Page
-Route::get('/terms-of-service', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
+Route::get('/vilkaar', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');
 
 // Account deletion (App Store / Play Store compliance)
-Route::get('/account-deletion', [HomeController::class, 'showAccountDeletion'])->name('account-deletion');
+Route::get('/slet-konto', [HomeController::class, 'showAccountDeletion'])->name('account-deletion');
 
 // City SEO hubs (programmatic local landing pages)
 Route::get('/byer', [\App\Http\Controllers\CitySeoController::class, 'index'])->name('cities.index');
@@ -197,10 +197,10 @@ Route::get('/biler-i/{city}', [\App\Http\Controllers\CitySeoController::class, '
 Route::get('/forhandlere-i/{city}', [\App\Http\Controllers\CitySeoController::class, 'dealers'])->name('cities.dealers');
 
 // Vehicles Page (DMR-linked Vehicle records)
-Route::get('/vehicles', [HomeController::class, 'showVehicles'])->name('vehicles');
+Route::get('/biler', [HomeController::class, 'showVehicles'])->name('vehicles');
 
 // Vehicle detail (slug)
-Route::get('/vehicles/{vehicle}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
+Route::get('/biler/{vehicle}', [HomeController::class, 'showVehicleDetail'])->name('vehicle.detail');
 
 // Dealer Public Page
 Route::get('/dealer-{slug}', [\App\Http\Controllers\DealerController::class, 'show'])->name('dealer.show');

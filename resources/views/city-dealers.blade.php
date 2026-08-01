@@ -28,7 +28,7 @@
             <a href="{{ route('cities.cars', $city->slug) }}" class="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                 {{ __('messages.pages.cities.see_cars', ['city' => $city->name]) }}
             </a>
-            <a href="/vehicles?city_slug={{ urlencode($city->slug) }}" class="inline-flex h-10 items-center rounded-md border border-input px-4 text-sm font-medium hover:bg-muted">
+            <a href="{{ route('vehicles', ['city_slug' => $city->slug]) }}" class="inline-flex h-10 items-center rounded-md border border-input px-4 text-sm font-medium hover:bg-muted">
                 {{ __('messages.pages.cities.see_all_cars', ['city' => $city->name]) }}
             </a>
         </div>

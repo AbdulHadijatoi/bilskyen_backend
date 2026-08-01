@@ -10,7 +10,7 @@
     'isBoosted' => false,
 ])
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
-    <a href="/vehicles/{{ $vehicle->slug }}" class="vehicle-item-main-link block flex-1 min-w-0">
+    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-item-main-link block flex-1 min-w-0">
         <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
             <img
                 src="{{ $imgUrl }}"
@@ -123,7 +123,7 @@
         </div>
         <div class="p-3 pt-0">
             <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
-                <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1" onclick="event.stopPropagation()">
+                <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex-1" onclick="event.stopPropagation()">
                     <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                         {{ __('messages.pages.vehicles.view_details') }}
                     </button>

@@ -43,7 +43,7 @@
             :subtitle="__('messages.pages.seller_dashboard.subtitle')"
         >
             <x-slot:actions>
-                <x-panel.button href="/sell-your-car" variant="primary">
+                <x-panel.button href="{{ route('sell-your-car') }}" variant="primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="12" x2="12" y1="5" y2="19"></line>
                         <line x1="5" x2="19" y1="12" y2="12"></line>
@@ -158,7 +158,7 @@
                         </svg>
                         <p class="panel-table-empty__title">{{ __('messages.pages.seller_dashboard.no_vehicles_found') }}</p>
                         <p>{{ __('messages.pages.seller_dashboard.no_vehicles_description') }}</p>
-                        <a href="/sell-your-car" class="panel-btn panel-btn--primary" style="margin-top:0.75rem">
+                        <a href="{{ route('sell-your-car') }}" class="panel-btn panel-btn--primary" style="margin-top:0.75rem">
                             {{ __('messages.pages.seller_dashboard.list_first_vehicle') }}
                         </a>
                     </div>

@@ -87,7 +87,7 @@ class SellYourCarSubmissionService
                 'postcode' => $user->postcode,
             ],
             'lookup' => $lookup,
-            'lookup_context_url_template' => url('/sell-your-car/lookup-context').'/{dmrFactVehicleId}',
+            'lookup_context_url_template' => url('/saelg-din-bil/lookup-context').'/{dmrFactVehicleId}',
         ];
     }
 

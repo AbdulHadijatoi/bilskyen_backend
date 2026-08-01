@@ -1226,6 +1226,12 @@
 
 @push('scripts')
 <script>
+
+        const VEHICLE_DETAIL_URL = (slug) => @json(rtrim(route('vehicle.detail', ['vehicle' => '__SLUG__']), '/')).replace('__SLUG__', encodeURIComponent(slug));
+        const VEHICLES_INDEX_PATH = @json(parse_url(route('vehicles'), PHP_URL_PATH));
+        const favoritesCheckBatchUrl = @json(route('favorites.check.batch'));
+        const favoritesStoreUrl = @json(route('favorites.store'));
+        const favoritesDestroyUrl = (id) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
     (function() {
         // Constants
         const vehicleContainer = document.getElementById('vehicle-container');
@@ -1328,7 +1334,7 @@
 
             return `
                 <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
-                    <a href="/vehicles/${slug}" class="vehicle-item-main-link block flex-1 min-w-0">
+                    <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link block flex-1 min-w-0">
                         <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
                                 src="${imageUrl}"
@@ -1429,7 +1435,7 @@
                         </div>
                         <div class="p-3 pt-0">
                             <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/${slug}" class="flex-1" onclick="event.stopPropagation()">
+                                <a href="${VEHICLE_DETAIL_URL(slug)}" class="flex-1" onclick="event.stopPropagation()">
                                     <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
@@ -1542,7 +1548,7 @@
 
             try {
                 // Make single batch API call
-                const response = await fetch('/favorites/check-batch', {
+                const response = await fetch(favoritesCheckBatchUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2325,7 +2331,7 @@
             }
         }
         
-        // Keep the address bar in sync so filters can be shared (GET /vehicles?…).
+        // Keep the address bar in sync so filters can be shared (GET /biler?…).
         // Live results still use POST /api/v1/search-vehicles.
         function syncFiltersToUrl(filters = {}) {
             const params = new URLSearchParams();
@@ -2347,8 +2353,8 @@
             });
             const qs = params.toString();
             const nextUrl = qs
-                ? `${window.location.pathname || '/vehicles'}?${qs}`
-                : (window.location.pathname || '/vehicles');
+                ? `${window.location.pathname || VEHICLES_INDEX_PATH}?${qs}`
+                : (window.location.pathname || VEHICLES_INDEX_PATH);
             if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
                 history.replaceState({}, '', nextUrl);
             }
@@ -4049,7 +4055,7 @@ if (config) {
 
                 if (isFavorited) {
                     // Remove from favorites
-                    const response = await fetch(`/favorites/${vehicleId}`, {
+                    const response = await fetch(favoritesDestroyUrl(vehicleId), {
                         method: 'DELETE',
                         headers: {
                             'Accept': 'application/json',
@@ -4100,7 +4106,7 @@ if (config) {
                     }
                 } else {
                     // Add to favorites
-                    const response = await fetch('/favorites', {
+                    const response = await fetch(favoritesStoreUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

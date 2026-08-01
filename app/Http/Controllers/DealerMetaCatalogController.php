@@ -42,7 +42,7 @@ class DealerMetaCatalogController extends Controller
                 'id' => $vehicle->id,
                 'title' => $vehicle->title,
                 'slug' => $vehicle->slug,
-                'detail_url' => url('/vehicles/'.$vehicle->slug),
+                'detail_url' => route('vehicle.detail', $vehicle),
                 'list_status_id' => $vehicle->list_status_id,
             ],
             'row' => $preview['row'],

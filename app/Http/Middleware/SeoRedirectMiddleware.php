@@ -26,9 +26,16 @@ class SeoRedirectMiddleware
 
         $this->redirectService->recordHit($redirect);
 
-        $to = $redirect->to_path;
-        if (! str_starts_with($to, 'http')) {
+        $path = $request->getPathInfo();
+        $to = $this->redirectService->destinationPath($redirect, $path);
+
+        if (! str_starts_with($to, 'http://') && ! str_starts_with($to, 'https://')) {
             $to = url($to);
+        }
+
+        $query = $request->getQueryString();
+        if ($query) {
+            $to .= (str_contains($to, '?') ? '&' : '?').$query;
         }
 
         return redirect($to, (int) $redirect->redirect_type);

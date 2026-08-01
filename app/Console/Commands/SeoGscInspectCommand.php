@@ -211,7 +211,7 @@ class SeoGscInspectCommand extends Command
             ->orderByDesc('updated_at')
             ->limit($limit)
             ->pluck('slug')
-            ->map(fn ($slug) => $base.'/vehicles/'.$slug)
+            ->map(fn ($slug) => route('vehicle.detail', $slug))
             ->values()
             ->all();
     }

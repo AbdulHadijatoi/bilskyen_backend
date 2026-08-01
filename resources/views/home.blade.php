@@ -660,7 +660,7 @@
                     @endif
                 </div>
 
-                <form method="GET" action="/vehicles" id="filter-form">
+                <form method="GET" action="{{ route('vehicles') }}" id="filter-form">
                 <div class="home-filter-top">
                     <div class="home-filter-brand-row">
                         <span class="home-filter-brand">Bilskyen</span>
@@ -868,7 +868,7 @@
                             {{ __('messages.pages.vehicles.reset_filters') }}
                         </button>
                         <div class="home-filter-footer-actions">
-                            <a href="/vehicles" class="text-sm font-medium text-primary hover:underline">
+                            <a href="{{ route('vehicles') }}" class="text-sm font-medium text-primary hover:underline">
                                 {{ __('messages.pages.vehicles.advanced_filters') }}
                             </a>
 
@@ -891,10 +891,10 @@
                     {{ $homePageContent['hero_description'] ?? __('messages.pages.home.hero_description') }}
                 </p>
                 <div class="flex flex-col gap-4 sm:flex-row">
-                    <a href="/vehicles" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <a href="{{ route('vehicles') }}" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         {{ __('messages.pages.home.browse_vehicles') }}
                     </a>
-                    <a href="/contact" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <a href="{{ route('contact') }}" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         {{ __('messages.pages.footer.contact_us') }}
                     </a>
                 </div>
@@ -942,7 +942,7 @@
                         <div class="flex gap-3">
                             @foreach($featuredVehicles as $vehicle)
                         <div class="featured-vehicle-card flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
-                            <a href="/vehicles/{{ $vehicle['slug'] ?? $vehicle['id'] }}" class="block flex-1">
+                            <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="block flex-1">
                                 <!-- Vehicle Image -->
                                 <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                                     <img
@@ -1036,7 +1036,7 @@
                                 <!-- Vehicle Actions -->
                                 <div class="p-3 pt-0">
                                     <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                        <a href="/vehicles/{{ $vehicle['slug'] ?? $vehicle['id'] }}" class="flex-1" onclick="event.stopPropagation()">
+                                        <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="flex-1" onclick="event.stopPropagation()">
                                             <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                                 {{ __('messages.pages.vehicles.view_details') }}
                                             </button>
@@ -1063,7 +1063,7 @@
                     <!-- Login Dialog -->
                     <x-login-dialog />
                     <div class="mt-4 flex justify-center">
-                        <a href="/vehicles" class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                        <a href="{{ route('vehicles') }}" class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                             {{ __('messages.pages.home.view_all_vehicles') }}
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
                                 <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -1179,7 +1179,7 @@
                     $feature2Title = $homePageContent['feature_2_title'] ?? __('messages.pages.home.feature_2_title');
                     $feature3Title = $homePageContent['feature_3_title'] ?? __('messages.pages.home.feature_3_title');
                 @endphp
-                <a href="/vehicles" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <a href="{{ route('vehicles') }}" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature1Title }}" title="{{ $feature1Title }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <rect width="20" height="14" x="2" y="5" rx="2"></rect>
@@ -1192,7 +1192,7 @@
                     </p>
                     <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
                 </a>
-                <a href="/contact" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <a href="{{ route('contact') }}" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature2Title }}" title="{{ $feature2Title }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -1204,7 +1204,7 @@
                     </p>
                     <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
                 </a>
-                <a href="/about" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <a href="{{ route('about') }}" class="group bg-card flex flex-col items-center rounded-lg border border-border p-6 text-center transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <div class="mb-4 rounded-full bg-primary/10 p-3" role="img" aria-label="{{ $feature3Title }}" title="{{ $feature3Title }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-primary" aria-hidden="true">
                             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
@@ -2376,6 +2376,7 @@
     // Form submission: AI-parse free text when AI is enabled; otherwise keyword search
     const filterForm = document.getElementById('filter-form');
     const publicAiEnabled = @json(!empty($publicAiEnabled));
+    const vehiclesUrl = @json(route('vehicles'));
     if (filterForm) {
         filterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2384,7 +2385,7 @@
             const facetParams = buildHomeFilterParams();
 
             if (!publicAiEnabled || !searchQuery || !window.BilskyenAiSearch) {
-                window.location.href = '/vehicles' + (facetParams.toString() ? '?' + facetParams.toString() : '');
+                window.location.href = vehiclesUrl + (facetParams.toString() ? '?' + facetParams.toString() : '');
                 return;
             }
 
@@ -2420,7 +2421,7 @@
                 window.location.href = url;
             } catch (err) {
                 facetParams.set('search', searchQuery);
-                window.location.href = '/vehicles?' + facetParams.toString();
+                window.location.href = vehiclesUrl + '?' + facetParams.toString();
             }
         });
     }
@@ -2629,6 +2630,10 @@
 @push('scripts')
 <script>
     (function() {
+        const favoritesUrl = @json(route('favorites'));
+        const favoritesCheckBatchUrl = @json(route('favorites.check.batch'));
+        const favoritesDestroyUrl = (vehicleId) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(vehicleId));
+
         // Get access token from cookie helper
         function getCookie(name) {
             const value = `; ${document.cookie}`;
@@ -2663,7 +2668,7 @@
 
             try {
                 // Make single batch API call
-                const response = await fetch('/favorites/check-batch', {
+                const response = await fetch(favoritesCheckBatchUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2738,7 +2743,7 @@
 
                 if (isFavorited) {
                     // Remove from favorites
-                    const response = await fetch(`/favorites/${vehicleId}`, {
+                    const response = await fetch(favoritesDestroyUrl(vehicleId), {
                         method: 'DELETE',
                         headers: {
                             'Accept': 'application/json',
@@ -2789,7 +2794,7 @@
                     }
                 } else {
                     // Add to favorites
-                    const response = await fetch('/favorites', {
+                    const response = await fetch(favoritesUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

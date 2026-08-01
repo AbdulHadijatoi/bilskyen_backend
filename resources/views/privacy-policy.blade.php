@@ -72,17 +72,17 @@
                             </h2>
                             <ul class="mt-4 space-y-2.5 text-sm">
                                 <li>
-                                    <a href="/terms-of-service" class="text-primary font-medium underline-offset-2 transition hover:underline">
+                                    <a href="{{ route('terms-of-service') }}" class="text-primary font-medium underline-offset-2 transition hover:underline">
                                         {{ __('messages.pages.footer.terms_of_service') }}
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/account-deletion" class="text-primary font-medium underline-offset-2 transition hover:underline">
+                                    <a href="{{ route('account-deletion') }}" class="text-primary font-medium underline-offset-2 transition hover:underline">
                                         {{ __('messages.pages.footer.account_deletion') }}
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/contact" class="text-primary font-medium underline-offset-2 transition hover:underline">
+                                    <a href="{{ route('contact') }}" class="text-primary font-medium underline-offset-2 transition hover:underline">
                                         {{ __('messages.pages.footer.contact') }}
                                     </a>
                                 </li>

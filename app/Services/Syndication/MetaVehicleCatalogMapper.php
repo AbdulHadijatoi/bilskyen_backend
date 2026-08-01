@@ -67,7 +67,7 @@ class MetaVehicleCatalogMapper
             'vehicle_id' => (string) $vehicle->id,
             'title' => (string) ($vehicle->title ?? ''),
             'description' => $this->plainDescription($vehicle),
-            'url' => url('/vehicles/'.$vehicle->slug),
+            'url' => route('vehicle.detail', $vehicle),
             'make' => (string) ($vehicle->brand?->name ?? ''),
             'model' => (string) ($vehicle->model?->name ?? ''),
             'year' => $year ? (string) $year : '',

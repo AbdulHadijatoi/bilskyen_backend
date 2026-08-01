@@ -381,7 +381,7 @@
 
                 const ctxBase = typeof window.sellYourCarLookupContextBase === 'string'
                     ? window.sellYourCarLookupContextBase
-                    : '/sell-your-car/lookup-context';
+                    : '/saelg-din-bil/lookup-context';
 
                 return fetch(ctxBase + '/' + encodeURIComponent(String(dmrId)), {
                     credentials: 'same-origin',
@@ -1754,7 +1754,7 @@
                 });
             }
 
-            const response = await fetch(form.getAttribute('data-action') || '/sell-your-car', {
+            const response = await fetch(form.getAttribute('data-action') || '/saelg-din-bil', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -1805,7 +1805,7 @@
             if (data.redirect_url) {
                 window.location.href = data.redirect_url;
             } else if (data.token) {
-                window.location.href = `/sell-your-car/success/${data.token}`;
+                window.location.href = `/saelg-din-bil/success/${data.token}`;
             } else if (data.vehicle_id) {
                 // Fallback: if token is missing, redirect with error message
                 displayGeneralError(trans('saveMissingToken', 'Køretøjet blev gemt, men adgangstoken mangler. Kontakt venligst support.'));

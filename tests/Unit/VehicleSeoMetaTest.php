@@ -140,7 +140,7 @@ class VehicleSeoMetaTest extends TestCase
         $this->assertStringContainsString('Au2Vest', $resolved['meta_description']);
         $this->assertStringContainsString('439.799 kr', $resolved['meta_description']);
         $this->assertSame('index, follow', $resolved['robots']);
-        $this->assertStringEndsWith('/vehicles/vw-id7-style-tourer-5d', $resolved['canonical_url']);
+        $this->assertStringEndsWith('/biler/vw-id7-style-tourer-5d', $resolved['canonical_url']);
         $this->assertSame('Vehicle', $resolved['schema_type']);
         $this->assertIsArray($resolved['schema_json']);
         $this->assertSame('Vehicle', $resolved['schema_json']['@type']);

@@ -1945,7 +1945,7 @@
 @json($lookupData['locations'] ?? [])
 </script>
 <script id="sell-your-car-lookup-context-base-data" type="application/json">
-@json(url('/sell-your-car/lookup-context'))
+@json(url('/saelg-din-bil/lookup-context'))
 </script>
 <script id="sell-your-car-translations-data" type="application/json">
 @json($sellYourCarTranslations)

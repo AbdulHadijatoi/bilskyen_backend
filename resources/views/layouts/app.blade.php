@@ -81,7 +81,7 @@
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
         @include($navComponent ?? 'components.navbar')
     @endif
-    <main @if(request()->is('vehicles*') || request()->is('favorites*')) class="bg-muted" @endif>
+    <main @if(request()->is('biler') || request()->is('biler/*') || request()->is('favoritter*')) class="bg-muted" @endif>
         @yield('content')
     </main>
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))

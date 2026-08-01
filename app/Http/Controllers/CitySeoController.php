@@ -228,7 +228,7 @@ class CitySeoController extends Controller
             $itemListElement[] = [
                 '@type' => 'ListItem',
                 'position' => $position++,
-                'url' => url('/vehicles/'.$vehicle->slug),
+                'url' => route('vehicle.detail', $vehicle),
                 'name' => $vehicle->title,
             ];
         }

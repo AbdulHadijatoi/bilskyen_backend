@@ -254,7 +254,7 @@
         <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-view="card">
                 @forelse($vehicles as $vehicle)
                 <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full shadow-sm">
-                    <a href="/vehicles/{{ $vehicle->slug }}" class="block flex-1">
+                    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="block flex-1">
                         <!-- Vehicle Image -->
                         <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
                             <img
@@ -339,7 +339,7 @@
                         @endif
                         <div class="p-3 pt-0">
                             <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="/vehicles/{{ $vehicle->slug }}" class="flex-1">
+                                <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex-1">
                                     <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
@@ -560,6 +560,12 @@
 </div>
 
 <script>
+
+        const vehicleDetailUrl = (slug) => @json(rtrim(route('vehicle.detail', ['vehicle' => '__SLUG__']), '/')).replace('__SLUG__', encodeURIComponent(slug));
+        const favoritesCheckUrl = (id) => @json(rtrim(route('favorites.check', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
+        const favoritesDestroyUrl = (id) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
+        const favoritesStoreUrl = @json(route('favorites.store'));
+        const vehiclePathPrefix = @json(parse_url(route('vehicles'), PHP_URL_PATH) + '/');
 document.addEventListener('DOMContentLoaded', function() {
     // Dealer Enquiry Dialog Functions
     window.openDealerEnquiryDialog = function() {
@@ -800,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-                const response = await fetch(`/favorites/check/${vehicleId}`, {
+                const response = await fetch(favoritesCheckUrl(vehicleId), {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -825,7 +831,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (isFavorite) {
                     // Remove from favorites
-                    const deleteResponse = await fetch(`/favorites/${vehicleId}`, {
+                    const deleteResponse = await fetch(favoritesDestroyUrl(vehicleId), {
                         method: 'DELETE',
                         headers: {
                             'Accept': 'application/json',
@@ -845,7 +851,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     // Add to favorites
-                    const addResponse = await fetch('/favorites', {
+                    const addResponse = await fetch(favoritesStoreUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1185,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `
             <div class="vehicle-item relative bg-card rounded-lg overflow-hidden">
-                <a href="/vehicles/${vehicle.slug}" class="block flex-1">
+                <a href="${vehicleDetailUrl(vehicle.slug)}" class="block flex-1">
                     <!-- Vehicle Image -->
                     <div class="vehicle-image-container relative">
                         <img
@@ -1240,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             ` : ''}
                             <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
-                                <a href="/vehicles/${vehicle.slug}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
+                                <a href="${vehicleDetailUrl(vehicle.slug)}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
                                     <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
                                         {{ __('messages.pages.vehicles.view_details') }}
                                     </button>
@@ -1273,8 +1279,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (card.classList.contains('vehicle-item')) return;
             
             // Store original HTML before conversion (use slug as key; link now contains slug)
-            const link = card.querySelector('a[href^="/vehicles/"]');
-            const vehicleSlug = link?.getAttribute('href')?.match(/\/vehicles\/([^/]+)/)?.[1] || '';
+            const link = card.querySelector('a[href*="/biler/"]');
+            const vehicleSlug = link?.getAttribute('href')?.match(/\/biler\/([^/]+)/)?.[1] || '';
             const vehicleId = card.querySelector('[data-vehicle-id]')?.getAttribute('data-vehicle-id') || '';
             if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
                 originalCardHTML.set(vehicleSlug, card.outerHTML);
@@ -1352,8 +1358,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const listItems = vehicleContainer.querySelectorAll('.vehicle-item');
         listItems.forEach(listItem => {
             // Extract vehicle slug from list item (link now contains slug)
-            const link = listItem.querySelector('a[href^="/vehicles/"]');
-            const vehicleSlug = link ? link.getAttribute('href').match(/\/vehicles\/([^/]+)/)?.[1] : '';
+            const link = listItem.querySelector('a[href*="/biler/"]');
+            const vehicleSlug = link ? link.getAttribute('href').match(/\/biler\/([^/]+)/)?.[1] : '';
             
             if (!vehicleSlug) return;
             
@@ -1484,8 +1490,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!vehicleContainer) return;
         const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
         cards.forEach(card => {
-            const link = card.querySelector('a[href^="/vehicles/"]');
-            const vehicleSlug = link ? link.getAttribute('href').match(/\/vehicles\/([^/]+)/)?.[1] : '';
+            const link = card.querySelector('a[href*="/biler/"]');
+            const vehicleSlug = link ? link.getAttribute('href').match(/\/biler\/([^/]+)/)?.[1] : '';
             if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
                 originalCardHTML.set(vehicleSlug, card.outerHTML);
             }

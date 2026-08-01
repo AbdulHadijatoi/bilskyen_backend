@@ -216,7 +216,7 @@ class HomeController extends Controller
             ]);
         }
 
-        return redirect('/profile')->with('status', __('messages.messages.profile_updated_successfully'));
+        return redirect()->route('profile')->with('status', __('messages.messages.profile_updated_successfully'));
     }
 
     /**
@@ -550,7 +550,7 @@ class HomeController extends Controller
         $constants = $this->lookupService->getPublicConstants();
         $seo = $this->seoService->getForPage('listing', 'vehicles') ?? [];
         // Always consolidate filter/sort query variants onto the clean listing URL.
-        $seo['canonical_url'] = url('/vehicles');
+        $seo['canonical_url'] = route('vehicles');
 
         $vehicleSortLabels = $this->buildVehicleListingSortLabels();
         $rawSortQuery = $request->query('sort');
@@ -697,7 +697,7 @@ class HomeController extends Controller
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            return redirect()->route('login')->with('return_url', '/favorites');
+            return redirect()->route('login')->with('return_url', '/favoritter');
         }
 
         // Get user's favorite vehicles

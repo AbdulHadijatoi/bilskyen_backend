@@ -15,7 +15,7 @@
 
 {{ __('messages.marketing.follow_up_signoff') }}
 
-@component('mail::button', ['url' => url('/vehicles/'.($enquiry->vehicle?->slug ?? ''))])
+@component('mail::button', ['url' => route('vehicle.detail', $enquiry->vehicle?->slug ?? '')])
 {{ __('messages.marketing.view_vehicle') }}
 @endcomponent
 

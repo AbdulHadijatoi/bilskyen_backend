@@ -47,11 +47,13 @@ class AdminSeoRedirectController extends Controller
         $data = $request->validate([
             'from_path' => ['required', 'string', 'max:500', Rule::unique('seo_redirects', 'from_path')->ignore($id)],
             'to_path' => 'required|string|max:500',
+            'match_type' => 'sometimes|string|in:exact,prefix',
             'redirect_type' => 'required|integer|in:301,302',
             'is_active' => 'sometimes|boolean',
         ]);
 
         $data['from_path'] = SeoRedirect::normalizePath($data['from_path']);
+        $data['match_type'] = $data['match_type'] ?? SeoRedirect::MATCH_EXACT;
 
         return $data;
     }

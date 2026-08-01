@@ -65,7 +65,7 @@ class SellYourCarController extends Controller
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            return redirect()->route('login')->with('return_url', '/sell-your-car');
+            return redirect()->route('login')->with('return_url', '/saelg-din-bil');
         }
 
         $user->load('dealer');
@@ -190,7 +190,7 @@ class SellYourCarController extends Controller
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            return redirect()->route('login')->with('return_url', '/sell-your-car');
+            return redirect()->route('login')->with('return_url', '/saelg-din-bil');
         }
         // Log all request data for debugging
         $allRequestData = $request->all();
@@ -307,7 +307,7 @@ class SellYourCarController extends Controller
         $user = $this->authService->getAuthenticatedUser($request);
         
         if (!$user) {
-            return redirect()->route('login')->with('return_url', '/sell-your-car');
+            return redirect()->route('login')->with('return_url', '/saelg-din-bil');
         }
 
         $tokenData = $this->verifySuccessToken($token, $user->id);
