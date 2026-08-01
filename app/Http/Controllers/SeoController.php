@@ -17,12 +17,20 @@ class SeoController extends Controller
      */
     public function sitemap(): Response
     {
-        $xml = Cache::remember('sitemap_xml', 86400, fn () => $this->seoService->getSitemapXml());
+        $env = app()->environment();
+        $ttl = $this->seoService->isIndexingEnabled() ? 86400 : 60;
+        $xml = Cache::remember("sitemap_xml_{$env}", $ttl, fn () => $this->seoService->getSitemapXml());
 
-        return response($xml, 200, [
+        $headers = [
             'Content-Type' => 'application/xml',
-            'Cache-Control' => 'public, max-age=86400',
-        ]);
+            'Cache-Control' => 'public, max-age='.$ttl,
+        ];
+
+        if (! $this->seoService->isIndexingEnabled()) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
+        return response($xml, 200, $headers);
     }
 
     /**
@@ -30,11 +38,19 @@ class SeoController extends Controller
      */
     public function robots(): Response
     {
-        $txt = Cache::remember('robots_txt', 86400, fn () => $this->seoService->getRobotsTxt());
+        $env = app()->environment();
+        $ttl = $this->seoService->isIndexingEnabled() ? 86400 : 60;
+        $txt = Cache::remember("robots_txt_{$env}", $ttl, fn () => $this->seoService->getRobotsTxt());
 
-        return response($txt, 200, [
+        $headers = [
             'Content-Type' => 'text/plain',
-            'Cache-Control' => 'public, max-age=86400',
-        ]);
+            'Cache-Control' => 'public, max-age='.$ttl,
+        ];
+
+        if (! $this->seoService->isIndexingEnabled()) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
+        return response($txt, 200, $headers);
     }
 }

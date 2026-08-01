@@ -1,0 +1,104 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Http\Controllers\SeoController;
+use App\Http\Middleware\SecurityHeaders;
+use App\Services\PlatformSettingService;
+use App\Services\SeoService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
+use Mockery;
+use Tests\TestCase;
+
+class SeoIndexingGateTest extends TestCase
+{
+    private SeoService $seo;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seo = app(SeoService::class);
+        Cache::flush();
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    public function test_indexing_disabled_outside_production(): void
+    {
+        $this->app['env'] = 'staging';
+
+        $this->assertFalse($this->seo->isIndexingEnabled());
+        $this->assertSame("User-agent: *\nDisallow: /", $this->seo->getRobotsTxt());
+        $this->assertStringNotContainsString('Sitemap:', $this->seo->getRobotsTxt());
+
+        $xml = $this->seo->getSitemapXml();
+        $this->assertStringContainsString('<urlset', $xml);
+        $this->assertStringNotContainsString('<url>', $xml);
+    }
+
+    public function test_indexing_enabled_in_production_robots_allows_and_links_sitemap(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.url' => 'https://example.test']);
+
+        $settings = Mockery::mock(PlatformSettingService::class);
+        $settings->shouldReceive('get')->with('seo', 'robots_mode', 'default')->andReturn('default');
+        $settings->shouldReceive('get')->with('seo', 'robots_custom_body', '')->andReturn('');
+        $this->app->instance(PlatformSettingService::class, $settings);
+
+        $this->assertTrue($this->seo->isIndexingEnabled());
+
+        $robots = $this->seo->getRobotsTxt();
+        $this->assertStringContainsString('Allow: /', $robots);
+        $this->assertStringContainsString('Sitemap: https://example.test/sitemap.xml', $robots);
+        $this->assertDoesNotMatchRegularExpression('/^Disallow: \/$/m', $robots);
+    }
+
+    public function test_robots_controller_disallows_all_when_not_production(): void
+    {
+        $this->app['env'] = 'staging';
+
+        $response = app(SeoController::class)->robots();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('noindex, nofollow', $response->headers->get('X-Robots-Tag'));
+        $this->assertSame("User-agent: *\nDisallow: /", $response->getContent());
+    }
+
+    public function test_sitemap_controller_empty_when_not_production(): void
+    {
+        $this->app['env'] = 'staging';
+
+        $response = app(SeoController::class)->sitemap();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('noindex, nofollow', $response->headers->get('X-Robots-Tag'));
+        $this->assertStringNotContainsString('<url>', $response->getContent());
+    }
+
+    public function test_security_headers_set_x_robots_tag_outside_production(): void
+    {
+        $this->app['env'] = 'local';
+
+        $middleware = new SecurityHeaders;
+        $response = $middleware->handle(Request::create('/', 'GET'), fn () => new Response('ok'));
+
+        $this->assertSame('noindex, nofollow', $response->headers->get('X-Robots-Tag'));
+    }
+
+    public function test_security_headers_omit_x_robots_tag_in_production(): void
+    {
+        $this->app['env'] = 'production';
+
+        $middleware = new SecurityHeaders;
+        $response = $middleware->handle(Request::create('/', 'GET'), fn () => new Response('ok'));
+
+        $this->assertFalse($response->headers->has('X-Robots-Tag'));
+    }
+}

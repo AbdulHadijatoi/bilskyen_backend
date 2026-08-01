@@ -1,6 +1,6 @@
-{{-- Meta Pixel base code. Enabled via platform marketing settings. --}}
+{{-- Meta Pixel base code. Enabled via platform marketing settings (production only). --}}
 @php
-    $metaPixelEnabled = filter_var(
+    $metaPixelEnabled = app()->environment('production') && filter_var(
         app(\App\Services\PlatformSettingService::class)->get('marketing', 'meta_pixel_enabled', false),
         FILTER_VALIDATE_BOOLEAN
     );

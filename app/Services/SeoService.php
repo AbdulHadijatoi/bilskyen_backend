@@ -500,10 +500,25 @@ class SeoService
     }
 
     /**
+     * Whether public SEO indexing signals should be emitted.
+     * Non-production (staging/local) must not be discoverable by crawlers.
+     */
+    public function isIndexingEnabled(): bool
+    {
+        return app()->environment('production');
+    }
+
+    /**
      * Build sitemap XML (merge seo_sitemaps, seo_pages static, vehicles, dealers).
      */
     public function getSitemapXml(): string
     {
+        if (! $this->isIndexingEnabled()) {
+            return '<?xml version="1.0" encoding="UTF-8"?>'."\n"
+                .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"
+                .'</urlset>';
+        }
+
         $baseUrl = rtrim(config('app.url'), '/');
         $entries = [];
 
@@ -691,6 +706,10 @@ class SeoService
      */
     public function getRobotsTxt(): string
     {
+        if (! $this->isIndexingEnabled()) {
+            return "User-agent: *\nDisallow: /";
+        }
+
         $settings = app(PlatformSettingService::class);
         $mode = $settings->get('seo', 'robots_mode', 'default');
         $custom = (string) $settings->get('seo', 'robots_custom_body', '');
