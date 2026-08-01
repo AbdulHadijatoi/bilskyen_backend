@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Constants\CmsPostStatus;
 use App\Models\LandingPage;
+use App\Services\Cms\CmsTemplateCatalog;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -62,7 +64,13 @@ class AdminLandingPageController extends Controller
         $data = $request->validate([
             'slug' => ['required', 'string', 'max:255', Rule::unique('landing_pages', 'slug')->ignore($id)],
             'title' => 'required|string|max:255',
+            'layout' => ['nullable', 'string', Rule::in(CmsTemplateCatalog::landingLayouts())],
+            'style' => ['nullable', 'string', Rule::in(CmsTemplateCatalog::styles())],
             'blocks' => 'nullable|array',
+            'blocks.*.id' => 'nullable|string|max:64',
+            'blocks.*.type' => 'required_with:blocks|string|max:64',
+            'blocks.*.variant' => 'nullable|string|max:64',
+            'blocks.*.content' => 'nullable|array',
             'status' => ['required', Rule::in(CmsPostStatus::values())],
             'published_at' => 'nullable|date',
             'scheduled_at' => 'nullable|date',
@@ -74,6 +82,24 @@ class AdminLandingPageController extends Controller
             'og_description' => 'nullable|string',
             'og_image' => 'nullable|string|max:500',
         ]);
+
+        $data['layout'] = $data['layout'] ?? 'guide';
+        $data['style'] = $data['style'] ?? 'brand';
+
+        $sanitizer = app(HtmlSanitizer::class);
+        $normalized = [];
+        foreach ($data['blocks'] ?? [] as $block) {
+            if (! is_array($block)) {
+                continue;
+            }
+            $item = CmsTemplateCatalog::normalizeLandingBlock($block);
+            if ($item['type'] === 'richtext') {
+                $item['content']['html'] = $sanitizer->purify((string) ($item['content']['html'] ?? ''));
+                $item['content']['html_secondary'] = $sanitizer->purify((string) ($item['content']['html_secondary'] ?? ''));
+            }
+            $normalized[] = $item;
+        }
+        $data['blocks'] = $normalized;
 
         if ($data['status'] === CmsPostStatus::PUBLISHED && empty($data['published_at'])) {
             $data['published_at'] = now();

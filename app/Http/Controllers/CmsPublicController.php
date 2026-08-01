@@ -50,7 +50,23 @@ class CmsPublicController extends Controller
             'robots' => $post->robots,
         ];
 
-        return view('cms.blog-show', compact('post', 'seo'));
+        $relatedLimit = 3;
+        foreach ($post->sections ?? [] as $section) {
+            if (($section['type'] ?? '') === 'related_posts') {
+                $relatedLimit = (int) (($section['content']['limit'] ?? 3));
+                break;
+            }
+        }
+
+        $relatedPosts = CmsPost::where('status', CmsPostStatus::PUBLISHED)
+            ->where('published_at', '<=', now())
+            ->where('id', '!=', $post->id)
+            ->when($post->category_id, fn ($q) => $q->where('category_id', $post->category_id))
+            ->orderByDesc('published_at')
+            ->limit($relatedLimit)
+            ->get(['id', 'slug', 'title']);
+
+        return view('cms.blog-show', compact('post', 'seo', 'relatedPosts'));
     }
 
     public function landingShow(string $slug): View
@@ -74,7 +90,8 @@ class CmsPublicController extends Controller
         $vehicleGridLimit = 6;
         foreach ($page->blocks ?? [] as $block) {
             if (($block['type'] ?? '') === 'vehicle_grid') {
-                $vehicleGridLimit = (int) ($block['limit'] ?? 6);
+                $content = $block['content'] ?? $block;
+                $vehicleGridLimit = (int) ($content['limit'] ?? 6);
                 break;
             }
         }

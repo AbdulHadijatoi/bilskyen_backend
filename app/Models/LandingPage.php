@@ -13,6 +13,8 @@ class LandingPage extends Model
     protected $fillable = [
         'slug',
         'title',
+        'layout',
+        'style',
         'blocks',
         'status',
         'published_at',
@@ -45,7 +47,7 @@ class LandingPage extends Model
     public function versionSnapshot(): array
     {
         return $this->only([
-            'slug', 'title', 'blocks', 'status', 'published_at', 'scheduled_at',
+            'slug', 'title', 'layout', 'style', 'blocks', 'status', 'published_at', 'scheduled_at',
             'meta_title', 'meta_description', 'canonical_url', 'robots',
             'og_title', 'og_description', 'og_image',
         ]);

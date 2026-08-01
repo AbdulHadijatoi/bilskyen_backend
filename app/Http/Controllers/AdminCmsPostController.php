@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Constants\CmsPostStatus;
 use App\Models\CmsPost;
 use App\Models\CmsPostCategory;
+use App\Services\Cms\CmsTemplateCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -88,6 +89,13 @@ class AdminCmsPostController extends Controller
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content_html' => 'nullable|string',
+            'layout' => ['nullable', 'string', Rule::in(CmsTemplateCatalog::blogLayouts())],
+            'style' => ['nullable', 'string', Rule::in(CmsTemplateCatalog::styles())],
+            'sections' => 'nullable|array',
+            'sections.*.id' => 'nullable|string|max:64',
+            'sections.*.type' => 'required_with:sections|string|max:64',
+            'sections.*.variant' => 'nullable|string|max:64',
+            'sections.*.content' => 'nullable|array',
             'status' => ['required', Rule::in(CmsPostStatus::values())],
             'published_at' => 'nullable|date',
             'scheduled_at' => 'nullable|date',
@@ -99,6 +107,16 @@ class AdminCmsPostController extends Controller
         ]);
 
         $data['author_user_id'] = $request->user()?->id;
+        $data['layout'] = $data['layout'] ?? 'classic';
+        $data['style'] = $data['style'] ?? 'brand';
+
+        $normalizedSections = [];
+        foreach ($data['sections'] ?? [] as $section) {
+            if (is_array($section)) {
+                $normalizedSections[] = CmsTemplateCatalog::normalizeBlogSection($section);
+            }
+        }
+        $data['sections'] = $normalizedSections;
 
         if (array_key_exists('content_html', $data) && is_string($data['content_html'])) {
             $data['content_html'] = app(\App\Services\HtmlSanitizer::class)->purify($data['content_html']);

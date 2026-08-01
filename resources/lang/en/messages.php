@@ -1523,6 +1523,8 @@ return [
         'min_read' => ':count min read',
         'browse_vehicles' => 'Browse vehicles',
         'cookie_accept' => 'Accept',
+        'related_posts' => 'Related articles',
+        'author_default_bio' => 'Contributor at Bilskyen.',
     ],
 
     // Layouts

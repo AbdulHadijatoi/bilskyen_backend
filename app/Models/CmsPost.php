@@ -19,6 +19,9 @@ class CmsPost extends Model
         'title',
         'excerpt',
         'content_html',
+        'layout',
+        'style',
+        'sections',
         'status',
         'published_at',
         'scheduled_at',
@@ -30,6 +33,7 @@ class CmsPost extends Model
     ];
 
     protected $casts = [
+        'sections' => 'array',
         'published_at' => 'datetime',
         'scheduled_at' => 'datetime',
     ];
@@ -63,7 +67,8 @@ class CmsPost extends Model
     {
         return $this->only([
             'category_id', 'author_user_id', 'featured_media_id', 'slug', 'title',
-            'excerpt', 'content_html', 'status', 'published_at', 'scheduled_at',
+            'excerpt', 'content_html', 'layout', 'style', 'sections',
+            'status', 'published_at', 'scheduled_at',
             'meta_title', 'meta_description', 'og_image', 'robots', 'canonical_url',
         ]);
     }

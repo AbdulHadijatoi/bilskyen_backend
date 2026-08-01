@@ -322,6 +322,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/{id}/versions/{versionId}/restore', [AdminLandingPageController::class, 'restoreVersion']);
     });
 
+    Route::prefix('cms/preview')->group(function () {
+        Route::post('/landing', [\App\Http\Controllers\AdminCmsPreviewController::class, 'landing']);
+        Route::post('/blog', [\App\Http\Controllers\AdminCmsPreviewController::class, 'blog']);
+    });
+
     Route::prefix('cms/media')->group(function () {
         Route::get('/', [AdminCmsMediaController::class, 'index']);
         Route::post('/', [AdminCmsMediaController::class, 'store']);

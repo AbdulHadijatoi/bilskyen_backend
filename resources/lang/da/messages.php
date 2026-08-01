@@ -1523,6 +1523,8 @@ return [
         'min_read' => ':count min. læsning',
         'browse_vehicles' => 'Se køretøjer',
         'cookie_accept' => 'Accepter',
+        'related_posts' => 'Relaterede artikler',
+        'author_default_bio' => 'Skribent hos Bilskyen.',
     ],
 
     // Layouts
