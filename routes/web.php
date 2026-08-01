@@ -148,10 +148,7 @@ Route::middleware('auth.web')->group(function () {
 // Blog & landing pages
 Route::get('/blog', [CmsPublicController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [CmsPublicController::class, 'blogShow'])->name('blog.show');
-// Canonical public URL (Danish path). Keep /lp as a hard alias so old links and
-// servers that still expect lp/{slug} never 404 when SEO redirects point at /guides.
 Route::get('/guides/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show');
-Route::get('/lp/{slug}', [CmsPublicController::class, 'landingShow'])->name('landing.show.legacy');
 
 // Dealer marketing pages
 Route::prefix('for-forhandlere')->name('for-dealers.')->group(function () {
