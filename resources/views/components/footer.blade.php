@@ -25,7 +25,10 @@
     </div>
 
     <div class="container mx-auto px-4 md:px-6 pb-12">
-        <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+        @php
+            $hasLandingPages = !empty($footerLandingPages) && $footerLandingPages->isNotEmpty();
+        @endphp
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div class="space-y-4">
                 <a href="/" class="inline-flex items-center">
                     <img src="/images/logo_white.png" alt="{{ __('messages.common.site_name') }}" class="h-8 w-auto">
@@ -78,26 +81,38 @@
             </div>
 
             <div>
-                <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.pages') }}</h3>
+                <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.company') }}</h3>
                 <ul class="space-y-3 text-sm">
+                    <li><a href="/about">{{ __('messages.pages.footer.about_us') }}</a></li>
+                    <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>
+                    @if(!empty($faqPageEnabled))
+                    <li><a href="/faq">{{ __('messages.pages.footer.faq') }}</a></li>
+                    @endif
                     <li><a href="/for-dealers">{{ __('messages.navigation.for_dealers') }}</a></li>
                     <li><a href="/for-staff">{{ __('messages.navigation.for_staff') }}</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.resources') }}</h3>
+                <ul class="space-y-3 text-sm">
                     <li><a href="/blog">{{ __('messages.pages.footer.blog') }}</a></li>
-                    @if(!empty($footerLandingPages) && $footerLandingPages->isNotEmpty())
+                    @if($hasLandingPages)
                         @foreach($footerLandingPages as $landingPage)
                             <li>
                                 <a href="{{ route('landing.show', $landingPage->slug) }}">{{ $landingPage->title }}</a>
                             </li>
                         @endforeach
                     @endif
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.legal') }}</h3>
+                <ul class="space-y-3 text-sm">
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
-                    @if(!empty($faqPageEnabled))
-                    <li><a href="/faq">{{ __('messages.pages.footer.faq') }}</a></li>
-                    @endif
                     <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>
-                    <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>
-                    <li><a href="/about">{{ __('messages.pages.footer.about_us') }}</a></li>
                 </ul>
             </div>
 
