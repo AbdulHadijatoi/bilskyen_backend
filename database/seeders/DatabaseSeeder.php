@@ -66,6 +66,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PageSeeder::class,
             BlogSeeder::class,
+            CmsTemplateDemoSeeder::class,
         ]);
 
         // 7. Subscriptions

@@ -27,6 +27,10 @@ class CmsMedia extends Model
 
     public function url(): string
     {
+        if (str_starts_with((string) $this->path, 'http://') || str_starts_with((string) $this->path, 'https://')) {
+            return (string) $this->path;
+        }
+
         return Storage::disk($this->disk)->url($this->path);
     }
 }
