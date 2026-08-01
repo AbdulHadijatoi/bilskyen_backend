@@ -11,6 +11,11 @@ interface AiProviderInterface
     public function isEnabled(): bool;
 
     /**
+     * Provider is toggled on and has a usable API key configured.
+     */
+    public function isConfigured(): bool;
+
+    /**
      * @return array{success: bool, message: string}
      */
     public function testConnection(): array;

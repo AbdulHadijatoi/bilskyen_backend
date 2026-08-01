@@ -8,7 +8,6 @@ use App\Services\VehicleImageUploadService;
 use App\Services\VehicleImport\Bilbasen\BilbasenListingFetcher;
 use App\Services\VehicleImport\Bilbasen\BilbasenListingParser;
 use App\Services\VehicleImport\Bilbasen\BilbasenUrlValidator;
-use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Mockery;
@@ -238,9 +237,8 @@ class BilbasenUrlImportTest extends TestCase
         );
     }
 
-    public function test_image_cap_constant_is_positive(): void
+    public function test_images_truncated_message_is_translated(): void
     {
-        $this->assertGreaterThan(0, VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW);
         $message = __('messages.api.vehicle_import_images_truncated', ['max' => 10]);
         $this->assertStringContainsString('10', $message);
         $this->assertNotSame('messages.api.vehicle_import_images_truncated', $message);

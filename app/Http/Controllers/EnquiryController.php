@@ -16,6 +16,7 @@ use App\Support\EnquiryMailPresenter;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
+use App\Services\Marketing\MetaConversionsApiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -31,6 +32,7 @@ class EnquiryController extends Controller
         private AuditLogService $auditLogService,
         private MailService $mailService,
         private MarketplaceNotifier $marketplaceNotifier,
+        private MetaConversionsApiService $metaConversionsApiService,
     ) {}
 
     private function resolveVehicleOwnerEmail(Vehicle $vehicle): ?string
@@ -239,12 +241,27 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
+        $metaLeadEventId = null;
+        if ($this->metaConversionsApiService->isEnabled()) {
+            $metaLeadEventId = $this->metaConversionsApiService->newEventId();
+            $this->metaConversionsApiService->trackLead(
+                $vehicle,
+                $metaLeadEventId,
+                url('/vehicles/'.$vehicle->slug),
+                $request->ip(),
+                $request->userAgent(),
+                $enquiry->email,
+                $enquiry->phone
+            );
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.lead_created_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'phone_number' => $phoneNumber,
+                'meta_lead_event_id' => $metaLeadEventId,
             ],
         ], 201);
     }
@@ -379,12 +396,27 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
+        $metaLeadEventId = null;
+        if ($this->metaConversionsApiService->isEnabled()) {
+            $metaLeadEventId = $this->metaConversionsApiService->newEventId();
+            $this->metaConversionsApiService->trackLead(
+                $vehicle,
+                $metaLeadEventId,
+                url('/vehicles/'.$vehicle->slug.'/enquire'),
+                $request->ip(),
+                $request->userAgent(),
+                $enquiry->email,
+                $enquiry->phone
+            );
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.messages.enquiry_submitted_successfully'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
+                'meta_lead_event_id' => $metaLeadEventId,
             ],
         ], 201);
     }

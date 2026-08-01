@@ -19,6 +19,7 @@ class Dealer extends Model
         'cvr',
         'address',
         'city',
+        'marketplace_city_id',
         'postcode',
         'country_code',
         'logo_path',
@@ -72,6 +73,11 @@ class Dealer extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    public function marketplaceCity(): BelongsTo
+    {
+        return $this->belongsTo(MarketplaceCity::class, 'marketplace_city_id');
     }
 
     /**

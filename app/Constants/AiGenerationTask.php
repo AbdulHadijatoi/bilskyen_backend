@@ -22,6 +22,10 @@ class AiGenerationTask
 
     public const CMS_REWRITE = 'cms_rewrite';
 
+    public const FAQ_CHAT = 'faq_chat';
+
+    public const SEARCH_PARSE = 'search_parse';
+
     public static function values(): array
     {
         return [
@@ -34,6 +38,8 @@ class AiGenerationTask
             self::LISTING_DESCRIPTION,
             self::LISTING_HEALTH_REWRITE,
             self::CMS_REWRITE,
+            self::FAQ_CHAT,
+            self::SEARCH_PARSE,
         ];
     }
 

@@ -668,7 +668,7 @@
                     </div>
                     <div class="home-filter-search-row">
                         <div class="home-filter-field relative min-w-0 flex-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </svg>
@@ -677,14 +677,25 @@
                                 id="home-search-input"
                                 name="search"
                                 class="home-filter-search-input"
-                                placeholder="{{ __('messages.pages.home.search_placeholder') }}"
+                                placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.pages.home.search_placeholder') }}"
                                 autocomplete="off"
+                                @if(!empty($publicAiEnabled))
+                                aria-autocomplete="list"
+                                aria-controls="home-ai-suggest"
+                                @endif
                             >
+                            @if(!empty($publicAiEnabled))
+                            <div id="home-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                            @endif
                         </div>
-                        <button type="submit" class="home-filter-cta">
+                        <button type="submit" id="home-search-submit" class="home-filter-cta">
                             {{ __('messages.common.search') }}
                         </button>
                     </div>
+                    @if(!empty($publicAiEnabled))
+                    <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
+                    <div id="home-ai-understood" class="ai-understood-banner hidden mt-3" aria-live="polite"></div>
+                    @endif
                 </div>
 
                 <div class="home-filter-toolbar">
@@ -1068,6 +1079,12 @@
                     @endif
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section class="py-8 md:py-10 bg-background">
+        <div class="container mx-auto px-4 md:px-6">
+            <x-popular-cities />
         </div>
     </section>
 
@@ -2356,13 +2373,79 @@
         }
     }
     
-    // Form submission handler
+    // Form submission: AI-parse free text when AI is enabled; otherwise keyword search
     const filterForm = document.getElementById('filter-form');
+    const publicAiEnabled = @json(!empty($publicAiEnabled));
     if (filterForm) {
-        filterForm.addEventListener('submit', (e) => {
+        filterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const params = buildHomeFilterParams();
-            window.location.href = '/vehicles' + (params.toString() ? '?' + params.toString() : '');
+            const submitBtn = document.getElementById('home-search-submit');
+            const searchQuery = document.getElementById('home-search-input')?.value?.trim() || '';
+            const facetParams = buildHomeFilterParams();
+
+            if (!publicAiEnabled || !searchQuery || !window.BilskyenAiSearch) {
+                window.location.href = '/vehicles' + (facetParams.toString() ? '?' + facetParams.toString() : '');
+                return;
+            }
+
+            facetParams.delete('search');
+
+            if (submitBtn) {
+                submitBtn.classList.add('is-loading');
+                submitBtn.dataset.originalText = submitBtn.textContent;
+                submitBtn.textContent = (window.BilskyenAiSearch?.I18N?.parsing) || '…';
+            }
+
+            try {
+                const result = await window.BilskyenAiSearch.parseQuery(searchQuery);
+                window.BilskyenAiSearch.renderAiBanner(
+                    document.getElementById('home-ai-understood'),
+                    result.labels,
+                    result.query
+                );
+                const merged = Object.assign({}, result.filters || {});
+                facetParams.forEach((value, key) => {
+                    const baseKey = key.replace(/\[\]$/, '');
+                    if (['brand_id', 'model_id', 'fuel_type_id', 'listing_type_id'].includes(baseKey)) {
+                        if (!Array.isArray(merged[baseKey])) merged[baseKey] = merged[baseKey] ? [merged[baseKey]] : [];
+                        merged[baseKey].push(value);
+                    } else if (merged[baseKey] === undefined) {
+                        merged[baseKey] = value;
+                    }
+                });
+                const url = window.BilskyenAiSearch.buildVehiclesUrl(merged, {
+                    ai_search: '1',
+                    q: result.query || searchQuery,
+                });
+                window.location.href = url;
+            } catch (err) {
+                facetParams.set('search', searchQuery);
+                window.location.href = '/vehicles?' + facetParams.toString();
+            }
+        });
+    }
+
+    // AI examples + autocomplete (only when helpers are loaded)
+    if (publicAiEnabled && window.BilskyenAiSearch) {
+        window.BilskyenAiSearch.renderExampleChips(document.getElementById('home-ai-examples'));
+        window.BilskyenAiSearch.bindAutocomplete(
+            document.getElementById('home-search-input'),
+            document.getElementById('home-ai-suggest'),
+            {
+                onExample: function (label) {
+                    document.getElementById('home-search-input').value = label;
+                },
+                onBrand: function (item) {
+                    document.getElementById('home-search-input').value = item.name || '';
+                },
+                onModel: function (item) {
+                    document.getElementById('home-search-input').value = item.name || '';
+                },
+            }
+        );
+        document.getElementById('home-ai-examples')?.addEventListener('ai-example-selected', function (ev) {
+            const q = ev.detail?.query;
+            if (q) document.getElementById('home-search-input').value = q;
         });
     }
     

@@ -78,6 +78,10 @@ Schedule::command('cms:publish-scheduled')
     ->everyFiveMinutes()
     ->timezone($timezone);
 
+Schedule::command('cities:reindex')
+    ->dailyAt('03:30')
+    ->timezone($timezone);
+
 Schedule::command('syndication:sync')
     ->hourly()
     ->timezone($timezone);

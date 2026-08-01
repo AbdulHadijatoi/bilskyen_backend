@@ -5,18 +5,34 @@ namespace App\Services\Feeds;
 use App\Constants\VehicleListStatus;
 use App\Models\Dealer;
 use App\Models\Vehicle;
+use App\Services\Syndication\MetaVehicleCatalogMapper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class VehicleFeedBuilderService
 {
+    public function __construct(
+        private MetaVehicleCatalogMapper $catalogMapper,
+    ) {}
+
     /**
      * @return Collection<int, Vehicle>
      */
     public function publishedVehiclesForDealer(Dealer $dealer): Collection
     {
-        return Vehicle::with(['images', 'brand', 'fuelType', 'gearType'])
+        return Vehicle::with($this->catalogMapper->eagerLoads())
             ->where('dealer_id', $dealer->id)
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->orderByDesc('published_at')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Vehicle>
+     */
+    public function publishedVehiclesPlatform(): Collection
+    {
+        return Vehicle::with($this->catalogMapper->eagerLoads())
             ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->orderByDesc('published_at')
             ->get();
@@ -31,15 +47,21 @@ class VehicleFeedBuilderService
             return url(Storage::disk('public')->url($img->image_path));
         })->values()->all();
 
+        $dealer = $vehicle->relationLoaded('dealer') ? $vehicle->dealer : null;
+
         return [
             'id' => $vehicle->id,
             'slug' => $vehicle->slug,
             'title' => $vehicle->title,
             'registration' => $vehicle->registration,
+            'vin' => $vehicle->vin,
             'price' => $vehicle->price,
             'km_driven' => $vehicle->km_driven,
             'description' => $vehicle->description,
             'brand' => $vehicle->brand?->name,
+            'model' => $vehicle->model?->name,
+            'body_type' => $vehicle->bodyType?->name,
+            'colour' => $vehicle->colour?->name,
             'fuel_type' => $vehicle->fuelType?->name,
             'gear_type' => $vehicle->gearType?->name,
             'year' => $vehicle->model_year ?? $vehicle->first_registration_year,
@@ -48,6 +70,14 @@ class VehicleFeedBuilderService
             'video_url' => $vehicle->video_url,
             'url' => url('/vehicles/'.$vehicle->slug),
             'published_at' => $vehicle->published_at?->toIso8601String(),
+            'dealer' => $dealer ? [
+                'id' => $dealer->id,
+                'slug' => $dealer->slug,
+                'address' => $dealer->address,
+                'city' => $dealer->city,
+                'postcode' => $dealer->postcode,
+                'country_code' => $dealer->country_code,
+            ] : null,
         ];
     }
 
@@ -84,6 +114,13 @@ class VehicleFeedBuilderService
                     }
                     continue;
                 }
+                if ($key === 'dealer' && is_array($value)) {
+                    $dealerNode = $node->addChild('dealer');
+                    foreach ($value as $dKey => $dVal) {
+                        $dealerNode->addChild($dKey, htmlspecialchars((string) ($dVal ?? '')));
+                    }
+                    continue;
+                }
                 if (is_scalar($value) || $value === null) {
                     $node->addChild($key, htmlspecialchars((string) ($value ?? '')));
                 }
@@ -91,5 +128,15 @@ class VehicleFeedBuilderService
         }
 
         return $xml->asXML() ?: '';
+    }
+
+    public function toFacebookCsv(Dealer $dealer): string
+    {
+        return $this->catalogMapper->toCsv($this->publishedVehiclesForDealer($dealer));
+    }
+
+    public function toPlatformFacebookCsv(): string
+    {
+        return $this->catalogMapper->toCsv($this->publishedVehiclesPlatform());
     }
 }

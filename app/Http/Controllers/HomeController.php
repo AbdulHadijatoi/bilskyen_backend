@@ -34,6 +34,10 @@ use App\Services\Finance\FinanceCalculatorService;
 use App\Services\VehicleTrustReportService;
 use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
+use App\Services\Marketing\MetaConversionsApiService;
+use App\Services\AiService;
+use App\Services\FaqContentService;
+use App\Services\PlatformSettingService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +58,10 @@ class HomeController extends Controller
         private VehicleTrustReportService $trustReportService,
         private MarketPricingService $marketPricingService,
         private VehicleListingPresentationService $vehicleListingPresentationService,
+        private MetaConversionsApiService $metaConversionsApiService,
+        private FaqContentService $faqContentService,
+        private PlatformSettingService $platformSettingService,
+        private AiService $aiService,
     ) {}
 
     /**
@@ -369,6 +377,50 @@ class HomeController extends Controller
         ]);
     }
 
+    /**
+     * Public FAQ / help page with optional on-page chatbot.
+     */
+    public function showFaq()
+    {
+        if (! $this->platformSettingService->isFaqPageEnabled()) {
+            abort(404);
+        }
+
+        $faq = $this->faqContentService->getPublicContent();
+        $seo = $this->seoService->getForPage('static', 'faq');
+        $qaPairs = $this->faqContentService->flattenQaPairs($faq['sections']);
+
+        $faqSchema = null;
+        if ($qaPairs !== []) {
+            $faqSchema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => array_map(static fn (array $pair) => [
+                    '@type' => 'Question',
+                    'name' => $pair['question'],
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => $pair['answer'],
+                    ],
+                ], $qaPairs),
+            ];
+        }
+
+        return view('faq', [
+            'faqHeaderTitle' => $faq['header_title'] !== ''
+                ? $faq['header_title']
+                : __('messages.pages.faq.header_title'),
+            'faqHeaderDescription' => $faq['header_description'] !== ''
+                ? $faq['header_description']
+                : __('messages.pages.faq.header_description'),
+            'faqSections' => $faq['sections'],
+            'faqChatbotEnabled' => $this->platformSettingService->isFaqChatbotEnabled()
+                && $this->aiService->isGloballyEnabled(),
+            'faqSchema' => $faqSchema,
+            'seo' => $seo,
+        ]);
+    }
+
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
         'brand_id', 'model_id', 'fuel_type_id', 'category_id', 'listing_type_id',
@@ -387,6 +439,7 @@ class HomeController extends Controller
         'engine_cylinders', 'doors', 'door_count', 'seats_min', 'seats_max', 'wheels', 'axles', 'axle_count',
         'drive_axle_count', 'specifications_airbags', 'charging_type', 'emission_norm_id',
         'ncap_five', 'ncap_test', 'is_import', 'is_factory_new', 'search', 'sort',
+        'city_slug', 'city', 'postcode',
     ];
 
     /**
@@ -495,7 +548,9 @@ class HomeController extends Controller
         $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
 
         $constants = $this->lookupService->getPublicConstants();
-        $seo = $this->seoService->getForPage('listing', 'vehicles');
+        $seo = $this->seoService->getForPage('listing', 'vehicles') ?? [];
+        // Always consolidate filter/sort query variants onto the clean listing URL.
+        $seo['canonical_url'] = url('/vehicles');
 
         $vehicleSortLabels = $this->buildVehicleListingSortLabels();
         $rawSortQuery = $request->query('sort');
@@ -595,7 +650,7 @@ class HomeController extends Controller
             $request->userAgent()
         );
         
-        $seo = $this->seoService->getForPage('vehicle', $vehicle->slug);
+        $seo = $this->seoService->resolveForVehicle($vehicle);
         $showFinanceCalculator = $this->financeCalculatorService->shouldShowCalculatorForVehicle($vehicle);
         $financeSettings = $showFinanceCalculator ? $this->financeCalculatorService->settingsForLocale() : [];
         $financeEstimate = $showFinanceCalculator
@@ -604,6 +659,18 @@ class HomeController extends Controller
         $financePartnerUrl = $showFinanceCalculator
             ? $this->financeCalculatorService->dealerFinanceUrl($vehicle->dealer)
             : null;
+
+        $metaViewContentEventId = null;
+        if ($this->metaConversionsApiService->isEnabled()) {
+            $metaViewContentEventId = $this->metaConversionsApiService->newEventId();
+            $this->metaConversionsApiService->trackViewContent(
+                $vehicle,
+                $metaViewContentEventId,
+                url()->current(),
+                $request->ip(),
+                $request->userAgent()
+            );
+        }
 
         return view('vehicle-detail', [
             'vehicle' => $vehicle,
@@ -614,6 +681,8 @@ class HomeController extends Controller
             'financeSettings' => $financeSettings,
             'financeEstimate' => $financeEstimate,
             'financePartnerUrl' => $financePartnerUrl,
+            'metaViewContentEventId' => $metaViewContentEventId,
+            'metaPixelEnabled' => $this->metaConversionsApiService->isEnabled(),
         ]);
     }
 

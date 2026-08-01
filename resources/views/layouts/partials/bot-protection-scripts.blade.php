@@ -83,8 +83,8 @@
     };
 
     /**
-     * Guest contact for phone reveal / lead create.
-     * Contact is optional — do not prompt (dedicated enquiry forms collect details).
+     * Optional guest contact for phone reveal / email / WhatsApp lead create.
+     * No browser prompts — anonymous guests are allowed.
      */
     window.bilskyenCollectGuestContact = async function () {
         return {};

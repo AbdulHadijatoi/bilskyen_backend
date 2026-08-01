@@ -15,7 +15,8 @@
     @else
     <link rel="canonical" href="{{ url()->current() }}">
     @endif
-    <meta name="robots" content="{{ $seo['robots'] ?? 'index, follow' }}">
+    @php $seoIndexingEnabled = app()->environment('production'); @endphp
+    <meta name="robots" content="{{ $seoIndexingEnabled ? ($seo['robots'] ?? 'index, follow') : 'noindex, nofollow' }}">
     @php
         $defaultOgImage = asset('images/og-image.jpg');
         $ogImage = !empty($seo['og_image'])
@@ -37,14 +38,15 @@
     @if(!empty($seo['twitter_title']))<meta name="twitter:title" content="{{ $seo['twitter_title'] }}">@else<meta name="twitter:title" content="{{ $seo['meta_title'] ?? $seo['title'] ?? __('messages.layouts.default_title') }}">@endif
     @if(!empty($seo['twitter_description']))<meta name="twitter:description" content="{{ $seo['twitter_description'] }}">@else<meta name="twitter:description" content="{{ $seo['meta_description'] ?? __('messages.layouts.meta_description') }}">@endif
     <meta name="twitter:image" content="{{ $twitterImage }}">
-    @if(!empty($seo['schema_json']))
+    @if($seoIndexingEnabled && !empty($seo['schema_json']))
     <script type="application/ld+json">{!! is_array($seo['schema_json']) ? json_encode($seo['schema_json']) : $seo['schema_json'] !!}</script>
     @endif
     @else
+    @php $seoIndexingEnabled = app()->environment('production'); @endphp
     <title>@yield('title', __('messages.layouts.default_title'))</title>
     <meta name="description" content="{{ __('messages.layouts.meta_description') }}">
     <link rel="canonical" href="{{ url()->current() }}">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $seoIndexingEnabled ? 'index, follow' : 'noindex, nofollow' }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Bilskyen">
     <meta property="og:title" content="@yield('title', __('messages.layouts.default_title'))">
@@ -58,9 +60,12 @@
     <meta name="twitter:description" content="{{ __('messages.layouts.meta_description') }}">
     <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
     @endisset
+    @if(app()->environment('production'))
     <meta name="google-site-verification" content="UJCmMpdQRdTthyDk_rvdfCvGYIv7OETj5CYKgKtWoPc">
+    @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.partials.bot-protection-scripts')
+    @include('layouts.partials.meta-pixel')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -70,6 +75,7 @@
     @include('layouts.partials.site-styles')
     @include('layouts.partials.panel-blade-styles')
     @stack('styles')
+    @stack('head')
 </head>
 <body class="antialiased selection:bg-accent selection:text-accent-foreground">
     @if(!request()->is('auth/*') && !request()->is('dealer/*') && !request()->is('admin/*'))
@@ -149,6 +155,10 @@
             }
         });
     </script>
+
+    @if(!empty($publicAiEnabled))
+    @include('components.ai-search-helpers')
+    @endif
 
     @stack('scripts')
 

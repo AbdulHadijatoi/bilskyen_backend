@@ -66,20 +66,35 @@
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.vehicles') }}</h3>
                 <ul class="space-y-3 text-sm">
                     <li><a href="/vehicles">{{ __('messages.pages.footer.browse_vehicles') }}</a></li>
+                    <li><a href="/byer">{{ __('messages.pages.footer.cars_by_city') }}</a></li>
                     <li><a href="/vehicles">{{ __('messages.pages.footer.pre_owned') }}</a></li>
                     <li><a href="/vehicles">{{ __('messages.pages.footer.new_arrivals') }}</a></li>
-                    <li><a href="/vehicles">{{ __('messages.pages.footer.special_offers') }}</a></li>
+                    @if(!empty($footerCities) && $footerCities->isNotEmpty())
+                        @foreach($footerCities->take(4) as $city)
+                            <li><a href="/biler-i/{{ $city->slug }}">{{ __('messages.pages.cities.cars_heading', ['city' => $city->name]) }}</a></li>
+                        @endforeach
+                    @endif
                 </ul>
             </div>
 
             <div>
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.pages') }}</h3>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="{{ route('for-dealers.landing') }}">{{ __('messages.navigation.for_dealers') }}</a></li>
-                    <li><a href="{{ route('for-staff.landing') }}">{{ __('messages.navigation.for_staff') }}</a></li>
-                    <li><a href="{{ route('blog.index') }}">{{ __('messages.pages.footer.blog') }}</a></li>
+                    <li><a href="/for-dealers">{{ __('messages.navigation.for_dealers') }}</a></li>
+                    <li><a href="/for-staff">{{ __('messages.navigation.for_staff') }}</a></li>
+                    <li><a href="/blog">{{ __('messages.pages.footer.blog') }}</a></li>
+                    @if(!empty($footerLandingPages) && $footerLandingPages->isNotEmpty())
+                        @foreach($footerLandingPages as $landingPage)
+                            <li>
+                                <a href="{{ route('landing.show', $landingPage->slug) }}">{{ $landingPage->title }}</a>
+                            </li>
+                        @endforeach
+                    @endif
                     <li><a href="/privacy-policy">{{ __('messages.pages.footer.privacy_policy') }}</a></li>
                     <li><a href="/terms-of-service">{{ __('messages.pages.footer.terms_of_service') }}</a></li>
+                    @if(!empty($faqPageEnabled))
+                    <li><a href="/faq">{{ __('messages.pages.footer.faq') }}</a></li>
+                    @endif
                     <li><a href="/account-deletion">{{ __('messages.pages.footer.account_deletion') }}</a></li>
                     <li><a href="/contact">{{ __('messages.pages.footer.contact_us') }}</a></li>
                     <li><a href="/about">{{ __('messages.pages.footer.about_us') }}</a></li>
@@ -101,8 +116,8 @@
                 © {{ date('Y') }} {{ __('messages.common.site_name') }}. {{ __('messages.pages.footer.all_rights_reserved') }}.
             </p>
             <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
-                <a href="{{ route('for-dealers.landing') }}" class="text-xs">{{ __('messages.navigation.for_dealers') }}</a>
-                <a href="{{ route('for-staff.landing') }}" class="text-xs">{{ __('messages.navigation.for_staff') }}</a>
+                <a href="/for-dealers" class="text-xs">{{ __('messages.navigation.for_dealers') }}</a>
+                <a href="/for-staff" class="text-xs">{{ __('messages.navigation.for_staff') }}</a>
                 <a href="/privacy-policy" class="text-xs">{{ __('messages.pages.footer.privacy_policy') }}</a>
                 <a href="/terms-of-service" class="text-xs">{{ __('messages.pages.footer.terms_of_service') }}</a>
                 <a href="/account-deletion" class="text-xs">{{ __('messages.pages.footer.account_deletion') }}</a>

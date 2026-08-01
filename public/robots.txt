@@ -1,7 +1,0 @@
-User-agent: *
-Disallow: /admin
-Disallow: /admin/
-Disallow: /api/
-Disallow: /auth/
-Disallow: /seller-dashboard
-Disallow: /test/

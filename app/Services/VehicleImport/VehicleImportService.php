@@ -170,15 +170,7 @@ class VehicleImportService
         $errors = $resolved['errors'];
         $this->appendPaygImportWarnings($warnings, $dealer, $payload);
 
-        if (count($imageUrls) > VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW) {
-            $errors[] = [
-                'field' => 'image_urls',
-                'value' => (string) count($imageUrls),
-                'message' => __('messages.api.vehicle_import_too_many_images', [
-                    'max' => VehicleImportColumnDefinitions::MAX_IMAGE_URLS_PER_ROW,
-                ]),
-            ];
-        }
+        $imageUrls = $this->limitImageUrlsToPlan($imageUrls, $dealer, $warnings);
 
         $base = [
             'row' => $excelRow,
@@ -309,6 +301,35 @@ class VehicleImportService
         $parts = preg_split('/[;|,]+/', (string) $raw) ?: [];
 
         return array_values(array_filter(array_map('trim', $parts)));
+    }
+
+    /**
+     * Keep all eligible URLs unless the dealer's plan caps images per vehicle.
+     *
+     * @param  list<string>  $imageUrls
+     * @param  list<array{field: string, value: string, message: string}>  $warnings
+     * @return list<string>
+     */
+    private function limitImageUrlsToPlan(array $imageUrls, ?Dealer $dealer, array &$warnings): array
+    {
+        if ($dealer === null || $imageUrls === []) {
+            return $imageUrls;
+        }
+
+        $planImageLimit = (int) $this->subscriptionFeatureService->getFeatureLimit($dealer, 'max_vehicle_images', 0);
+        if ($planImageLimit <= 0 || count($imageUrls) <= $planImageLimit) {
+            return $imageUrls;
+        }
+
+        $warnings[] = [
+            'field' => 'image_urls',
+            'value' => (string) count($imageUrls),
+            'message' => __('messages.api.vehicle_import_images_truncated', [
+                'max' => $planImageLimit,
+            ]),
+        ];
+
+        return array_slice($imageUrls, 0, $planImageLimit);
     }
 
     /**

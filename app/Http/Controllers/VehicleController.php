@@ -144,6 +144,7 @@ class VehicleController extends Controller
         'charging_type', 'ncap_test',
         'is_import', 'is_factory_new',
         'equipment_ids', 'drive_axle_count', 'specifications_airbags',
+        'city_slug', 'city', 'postcode',
     ];
 
     /**

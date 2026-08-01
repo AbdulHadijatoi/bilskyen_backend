@@ -1819,12 +1819,14 @@
             <div class="section-content expanded">
                     <div class="space-y-2">
                     <label for="description" class="text-sm font-medium">{{ __('messages.forms.message') }}</label>
+                    @if(!empty($publicAiEnabled))
                     <div class="flex items-center gap-2 mb-2">
                         <button type="button" id="ai-suggest-description-btn" class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent">
                             {{ __('messages.pages.sell_your_car.ai_suggest_description') }}
                         </button>
                         <span id="ai-suggest-description-status" class="text-xs text-muted-foreground"></span>
                     </div>
+                    @endif
                     <textarea id="description" name="description" rows="6"
                         class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         placeholder="{{ __('messages.pages.sell_your_car.description_placeholder') }}"></textarea>

@@ -877,16 +877,23 @@ class VehicleService
 
         if (! empty($f['search'])) {
             $term = trim((string) $f['search']);
-            $query->where(function (Builder $q) use ($term) {
-                $q->where('title', 'like', '%'.$term.'%')
-                    ->orWhere('registration', 'like', '%'.$term.'%')
-                    ->orWhere('description', 'like', '%'.$term.'%')
-                    ->orWhereHas('brand', function (Builder $b) use ($term): void {
-                        $b->where('name', 'like', '%'.$term.'%');
-                    })
-                    ->orWhereHas('model', function (Builder $m) use ($term): void {
-                        $m->where('name', 'like', '%'.$term.'%');
+            $expanded = app(VehicleSearchSynonymService::class)->expand($term);
+            $terms = array_values(array_unique(array_filter([$term, $expanded], fn ($t) => $t !== '')));
+            $query->where(function (Builder $q) use ($terms) {
+                foreach ($terms as $index => $searchTerm) {
+                    $method = $index === 0 ? 'where' : 'orWhere';
+                    $q->{$method}(function (Builder $inner) use ($searchTerm) {
+                        $inner->where('title', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('registration', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('description', 'like', '%'.$searchTerm.'%')
+                            ->orWhereHas('brand', function (Builder $b) use ($searchTerm): void {
+                                $b->where('name', 'like', '%'.$searchTerm.'%');
+                            })
+                            ->orWhereHas('model', function (Builder $m) use ($searchTerm): void {
+                                $m->where('name', 'like', '%'.$searchTerm.'%');
+                            });
                     });
+                }
             });
         }
 
@@ -1120,6 +1127,38 @@ class VehicleService
                     $dq->where('cvr', 'not like', 'INDIVIDUAL-%');
                 });
             }
+        }
+
+        $citySlug = $f['city_slug'] ?? $f['city'] ?? null;
+        if (is_string($citySlug) && trim($citySlug) !== '') {
+            $city = app(\App\Services\CityIndexService::class)->findBySlug(trim($citySlug));
+            if (! $city && ! str_contains($citySlug, '-')) {
+                // Allow city name as well as slug.
+                $city = app(\App\Services\CityIndexService::class)->ensureCityFromName($citySlug);
+            }
+            if ($city) {
+                $names = $city->matchNames();
+                $postcodes = app(\App\Services\CityIndexService::class)->postcodesForCity($city);
+                $query->where(function (Builder $q) use ($table, $city, $names, $postcodes) {
+                    $q->whereHas('dealer', function (Builder $dealer) use ($city, $names) {
+                        $dealer->where('marketplace_city_id', $city->id);
+                        if ($names !== []) {
+                            $dealer->orWhere(function (Builder $inner) use ($names) {
+                                foreach ($names as $name) {
+                                    $inner->orWhereRaw('LOWER(city) = ?', [$name]);
+                                }
+                            });
+                        }
+                    });
+                    if ($postcodes !== []) {
+                        $q->orWhereIn("{$table}.postcode", $postcodes);
+                    }
+                });
+            }
+        }
+
+        if (! empty($f['postcode'])) {
+            $query->where("{$table}.postcode", (string) $f['postcode']);
         }
     }
 

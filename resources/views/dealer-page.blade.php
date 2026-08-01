@@ -107,6 +107,19 @@
                         @endif
                     </div>
                     @endif
+                    @php
+                        $dealerCity = app(\App\Services\CityIndexService::class)->resolveCityForDealer($dealer);
+                    @endphp
+                    @if($dealerCity)
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <a href="{{ route('cities.cars', $dealerCity->slug) }}" class="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium hover:bg-muted">
+                            {{ __('messages.pages.cities.see_cars', ['city' => $dealerCity->name]) }}
+                        </a>
+                        <a href="{{ route('cities.dealers', $dealerCity->slug) }}" class="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium hover:bg-muted">
+                            {{ __('messages.pages.cities.see_dealers', ['city' => $dealerCity->name]) }}
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
 

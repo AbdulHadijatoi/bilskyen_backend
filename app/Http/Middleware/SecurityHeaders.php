@@ -32,6 +32,10 @@ class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
+        if (! app()->environment('production')) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
         return $response;
     }
 }
