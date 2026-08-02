@@ -876,16 +876,15 @@
                 <p class="home-filter-search-hint">{{ __('messages.pages.home.search_hint_ai') }}</p>
                 @endif
 
-                <div class="home-filter-suggestion-row">
+                    <div class="home-filter-suggestion-row">
                     @if(!empty($publicAiEnabled))
                     <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
                     @endif
-                    <a href="{{ route('find-perfect-car') }}" class="ai-search-example-chip lifestyle">
-                        ✦ {{ __('messages.pages.home.lifestyle_chip_family') }}
+                    @foreach($lifestyleChips ?? [] as $chip)
+                    <a href="{{ $chip['href'] }}" class="ai-search-example-chip lifestyle">
+                        ✦ {{ $chip['label'] }}
                     </a>
-                    <a href="{{ route('find-perfect-car') }}" class="ai-search-example-chip lifestyle">
-                        ✦ {{ __('messages.pages.home.lifestyle_chip_first_car') }}
-                    </a>
+                    @endforeach
                 </div>
 
                 @if(!empty($publicAiEnabled))
@@ -2620,7 +2619,7 @@
             }
 
             try {
-                const result = await window.BilskyenAiSearch.parseQuery(searchQuery);
+                const result = await window.BilskyenAiSearch.parseQuery(searchQuery, 'home');
                 window.BilskyenAiSearch.renderAiBanner(
                     document.getElementById('home-ai-understood'),
                     result.labels,

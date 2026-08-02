@@ -2,7 +2,8 @@
 @php
     $honeypotField = config('security.honeypot.field', 'website');
     $aiSearchLocale = app()->getLocale();
-    $aiSearchExamples = app(\App\Services\VehicleSearchSynonymService::class)->exampleQueries($aiSearchLocale);
+    $sessionSeed = session()->getId();
+    $aiSearchExamples = app(\App\Services\SuggestionService::class)->exampleQueries($aiSearchLocale, $sessionSeed, 4);
 @endphp
 <script>
 window.BilskyenAiSearch = (function () {
@@ -86,7 +87,7 @@ window.BilskyenAiSearch = (function () {
     /**
      * Call AI search-parse with timeout; on failure return keyword fallback.
      */
-    async function parseQuery(query) {
+    async function parseQuery(query, surface) {
         const q = (query || '').trim();
         if (!q) {
             return { filters: {}, labels: [], fallback: true, query: '' };
@@ -98,6 +99,9 @@ window.BilskyenAiSearch = (function () {
         try {
             const bot = await botFields();
             const body = Object.assign({ query: q, locale: LOCALE }, bot);
+            if (surface) {
+                body.surface = surface;
+            }
             const response = await fetch(PARSE_URL, {
                 method: 'POST',
                 headers: {
@@ -142,8 +146,10 @@ window.BilskyenAiSearch = (function () {
     }
 
     async function navigateWithAiSearch(query, extraParams) {
-        const result = await parseQuery(query);
+        const surface = (extraParams && extraParams.surface) || 'navbar';
+        const result = await parseQuery(query, surface);
         const extras = Object.assign({ ai_search: '1' }, extraParams || {});
+        delete extras.surface;
         if (result.query) {
             extras.q = result.query;
         }

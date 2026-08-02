@@ -156,26 +156,13 @@ class CarAdvisorService
 
     /**
      * Curated lifestyle example prompts for the advisor UI.
+     * Delegates to SuggestionService (inventory-backed cache + seed fallback).
      *
      * @return list<string>
      */
     public function examplePrompts(string $locale = 'da'): array
     {
-        if ($locale === 'en') {
-            return [
-                'I have 150,000 DKK, mostly city driving, need space for a stroller, want low ownership costs, and like sporty-looking cars.',
-                'Family of 4, max 250,000 kr, automatic, diesel or hybrid, room for weekend trips.',
-                'Electric commute under 300,000 kr, low annual tax, parking in Copenhagen.',
-                'First car under 80,000 kr, reliable and cheap to run, mostly short trips.',
-            ];
-        }
-
-        return [
-            'Jeg har 150.000 kr, kører mest i byen, skal have plads til barnevogn, vil undgå dyre reparationer, og synes om sporty biler.',
-            'Familie på 4, max 250.000 kr, automatgear, diesel eller hybrid, plads til weekendture.',
-            'Elbil til pendling under 300.000 kr, lav ejerafgift, parkering i København.',
-            'Første bil under 80.000 kr, pålidelig og billig i drift, mest korte ture.',
-        ];
+        return app(SuggestionService::class)->examplePrompts($locale);
     }
 
     /**

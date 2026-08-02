@@ -82,6 +82,10 @@ Schedule::command('cities:reindex')
     ->dailyAt('03:30')
     ->timezone($timezone);
 
+Schedule::command('suggestions:refresh')
+    ->dailyAt('07:30')
+    ->timezone($timezone);
+
 Schedule::command('syndication:sync')
     ->hourly()
     ->timezone($timezone);

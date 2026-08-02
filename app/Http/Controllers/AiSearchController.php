@@ -7,7 +7,8 @@ use App\Models\SavedSearch;
 use App\Services\AiSearchParseService;
 use App\Services\AiService;
 use App\Services\AuthService;
-use App\Services\VehicleSearchSynonymService;
+use App\Services\SearchQueryLogService;
+use App\Services\SuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +19,8 @@ class AiSearchController extends Controller
 
     public function __construct(
         private AiSearchParseService $aiSearchParseService,
-        private VehicleSearchSynonymService $synonymService,
+        private SuggestionService $suggestionService,
+        private SearchQueryLogService $searchQueryLogService,
         private AuthService $authService,
         private AiService $aiService,
     ) {}
@@ -36,11 +38,20 @@ class AiSearchController extends Controller
             $data = $request->validate([
                 'query' => 'required|string|max:'.self::MAX_QUERY_LENGTH,
                 'locale' => 'sometimes|string|in:da,en',
+                'surface' => 'sometimes|string|in:home,vehicles,navbar',
             ]);
 
+            $locale = $data['locale'] ?? app()->getLocale();
             $result = $this->aiSearchParseService->parse(
                 query: $data['query'],
-                locale: $data['locale'] ?? app()->getLocale(),
+                locale: $locale,
+            );
+
+            $this->searchQueryLogService->log(
+                surface: $data['surface'] ?? 'home',
+                query: $data['query'],
+                locale: $locale,
+                filters: $result['filters'] ?? null,
             );
 
             return $this->success([
@@ -90,7 +101,7 @@ class AiSearchController extends Controller
         ]);
 
         return $this->success([
-            'examples' => $this->synonymService->exampleQueries($data['locale'] ?? app()->getLocale()),
+            'examples' => $this->suggestionService->exampleQueries($data['locale'] ?? app()->getLocale()),
         ]);
     }
 

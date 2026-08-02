@@ -2454,7 +2454,7 @@
                     if (publicAiEnabled && searchValue && window.BilskyenAiSearch) {
                         searchInput.disabled = true;
                         try {
-                            const result = await window.BilskyenAiSearch.parseQuery(searchValue);
+                            const result = await window.BilskyenAiSearch.parseQuery(searchValue, 'vehicles');
                             window.location.href = window.BilskyenAiSearch.buildVehiclesUrl(result.filters || {}, {
                                 ai_search: '1',
                                 q: result.query || searchValue,

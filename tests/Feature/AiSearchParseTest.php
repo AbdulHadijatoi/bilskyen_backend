@@ -38,6 +38,10 @@ class AiSearchParseTest extends TestCase
             ]);
         $this->app->instance(AiSearchParseService::class, $service);
 
+        $log = Mockery::mock(\App\Services\SearchQueryLogService::class);
+        $log->shouldReceive('log')->once();
+        $this->app->instance(\App\Services\SearchQueryLogService::class, $log);
+
         $response = $this->postJson('/api/v1/ai/search-parse', [
             'query' => 'elbil under 200000',
             'locale' => 'da',
@@ -74,6 +78,8 @@ class AiSearchParseTest extends TestCase
 
     public function test_suggest_endpoint_returns_structure(): void
     {
+        $this->withoutMiddleware(\App\Http\Middleware\SeoRedirectMiddleware::class);
+
         $service = Mockery::mock(AiSearchParseService::class);
         $service->shouldReceive('suggest')
             ->once()
@@ -91,6 +97,8 @@ class AiSearchParseTest extends TestCase
 
     public function test_examples_endpoint(): void
     {
+        $this->withoutMiddleware(\App\Http\Middleware\SeoRedirectMiddleware::class);
+
         $this->getJson('/api/v1/search/examples?locale=da')
             ->assertOk()
             ->assertJsonStructure(['data' => ['examples']]);

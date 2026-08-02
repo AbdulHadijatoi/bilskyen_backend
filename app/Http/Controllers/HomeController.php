@@ -38,6 +38,8 @@ use App\Services\Marketing\MetaConversionsApiService;
 use App\Services\AiService;
 use App\Services\FaqContentService;
 use App\Services\PlatformSettingService;
+use App\Services\SearchQueryLogService;
+use App\Services\SuggestionService;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -137,6 +139,13 @@ class HomeController extends Controller
         // Get home page content from cache
         $homePageContent = $this->pageContentService->getHomePageContent('home');
         $seo = $this->seoService->getForPage('home', 'home');
+        $locale = app()->getLocale();
+        $sessionSeed = null;
+        try {
+            $sessionSeed = $request->hasSession() ? $request->session()->getId() : null;
+        } catch (\Throwable) {
+            $sessionSeed = null;
+        }
 
         return view('home', [
             'filterOptions' => $filterOptions,
@@ -148,6 +157,7 @@ class HomeController extends Controller
             'currentYear' => $currentYear,
             'filterPriceMax' => VehicleSearchFilters::PRICE_MAX,
             'filterKmMax' => VehicleSearchFilters::KM_MAX,
+            'lifestyleChips' => app(SuggestionService::class)->lifestyleChips($locale, $sessionSeed, 2),
         ]);
     }
 
@@ -427,11 +437,17 @@ class HomeController extends Controller
     public function showFindPerfectCar()
     {
         $locale = app()->getLocale();
-        $advisor = app(\App\Services\CarAdvisorService::class);
+        $sessionSeed = null;
+        try {
+            $sessionSeed = request()->hasSession() ? request()->session()->getId() : null;
+        } catch (\Throwable) {
+            $sessionSeed = null;
+        }
 
         return view('find-perfect-car', [
             'publicAiEnabled' => $this->aiService->isGloballyEnabled(),
-            'advisorExamples' => $advisor->examplePrompts($locale),
+            'advisorExamples' => app(SuggestionService::class)->examplePrompts($locale, $sessionSeed, 4),
+            'advisorPrefill' => trim((string) request()->query('q', '')),
             'seo' => [
                 'meta_title' => __('messages.pages.find_perfect_car.meta_title'),
                 'meta_description' => __('messages.pages.find_perfect_car.meta_description'),
@@ -541,6 +557,16 @@ class HomeController extends Controller
         unset($input['year_from'], $input['year_to']);
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
+
+        $searchQuery = trim((string) ($request->input('search') ?? $request->input('q') ?? ''));
+        if ($searchQuery !== '') {
+            app(SearchQueryLogService::class)->log(
+                surface: 'vehicles',
+                query: $searchQuery,
+                locale: app()->getLocale(),
+                filters: array_filter($currentFilters, fn ($v) => $v !== null && $v !== '' && $v !== []),
+            );
+        }
 
         $hasFilters = $this->hasActiveVehicleFilters($currentFilters);
         $showNoResultsMessage = $vehicles->total() === 0 && $hasFilters;

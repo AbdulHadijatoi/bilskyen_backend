@@ -17,7 +17,7 @@ class VehicleSearchSynonymServiceTest extends TestCase
         $this->assertStringContainsString('Aarhus', $expanded);
     }
 
-    public function test_example_queries_are_locale_aware(): void
+    public function test_example_queries_delegate_to_suggestion_service(): void
     {
         $service = new VehicleSearchSynonymService;
         $da = $service->exampleQueries('da');
@@ -25,7 +25,5 @@ class VehicleSearchSynonymServiceTest extends TestCase
 
         $this->assertNotEmpty($da);
         $this->assertNotEmpty($en);
-        $this->assertStringContainsString('Elbil', $da[0]);
-        $this->assertStringContainsString('Electric', $en[0]);
     }
 }

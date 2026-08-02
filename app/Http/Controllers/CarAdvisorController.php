@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Exceptions\AiGenerationException;
 use App\Services\AiService;
 use App\Services\CarAdvisorService;
+use App\Services\SearchQueryLogService;
+use App\Services\SuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +22,8 @@ class CarAdvisorController extends Controller
     public function __construct(
         private AiService $aiService,
         private CarAdvisorService $carAdvisorService,
+        private SuggestionService $suggestionService,
+        private SearchQueryLogService $searchQueryLogService,
     ) {}
 
     /**
@@ -40,9 +44,17 @@ class CarAdvisorController extends Controller
                 'history.*.content' => 'required_with:history|string|max:'.self::MAX_HISTORY_MESSAGE_LENGTH,
             ]);
 
+            $locale = $data['locale'] ?? app()->getLocale();
+
+            $this->searchQueryLogService->log(
+                surface: 'advisor',
+                query: $data['message'],
+                locale: $locale,
+            );
+
             $result = $this->carAdvisorService->advise(
                 message: $data['message'],
-                locale: $data['locale'] ?? app()->getLocale(),
+                locale: $locale,
                 history: $data['history'] ?? [],
             );
 
@@ -64,7 +76,7 @@ class CarAdvisorController extends Controller
         ]);
 
         return $this->success([
-            'examples' => $this->carAdvisorService->examplePrompts(
+            'examples' => $this->suggestionService->examplePrompts(
                 $data['locale'] ?? app()->getLocale()
             ),
             'enabled' => $this->aiService->isGloballyEnabled(),

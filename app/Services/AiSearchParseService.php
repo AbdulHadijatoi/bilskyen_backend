@@ -41,6 +41,7 @@ class AiSearchParseService
         private VehicleSearchSynonymService $synonymService,
         private LookupService $lookupService,
         private CityIndexService $cityIndexService,
+        private SuggestionService $suggestionService,
     ) {}
 
     /**
@@ -131,13 +132,18 @@ class AiSearchParseService
     public function suggest(string $term, string $locale = 'da', int $limit = 6): array
     {
         $term = trim($term);
-        $examples = $this->synonymService->exampleQueries($locale);
+        $sessionSeed = null;
+        try {
+            $sessionSeed = session()->getId();
+        } catch (\Throwable) {
+            $sessionSeed = null;
+        }
 
         if ($term === '') {
             return [
                 'brands' => [],
                 'models' => [],
-                'examples' => $examples,
+                'examples' => $this->suggestionService->matchingExamples('', $locale, min(4, $limit), $sessionSeed),
             ];
         }
 
@@ -145,15 +151,10 @@ class AiSearchParseService
         $brands = array_slice($this->lookupService->searchBrandsForListingFilters($expanded), 0, $limit);
         $models = array_slice($this->lookupService->searchModelsForListingFilters($expanded, []), 0, $limit);
 
-        $matchingExamples = array_values(array_filter(
-            $examples,
-            fn (string $ex) => Str::contains(mb_strtolower($ex), mb_strtolower($term))
-        ));
-
         return [
             'brands' => $brands,
             'models' => $models,
-            'examples' => $matchingExamples !== [] ? $matchingExamples : array_slice($examples, 0, 3),
+            'examples' => $this->suggestionService->matchingExamples($term, $locale, min(3, $limit), $sessionSeed),
         ];
     }
 

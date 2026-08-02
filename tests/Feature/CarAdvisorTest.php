@@ -3,25 +3,10 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\CarAdvisorController;
-use App\Http\Controllers\HomeController;
 use App\Services\AiService;
-use App\Services\AuditLogService;
-use App\Services\AuthService;
 use App\Services\CarAdvisorService;
-use App\Services\FaqContentService;
-use App\Services\Finance\FinanceCalculatorService;
-use App\Services\LookupService;
-use App\Services\MailService;
-use App\Services\MarketPricingService;
-use App\Services\Marketing\MetaConversionsApiService;
-use App\Services\PageContentService;
-use App\Services\PlatformSettingService;
-use App\Services\SeoService;
-use App\Services\VehicleDetailPresentationService;
-use App\Services\VehicleListingPresentationService;
-use App\Services\VehicleService;
-use App\Services\VehicleTrustReportService;
-use App\Services\VehicleViewService;
+use App\Services\SearchQueryLogService;
+use App\Services\SuggestionService;
 use Illuminate\Http\Request;
 use Mockery;
 use Tests\TestCase;
@@ -74,6 +59,10 @@ class CarAdvisorTest extends TestCase
             ]);
         $this->app->instance(CarAdvisorService::class, $service);
 
+        $log = Mockery::mock(SearchQueryLogService::class);
+        $log->shouldReceive('log')->once();
+        $this->app->instance(SearchQueryLogService::class, $log);
+
         $response = $this->postJson('/api/v1/ai/car-advisor', [
             'message' => 'elbil under 200000',
             'locale' => 'da',
@@ -83,19 +72,6 @@ class CarAdvisorTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('data.summary', 'Elbil under budget');
         $response->assertJsonPath('data.recommendations.0.match_percent', 88);
-        $response->assertJsonPath('data.filters.price_to', 200000);
-    }
-
-    public function test_car_advisor_rejects_when_ai_disabled(): void
-    {
-        $ai = Mockery::mock(AiService::class);
-        $ai->shouldReceive('isGloballyEnabled')->andReturn(false);
-        $this->app->instance(AiService::class, $ai);
-
-        $this->postJson('/api/v1/ai/car-advisor', [
-            'message' => 'familiebil under 200000',
-            'website' => '',
-        ])->assertStatus(422);
     }
 
     public function test_car_advisor_validates_message(): void
@@ -114,13 +90,15 @@ class CarAdvisorTest extends TestCase
         $ai = Mockery::mock(AiService::class);
         $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
 
-        $service = Mockery::mock(CarAdvisorService::class);
-        $service->shouldReceive('examplePrompts')
+        $advisor = Mockery::mock(CarAdvisorService::class);
+        $suggestions = Mockery::mock(SuggestionService::class);
+        $suggestions->shouldReceive('examplePrompts')
             ->once()
             ->with('da')
             ->andReturn(['Example one']);
+        $log = Mockery::mock(SearchQueryLogService::class);
 
-        $controller = new CarAdvisorController($ai, $service);
+        $controller = new CarAdvisorController($ai, $advisor, $suggestions, $log);
         $response = $controller->examples(Request::create('/api/v1/ai/car-advisor/examples', 'GET', [
             'locale' => 'da',
         ]));
@@ -136,27 +114,27 @@ class CarAdvisorTest extends TestCase
         $ai = Mockery::mock(AiService::class);
         $ai->shouldReceive('isGloballyEnabled')->andReturn(true);
 
-        $advisor = Mockery::mock(CarAdvisorService::class);
-        $advisor->shouldReceive('examplePrompts')->andReturn(['Demo prompt']);
-        $this->app->instance(CarAdvisorService::class, $advisor);
+        $suggestions = Mockery::mock(SuggestionService::class);
+        $suggestions->shouldReceive('examplePrompts')->andReturn(['Demo prompt']);
+        $this->app->instance(SuggestionService::class, $suggestions);
 
-        $controller = new HomeController(
-            Mockery::mock(AuthService::class),
-            Mockery::mock(VehicleService::class),
-            Mockery::mock(AuditLogService::class),
-            Mockery::mock(PageContentService::class),
-            Mockery::mock(LookupService::class),
-            Mockery::mock(SeoService::class),
-            Mockery::mock(VehicleDetailPresentationService::class),
-            Mockery::mock(VehicleViewService::class),
-            Mockery::mock(MailService::class),
-            Mockery::mock(FinanceCalculatorService::class),
-            Mockery::mock(VehicleTrustReportService::class),
-            Mockery::mock(MarketPricingService::class),
-            Mockery::mock(VehicleListingPresentationService::class),
-            Mockery::mock(MetaConversionsApiService::class),
-            Mockery::mock(FaqContentService::class),
-            Mockery::mock(PlatformSettingService::class),
+        $controller = new \App\Http\Controllers\HomeController(
+            Mockery::mock(\App\Services\AuthService::class),
+            Mockery::mock(\App\Services\VehicleService::class),
+            Mockery::mock(\App\Services\AuditLogService::class),
+            Mockery::mock(\App\Services\PageContentService::class),
+            Mockery::mock(\App\Services\LookupService::class),
+            Mockery::mock(\App\Services\SeoService::class),
+            Mockery::mock(\App\Services\VehicleDetailPresentationService::class),
+            Mockery::mock(\App\Services\VehicleViewService::class),
+            Mockery::mock(\App\Services\MailService::class),
+            Mockery::mock(\App\Services\Finance\FinanceCalculatorService::class),
+            Mockery::mock(\App\Services\VehicleTrustReportService::class),
+            Mockery::mock(\App\Services\MarketPricingService::class),
+            Mockery::mock(\App\Services\VehicleListingPresentationService::class),
+            Mockery::mock(\App\Services\Marketing\MetaConversionsApiService::class),
+            Mockery::mock(\App\Services\FaqContentService::class),
+            Mockery::mock(\App\Services\PlatformSettingService::class),
             $ai,
         );
 

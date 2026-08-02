@@ -85,25 +85,12 @@ class VehicleSearchSynonymService
 
     /**
      * Curated example queries shown under search boxes (locale-aware).
+     * Delegates to SuggestionService (inventory-backed cache + seed fallback).
      *
      * @return list<string>
      */
     public function exampleQueries(string $locale = 'da'): array
     {
-        if ($locale === 'en') {
-            return [
-                'Electric car under 200,000',
-                'VW Golf diesel',
-                'Family car Aarhus',
-                'Automatic hybrid 2020 or newer',
-            ];
-        }
-
-        return [
-            'Elbil under 200.000',
-            'VW Golf diesel',
-            'Familiebil Aarhus',
-            'Automatgear hybrid 2020 eller nyere',
-        ];
+        return app(SuggestionService::class)->exampleQueries($locale);
     }
 }
