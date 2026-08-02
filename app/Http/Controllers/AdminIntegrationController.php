@@ -50,14 +50,18 @@ class AdminIntegrationController extends Controller
                 'settings.anthropic_enabled' => 'sometimes|boolean',
                 'settings.gemini_enabled' => 'sometimes|boolean',
                 'settings.deepseek_enabled' => 'sometimes|boolean',
+                'settings.ollama_enabled' => 'sometimes|boolean',
                 'settings.openai_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.anthropic_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.gemini_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.deepseek_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.ollama_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.openai_model' => 'sometimes|nullable|string|max:100',
                 'settings.anthropic_model' => 'sometimes|nullable|string|max:100',
                 'settings.gemini_model' => 'sometimes|nullable|string|max:100',
                 'settings.deepseek_model' => 'sometimes|nullable|string|max:100',
+                'settings.ollama_model' => 'sometimes|nullable|string|max:100',
+                'settings.ollama_base_url' => 'sometimes|nullable|string|max:255',
                 'settings.max_tokens' => 'sometimes|integer|min:256|max:8000',
                 'settings.temperature' => 'sometimes|numeric|min:0|max:1',
                 'settings.monthly_token_budget' => 'sometimes|integer|min:0',
@@ -126,7 +130,7 @@ class AdminIntegrationController extends Controller
             return $this->success($result);
         }
 
-        if (in_array($data['provider'], ['openai', 'anthropic', 'gemini', 'deepseek'], true)) {
+        if (in_array($data['provider'], ['openai', 'anthropic', 'gemini', 'deepseek', 'ollama'], true)) {
             $result = app(\App\Services\AiService::class)->testProvider($data['provider']);
 
             $this->platformSettingService->logIntegration(

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\GeminiProvider;
+use App\Services\Ai\OllamaProvider;
 use App\Services\Ai\OpenAiProvider;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ class AiService
 {
     /** @var list<class-string<AiProviderInterface>> */
     private array $providerClasses = [
+        // Prefer local Ollama when enabled (local testing). Falls through to cloud providers on failure.
+        OllamaProvider::class,
         OpenAiProvider::class,
         AnthropicProvider::class,
         GeminiProvider::class,

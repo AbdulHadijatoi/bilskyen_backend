@@ -31,6 +31,7 @@ class AiConstantsTest extends TestCase
     {
         $this->assertNotEmpty(config('ai.providers.openai.default_model'));
         $this->assertSame('deepseek-v4-flash', config('ai.providers.deepseek.default_model'));
+        $this->assertSame('llama3.2', config('ai.providers.ollama.default_model'));
         $this->assertGreaterThan(0, config('ai.default_max_tokens'));
     }
 }

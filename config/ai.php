@@ -19,6 +19,10 @@ return [
         'deepseek' => [
             'default_model' => env('AI_DEEPSEEK_MODEL', 'deepseek-v4-flash'),
         ],
+        'ollama' => [
+            'default_model' => env('AI_OLLAMA_MODEL', 'llama3.2'),
+            'base_url' => env('AI_OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
+        ],
     ],
 
 ];
