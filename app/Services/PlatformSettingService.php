@@ -57,7 +57,13 @@ class PlatformSettingService
     {
         $shouldEncrypt = $this->shouldEncryptKey($key) || is_string($value) && str_contains($key, 'secret');
 
-        $stored = is_array($value) ? json_encode($value) : (string) $value;
+        if (is_bool($value)) {
+            $stored = $value ? 'true' : 'false';
+        } elseif (is_array($value)) {
+            $stored = json_encode($value);
+        } else {
+            $stored = (string) $value;
+        }
 
         // Preserve existing secret when admin UI sends the masked placeholder back.
         if ($shouldEncrypt && $stored === '********') {
@@ -145,15 +151,18 @@ class PlatformSettingService
     private function decodeValue(PlatformSetting $setting, bool $decrypt): mixed
     {
         $raw = $setting->value;
+        $isToggle = str_ends_with($setting->key, '_enabled');
+
+        // PHP (string) false becomes "", which historically corrupted toggles to null.
         if ($raw === null || $raw === '') {
-            return null;
+            return $isToggle ? false : null;
         }
 
         if ($setting->is_encrypted && $decrypt) {
             try {
                 $raw = Crypt::decryptString($raw);
             } catch (\Throwable) {
-                return null;
+                return $isToggle ? false : null;
             }
         }
 
@@ -162,10 +171,10 @@ class PlatformSettingService
             return $decoded;
         }
 
-        if ($raw === 'true') {
+        if ($raw === 'true' || $raw === '1') {
             return true;
         }
-        if ($raw === 'false') {
+        if ($raw === 'false' || $raw === '0') {
             return false;
         }
 

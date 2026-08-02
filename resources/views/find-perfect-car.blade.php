@@ -118,74 +118,130 @@
             border-radius: 0.75rem;
         }
     }
+    .advisor-page .advisor-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
     .advisor-page .advisor-row {
         display: grid;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--advisor-border);
+        gap: 0.85rem;
+        padding: 0.9rem;
+        border: 1px solid var(--advisor-border);
+        border-radius: 0.85rem;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        animation: advisor-row-in 0.45s ease both;
+    }
+    .advisor-page .advisor-row:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 8px 24px rgba(3, 65, 139, 0.06);
     }
     @media (min-width: 640px) {
         .advisor-page .advisor-row {
-            grid-template-columns: 140px 1fr auto;
-            align-items: start;
-            gap: 1.25rem;
-            padding: 1.25rem 0;
+            grid-template-columns: 152px 1fr auto;
+            align-items: stretch;
+            gap: 1.15rem;
+            padding: 1rem;
         }
     }
     .advisor-page .advisor-row.is-best {
-        background: linear-gradient(90deg, var(--advisor-navy-soft), transparent 60%);
-        margin: 0 -0.75rem;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-        border-radius: 0.5rem;
+        border-color: rgba(3, 65, 139, 0.28);
+        background: linear-gradient(135deg, rgba(3, 65, 139, 0.05), #fff 55%);
+        box-shadow: 0 1px 0 rgba(3, 65, 139, 0.04);
     }
     .advisor-page .advisor-row-photo {
+        position: relative;
         display: block;
         aspect-ratio: 4 / 3;
         overflow: hidden;
-        border-radius: 0.5rem;
+        border-radius: 0.6rem;
         background: var(--advisor-surface);
         border: 1px solid var(--advisor-border);
     }
     @media (min-width: 640px) {
         .advisor-page .advisor-row-photo {
-            width: 140px;
-            aspect-ratio: 4 / 3;
+            width: 152px;
+            height: 100%;
+            min-height: 114px;
+            aspect-ratio: auto;
         }
     }
     .advisor-page .advisor-row-photo img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+    .advisor-page .advisor-row:hover .advisor-row-photo img {
+        transform: scale(1.04);
+    }
+    .advisor-page .advisor-rank {
+        position: absolute;
+        top: 0.45rem;
+        left: 0.45rem;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.6rem;
+        height: 1.6rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.72);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+    }
+    .advisor-page .advisor-row.is-best .advisor-rank {
+        background: var(--advisor-navy);
     }
     .advisor-page .advisor-match {
-        min-width: 5.5rem;
-        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        min-width: 4.75rem;
     }
-    @media (max-width: 639px) {
+    @media (min-width: 640px) {
         .advisor-page .advisor-match {
-            text-align: left;
-            display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: center;
+            padding-left: 0.25rem;
         }
     }
-    .advisor-page .advisor-match-bar {
-        width: 100%;
-        max-width: 5.5rem;
-        height: 0.35rem;
+    .advisor-page .advisor-ring {
+        --pct: 0;
+        position: relative;
+        width: 3.5rem;
+        height: 3.5rem;
         border-radius: 999px;
-        background: #e4e4e7;
-        overflow: hidden;
-        margin-top: 0.35rem;
+        background: conic-gradient(var(--advisor-navy) calc(var(--pct) * 1%), #e4e4e7 0);
+        display: grid;
+        place-items: center;
     }
-    @media (max-width: 639px) {
-        .advisor-page .advisor-match-bar { max-width: 6rem; margin-top: 0; }
-    }
-    .advisor-page .advisor-match-fill {
-        height: 100%;
+    .advisor-page .advisor-ring::before {
+        content: '';
+        position: absolute;
+        inset: 0.35rem;
         border-radius: 999px;
-        background: var(--advisor-navy);
+        background: #fff;
+    }
+    .advisor-page .advisor-ring-value {
+        position: relative;
+        z-index: 1;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--advisor-navy);
+        line-height: 1;
+    }
+    .advisor-page .advisor-ring-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--advisor-muted);
     }
     .advisor-page .advisor-best-badge {
         display: inline-flex;
@@ -198,21 +254,41 @@
         letter-spacing: 0.02em;
         text-transform: uppercase;
         padding: 0.2rem 0.5rem;
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.4rem;
+    }
+    .advisor-page .advisor-teaser {
+        margin-top: 0.55rem;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+        color: #3f3f46;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
     .advisor-page .advisor-meta-line {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem 0.85rem;
-        margin-top: 0.35rem;
+        align-items: center;
+        gap: 0.25rem 0;
+        margin-top: 0.4rem;
         font-size: 0.8125rem;
         color: var(--advisor-muted);
+    }
+    .advisor-page .advisor-meta-line > * + *::before {
+        content: '·';
+        margin: 0 0.45rem;
+        color: #a1a1aa;
     }
     .advisor-page .advisor-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         margin-top: 0.85rem;
+    }
+    @keyframes advisor-row-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .advisor-page .advisor-btn-primary {
         display: inline-flex;
@@ -239,51 +315,390 @@
         color: #3f3f46;
     }
     .advisor-page .advisor-btn-ghost:hover { background: var(--advisor-surface); }
-    .advisor-page .advisor-details {
+    .advisor-page .advisor-why-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
         margin-top: 0.75rem;
-        border-top: 1px solid #f4f4f5;
-        padding-top: 0.65rem;
-    }
-    .advisor-page .advisor-details summary {
-        cursor: pointer;
-        list-style: none;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--advisor-navy);
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--advisor-navy);
-        user-select: none;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
-    .advisor-page .advisor-details summary::-webkit-details-marker { display: none; }
-    .advisor-page .advisor-details[open] summary { margin-bottom: 0.5rem; }
-    .advisor-page .advisor-details-body {
+    .advisor-page .advisor-why-btn:hover { color: #023a7a; }
+    .advisor-why-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+    }
+    @media (min-width: 640px) {
+        .advisor-why-modal {
+            align-items: center;
+            padding: 1.25rem;
+        }
+    }
+    .advisor-why-modal[hidden] { display: none !important; }
+    .advisor-why-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(3px);
+    }
+    .advisor-why-modal__dialog {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 34rem;
+        max-height: min(92vh, 44rem);
+        background: #fff;
+        border-radius: 1rem 1rem 0 0;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+        overflow: hidden;
+        animation: advisor-modal-in 0.28s ease both;
+    }
+    @media (min-width: 640px) {
+        .advisor-why-modal__dialog {
+            border-radius: 1rem;
+        }
+    }
+    @keyframes advisor-modal-in {
+        from { opacity: 0; transform: translateY(18px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .advisor-why-modal__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem 1rem 0.75rem;
+        border-bottom: 1px solid #f4f4f5;
+        flex-shrink: 0;
+    }
+    .advisor-why-modal__kicker {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--advisor-navy, #03418b);
+    }
+    .advisor-why-modal__title {
+        margin-top: 0.15rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1.3;
+        color: #18181b;
+    }
+    .advisor-why-modal__close {
+        flex-shrink: 0;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        border: 1px solid #e4e4e7;
+        background: #fff;
+        color: #52525b;
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .advisor-why-modal__close:hover { background: #fafafa; }
+    .advisor-why-modal__body {
+        overflow-y: auto;
+        padding: 1rem;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
+    }
+    .advisor-why-modal__hero {
+        display: grid;
+        gap: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    @media (min-width: 480px) {
+        .advisor-why-modal__hero {
+            grid-template-columns: 7.5rem 1fr auto;
+            align-items: center;
+        }
+    }
+    .advisor-why-modal__photo {
+        aspect-ratio: 4 / 3;
+        border-radius: 0.65rem;
+        overflow: hidden;
+        border: 1px solid #e4e4e7;
+        background: #fafafa;
+    }
+    .advisor-why-modal__photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .advisor-why-modal__meta {
         font-size: 0.8125rem;
+        color: #71717a;
+        margin-top: 0.35rem;
+        line-height: 1.45;
+    }
+    .advisor-why-modal__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.55rem;
+    }
+    .advisor-why-modal__chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: rgba(3, 65, 139, 0.08);
+        color: #03418b;
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 0.25rem 0.6rem;
+    }
+    .advisor-why-modal__match {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    @media (min-width: 480px) {
+        .advisor-why-modal__match { align-items: center; }
+    }
+    .advisor-why-modal__section {
+        margin-top: 0.85rem;
+        padding: 0.85rem 0.9rem;
+        border-radius: 0.75rem;
+        border: 1px solid #f4f4f5;
+        background: #fafafa;
+    }
+    .advisor-why-modal__section--warn {
+        border-color: #fde68a;
+        background: #fffbeb;
+    }
+    .advisor-why-modal__section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #71717a;
+        margin-bottom: 0.45rem;
+    }
+    .advisor-why-modal__section--warn .advisor-why-modal__section-title {
+        color: #a16207;
+    }
+    .advisor-why-modal__section p {
+        font-size: 0.875rem;
         line-height: 1.55;
         color: #3f3f46;
+        margin: 0;
     }
-    .advisor-page .advisor-details-body ul {
-        margin: 0.4rem 0 0;
-        padding-left: 1.1rem;
+    .advisor-why-modal__section ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+    .advisor-why-modal__section li {
+        position: relative;
+        padding-left: 1.15rem;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        color: #3f3f46;
+    }
+    .advisor-why-modal__section li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.45rem;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 999px;
+        background: #03418b;
+    }
+    .advisor-why-modal__section--warn li::before {
+        background: #d97706;
+    }
+    .advisor-why-modal__footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.85rem 1rem 1rem;
+        border-top: 1px solid #f4f4f5;
+        background: #fff;
+        flex-shrink: 0;
+    }
+    .advisor-why-modal__footer .advisor-btn-primary,
+    .advisor-why-modal__footer .advisor-btn-ghost {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-width: 8rem;
+        height: 2.5rem;
+        font-size: 0.8125rem;
+    }
+    .advisor-page .advisor-loading {
+        margin-top: 1.75rem;
+        border: 1px solid var(--advisor-border);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #f8fafc 0%, #fff 42%);
+        padding: 1.15rem 1rem 1rem;
+        overflow: hidden;
+    }
+    .advisor-page .advisor-loading-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    .advisor-page .advisor-spinner {
+        position: relative;
+        width: 2.35rem;
+        height: 2.35rem;
+        flex-shrink: 0;
+    }
+    .advisor-page .advisor-spinner::before,
+    .advisor-page .advisor-spinner::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 2px solid transparent;
+        border-top-color: var(--advisor-navy);
+        animation: advisor-spin 0.9s linear infinite;
+    }
+    .advisor-page .advisor-spinner::after {
+        inset: 0.35rem;
+        border-top-color: rgba(3, 65, 139, 0.35);
+        animation-duration: 1.35s;
+        animation-direction: reverse;
+    }
+    .advisor-page .advisor-loading-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #18181b;
+        line-height: 1.3;
+    }
+    .advisor-page .advisor-loading-step {
+        margin-top: 0.2rem;
+        font-size: 0.8125rem;
         color: var(--advisor-muted);
+        min-height: 1.25rem;
+        transition: opacity 0.25s ease;
+    }
+    .advisor-page .advisor-loading-step.is-swap {
+        opacity: 0;
+    }
+    .advisor-page .advisor-progress {
+        height: 0.35rem;
+        border-radius: 999px;
+        background: #e4e4e7;
+        overflow: hidden;
+        margin-bottom: 0.85rem;
+    }
+    .advisor-page .advisor-progress-fill {
+        height: 100%;
+        width: 8%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--advisor-navy), #2563eb);
+        transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        position: relative;
+    }
+    .advisor-page .advisor-progress-fill::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+        animation: advisor-sheen 1.4s ease-in-out infinite;
+    }
+    .advisor-page .advisor-loading-stages {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.35rem;
+        margin-bottom: 1.1rem;
+    }
+    .advisor-page .advisor-stage {
+        height: 0.28rem;
+        border-radius: 999px;
+        background: #e4e4e7;
+        overflow: hidden;
+    }
+    .advisor-page .advisor-stage > span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--advisor-navy);
+        border-radius: inherit;
+        transition: width 0.55s ease;
+    }
+    .advisor-page .advisor-stage.is-done > span { width: 100%; }
+    .advisor-page .advisor-stage.is-active > span {
+        width: 100%;
+        animation: advisor-stage-pulse 1.1s ease-in-out infinite;
+    }
+    .advisor-page .advisor-loading-tip {
+        margin-top: 0.85rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 0.65rem;
+        background: var(--advisor-navy-soft);
+        color: var(--advisor-navy);
+        font-size: 0.75rem;
+        line-height: 1.45;
     }
     .advisor-page .advisor-skeleton {
         display: grid;
-        gap: 1rem;
-        padding: 1.25rem 0;
-        border-bottom: 1px solid var(--advisor-border);
+        gap: 0.85rem;
+        padding: 0.9rem;
+        border: 1px solid var(--advisor-border);
+        border-radius: 0.85rem;
+        background: #fff;
+        margin-bottom: 0.75rem;
     }
     @media (min-width: 640px) {
         .advisor-page .advisor-skeleton {
-            grid-template-columns: 140px 1fr 5rem;
+            grid-template-columns: 152px 1fr 4.75rem;
+            align-items: center;
+            gap: 1.15rem;
+            padding: 1rem;
         }
     }
     .advisor-page .advisor-skel {
-        border-radius: 0.4rem;
-        background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
-        background-size: 200% 100%;
-        animation: advisor-shimmer 1.2s ease-in-out infinite;
+        border-radius: 0.45rem;
+        background: linear-gradient(90deg, #f4f4f5 15%, #e8e8ec 45%, #f4f4f5 75%);
+        background-size: 220% 100%;
+        animation: advisor-shimmer 1.35s ease-in-out infinite;
     }
+    .advisor-page .advisor-skel-ring {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 999px;
+        margin-inline: auto;
+    }
+    .advisor-page .advisor-skeleton:nth-child(2) .advisor-skel { animation-delay: 0.12s; }
+    .advisor-page .advisor-skeleton:nth-child(3) .advisor-skel { animation-delay: 0.24s; }
+    .advisor-page .advisor-skeleton:nth-child(4) .advisor-skel { animation-delay: 0.36s; }
     @keyframes advisor-shimmer {
         0% { background-position: 200% 0; }
         100% { background-position: -200% 0; }
+    }
+    @keyframes advisor-spin {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes advisor-sheen {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(120%); }
+    }
+    @keyframes advisor-stage-pulse {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
     }
     .advisor-page .advisor-empty {
         text-align: center;
@@ -294,7 +709,8 @@
     }
     .advisor-page .advisor-examples-panel[hidden],
     .advisor-page .advisor-refine[hidden],
-    .advisor-page .advisor-results[hidden] {
+    .advisor-page .advisor-results[hidden],
+    .advisor-page .advisor-loading[hidden] {
         display: none !important;
     }
 </style>
@@ -367,33 +783,58 @@
                 </div>
                 @endif
 
-                <div id="advisor-loading" class="mt-8 hidden" aria-hidden="true">
-                    <div class="advisor-skeleton">
-                        <div class="advisor-skel" style="aspect-ratio:4/3"></div>
-                        <div class="space-y-2 py-1">
-                            <div class="advisor-skel" style="height:1rem;width:75%"></div>
-                            <div class="advisor-skel" style="height:0.75rem;width:50%"></div>
-                            <div class="advisor-skel" style="height:0.75rem;width:66%"></div>
+                <div id="advisor-loading" class="advisor-loading mt-8 hidden" hidden aria-live="polite" aria-busy="false">
+                    <div class="advisor-loading-head">
+                        <div class="advisor-spinner" aria-hidden="true"></div>
+                        <div class="min-w-0 flex-1">
+                            <p class="advisor-loading-title">{{ __('messages.pages.find_perfect_car.loading_title') }}</p>
+                            <p id="advisor-loading-step" class="advisor-loading-step">{{ __('messages.pages.find_perfect_car.loading_step_1') }}</p>
                         </div>
-                        <div class="advisor-skel justify-self-end" style="height:2rem;width:3.5rem"></div>
                     </div>
-                    <div class="advisor-skeleton">
-                        <div class="advisor-skel" style="aspect-ratio:4/3"></div>
-                        <div class="space-y-2 py-1">
-                            <div class="advisor-skel" style="height:1rem;width:66%"></div>
-                            <div class="advisor-skel" style="height:0.75rem;width:50%"></div>
-                            <div class="advisor-skel" style="height:0.75rem;width:40%"></div>
+                    <div class="advisor-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8" id="advisor-progress">
+                        <div class="advisor-progress-fill" id="advisor-progress-fill" style="width:8%"></div>
+                    </div>
+                    <div class="advisor-loading-stages" aria-hidden="true">
+                        <div class="advisor-stage is-active" data-stage="0"><span></span></div>
+                        <div class="advisor-stage" data-stage="1"><span></span></div>
+                        <div class="advisor-stage" data-stage="2"><span></span></div>
+                        <div class="advisor-stage" data-stage="3"><span></span></div>
+                    </div>
+                    <div id="advisor-skeleton-list">
+                        <div class="advisor-skeleton">
+                            <div class="advisor-skel" style="aspect-ratio:4/3;border-radius:0.6rem"></div>
+                            <div class="space-y-2 py-1">
+                                <div class="advisor-skel" style="height:0.7rem;width:4.5rem;border-radius:999px"></div>
+                                <div class="advisor-skel" style="height:1rem;width:78%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:58%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:88%"></div>
+                                <div class="flex gap-2 pt-1">
+                                    <div class="advisor-skel" style="height:2.1rem;width:5.5rem"></div>
+                                    <div class="advisor-skel" style="height:2.1rem;width:5.5rem"></div>
+                                </div>
+                            </div>
+                            <div class="advisor-skel advisor-skel-ring"></div>
                         </div>
-                        <div class="advisor-skel justify-self-end" style="height:2rem;width:3.5rem"></div>
-                    </div>
-                    <div class="advisor-skeleton">
-                        <div class="advisor-skel" style="aspect-ratio:4/3"></div>
-                        <div class="space-y-2 py-1">
-                            <div class="advisor-skel" style="height:1rem;width:80%"></div>
-                            <div class="advisor-skel" style="height:0.75rem;width:45%"></div>
+                        <div class="advisor-skeleton">
+                            <div class="advisor-skel" style="aspect-ratio:4/3;border-radius:0.6rem"></div>
+                            <div class="space-y-2 py-1">
+                                <div class="advisor-skel" style="height:1rem;width:70%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:52%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:80%"></div>
+                            </div>
+                            <div class="advisor-skel advisor-skel-ring"></div>
                         </div>
-                        <div class="advisor-skel justify-self-end" style="height:2rem;width:3.5rem"></div>
+                        <div class="advisor-skeleton">
+                            <div class="advisor-skel" style="aspect-ratio:4/3;border-radius:0.6rem"></div>
+                            <div class="space-y-2 py-1">
+                                <div class="advisor-skel" style="height:1rem;width:64%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:48%"></div>
+                                <div class="advisor-skel" style="height:0.75rem;width:72%"></div>
+                            </div>
+                            <div class="advisor-skel advisor-skel-ring"></div>
+                        </div>
                     </div>
+                    <p class="advisor-loading-tip">{{ __('messages.pages.find_perfect_car.loading_tip') }}</p>
                 </div>
 
                 <div id="advisor-results" class="advisor-results mt-8 hidden" hidden>
@@ -433,6 +874,21 @@
             @endif
         </div>
     </section>
+
+    <div id="advisor-why-modal" class="advisor-why-modal" hidden aria-hidden="true">
+        <div class="advisor-why-modal__backdrop" data-advisor-why-close tabindex="-1"></div>
+        <div class="advisor-why-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="advisor-why-modal-title">
+            <div class="advisor-why-modal__header">
+                <div class="min-w-0">
+                    <p class="advisor-why-modal__kicker">{{ __('messages.pages.find_perfect_car.why_toggle') }}</p>
+                    <h2 id="advisor-why-modal-title" class="advisor-why-modal__title"></h2>
+                </div>
+                <button type="button" class="advisor-why-modal__close" data-advisor-why-close aria-label="{{ __('messages.pages.find_perfect_car.close') }}">&times;</button>
+            </div>
+            <div class="advisor-why-modal__body" id="advisor-why-modal-body"></div>
+            <div class="advisor-why-modal__footer" id="advisor-why-modal-footer"></div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -444,6 +900,12 @@
 
     const I18N = {
         thinking: @json(__('messages.pages.find_perfect_car.thinking')),
+        loadingSteps: [
+            @json(__('messages.pages.find_perfect_car.loading_step_1')),
+            @json(__('messages.pages.find_perfect_car.loading_step_2')),
+            @json(__('messages.pages.find_perfect_car.loading_step_3')),
+            @json(__('messages.pages.find_perfect_car.loading_step_4')),
+        ],
         error: @json(__('messages.pages.find_perfect_car.error')),
         empty: @json(__('messages.pages.find_perfect_car.empty')),
         emptyBrowse: @json(__('messages.pages.find_perfect_car.empty_browse')),
@@ -451,6 +913,7 @@
         bestMatch: @json(__('messages.pages.find_perfect_car.best_match')),
         why: @json(__('messages.pages.find_perfect_car.why')),
         whyToggle: @json(__('messages.pages.find_perfect_car.why_toggle')),
+        close: @json(__('messages.pages.find_perfect_car.close')),
         tradeoffs: @json(__('messages.pages.find_perfect_car.tradeoffs')),
         ownership: @json(__('messages.pages.find_perfect_car.ownership')),
         ownershipTax: @json(__('messages.pages.find_perfect_car.ownership_tax')),
@@ -479,15 +942,27 @@
     const saveBtn = document.getElementById('advisor-save-search');
     const saveMsg = document.getElementById('advisor-save-msg');
     const loadingEl = document.getElementById('advisor-loading');
+    const loadingStepEl = document.getElementById('advisor-loading-step');
+    const progressEl = document.getElementById('advisor-progress');
+    const progressFill = document.getElementById('advisor-progress-fill');
+    const stageEls = loadingEl ? loadingEl.querySelectorAll('.advisor-stage') : [];
     const understoodEl = document.getElementById('advisor-understood');
     const examplesToggle = document.getElementById('advisor-examples-toggle');
     const examplesPanel = document.getElementById('advisor-examples-panel');
     const honeypotName = page.dataset.honeypot || 'website';
     const vehiclesUrl = page.dataset.vehiclesUrl || '/vehicles';
+    const whyModal = document.getElementById('advisor-why-modal');
+    const whyModalTitle = document.getElementById('advisor-why-modal-title');
+    const whyModalBody = document.getElementById('advisor-why-modal-body');
+    const whyModalFooter = document.getElementById('advisor-why-modal-footer');
 
     let history = [];
     let lastFilters = {};
     let lastSummary = '';
+    let lastRecommendations = [];
+    let loadingTimer = null;
+    let loadingStepIndex = 0;
+    let whyModalLastFocus = null;
 
     function csrfToken() {
         const meta = document.querySelector('meta[name="csrf-token"]');
@@ -506,25 +981,82 @@
         el.setAttribute('hidden', '');
     }
 
+    function setProgress(pct, stageIndex) {
+        const clamped = Math.max(0, Math.min(96, pct));
+        if (progressFill) progressFill.style.width = clamped + '%';
+        if (progressEl) progressEl.setAttribute('aria-valuenow', String(Math.round(clamped)));
+        stageEls.forEach(function (el, i) {
+            el.classList.remove('is-active', 'is-done');
+            if (i < stageIndex) el.classList.add('is-done');
+            else if (i === stageIndex) el.classList.add('is-active');
+        });
+    }
+
+    function setLoadingStep(index) {
+        if (!loadingStepEl) return;
+        const next = I18N.loadingSteps[index] || I18N.thinking;
+        loadingStepEl.classList.add('is-swap');
+        window.setTimeout(function () {
+            loadingStepEl.textContent = next;
+            loadingStepEl.classList.remove('is-swap');
+        }, 160);
+    }
+
+    function startLoadingProgress() {
+        stopLoadingProgress();
+        loadingStepIndex = 0;
+        setProgress(12, 0);
+        setLoadingStep(0);
+        const targets = [28, 52, 74, 90];
+        loadingTimer = window.setInterval(function () {
+            loadingStepIndex = Math.min(loadingStepIndex + 1, I18N.loadingSteps.length - 1);
+            setLoadingStep(loadingStepIndex);
+            setProgress(targets[loadingStepIndex] || 90, loadingStepIndex);
+            if (loadingStepIndex >= I18N.loadingSteps.length - 1) {
+                window.clearInterval(loadingTimer);
+                loadingTimer = null;
+            }
+        }, 1400);
+    }
+
+    function stopLoadingProgress() {
+        if (loadingTimer) {
+            window.clearInterval(loadingTimer);
+            loadingTimer = null;
+        }
+    }
+
     function setLoading(on) {
         submitBtn.disabled = on;
-        statusEl.classList.toggle('hidden', !on);
-        statusEl.textContent = on ? I18N.thinking : '';
+        statusEl.classList.add('hidden');
+        statusEl.textContent = '';
         if (on) {
             errorEl.classList.add('hidden');
             errorEl.textContent = '';
             hide(resultsEl);
             hide(refineEl);
-            show(loadingEl);
+            if (loadingEl) {
+                loadingEl.setAttribute('aria-busy', 'true');
+                show(loadingEl);
+                loadingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            startLoadingProgress();
         } else {
-            hide(loadingEl);
+            stopLoadingProgress();
+            if (loadingEl) {
+                loadingEl.setAttribute('aria-busy', 'false');
+                hide(loadingEl);
+            }
         }
     }
 
     function showError(msg) {
+        stopLoadingProgress();
         errorEl.textContent = msg || I18N.error;
         errorEl.classList.remove('hidden');
         hide(loadingEl);
+        if (loadingEl) loadingEl.setAttribute('aria-busy', 'false');
+        submitBtn.disabled = false;
     }
 
     function escapeHtml(str) {
@@ -542,6 +1074,12 @@
         } catch (e) {
             return String(km) + ' km';
         }
+    }
+
+    function truncateText(text, max) {
+        const value = String(text || '').trim();
+        if (value.length <= max) return value;
+        return value.slice(0, max - 1).trimEnd() + '…';
     }
 
     function renderUnderstood(labels) {
@@ -564,15 +1102,112 @@
         else hide(understoodEl);
     }
 
+    function hasWhyContent(rec) {
+        return !!(rec.explanation
+            || (rec.match_reasons && rec.match_reasons.length)
+            || (rec.tradeoffs && rec.tradeoffs.length)
+            || rec.ownership_outlook);
+    }
+
+    function closeWhyModal() {
+        if (!whyModal || whyModal.hasAttribute('hidden')) return;
+        whyModal.setAttribute('hidden', '');
+        whyModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (whyModalLastFocus && typeof whyModalLastFocus.focus === 'function') {
+            whyModalLastFocus.focus();
+        }
+        whyModalLastFocus = null;
+    }
+
+    function openWhyModal(index) {
+        const rec = lastRecommendations[index];
+        if (!rec || !whyModal || !whyModalBody || !whyModalFooter) return;
+
+        const pct = Math.max(0, Math.min(100, Number(rec.match_percent) || 0));
+        const img = rec.image_url
+            ? `<img src="${escapeHtml(rec.image_url)}" alt="">`
+            : `<div class="flex h-full items-center justify-center text-xs text-muted-foreground">Bilskyen</div>`;
+
+        const metaBits = [];
+        if (rec.price_formatted) metaBits.push(escapeHtml(rec.price_formatted));
+        if (rec.year) metaBits.push(escapeHtml(String(rec.year)));
+        if (rec.km_driven != null) metaBits.push(escapeHtml(formatKm(rec.km_driven)));
+        if (rec.fuel) metaBits.push(escapeHtml(rec.fuel));
+
+        const chips = [];
+        if (rec.ownership_tax_formatted) {
+            chips.push(`<span class="advisor-why-modal__chip">${escapeHtml(I18N.ownershipTax)}: ${escapeHtml(rec.ownership_tax_formatted)}</span>`);
+        }
+        if (rec.fair_price && rec.fair_price.label_text) {
+            chips.push(`<span class="advisor-why-modal__chip">${escapeHtml(I18N.fairPrice)}: ${escapeHtml(rec.fair_price.label_text)}</span>`);
+        }
+
+        const sections = [];
+        const hasExplanation = !!rec.explanation;
+        const hasReasons = !!(rec.match_reasons && rec.match_reasons.length);
+
+        if (hasExplanation || hasReasons) {
+            const reasonItems = hasReasons
+                ? `<ul${hasExplanation ? ' style="margin-top:0.65rem"' : ''}>${rec.match_reasons.map(function (r) {
+                    return `<li>${escapeHtml(r)}</li>`;
+                }).join('')}</ul>`
+                : '';
+            sections.push(`
+            <section class="advisor-why-modal__section">
+                <h3 class="advisor-why-modal__section-title">${escapeHtml(I18N.why)}</h3>
+                ${hasExplanation ? `<p>${escapeHtml(rec.explanation)}</p>` : ''}
+                ${reasonItems}
+            </section>`);
+        }
+        if (rec.tradeoffs && rec.tradeoffs.length) {
+            sections.push(`
+            <section class="advisor-why-modal__section advisor-why-modal__section--warn">
+                <h3 class="advisor-why-modal__section-title">${escapeHtml(I18N.tradeoffs)}</h3>
+                <ul>${rec.tradeoffs.map(function (t) { return `<li>${escapeHtml(t)}</li>`; }).join('')}</ul>
+            </section>`);
+        }
+        if (rec.ownership_outlook) {
+            sections.push(`
+            <section class="advisor-why-modal__section">
+                <h3 class="advisor-why-modal__section-title">${escapeHtml(I18N.ownership)}</h3>
+                <p>${escapeHtml(rec.ownership_outlook)}</p>
+            </section>`);
+        }
+
+        whyModalTitle.textContent = rec.title || I18N.whyToggle;
+        whyModalBody.innerHTML = `
+            <div class="advisor-why-modal__hero">
+                <div class="advisor-why-modal__photo">${img}</div>
+                <div class="min-w-0">
+                    ${index === 0 ? `<span class="advisor-best-badge">${escapeHtml(I18N.bestMatch)}</span>` : ''}
+                    <div class="advisor-why-modal__meta">${metaBits.join(' · ')}</div>
+                    ${chips.length ? `<div class="advisor-why-modal__chips">${chips.join('')}</div>` : ''}
+                </div>
+                <div class="advisor-why-modal__match">
+                    <div class="advisor-ring" style="--pct:${pct}">
+                        <span class="advisor-ring-value">${escapeHtml(String(rec.match_percent))}%</span>
+                    </div>
+                    <span class="advisor-ring-label">${escapeHtml(I18N.match)}</span>
+                </div>
+            </div>
+            ${sections.join('')}`;
+        whyModalFooter.innerHTML = `
+            <a href="${escapeHtml(rec.detail_url)}" class="advisor-btn-primary">${escapeHtml(I18N.viewListing)}</a>
+            <a href="${escapeHtml(rec.enquire_url)}" class="advisor-btn-ghost">${escapeHtml(I18N.enquire)}</a>
+        `;
+
+        whyModalLastFocus = document.activeElement;
+        whyModal.removeAttribute('hidden');
+        whyModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        const closeBtn = whyModal.querySelector('.advisor-why-modal__close');
+        if (closeBtn) closeBtn.focus();
+    }
+
     function renderCard(rec, index) {
         const isBest = index === 0;
         const pct = Math.max(0, Math.min(100, Number(rec.match_percent) || 0));
-        const reasons = (rec.match_reasons || []).map(function (r) {
-            return `<li>${escapeHtml(r)}</li>`;
-        }).join('');
-        const tradeoffs = (rec.tradeoffs || []).map(function (t) {
-            return `<li>${escapeHtml(t)}</li>`;
-        }).join('');
         const fair = rec.fair_price && rec.fair_price.label_text
             ? `<span>${escapeHtml(I18N.fairPrice)}: ${escapeHtml(rec.fair_price.label_text)}</span>`
             : '';
@@ -589,48 +1224,39 @@
         if (rec.km_driven != null) metaParts.push(`<span>${escapeHtml(formatKm(rec.km_driven))}</span>`);
         if (rec.fuel) metaParts.push(`<span>${escapeHtml(rec.fuel)}</span>`);
 
-        const detailBits = [];
-        if (rec.explanation) {
-            detailBits.push(`<p>${escapeHtml(rec.explanation)}</p>`);
-        }
-        if (reasons) {
-            detailBits.push(`<p class="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${escapeHtml(I18N.why)}</p><ul>${reasons}</ul>`);
-        }
-        if (tradeoffs) {
-            detailBits.push(`<p class="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${escapeHtml(I18N.tradeoffs)}</p><ul>${tradeoffs}</ul>`);
-        }
-        if (rec.ownership_outlook) {
-            detailBits.push(`<p class="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${escapeHtml(I18N.ownership)}</p><p class="mt-1 text-muted-foreground">${escapeHtml(rec.ownership_outlook)}</p>`);
-        }
+        const teaserSource = rec.explanation
+            || ((rec.match_reasons && rec.match_reasons[0]) ? rec.match_reasons[0] : '');
+        const teaser = teaserSource ? truncateText(teaserSource, 140) : '';
+        const delay = Math.min(index * 70, 280);
 
         return `
-        <article class="advisor-row${isBest ? ' is-best' : ''}">
-            <a href="${escapeHtml(rec.detail_url)}" class="advisor-row-photo">${img}</a>
+        <article class="advisor-row${isBest ? ' is-best' : ''}" style="animation-delay:${delay}ms">
+            <a href="${escapeHtml(rec.detail_url)}" class="advisor-row-photo">
+                <span class="advisor-rank">${escapeHtml(String(index + 1))}</span>
+                ${img}
+            </a>
             <div class="min-w-0">
                 ${isBest ? `<span class="advisor-best-badge">${escapeHtml(I18N.bestMatch)}</span>` : ''}
-                <h3 class="text-base font-semibold leading-snug text-foreground md:text-lg">
+                <h3 class="text-base font-semibold leading-snug text-foreground md:text-[1.05rem]">
                     <a href="${escapeHtml(rec.detail_url)}" class="hover:underline">${escapeHtml(rec.title)}</a>
                 </h3>
                 <div class="advisor-meta-line">${metaParts.join('')}</div>
                 ${(tax || fair) ? `<div class="advisor-meta-line">${tax}${fair}</div>` : ''}
+                ${teaser ? `<p class="advisor-teaser">${escapeHtml(teaser)}</p>` : ''}
                 <div class="advisor-actions">
                     <a href="${escapeHtml(rec.detail_url)}" class="advisor-btn-primary">${escapeHtml(I18N.viewListing)}</a>
                     <a href="${escapeHtml(rec.enquire_url)}" class="advisor-btn-ghost">${escapeHtml(I18N.enquire)}</a>
                 </div>
-                ${detailBits.length ? `
-                <details class="advisor-details">
-                    <summary>${escapeHtml(I18N.whyToggle)}</summary>
-                    <div class="advisor-details-body">${detailBits.join('')}</div>
-                </details>` : ''}
+                ${hasWhyContent(rec) ? `
+                <button type="button" class="advisor-why-btn" data-advisor-why="${index}">
+                    ${escapeHtml(I18N.whyToggle)}
+                </button>` : ''}
             </div>
             <div class="advisor-match">
-                <div>
-                    <div class="text-[0.65rem] uppercase tracking-wide text-muted-foreground">${escapeHtml(I18N.match)}</div>
-                    <div class="text-lg font-bold text-primary">${escapeHtml(String(rec.match_percent))}%</div>
+                <div class="advisor-ring" style="--pct:${pct}" aria-label="${escapeHtml(I18N.match)} ${escapeHtml(String(rec.match_percent))}%">
+                    <span class="advisor-ring-value">${escapeHtml(String(rec.match_percent))}%</span>
                 </div>
-                <div class="advisor-match-bar" aria-hidden="true">
-                    <div class="advisor-match-fill" style="width:${pct}%"></div>
-                </div>
+                <span class="advisor-ring-label">${escapeHtml(I18N.match)}</span>
             </div>
         </article>`;
     }
@@ -655,10 +1281,11 @@
         renderUnderstood(data.labels || []);
 
         const recs = data.recommendations || [];
+        lastRecommendations = recs;
         if (!recs.length) {
             cardsEl.innerHTML = renderEmpty();
         } else {
-            cardsEl.innerHTML = recs.map(renderCard).join('');
+            cardsEl.innerHTML = `<div class="advisor-list">${recs.map(renderCard).join('')}</div>`;
         }
         show(resultsEl);
         show(refineEl);
@@ -702,6 +1329,7 @@
             if (!asRefine) {
                 input.value = text;
             }
+            setProgress(100, 3);
             renderResults(data);
             resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (e) {
@@ -784,6 +1412,27 @@
             saveMsg.textContent = I18N.saveFail;
             saveMsg.classList.remove('hidden');
         }
+    });
+
+    if (cardsEl) {
+        cardsEl.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-advisor-why]');
+            if (!btn) return;
+            e.preventDefault();
+            openWhyModal(Number(btn.getAttribute('data-advisor-why')));
+        });
+    }
+
+    if (whyModal) {
+        whyModal.addEventListener('click', function (e) {
+            if (e.target.closest('[data-advisor-why-close]')) {
+                closeWhyModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeWhyModal();
     });
 
     const params = new URLSearchParams(window.location.search);

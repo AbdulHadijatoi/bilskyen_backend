@@ -45,6 +45,14 @@ class AdminIntegrationController extends Controller
         }
 
         if ($data['group'] === 'ai') {
+            $settings = $request->input('settings', []);
+            foreach (['openai_enabled', 'anthropic_enabled', 'gemini_enabled', 'deepseek_enabled', 'ollama_enabled'] as $boolKey) {
+                if (array_key_exists($boolKey, $settings)) {
+                    $settings[$boolKey] = filter_var($settings[$boolKey], FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+            $request->merge(['settings' => $settings]);
+
             $request->validate([
                 'settings.openai_enabled' => 'sometimes|boolean',
                 'settings.anthropic_enabled' => 'sometimes|boolean',
@@ -70,7 +78,7 @@ class AdminIntegrationController extends Controller
 
         $this->platformSettingService->setGroup(
             $data['group'],
-            $data['settings'],
+            $request->input('settings', []),
             $request->user()?->id
         );
 

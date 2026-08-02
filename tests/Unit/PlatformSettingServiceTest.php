@@ -81,4 +81,39 @@ class PlatformSettingServiceTest extends TestCase
         $this->assertFalse($service->isFaqPageEnabled());
         $this->assertTrue($service->isFaqChatbotEnabled());
     }
+
+    public function test_boolean_false_round_trips_as_false_not_null(): void
+    {
+        $service = app(PlatformSettingService::class);
+        Cache::flush();
+
+        $service->set('ai', 'openai_enabled', false);
+        $service->set('ai', 'deepseek_enabled', true);
+        Cache::flush();
+
+        $row = PlatformSetting::where('group', 'ai')->where('key', 'openai_enabled')->first();
+        $this->assertSame('false', $row->value);
+
+        $this->assertFalse($service->get('ai', 'openai_enabled'));
+        $this->assertTrue($service->get('ai', 'deepseek_enabled'));
+
+        $public = $service->getPublicGroup('ai');
+        $this->assertFalse($public['openai_enabled']);
+        $this->assertTrue($public['deepseek_enabled']);
+    }
+
+    public function test_empty_enabled_value_decodes_as_false(): void
+    {
+        PlatformSetting::create([
+            'group' => 'ai',
+            'key' => 'anthropic_enabled',
+            'value' => '',
+            'is_encrypted' => false,
+        ]);
+
+        $service = app(PlatformSettingService::class);
+        Cache::flush();
+
+        $this->assertFalse($service->get('ai', 'anthropic_enabled'));
+    }
 }
