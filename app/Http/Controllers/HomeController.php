@@ -421,6 +421,27 @@ class HomeController extends Controller
         ]);
     }
 
+    /**
+     * Find My Perfect Car — lifestyle advisor (grounded on live inventory).
+     */
+    public function showFindPerfectCar()
+    {
+        $locale = app()->getLocale();
+        $advisor = app(\App\Services\CarAdvisorService::class);
+
+        return view('find-perfect-car', [
+            'publicAiEnabled' => $this->aiService->isGloballyEnabled(),
+            'advisorExamples' => $advisor->examplePrompts($locale),
+            'seo' => [
+                'meta_title' => __('messages.pages.find_perfect_car.meta_title'),
+                'meta_description' => __('messages.pages.find_perfect_car.meta_description'),
+                'canonical_url' => url('/find-din-bil'),
+                'og_title' => __('messages.pages.find_perfect_car.meta_title'),
+                'og_description' => __('messages.pages.find_perfect_car.meta_description'),
+            ],
+        ]);
+    }
+
     /** Keys that can come from GET and populate the vehicles sidebar (from vehicle_listing_filters.txt) */
     private const VEHICLE_FILTER_KEYS = [
         'brand_id', 'model_id', 'fuel_type_id', 'category_id', 'listing_type_id',

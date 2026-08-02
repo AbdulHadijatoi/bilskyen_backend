@@ -26,6 +26,10 @@ class AiGenerationTask
 
     public const SEARCH_PARSE = 'search_parse';
 
+    public const CAR_ADVISOR_PROFILE = 'car_advisor_profile';
+
+    public const CAR_ADVISOR_EXPLAIN = 'car_advisor_explain';
+
     public static function values(): array
     {
         return [
@@ -40,6 +44,8 @@ class AiGenerationTask
             self::CMS_REWRITE,
             self::FAQ_CHAT,
             self::SEARCH_PARSE,
+            self::CAR_ADVISOR_PROFILE,
+            self::CAR_ADVISOR_EXPLAIN,
         ];
     }
 

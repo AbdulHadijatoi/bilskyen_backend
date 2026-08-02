@@ -78,6 +78,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/ai/search-parse', [\App\Http\Controllers\AiSearchController::class, 'parse'])
         ->middleware(['throttle:20,1', 'honeypot']);
 
+    Route::post('/ai/car-advisor', [\App\Http\Controllers\CarAdvisorController::class, 'advise'])
+        ->middleware(['throttle:10,1', 'honeypot']);
+
+    Route::get('/ai/car-advisor/examples', [\App\Http\Controllers\CarAdvisorController::class, 'examples'])
+        ->middleware(['throttle:public.reads']);
+
     Route::get('/search/suggest', [\App\Http\Controllers\AiSearchController::class, 'suggest'])
         ->middleware(['throttle:public.reads', 'abuse.detect']);
 

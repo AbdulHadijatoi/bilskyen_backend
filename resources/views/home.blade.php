@@ -695,6 +695,12 @@
                     @if(!empty($publicAiEnabled))
                     <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
                     <div id="home-ai-understood" class="ai-understood-banner hidden mt-3" aria-live="polite"></div>
+                    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <a href="{{ route('find-perfect-car') }}" class="inline-flex h-10 items-center justify-center rounded-md border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary hover:bg-primary/10">
+                            {{ __('messages.pages.home.find_perfect_car_cta') }}
+                        </a>
+                        <span class="text-xs text-muted-foreground">{{ __('messages.pages.home.find_perfect_car_hint') }}</span>
+                    </div>
                     @endif
                 </div>
 
@@ -894,6 +900,11 @@
                     <a href="{{ route('vehicles') }}" class="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         {{ __('messages.pages.home.browse_vehicles') }}
                     </a>
+                    @if(!empty($publicAiEnabled))
+                    <a href="{{ route('find-perfect-car') }}" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        {{ __('messages.pages.home.find_perfect_car_cta') }}
+                    </a>
+                    @endif
                     <a href="{{ route('contact') }}" class="inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                         {{ __('messages.pages.footer.contact_us') }}
                     </a>

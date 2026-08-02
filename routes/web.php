@@ -184,6 +184,7 @@ Route::get('/privatlivspolitik', [HomeController::class, 'showPrivacyPolicy'])->
 
 // FAQ / Help
 Route::get('/faq', [HomeController::class, 'showFaq'])->name('faq');
+Route::get('/find-din-bil', [HomeController::class, 'showFindPerfectCar'])->name('find-perfect-car');
 
 // Terms of Service Page
 Route::get('/vilkaar', [HomeController::class, 'showTermsOfService'])->name('terms-of-service');

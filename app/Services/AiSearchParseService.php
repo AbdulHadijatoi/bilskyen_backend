@@ -158,6 +158,17 @@ class AiSearchParseService
     }
 
     /**
+     * Resolve advisor / parse JSON fields into public listing filters (shared with car advisor).
+     *
+     * @param  array<string, mixed>  $parsed
+     * @return array{filters: array<string, mixed>, labels: list<array{key: string, label: string}>}
+     */
+    public function resolveAdvisorFilters(array $parsed, string $locale = 'da'): array
+    {
+        return $this->resolveToFilters($parsed, '', $locale);
+    }
+
+    /**
      * @param  array<string, mixed>  $parsed
      * @return array{filters: array<string, mixed>, labels: list<array{key: string, label: string}>}
      */

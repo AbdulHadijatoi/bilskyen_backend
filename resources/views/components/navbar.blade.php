@@ -7,6 +7,7 @@
                 </a>
                 <nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
                     <a href="{{ route('vehicles') }}" class="site-nav-link {{ request()->is('biler') || request()->is('biler/*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
+                    <a href="{{ route('find-perfect-car') }}" class="site-nav-link {{ request()->is('find-din-bil') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.find_perfect_car') }}</a>
                     <a href="{{ route('about') }}" class="site-nav-link {{ request()->is('om-os') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
                     <a href="{{ route('contact') }}" class="site-nav-link {{ request()->is('kontakt') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
                     @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)
@@ -65,6 +66,7 @@
                     </button>
                 </form>
                 <a href="{{ route('vehicles') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
+                <a href="{{ route('find-perfect-car') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.find_perfect_car') }}</a>
                 <a href="{{ route('about') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
                 <a href="{{ route('contact') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>
                 @if(isset($hasSellerRole) && $hasSellerRole && isset($sellerToken) && $sellerToken)

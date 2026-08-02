@@ -233,6 +233,36 @@ class AiService
     }
 
     /**
+     * Public car advisor — extract lifestyle profile + candidate filters from free text.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateCarAdvisorProfile(array $context, string $locale = 'da'): array
+    {
+        return $this->generateForPublic(
+            task: AiGenerationTask::CAR_ADVISOR_PROFILE,
+            context: $context,
+            locale: $locale,
+            contextType: 'car_advisor_profile',
+        );
+    }
+
+    /**
+     * Public car advisor — grounded explanations for ranked inventory matches.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function generateCarAdvisorExplain(array $context, string $locale = 'da'): array
+    {
+        return $this->generateForPublic(
+            task: AiGenerationTask::CAR_ADVISOR_EXPLAIN,
+            context: $context,
+            locale: $locale,
+            contextType: 'car_advisor_explain',
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $context
      */
     private function runGeneration(

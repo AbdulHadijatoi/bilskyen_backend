@@ -19,6 +19,14 @@ class AiConstantsTest extends TestCase
         $this->assertTrue(AiGenerationTask::isValid('search_parse'));
     }
 
+    public function test_ai_generation_tasks_include_car_advisor(): void
+    {
+        $this->assertContains(AiGenerationTask::CAR_ADVISOR_PROFILE, AiGenerationTask::values());
+        $this->assertContains(AiGenerationTask::CAR_ADVISOR_EXPLAIN, AiGenerationTask::values());
+        $this->assertTrue(AiGenerationTask::isValid('car_advisor_profile'));
+        $this->assertTrue(AiGenerationTask::isValid('car_advisor_explain'));
+    }
+
     public function test_ai_config_defaults(): void
     {
         $this->assertNotEmpty(config('ai.providers.openai.default_model'));
