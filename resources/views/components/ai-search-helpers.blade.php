@@ -158,14 +158,18 @@ window.BilskyenAiSearch = (function () {
         label.className = 'ai-search-examples-label';
         label.textContent = I18N.examplesLabel;
         container.appendChild(label);
-        EXAMPLES.forEach(function (ex) {
+        EXAMPLES.forEach(function (ex, index) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'ai-search-example-chip';
+            btn.className = 'ai-search-example-chip' + (index === 0 ? ' is-active' : '');
             btn.textContent = ex;
             btn.addEventListener('click', function () {
-                const input = container.closest('form, section, .home-filter-card, #search-bar-container, .navbar-ai-search')
-                    ?.querySelector('input[type="search"], input[name="search"], #home-search-input, #search-input, #navbar-search-input');
+                container.querySelectorAll('.ai-search-example-chip').forEach(function (chip) {
+                    chip.classList.remove('is-active');
+                });
+                btn.classList.add('is-active');
+                const root = container.closest('form, section, .home-filter-card, #search-bar-container, .navbar-ai-search');
+                const input = root?.querySelector('input[type="search"], input[name="search"], #home-search-input, #search-input, #navbar-search-input');
                 if (input) {
                     input.value = ex;
                     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -340,15 +344,15 @@ window.BilskyenAiSearch = (function () {
 }
 .ai-search-examples-label {
     font-size: 0.75rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin-right: 0.15rem;
 }
 .ai-search-example-chip {
     display: inline-flex;
     align-items: center;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--foreground);
     border-radius: 9999px;
     padding: 0.25rem 0.7rem;
     font-size: 0.75rem;
@@ -357,8 +361,8 @@ window.BilskyenAiSearch = (function () {
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 .ai-search-example-chip:hover {
-    background: hsl(var(--muted));
-    border-color: hsl(var(--primary) / 0.35);
+    background: var(--muted);
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
 }
 .ai-suggest-dropdown {
     position: absolute;
@@ -369,8 +373,8 @@ window.BilskyenAiSearch = (function () {
     max-height: 16rem;
     overflow-y: auto;
     border-radius: 0.75rem;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--card));
+    border: 1px solid var(--border);
+    background: #ffffff;
     box-shadow: 0 10px 30px rgba(0,0,0,.12);
     padding: 0.35rem 0;
 }
@@ -381,7 +385,7 @@ window.BilskyenAiSearch = (function () {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
 }
 .ai-suggest-item {
     display: block;
@@ -391,15 +395,15 @@ window.BilskyenAiSearch = (function () {
     background: transparent;
     padding: 0.45rem 0.85rem;
     font-size: 0.875rem;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     cursor: pointer;
 }
-.ai-suggest-item:hover { background: hsl(var(--muted)); }
+.ai-suggest-item:hover { background: var(--muted); }
 .ai-understood-banner {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     border-radius: 0.75rem;
-    border: 1px solid hsl(var(--primary) / 0.25);
-    background: hsl(var(--primary) / 0.06);
+    border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+    background: color-mix(in oklch, var(--primary) 6%, #fff);
     padding: 0.85rem 1rem;
 }
 .ai-understood-banner.hidden { display: none; }
@@ -407,7 +411,7 @@ window.BilskyenAiSearch = (function () {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     margin-bottom: 0.45rem;
 }
 .ai-understood-chips {
@@ -419,8 +423,8 @@ window.BilskyenAiSearch = (function () {
     display: inline-flex;
     align-items: center;
     border-radius: 9999px;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
+    background: var(--background);
+    border: 1px solid var(--border);
     padding: 0.2rem 0.65rem;
     font-size: 0.75rem;
 }
@@ -428,5 +432,11 @@ window.BilskyenAiSearch = (function () {
 .navbar-ai-search-btn.is-loading {
     opacity: 0.75;
     pointer-events: none;
+}
+.ai-search-example-chip.is-active {
+    background: var(--primary-light, #e8f0fa);
+    border-color: var(--primary, #03418b);
+    color: var(--primary, #03418b);
+    font-weight: 600;
 }
 </style>

@@ -182,186 +182,240 @@
         }
     }
 
-    /* Home filter form */
+    /* Home filter form — redesign (compact, site fonts) */
+    .home-search-section {
+        background: #f3f4f6;
+    }
+
     .home-filter-card {
-        border-radius: 1.25rem;
+        --hf-paper: #f0f1f3;
+        --hf-panel: #ffffff;
+        --hf-ink: var(--foreground, #0f172a);
+        --hf-ink-soft: var(--muted-foreground, #64748b);
+        --hf-slate: var(--muted-foreground, #64748b);
+        --hf-line: var(--border, #e2e8f0);
+        --hf-route: var(--primary, #03418b);
+        --hf-route-soft: var(--primary-light, #e8f0fa);
+        --hf-accent: var(--primary, #03418b);
+        --hf-accent-soft: var(--primary-light, #e8f0fa);
+        --hf-success: var(--success, #059669);
+
+        background: var(--hf-panel);
+        border: 1px solid var(--hf-line);
+        border-radius: 1rem;
+        padding: 1.25rem 1.125rem 1rem;
+        box-shadow: var(--shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04));
+        color: var(--hf-ink);
+    }
+
+    @media (min-width: 768px) {
+        .home-filter-card {
+            padding: 1.5rem 1.75rem 1.25rem;
+        }
     }
 
     .home-filter-intro {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1rem;
     }
 
     @media (min-width: 768px) {
         .home-filter-intro {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.125rem;
         }
+    }
+
+    .home-filter-intro h1 {
+        font-weight: 700;
+        font-size: 1.5rem;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        color: var(--hf-ink);
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .home-filter-intro h1 {
+            font-size: 1.75rem;
+        }
+    }
+
+    .home-filter-intro-sub {
+        margin: 0.375rem 0 0;
+        max-width: 36rem;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        color: var(--hf-ink-soft);
     }
 
     .home-filter-field {
         display: flex;
         flex-direction: column;
-    }
-
-    .home-filter-pill {
-        border-radius: 9999px;
-    }
-
-    .home-filter-pill-btn {
-        display: inline-flex;
-        height: 2.5rem;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 9999px;
-        border: 0;
-        background-color: #f0f1f3;
-        padding: 0 1.25rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--foreground, #111);
-        cursor: pointer;
-        transition: background-color 0.15s ease;
-    }
-
-    .home-filter-pill-btn:hover:not(:disabled) {
-        background-color: #e4e6ea;
-    }
-
-    .home-filter-pill-btn:focus-visible {
-        outline: none;
-        background-color: #e4e6ea;
-    }
-
-    .home-filter-pill-btn.is-open {
-        background-color: #dcdee3;
-    }
-
-    .home-filter-pill-btn:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-        background-color: #eceef1;
-        color: var(--muted-foreground, #6b7280);
-    }
-
-    .home-filter-search-input {
-        height: 2.5rem;
-        width: 100%;
-        border-radius: 9999px;
-        border: 0;
-        background-color: #f0f1f3;
-        padding: 0 1.25rem 0 2.75rem;
-        font-size: 0.9375rem;
-        color: var(--foreground, #111);
-        outline: none;
-        transition: background-color 0.15s ease;
-    }
-
-    .home-filter-search-input::placeholder {
-        color: var(--muted-foreground, #6b7280);
-    }
-
-    .home-filter-search-input:hover {
-        background-color: #e4e6ea;
-    }
-
-    .home-filter-search-input:focus {
-        background-color: #dcdee3;
-    }
-
-    .home-filter-cta {
-        display: inline-flex;
-        min-height: 2.5rem;
-        width: auto;
-        align-items: center;
-        justify-content: center;
-        border-radius: 9999px;
-        border: 0;
-        background-color: var(--primary, #004aad);
-        padding: 0.5rem 1.125rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--primary-foreground, #fff);
-        white-space: nowrap;
-        flex-shrink: 0;
-        transition: background-color 0.15s ease;
-    }
-
-    .home-filter-cta:hover {
-        background-color: color-mix(in oklch, var(--primary, #004aad) 88%, #000);
-    }
-
-    .home-filter-footer {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem 1rem;
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-        border-top: 1px solid #eceef1;
-    }
-
-    .home-filter-footer-actions {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem 1rem;
-        margin-left: auto;
-    }
-
-    .home-filter-top {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    @media (min-width: 1024px) {
-        .home-filter-top {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-        }
-    }
-
-    .home-filter-brand-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.625rem;
-        flex-shrink: 0;
-    }
-
-    .home-filter-brand {
-        font-size: 1.25rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--foreground, #111);
-    }
-
-    .home-filter-tag {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 9999px;
-        background-color: color-mix(in oklch, var(--primary, #004aad) 12%, #fff);
-        padding: 0.25rem 0.625rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: var(--primary, #004aad);
+        min-width: 0;
     }
 
     .home-filter-search-row {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        align-items: stretch;
         gap: 0.5rem;
         width: 100%;
     }
 
-    @media (min-width: 1024px) {
+    @media (min-width: 640px) {
         .home-filter-search-row {
-            max-width: 28rem;
-            margin-left: auto;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5rem;
         }
+    }
+
+    .home-filter-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        background: var(--hf-paper);
+        border: 1px solid var(--hf-line);
+        border-radius: 0.625rem;
+        padding: 0 0.875rem;
+        height: 2.75rem;
+        transition: border-color 0.15s ease;
+    }
+
+    .home-filter-search-wrap:focus-within {
+        border-color: var(--hf-route);
+    }
+
+    .home-filter-search-wrap > svg {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        color: var(--hf-slate);
+    }
+
+    .home-filter-search-input {
+        height: 100%;
+        width: 100%;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        padding: 0;
+        font-size: 0.875rem;
+        color: var(--hf-ink);
+        outline: none;
+    }
+
+    .home-filter-search-input::placeholder {
+        color: var(--hf-slate);
+    }
+
+    .home-filter-search-input:hover,
+    .home-filter-search-input:focus {
+        background: transparent;
+    }
+
+    .home-filter-cta {
+        display: inline-flex;
+        height: 2.75rem;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.625rem;
+        border: 0;
+        background-color: var(--hf-route);
+        padding: 0 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.15s ease;
+        cursor: pointer;
+    }
+
+    @media (min-width: 640px) {
+        .home-filter-cta {
+            width: auto;
+        }
+    }
+
+    .home-filter-cta:hover {
+        background-color: var(--primary-hover, #022a5c);
+    }
+
+    .home-filter-submit-cta {
+        height: 2.5rem;
+        min-height: 0;
+        border-radius: 0.5rem;
+        padding: 0 1.25rem;
+        font-size: 0.875rem;
+    }
+
+    .home-filter-search-hint {
+        margin: 0.5rem 0 0;
+        padding-left: 0.125rem;
+        font-size: 0.75rem;
+        color: var(--hf-slate);
+    }
+
+    .home-filter-suggestion-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.875rem;
+        margin-bottom: 0;
+    }
+
+    .home-filter-card .ai-search-examples {
+        display: contents;
+        margin-top: 0;
+        gap: 0.4rem;
+    }
+
+    .home-filter-card .ai-search-examples-label {
+        display: none;
+    }
+
+    .home-filter-card .ai-search-example-chip {
+        font-size: 0.75rem;
+        color: var(--hf-ink-soft);
+        background: var(--hf-paper);
+        border: 1px solid var(--hf-line);
+        border-radius: 9999px;
+        padding: 0.3rem 0.75rem;
+    }
+
+    .home-filter-card .ai-search-example-chip:hover {
+        border-color: var(--hf-route);
+        color: var(--hf-route);
+        background: var(--hf-paper);
+    }
+
+    .home-filter-card .ai-search-example-chip.is-active {
+        background: var(--hf-route-soft);
+        border-color: var(--hf-route);
+        color: var(--hf-route);
+        font-weight: 600;
+    }
+
+    .home-filter-card .ai-search-example-chip.lifestyle {
+        background: var(--hf-accent-soft);
+        border-color: color-mix(in oklch, var(--hf-route) 28%, #fff);
+        color: var(--hf-route);
+        text-decoration: none;
+    }
+
+    .home-filter-card .ai-search-example-chip.lifestyle:hover {
+        border-color: var(--hf-accent);
+        color: var(--hf-accent);
+        background: var(--hf-accent-soft);
+    }
+
+    .home-filter-ai-understood {
+        margin-top: 0.75rem;
     }
 
     .home-filter-toolbar {
@@ -369,42 +423,96 @@
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem 1rem;
-        margin-top: 1.25rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #eceef1;
+        gap: 0.5rem 1rem;
+        margin-top: 1.125rem;
+        padding-bottom: 0;
+        border-bottom: 1px solid var(--hf-line);
     }
 
     .home-filter-tabs {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 1.25rem;
+        gap: 1.125rem;
+    }
+
+    .home-filter-toolbar-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .home-filter-showing {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--hf-ink-soft);
+        white-space: nowrap;
+    }
+
+    .home-filter-showing b,
+    .home-filter-showing #home-results-badge {
+        color: var(--hf-ink);
+        font-weight: 700;
+    }
+
+    .home-filter-showing-dot {
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 9999px;
+        background: var(--hf-success);
+        flex-shrink: 0;
     }
 
     .home-filter-hide-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: 0.3rem;
         border: 0;
         background: transparent;
         padding: 0;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--muted-foreground, #6b7280);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--hf-ink-soft);
         cursor: pointer;
         transition: color 0.15s ease;
     }
 
     .home-filter-hide-btn:hover {
-        color: var(--foreground, #111);
+        color: var(--hf-ink);
+    }
+
+    .home-filter-tab {
+        border: 0;
+        background: transparent;
+        padding: 0 0 0.625rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--hf-slate);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .home-filter-tab:hover {
+        color: var(--hf-ink);
+    }
+
+    .home-filter-tab.active {
+        color: var(--hf-ink);
+        font-weight: 600;
+        border-bottom-color: var(--hf-route);
     }
 
     .home-filter-chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.875rem;
+        gap: 0.375rem;
+        margin-top: 0.75rem;
         min-height: 0;
     }
 
@@ -415,27 +523,28 @@
     .home-filter-chip {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        border: 0;
+        gap: 0.3rem;
+        border: 1px solid var(--hf-line);
         border-radius: 9999px;
-        background-color: #f0f1f3;
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8125rem;
+        background-color: var(--hf-paper);
+        padding: 0.25rem 0.625rem;
+        font-size: 0.75rem;
         font-weight: 500;
-        color: var(--foreground, #111);
+        color: var(--hf-ink);
         cursor: pointer;
-        transition: background-color 0.15s ease;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
     }
 
     .home-filter-chip:hover {
-        background-color: #e4e6ea;
+        background-color: var(--hf-route-soft);
+        border-color: var(--hf-route);
     }
 
     .home-filter-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1.25rem 1.5rem;
-        margin-top: 1.25rem;
+        gap: 1rem 1.25rem;
+        margin-top: 1.125rem;
     }
 
     @media (min-width: 768px) {
@@ -444,55 +553,85 @@
         }
     }
 
-    .home-filter-results-badge {
+    .home-filter-pill-btn {
         display: inline-flex;
+        height: 2.5rem;
+        width: 100%;
         align-items: center;
-        border-radius: 9999px;
-        background-color: color-mix(in oklch, var(--primary, #004aad) 12%, #fff);
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--primary, #004aad);
-        white-space: nowrap;
-    }
-
-    .home-filter-tab {
-        border: 0;
-        background: transparent;
-        padding: 0.25rem 0;
-        font-size: 0.9375rem;
-        font-weight: 500;
-        color: var(--muted-foreground, #6b7280);
+        justify-content: space-between;
+        border-radius: 0.5rem;
+        border: 1px solid var(--hf-line);
+        background-color: var(--hf-paper);
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: var(--hf-ink);
         cursor: pointer;
-        border-bottom: 2px solid transparent;
-        transition: color 0.15s ease, border-color 0.15s ease;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
-    .home-filter-tab:hover {
-        color: var(--foreground, #111);
+    .home-filter-pill-btn:hover:not(:disabled) {
+        border-color: var(--hf-route);
+        background-color: var(--hf-paper);
     }
 
-    .home-filter-tab.active {
-        color: var(--primary, #004aad);
-        font-weight: 700;
-        border-bottom-color: var(--primary, #004aad);
+    .home-filter-pill-btn:focus-visible {
+        outline: none;
+        border-color: var(--hf-route);
+    }
+
+    .home-filter-pill-btn.is-open {
+        border-color: var(--hf-route);
+        background-color: #fff;
+    }
+
+    .home-filter-pill-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        background-color: var(--hf-paper);
+        color: var(--hf-slate);
     }
 
     .home-filter-field-label {
         display: block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
         font-size: 0.6875rem;
         font-weight: 600;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: #6b7280;
+        color: var(--hf-slate);
+    }
+
+    .home-filter-field[data-filter-range] .home-filter-field-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.75rem;
+        color: var(--hf-ink);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .home-filter-field[data-filter-range] .home-filter-field-label-text {
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .home-filter-range-value {
+        color: var(--hf-route);
+        font-weight: 500;
+        white-space: nowrap;
+        font-size: 0.75rem;
     }
 
     .home-filter-range-box {
         border: 0;
         border-radius: 0;
         background-color: transparent;
-        padding: 0.25rem 0 0;
+        padding: 0;
     }
 
     .home-filter-dropdown-menu {
@@ -503,10 +642,10 @@
         top: calc(100% + 0.25rem);
         z-index: 60;
         width: 100%;
-        border: 0;
-        border-radius: 0.75rem;
+        border: 1px solid var(--hf-line);
+        border-radius: 0.625rem;
         background-color: #fff;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        box-shadow: 0 8px 24px rgba(19, 35, 63, 0.12);
         max-height: 300px;
         overflow: hidden;
     }
@@ -517,41 +656,79 @@
 
     .home-filter-dropdown-menu .dropdown-search {
         border: 0;
-        background-color: #f0f1f3;
+        background-color: var(--hf-paper);
         border-radius: 0.5rem;
     }
 
     .home-filter-dropdown-menu .dropdown-search:focus {
-        background-color: #e4e6ea;
+        background-color: #fff;
         outline: none;
     }
 
     .home-filter-dropdown-menu .dropdown-option:hover {
-        background-color: #f0f1f3;
+        background-color: var(--hf-paper);
+    }
+
+    .home-filter-range-track-wrap {
+        position: relative;
+        padding: 0.875rem 0.125rem 0.375rem;
+    }
+
+    .home-filter-range-rail {
+        position: relative;
+        height: 3px;
+        margin: 0;
+        border-radius: 3px;
+        background-color: var(--hf-line);
+    }
+
+    .home-filter-range-fill {
+        position: absolute;
+        height: 3px;
+        border-radius: 3px;
+        background-color: var(--hf-route);
+    }
+
+    .home-filter-range-input {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 1.5rem;
+        margin: 0;
+        transform: translateY(-50%);
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .home-filter-range-input-max {
+        z-index: 20;
     }
 
     .home-filter-range-handle {
         position: absolute;
-        top: -0.625rem;
-        width: 1.5rem;
-        height: 1.5rem;
+        top: 50%;
+        width: 0.875rem;
+        height: 0.875rem;
         border-radius: 9999px;
-        border: 2px solid #fff;
-        background-color: #4b5563;
-        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15);
+        border: 2px solid var(--hf-route);
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(19, 35, 63, 0.2);
         cursor: pointer;
         z-index: 30;
+        transform: translate(-50%, -50%);
     }
 
     .home-filter-range-tooltip {
         position: absolute;
-        bottom: calc(100% + 0.5rem);
+        bottom: calc(100% + 0.375rem);
         left: 50%;
         transform: translateX(-50%);
         border-radius: 0.375rem;
-        background-color: #111827;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+        background-color: var(--hf-ink);
+        padding: 0.2rem 0.4rem;
+        font-size: 0.6875rem;
         font-weight: 600;
         line-height: 1.2;
         color: #fff;
@@ -567,41 +744,48 @@
         visibility: visible;
     }
 
-    .home-filter-range-track-wrap {
-        position: relative;
-        padding: 1.75rem 0.25rem 0;
+    .home-filter-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.625rem 1rem;
+        margin-top: 1.125rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--hf-line);
     }
 
-    .home-filter-range-rail {
-        position: relative;
-        height: 2px;
-        margin: 0;
-        border-radius: 9999px;
-        background-color: #d1d5db;
-    }
-
-    .home-filter-range-input {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        width: 100%;
-        height: 1.75rem;
-        margin: 0;
-        transform: translateY(-50%);
-        opacity: 0;
+    .home-filter-footer-reset {
+        font-size: 0.8125rem;
+        color: var(--hf-slate);
+        text-decoration: underline;
+        background: transparent;
+        border: 0;
+        padding: 0;
         cursor: pointer;
-        z-index: 10;
     }
 
-    .home-filter-range-fill {
-        position: absolute;
-        height: 2px;
-        border-radius: 9999px;
-        background-color: #6b7280;
+    .home-filter-footer-reset:hover {
+        color: var(--hf-ink);
     }
 
-    .home-filter-range-input-max {
-        z-index: 20;
+    .home-filter-footer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+        margin-left: auto;
+    }
+
+    .home-filter-advanced-link {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--hf-route);
+        text-decoration: none;
+    }
+
+    .home-filter-advanced-link:hover {
+        text-decoration: underline;
     }
 
     #home-filters-panel.is-collapsed {
@@ -646,63 +830,67 @@
 @endphp
 <div class="flex min-h-screen flex-col pt-0">
     <!-- Search Section -->
-    <section class="relative bg-gray-100 py-8 md:py-12">
+    <section class="home-search-section relative py-6 md:py-8">
         <div class="container mx-auto px-4 md:px-6">
-            <div class="home-filter-card rounded-2xl bg-card p-5 md:p-8 shadow-lg">
+            <div class="home-filter-card">
                 <div class="home-filter-intro">
-                    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    <h1>
                         {{ $homePageContent['search_title'] ?? __('messages.pages.home.title') }}
                     </h1>
                     @if(filled($searchDescription))
-                        <p class="mt-2 text-sm text-muted-foreground md:mt-2.5 md:text-base">
+                        <p class="home-filter-intro-sub">
                             {{ $searchDescription }}
                         </p>
                     @endif
                 </div>
 
                 <form method="GET" action="{{ route('vehicles') }}" id="filter-form">
-                <div class="home-filter-top">
-                    <div class="home-filter-brand-row">
-                        <span class="home-filter-brand">Bilskyen</span>
-                        <span class="home-filter-tag">{{ __('messages.pages.home.tagline') }}</span>
-                    </div>
-                    <div class="home-filter-search-row">
-                        <div class="home-filter-field relative min-w-0 flex-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.3-4.3"></path>
-                            </svg>
-                            <input
-                                type="search"
-                                id="home-search-input"
-                                name="search"
-                                class="home-filter-search-input"
-                                placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.pages.home.search_placeholder') }}"
-                                autocomplete="off"
-                                @if(!empty($publicAiEnabled))
-                                aria-autocomplete="list"
-                                aria-controls="home-ai-suggest"
-                                @endif
-                            >
+                <div class="home-filter-search-row">
+                    <div class="home-filter-search-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                        <input
+                            type="search"
+                            id="home-search-input"
+                            name="search"
+                            class="home-filter-search-input"
+                            placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.pages.home.search_placeholder') }}"
+                            autocomplete="off"
                             @if(!empty($publicAiEnabled))
-                            <div id="home-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                            aria-autocomplete="list"
+                            aria-controls="home-ai-suggest"
                             @endif
-                        </div>
-                        <button type="submit" id="home-search-submit" class="home-filter-cta">
-                            {{ __('messages.common.search') }}
-                        </button>
+                        >
+                        @if(!empty($publicAiEnabled))
+                        <div id="home-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
+                        @endif
                     </div>
+                    <button type="submit" id="home-search-submit" class="home-filter-cta">
+                        {{ __('messages.common.search') }}
+                    </button>
+                </div>
+
+                @if(!empty($publicAiEnabled))
+                <p class="home-filter-search-hint">{{ __('messages.pages.home.search_hint_ai') }}</p>
+                @endif
+
+                <div class="home-filter-suggestion-row">
                     @if(!empty($publicAiEnabled))
                     <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
-                    <div id="home-ai-understood" class="ai-understood-banner hidden mt-3" aria-live="polite"></div>
-                    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <a href="{{ route('find-perfect-car') }}" class="inline-flex h-10 items-center justify-center rounded-md border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary hover:bg-primary/10">
-                            {{ __('messages.pages.home.find_perfect_car_cta') }}
-                        </a>
-                        <span class="text-xs text-muted-foreground">{{ __('messages.pages.home.find_perfect_car_hint') }}</span>
-                    </div>
                     @endif
+                    <a href="{{ route('find-perfect-car') }}" class="ai-search-example-chip lifestyle">
+                        ✦ {{ __('messages.pages.home.lifestyle_chip_family') }}
+                    </a>
+                    <a href="{{ route('find-perfect-car') }}" class="ai-search-example-chip lifestyle">
+                        ✦ {{ __('messages.pages.home.lifestyle_chip_first_car') }}
+                    </a>
                 </div>
+
+                @if(!empty($publicAiEnabled))
+                <div id="home-ai-understood" class="ai-understood-banner home-filter-ai-understood hidden" aria-live="polite"></div>
+                @endif
 
                 <div class="home-filter-toolbar">
                     <div class="home-filter-tabs">
@@ -715,26 +903,24 @@
                             </button>
                         @endforeach
                     </div>
-                    <button
-                        type="button"
-                        id="toggle-filters-button"
-                        class="home-filter-hide-btn"
-                        data-hide-label="{{ __('messages.pages.home.hide_filters') }}"
-                        data-show-label="{{ __('messages.pages.home.show_filters') }}"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="4" x2="4" y1="21" y2="14"></line>
-                            <line x1="4" x2="4" y1="10" y2="3"></line>
-                            <line x1="12" x2="12" y1="21" y2="12"></line>
-                            <line x1="12" x2="12" y1="8" y2="3"></line>
-                            <line x1="20" x2="20" y1="21" y2="16"></line>
-                            <line x1="20" x2="20" y1="12" y2="3"></line>
-                            <line x1="2" x2="6" y1="14" y2="14"></line>
-                            <line x1="10" x2="14" y1="8" y2="8"></line>
-                            <line x1="18" x2="22" y1="16" y2="16"></line>
-                        </svg>
-                        <span class="home-filter-hide-btn-label">{{ __('messages.pages.home.hide_filters') }}</span>
-                    </button>
+                    <div class="home-filter-toolbar-meta">
+                        <div class="home-filter-showing" aria-live="polite">
+                            <span class="home-filter-showing-dot" aria-hidden="true"></span>
+                            <span>{!! __('messages.pages.home.showing_cars', ['count' => '<b id="home-results-badge">' . e($vehicleCountFormatted) . '</b>']) !!}</span>
+                        </div>
+                        <button
+                            type="button"
+                            id="toggle-filters-button"
+                            class="home-filter-hide-btn"
+                            data-hide-label="{{ __('messages.pages.home.hide_filters') }}"
+                            data-show-label="{{ __('messages.pages.home.show_filters') }}"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                            <span class="home-filter-hide-btn-label">{{ __('messages.pages.home.hide_filters') }}</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="home-listing-type-inputs" data-name="listing_type_id[]"></div>
 
@@ -806,7 +992,10 @@
                         </div>
 
                         <div class="home-filter-field" data-filter-range="price">
-                            <label class="home-filter-field-label">{{ __('messages.forms.price') }}</label>
+                            <label class="home-filter-field-label">
+                                <span class="home-filter-field-label-text">{{ __('messages.forms.price') }}</span>
+                                <span class="home-filter-range-value" id="price-range-label"></span>
+                            </label>
                             <input type="hidden" id="price-from-dropdown" name="price_from" value="">
                             <input type="hidden" id="price-to-dropdown" name="price_to" value="">
                             <div class="home-filter-range-box">
@@ -827,7 +1016,10 @@
                         </div>
 
                         <div class="home-filter-field" data-filter-range="km_driven">
-                            <label class="home-filter-field-label">{{ __('messages.forms.km_driven') }}</label>
+                            <label class="home-filter-field-label">
+                                <span class="home-filter-field-label-text">{{ __('messages.forms.km_driven') }}</span>
+                                <span class="home-filter-range-value" id="km-driven-range-label"></span>
+                            </label>
                             <input type="hidden" id="km-driven-from" name="km_driven_from" value="">
                             <input type="hidden" id="km-driven-to" name="km_driven_to" value="">
                             <div class="home-filter-range-box">
@@ -848,7 +1040,10 @@
                         </div>
 
                         <div class="home-filter-field" data-filter-range="model_year">
-                            <label class="home-filter-field-label">{{ __('messages.forms.model_year') }}</label>
+                            <label class="home-filter-field-label">
+                                <span class="home-filter-field-label-text">{{ __('messages.forms.model_year') }}</span>
+                                <span class="home-filter-range-value" id="model-year-range-label"></span>
+                            </label>
                             <input type="hidden" id="model-year-from" value="">
                             <input type="hidden" id="model-year-to" value="">
                             <div class="home-filter-range-box">
@@ -870,15 +1065,15 @@
                     </div>
 
                     <div class="home-filter-footer">
-                        <button type="button" id="reset-filters-button" class="text-sm text-muted-foreground hover:text-foreground transition-colors underline bg-transparent border-0 p-0 cursor-pointer">
+                        <button type="button" id="reset-filters-button" class="home-filter-footer-reset">
                             {{ __('messages.pages.vehicles.reset_filters') }}
                         </button>
                         <div class="home-filter-footer-actions">
-                            <a href="{{ route('vehicles') }}" class="text-sm font-medium text-primary hover:underline">
+                            <a href="{{ route('vehicles') }}" class="home-filter-advanced-link">
                                 {{ __('messages.pages.vehicles.advanced_filters') }}
                             </a>
 
-                            <button type="submit" id="home-show-results-btn" class="home-filter-cta">
+                            <button type="submit" id="home-show-results-btn" class="home-filter-cta home-filter-submit-cta">
                                 {{ __('messages.pages.home.see_results', ['count' => $vehicleCountFormatted]) }}
                             </button>
                         </div>
@@ -2142,9 +2337,11 @@
             minHandle: document.getElementById('price-handle-min-dropdown'),
             maxHandle: document.getElementById('price-handle-max-dropdown'),
             track: document.getElementById('price-range-track-dropdown'),
+            valueLabel: document.getElementById('price-range-label'),
             min: 0,
             max: HOME_PRICE_MAX,
             formatValue: formatPriceHandleValue,
+            formatRange: formatPriceRangeChip,
         };
         
         const kmDrivenConfig = {
@@ -2155,9 +2352,11 @@
             minHandle: document.getElementById('km-driven-handle-min'),
             maxHandle: document.getElementById('km-driven-handle-max'),
             track: document.getElementById('km-driven-range-track'),
+            valueLabel: document.getElementById('km-driven-range-label'),
             min: 0,
             max: HOME_KM_MAX,
             formatValue: formatKmHandleValue,
+            formatRange: formatKmRangeChip,
         };
 
         const yearConfig = {
@@ -2168,9 +2367,11 @@
             minHandle: document.getElementById('model-year-handle-min'),
             maxHandle: document.getElementById('model-year-handle-max'),
             track: document.getElementById('model-year-range-track'),
+            valueLabel: document.getElementById('model-year-range-label'),
             min: HOME_YEAR_MIN,
             max: HOME_YEAR_MAX,
             formatValue: formatYearHandleValue,
+            formatRange: formatYearRangeChip,
         };
 
         function setActiveRangeHandle(config, isMin) {
@@ -2221,11 +2422,21 @@
                 const minPercent = ((finalMin - config.min) / (config.max - config.min)) * 100;
                 const maxPercent = ((finalMax - config.min) / (config.max - config.min)) * 100;
                 
-                if (config.minHandle) config.minHandle.style.left = `calc(${minPercent}% - 12px)`;
-                if (config.maxHandle) config.maxHandle.style.left = `calc(${maxPercent}% - 12px)`;
+                if (config.minHandle) config.minHandle.style.left = `${minPercent}%`;
+                if (config.maxHandle) config.maxHandle.style.left = `${maxPercent}%`;
                 if (config.track) {
                     config.track.style.left = `${minPercent}%`;
                     config.track.style.width = `${maxPercent - minPercent}%`;
+                }
+
+                if (config.valueLabel && config.formatRange) {
+                    let label = config.formatRange(finalMin, finalMax);
+                    if (config.valueLabel.id === 'price-range-label') {
+                        label = label.replace(/\s*kr\./g, ' DKK');
+                    } else if (config.valueLabel.id === 'km-driven-range-label') {
+                        label = label.replace(/\s*km\./g, ' km');
+                    }
+                    config.valueLabel.textContent = label;
                 }
 
                 updateHandleTooltips(config, finalMin, finalMax);
@@ -2351,7 +2562,7 @@
         const formatted = formatHomeNumber(count);
         const badge = document.getElementById('home-results-badge');
         if (badge) {
-            badge.textContent = HOME_RESULTS_COUNT_LABEL.replace(':count', formatted);
+            badge.textContent = formatted;
         }
         const button = document.getElementById('home-show-results-btn');
         if (button) {
