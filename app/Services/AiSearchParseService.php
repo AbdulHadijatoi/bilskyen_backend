@@ -78,6 +78,9 @@ class AiSearchParseService
                     'user_query' => $query,
                     'expanded_query' => $expanded,
                     'slang_hints' => $this->synonymHintsForPrompt(),
+                    'catalog_fuels' => $this->catalogNames(DmrDriveEnergy::class),
+                    'catalog_bodies' => $this->catalogNames(DmrBodyType::class),
+                    'catalog_gears' => $this->catalogNames(GearType::class),
                     'output_schema' => $this->outputSchemaDescription(),
                 ],
                 locale: $locale,
@@ -359,7 +362,11 @@ class AiSearchParseService
      */
     private function resolveNamedLookup(string $name, string $modelClass): ?array
     {
-        $needle = mb_strtolower(trim($name));
+        $needles = $this->synonymService->equivalentTerms($name);
+        if ($needles === []) {
+            $needles = [mb_strtolower(trim($name))];
+        }
+
         $rows = $modelClass::query()->select(['id', 'name'])->orderBy('name')->get();
         $best = null;
         $bestScore = 0;
@@ -367,18 +374,26 @@ class AiSearchParseService
         foreach ($rows as $row) {
             $candidate = mb_strtolower((string) $row->name);
             $score = 0;
-            if ($candidate === $needle) {
-                $score = 100;
-            } elseif (str_contains($candidate, $needle) || str_contains($needle, $candidate)) {
-                $score = 70;
-            } elseif (similar_text($candidate, $needle) / max(mb_strlen($needle), 1) > 0.7) {
-                $score = 50;
+
+            foreach ($needles as $needle) {
+                if ($needle === '') {
+                    continue;
+                }
+                if ($candidate === $needle) {
+                    $score = max($score, 100);
+                    continue;
+                }
+                // Short tokens (e.g. "el") must not substring-match "Petroleum"
+                if (mb_strlen($needle) <= 2) {
+                    continue;
+                }
+                if (str_contains($candidate, $needle) || str_contains($needle, $candidate)) {
+                    $score = max($score, 70);
+                } elseif (similar_text($candidate, $needle) / max(mb_strlen($needle), 1) > 0.7) {
+                    $score = max($score, 50);
+                }
             }
-            // Synonym expansion: Electric matches El, etc.
-            $expandedNeedle = mb_strtolower($this->synonymService->expand($name));
-            if ($expandedNeedle !== $needle && (str_contains($candidate, $expandedNeedle) || str_contains($expandedNeedle, $candidate))) {
-                $score = max($score, 75);
-            }
+
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $best = ['id' => (int) $row->id, 'name' => (string) $row->name];
@@ -386,6 +401,18 @@ class AiSearchParseService
         }
 
         return $bestScore >= 50 ? $best : null;
+    }
+
+    /**
+     * @param  class-string  $modelClass
+     */
+    private function catalogNames(string $modelClass): string
+    {
+        return $modelClass::query()
+            ->orderBy('name')
+            ->pluck('name')
+            ->filter(fn ($n) => is_string($n) && trim($n) !== '')
+            ->implode(', ');
     }
 
     /**
@@ -543,6 +570,6 @@ class AiSearchParseService
 
     private function outputSchemaDescription(): string
     {
-        return 'JSON object with optional keys: brand, model, fuel, body, gear, city, price_from, price_to, km_driven_from, km_driven_to, model_year_from, model_year_to, ownership_tax_from, ownership_tax_to, seats_min, intent (family|commute|null), search (residual keywords), labels (array of short human-readable chip strings). Use null for unused fields. Numbers must be integers in DKK / km / year.';
+        return 'JSON object with optional keys: brand, model, fuel, body, gear, city, price_from, price_to, km_driven_from, km_driven_to, model_year_from, model_year_to, ownership_tax_from, ownership_tax_to, seats_min, intent (family|commute|null), search (residual keywords), labels (array of short human-readable chip strings). For fuel/body/gear use EXACT strings from catalog_fuels / catalog_bodies / catalog_gears (e.g. fuel "El" not "Electric", body "Stationcar" not "Estate"). Use null for unused fields. Numbers must be integers in DKK / km / year.';
     }
 }

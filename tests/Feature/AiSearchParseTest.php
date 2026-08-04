@@ -26,12 +26,13 @@ class AiSearchParseTest extends TestCase
             ->once()
             ->with('elbil under 200000', 'da')
             ->andReturn([
-                'filters' => ['price_to' => 200000, 'search' => 'Electric'],
+                'filters' => ['price_to' => 200000, 'fuel_type_id' => [3]],
                 'labels' => [
                     ['key' => 'price_to', 'label' => 'Max 200.000 kr'],
+                    ['key' => 'fuel_type_id', 'label' => 'El'],
                 ],
                 'query' => 'elbil under 200000',
-                'expanded_query' => 'Electric under 200000',
+                'expanded_query' => 'El under 200000',
                 'provider' => 'openai',
                 'cached' => false,
                 'fallback' => false,

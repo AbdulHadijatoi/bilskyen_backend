@@ -3,57 +3,82 @@
 namespace App\Services;
 
 /**
- * Danish/English automotive slang → canonical tokens for AI parse context and LIKE search.
+ * Danish/English automotive slang → DMR catalog tokens for AI parse context and LIKE search.
+ *
+ * Canonical targets must match live lookup names (dmr_drive_energies, gear_types, dmr_body_types).
  */
 class VehicleSearchSynonymService
 {
     /**
      * Longer phrases first so multi-word slang wins over single tokens.
+     * Values are DMR / gear catalog names where a structured filter exists.
      *
      * @var array<string, string>
      */
     private const MAP = [
-        'plug-in hybrid' => 'Plug-in Hybrid',
-        'plugin hybrid' => 'Plug-in Hybrid',
-        'plug in hybrid' => 'Plug-in Hybrid',
-        'ladbar hybrid' => 'Plug-in Hybrid',
+        // Fuel → dmr_drive_energies.name
+        'plug-in hybrid' => 'Benzin',
+        'plugin hybrid' => 'Benzin',
+        'plug in hybrid' => 'Benzin',
+        'ladbar hybrid' => 'Benzin',
+        'plugin-hybrid' => 'Benzin',
+        'elbiler' => 'El',
+        'elbil' => 'El',
+        'elektrisk' => 'El',
+        'electric' => 'El',
+        'ev' => 'El',
+        'benzin' => 'Benzin',
+        'petrol' => 'Benzin',
+        'gasoline' => 'Benzin',
+        'diesel' => 'Diesel',
+
+        // Gear → gear_types.name
         'automatgear' => 'Automatic',
         'automatisk gear' => 'Automatic',
+        'automatisk' => 'Automatic',
+        'automatic' => 'Automatic',
         'manuelt gear' => 'Manual',
         'manuel gear' => 'Manual',
-        'stationcar' => 'Estate',
-        'station car' => 'Estate',
-        'personbil' => 'Passenger car',
-        'familiebil' => 'family car',
-        'elbiler' => 'Electric',
-        'elbil' => 'Electric',
-        'elektrisk' => 'Electric',
-        'benzin' => 'Petrol',
-        'diesel' => 'Diesel',
-        'hybrid' => 'Hybrid',
-        'automatic' => 'Automatic',
-        'automatisk' => 'Automatic',
-        'manual' => 'Manual',
         'manuel' => 'Manual',
-        'estate' => 'Estate',
-        'touring' => 'Estate',
-        'wagon' => 'Estate',
-        'suv' => 'SUV',
-        'crossover' => 'SUV',
+        'manual' => 'Manual',
+        'manuelt' => 'Manual',
+
+        // Body → dmr_body_types.name
+        'station car' => 'Stationcar',
+        'stationcar' => 'Stationcar',
+        'estate' => 'Stationcar',
+        'touring' => 'Stationcar',
+        'wagon' => 'Stationcar',
+        'cabrio' => 'Cabriolet',
+        'convertible' => 'Cabriolet',
+        'cabriolet' => 'Cabriolet',
         'sedan' => 'Sedan',
         'hatchback' => 'Hatchback',
-        'cabrio' => 'Convertible',
-        'cabriolet' => 'Convertible',
+        'coupe' => 'Coupe',
+        'mpv' => 'MPV',
+
+        // Cities
         'københavn' => 'København',
         'copenhagen' => 'København',
         'århus' => 'Aarhus',
         'aarhus' => 'Aarhus',
-        'billig' => 'cheap',
-        'billige' => 'cheap',
-        'nyere' => 'newer',
-        'pendling' => 'commuting',
-        'ejerafgift' => 'ownership tax',
-        'grøn afgift' => 'ownership tax',
+
+        // Intent / residual (no direct catalog row)
+        'personbil' => 'personbil',
+        'familiebil' => 'familiebil',
+        'hybrid' => 'hybrid',
+        'suv' => 'SUV',
+        'crossover' => 'SUV',
+        'billig' => 'billig',
+        'billige' => 'billig',
+        'nyere' => 'nyere',
+        'pendling' => 'pendling',
+        'ejerafgift' => 'ejerafgift',
+        'grøn afgift' => 'ejerafgift',
+        'cheap' => 'billig',
+        'newer' => 'nyere',
+        'commuting' => 'pendling',
+        'ownership tax' => 'ejerafgift',
     ];
 
     /**
@@ -73,6 +98,57 @@ class VehicleSearchSynonymService
         }
 
         return trim(preg_replace('/\s+/u', ' ', $result) ?? $result);
+    }
+
+    /**
+     * Canonical catalog (or residual) token for a single term, if known.
+     */
+    public function canonicalFor(string $term): ?string
+    {
+        $needle = mb_strtolower(trim($term));
+        if ($needle === '') {
+            return null;
+        }
+
+        foreach (self::MAP as $from => $to) {
+            if ($needle === mb_strtolower($from) || $needle === mb_strtolower($to)) {
+                return $to;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * All Danish/English equivalents for a term (for lookup resolution).
+     *
+     * @return list<string> lowercased unique terms
+     */
+    public function equivalentTerms(string $term): array
+    {
+        $needle = mb_strtolower(trim($term));
+        if ($needle === '') {
+            return [];
+        }
+
+        $canonical = $this->canonicalFor($term);
+        $groupKey = $canonical !== null ? mb_strtolower($canonical) : $needle;
+
+        $terms = [$needle];
+        if ($canonical !== null) {
+            $terms[] = mb_strtolower($canonical);
+        }
+
+        foreach (self::MAP as $from => $to) {
+            $toLower = mb_strtolower($to);
+            $fromLower = mb_strtolower($from);
+            if ($toLower === $groupKey || $fromLower === $groupKey || $fromLower === $needle || $toLower === $needle) {
+                $terms[] = $fromLower;
+                $terms[] = $toLower;
+            }
+        }
+
+        return array_values(array_unique($terms));
     }
 
     /**
