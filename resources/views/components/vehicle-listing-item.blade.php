@@ -5,7 +5,6 @@
     'salesTypeName' => null,
     'trustBadge' => false,
     'priceDroppedRecently' => false,
-    'fairPriceLabel' => null,
     'premiumDealerBadge' => false,
     'isBoosted' => false,
 ])
@@ -50,11 +49,6 @@
                 @if($priceDroppedRecently)
                     <span class="inline-flex items-center rounded-md bg-rose-600/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
                         {{ __('messages.pages.vehicles.detail.price_dropped_badge') }}
-                    </span>
-                @endif
-                @if($fairPriceLabel === 'below_market')
-                    <span class="inline-flex items-center rounded-md bg-sky-600/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                        {{ __('messages.pages.vehicles.detail.fair_price_below_market') }}
                     </span>
                 @endif
             </div>
