@@ -627,7 +627,7 @@ class HomeController extends Controller
     /**
      * Presentation fields for the vehicle listing card component (initial SSR).
      *
-     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null, trustBadge: bool, priceDroppedRecently: bool, fairPriceLabel: string|null}
+     * @return array{vehicle: Vehicle, imgUrl: string, imgAlt: string, salesTypeName: string|null, trustBadge: bool, priceDroppedRecently: bool}
      */
     private function vehicleListingItemRow(Vehicle $vehicle): array
     {
@@ -650,7 +650,6 @@ class HomeController extends Controller
             'salesTypeName' => $salesTypeName,
             'trustBadge' => (bool) ($badges['trust_badge'] ?? false),
             'priceDroppedRecently' => (bool) ($badges['price_dropped_recently'] ?? false),
-            'fairPriceLabel' => $badges['fair_price_label'] ?? null,
             'premiumDealerBadge' => (bool) ($badges['premium_dealer_badge'] ?? false),
             'isBoosted' => (bool) ($badges['is_boosted'] ?? false),
         ];

@@ -834,7 +834,6 @@
                 :sales-type-name="$row['salesTypeName']"
                 :trust-badge="$row['trustBadge'] ?? false"
                 :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
-                :fair-price-label="$row['fairPriceLabel'] ?? null"
                 :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
                 :is-boosted="$row['isBoosted'] ?? false"
             />
@@ -877,7 +876,6 @@
                         :sales-type-name="$row['salesTypeName']"
                         :trust-badge="$row['trustBadge'] ?? false"
                         :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
-                        :fair-price-label="$row['fairPriceLabel'] ?? null"
                         :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
                         :is-boosted="$row['isBoosted'] ?? false"
                     />
@@ -1374,11 +1372,6 @@
                             ${vehicle.price_dropped_recently ? `
                             <span class="inline-flex items-center rounded-md bg-rose-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
                                 {{ __('messages.pages.vehicles.detail.price_dropped_badge') }}
-                            </span>
-                            ` : ''}
-                            ${vehicle.fair_price_label === 'below_market' ? `
-                            <span class="inline-flex items-center rounded-md bg-sky-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                                {{ __('messages.pages.vehicles.detail.fair_price_below_market') }}
                             </span>
                             ` : ''}
                             </div>

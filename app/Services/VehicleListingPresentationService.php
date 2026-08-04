@@ -11,7 +11,6 @@ class VehicleListingPresentationService
 {
     public function __construct(
         private VehicleTrustReportService $trustReportService,
-        private MarketPricingService $marketPricingService,
         private DealerBadgeService $dealerBadgeService,
     ) {}
 
@@ -21,12 +20,10 @@ class VehicleListingPresentationService
     public function badgeFields(Vehicle $vehicle): array
     {
         $trust = $this->trustReportService->buildForVehicle($vehicle);
-        $fairPrice = $this->marketPricingService->evaluateVehicle($vehicle);
 
         return [
             'trust_badge' => (bool) ($trust['trust_badge'] ?? false),
             'price_dropped_recently' => $this->trustReportService->hasRecentPriceDrop($vehicle),
-            'fair_price_label' => $fairPrice['label'] ?? null,
             'premium_dealer_badge' => $this->dealerBadgeService->hasPremiumBadge($vehicle->dealer),
             'is_boosted' => (bool) app(ListingBoostService::class)->activeBoostForVehicle($vehicle->id),
         ];

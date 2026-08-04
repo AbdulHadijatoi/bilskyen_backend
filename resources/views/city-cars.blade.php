@@ -68,7 +68,6 @@
                     :sales-type-name="$vehicle->salesType?->name"
                     :trust-badge="$badges['trust_badge'] ?? false"
                     :price-dropped-recently="$badges['price_dropped_recently'] ?? false"
-                    :fair-price-label="$badges['fair_price_label'] ?? null"
                     :premium-dealer-badge="$badges['premium_dealer_badge'] ?? false"
                     :is-boosted="$badges['is_boosted'] ?? false"
                 />
