@@ -281,11 +281,25 @@
         border-radius: 0.625rem;
         padding: 0 0.875rem;
         height: 2.75rem;
-        transition: border-color 0.15s ease;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
     .home-filter-search-wrap:focus-within {
         border-color: var(--hf-route);
+    }
+
+    .home-filter-search-wrap.is-ai {
+        border-color: color-mix(in oklch, var(--hf-route) 35%, var(--hf-line));
+        background: linear-gradient(
+            135deg,
+            color-mix(in oklch, var(--hf-route-soft) 55%, #fff) 0%,
+            var(--hf-paper) 55%
+        );
+    }
+
+    .home-filter-search-wrap.is-ai:focus-within {
+        border-color: var(--hf-route);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--hf-route) 16%, transparent);
     }
 
     .home-filter-search-wrap > svg {
@@ -293,6 +307,27 @@
         width: 16px;
         height: 16px;
         color: var(--hf-slate);
+    }
+
+    .home-filter-search-wrap.is-ai > svg {
+        color: var(--hf-route);
+    }
+
+    .home-filter-ai-badge {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: 1.375rem;
+        padding: 0 0.45rem;
+        border-radius: 9999px;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--hf-route);
+        background: color-mix(in oklch, var(--hf-route-soft) 80%, #fff);
+        border: 1px solid color-mix(in oklch, var(--hf-route) 22%, transparent);
     }
 
     .home-filter-search-input {
@@ -846,18 +881,28 @@
 
                 <form method="GET" action="{{ route('vehicles') }}" id="filter-form">
                 <div class="home-filter-search-row">
-                    <div class="home-filter-search-wrap">
+                    <div class="home-filter-search-wrap{{ !empty($publicAiEnabled) ? ' is-ai' : '' }}">
+                        @if(!empty($publicAiEnabled))
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"></path>
+                            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"></path>
+                            <path d="M5 15l.6 1.6L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6L5 15z"></path>
+                        </svg>
+                        <span class="home-filter-ai-badge">{{ __('messages.pages.home.search_ai_badge') }}</span>
+                        @else
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="11" cy="11" r="7"></circle>
                             <path d="M21 21l-4.35-4.35"></path>
                         </svg>
+                        @endif
                         <input
                             type="search"
                             id="home-search-input"
-                            name="search"
+                            @if(empty($publicAiEnabled)) name="search" @endif
                             class="home-filter-search-input"
                             placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.pages.home.search_placeholder') }}"
                             autocomplete="off"
+                            aria-label="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_aria_ai') : __('messages.pages.home.search_aria') }}"
                             @if(!empty($publicAiEnabled))
                             aria-autocomplete="list"
                             aria-controls="home-ai-suggest"
@@ -868,7 +913,7 @@
                         @endif
                     </div>
                     <button type="submit" id="home-search-submit" class="home-filter-cta">
-                        {{ __('messages.common.search') }}
+                        {{ !empty($publicAiEnabled) ? __('messages.pages.home.search_cta_ai') : __('messages.common.search') }}
                     </button>
                 </div>
 
@@ -2594,56 +2639,24 @@
         }
     }
     
-    // Form submission: AI-parse free text when AI is enabled; otherwise keyword search
+    // Form submission: AI text → Find My Perfect Car; otherwise vehicle listing filters
     const filterForm = document.getElementById('filter-form');
     const publicAiEnabled = @json(!empty($publicAiEnabled));
     const vehiclesUrl = @json(route('vehicles'));
+    const findPerfectCarUrl = @json(route('find-perfect-car'));
     if (filterForm) {
         filterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const submitBtn = document.getElementById('home-search-submit');
             const searchQuery = document.getElementById('home-search-input')?.value?.trim() || '';
             const facetParams = buildHomeFilterParams();
 
-            if (!publicAiEnabled || !searchQuery || !window.BilskyenAiSearch) {
-                window.location.href = vehiclesUrl + (facetParams.toString() ? '?' + facetParams.toString() : '');
+            if (publicAiEnabled && searchQuery) {
+                const advisorParams = new URLSearchParams({ q: searchQuery });
+                window.location.href = findPerfectCarUrl + '?' + advisorParams.toString();
                 return;
             }
 
-            facetParams.delete('search');
-
-            if (submitBtn) {
-                submitBtn.classList.add('is-loading');
-                submitBtn.dataset.originalText = submitBtn.textContent;
-                submitBtn.textContent = (window.BilskyenAiSearch?.I18N?.parsing) || '…';
-            }
-
-            try {
-                const result = await window.BilskyenAiSearch.parseQuery(searchQuery, 'home');
-                window.BilskyenAiSearch.renderAiBanner(
-                    document.getElementById('home-ai-understood'),
-                    result.labels,
-                    result.query
-                );
-                const merged = Object.assign({}, result.filters || {});
-                facetParams.forEach((value, key) => {
-                    const baseKey = key.replace(/\[\]$/, '');
-                    if (['brand_id', 'model_id', 'fuel_type_id', 'listing_type_id'].includes(baseKey)) {
-                        if (!Array.isArray(merged[baseKey])) merged[baseKey] = merged[baseKey] ? [merged[baseKey]] : [];
-                        merged[baseKey].push(value);
-                    } else if (merged[baseKey] === undefined) {
-                        merged[baseKey] = value;
-                    }
-                });
-                const url = window.BilskyenAiSearch.buildVehiclesUrl(merged, {
-                    ai_search: '1',
-                    q: result.query || searchQuery,
-                });
-                window.location.href = url;
-            } catch (err) {
-                facetParams.set('search', searchQuery);
-                window.location.href = vehiclesUrl + '?' + facetParams.toString();
-            }
+            window.location.href = vehiclesUrl + (facetParams.toString() ? '?' + facetParams.toString() : '');
         });
     }
 

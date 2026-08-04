@@ -1391,7 +1391,7 @@
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({
-                    name: (lastSummary || 'Find My Perfect Car').slice(0, 80),
+                    name: (lastSummary || @json(__('messages.navigation.find_perfect_car'))).slice(0, 80),
                     filters: lastFilters,
                 }),
             });
@@ -1436,9 +1436,12 @@
     });
 
     const params = new URLSearchParams(window.location.search);
-    const q = params.get('q');
-    if (q && !input.value) {
-        input.value = q;
+    const q = (params.get('q') || '').trim();
+    if (q) {
+        if (!input.value.trim()) {
+            input.value = q;
+        }
+        advise(input.value.trim() || q, false);
     }
 })();
 </script>

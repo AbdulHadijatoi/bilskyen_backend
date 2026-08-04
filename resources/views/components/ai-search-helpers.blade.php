@@ -174,8 +174,8 @@ window.BilskyenAiSearch = (function () {
                     chip.classList.remove('is-active');
                 });
                 btn.classList.add('is-active');
-                const root = container.closest('form, section, .home-filter-card, #search-bar-container, .navbar-ai-search');
-                const input = root?.querySelector('input[type="search"], input[name="search"], #home-search-input, #search-input, #navbar-search-input');
+                const root = container.closest('form, section, .home-filter-card, #search-bar-container');
+                const input = root?.querySelector('input[type="search"], input[name="search"], #home-search-input, #search-input');
                 if (input) {
                     input.value = ex;
                     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -434,8 +434,7 @@ window.BilskyenAiSearch = (function () {
     padding: 0.2rem 0.65rem;
     font-size: 0.75rem;
 }
-.home-filter-cta.is-loading,
-.navbar-ai-search-btn.is-loading {
+.home-filter-cta.is-loading {
     opacity: 0.75;
     pointer-events: none;
 }
