@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\SalesType;
 use App\Services\DmrFactVehicleLookupService;
 use App\Services\Import\SpreadsheetImportParser;
 use App\Services\VehicleImport\VehicleImportBatchContext;
@@ -136,6 +137,45 @@ class VehicleImportTest extends TestCase
         $this->assertFalse(RemoteUrlGuard::isPublicIp('10.0.0.1'));
         $this->assertFalse(RemoteUrlGuard::isPublicIp('192.168.1.1'));
         $this->assertTrue(RemoteUrlGuard::isPublicIp('8.8.8.8'));
+    }
+
+    public function test_sales_type_is_leasing_name_accepts_leasing_and_leasingdetaljer(): void
+    {
+        $this->assertTrue(SalesType::isLeasingName('Leasing'));
+        $this->assertTrue(SalesType::isLeasingName('Leasingdetaljer'));
+        $this->assertFalse(SalesType::isLeasingName('Kontantpris'));
+    }
+
+    public function test_sales_type_lookup_accepts_leasing_alias_for_leasingdetaljer(): void
+    {
+        $map = ['leasingdetaljer' => 9, 'kontantpris' => 1];
+
+        $this->assertSame(
+            9,
+            VehicleImportLookupCache::resolveKeyInMap('sales_type_id', 'Leasing', $map)
+        );
+        $this->assertSame(
+            9,
+            VehicleImportLookupCache::resolveKeyInMap('sales_type_id', 'Leasingdetaljer', $map)
+        );
+        $this->assertSame(
+            1,
+            VehicleImportLookupCache::resolveKeyInMap('sales_type_id', 'Kontantpris', $map)
+        );
+    }
+
+    public function test_sales_type_lookup_accepts_leasingdetaljer_when_db_name_is_leasing(): void
+    {
+        $map = ['leasing' => 12];
+
+        $this->assertSame(
+            12,
+            VehicleImportLookupCache::resolveKeyInMap('sales_type_id', 'Leasing', $map)
+        );
+        $this->assertSame(
+            12,
+            VehicleImportLookupCache::resolveKeyInMap('sales_type_id', 'Leasingdetaljer', $map)
+        );
     }
 
     public function test_row_resolver_normalizes_bilbasen_month_year_dates(): void

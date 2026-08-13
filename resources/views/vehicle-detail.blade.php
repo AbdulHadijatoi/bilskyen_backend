@@ -81,7 +81,7 @@
     use Illuminate\Support\Carbon;
     /** @var array<string, mixed> $vehicleDetail */
     $vd = $vehicleDetail ?? [];
-    $showLeasingDetails = ! empty($vd['sales_type_name']) && trim((string) $vd['sales_type_name']) === 'Leasingdetaljer';
+    $showLeasingDetails = ! empty($vd['sales_type_name']) && \App\Models\SalesType::isLeasingName((string) $vd['sales_type_name']);
 @endphp
 
 @section('content')
