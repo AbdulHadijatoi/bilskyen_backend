@@ -75,17 +75,31 @@ class VehicleImportLookupCache
 
     public function resolveFlat(string $column, string $value): ?int
     {
-        $key = $this->normalizeKey($value);
+        return self::resolveKeyInMap($column, $value, $this->flatMaps[$column] ?? []);
+    }
+
+    /**
+     * Prefer an exact DB name match, then aliases (e.g. Excel "Leasing" → "Leasingdetaljer").
+     *
+     * @param  array<string, int>  $map
+     */
+    public static function resolveKeyInMap(string $column, string $value, array $map): ?int
+    {
+        $key = mb_strtolower(trim($value));
         if ($key === '') {
             return null;
         }
 
-        $aliases = $this->aliasesFor($column);
-        if (isset($aliases[$key])) {
-            $key = $aliases[$key];
+        if (isset($map[$key])) {
+            return $map[$key];
         }
 
-        return $this->flatMaps[$column][$key] ?? null;
+        $alias = self::aliasesForColumn($column)[$key] ?? null;
+        if (is_string($alias) && isset($map[$alias])) {
+            return $map[$alias];
+        }
+
+        return null;
     }
 
     /**
@@ -93,7 +107,7 @@ class VehicleImportLookupCache
      *
      * @return array<string, string>
      */
-    private function aliasesFor(string $column): array
+    public static function aliasesForColumn(string $column): array
     {
         return match ($column) {
             'sales_type_id' => [
@@ -104,6 +118,7 @@ class VehicleImportLookupCache
                 'purchase' => 'kontantpris',
                 'leasing' => 'leasingdetaljer',
                 'lease' => 'leasingdetaljer',
+                'leasingdetaljer' => 'leasing',
             ],
             'fuel_type_id' => [
                 'plugin hybrid (benzin + el)' => 'benzin',

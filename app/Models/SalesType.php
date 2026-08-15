@@ -20,5 +20,15 @@ class SalesType extends Model
     protected $fillable = [
         'name',
     ];
+
+    /**
+     * Excel/extension may send "Leasing"; seeded lookup name is "Leasingdetaljer".
+     */
+    public static function isLeasingName(?string $name): bool
+    {
+        $key = mb_strtolower(trim((string) $name));
+
+        return in_array($key, ['leasing', 'leasingdetaljer', 'lease'], true);
+    }
 }
 
