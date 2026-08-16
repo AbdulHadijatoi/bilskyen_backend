@@ -119,7 +119,7 @@ class AdminAiController extends Controller
     public function testProvider(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'provider' => ['required', 'string', Rule::in(['openai', 'anthropic', 'gemini', 'deepseek', 'ollama'])],
+            'provider' => ['required', 'string', Rule::in(['openai', 'anthropic', 'gemini', 'deepseek', 'openrouter', 'opencodezen', 'ollama'])],
         ]);
 
         $result = $this->aiService->testProvider($data['provider']);

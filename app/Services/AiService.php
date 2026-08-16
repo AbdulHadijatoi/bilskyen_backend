@@ -14,7 +14,9 @@ use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\GeminiProvider;
 use App\Services\Ai\OllamaProvider;
+use App\Services\Ai\OpenCodeZenProvider;
 use App\Services\Ai\OpenAiProvider;
+use App\Services\Ai\OpenRouterProvider;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +27,9 @@ class AiService
     private array $providerClasses = [
         // Prefer local Ollama when enabled (local testing). Falls through to cloud providers on failure.
         OllamaProvider::class,
+        // Free OpenRouter / OpenCode Zen models before paid providers when enabled.
+        OpenRouterProvider::class,
+        OpenCodeZenProvider::class,
         OpenAiProvider::class,
         AnthropicProvider::class,
         GeminiProvider::class,

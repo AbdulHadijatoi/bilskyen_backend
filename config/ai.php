@@ -19,6 +19,14 @@ return [
         'deepseek' => [
             'default_model' => env('AI_DEEPSEEK_MODEL', 'deepseek-v4-flash'),
         ],
+        'openrouter' => [
+            'default_model' => env('AI_OPENROUTER_MODEL', 'openrouter/free'),
+        ],
+        'opencodezen' => [
+            'default_model' => env('AI_OPENCODEZEN_MODEL', 'deepseek-v4-flash-free'),
+            // Free Zen models ("Console") reject non-opencode User-Agents with a 429.
+            'user_agent' => env('AI_OPENCODEZEN_USER_AGENT', 'opencode/1.18.16'),
+        ],
         'ollama' => [
             'default_model' => env('AI_OLLAMA_MODEL', 'llama3.2'),
             'base_url' => env('AI_OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),

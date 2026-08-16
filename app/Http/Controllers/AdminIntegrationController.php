@@ -46,7 +46,7 @@ class AdminIntegrationController extends Controller
 
         if ($data['group'] === 'ai') {
             $settings = $request->input('settings', []);
-            foreach (['openai_enabled', 'anthropic_enabled', 'gemini_enabled', 'deepseek_enabled', 'ollama_enabled'] as $boolKey) {
+            foreach (['openai_enabled', 'anthropic_enabled', 'gemini_enabled', 'deepseek_enabled', 'openrouter_enabled', 'opencodezen_enabled', 'ollama_enabled'] as $boolKey) {
                 if (array_key_exists($boolKey, $settings)) {
                     $settings[$boolKey] = filter_var($settings[$boolKey], FILTER_VALIDATE_BOOLEAN);
                 }
@@ -58,16 +58,22 @@ class AdminIntegrationController extends Controller
                 'settings.anthropic_enabled' => 'sometimes|boolean',
                 'settings.gemini_enabled' => 'sometimes|boolean',
                 'settings.deepseek_enabled' => 'sometimes|boolean',
+                'settings.openrouter_enabled' => 'sometimes|boolean',
+                'settings.opencodezen_enabled' => 'sometimes|boolean',
                 'settings.ollama_enabled' => 'sometimes|boolean',
                 'settings.openai_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.anthropic_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.gemini_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.deepseek_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.openrouter_api_key' => 'sometimes|nullable|string|max:512',
+                'settings.opencodezen_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.ollama_api_key' => 'sometimes|nullable|string|max:512',
                 'settings.openai_model' => 'sometimes|nullable|string|max:100',
                 'settings.anthropic_model' => 'sometimes|nullable|string|max:100',
                 'settings.gemini_model' => 'sometimes|nullable|string|max:100',
                 'settings.deepseek_model' => 'sometimes|nullable|string|max:100',
+                'settings.openrouter_model' => 'sometimes|nullable|string|max:150',
+                'settings.opencodezen_model' => 'sometimes|nullable|string|max:150',
                 'settings.ollama_model' => 'sometimes|nullable|string|max:100',
                 'settings.ollama_base_url' => 'sometimes|nullable|string|max:255',
                 'settings.max_tokens' => 'sometimes|integer|min:256|max:8000',
@@ -138,7 +144,7 @@ class AdminIntegrationController extends Controller
             return $this->success($result);
         }
 
-        if (in_array($data['provider'], ['openai', 'anthropic', 'gemini', 'deepseek', 'ollama'], true)) {
+        if (in_array($data['provider'], ['openai', 'anthropic', 'gemini', 'deepseek', 'openrouter', 'opencodezen', 'ollama'], true)) {
             $result = app(\App\Services\AiService::class)->testProvider($data['provider']);
 
             $this->platformSettingService->logIntegration(
