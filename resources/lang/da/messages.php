@@ -1760,6 +1760,8 @@ return [
         'ai_connection_ok' => 'Forbindelse til :provider oprettet.',
         'ai_unknown_provider' => 'Ukendt AI-udbyder.',
         'ai_context_too_large' => 'AI-kontekst er for stor.',
+        'ai_input_blocked' => 'Den forespørgsel kan ikke behandles. Beskriv bilen, du leder efter, i almindeligt sprog.',
+        'ai_output_blocked' => 'AI-svaret blev blokeret. Prøv igen med en enklere forespørgsel.',
         'faq_chatbot_disabled' => 'FAQ-chatbotten er deaktiveret i øjeblikket.',
         'faq_knowledge_empty' => 'FAQ-vidensbasen er tom. Bed en administrator om at tilføje FAQ-indhold.',
         'subscription_change_request_pending_exists' => 'Du har allerede en abonnementsændring, der afventer administratorgodkendelse. Annuller den, eller vent til den er godkendt eller afvist, før du sender en ny.',

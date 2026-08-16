@@ -33,6 +33,37 @@ class AiServiceTest extends TestCase
         $this->assertStringContainsString('"make": "Volvo"', $user);
     }
 
+    public function test_public_prompts_include_preamble_and_fenced_user_message(): void
+    {
+        $template = new AiPromptTemplate([
+            'key' => AiGenerationTask::CAR_ADVISOR_PROFILE,
+            'name' => 'Test',
+            'system_prompt' => 'You extract JSON.',
+            'user_prompt_template' => "Locale: {{locale}}\n\n{{context}}",
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $guardrails = app(\App\Services\Ai\AiGuardrailService::class);
+        $context = $guardrails->preparePublicContext(AiGenerationTask::CAR_ADVISOR_PROFILE, [
+            'user_message' => 'elbil under 200000',
+            'output_schema' => 'JSON object with keys',
+        ]);
+
+        $service = app(AiService::class);
+        $method = new ReflectionMethod(AiService::class, 'renderPrompts');
+        $method->setAccessible(true);
+
+        [$system, $user] = $method->invoke($service, $template, $context, 'da');
+        $system = $guardrails->publicSystemPreamble()."\n\n".$system;
+
+        $this->assertStringContainsString('untrusted user data', $system);
+        $this->assertStringContainsString('<<<UNTRUSTED', $user);
+        $this->assertStringContainsString('elbil under 200000', $user);
+        $this->assertStringContainsString('JSON object with keys', $user);
+        $this->assertDoesNotMatchRegularExpression('/<<<UNTRUSTED\s+JSON object with keys/', $user);
+    }
+
     public function test_ai_generation_exception_carries_status_code(): void
     {
         $exception = new AiGenerationException('Quota exceeded', 422);

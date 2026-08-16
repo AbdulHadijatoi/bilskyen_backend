@@ -1652,6 +1652,8 @@ return [
         'ai_connection_ok' => 'Successfully connected to :provider.',
         'ai_unknown_provider' => 'Unknown AI provider.',
         'ai_context_too_large' => 'AI context payload is too large.',
+        'ai_input_blocked' => 'That request cannot be processed. Try describing the car you want in plain language.',
+        'ai_output_blocked' => 'The AI response was blocked. Try again with a simpler request.',
         'faq_chatbot_disabled' => 'The FAQ chatbot is currently disabled.',
         'faq_knowledge_empty' => 'FAQ knowledge base is empty. Ask an admin to add FAQ content.',
         'provide_endpoint_or_user_id' => 'Provide either endpoint or userId',

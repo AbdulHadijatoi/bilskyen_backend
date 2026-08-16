@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Constants\AiGenerationTask;
 use App\Exceptions\AiGenerationException;
+use App\Services\Ai\AiGuardrailService;
 use App\Services\AiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PublicAiController extends Controller
@@ -18,6 +18,7 @@ class PublicAiController extends Controller
 
     public function __construct(
         private AiService $aiService,
+        private AiGuardrailService $guardrails,
     ) {}
 
     public function generateListingDescription(Request $request): JsonResponse
@@ -37,7 +38,10 @@ class PublicAiController extends Controller
 
             $result = $this->aiService->generateForPublic(
                 task: AiGenerationTask::LISTING_DESCRIPTION,
-                context: $data['context'],
+                context: $this->guardrails->allowlistContext(
+                    $data['context'],
+                    AiGuardrailService::LISTING_CONTEXT_KEYS
+                ),
                 locale: $data['locale'] ?? app()->getLocale(),
             );
 

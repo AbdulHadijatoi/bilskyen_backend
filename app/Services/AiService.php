@@ -10,6 +10,7 @@ use App\Models\AiPromptTemplate;
 use App\Models\AiUsageLog;
 use App\Models\Dealer;
 use App\Models\User;
+use App\Services\Ai\AiGuardrailService;
 use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\GeminiProvider;
@@ -39,6 +40,7 @@ class AiService
     public function __construct(
         private PlatformSettingService $platformSettingService,
         private SubscriptionFeatureService $subscriptionFeatureService,
+        private AiGuardrailService $guardrails,
     ) {}
 
     /**
@@ -198,6 +200,8 @@ class AiService
             throw new AiGenerationException(__('messages.api.ai_not_enabled'), 422);
         }
 
+        $context = $this->guardrails->preparePublicContext($task, $context);
+
         return $this->runGeneration(
             task: $task,
             context: $context,
@@ -207,6 +211,7 @@ class AiService
             contextType: $contextType,
             contextId: null,
             enforceDealerQuota: false,
+            applyPublicGuardrails: true,
         );
     }
 
@@ -282,6 +287,7 @@ class AiService
         ?string $contextType,
         ?int $contextId,
         bool $enforceDealerQuota,
+        bool $applyPublicGuardrails = false,
     ): array {
         if (! AiGenerationTask::isValid($task)) {
             throw new AiGenerationException(__('messages.api.ai_invalid_task'), 422);
@@ -303,8 +309,11 @@ class AiService
         }
 
         [$systemPrompt, $userPrompt] = $this->renderPrompts($template, $context, $locale);
+        if ($applyPublicGuardrails) {
+            $systemPrompt = $this->guardrails->publicSystemPreamble()."\n\n".$systemPrompt;
+        }
 
-        $runner = function () use ($user, $dealer, $task, $systemPrompt, $userPrompt, $contextType, $contextId, $enforceDealerQuota): array {
+        $runner = function () use ($user, $dealer, $task, $systemPrompt, $userPrompt, $contextType, $contextId, $enforceDealerQuota, $applyPublicGuardrails): array {
             if ($enforceDealerQuota && $dealer) {
                 $this->assertWithinQuota($dealer);
             }
@@ -319,6 +328,9 @@ class AiService
 
                 try {
                     $result = $provider->complete($systemPrompt, $userPrompt);
+                    if ($applyPublicGuardrails) {
+                        $this->guardrails->assertSafeOutput($result->text, $task);
+                    }
                     $this->logUsage($user, $dealer, $task, $result, 'success', null, $contextType, $contextId);
 
                     return [
@@ -328,6 +340,8 @@ class AiService
                         'task' => $task,
                         'tokens' => $result->totalTokens(),
                     ];
+                } catch (AiGenerationException $e) {
+                    throw $e;
                 } catch (\Throwable $e) {
                     $lastError = $e;
                     $this->logUsage(

@@ -33,4 +33,9 @@ return [
         ],
     ],
 
+    'guardrails' => [
+        'enabled' => filter_var(env('AI_GUARDRAILS_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+        'patterns' => [],
+    ],
+
 ];

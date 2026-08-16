@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\AiGenerationException;
+use App\Services\Ai\AiGuardrailService;
 use App\Services\AiService;
 use App\Services\FaqContentService;
 use App\Services\PlatformSettingService;
@@ -22,6 +23,7 @@ class FaqChatController extends Controller
         private PlatformSettingService $platformSettingService,
         private FaqContentService $faqContentService,
         private AiService $aiService,
+        private AiGuardrailService $guardrails,
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -50,7 +52,7 @@ class FaqChatController extends Controller
             }
 
             $historyLines = [];
-            foreach ($data['history'] ?? [] as $turn) {
+            foreach ($this->guardrails->sanitizeHistory($data['history'] ?? []) as $turn) {
                 $role = $turn['role'] === 'assistant' ? 'Assistant' : 'User';
                 $historyLines[] = $role.': '.$turn['content'];
             }

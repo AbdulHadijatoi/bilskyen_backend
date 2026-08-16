@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Constants\AiGenerationTask;
 use App\Exceptions\AiGenerationException;
 use App\Helpers\FormatHelper;
 use App\Models\Vehicle;
+use App\Services\Ai\AiGuardrailService;
 use Illuminate\Support\Facades\Log;
 
 class CarAdvisorService
@@ -22,6 +24,7 @@ class CarAdvisorService
         private CarAdvisorScorer $scorer,
         private MarketPricingService $marketPricingService,
         private VehicleSearchSynonymService $synonymService,
+        private AiGuardrailService $guardrails,
     ) {}
 
     /**
@@ -43,6 +46,7 @@ class CarAdvisorService
     {
         $message = trim($message);
         $locale = in_array($locale, ['da', 'en'], true) ? $locale : 'da';
+        $history = $this->guardrails->sanitizeHistory($history);
 
         $profileResult = $this->buildProfile($message, $locale, $history);
         $profile = $profileResult['profile'];
@@ -190,6 +194,10 @@ class CarAdvisorService
 
             $parsed = $this->decodeAiJson((string) ($result['text'] ?? ''));
             $profile = $this->normalizeProfile($parsed, $message);
+            $this->guardrails->assertSafeOutput(
+                trim((string) ($profile['summary'] ?? '')).' '.json_encode($profile['labels'] ?? [], JSON_UNESCAPED_UNICODE),
+                AiGenerationTask::CAR_ADVISOR_PROFILE
+            );
 
             return [
                 'profile' => $profile,
@@ -480,6 +488,19 @@ class CarAdvisorService
                     ? trim($item['ownership_outlook'])
                     : null,
             ];
+        }
+
+        $copy = [];
+        foreach ($map as $row) {
+            if (is_string($row['explanation'] ?? null)) {
+                $copy[] = $row['explanation'];
+            }
+            if (is_string($row['ownership_outlook'] ?? null)) {
+                $copy[] = $row['ownership_outlook'];
+            }
+        }
+        if ($copy !== []) {
+            $this->guardrails->assertSafeOutput(implode("\n", $copy), AiGenerationTask::CAR_ADVISOR_EXPLAIN);
         }
 
         return $map;
