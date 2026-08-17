@@ -318,6 +318,12 @@ class AiService
                 $this->assertWithinQuota($dealer);
             }
 
+            $completionOptions = $this->completionOptionsForTask($task);
+            $maxProviderAttempts = $applyPublicGuardrails
+                ? max(1, (int) config('ai.public_max_providers', 1))
+                : PHP_INT_MAX;
+            $attempted = 0;
+
             $lastError = null;
             foreach ($this->providerClasses as $class) {
                 /** @var AiProviderInterface $provider */
@@ -326,8 +332,13 @@ class AiService
                     continue;
                 }
 
+                if ($attempted >= $maxProviderAttempts) {
+                    break;
+                }
+                $attempted++;
+
                 try {
-                    $result = $provider->complete($systemPrompt, $userPrompt);
+                    $result = $provider->complete($systemPrompt, $userPrompt, $completionOptions);
                     if ($applyPublicGuardrails) {
                         $this->guardrails->assertSafeOutput($result->text, $task);
                     }
@@ -444,7 +455,7 @@ class AiService
         $replacements = [
             '{{locale}}' => $locale,
             '{{context}}' => $contextBlock,
-            '{{context_json}}' => json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            '{{context_json}}' => json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ];
 
         $system = strtr($template->system_prompt, $replacements);
@@ -460,7 +471,7 @@ class AiService
     {
         $lines = [];
         foreach ($context as $key => $value) {
-            if ($value === null || $value === '') {
+            if ($value === null || $value === '' || $value === []) {
                 continue;
             }
             if (is_array($value)) {
@@ -470,6 +481,27 @@ class AiService
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * @return array{max_tokens?: int, temperature?: float}
+     */
+    private function completionOptionsForTask(string $task): array
+    {
+        $config = config('ai.tasks.'.$task, []);
+        if (! is_array($config)) {
+            return [];
+        }
+
+        $options = [];
+        if (isset($config['max_tokens'])) {
+            $options['max_tokens'] = max(64, (int) $config['max_tokens']);
+        }
+        if (array_key_exists('temperature', $config)) {
+            $options['temperature'] = min(1.0, max(0.0, (float) $config['temperature']));
+        }
+
+        return $options;
     }
 
     private function assertWithinQuota(?Dealer $dealer): void

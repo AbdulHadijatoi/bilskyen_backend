@@ -217,6 +217,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.showSnackbar(successMsg, 'success');
                 }
 
+                if (typeof window.bilskyenTrackMetaLead === 'function') {
+                    window.bilskyenTrackMetaLead(result?.data?.meta_lead_event_id, @json((string) $vehicle->id), {
+                        content_name: @json($vehicle->title),
+                        value: @json((float) ($vehicle->price ?? 0))
+                    });
+                }
+
                 // Redirect after 3 seconds
                 setTimeout(() => {
                     window.location.href = '{{ route("vehicle.detail", $vehicle) }}';

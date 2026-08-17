@@ -1620,6 +1620,11 @@
         const vehicleEnquireUrl = (id) => @json(rtrim(route('vehicles.enquire', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const vehicleTestDriveUrl = (id) => @json(rtrim(route('vehicles.test-drive.form', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const vehiclePriceNegotiationUrl = (id) => @json(rtrim(route('vehicles.price-negotiation.form', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
+        const catalogVehicleId = @json((string) $vehicle->id);
+        const catalogVehicleLeadExtra = {
+            content_name: @json($vehicle->title),
+            value: @json((float) ($vehicle->price ?? 0))
+        };
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Embla Carousel
     const emblaNode = document.querySelector('#vehicle-images-carousel');
@@ -1741,7 +1746,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (typeof window.bilskyenTrackMetaLead === 'function') {
-                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, vehicleId);
+                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, catalogVehicleId, catalogVehicleLeadExtra);
             }
 
             const phone = payload?.data?.phone_number || '';
@@ -1822,7 +1827,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (typeof window.bilskyenTrackMetaLead === 'function') {
-                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, vehicleId);
+                window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, catalogVehicleId, catalogVehicleLeadExtra);
             }
 
             const phone = payload?.data?.phone_number || '';
@@ -1914,7 +1919,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             if (typeof window.bilskyenTrackMetaLead === 'function') {
-                window.bilskyenTrackMetaLead(data?.data?.meta_lead_event_id, vehicleId);
+                window.bilskyenTrackMetaLead(data?.data?.meta_lead_event_id, catalogVehicleId, catalogVehicleLeadExtra);
             }
             return data;
         } catch (error) {
@@ -2057,16 +2062,6 @@ document.addEventListener('DOMContentLoaded', function() {
 @if(!empty($metaPixelEnabled) && !empty($metaViewContentEventId))
 @push('scripts')
 <script>
-window.bilskyenTrackMetaLead = function (eventId, vehicleId) {
-    if (typeof fbq !== 'function' || !eventId) return;
-    fbq('track', 'Lead', {
-        content_ids: [String(vehicleId)],
-        content_type: 'vehicle',
-        content_name: @json($vehicle->title),
-        value: @json((float) ($vehicle->price ?? 0)),
-        currency: 'DKK'
-    }, { eventID: eventId });
-};
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof fbq !== 'function') return;
     fbq('track', 'ViewContent', {

@@ -134,6 +134,26 @@ class EnquiryController extends Controller
         return __($translationKey, ['vehicle' => $this->vehicleLabel($vehicle)]);
     }
 
+    private function dispatchMetaLead(Request $request, Vehicle $vehicle, ?Enquiry $enquiry = null): ?string
+    {
+        if (! $this->metaConversionsApiService->isBrowserEnabled()) {
+            return null;
+        }
+
+        $eventId = $this->metaConversionsApiService->newEventId();
+        $this->metaConversionsApiService->trackLead(
+            $vehicle,
+            $eventId,
+            route('vehicle.detail', $vehicle),
+            $request->ip(),
+            $request->userAgent(),
+            $enquiry?->email,
+            $enquiry?->phone
+        );
+
+        return $eventId;
+    }
+
     /**
      * Create a lead/enquiry for a vehicle
      * Allows both authenticated and guest users
@@ -241,19 +261,7 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
-        $metaLeadEventId = null;
-        if ($this->metaConversionsApiService->isEnabled()) {
-            $metaLeadEventId = $this->metaConversionsApiService->newEventId();
-            $this->metaConversionsApiService->trackLead(
-                $vehicle,
-                $metaLeadEventId,
-                route('vehicle.detail', $vehicle),
-                $request->ip(),
-                $request->userAgent(),
-                $enquiry->email,
-                $enquiry->phone
-            );
-        }
+        $metaLeadEventId = $this->dispatchMetaLead($request, $vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',
@@ -396,19 +404,7 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
-        $metaLeadEventId = null;
-        if ($this->metaConversionsApiService->isEnabled()) {
-            $metaLeadEventId = $this->metaConversionsApiService->newEventId();
-            $this->metaConversionsApiService->trackLead(
-                $vehicle,
-                $metaLeadEventId,
-                route('vehicles.enquire.form', $vehicle),
-                $request->ip(),
-                $request->userAgent(),
-                $enquiry->email,
-                $enquiry->phone
-            );
-        }
+        $metaLeadEventId = $this->dispatchMetaLead($request, $vehicle, $enquiry);
 
         return response()->json([
             'status' => 'success',
@@ -556,12 +552,15 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
+        $metaLeadEventId = $this->dispatchMetaLead($request, $vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.test_drive_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
+                'meta_lead_event_id' => $metaLeadEventId,
             ],
         ], 201);
     }
@@ -697,12 +696,15 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
+        $metaLeadEventId = $this->dispatchMetaLead($request, $vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.price_negotiation_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
+                'meta_lead_event_id' => $metaLeadEventId,
             ],
         ], 201);
     }
@@ -818,12 +820,15 @@ class EnquiryController extends Controller
         $this->sendVehicleEnquiryEmail($vehicle, $enquiry);
         $this->notifyEnquiryRecipients($vehicle, $enquiry);
 
+        $metaLeadEventId = $this->dispatchMetaLead($request, $vehicle, $enquiry);
+
         return response()->json([
             'status' => 'success',
             'message' => __('messages.api.exchange_request_submitted_followup'),
             'data' => [
                 'lead_id' => $lead->id,
                 'enquiry_id' => $enquiry->id,
+                'meta_lead_event_id' => $metaLeadEventId,
             ],
         ], 201);
     }

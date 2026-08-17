@@ -15,9 +15,9 @@ class FaqChatController extends Controller
 {
     private const MAX_MESSAGE_LENGTH = 2000;
 
-    private const MAX_HISTORY_TURNS = 10;
+    private const MAX_HISTORY_TURNS = 4;
 
-    private const MAX_HISTORY_MESSAGE_LENGTH = 1000;
+    private const MAX_HISTORY_MESSAGE_LENGTH = 400;
 
     public function __construct(
         private PlatformSettingService $platformSettingService,
@@ -54,14 +54,20 @@ class FaqChatController extends Controller
             $historyLines = [];
             foreach ($this->guardrails->sanitizeHistory($data['history'] ?? []) as $turn) {
                 $role = $turn['role'] === 'assistant' ? 'Assistant' : 'User';
-                $historyLines[] = $role.': '.$turn['content'];
+                $content = mb_substr($turn['content'], 0, self::MAX_HISTORY_MESSAGE_LENGTH);
+                if ($content === '') {
+                    continue;
+                }
+                $historyLines[] = $role.': '.$content;
             }
 
             $context = [
                 'knowledge_base' => $knowledge,
-                'conversation_history' => $historyLines !== [] ? implode("\n", $historyLines) : '(none)',
                 'user_message' => $data['message'],
             ];
+            if ($historyLines !== []) {
+                $context['conversation_history'] = implode("\n", $historyLines);
+            }
 
             $result = $this->aiService->generateFaqChat(
                 context: $context,

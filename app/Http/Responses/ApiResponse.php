@@ -47,7 +47,7 @@ trait ApiResponse
         string $message,
         $errors = null,
         int $statusCode = ApiStatusCode::BAD_REQUEST,
-        string $errorCode = null
+        ?string $errorCode = null
     ): JsonResponse {
         $response = [
             'success' => false,

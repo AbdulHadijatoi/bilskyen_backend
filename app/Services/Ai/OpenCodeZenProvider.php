@@ -3,7 +3,6 @@
 namespace App\Services\Ai;
 
 use App\Data\AiCompletionResult;
-use Illuminate\Support\Facades\Http;
 
 class OpenCodeZenProvider extends AbstractAiProvider
 {
@@ -24,8 +23,7 @@ class OpenCodeZenProvider extends AbstractAiProvider
 
     protected function callApi(string $apiKey, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, float $temperature): AiCompletionResult
     {
-        $response = Http::timeout(60)
-            ->withToken($apiKey)
+        $response = $this->timedRequest($apiKey)
             ->withUserAgent((string) config('ai.providers.opencodezen.user_agent', 'opencode/1.18.16'))
             ->post('https://opencode.ai/zen/v1/chat/completions', [
                 'model' => $this->normalizeModel($model),

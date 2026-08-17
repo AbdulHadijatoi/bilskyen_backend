@@ -29,7 +29,8 @@ class GeminiProvider extends AbstractAiProvider
             urlencode($model)
         );
 
-        $response = Http::timeout(60)
+        $response = Http::timeout($this->requestTimeout())
+            ->connectTimeout(3)
             ->withQueryParameters(['key' => $apiKey])
             ->post($url, [
                 'systemInstruction' => [

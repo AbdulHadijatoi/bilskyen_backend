@@ -103,10 +103,7 @@ class OllamaProvider extends AbstractAiProvider
 
     protected function callApi(string $apiKey, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, float $temperature): AiCompletionResult
     {
-        $request = Http::timeout(120);
-        if ($apiKey !== '' && $apiKey !== 'ollama-local') {
-            $request = $request->withToken($apiKey);
-        }
+        $request = $this->timedRequest($apiKey);
 
         $response = $request->post($this->baseUrl().'/v1/chat/completions', [
             'model' => $model,

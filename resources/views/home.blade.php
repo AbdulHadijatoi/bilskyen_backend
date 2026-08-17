@@ -2650,6 +2650,10 @@
             const searchQuery = document.getElementById('home-search-input')?.value?.trim() || '';
             const facetParams = buildHomeFilterParams();
 
+            if (typeof window.bilskyenTrackMetaSearch === 'function') {
+                window.bilskyenTrackMetaSearch(searchQuery || facetParams.toString());
+            }
+
             if (publicAiEnabled && searchQuery) {
                 const advisorParams = new URLSearchParams({ q: searchQuery });
                 window.location.href = findPerfectCarUrl + '?' + advisorParams.toString();

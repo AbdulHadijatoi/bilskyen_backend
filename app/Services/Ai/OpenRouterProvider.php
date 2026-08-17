@@ -3,7 +3,6 @@
 namespace App\Services\Ai;
 
 use App\Data\AiCompletionResult;
-use Illuminate\Support\Facades\Http;
 
 class OpenRouterProvider extends AbstractAiProvider
 {
@@ -24,8 +23,7 @@ class OpenRouterProvider extends AbstractAiProvider
 
     protected function callApi(string $apiKey, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, float $temperature): AiCompletionResult
     {
-        $response = Http::timeout(60)
-            ->withToken($apiKey)
+        $response = $this->timedRequest($apiKey)
             ->withHeaders([
                 'HTTP-Referer' => (string) config('app.url'),
                 'X-OpenRouter-Title' => (string) config('app.name'),

@@ -63,6 +63,12 @@
     @if(app()->environment('production'))
     <meta name="google-site-verification" content="UJCmMpdQRdTthyDk_rvdfCvGYIv7OETj5CYKgKtWoPc">
     @endif
+    @php
+        $facebookDomainVerification = app(\App\Services\Marketing\MetaConversionsApiService::class)->domainVerificationCode();
+    @endphp
+    @if($facebookDomainVerification !== '')
+    <meta name="facebook-domain-verification" content="{{ $facebookDomainVerification }}">
+    @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.partials.bot-protection-scripts')
     @include('layouts.partials.meta-pixel')

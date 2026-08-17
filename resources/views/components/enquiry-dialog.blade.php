@@ -10,6 +10,11 @@
     }
     $slug = $slug ? (is_string($slug) ? $slug : (string) $slug) : null;
 
+    $numericVehicleId = null;
+    if ($vehicle) {
+        $numericVehicleId = is_array($vehicle) ? ($vehicle['id'] ?? null) : ($vehicle->id ?? null);
+    }
+
     // Get form configuration based on type
     $formConfig = [
         'enquiry' => [
@@ -400,6 +405,13 @@
                 // Show snackbar
                 if (window.showSnackbar) {
                     window.showSnackbar(successMsg, 'success');
+                }
+
+                if (typeof window.bilskyenTrackMetaLead === 'function') {
+                    window.bilskyenTrackMetaLead(result?.data?.meta_lead_event_id, @json($numericVehicleId ? (string) $numericVehicleId : ''), {
+                        content_name: @json($vehicleTitle),
+                        value: @json((float) ($vehiclePrice ?? 0))
+                    });
                 }
 
                 // Close dialog immediately after submit

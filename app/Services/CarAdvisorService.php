@@ -11,9 +11,15 @@ use Illuminate\Support\Facades\Log;
 
 class CarAdvisorService
 {
-    private const CANDIDATE_LIMIT = 50;
+    private const CANDIDATE_LIMIT = 24;
 
     private const TOP_EXPLAIN = 6;
+
+    private const MARKET_RESCORE = 10;
+
+    private const HISTORY_TURNS = 4;
+
+    private const HISTORY_TURN_CHARS = 280;
 
     private const MIN_CANDIDATES_BEFORE_RELAX = 4;
 
@@ -86,9 +92,25 @@ class CarAdvisorService
         $scored = [];
         foreach ($vehicles as $vehicle) {
             /** @var Vehicle $vehicle */
+            $result = $this->scorer->score($vehicle, $profile, null);
+            $scored[] = [
+                'vehicle' => $vehicle,
+                'score' => $result['score'],
+                'match_reasons' => $result['match_reasons'],
+                'tradeoffs' => $result['tradeoffs'],
+                'components' => $result['components'],
+                'market' => null,
+            ];
+        }
+
+        usort($scored, fn (array $a, array $b) => $b['score'] <=> $a['score']);
+        $marketSlice = array_slice($scored, 0, self::MARKET_RESCORE);
+        foreach ($marketSlice as $index => $row) {
+            /** @var Vehicle $vehicle */
+            $vehicle = $row['vehicle'];
             $market = $this->marketPricingService->evaluateVehicle($vehicle);
             $result = $this->scorer->score($vehicle, $profile, $market);
-            $scored[] = [
+            $marketSlice[$index] = [
                 'vehicle' => $vehicle,
                 'score' => $result['score'],
                 'match_reasons' => $result['match_reasons'],
@@ -97,20 +119,22 @@ class CarAdvisorService
                 'market' => $market,
             ];
         }
-
-        usort($scored, fn (array $a, array $b) => $b['score'] <=> $a['score']);
-        $top = array_slice($scored, 0, self::TOP_EXPLAIN);
+        usort($marketSlice, fn (array $a, array $b) => $b['score'] <=> $a['score']);
+        $top = array_slice($marketSlice, 0, self::TOP_EXPLAIN);
 
         $explainMap = [];
-        $fallbackExplain = false;
-        try {
-            $explainMap = $this->explainRecommendations($profile, $top, $locale);
-            if ($explainMap === []) {
+        $fallbackExplain = true;
+        if ((bool) config('ai.tasks.car_advisor_explain.enabled', false)) {
+            $fallbackExplain = false;
+            try {
+                $explainMap = $this->explainRecommendations($profile, $top, $locale);
+                if ($explainMap === []) {
+                    $fallbackExplain = true;
+                }
+            } catch (\Throwable $e) {
+                Log::info('car_advisor.explain_fallback', ['message' => $e->getMessage()]);
                 $fallbackExplain = true;
             }
-        } catch (\Throwable $e) {
-            Log::info('car_advisor.explain_fallback', ['message' => $e->getMessage()]);
-            $fallbackExplain = true;
         }
 
         $recommendations = [];
@@ -176,19 +200,27 @@ class CarAdvisorService
     private function buildProfile(string $message, string $locale, array $history): array
     {
         $historyLines = [];
-        foreach ($history as $turn) {
+        foreach (array_slice($history, -self::HISTORY_TURNS) as $turn) {
             $role = ($turn['role'] ?? '') === 'assistant' ? 'Assistant' : 'User';
-            $historyLines[] = $role.': '.($turn['content'] ?? '');
+            $content = mb_substr(trim((string) ($turn['content'] ?? '')), 0, self::HISTORY_TURN_CHARS);
+            if ($content === '') {
+                continue;
+            }
+            $historyLines[] = $role.': '.$content;
+        }
+
+        $expanded = $this->synonymService->expand($message);
+        $context = ['user_message' => $message];
+        if ($historyLines !== []) {
+            $context['conversation_history'] = implode("\n", $historyLines);
+        }
+        if ($expanded !== '' && mb_strtolower($expanded) !== mb_strtolower($message)) {
+            $context['expanded_query'] = $expanded;
         }
 
         try {
             $result = $this->aiService->generateCarAdvisorProfile(
-                context: [
-                    'user_message' => $message,
-                    'conversation_history' => $historyLines !== [] ? implode("\n", $historyLines) : '(none)',
-                    'expanded_query' => $this->synonymService->expand($message),
-                    'output_schema' => $this->profileSchemaDescription(),
-                ],
+                context: $context,
                 locale: $locale,
             );
 
@@ -218,17 +250,6 @@ class CarAdvisorService
                 'provider' => null,
             ];
         }
-    }
-
-    private function profileSchemaDescription(): string
-    {
-        return 'JSON object with keys: budget_max (int DKK or null), use_case (city|mixed|highway|family|null), '
-            .'needs (array of tokens: stroller, space, family, city, low_repair_risk, low_tax, low_ownership_cost, sporty_look, automatic, electric), '
-            .'priorities (ordered array of short priority strings), '
-            .'summary (1-2 sentence brief in user language), '
-            .'brand, model, fuel, body, gear, city (strings or null), '
-            .'price_from, price_to, km_driven_from, km_driven_to, model_year_from, model_year_to, ownership_tax_to, seats_min (ints or null), '
-            .'intent (family|commute|null), search (residual keywords or null), labels (array of short chips).';
     }
 
     /**

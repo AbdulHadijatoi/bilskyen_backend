@@ -707,7 +707,8 @@ class HomeController extends Controller
             : null;
 
         $metaViewContentEventId = null;
-        if ($this->metaConversionsApiService->isEnabled()) {
+        $metaPixelEnabled = $this->metaConversionsApiService->isBrowserEnabled();
+        if ($metaPixelEnabled) {
             $metaViewContentEventId = $this->metaConversionsApiService->newEventId();
             $this->metaConversionsApiService->trackViewContent(
                 $vehicle,
@@ -728,7 +729,7 @@ class HomeController extends Controller
             'financeEstimate' => $financeEstimate,
             'financePartnerUrl' => $financePartnerUrl,
             'metaViewContentEventId' => $metaViewContentEventId,
-            'metaPixelEnabled' => $this->metaConversionsApiService->isEnabled(),
+            'metaPixelEnabled' => $metaPixelEnabled,
         ]);
     }
 

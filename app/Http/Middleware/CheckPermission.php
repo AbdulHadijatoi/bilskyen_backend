@@ -13,7 +13,7 @@ class CheckPermission
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $permission, string $action = null): Response
+    public function handle(Request $request, Closure $next, string $permission, ?string $action = null): Response
     {
         // For API requests, use auth('api')->user() since auth:api middleware already authenticated
         // For web requests, use $request->user()

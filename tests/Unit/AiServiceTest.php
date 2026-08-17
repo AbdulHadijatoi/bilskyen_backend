@@ -30,7 +30,7 @@ class AiServiceTest extends TestCase
 
         $this->assertStringContainsString('Locale=da', $system);
         $this->assertStringContainsString('Make: Volvo', $user);
-        $this->assertStringContainsString('"make": "Volvo"', $user);
+        $this->assertStringContainsString('"make":"Volvo"', $user);
     }
 
     public function test_public_prompts_include_preamble_and_fenced_user_message(): void
@@ -62,6 +62,20 @@ class AiServiceTest extends TestCase
         $this->assertStringContainsString('elbil under 200000', $user);
         $this->assertStringContainsString('JSON object with keys', $user);
         $this->assertDoesNotMatchRegularExpression('/<<<UNTRUSTED\s+JSON object with keys/', $user);
+    }
+
+    public function test_completion_options_use_task_limits(): void
+    {
+        $service = app(AiService::class);
+        $method = new ReflectionMethod(AiService::class, 'completionOptionsForTask');
+        $method->setAccessible(true);
+
+        $search = $method->invoke($service, AiGenerationTask::SEARCH_PARSE);
+        $this->assertSame(180, $search['max_tokens']);
+        $this->assertEquals(0.0, $search['temperature']);
+
+        $dealer = $method->invoke($service, AiGenerationTask::VEHICLE_DESCRIPTION);
+        $this->assertSame([], $dealer);
     }
 
     public function test_ai_generation_exception_carries_status_code(): void

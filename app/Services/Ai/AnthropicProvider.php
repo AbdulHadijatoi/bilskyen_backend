@@ -24,7 +24,8 @@ class AnthropicProvider extends AbstractAiProvider
 
     protected function callApi(string $apiKey, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, float $temperature): AiCompletionResult
     {
-        $response = Http::timeout(60)
+        $response = Http::timeout($this->requestTimeout())
+            ->connectTimeout(3)
             ->withHeaders([
                 'x-api-key' => $apiKey,
                 'anthropic-version' => '2023-06-01',

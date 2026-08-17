@@ -50,7 +50,7 @@ abstract class AbstractAiProvider implements AiProviderInterface
     {
         $value = $this->platformSettingService->get('ai', 'max_tokens', config('ai.default_max_tokens', 1200));
 
-        return max(256, (int) $value);
+        return max(64, (int) $value);
     }
 
     protected function temperature(): float
@@ -138,8 +138,23 @@ abstract class AbstractAiProvider implements AiProviderInterface
         }
     }
 
+    protected function requestTimeout(): int
+    {
+        return max(5, (int) config('ai.http_timeout', 12));
+    }
+
+    protected function timedRequest(?string $apiKey = null): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::timeout($this->requestTimeout())->connectTimeout(3);
+        if (is_string($apiKey) && $apiKey !== '' && $apiKey !== 'ollama-local') {
+            $request = $request->withToken($apiKey);
+        }
+
+        return $request;
+    }
+
     protected function httpClient(string $apiKey): \Illuminate\Http\Client\PendingRequest
     {
-        return Http::timeout(60)->withToken($apiKey);
+        return $this->timedRequest($apiKey);
     }
 }

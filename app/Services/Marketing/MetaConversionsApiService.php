@@ -10,10 +10,15 @@ use Illuminate\Support\Str;
 
 class MetaConversionsApiService
 {
+    public const FALLBACK_PIXEL_ID = '1904616770388925';
+
     public function __construct(
         private PlatformSettingService $platformSettingService,
     ) {}
 
+    /**
+     * Admin toggle + pixel ID: used for CAPI and catalog-guide status.
+     */
     public function isEnabled(): bool
     {
         return filter_var(
@@ -22,9 +27,25 @@ class MetaConversionsApiService
         ) && $this->pixelId() !== '';
     }
 
+    /**
+     * Browser Pixel / ViewContent / Lead. Always on when a Pixel ID is resolvable
+     * (settings or the live fallback) so retargeting does not depend on CAPI setup.
+     */
+    public function isBrowserEnabled(): bool
+    {
+        return $this->pixelId() !== '';
+    }
+
     public function pixelId(): string
     {
-        return trim((string) $this->platformSettingService->get('marketing', 'meta_pixel_id', ''));
+        $id = trim((string) $this->platformSettingService->get('marketing', 'meta_pixel_id', ''));
+
+        return $id !== '' ? $id : self::FALLBACK_PIXEL_ID;
+    }
+
+    public function domainVerificationCode(): string
+    {
+        return trim((string) $this->platformSettingService->get('marketing', 'meta_domain_verification', ''));
     }
 
     public function accessToken(): string

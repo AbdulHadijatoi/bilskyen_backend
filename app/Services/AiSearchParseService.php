@@ -73,16 +73,13 @@ class AiSearchParseService
         }
 
         try {
+            $context = ['user_query' => $query];
+            if ($expanded !== '' && mb_strtolower($expanded) !== mb_strtolower($query)) {
+                $context['expanded_query'] = $expanded;
+            }
+
             $result = $this->aiService->generateSearchParse(
-                context: [
-                    'user_query' => $query,
-                    'expanded_query' => $expanded,
-                    'slang_hints' => $this->synonymHintsForPrompt(),
-                    'catalog_fuels' => $this->catalogNames(DmrDriveEnergy::class),
-                    'catalog_bodies' => $this->catalogNames(DmrBodyType::class),
-                    'catalog_gears' => $this->catalogNames(GearType::class),
-                    'output_schema' => $this->outputSchemaDescription(),
-                ],
+                context: $context,
                 locale: $locale,
             );
 
@@ -404,18 +401,6 @@ class AiSearchParseService
     }
 
     /**
-     * @param  class-string  $modelClass
-     */
-    private function catalogNames(string $modelClass): string
-    {
-        return $modelClass::query()
-            ->orderBy('name')
-            ->pluck('name')
-            ->filter(fn ($n) => is_string($n) && trim($n) !== '')
-            ->implode(', ');
-    }
-
-    /**
      * @param  list<array{id:int,name:string,brand_id?:int}>  $rows
      * @return array{id:int,name:string,brand_id?:int}|null
      */
@@ -556,20 +541,5 @@ class AiSearchParseService
             'seats_min' => ($isDa ? 'Min. ' : 'Min ').$value.($isDa ? ' sæder' : ' seats'),
             default => $key.': '.$formatted,
         };
-    }
-
-    private function synonymHintsForPrompt(): string
-    {
-        $parts = [];
-        foreach ($this->synonymService->map() as $from => $to) {
-            $parts[] = $from.' → '.$to;
-        }
-
-        return implode('; ', array_slice($parts, 0, 40));
-    }
-
-    private function outputSchemaDescription(): string
-    {
-        return 'JSON object with optional keys: brand, model, fuel, body, gear, city, price_from, price_to, km_driven_from, km_driven_to, model_year_from, model_year_to, ownership_tax_from, ownership_tax_to, seats_min, intent (family|commute|null), search (residual keywords), labels (array of short human-readable chip strings). For fuel/body/gear use EXACT strings from catalog_fuels / catalog_bodies / catalog_gears (e.g. fuel "El" not "Electric", body "Stationcar" not "Estate"). Use null for unused fields. Numbers must be integers in DKK / km / year.';
     }
 }

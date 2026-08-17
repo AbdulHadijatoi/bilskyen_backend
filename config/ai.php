@@ -6,6 +6,10 @@ return [
 
     'default_temperature' => (float) env('AI_DEFAULT_TEMPERATURE', 0.7),
 
+    'http_timeout' => (int) env('AI_HTTP_TIMEOUT', 12),
+
+    'public_max_providers' => (int) env('AI_PUBLIC_MAX_PROVIDERS', 1),
+
     'providers' => [
         'openai' => [
             'default_model' => env('AI_OPENAI_MODEL', 'gpt-4o-mini'),
@@ -36,6 +40,30 @@ return [
     'guardrails' => [
         'enabled' => filter_var(env('AI_GUARDRAILS_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
         'patterns' => [],
+    ],
+
+    'tasks' => [
+        'car_advisor_profile' => [
+            'max_tokens' => 280,
+            'temperature' => 0.1,
+        ],
+        'car_advisor_explain' => [
+            'enabled' => false,
+            'max_tokens' => 320,
+            'temperature' => 0.1,
+        ],
+        'search_parse' => [
+            'max_tokens' => 180,
+            'temperature' => 0.0,
+        ],
+        'faq_chat' => [
+            'max_tokens' => 280,
+            'temperature' => 0.2,
+        ],
+        'listing_description' => [
+            'max_tokens' => 360,
+            'temperature' => 0.4,
+        ],
     ],
 
 ];

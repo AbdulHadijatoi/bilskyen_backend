@@ -2,14 +2,13 @@
 
 namespace App\Services\Syndication;
 
-use App\Models\Dealer;
 use App\Models\Vehicle;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class MetaVehicleCatalogMapper
 {
-    public const MAX_IMAGES = 10;
+    public const MAX_IMAGES = 20;
 
     /**
      * Stable CSV column order for Meta automotive catalogs.
@@ -29,6 +28,8 @@ class MetaVehicleCatalogMapper
             'mileage.value',
             'mileage.unit',
             'price',
+            'availability',
+            'condition',
             'body_style',
             'exterior_color',
             'state_of_vehicle',
@@ -67,13 +68,15 @@ class MetaVehicleCatalogMapper
             'vehicle_id' => (string) $vehicle->id,
             'title' => (string) ($vehicle->title ?? ''),
             'description' => $this->plainDescription($vehicle),
-            'url' => route('vehicle.detail', $vehicle),
+            'url' => self::forceHttps(route('vehicle.detail', $vehicle)),
             'make' => (string) ($vehicle->brand?->name ?? ''),
             'model' => (string) ($vehicle->model?->name ?? ''),
             'year' => $year ? (string) $year : '',
             'mileage.value' => (string) $mileage,
             'mileage.unit' => 'KM',
             'price' => number_format((float) ($vehicle->price ?? 0), 2, '.', '').' DKK',
+            'availability' => 'IN_STOCK',
+            'condition' => $this->mapCondition($vehicle->condition?->name),
             'body_style' => $this->mapBodyStyle($vehicle->bodyType?->name),
             'exterior_color' => (string) ($vehicle->colour?->name ?? 'Other'),
             'state_of_vehicle' => $state,
@@ -134,6 +137,8 @@ class MetaVehicleCatalogMapper
             ['key' => 'price', 'ok' => (float) ($vehicle->price ?? 0) > 0, 'label' => 'price'],
             ['key' => 'image', 'ok' => ($row['image[0].url'] ?? '') !== '', 'label' => 'image'],
             ['key' => 'url', 'ok' => $row['url'] !== '', 'label' => 'url'],
+            ['key' => 'availability', 'ok' => ($row['availability'] ?? '') === 'IN_STOCK', 'label' => 'availability'],
+            ['key' => 'condition', 'ok' => ($row['condition'] ?? '') !== '', 'label' => 'condition'],
             ['key' => 'body_style', 'ok' => $row['body_style'] !== '' && $row['body_style'] !== 'OTHER', 'label' => 'body_style'],
             ['key' => 'exterior_color', 'ok' => $row['exterior_color'] !== '' && $row['exterior_color'] !== 'Other', 'label' => 'exterior_color'],
             ['key' => 'mileage', 'ok' => true, 'label' => 'mileage'],
@@ -160,7 +165,43 @@ class MetaVehicleCatalogMapper
      */
     public function eagerLoads(): array
     {
-        return ['images', 'brand', 'model', 'fuelType', 'gearType', 'bodyType', 'colour', 'dealer'];
+        return ['images', 'brand', 'model', 'fuelType', 'gearType', 'bodyType', 'colour', 'condition', 'dealer'];
+    }
+
+    public static function forceHttps(string $url): string
+    {
+        if ($url === '') {
+            return '';
+        }
+
+        if (str_starts_with(strtolower($url), 'http://')) {
+            return 'https://'.substr($url, 7);
+        }
+
+        return $url;
+    }
+
+    public function mapCondition(?string $name): string
+    {
+        $n = strtolower(trim((string) $name));
+        if ($n === '') {
+            return 'GOOD';
+        }
+
+        if (str_contains($n, 'excellent') || str_contains($n, 'fremrag') || str_contains($n, 'udmærk') || str_contains($n, 'udmaerk')) {
+            return 'EXCELLENT';
+        }
+        if (str_contains($n, 'fair') || str_contains($n, 'rimelig') || str_contains($n, 'middel')) {
+            return 'FAIR';
+        }
+        if (str_contains($n, 'poor') || str_contains($n, 'dårlig') || str_contains($n, 'daarlig') || str_contains($n, 'slidt')) {
+            return 'POOR';
+        }
+        if (str_contains($n, 'new') || $n === 'ny' || str_starts_with($n, 'ny ')) {
+            return 'EXCELLENT';
+        }
+
+        return 'GOOD';
     }
 
     public function mapBodyStyle(?string $name): string
@@ -259,7 +300,7 @@ class MetaVehicleCatalogMapper
         return $vehicle->images
             ->sortBy('sort_order')
             ->take(self::MAX_IMAGES)
-            ->map(fn ($img) => url(Storage::disk('public')->url($img->image_path)))
+            ->map(fn ($img) => self::forceHttps(url(Storage::disk('public')->url($img->image_path))))
             ->values()
             ->all();
     }

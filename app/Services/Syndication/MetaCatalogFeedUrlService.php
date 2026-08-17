@@ -26,11 +26,15 @@ class MetaCatalogFeedUrlService
     {
         $token = $this->ensurePlatformFeedToken();
 
-        return rtrim(config('app.url'), '/').'/api/v1/feeds/platform/'.$token.'/vehicles.csv';
+        return MetaVehicleCatalogMapper::forceHttps(
+            rtrim((string) config('app.url'), '/').'/api/v1/feeds/platform/'.$token.'/vehicles.csv'
+        );
     }
 
     public function dealerFeedUrl(string $token): string
     {
-        return rtrim(config('app.url'), '/').'/api/v1/feeds/'.$token.'/vehicles.csv';
+        return MetaVehicleCatalogMapper::forceHttps(
+            rtrim((string) config('app.url'), '/').'/api/v1/feeds/'.$token.'/vehicles.csv'
+        );
     }
 }

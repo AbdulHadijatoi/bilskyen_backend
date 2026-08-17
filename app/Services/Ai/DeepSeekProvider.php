@@ -3,7 +3,6 @@
 namespace App\Services\Ai;
 
 use App\Data\AiCompletionResult;
-use Illuminate\Support\Facades\Http;
 
 class DeepSeekProvider extends AbstractAiProvider
 {
@@ -24,8 +23,7 @@ class DeepSeekProvider extends AbstractAiProvider
 
     protected function callApi(string $apiKey, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, float $temperature): AiCompletionResult
     {
-        $response = Http::timeout(60)
-            ->withToken($apiKey)
+        $response = $this->timedRequest($apiKey)
             ->post('https://api.deepseek.com/chat/completions', [
                 'model' => $model,
                 'max_tokens' => $maxTokens,

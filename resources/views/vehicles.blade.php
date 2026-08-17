@@ -2418,6 +2418,14 @@
                 renderFilterChips();
                 updateResetButtonVisibility();
                 syncFiltersToUrl({ ...payload, page });
+                if (typeof window.bilskyenTrackMetaSearch === 'function') {
+                    const searchBits = [];
+                    if (payload.search) searchBits.push(String(payload.search));
+                    if (payload.price_to) searchBits.push('under ' + payload.price_to);
+                    if (payload.body_type_id) searchBits.push('body:' + payload.body_type_id);
+                    if (payload.condition_id) searchBits.push('condition:' + payload.condition_id);
+                    window.bilskyenTrackMetaSearch(searchBits.join(' ').trim());
+                }
                 isLoading = false;
             } catch (error) {
                 console.error('Error fetching vehicles:', error);

@@ -35,5 +35,10 @@ class AiConstantsTest extends TestCase
         $this->assertSame('deepseek-v4-flash-free', config('ai.providers.opencodezen.default_model'));
         $this->assertSame('llama3.2', config('ai.providers.ollama.default_model'));
         $this->assertGreaterThan(0, config('ai.default_max_tokens'));
+        $this->assertGreaterThan(0, config('ai.http_timeout'));
+        $this->assertGreaterThan(0, config('ai.public_max_providers'));
+        $this->assertFalse((bool) config('ai.tasks.car_advisor_explain.enabled'));
+        $this->assertLessThanOrEqual(300, (int) config('ai.tasks.car_advisor_profile.max_tokens'));
+        $this->assertLessThanOrEqual(200, (int) config('ai.tasks.search_parse.max_tokens'));
     }
 }
