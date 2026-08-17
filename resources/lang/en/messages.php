@@ -1473,6 +1473,10 @@ return [
     // Errors
     'errors' => [
         'dealer_not_found' => 'Dealer not found',
+        'impersonate_dealer_no_owner' => 'This dealer has no owner account to log in as.',
+        'impersonate_dealer_owner_banned' => 'This dealer owner account is banned or suspended.',
+        'impersonate_dealer_owner_not_dealer' => 'This dealer owner cannot log in to the dealer panel.',
+        'impersonate_not_active' => 'You are not currently logged in as a dealer.',
         'vehicle_not_found' => 'Vehicle not found',
         'unauthorized_access' => 'Unauthorized access',
         'permission_denied' => 'You do not have permission to perform this action',

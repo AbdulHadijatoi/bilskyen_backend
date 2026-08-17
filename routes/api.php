@@ -163,6 +163,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/update-user', [AuthController::class, 'updateUser']);
             Route::post('/profile', [AuthController::class, 'updateUser']); // Alias for update-user
             Route::post('/revoke-session', [AuthController::class, 'revokeSession']);
+            Route::post('/stop-impersonation', [AuthController::class, 'stopImpersonation']);
             Route::post('/change-password', [AuthController::class, 'changePassword']);
             Route::delete('/account', [AuthController::class, 'deleteAccount']);
         });

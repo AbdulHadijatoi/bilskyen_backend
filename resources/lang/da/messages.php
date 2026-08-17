@@ -1473,6 +1473,10 @@ return [
     // Errors
     'errors' => [
         'dealer_not_found' => 'Forhandler ikke fundet',
+        'impersonate_dealer_no_owner' => 'Denne forhandler har ingen ejerkonto at logge ind som.',
+        'impersonate_dealer_owner_banned' => 'Forhandlerens ejerkonto er udelukket eller suspenderet.',
+        'impersonate_dealer_owner_not_dealer' => 'Forhandlerens ejer kan ikke logge ind i forhandlerpanelet.',
+        'impersonate_not_active' => 'Du er ikke logget ind som forhandler i øjeblikket.',
         'vehicle_not_found' => 'Køretøj ikke fundet',
         'unauthorized_access' => 'Uautoriseret adgang',
         'permission_denied' => 'Du har ikke tilladelse til at udføre denne handling',

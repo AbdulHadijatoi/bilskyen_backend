@@ -157,6 +157,11 @@ class AuthController extends Controller
         return $this->sessionController->deleteAccount($request);
     }
 
+    public function stopImpersonation(Request $request): JsonResponse
+    {
+        return $this->sessionController->stopImpersonation($request);
+    }
+
     public function signInMagicLink(Request $request): JsonResponse
     {
         return $this->verificationController->signInMagicLink($request);

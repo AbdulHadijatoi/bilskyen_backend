@@ -2,16 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\UserStatus;
 use App\Constants\VehicleListStatus;
+use App\Models\AuditActorType;
 use App\Models\Dealer;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\AuditLogService;
+use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 /**
  * Admin Dealer Controller
  */
 class AdminDealerController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLogService,
+        private SubscriptionFeatureService $subscriptionFeatureService
+    ) {}
+
     /**
      * List all dealers
      */
@@ -87,5 +98,87 @@ class AdminDealerController extends Controller
             ->findOrFail($id);
 
         return $this->success($dealer);
+    }
+
+    /**
+     * Log in as the dealer owner (impersonation). Does not overwrite the admin refresh cookie.
+     */
+    public function impersonate(Request $request, int $id): JsonResponse
+    {
+        $admin = $request->user();
+        $dealer = Dealer::with('owner')->findOrFail($id);
+        $owner = $dealer->owner;
+
+        if (! $owner) {
+            return $this->notFound(__('messages.errors.impersonate_dealer_no_owner'));
+        }
+
+        $owner->load('roles');
+
+        if (($owner->banned ?? false) || (int) $owner->status_id === UserStatus::SUSPENDED) {
+            return $this->forbidden(__('messages.errors.impersonate_dealer_owner_banned'));
+        }
+
+        if (! $owner->hasRole('dealer')) {
+            return $this->forbidden(__('messages.errors.impersonate_dealer_owner_not_dealer'));
+        }
+
+        $token = JWTAuth::customClaims([
+            'impersonated_by' => $admin->id,
+            'impersonating_dealer_id' => $dealer->id,
+        ])->fromUser($owner);
+
+        $this->auditLogService->log(
+            $admin->id,
+            AuditActorType::ADMIN,
+            'impersonate',
+            'Dealer',
+            $dealer->id,
+            null,
+            [
+                'owner_user_id' => $owner->id,
+                'owner_email' => $owner->email,
+            ],
+            $request,
+            'User',
+            $owner->id,
+            'Admin logged in as dealer',
+            ['impersonation', 'dealer']
+        );
+
+        return $this->success($this->panelAuthPayload($owner, $token, $dealer));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function panelAuthPayload(User $user, string $token, Dealer $dealer): array
+    {
+        $subscriptionFeatures = $this->subscriptionFeatureService->getFeatures($dealer);
+        if ($subscriptionFeatures === []) {
+            $subscriptionFeatures = new \stdClass;
+        }
+
+        $dealerName = $user->name ?: ($dealer->slug ?: ('Dealer #'.$dealer->id));
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+                'emailVerified' => $user->email_verified_at !== null,
+                'phone' => $user->phone,
+            ],
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl', 30) * 60,
+            'subscription_features' => $subscriptionFeatures,
+            'impersonation' => [
+                'dealer_id' => $dealer->id,
+                'dealer_name' => $dealerName,
+            ],
+        ];
     }
 }

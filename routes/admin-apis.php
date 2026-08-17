@@ -166,6 +166,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::prefix('dealers')->group(function () {
         Route::get('/', [AdminDealerController::class, 'index']);
         Route::get('/list', [AdminDealerController::class, 'list']);
+        Route::post('/{id}/impersonate', [AdminDealerController::class, 'impersonate']);
         Route::get('/{id}', [AdminDealerController::class, 'show']);
     });
 

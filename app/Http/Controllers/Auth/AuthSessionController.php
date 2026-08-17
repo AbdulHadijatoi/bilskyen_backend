@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditActorType;
+use App\Models\User;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -209,6 +211,85 @@ class AuthSessionController extends Controller
         }
 
         return $this->success(['message' => __('messages.messages.account_deleted_successfully')]);
+    }
+
+    /**
+     * End dealer impersonation and restore the original admin session.
+     */
+    public function stopImpersonation(Request $request): JsonResponse
+    {
+        try {
+            $payload = JWTAuth::parseToken()->getPayload();
+        } catch (JWTException $e) {
+            return $this->unauthorized();
+        }
+
+        $claims = $payload->toArray();
+        $adminId = $claims['impersonated_by'] ?? null;
+        $dealerId = $claims['impersonating_dealer_id'] ?? null;
+
+        if (! $adminId) {
+            return $this->forbidden(__('messages.errors.impersonate_not_active'));
+        }
+
+        $admin = User::find($adminId);
+        if (! $admin) {
+            return $this->notFound(__('messages.errors.user_not_found'));
+        }
+
+        $admin->load('roles');
+
+        if (! $admin->hasRole('admin')) {
+            return $this->forbidden(__('messages.errors.permission_denied'));
+        }
+
+        $impersonatedUserId = $request->user()?->id;
+
+        $accessToken = JWTAuth::customClaims([])->fromUser($admin);
+        $refreshToken = JWTAuth::customClaims(['type' => 'refresh'])->fromUser($admin);
+
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            20160,
+            null,
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
+
+        $this->auditLogService->log(
+            $admin->id,
+            AuditActorType::ADMIN,
+            'stop_impersonate',
+            $dealerId ? 'Dealer' : 'User',
+            (int) ($dealerId ?: $admin->id),
+            null,
+            ['restored_admin_id' => $admin->id],
+            $request,
+            'User',
+            $impersonatedUserId,
+            'Admin stopped dealer impersonation',
+            ['impersonation', 'dealer']
+        );
+
+        return $this->success([
+            'user' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'roles' => $admin->roles->pluck('name')->toArray(),
+                'permissions' => $admin->getAllPermissions()->pluck('name')->toArray(),
+                'emailVerified' => $admin->email_verified_at !== null,
+                'phone' => $admin->phone,
+            ],
+            'access_token' => $accessToken,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl', 30) * 60,
+            'subscription_features' => new \stdClass,
+        ])->cookie($cookie);
     }
 }
 
