@@ -88,6 +88,7 @@ class AuthSessionController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|min:2|max:100',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:10',
@@ -98,15 +99,20 @@ class AuthSessionController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        // Capture before state for audit log
-        $beforeData = $user->only(['name', 'phone', 'address', 'postcode', 'image']);
+        $validated = $validator->validated();
+        if (isset($validated['email'])) {
+            $validated['email'] = strtolower($validated['email']);
+        }
 
-        $user->update($validator->validated());
+        // Capture before state for audit log
+        $beforeData = $user->only(['name', 'email', 'phone', 'address', 'postcode', 'image']);
+
+        $user->update($validated);
         $user->load('roles');
 
         // Log audit trail
         try {
-            $afterData = $user->only(['name', 'phone', 'address', 'postcode', 'image']);
+            $afterData = $user->only(['name', 'email', 'phone', 'address', 'postcode', 'image']);
             $this->auditLogService->logUpdate(
                 $user,
                 'User',
