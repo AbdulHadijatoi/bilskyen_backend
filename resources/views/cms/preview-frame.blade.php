@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $seo['meta_title'] ?? 'Preview' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @include('layouts.partials.design-tokens')
+    @include('layouts.partials.site-styles')
     <style>
         body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; }
         .cms-preview-banner {

@@ -401,6 +401,7 @@ return [
             'info_title' => 'Contact Information',
             'info_description' => 'Find us at our dealership or contact us via phone or email.',
             'our_address' => 'Our Address',
+            'cvr' => 'CVR',
             'get_directions' => 'Get Directions',
             'phone' => 'Phone',
             'email' => 'Email',
@@ -422,6 +423,7 @@ return [
         'about' => [
             'page_title' => 'About Bilskyen | Bilskyen',
             'title' => 'About Bilskyen',
+            'cvr' => 'CVR',
             'description' => 'We are dedicated to revolutionizing the dealership industry with cutting-edge technology and a passion for excellence.',
             'mission_label' => 'Our Mission',
             'mission_title' => 'Empowering Dealers Through Innovation',
@@ -880,6 +882,7 @@ return [
             'about_us' => 'About Us',
             'contact' => 'Contact',
             'address' => 'Address',
+            'cvr' => 'CVR',
             'all_rights_reserved' => 'All rights reserved',
             'default_about_description' => 'Bilskyen - Driving trust and value with quality pre-owned vehicles for every journey.',
             'social_instagram' => 'Instagram',

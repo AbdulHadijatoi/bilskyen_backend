@@ -14,6 +14,7 @@ class SchemaBuilderService
             'Organization' => $this->organization($fields),
             'WebSite' => $this->webSite($fields),
             'Vehicle' => $this->vehicle($fields),
+            'AutoDealer' => $this->autoDealer($fields),
             'FAQPage' => $this->faqPage($fields),
             'BreadcrumbList' => $this->breadcrumbList($fields),
             default => throw new \InvalidArgumentException("Unknown schema type: {$type}"),
@@ -53,18 +54,75 @@ class SchemaBuilderService
     }
 
     /**
+     * Sitewide Organization + WebSite graph (no SearchAction).
+     *
+     * @return array<string, mixed>
+     */
+    public function sitewideGraph(): array
+    {
+        $company = \App\Support\CompanyProfile::class;
+
+        $org = $this->organization([
+            'name' => $company::name(),
+            'legalName' => $company::legalName(),
+            'url' => url('/'),
+            'logo' => $company::logoUrl(),
+            'email' => $company::email(),
+            'telephone' => $company::publicPhone(),
+            'taxID' => $company::cvr(),
+            'street' => $company::street(),
+            'postalCode' => $company::postalCode(),
+            'addressLocality' => $company::city(),
+            'addressCountry' => $company::country(),
+            'sameAs' => $company::sameAs(),
+        ]);
+        unset($org['@context']);
+
+        $web = $this->webSite([
+            'name' => $company::name(),
+            'url' => url('/'),
+        ]);
+        unset($web['@context']);
+
+        return [
+            '@context' => 'https://schema.org',
+            '@graph' => array_values(array_filter([$org, $web])),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $fields
      * @return array<string, mixed>
      */
     private function organization(array $fields): array
     {
+        $sameAs = $fields['sameAs'] ?? [];
+        if (! is_array($sameAs)) {
+            $sameAs = [];
+        }
+        $sameAs = array_values(array_filter($sameAs, fn ($url) => is_string($url) && str_starts_with(strtolower($url), 'https://')));
+
+        $address = array_filter([
+            '@type' => 'PostalAddress',
+            'streetAddress' => $fields['street'] ?? ($fields['address'] ?? null),
+            'postalCode' => $fields['postalCode'] ?? null,
+            'addressLocality' => $fields['addressLocality'] ?? null,
+            'addressCountry' => $fields['addressCountry'] ?? null,
+        ]);
+
         return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             'name' => $fields['name'] ?? null,
+            'legalName' => $fields['legalName'] ?? null,
             'url' => $fields['url'] ?? null,
             'logo' => $fields['logo'] ?? null,
             'description' => $fields['description'] ?? null,
+            'email' => $fields['email'] ?? null,
+            'telephone' => $fields['telephone'] ?? null,
+            'taxID' => $fields['taxID'] ?? null,
+            'address' => count($address) > 1 ? $address : null,
+            'sameAs' => $sameAs !== [] ? $sameAs : null,
         ]);
     }
 
@@ -107,14 +165,40 @@ class SchemaBuilderService
         ];
 
         if (! empty($fields['price'])) {
-            $schema['offers'] = [
+            $offer = array_filter([
                 '@type' => 'Offer',
                 'price' => (float) $fields['price'],
                 'priceCurrency' => 'DKK',
-            ];
+                'url' => $fields['url'] ?? null,
+                'availability' => $fields['availability'] ?? null,
+                'itemCondition' => $fields['itemCondition'] ?? 'https://schema.org/UsedCondition',
+                'seller' => $fields['seller'] ?? null,
+            ]);
+            $schema['offers'] = $offer;
         }
 
         return array_filter($schema);
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array<string, mixed>
+     */
+    private function autoDealer(array $fields): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'AutoDealer',
+            '@id' => $fields['id'] ?? null,
+            'name' => $fields['name'] ?? null,
+            'url' => $fields['url'] ?? null,
+            'image' => $fields['image'] ?? null,
+            'telephone' => $fields['telephone'] ?? null,
+            'address' => ! empty($fields['address']) ? [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $fields['address'],
+            ] : null,
+        ]);
     }
 
     /**

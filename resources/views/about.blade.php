@@ -13,6 +13,11 @@
             <p class="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
                 {{ $aboutPageContent['about_header_description'] ?? __('messages.pages.about.description') }}
             </p>
+            <p class="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm">
+                {{ \App\Support\CompanyProfile::legalName() }}
+                · {{ __('messages.pages.about.cvr') }} {{ \App\Support\CompanyProfile::cvr() }}
+                · {{ \App\Support\CompanyProfile::addressLine() }}
+            </p>
         </div>
     </section>
 

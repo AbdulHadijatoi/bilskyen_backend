@@ -14,6 +14,7 @@ use App\Services\AuthService;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
 use App\Services\SeoService;
+use App\Services\Seo\SchemaBuilderService;
 use App\Services\Reputation\GoogleReviewService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
@@ -31,6 +32,7 @@ class DealerController extends Controller
         private AuditLogService $auditLogService,
         private SeoService $seoService,
         private GoogleReviewService $googleReviewService,
+        private SchemaBuilderService $schemaBuilder,
     ) {}
 
     /**
@@ -109,7 +111,17 @@ class DealerController extends Controller
                 : collect();
         }
 
-        $seo = $this->seoService->getForPage('dealer', $dealer->slug);
+        $seo = $this->seoService->getForPage('dealer', $dealer->slug) ?? [];
+        if (empty($seo['schema_json'])) {
+            $dealerUrl = route('dealer.show', $dealer->slug);
+            $seo['schema_json'] = $this->schemaBuilder->build('AutoDealer', [
+                'id' => $dealerUrl.'#dealer',
+                'name' => $dealer->owner?->name ?? $dealer->slug,
+                'url' => $dealerUrl,
+                'image' => $dealer->logo_url,
+                'address' => trim(implode(', ', array_filter([(string) $dealer->address, (string) $dealer->postcode, (string) $dealer->city]))),
+            ]);
+        }
         $reviewSummary = $this->googleReviewService->dealerReviewSummary($dealer);
 
         // Whether the dealer has any published inventory at all (independent of

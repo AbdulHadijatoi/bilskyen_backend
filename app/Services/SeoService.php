@@ -106,10 +106,26 @@ class SeoService
         }
 
         $canonical = route('vehicle.detail', $vehicle);
+        $schemaBrand = \App\Support\SchemaBrandName::normalize($brand !== '' ? $brand : null);
+        $availability = ((int) $vehicle->list_status_id === VehicleListStatus::SOLD)
+            ? 'https://schema.org/SoldOut'
+            : 'https://schema.org/InStock';
+        $seller = null;
+        $dealer = $vehicle->dealer;
+        if ($dealer && \App\Models\Dealer::isPublicProfileSlug($dealer->slug)) {
+            $dealerUrl = route('dealer.show', $dealer->slug);
+            $seller = array_filter([
+                '@type' => 'AutoDealer',
+                '@id' => $dealerUrl.'#dealer',
+                'name' => $dealerName !== '' ? $dealerName : ($dealer->slug ?? null),
+                'url' => $dealerUrl,
+            ]);
+        }
+
         $schema = app(SchemaBuilderService::class)->build('Vehicle', [
             'name' => trim(implode(' ', array_filter([$brand, $model, $variant], fn ($p) => $p !== '')))
                 ?: ($vehicle->title ?? null),
-            'brand' => $brand !== '' ? $brand : null,
+            'brand' => $schemaBrand,
             'model' => $model !== '' ? $model : null,
             'year' => $year,
             'price' => $vehicle->price !== null && (float) $vehicle->price > 0 ? (float) $vehicle->price : null,
@@ -119,6 +135,17 @@ class SeoService
             'fuel' => $vehicle->fuel_type_name,
             'url' => $canonical,
             'image' => $ogImage,
+            'availability' => $availability,
+            'itemCondition' => 'https://schema.org/UsedCondition',
+            'seller' => $seller,
+        ]);
+
+        $breadcrumbs = app(SchemaBuilderService::class)->build('BreadcrumbList', [
+            'items' => [
+                ['name' => __('messages.common.site_name'), 'url' => url('/')],
+                ['name' => __('messages.pages.vehicles.listing_h1'), 'url' => route('vehicles')],
+                ['name' => $pageTitle !== '' ? $pageTitle : ($vehicle->title ?? __('messages.pages.vehicles.detail.page_title')), 'url' => $canonical],
+            ],
         ]);
 
         $defaults = [
@@ -138,7 +165,7 @@ class SeoService
             'schema_json' => $schema,
             'content_html' => null,
             'faq_json' => null,
-            'breadcrumbs_json' => null,
+            'breadcrumbs_json' => $breadcrumbs,
         ];
 
         return $this->applyNonEmptyOverrides(

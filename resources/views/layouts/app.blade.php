@@ -41,6 +41,9 @@
     @if($seoIndexingEnabled && !empty($seo['schema_json']))
     <script type="application/ld+json">{!! is_array($seo['schema_json']) ? json_encode($seo['schema_json']) : $seo['schema_json'] !!}</script>
     @endif
+    @if($seoIndexingEnabled && !empty($seo['breadcrumbs_json']))
+    <script type="application/ld+json">{!! is_array($seo['breadcrumbs_json']) ? json_encode($seo['breadcrumbs_json']) : $seo['breadcrumbs_json'] !!}</script>
+    @endif
     @else
     @php $seoIndexingEnabled = app()->environment('production'); @endphp
     <title>@yield('title', __('messages.layouts.default_title'))</title>
@@ -60,6 +63,10 @@
     <meta name="twitter:description" content="{{ __('messages.layouts.meta_description') }}">
     <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
     @endisset
+    @php $seoIndexingEnabled = $seoIndexingEnabled ?? app()->environment('production'); @endphp
+    @if($seoIndexingEnabled)
+    <script type="application/ld+json">{!! json_encode(app(\App\Services\Seo\SchemaBuilderService::class)->sitewideGraph()) !!}</script>
+    @endif
     @if(app()->environment('production'))
     <meta name="google-site-verification" content="UJCmMpdQRdTthyDk_rvdfCvGYIv7OETj5CYKgKtWoPc">
     @endif
@@ -76,8 +83,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    @include('layouts.partials.tailwind-config')
     @include('layouts.partials.design-tokens')
     @include('layouts.partials.site-styles')
     @include('layouts.partials.panel-blade-styles')

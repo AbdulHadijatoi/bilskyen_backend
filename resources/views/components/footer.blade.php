@@ -118,10 +118,21 @@
 
             <div>
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.contact_us') }}</h3>
+                @php
+                    $footerEmail = \App\Support\CompanyProfile::email();
+                    if (!empty($homePageContent['footer_contact_email'])) {
+                        $footerEmail = $homePageContent['footer_contact_email'];
+                    }
+                    $footerPhone = \App\Support\CompanyProfile::publicPhone($homePageContent['footer_contact_phone'] ?? null);
+                    $footerAddress = \App\Support\CompanyProfile::publicAddress($homePageContent['footer_about_address'] ?? null);
+                @endphp
                 <ul class="space-y-3 text-sm">
-                    <li><a href="mailto:{{ isset($homePageContent) && isset($homePageContent['footer_contact_email']) ? $homePageContent['footer_contact_email'] : 'info@bilskyen.dk' }}">{{ isset($homePageContent) && isset($homePageContent['footer_contact_email']) ? $homePageContent['footer_contact_email'] : 'info@bilskyen.dk' }}</a></li>
-                    <li><a href="tel:{{ isset($homePageContent) && isset($homePageContent['footer_contact_phone']) ? $homePageContent['footer_contact_phone'] : '+45 12 34 56 78' }}">{{ isset($homePageContent) && isset($homePageContent['footer_contact_phone']) ? $homePageContent['footer_contact_phone'] : '+45 12 34 56 78' }}</a></li>
-                    <li class="text-[var(--footer-muted)]">{{ __('messages.pages.footer.address') }}: {{ isset($homePageContent) && isset($homePageContent['footer_about_address']) ? $homePageContent['footer_about_address'] : '123 Dealership Lane, Copenhagen, Denmark' }}</li>
+                    <li><a href="mailto:{{ $footerEmail }}">{{ $footerEmail }}</a></li>
+                    @if($footerPhone)
+                    <li><a href="tel:{{ \App\Helpers\FormatHelper::formatPhoneNumber($footerPhone) }}">{{ $footerPhone }}</a></li>
+                    @endif
+                    <li class="text-[var(--footer-muted)]">{{ __('messages.pages.footer.address') }}: {{ $footerAddress }}</li>
+                    <li class="text-[var(--footer-muted)]">{{ __('messages.pages.footer.cvr') }}: {{ \App\Support\CompanyProfile::cvr() }}</li>
                 </ul>
             </div>
         </div>

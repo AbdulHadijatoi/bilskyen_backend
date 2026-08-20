@@ -29,12 +29,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend([
+            \App\Http\Middleware\CanonicalUrlMiddleware::class,
             \App\Http\Middleware\SeoRedirectMiddleware::class,
         ]);
 
         $middleware->append([
             SanitizeInput::class,
             SecurityHeaders::class,
+            \App\Http\Middleware\PublicHtmlCache::class,
         ]);
 
         // Trust Cloudflare / reverse-proxy headers when behind a CDN.

@@ -140,17 +140,33 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.our_address') }}</h3>
+                                @php
+                                    $contactAddress = \App\Support\CompanyProfile::publicAddress($contactPageContent['contact_address'] ?? null);
+                                @endphp
                                 <p class="text-muted-foreground">
-                                    {{ $contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark' }}
+                                    {{ $contactAddress }}
+                                </p>
+                                <p class="text-muted-foreground mt-1 text-sm">
+                                    {{ __('messages.pages.contact.cvr') }}: {{ \App\Support\CompanyProfile::cvr() }}
                                 </p>
                                 <a
-                                    href="#"
+                                    href="{{ \App\Support\CompanyProfile::mapsSearchUrl($contactAddress) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     class="text-primary mt-1 inline-block text-sm font-medium hover:underline"
                                 >
                                     {{ __('messages.pages.contact.get_directions') }}
                                 </a>
                             </div>
                         </div>
+                        @php
+                            $contactPhone = \App\Support\CompanyProfile::publicPhone($contactPageContent['contact_phone'] ?? null);
+                            $phoneParts = $contactPhone
+                                ? array_values(array_filter(array_map('trim', preg_split('/\s*(?:\/|,|;|\||\s{2,})\s*/', $contactPhone) ?: [$contactPhone])))
+                                : [];
+                            $phoneParts = array_values(array_filter($phoneParts, fn ($part) => \App\Support\CompanyProfile::isPublicPhone($part)));
+                        @endphp
+                        @if($phoneParts !== [])
                         <div class="flex items-start gap-4">
                             <div class="bg-primary/10 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
@@ -159,11 +175,6 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.phone') }}</h3>
-                                @php
-                                    $contactPhone = $contactPageContent['contact_phone'] ?? '+45 12 34 56 78';
-                                    $phoneParts = preg_split('/\s*(?:\/|,|;|\||\s{2,})\s*/', trim($contactPhone)) ?: [$contactPhone];
-                                    $phoneParts = array_values(array_filter(array_map('trim', $phoneParts)));
-                                @endphp
                                 <div class="flex flex-col gap-1">
                                     @foreach($phoneParts as $phonePart)
                                         <a href="tel:{{ \App\Helpers\FormatHelper::formatPhoneNumber($phonePart) }}" class="text-muted-foreground hover:text-primary transition-colors">
@@ -173,6 +184,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                         <div class="flex items-start gap-4">
                             <div class="bg-primary/10 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
@@ -182,7 +194,7 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-semibold">{{ __('messages.pages.contact.email') }}</h3>
-                                @php $contactEmail = $contactPageContent['contact_email'] ?? 'info@bilskyen.dk'; @endphp
+                                @php $contactEmail = !empty($contactPageContent['contact_email']) ? $contactPageContent['contact_email'] : \App\Support\CompanyProfile::email(); @endphp
                                 <a href="mailto:{{ $contactEmail }}" class="text-muted-foreground hover:text-primary transition-colors">
                                     {{ $contactEmail }}
                                 </a>
@@ -228,7 +240,7 @@
             <div class="absolute inset-0 bg-black/50"></div>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
                 <h2 class="text-3xl font-bold">{{ $contactPageContent['contact_map_title'] ?? __('messages.pages.contact.visit_showroom') }}</h2>
-                <p class="mt-2 max-w-md">{{ $contactPageContent['contact_map_address'] ?? ($contactPageContent['contact_address'] ?? '123 Dealership Lane, Copenhagen, Denmark') }}</p>
+                <p class="mt-2 max-w-md">{{ $contactPageContent['contact_map_address'] ?? \App\Support\CompanyProfile::publicAddress($contactPageContent['contact_address'] ?? null) }}</p>
             </div>
         </div>
     </section>
