@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Seo\IndexNowService;
 use App\Services\SeoService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -52,5 +53,38 @@ class SeoController extends Controller
         }
 
         return response($txt, 200, $headers);
+    }
+
+    /**
+     * Optional llms.txt for non-Google agents (Google ignores this file).
+     */
+    public function llmsTxt(): Response
+    {
+        $txt = $this->seoService->getLlmsTxt();
+        $headers = [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ];
+        if (! $this->seoService->isIndexingEnabled()) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
+        return response($txt, 200, $headers);
+    }
+
+    /**
+     * IndexNow key file. Must match INDEXNOW_KEY (8–128 hex/uuid chars).
+     */
+    public function indexNowKey(string $indexNowKey): Response
+    {
+        $configured = trim((string) config('services.indexnow.key', ''));
+        if (! IndexNowService::isValidKey($configured) || $configured !== $indexNowKey) {
+            abort(404);
+        }
+
+        return response($configured, 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
     }
 }

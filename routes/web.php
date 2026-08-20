@@ -18,6 +18,10 @@ Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('local
 // Sitemap and robots (public, cached)
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
 Route::get('/robots.txt', [SeoController::class, 'robots']);
+Route::get('/llms.txt', [SeoController::class, 'llmsTxt']);
+Route::get('/{indexNowKey}.txt', [SeoController::class, 'indexNowKey'])
+    ->where('indexNowKey', '[0-9a-fA-F-]{8,128}')
+    ->name('indexnow.key');
 
 // Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -198,6 +202,12 @@ Route::get('/slet-konto', [HomeController::class, 'showAccountDeletion'])->name(
 Route::get('/byer', [\App\Http\Controllers\CitySeoController::class, 'index'])->name('cities.index');
 Route::get('/biler-i/{city}', [\App\Http\Controllers\CitySeoController::class, 'cars'])->name('cities.cars');
 Route::get('/forhandlere-i/{city}', [\App\Http\Controllers\CitySeoController::class, 'dealers'])->name('cities.dealers');
+
+Route::get('/markedsdata', [\App\Http\Controllers\MarketSnapshotController::class, 'show'])->name('market-snapshot');
+
+// Stock-gated brand/fuel hubs (must be registered before /biler/{vehicle})
+Route::get('/biler/el', [\App\Http\Controllers\InventoryHubController::class, 'electric'])->name('hubs.electric');
+Route::get('/biler/maerke/{brand}', [\App\Http\Controllers\InventoryHubController::class, 'brand'])->name('hubs.brand');
 
 // Vehicles Page (DMR-linked Vehicle records)
 Route::get('/biler', [HomeController::class, 'showVehicles'])->name('vehicles');

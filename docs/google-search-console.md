@@ -38,8 +38,18 @@ Inspect SEO’d dealer pages and published vehicles:
 php artisan seo:gsc-inspect
 php artisan seo:gsc-inspect --dealers-only
 php artisan seo:gsc-inspect --vehicles-only --limit=50
-php artisan seo:gsc-inspect --submit-sitemap
+php artisan seo:gsc-inspect --hubs --base-url=https://bilskyen.dk
+php artisan seo:gsc-inspect --submit-sitemap --hubs --base-url=https://bilskyen.dk
 php artisan seo:gsc-inspect --list-sitemaps
+```
+
+`--hubs` inspects `/biler`, `/markedsdata`, a few public dealer pages, one indexable city (`/biler-i/{slug}`), and one below-threshold city (expect `noindex` / excluded). `--list-sitemaps` warns if a registered feed path is `http://`.
+
+After production deploy:
+
+```bash
+php artisan seo:gsc-inspect --submit-sitemap --hubs --base-url=https://bilskyen.dk
+php artisan seo:city-gate
 ```
 
 URL Inspection is quota-limited (on the order of ~2 000 requests/day). The command throttles between calls (`--sleep=1` by default).

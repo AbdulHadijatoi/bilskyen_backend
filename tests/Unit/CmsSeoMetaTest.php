@@ -76,20 +76,20 @@ class CmsSeoMetaTest extends TestCase
     public function test_landing_page_defaults_and_webpage_schema(): void
     {
         $page = new LandingPage([
-            'slug' => 'brugte-elbiler',
-            'title' => 'Brugte elbiler',
+            'slug' => 'other-guide',
+            'title' => 'Other guide',
             'meta_title' => '',
             'meta_description' => '',
         ]);
 
         $seo = Mockery::mock(SeoService::class)->makePartial();
-        $seo->shouldReceive('getForPage')->once()->with('landing', 'brugte-elbiler')->andReturn(null);
+        $seo->shouldReceive('getForPage')->once()->with('landing', 'other-guide')->andReturn(null);
 
         $resolved = $seo->resolveForLandingPage($page);
 
-        $this->assertSame('Brugte elbiler', $resolved['meta_title']);
+        $this->assertSame('Other guide', $resolved['meta_title']);
         $this->assertNull($resolved['meta_description']);
-        $this->assertSame(route('landing.show', 'brugte-elbiler'), $resolved['canonical_url']);
+        $this->assertSame(route('landing.show', 'other-guide'), $resolved['canonical_url']);
         $this->assertSame('WebPage', $resolved['schema_type']);
         $this->assertIsArray($resolved['schema_json']);
         $this->assertSame('WebPage', $resolved['schema_json']['@type']);

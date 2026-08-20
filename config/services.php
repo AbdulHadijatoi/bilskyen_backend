@@ -42,4 +42,9 @@ return [
         'credentials' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
     ],
 
+    'indexnow' => [
+        'key' => env('INDEXNOW_KEY', ''),
+        'host' => env('INDEXNOW_HOST', 'bilskyen.dk'),
+    ],
+
 ];

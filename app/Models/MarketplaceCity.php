@@ -11,6 +11,10 @@ class MarketplaceCity extends Model
 
     public const MIN_DEALERS_FOR_INDEX = 1;
 
+    public const INDEXABLE_CARS_WARNING = 30;
+
+    public const INDEXABLE_CARS_HARD_STOP = 50;
+
     protected $fillable = [
         'name',
         'slug',

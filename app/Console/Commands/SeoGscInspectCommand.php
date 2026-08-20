@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Constants\VehicleListStatus;
+use App\Models\Dealer;
+use App\Models\MarketplaceCity;
 use App\Models\SeoPage;
 use App\Models\Vehicle;
 use App\Services\Seo\GoogleSearchConsoleService;
@@ -14,6 +16,7 @@ class SeoGscInspectCommand extends Command
     protected $signature = 'seo:gsc-inspect
         {--dealers-only : Only inspect dealer pages that have seo_pages rows}
         {--vehicles-only : Only inspect published vehicle detail URLs}
+        {--hubs : Inspect /biler, public dealers, /markedsdata, and sample city pages}
         {--limit=100 : Max vehicle URLs to inspect (ignored for dealers)}
         {--sleep=1 : Seconds to wait between Inspection API calls}
         {--submit-sitemap : Submit /sitemap.xml to Search Console before inspecting}
@@ -57,22 +60,32 @@ class SeoGscInspectCommand extends Command
 
         $dealersOnly = (bool) $this->option('dealers-only');
         $vehiclesOnly = (bool) $this->option('vehicles-only');
+        $hubs = (bool) $this->option('hubs');
         if ($dealersOnly && $vehiclesOnly) {
             $this->error('Use only one of --dealers-only / --vehicles-only.');
 
             return self::FAILURE;
         }
+        if ($hubs && ($dealersOnly || $vehiclesOnly)) {
+            $this->error('Do not combine --hubs with --dealers-only / --vehicles-only.');
+
+            return self::FAILURE;
+        }
 
         $urls = [];
-        if (! $vehiclesOnly) {
-            foreach ($this->dealerSeoUrls() as $url) {
-                $urls[] = ['type' => 'dealer', 'url' => $url];
+        if ($hubs) {
+            $urls = $this->hubUrls();
+        } else {
+            if (! $vehiclesOnly) {
+                foreach ($this->dealerSeoUrls() as $url) {
+                    $urls[] = ['type' => 'dealer', 'url' => $url];
+                }
             }
-        }
-        if (! $dealersOnly) {
-            $limit = max(1, (int) $this->option('limit'));
-            foreach ($this->vehicleUrls($limit) as $url) {
-                $urls[] = ['type' => 'vehicle', 'url' => $url];
+            if (! $dealersOnly) {
+                $limit = max(1, (int) $this->option('limit'));
+                foreach ($this->vehicleUrls($limit) as $url) {
+                    $urls[] = ['type' => 'vehicle', 'url' => $url];
+                }
             }
         }
 
@@ -178,7 +191,82 @@ class SeoGscInspectCommand extends Command
             $rows
         );
 
+        foreach ($sitemaps as $sitemap) {
+            $path = (string) ($sitemap['path'] ?? '');
+            if (self::sitemapPathIsHttp($path)) {
+                $this->warn('Sitemap is HTTP (should be HTTPS): '.$path);
+            }
+        }
+
         return self::SUCCESS;
+    }
+
+    public static function sitemapPathIsHttp(string $path): bool
+    {
+        return str_starts_with(strtolower(trim($path)), 'http://');
+    }
+
+    /**
+     * @param  array{indexable_city?: string|null, thin_city?: string|null, dealers?: list<string>}  $extras
+     * @return list<array{type: string, url: string}>
+     */
+    public static function hubInspectionItems(string $base, array $extras = []): array
+    {
+        $base = rtrim($base, '/');
+        $items = [
+            ['type' => 'listing', 'url' => $base.'/biler'],
+            ['type' => 'market', 'url' => $base.'/markedsdata'],
+        ];
+        if (! empty($extras['indexable_city'])) {
+            $items[] = ['type' => 'city', 'url' => $base.'/biler-i/'.$extras['indexable_city']];
+        }
+        if (! empty($extras['thin_city'])) {
+            $items[] = ['type' => 'city_noindex', 'url' => $base.'/biler-i/'.$extras['thin_city']];
+        }
+        foreach ($extras['dealers'] ?? [] as $slug) {
+            $slug = trim((string) $slug);
+            if ($slug === '' || ! Dealer::isPublicProfileSlug($slug)) {
+                continue;
+            }
+            $items[] = ['type' => 'dealer', 'url' => $base.'/dealer-'.$slug];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @return list<array{type: string, url: string}>
+     */
+    private function hubUrls(): array
+    {
+        $indexableSlug = MarketplaceCity::query()
+            ->where('is_active', true)
+            ->where('published_vehicle_count', '>=', MarketplaceCity::MIN_VEHICLES_FOR_INDEX)
+            ->orderByDesc('published_vehicle_count')
+            ->value('slug');
+
+        $thinSlug = MarketplaceCity::query()
+            ->where('is_active', true)
+            ->where('published_vehicle_count', '<', MarketplaceCity::MIN_VEHICLES_FOR_INDEX)
+            ->orderBy('published_vehicle_count')
+            ->value('slug');
+
+        $dealerSlugs = Dealer::query()
+            ->whereNotNull('slug')
+            ->whereNotNull('user_id')
+            ->orderBy('id')
+            ->limit(20)
+            ->pluck('slug')
+            ->filter(fn ($slug) => Dealer::isPublicProfileSlug($slug))
+            ->take(5)
+            ->values()
+            ->all();
+
+        return self::hubInspectionItems($this->publicBaseUrl(), [
+            'indexable_city' => $indexableSlug,
+            'thin_city' => $thinSlug,
+            'dealers' => $dealerSlugs,
+        ]);
     }
 
     /**

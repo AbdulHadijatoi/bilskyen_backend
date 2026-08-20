@@ -11,6 +11,7 @@ use App\Observers\EnquiryObserver;
 use App\Observers\VehicleSyndicationObserver;
 use App\Observers\VehicleDmsWebhookObserver;
 use App\Observers\VehicleCityObserver;
+use App\Observers\VehicleIndexNowObserver;
 use App\Observers\DealerCityObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         Vehicle::observe(VehicleSyndicationObserver::class);
         Vehicle::observe(VehicleDmsWebhookObserver::class);
         Vehicle::observe(VehicleCityObserver::class);
+        Vehicle::observe(VehicleIndexNowObserver::class);
         Dealer::observe(DealerCityObserver::class);
 
         // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)

@@ -1360,7 +1360,7 @@
                                 <path d="M12 8v6M9 11h6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold">{{ $homePageContent['stat_1_value'] ?? '10+' }}</h3>
+                        <h3 class="text-xl font-bold">{{ $vehicleCountFormatted }}</h3>
                         <p class="mb-2 font-medium">{{ $homePageContent['stat_1_title'] ?? __('messages.pages.home.stat_1_title') }}</p>
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? __('messages.pages.home.stat_1_description') }}</p>
                     </div>

@@ -97,6 +97,7 @@
                 <h3 class="mb-4 text-sm font-semibold text-[var(--footer-foreground)]">{{ __('messages.pages.footer.resources') }}</h3>
                 <ul class="space-y-3 text-sm">
                     <li><a href="/blog">{{ __('messages.pages.footer.blog') }}</a></li>
+                    <li><a href="{{ route('market-snapshot') }}">{{ __('messages.pages.footer.market_data') }}</a></li>
                     @if($hasLandingPages)
                         @foreach($footerLandingPages as $landingPage)
                             <li>

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CityIndexService
@@ -168,6 +169,15 @@ class CityIndexService
             }
         }
 
+        if ($this->indexableCarsCount() >= MarketplaceCity::INDEXABLE_CARS_HARD_STOP) {
+            Log::warning('City hard stop: not inserting new marketplace city', [
+                'name' => $name,
+                'indexable' => MarketplaceCity::INDEXABLE_CARS_HARD_STOP,
+            ]);
+
+            return null;
+        }
+
         return MarketplaceCity::create([
             'name' => $name,
             'slug' => $slug,
@@ -287,8 +297,25 @@ class CityIndexService
         return $city;
     }
 
+    public function indexableCarsCount(): int
+    {
+        return (int) MarketplaceCity::query()
+            ->where('is_active', true)
+            ->where('published_vehicle_count', '>=', MarketplaceCity::MIN_VEHICLES_FOR_INDEX)
+            ->count();
+    }
+
     public function reindexAll(): int
     {
+        $indexable = $this->indexableCarsCount();
+        if ($indexable >= MarketplaceCity::INDEXABLE_CARS_WARNING) {
+            Log::warning('Indexable city car pages at or above warning threshold', [
+                'count' => $indexable,
+                'warning' => MarketplaceCity::INDEXABLE_CARS_WARNING,
+                'hard_stop' => MarketplaceCity::INDEXABLE_CARS_HARD_STOP,
+            ]);
+        }
+
         // Seed from locations catalog.
         $locationCities = Location::query()
             ->select('city', 'region')

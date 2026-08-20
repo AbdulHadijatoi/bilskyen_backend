@@ -12,6 +12,7 @@ use App\Models\SeoSitemap;
 use App\Models\Vehicle;
 use App\Services\PlatformSettingService;
 use App\Services\Seo\SchemaBuilderService;
+use App\Support\CompanyProfile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -188,6 +189,10 @@ class SeoService
         $ogImage = trim((string) ($post->og_image ?: '')) ?: $post->featuredMedia?->url();
         $ogImage = $ogImage !== '' ? $ogImage : null;
 
+        if ($post->exists && $post->author_user_id && ! $post->relationLoaded('author')) {
+            $post->load('author');
+        }
+
         $schema = array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Article',
@@ -198,6 +203,7 @@ class SeoService
             'datePublished' => $post->published_at?->toAtomString(),
             'dateModified' => $post->updated_at?->toAtomString(),
         ], fn ($value) => $value !== null && $value !== '');
+        $schema['author'] = $this->cmsPostAuthorSchema($post);
 
         $defaults = [
             'title' => $title !== '' ? $title : null,
@@ -235,6 +241,9 @@ class SeoService
     {
         $title = trim((string) ($page->meta_title ?: $page->title));
         $description = trim((string) ($page->meta_description ?: ''));
+        if ($description === '') {
+            $description = $this->landingMetaFallback((string) $page->slug);
+        }
         $canonical = trim((string) ($page->canonical_url ?: '')) ?: route('landing.show', $page->slug);
         $ogTitle = trim((string) ($page->og_title ?: '')) ?: $title;
         $ogDescription = trim((string) ($page->og_description ?: '')) ?: $description;
@@ -275,6 +284,150 @@ class SeoService
             $this->getForPage('landing', (string) $page->slug) ?? []
         );
     }
+
+    /**
+     * @return array<string, string>
+     */
+    private function cmsPostAuthorSchema(CmsPost $post): array
+    {
+        $name = trim((string) ($post->author?->name ?? ''));
+        if ($name !== '') {
+            return [
+                '@type' => 'Person',
+                'name' => $name,
+            ];
+        }
+
+        return [
+            '@type' => 'Organization',
+            'name' => CompanyProfile::name(),
+        ];
+    }
+
+    private function landingMetaFallback(string $slug): string
+    {
+        $key = 'messages.cms.landing_meta.'.$slug;
+        $translated = __($key);
+        if (! is_string($translated) || $translated === $key) {
+            return '';
+        }
+
+        return trim($translated);
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return array<string, mixed>
+     */
+    public function resolveForMarketSnapshot(array $snapshot): array
+    {
+        $generatedAt = (string) ($snapshot['generated_at'] ?? now()->toAtomString());
+        $title = __('messages.pages.market.meta_title');
+        $description = __('messages.pages.market.meta_description');
+        $canonical = route('market-snapshot');
+
+        $schema = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebPage',
+            'name' => $title,
+            'description' => $description,
+            'url' => $canonical,
+            'dateModified' => $generatedAt,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return [
+            'title' => $title,
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'meta_keywords' => null,
+            'canonical_url' => $canonical,
+            'robots' => 'index, follow',
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_image' => null,
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+            'twitter_image' => null,
+            'schema_type' => 'WebPage',
+            'schema_json' => $schema,
+            'content_html' => null,
+            'faq_json' => null,
+            'breadcrumbs_json' => [
+                ['name' => __('messages.common.site_name'), 'url' => url('/')],
+                ['name' => __('messages.pages.market.heading'), 'url' => $canonical],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array{heading?: string, intro?: string, count?: int, indexable?: bool, canonical?: string, listing_urls?: list<array{url: string, name: string}>}  $hub
+     * @return array<string, mixed>
+     */
+    public function resolveForHub(array $hub): array
+    {
+        $title = (string) ($hub['heading'] ?? '');
+        $description = (string) ($hub['intro'] ?? '');
+        $canonical = (string) ($hub['canonical'] ?? '');
+        $indexable = (bool) ($hub['indexable'] ?? false);
+        $count = (int) ($hub['count'] ?? 0);
+
+        $itemListElement = [];
+        $position = 1;
+        foreach ($hub['listing_urls'] ?? [] as $item) {
+            if (! is_array($item) || empty($item['url'])) {
+                continue;
+            }
+            $itemListElement[] = [
+                '@type' => 'ListItem',
+                'position' => $position++,
+                'url' => $item['url'],
+                'name' => $item['name'] ?? $item['url'],
+            ];
+        }
+
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'WebPage',
+                    'name' => $title,
+                    'description' => $description,
+                    'url' => $canonical,
+                ],
+                [
+                    '@type' => 'ItemList',
+                    'name' => $title,
+                    'numberOfItems' => $count,
+                    'itemListElement' => $itemListElement,
+                ],
+            ],
+        ];
+
+        return [
+            'title' => $title,
+            'meta_title' => $title,
+            'meta_description' => $description,
+            'meta_keywords' => null,
+            'canonical_url' => $canonical,
+            'robots' => $indexable ? 'index, follow' : 'noindex, follow',
+            'og_title' => $title,
+            'og_description' => $description,
+            'og_image' => null,
+            'twitter_title' => $title,
+            'twitter_description' => $description,
+            'twitter_image' => null,
+            'schema_type' => 'ItemList',
+            'schema_json' => $schema,
+            'content_html' => null,
+            'faq_json' => null,
+            'breadcrumbs_json' => [
+                ['name' => __('messages.common.site_name'), 'url' => url('/')],
+                ['name' => __('messages.pages.footer.browse_vehicles'), 'url' => route('vehicles')],
+                ['name' => $title, 'url' => $canonical],
+            ],
+        ];
+    }
+
 
     /**
      * Copy override fields onto defaults only when the override value is non-empty.
@@ -849,6 +1002,28 @@ class SeoService
             }
         }
 
+        $this->pushSitemapEntry($entries, $seen, route('market-snapshot'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'weekly',
+            'priority' => '0.6',
+        ]);
+
+        $hubs = app(InventoryHubService::class);
+        if ($hubs->isElectricIndexable()) {
+            $this->pushSitemapEntry($entries, $seen, route('hubs.electric'), [
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ]);
+        }
+        if ($hubs->isBrandIndexable(InventoryHubService::VOLKSWAGEN_SLUG)) {
+            $this->pushSitemapEntry($entries, $seen, route('hubs.brand', ['brand' => InventoryHubService::VOLKSWAGEN_SLUG]), [
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ]);
+        }
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
         foreach ($entries as $e) {
@@ -906,5 +1081,32 @@ class SeoService
             'Sitemap: '.$this->canonicalPublicUrl('/sitemap.xml'),
         ];
         return implode("\n", $lines);
+    }
+
+    /**
+     * Short llms.txt for non-Google agents. Google ignores this file.
+     */
+    public function getLlmsTxt(): string
+    {
+        $company = CompanyProfile::legalName();
+        $cvr = CompanyProfile::cvr();
+        $lines = [
+            '# '.$company,
+            '',
+            $company.' (CVR '.$cvr.') is a Danish used-car marketplace at Bilskyen. Dealers and private sellers publish listings; buyers browse, compare, and enquire.',
+            '',
+            '## Site',
+            '- Home: '.$this->canonicalPublicUrl('/'),
+            '- Used cars: '.$this->canonicalPublicUrl(route('vehicles')),
+            '- Market snapshot: '.$this->canonicalPublicUrl(route('market-snapshot')),
+            '- Blog: '.$this->canonicalPublicUrl(route('blog.index')),
+            '- About: '.$this->canonicalPublicUrl(route('about')),
+            '- Contact: '.$this->canonicalPublicUrl(route('contact')),
+            '- Sell your car: '.$this->canonicalPublicUrl(route('sell-your-car')),
+            '',
+            'Inventory is live on /biler. Do not treat unpublished or draft listings as for sale.',
+        ];
+
+        return implode("\n", $lines)."\n";
     }
 }
