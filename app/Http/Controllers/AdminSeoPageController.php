@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\CmsPostStatus;
+use App\Models\CmsPost;
+use App\Models\Dealer;
+use App\Models\LandingPage;
 use App\Models\SeoPage;
 use App\Models\Vehicle;
-use App\Models\Dealer;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +19,8 @@ class AdminSeoPageController extends Controller
     ) {}
 
     /**
-     * Get page_key options for dropdown (for vehicle/dealer types).
-     * GET ?page_type=vehicle|dealer
+     * Get page_key options for dropdown (vehicle/dealer/blog/landing types).
+     * GET ?page_type=vehicle|dealer|blog|landing
      */
     public function pageKeyOptions(Request $request): JsonResponse
     {
@@ -42,6 +45,34 @@ class AdminSeoPageController extends Controller
                 $options[] = [
                     'value' => $d->slug,
                     'label' => $d->owner?->name ?? $d->slug ?? 'Dealer #' . $d->id,
+                ];
+            }
+        } elseif ($pageType === 'blog') {
+            $posts = CmsPost::select('id', 'slug', 'title')
+                ->where('status', CmsPostStatus::PUBLISHED)
+                ->whereNotNull('published_at')
+                ->where('published_at', '<=', now())
+                ->orderBy('title')
+                ->limit(2000)
+                ->get();
+            foreach ($posts as $post) {
+                $options[] = [
+                    'value' => $post->slug,
+                    'label' => $post->title ?: $post->slug ?: 'Post #' . $post->id,
+                ];
+            }
+        } elseif ($pageType === 'landing') {
+            $pages = LandingPage::select('id', 'slug', 'title')
+                ->where('status', CmsPostStatus::PUBLISHED)
+                ->whereNotNull('published_at')
+                ->where('published_at', '<=', now())
+                ->orderBy('title')
+                ->limit(2000)
+                ->get();
+            foreach ($pages as $page) {
+                $options[] = [
+                    'value' => $page->slug,
+                    'label' => $page->title ?: $page->slug ?: 'Landing #' . $page->id,
                 ];
             }
         }

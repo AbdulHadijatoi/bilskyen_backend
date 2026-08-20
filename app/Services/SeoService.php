@@ -141,11 +141,128 @@ class SeoService
             'breadcrumbs_json' => null,
         ];
 
-        $override = $this->getForPage('vehicle', (string) $vehicle->slug) ?? [];
+        return $this->applyNonEmptyOverrides(
+            $defaults,
+            $this->getForPage('vehicle', (string) $vehicle->slug) ?? []
+        );
+    }
+
+    /**
+     * SEO for a public blog post. CMS fields are defaults; seo_pages (page_type=blog, page_key=slug)
+     * win only when non-empty. Schema is a plain Article array (no SchemaBuilderService).
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveForCmsPost(CmsPost $post): array
+    {
+        $title = trim((string) ($post->meta_title ?: $post->title));
+        $description = trim((string) ($post->meta_description ?: $post->excerpt));
+        $canonical = trim((string) ($post->canonical_url ?: '')) ?: route('blog.show', $post->slug);
+        $ogImage = trim((string) ($post->og_image ?: '')) ?: $post->featuredMedia?->url();
+        $ogImage = $ogImage !== '' ? $ogImage : null;
+
+        $schema = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Article',
+            'headline' => $title !== '' ? $title : null,
+            'description' => $description !== '' ? $description : null,
+            'image' => $ogImage,
+            'url' => $canonical,
+            'datePublished' => $post->published_at?->toAtomString(),
+            'dateModified' => $post->updated_at?->toAtomString(),
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $defaults = [
+            'title' => $title !== '' ? $title : null,
+            'meta_title' => $title !== '' ? $title : null,
+            'meta_description' => $description !== '' ? $description : null,
+            'meta_keywords' => null,
+            'canonical_url' => $canonical,
+            'robots' => trim((string) ($post->robots ?: '')) ?: 'index, follow',
+            'og_title' => $title !== '' ? $title : null,
+            'og_description' => $description !== '' ? $description : null,
+            'og_image' => $ogImage,
+            'twitter_title' => $title !== '' ? $title : null,
+            'twitter_description' => $description !== '' ? $description : null,
+            'twitter_image' => $ogImage,
+            'schema_type' => 'Article',
+            'schema_json' => $schema,
+            'content_html' => null,
+            'faq_json' => null,
+            'breadcrumbs_json' => null,
+        ];
+
+        return $this->applyNonEmptyOverrides(
+            $defaults,
+            $this->getForPage('blog', (string) $post->slug) ?? []
+        );
+    }
+
+    /**
+     * SEO for a public landing page. CMS fields are defaults; seo_pages (page_type=landing, page_key=slug)
+     * win only when non-empty. Schema is a plain WebPage array (no SchemaBuilderService).
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveForLandingPage(LandingPage $page): array
+    {
+        $title = trim((string) ($page->meta_title ?: $page->title));
+        $description = trim((string) ($page->meta_description ?: ''));
+        $canonical = trim((string) ($page->canonical_url ?: '')) ?: route('landing.show', $page->slug);
+        $ogTitle = trim((string) ($page->og_title ?: '')) ?: $title;
+        $ogDescription = trim((string) ($page->og_description ?: '')) ?: $description;
+        $ogImage = trim((string) ($page->og_image ?: ''));
+        $ogImage = $ogImage !== '' ? $ogImage : null;
+
+        $schema = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebPage',
+            'name' => $title !== '' ? $title : null,
+            'description' => $description !== '' ? $description : null,
+            'url' => $canonical,
+            'image' => $ogImage,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $defaults = [
+            'title' => $title !== '' ? $title : null,
+            'meta_title' => $title !== '' ? $title : null,
+            'meta_description' => $description !== '' ? $description : null,
+            'meta_keywords' => null,
+            'canonical_url' => $canonical,
+            'robots' => trim((string) ($page->robots ?: '')) ?: 'index, follow',
+            'og_title' => $ogTitle !== '' ? $ogTitle : null,
+            'og_description' => $ogDescription !== '' ? $ogDescription : null,
+            'og_image' => $ogImage,
+            'twitter_title' => $ogTitle !== '' ? $ogTitle : null,
+            'twitter_description' => $ogDescription !== '' ? $ogDescription : null,
+            'twitter_image' => $ogImage,
+            'schema_type' => 'WebPage',
+            'schema_json' => $schema,
+            'content_html' => null,
+            'faq_json' => null,
+            'breadcrumbs_json' => null,
+        ];
+
+        return $this->applyNonEmptyOverrides(
+            $defaults,
+            $this->getForPage('landing', (string) $page->slug) ?? []
+        );
+    }
+
+    /**
+     * Copy override fields onto defaults only when the override value is non-empty.
+     *
+     * @param  array<string, mixed>  $defaults
+     * @param  array<string, mixed>  $override
+     * @return array<string, mixed>
+     */
+    private function applyNonEmptyOverrides(array $defaults, array $override): array
+    {
         foreach ($override as $key => $value) {
-            if ($value !== null && $value !== '') {
-                $defaults[$key] = $value;
+            if ($value === null || $value === '' || $value === []) {
+                continue;
             }
+            $defaults[$key] = $value;
         }
 
         return $defaults;
@@ -587,7 +704,7 @@ class SeoService
             ];
         }
 
-        $blogUrl = $baseUrl . '/blog';
+        $blogUrl = route('blog.index');
         if (!in_array($blogUrl, $addedUrls, true)) {
             $entries[] = [
                 'loc' => $blogUrl,
@@ -597,25 +714,39 @@ class SeoService
             ];
         }
 
-        // Blog posts
-        foreach (CmsPost::where('status', CmsPostStatus::PUBLISHED)->whereNotNull('published_at')->get() as $post) {
-            $entries[] = [
-                'loc' => $baseUrl.'/blog/'.$post->slug,
-                'lastmod' => $post->updated_at?->format('Y-m-d'),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ];
-        }
+        CmsPost::query()
+            ->where('status', CmsPostStatus::PUBLISHED)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->select(['id', 'slug', 'updated_at'])
+            ->orderBy('id')
+            ->chunkById(500, function ($posts) use (&$entries) {
+                foreach ($posts as $post) {
+                    $entries[] = [
+                        'loc' => route('blog.show', $post->slug),
+                        'lastmod' => $post->updated_at?->format('Y-m-d'),
+                        'changefreq' => 'weekly',
+                        'priority' => '0.7',
+                    ];
+                }
+            });
 
-        // Landing pages
-        foreach (LandingPage::where('status', CmsPostStatus::PUBLISHED)->whereNotNull('published_at')->get() as $lp) {
-            $entries[] = [
-                'loc' => route('landing.show', $lp->slug),
-                'lastmod' => $lp->updated_at?->format('Y-m-d'),
-                'changefreq' => 'monthly',
-                'priority' => '0.6',
-            ];
-        }
+        LandingPage::query()
+            ->where('status', CmsPostStatus::PUBLISHED)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->select(['id', 'slug', 'updated_at'])
+            ->orderBy('id')
+            ->chunkById(500, function ($pages) use (&$entries) {
+                foreach ($pages as $lp) {
+                    $entries[] = [
+                        'loc' => route('landing.show', $lp->slug),
+                        'lastmod' => $lp->updated_at?->format('Y-m-d'),
+                        'changefreq' => 'monthly',
+                        'priority' => '0.6',
+                    ];
+                }
+            });
 
         // Vehicle detail URLs (published inventory only)
         Vehicle::query()

@@ -41,14 +41,7 @@ class CmsPublicController extends Controller
             ->where('published_at', '<=', now())
             ->firstOrFail();
 
-        $seo = [
-            'title' => $post->meta_title ?: $post->title,
-            'meta_title' => $post->meta_title ?: $post->title,
-            'meta_description' => $post->meta_description ?: $post->excerpt,
-            'og_image' => $post->og_image ?: $post->featuredMedia?->url(),
-            'canonical_url' => $post->canonical_url,
-            'robots' => $post->robots,
-        ];
+        $seo = $this->seoService->resolveForCmsPost($post);
 
         $relatedLimit = 3;
         foreach ($post->sections ?? [] as $section) {
@@ -76,16 +69,7 @@ class CmsPublicController extends Controller
             ->where('published_at', '<=', now())
             ->firstOrFail();
 
-        $seo = [
-            'title' => $page->meta_title ?: $page->title,
-            'meta_title' => $page->meta_title ?: $page->title,
-            'meta_description' => $page->meta_description,
-            'og_title' => $page->og_title,
-            'og_description' => $page->og_description,
-            'og_image' => $page->og_image,
-            'canonical_url' => $page->canonical_url,
-            'robots' => $page->robots,
-        ];
+        $seo = $this->seoService->resolveForLandingPage($page);
 
         $vehicleGridLimit = 6;
         foreach ($page->blocks ?? [] as $block) {
