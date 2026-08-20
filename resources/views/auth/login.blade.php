@@ -26,6 +26,9 @@
 
     <form method="POST" action="{{ route('login.post') }}" class="grid gap-4">
         @csrf
+        @if(!empty($returnUrl))
+            <input type="hidden" name="return_url" value="{{ $returnUrl }}">
+        @endif
         @include('components.bot-protection')
         <div class="grid gap-2">
             <label for="email" class="text-sm font-medium">{{ __('messages.forms.email') }}</label>

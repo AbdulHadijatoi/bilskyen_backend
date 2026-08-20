@@ -1,11 +1,13 @@
-@props(['type', 'vehicle' => null, 'vehicleId' => null])
+@props(['type', 'vehicle' => null, 'vehicleId' => null, 'shared' => false])
 
 @php
     use App\Helpers\FormatHelper;
 
     // Determine vehicle slug for URLs (and dialog id); fallback to id for backward compatibility
     $slug = $vehicleId ?? null;
-    if (!$slug && $vehicle) {
+    if ($shared) {
+        $slug = 'shared';
+    } elseif (!$slug && $vehicle) {
         $slug = is_array($vehicle) ? ($vehicle['slug'] ?? $vehicle['id'] ?? null) : ($vehicle->slug ?? $vehicle->id ?? null);
     }
     $slug = $slug ? (is_string($slug) ? $slug : (string) $slug) : null;
@@ -24,7 +26,7 @@
             'messageLabel' => __('messages.forms.message'),
             'messagePlaceholder' => __('messages.forms.enter_message'),
             'submitText' => __('messages.dialogs.submit_enquiry'),
-            'endpoint' => $slug ? route('vehicles.enquire.submit', ['vehicle' => $slug]) : '',
+            'endpoint' => ($shared || !$slug) ? '' : route('vehicles.enquire.submit', ['vehicle' => $slug]),
             'errorMessage' => __('messages.dialogs.please_login_enquiry'),
         ],
         'test-drive' => [
@@ -62,7 +64,12 @@
     $config = $formConfig[$type] ?? $formConfig['enquiry'];
     
     // Get vehicle data - handle both objects and arrays
-    if (is_array($vehicle)) {
+    if ($shared || !$vehicle) {
+        $vehicleTitle = '';
+        $vehiclePrice = null;
+        $vehicleBrand = null;
+        $vehicleModel = null;
+    } elseif (is_array($vehicle)) {
         $vehicleTitle = $vehicle['title'] ?? __('messages.forms.vehicle');
         $vehiclePrice = $vehicle['price'] ?? null;
         $vehicleBrand = $vehicle['brand_name'] ?? null;
@@ -81,7 +88,13 @@
     $authEmail = $jwtUser?->email ?? '';
 @endphp
 
-<div id="{{ $type }}-dialog-{{ $slug }}" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="{{ $type }}-dialog-title">
+<div id="{{ $type }}-dialog-{{ $slug }}"
+     class="fixed inset-0 z-50 hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="{{ $type }}-dialog-title"
+     data-endpoint-template="{{ rtrim(route('vehicles.enquire.submit', ['vehicle' => '__SLUG__']), '/') }}"
+     @if($shared) data-shared="1" @endif>
     <!-- Backdrop -->
     <div 
         class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -302,7 +315,7 @@
     const errorContainer = document.getElementById('{{ $type }}-errors-{{ $slug }}');
     const errorList = document.getElementById('{{ $type }}-error-list-{{ $slug }}');
     const successMessage = document.getElementById('{{ $type }}-success-{{ $slug }}');
-    const endpoint = '{{ $config['endpoint'] }}';
+    const endpoint = form.dataset.endpoint || '{{ $config['endpoint'] }}';
     const errorMsg = '{{ $config['errorMessage'] }}';
     
     form.addEventListener('submit', async function(e) {

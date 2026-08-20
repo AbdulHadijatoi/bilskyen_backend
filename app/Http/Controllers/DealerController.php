@@ -42,19 +42,17 @@ class DealerController extends Controller
      */
     public function show(Request $request, string $slug): View
     {
-        $dealer = Dealer::where('slug', $slug)->first();
-        
-        if (!$dealer) {
+        if (! Dealer::isPublicProfileSlug($slug)) {
             abort(404, __('messages.api.dealer_not_found'));
         }
 
-        // Load dealer relationships
-        $dealer->load(['owner', 'vehicles' => function ($query) {
-            $query->where('list_status_id', VehicleListStatus::PUBLISHED)
-                  ->with(['images' => function ($q) {
-                      $q->orderBy('sort_order');
-                  }]);
-        }]);
+        $dealer = Dealer::where('slug', $slug)->first();
+
+        if (! $dealer) {
+            abort(404, __('messages.api.dealer_not_found'));
+        }
+
+        $dealer->load('owner');
 
         // Define basic filter keys
         $basicFilterKeys = [
@@ -117,7 +115,7 @@ class DealerController extends Controller
         // Whether the dealer has any published inventory at all (independent of
         // the current filters). Used to hide/disable filter controls and show
         // an informative empty-state message when there is nothing to filter.
-        $hasVehicles = $dealer->vehicles->isNotEmpty();
+        $hasVehicles = $dealer->hasPublishedVehicles();
 
         return view('dealer-page', [
             'dealer' => $dealer,

@@ -21,6 +21,8 @@ use App\Services\DmrLookupAssociationService;
 use App\Services\FileService;
 use App\Services\SellYourCarSubmissionService;
 use App\Services\VehicleTrustReportService;
+use App\Services\SeoService;
+use App\Support\InternalRedirect;
 use App\Constants\ApiStatusCode;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +40,7 @@ class SellYourCarController extends Controller
         private DmrLookupAssociationService $dmrLookupAssociationService,
         private SellYourCarSubmissionService $sellYourCarSubmissionService,
         private VehicleTrustReportService $trustReportService,
+        private SeoService $seoService,
     ) {}
 
     /**
@@ -58,14 +61,36 @@ class SellYourCarController extends Controller
     }
 
     /**
-     * Show the sell your car form page
+     * Show the public seller landing (guests) or the sell-your-car form (logged-in users).
      */
     public function show(Request $request)
     {
         $user = $this->authService->getAuthenticatedUser($request);
-        
+
         if (!$user) {
-            return redirect()->route('login')->with('return_url', '/saelg-din-bil');
+            $pageSeo = $this->seoService->getForPage('static', 'sell-your-car') ?? [];
+            $title = $pageSeo['meta_title'] ?? $pageSeo['title'] ?? __('messages.pages.sell_your_car.landing_meta_title');
+            $description = $pageSeo['meta_description'] ?? __('messages.pages.sell_your_car.landing_meta_description');
+            $canonical = $pageSeo['canonical_url'] ?? route('sell-your-car');
+
+            $seo = array_merge([
+                'title' => $title,
+                'meta_title' => $title,
+                'meta_description' => $description,
+                'canonical_url' => $canonical,
+                'robots' => 'index, follow',
+                'og_title' => $title,
+                'og_description' => $description,
+                'schema_json' => null,
+            ], array_filter($pageSeo, fn ($value) => $value !== null && $value !== ''));
+
+            $returnPath = InternalRedirect::path('/saelg-din-bil') ?? '/saelg-din-bil';
+
+            return view('sell-your-car-landing', [
+                'seo' => $seo,
+                'loginUrl' => route('login', ['return_url' => $returnPath]),
+                'dealerLandingUrl' => route('for-dealers.landing'),
+            ]);
         }
 
         $user->load('dealer');

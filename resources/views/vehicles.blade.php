@@ -86,6 +86,10 @@
         </svg>
             </button>
 
+    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+        {{ $seo['meta_title'] ?? __('messages.pages.vehicles.listing_h1') }}
+    </h1>
+
     <!-- Filters + Sort/View/Layout -->
     <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start w-full">
 
@@ -110,10 +114,216 @@
             }
         </style>
 
+        <!-- Sort, view toggle and results (DOM-first so listing links precede the filter tree) -->
+        <div class="flex-1 flex flex-col gap-4 w-full lg:order-2">
+            <!-- Results count, filter chips, and reset button -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap w-full">
+                        <!-- Applied Filters Chips -->
+                        <div id="applied-filters-container" class="flex flex-wrap gap-2 w-full min-w-0">
+                            <!-- Filter chips will be rendered here via JavaScript -->
+                    <!-- Reset Button (only visible when filters are applied) -->
+                    <button
+                        id="filter-reset-button-main"
+                        type="button"
+                        class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                        {{ __('messages.pages.vehicles.reset_filters') }}
+                    </button>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+            <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
+            <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
+                        @if(!empty($showNoResultsMessage))
+                            <strong>0</strong> {{ __('messages.pages.vehicles.matching_results') }}
+                        @else
+                            <strong>{{ number_format($vehicles->total()) }}</strong>
+                            {{ __('messages.forms.results') }}
+                        @endif
+                    </p>
+                </div>
+                <!-- Sort Dropdown Container -->
+                <div class="relative text-xs font-medium">
+                    <select
+                        id="sort-select"
+                        name="sort"
+                        class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
+                    >
+                        @foreach($vehicleSortLabels as $value => $label)
+                            <option value="{{ $value }}" @if(\App\Services\VehicleService::listingSortOptionIsSelected($value, $rawSortQuery ?? null)) selected @endif>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Sort and View Toggle -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <!-- Sort Dropdown -->
+            <div class="relative text-xs font-medium">
+                
+                
+                <!-- View Toggle Buttons -->
+                <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-input">
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-primary text-primary-foreground font-semibold">
+                        <input 
+                            type="radio" 
+                            name="view-toggle" 
+                            value="card"
+                            class="sr-only peer view-toggle-radio"
+                            checked
+                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                </svg>
+                    </label>
+                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-card text-muted-foreground hover:text-foreground border border-transparent border-input">
+                        <input 
+                            type="radio" 
+                            name="view-toggle" 
+                            value="list"
+                            class="sr-only peer view-toggle-radio"
+                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <line x1="8" x2="21" y1="6" y2="6"></line>
+                    <line x1="8" x2="21" y1="12" y2="12"></line>
+                    <line x1="8" x2="21" y1="18" y2="18"></line>
+                    <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                    <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                    <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                </svg>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-6">
+        <x-popular-cities class="rounded-xl border border-border bg-card p-4" />
+    </div>
+
+    <!-- No filter matches (shown above results when filters return zero) -->
+    <div
+        id="no-results-message"
+        class="@if(empty($showNoResultsMessage)) hidden @endif mb-6 rounded-xl border border-amber-200 bg-amber-50 px-6 py-8 text-center dark:border-amber-900/50 dark:bg-amber-950/30"
+        role="status"
+        aria-live="polite"
+    >
+        <div class="mx-auto flex max-w-lg flex-col items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">{{ __('messages.pages.vehicles.no_matching_filters') }}</h3>
+            <p class="text-sm text-muted-foreground">{{ __('messages.forms.try_adjusting_filters') }}</p>
+            <button type="button" id="no-results-reset-filters" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                {{ __('messages.pages.vehicles.reset_filters') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Vehicle Grid/List (filter matches only) -->
+    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
+        @forelse($vehicles as $row)
+            <x-vehicle-listing-item
+                :vehicle="$row['vehicle']"
+                :img-url="$row['imgUrl']"
+                :img-alt="$row['imgAlt']"
+                :sales-type-name="$row['salesTypeName']"
+                :trust-badge="$row['trustBadge'] ?? false"
+                :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
+                :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
+                :is-boosted="$row['isBoosted'] ?? false"
+            />
+        @empty
+            @if(empty($showNoResultsMessage))
+            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
+                <p class="mt-1 text-muted-foreground">
+                    {{ __('messages.forms.try_adjusting_filters') }}
+                </p>
+                <button type="button" onclick="document.getElementById('filter-reset-button-main')?.click()" class="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    {{ __('messages.pages.vehicles.reset_filters') }}
+                </button>
+            </div>
+            @endif
+        @endforelse
+    </div>
+
+    <!-- Suggested vehicles when filters match nothing -->
+    <div
+        id="vehicle-fallback-section"
+        data-view="card"
+        class="@if(empty($showNoResultsMessage) || empty($fallbackVehicles) || $fallbackVehicles->count() === 0) hidden @endif mt-8 rounded-xl border border-border bg-muted/20 p-4 sm:p-6"
+    >
+        <div class="mb-4 border-b border-border pb-4">
+            <h4 class="text-base font-semibold text-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_heading') }}</h4>
+            <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_intro') }}</p>
+        </div>
+        <div id="vehicle-fallback-grid" class="vehicle-fallback-grid grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            @if(!empty($showNoResultsMessage) && !empty($fallbackVehicles))
+                @foreach($fallbackVehicles as $row)
+                    <x-vehicle-listing-item
+                        :vehicle="$row['vehicle']"
+                        :img-url="$row['imgUrl']"
+                        :img-alt="$row['imgAlt']"
+                        :sales-type-name="$row['salesTypeName']"
+                        :trust-badge="$row['trustBadge'] ?? false"
+                        :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
+                        :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
+                        :is-boosted="$row['isBoosted'] ?? false"
+                    />
+                @endforeach
+            @endif
+        </div>
+    </div>
+
+    <x-enquiry-dialog type="enquiry" :shared="true" />
+
+    <!-- Login Dialog -->
+    <x-login-dialog />
+
+    <!-- Pagination -->
+    <div id="pagination-container" class="mt-8 flex items-center justify-center gap-2">
+        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            {{ __('messages.common.previous') }}
+        </button>
+        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+            1
+        </button>
+        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+            {{ __('messages.common.next') }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
+                <path d="m9 18 6-6-6-6"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
-            class="hidden lg:flex lg:flex-col fixed lg:relative inset-0 lg:inset-auto lg:sticky lg:top-4 z-40 lg:z-auto overflow-y-auto bg-background lg:bg-card shadow-lg lg:shadow-sm lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0 border-t border-border lg:border-t-0 lg:max-h-[calc(100vh-5rem)]"
+            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto lg:sticky lg:top-4 z-40 lg:z-auto overflow-y-auto bg-background lg:bg-card shadow-lg lg:shadow-sm lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0 border-t border-border lg:border-t-0 lg:max-h-[calc(100vh-5rem)]"
         >
             @php $cf = $currentFilters ?? []; @endphp
 
@@ -635,284 +845,19 @@
                 </div>
             </details>
 
-            <!-- Equipment (collapsed, with nested sub-accordion) -->
-            @php
-                $equipmentActive = !empty($cf['equipment_ids']);
-                $equipmentTypes = $constants['equipment_types'] ?? [];
-                $equipmentsList = $constants['equipments'] ?? [];
-                $equipmentsByType = [];
-                foreach ($equipmentsList as $eq) {
-                    $eid = is_array($eq) ? $eq['id'] : $eq->id;
-                    $ename = is_array($eq) ? $eq['name'] : $eq->name;
-                    $typeId = is_array($eq) ? ($eq['equipment_type_id'] ?? null) : ($eq->equipment_type_id ?? null);
-                    if (!isset($equipmentsByType[$typeId])) $equipmentsByType[$typeId] = [];
-                    $equipmentsByType[$typeId][] = ['id' => $eid, 'name' => $ename];
-                }
-            @endphp
-            <details @if($equipmentActive) open @endif class="last:border-0">
+            <!-- Equipment (loaded on first open — full catalog is too large to SSR) -->
+            @php $equipmentActive = !empty($cf['equipment_ids']); @endphp
+            <details id="equipment-filter-details" @if($equipmentActive) open @endif class="last:border-0">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.equipment') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-1">
-                    @foreach($equipmentTypes as $et)
-                        @php
-                            $typeId = is_array($et) ? $et['id'] : $et->id;
-                            $typeName = is_array($et) ? $et['name'] : $et->name;
-                            $items = $equipmentsByType[$typeId] ?? [];
-                        @endphp
-                        @if(count($items) > 0)
-                            <div class="equipment-type-group border-b border-border pb-2 last:border-0">
-                                <button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-                                    <span>{{ $typeName }}</span>
-                                    <svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
-                                </button>
-                                <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">
-                                    @foreach($items as $eq)
-                                        @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
-                                        <label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                            <input type="checkbox" name="equipment_ids[]" value="{{ $eq['id'] }}" class="sr-only peer" @if($checked) checked @endif>
-                                            <span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                            <span>{{ $eq['name'] }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-                    @endforeach
-                    @php $otherItems = array_merge($equipmentsByType[null] ?? [], $equipmentsByType[''] ?? []); @endphp
-                    @if(count($otherItems) > 0)
-                        <div class="equipment-type-group border-b border-border pb-2 last:border-0">
-                            <button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-                                <span>{{ __('messages.pages.sell_your_car.equipment_other') }}</span>
-                                <svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
-                            </button>
-                            <div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">
-                                @foreach($otherItems as $eq)
-                                    @php $checked = isset($cf['equipment_ids']) && is_array($cf['equipment_ids']) && in_array($eq['id'], $cf['equipment_ids']); @endphp
-                                    <label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
-                                        <input type="checkbox" name="equipment_ids[]" value="{{ $eq['id'] }}" class="sr-only peer" @if($checked) checked @endif>
-                                        <span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                        <span>{{ $eq['name'] }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+                <div id="equipment-filter-body" class="px-4 pb-3 space-y-1" data-selected='@json(array_values(array_map("intval", $cf["equipment_ids"] ?? [])))'>
+                    <p class="text-xs text-muted-foreground py-1">{{ __('messages.pages.vehicles.equipment_loading') }}</p>
                 </div>
             </details>
         </aside>
-
-        <!-- Sort, view toggle and results -->
-        <div class="flex-1 flex flex-col gap-4 w-full">
-            <!-- Results count, filter chips, and reset button -->
-            <div class="flex flex-col gap-3">
-                <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <div class="flex items-center gap-3 flex-wrap w-full">
-                        <!-- Applied Filters Chips -->
-                        <div id="applied-filters-container" class="flex flex-wrap gap-2 w-full min-w-0">
-                            <!-- Filter chips will be rendered here via JavaScript -->
-                    <!-- Reset Button (only visible when filters are applied) -->
-                    <button
-                        id="filter-reset-button-main"
-                        type="button"
-                        class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                        {{ __('messages.pages.vehicles.reset_filters') }}
-                    </button>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-            <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
-            <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
-                        @if(!empty($showNoResultsMessage))
-                            <strong>0</strong> {{ __('messages.pages.vehicles.matching_results') }}
-                        @else
-                            <strong>{{ number_format($vehicles->total()) }}</strong>
-                            {{ __('messages.forms.results') }}
-                        @endif
-                    </p>
-                </div>
-                <!-- Sort Dropdown Container -->
-                <div class="relative text-xs font-medium">
-                    <select
-                        id="sort-select"
-                        name="sort"
-                        class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
-                    >
-                        @foreach($vehicleSortLabels as $value => $label)
-                            <option value="{{ $value }}" @if(\App\Services\VehicleService::listingSortOptionIsSelected($value, $rawSortQuery ?? null)) selected @endif>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground pointer-events-none">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                </div>
-            </div>
-            
-            <!-- Sort and View Toggle -->
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <!-- Sort Dropdown -->
-            <div class="relative text-xs font-medium">
-                
-                
-                <!-- View Toggle Buttons -->
-                <div class="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-input">
-                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-card-label bg-primary text-primary-foreground font-semibold">
-                        <input 
-                            type="radio" 
-                            name="view-toggle" 
-                            value="card"
-                            class="sr-only peer view-toggle-radio"
-                            checked
-                        >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                    <rect width="7" height="7" x="3" y="3" rx="1"></rect>
-                    <rect width="7" height="7" x="14" y="3" rx="1"></rect>
-                    <rect width="7" height="7" x="3" y="14" rx="1"></rect>
-                    <rect width="7" height="7" x="14" y="14" rx="1"></rect>
-                </svg>
-                    </label>
-                    <label class="view-toggle-label inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-all view-list-label bg-card text-muted-foreground hover:text-foreground border border-transparent border-input">
-                        <input 
-                            type="radio" 
-                            name="view-toggle" 
-                            value="list"
-                            class="sr-only peer view-toggle-radio"
-                        >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                    <line x1="8" x2="21" y1="6" y2="6"></line>
-                    <line x1="8" x2="21" y1="12" y2="12"></line>
-                    <line x1="8" x2="21" y1="18" y2="18"></line>
-                    <line x1="3" x2="3.01" y1="6" y2="6"></line>
-                    <line x1="3" x2="3.01" y1="12" y2="12"></line>
-                    <line x1="3" x2="3.01" y1="18" y2="18"></line>
-                </svg>
-                    </label>
-                </div>
-            </div>
-        </div>
     </div>
-    
-    <div class="mb-6">
-        <x-popular-cities class="rounded-xl border border-border bg-card p-4" />
-    </div>
-
-    <!-- No filter matches (shown above results when filters return zero) -->
-    <div
-        id="no-results-message"
-        class="@if(empty($showNoResultsMessage)) hidden @endif mb-6 rounded-xl border border-amber-200 bg-amber-50 px-6 py-8 text-center dark:border-amber-900/50 dark:bg-amber-950/30"
-        role="status"
-        aria-live="polite"
-    >
-        <div class="mx-auto flex max-w-lg flex-col items-center gap-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-foreground">{{ __('messages.pages.vehicles.no_matching_filters') }}</h3>
-            <p class="text-sm text-muted-foreground">{{ __('messages.forms.try_adjusting_filters') }}</p>
-            <button type="button" id="no-results-reset-filters" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                {{ __('messages.pages.vehicles.reset_filters') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- Vehicle Grid/List (filter matches only) -->
-    <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3" data-view="card">
-        @forelse($vehicles as $row)
-            <x-vehicle-listing-item
-                :vehicle="$row['vehicle']"
-                :img-url="$row['imgUrl']"
-                :img-alt="$row['imgAlt']"
-                :sales-type-name="$row['salesTypeName']"
-                :trust-badge="$row['trustBadge'] ?? false"
-                :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
-                :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
-                :is-boosted="$row['isBoosted'] ?? false"
-            />
-        @empty
-            @if(empty($showNoResultsMessage))
-            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 h-6 w-6 text-muted-foreground">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </svg>
-                <h3 class="text-lg font-semibold">{{ __('messages.forms.no_vehicles_found') }}</h3>
-                <p class="mt-1 text-muted-foreground">
-                    {{ __('messages.forms.try_adjusting_filters') }}
-                </p>
-                <button type="button" onclick="document.getElementById('filter-reset-button-main')?.click()" class="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                    {{ __('messages.pages.vehicles.reset_filters') }}
-                </button>
-            </div>
-            @endif
-        @endforelse
-    </div>
-
-    <!-- Suggested vehicles when filters match nothing -->
-    <div
-        id="vehicle-fallback-section"
-        data-view="card"
-        class="@if(empty($showNoResultsMessage) || empty($fallbackVehicles) || $fallbackVehicles->count() === 0) hidden @endif mt-8 rounded-xl border border-border bg-muted/20 p-4 sm:p-6"
-    >
-        <div class="mb-4 border-b border-border pb-4">
-            <h4 class="text-base font-semibold text-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_heading') }}</h4>
-            <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.suggested_vehicles_intro') }}</p>
-        </div>
-        <div id="vehicle-fallback-grid" class="vehicle-fallback-grid grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-            @if(!empty($showNoResultsMessage) && !empty($fallbackVehicles))
-                @foreach($fallbackVehicles as $row)
-                    <x-vehicle-listing-item
-                        :vehicle="$row['vehicle']"
-                        :img-url="$row['imgUrl']"
-                        :img-alt="$row['imgAlt']"
-                        :sales-type-name="$row['salesTypeName']"
-                        :trust-badge="$row['trustBadge'] ?? false"
-                        :price-dropped-recently="$row['priceDroppedRecently'] ?? false"
-                        :premium-dealer-badge="$row['premiumDealerBadge'] ?? false"
-                        :is-boosted="$row['isBoosted'] ?? false"
-                    />
-                @endforeach
-            @endif
-        </div>
-    </div>
-
-    <!-- Enquiry Dialogs for Vehicles -->
-    @php $vehiclesForDialogs = (isset($showNoResultsMessage) && $showNoResultsMessage && isset($fallbackVehicles) && $fallbackVehicles->count() > 0) ? $fallbackVehicles : $vehicles; @endphp
-    @foreach($vehiclesForDialogs as $row)
-        <x-enquiry-dialog type="enquiry" :vehicle="$row['vehicle']" />
-    @endforeach
-
-    <!-- Login Dialog -->
-    <x-login-dialog />
-
-    <!-- Pagination -->
-    <div id="pagination-container" class="mt-8 flex items-center justify-center gap-2">
-        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
-                <path d="m15 18-6-6 6-6"></path>
-            </svg>
-            {{ __('messages.common.previous') }}
-        </button>
-        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            1
-        </button>
-        <button class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-            {{ __('messages.common.next') }}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4">
-                <path d="m9 18 6-6-6-6"></path>
-            </svg>
-        </button>
-    </div>
-</div>
-
 
 @push('styles')
 <style>
@@ -1277,6 +1222,65 @@
             results: @json(__('messages.forms.results')),
         };
         const CHIP_COLLAPSE_LIMIT = 5;
+        const EQUIPMENT_CONSTANTS_URL = @json(url('/api/v1/constants'));
+        const EQUIPMENT_OTHER_LABEL = @json(__('messages.pages.sell_your_car.equipment_other'));
+        let equipmentFiltersLoaded = false;
+
+        async function loadEquipmentFilters() {
+            const body = document.getElementById('equipment-filter-body');
+            if (!body || equipmentFiltersLoaded) return;
+            equipmentFiltersLoaded = true;
+            try {
+                const res = await fetch(EQUIPMENT_CONSTANTS_URL, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+                const json = await res.json();
+                const data = json.data || json;
+                const types = data.equipment_types || [];
+                const list = data.equipments || [];
+                const selected = new Set((JSON.parse(body.getAttribute('data-selected') || '[]') || []).map(Number));
+                const byType = {};
+                list.forEach((eq) => {
+                    const typeId = eq.equipment_type_id ?? '';
+                    if (!byType[typeId]) byType[typeId] = [];
+                    byType[typeId].push(eq);
+                });
+                const groups = [];
+                types.forEach((et) => {
+                    const items = byType[et.id] || [];
+                    if (items.length) groups.push({ name: et.name, items });
+                });
+                const other = [...(byType[''] || []), ...(byType[null] || [])];
+                if (other.length) groups.push({ name: EQUIPMENT_OTHER_LABEL, items: other });
+                body.innerHTML = groups.map((g) => {
+                    const itemsHtml = g.items.map((eq) => {
+                        const checked = selected.has(Number(eq.id)) ? ' checked' : '';
+                        return `<label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary"><input type="checkbox" name="equipment_ids[]" value="${eq.id}" class="sr-only peer"${checked}><span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span><span></span></label>`;
+                    }).join('');
+                    return `<div class="equipment-type-group border-b border-border pb-2 last:border-0"><button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"><span></span><svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg></button><div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">${itemsHtml}</div></div>`;
+                }).join('');
+                groups.forEach((g, i) => {
+                    const groupEl = body.children[i];
+                    if (!groupEl) return;
+                    const titleSpan = groupEl.querySelector('.equipment-type-toggle > span');
+                    if (titleSpan) titleSpan.textContent = g.name;
+                    g.items.forEach((eq, j) => {
+                        const labelSpan = groupEl.querySelectorAll('.equipment-btn > span:last-child')[j];
+                        if (labelSpan) labelSpan.textContent = eq.name;
+                    });
+                });
+                setupEquipmentCollapsible();
+            } catch (e) {
+                equipmentFiltersLoaded = false;
+                body.innerHTML = '<p class="text-xs text-muted-foreground py-1"></p>';
+            }
+        }
+
+        const equipmentDetails = document.getElementById('equipment-filter-details');
+        if (equipmentDetails) {
+            equipmentDetails.addEventListener('toggle', () => {
+                if (equipmentDetails.open) loadEquipmentFilters();
+            });
+            if (equipmentDetails.open) loadEquipmentFilters();
+        }
         
         let searchDebounceTimer = null;
         let isLoading = false;
@@ -2777,6 +2781,57 @@
         updateConditionStyles();
         
         // Equipment collapsible functionality
+        const CONSTANTS_URL = @json(url('/api/v1/constants'));
+        let equipmentFiltersLoaded = false;
+
+        function listingEscapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        async function loadEquipmentFilters() {
+            const body = document.getElementById('equipment-filter-body');
+            if (!body || equipmentFiltersLoaded) return;
+            equipmentFiltersLoaded = true;
+            try {
+                const res = await fetch(CONSTANTS_URL, { headers: { Accept: 'application/json' } });
+                const json = await res.json();
+                const data = json.data || json;
+                const types = data.equipment_types || [];
+                const list = data.equipments || [];
+                let selected = [];
+                try {
+                    selected = JSON.parse(body.getAttribute('data-selected') || '[]');
+                } catch (e) {
+                    selected = [];
+                }
+                const selectedSet = new Set(selected.map(String));
+                const byType = {};
+                list.forEach((eq) => {
+                    const typeId = eq.equipment_type_id == null || eq.equipment_type_id === '' ? 'other' : eq.equipment_type_id;
+                    (byType[typeId] ||= []).push(eq);
+                });
+                const checkSvg = '<span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>';
+                const labelClass = 'equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary';
+                let html = '';
+                types.forEach((et) => {
+                    const items = byType[et.id] || [];
+                    if (!items.length) return;
+                    html += '<div class="equipment-type-group border-b border-border pb-2 last:border-0">';
+                    html += '<button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"><span>' + listingEscapeHtml(et.name) + '</span><svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg></button>';
+                    html += '<div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">';
+                    items.forEach((eq) => {
+                        const checked = selectedSet.has(String(eq.id)) ? ' checked' : '';
+                        html += '<label class="' + labelClass + '"><input type="checkbox" name="equipment_ids[]" value="' + eq.id + '" class="sr-only peer"' + checked + '>' + checkSvg + '<span>' + listingEscapeHtml(eq.name) + '</span></label>';
+                    });
+                    html += '</div></div>';
+                });
+                body.innerHTML = html;
+                setupEquipmentCollapsible();
+            } catch (e) {
+                equipmentFiltersLoaded = false;
+            }
+        }
+
         function setupEquipmentCollapsible() {
             if (!filterSidebar) return;
             

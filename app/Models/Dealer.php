@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Constants\VehicleListStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -73,6 +74,26 @@ class Dealer extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    /**
+     * Slugs that must never be a public dealer profile (placeholder / default values).
+     */
+    public static function isPublicProfileSlug(?string $slug): bool
+    {
+        $slug = strtolower(trim((string) $slug));
+
+        return $slug !== '' && ! in_array($slug, ['dealer'], true);
+    }
+
+    /**
+     * Whether this dealer has at least one published vehicle (no eager-load of inventory).
+     */
+    public function hasPublishedVehicles(): bool
+    {
+        return $this->vehicles()
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->exists();
     }
 
     public function marketplaceCity(): BelongsTo

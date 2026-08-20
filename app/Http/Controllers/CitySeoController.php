@@ -98,6 +98,9 @@ class CitySeoController extends Controller
             'max_price' => $marketplaceCity->max_price,
             'brands' => $brandNames,
         ]);
+        if (! $marketplaceCity->isCarsIndexable()) {
+            $seo['robots'] = 'noindex, follow';
+        }
 
         $faqs = $this->carsFaqs($marketplaceCity);
         $seo['faq_json'] = $faqs;
@@ -145,6 +148,9 @@ class CitySeoController extends Controller
         $seo = $this->seoService->resolveForCityDealers($marketplaceCity, [
             'dealer_count' => $marketplaceCity->dealer_count,
         ]);
+        if (! $marketplaceCity->isDealersIndexable()) {
+            $seo['robots'] = 'noindex, follow';
+        }
 
         $faqs = $this->dealersFaqs($marketplaceCity);
         $seo['faq_json'] = $faqs;

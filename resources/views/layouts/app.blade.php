@@ -125,8 +125,19 @@
         };
 
         window.openEnquiryDialog = function(type, vehicleId) {
-            const dialogId = `${type}-dialog-${vehicleId}`;
-            const dialog = document.getElementById(dialogId);
+            let dialog = document.getElementById(`${type}-dialog-${vehicleId}`);
+            if (!dialog) {
+                dialog = document.getElementById(`${type}-dialog-shared`);
+                if (dialog) {
+                    const template = dialog.getAttribute('data-endpoint-template') || '';
+                    const form = dialog.querySelector('form');
+                    if (form) {
+                        form.dataset.endpoint = template.replace('__SLUG__', encodeURIComponent(vehicleId));
+                    }
+                    const hidden = dialog.querySelector('input[name="vehicle_id"]');
+                    if (hidden) hidden.value = vehicleId;
+                }
+            }
             if (dialog) {
                 dialog.classList.remove('hidden');
                 dialog.setAttribute('aria-hidden', 'false');

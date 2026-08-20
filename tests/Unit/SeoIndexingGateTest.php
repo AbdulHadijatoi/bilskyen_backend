@@ -60,6 +60,34 @@ class SeoIndexingGateTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/^Disallow: \/$/m', $robots);
     }
 
+    public function test_robots_sitemap_line_is_https_when_app_url_is_http(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.url' => 'http://example.test']);
+
+        $settings = Mockery::mock(PlatformSettingService::class);
+        $settings->shouldReceive('get')->with('seo', 'robots_mode', 'default')->andReturn('default');
+        $settings->shouldReceive('get')->with('seo', 'robots_custom_body', '')->andReturn('');
+        $this->app->instance(PlatformSettingService::class, $settings);
+
+        $robots = $this->seo->getRobotsTxt();
+        $this->assertStringContainsString('Sitemap: https://example.test/sitemap.xml', $robots);
+        $this->assertStringNotContainsString('Sitemap: http://', $robots);
+    }
+
+    public function test_canonical_public_url_rewrites_http_and_dedupes_slash(): void
+    {
+        config(['app.url' => 'http://example.test']);
+
+        $this->assertSame('https://example.test/', $this->seo->canonicalPublicUrl('http://example.test/'));
+        $this->assertSame('https://example.test/biler', $this->seo->canonicalPublicUrl('http://example.test/biler/'));
+        $this->assertSame('https://example.test/biler', $this->seo->canonicalPublicUrl('/biler'));
+        $this->assertSame(
+            $this->seo->canonicalPublicUrl('http://example.test/biler'),
+            $this->seo->canonicalPublicUrl('https://example.test/biler/')
+        );
+    }
+
     public function test_robots_controller_disallows_all_when_not_production(): void
     {
         $this->app['env'] = 'staging';

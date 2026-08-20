@@ -109,6 +109,9 @@ Route::get('/marketplace-notifications/count', [\App\Http\Controllers\Marketplac
 Route::get('/marketplace-notifications', [\App\Http\Controllers\MarketplaceNotificationController::class, 'index'])->name('marketplace-notifications.index');
 Route::post('/marketplace-notifications/mark-read', [\App\Http\Controllers\MarketplaceNotificationController::class, 'markRead'])->name('marketplace-notifications.mark-read');
 
+// Public seller landing (logged-in users see the form)
+Route::get('/saelg-din-bil', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+
 // Authenticated Routes - Require login
 Route::middleware('auth.web')->group(function () {
     // Profile Routes
@@ -125,8 +128,7 @@ Route::middleware('auth.web')->group(function () {
         ->middleware('throttle:public.writes')
         ->name('saved-searches.store');
     
-    // Sell Your Car Routes
-    Route::get('/saelg-din-bil', [\App\Http\Controllers\SellYourCarController::class, 'show'])->name('sell-your-car');
+    // Sell Your Car (form POST / lookup / success stay behind auth)
     Route::get('/saelg-din-bil/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
         ->name('sell-your-car.lookup-context');
     Route::post('/saelg-din-bil', [\App\Http\Controllers\SellYourCarController::class, 'store'])

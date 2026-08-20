@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Support\InternalRedirect;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Carbon\Carbon;
@@ -48,12 +49,21 @@ class AuthPageController extends Controller
      */
     public function showLogin(Request $request)
     {
+        $returnUrl = InternalRedirect::path($request->query('return_url'))
+            ?? InternalRedirect::path($request->session()->get('url.intended'));
+
         // Redirect if already authenticated
         if ($user = $this->getAuthenticatedUser($request)) {
-            return $this->redirectBasedOnRole($user);
+            return $this->redirectBasedOnRole($user, $returnUrl);
         }
-        
-        return view('auth.login');
+
+        if ($returnUrl) {
+            $request->session()->put('url.intended', $returnUrl);
+        }
+
+        return view('auth.login', [
+            'returnUrl' => $returnUrl,
+        ]);
     }
 
     /**
@@ -263,10 +273,13 @@ class AuthPageController extends Controller
             'Strict' // sameSite
         );
 
+        $destination = InternalRedirect::afterLogin($request);
+
         // If AJAX request, return JSON response
         if ($request->expectsJson() || $request->ajax()) {
             $response = response()->json([
                 'message' => __('messages.errors.login_successful'),
+                'redirect' => $destination,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -285,8 +298,7 @@ class AuthPageController extends Controller
             return $response;
         }
 
-        // Redirect all users to home page after login
-        return redirect('/')->withCookies([$refreshCookie, $accessCookie, $authPresentCookie]);
+        return redirect($destination)->withCookies([$refreshCookie, $accessCookie, $authPresentCookie]);
     }
 
     /**
@@ -731,15 +743,18 @@ class AuthPageController extends Controller
 
     /**
      * Redirect user based on their roles
-     * All users are redirected to home page
+     * Honors an allowlisted same-origin return path when present.
      *
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
      */
-    protected function redirectBasedOnRole($user)
+    protected function redirectBasedOnRole($user, ?string $returnUrl = null)
     {
-        // Redirect all users to home page
-        return redirect('/');
+        $path = InternalRedirect::path($returnUrl)
+            ?? InternalRedirect::path(request()->query('return_url'))
+            ?? InternalRedirect::path(session()->pull('url.intended'));
+
+        return redirect($path ?? '/');
     }
 
     /**

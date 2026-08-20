@@ -626,6 +626,50 @@ class SeoService
     }
 
     /**
+     * Absolute HTTPS URL for sitemap/robots locs (strips default ports and trailing slash except "/").
+     */
+    public function canonicalPublicUrl(string $urlOrPath): string
+    {
+        $trimmed = trim($urlOrPath);
+        $appUrl = (string) config('app.url');
+        $host = parse_url($appUrl, PHP_URL_HOST) ?: 'bilskyen.dk';
+
+        if ($trimmed === '') {
+            $trimmed = '/';
+        }
+
+        if (! str_starts_with($trimmed, 'http://') && ! str_starts_with($trimmed, 'https://')) {
+            $path = '/'.ltrim($trimmed, '/');
+            $trimmed = 'https://'.$host.$path;
+        }
+
+        $parts = parse_url($trimmed) ?: [];
+        $host = $parts['host'] ?? $host;
+        $path = $parts['path'] ?? '/';
+        if ($path !== '/') {
+            $path = rtrim($path, '/');
+        }
+        $query = isset($parts['query']) && $parts['query'] !== '' ? '?'.$parts['query'] : '';
+
+        return 'https://'.$host.$path.$query;
+    }
+
+    /**
+     * @param  array<string, true>  $seen
+     * @param  array{lastmod?: string|null, changefreq?: string, priority?: float|string}  $meta
+     * @param  list<array{loc: string, lastmod?: string|null, changefreq?: string, priority?: float|string}>  $entries
+     */
+    private function pushSitemapEntry(array &$entries, array &$seen, string $loc, array $meta): void
+    {
+        $loc = $this->canonicalPublicUrl($loc);
+        if (isset($seen[$loc])) {
+            return;
+        }
+        $seen[$loc] = true;
+        $entries[] = array_merge(['loc' => $loc], $meta);
+    }
+
+    /**
      * Build sitemap XML (merge seo_sitemaps, seo_pages static, vehicles, dealers).
      */
     public function getSitemapXml(): string
@@ -636,26 +680,16 @@ class SeoService
                 .'</urlset>';
         }
 
-        $baseUrl = rtrim(config('app.url'), '/');
         $entries = [];
+        $seen = [];
 
-        // Custom entries from seo_sitemaps table
         foreach (SeoSitemap::all() as $row) {
-            $loc = str_starts_with($row->url, 'http') ? $row->url : $baseUrl . '/' . ltrim($row->url, '/');
-            $entries[] = [
-                'loc' => $loc,
+            $this->pushSitemapEntry($entries, $seen, $row->url, [
                 'lastmod' => $row->lastmod?->format('Y-m-d'),
                 'changefreq' => $row->changefreq ?? 'weekly',
                 'priority' => $row->priority ?? '0.5',
-            ];
+            ]);
         }
-
-        // Static pages from seo_pages (home, listing, static)
-        $staticPageKeys = [
-            'home' => ['home', 'home', 1.0, 'daily'],
-            'listing' => ['listing', 'vehicles', 0.9, 'daily'],
-            'static' => ['static', null, 0.7, 'monthly'],
-        ];
 
         $staticPageKeyToRoute = [
             'home' => 'home',
@@ -665,54 +699,40 @@ class SeoService
             'account-deletion' => 'account-deletion',
             'about' => 'about',
             'contact' => 'contact',
+            'sell-your-car' => 'sell-your-car',
         ];
-
-        $addedUrls = array_column($entries, 'loc');
 
         foreach (SeoPage::whereIn('page_type', ['home', 'listing', 'static'])->get() as $seo) {
             $routeName = $staticPageKeyToRoute[$seo->page_key] ?? null;
             if ($routeName) {
-                $loc = $baseUrl . '/' . ltrim(route($routeName, [], false), '/');
-                if (!in_array($loc, $addedUrls, true)) {
-                    $entries[] = [
-                        'loc' => $loc,
-                        'lastmod' => $seo->updated_at?->format('Y-m-d'),
-                        'changefreq' => $seo->page_key === 'home' ? 'daily' : 'weekly',
-                        'priority' => $seo->page_key === 'home' ? '1.0' : ($seo->page_key === 'vehicles' ? '0.9' : '0.7'),
-                    ];
-                    $addedUrls[] = $loc;
-                }
+                $this->pushSitemapEntry($entries, $seen, route($routeName), [
+                    'lastmod' => $seo->updated_at?->format('Y-m-d'),
+                    'changefreq' => $seo->page_key === 'home' ? 'daily' : 'weekly',
+                    'priority' => $seo->page_key === 'home' ? '1.0' : ($seo->page_key === 'vehicles' ? '0.9' : '0.7'),
+                ]);
             }
         }
 
-        // If no seo_pages for home/vehicles, add default URLs
-        if (!in_array($baseUrl . '/', $addedUrls, true) && !in_array($baseUrl, $addedUrls, true)) {
-            $entries[] = [
-                'loc' => $baseUrl . '/',
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'daily',
-                'priority' => '1.0',
-            ];
-        }
-        $vehiclesUrl = route('vehicles');
-        if (!in_array($vehiclesUrl, $addedUrls, true)) {
-            $entries[] = [
-                'loc' => $vehiclesUrl,
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'daily',
-                'priority' => '0.9',
-            ];
-        }
-
-        $blogUrl = route('blog.index');
-        if (!in_array($blogUrl, $addedUrls, true)) {
-            $entries[] = [
-                'loc' => $blogUrl,
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ];
-        }
+        $this->pushSitemapEntry($entries, $seen, url('/'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'daily',
+            'priority' => '1.0',
+        ]);
+        $this->pushSitemapEntry($entries, $seen, route('vehicles'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'daily',
+            'priority' => '0.9',
+        ]);
+        $this->pushSitemapEntry($entries, $seen, route('blog.index'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'weekly',
+            'priority' => '0.7',
+        ]);
+        $this->pushSitemapEntry($entries, $seen, route('sell-your-car'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'weekly',
+            'priority' => '0.8',
+        ]);
 
         CmsPost::query()
             ->where('status', CmsPostStatus::PUBLISHED)
@@ -720,14 +740,13 @@ class SeoService
             ->where('published_at', '<=', now())
             ->select(['id', 'slug', 'updated_at'])
             ->orderBy('id')
-            ->chunkById(500, function ($posts) use (&$entries) {
+            ->chunkById(500, function ($posts) use (&$entries, &$seen) {
                 foreach ($posts as $post) {
-                    $entries[] = [
-                        'loc' => route('blog.show', $post->slug),
+                    $this->pushSitemapEntry($entries, $seen, route('blog.show', $post->slug), [
                         'lastmod' => $post->updated_at?->format('Y-m-d'),
                         'changefreq' => 'weekly',
                         'priority' => '0.7',
-                    ];
+                    ]);
                 }
             });
 
@@ -737,77 +756,69 @@ class SeoService
             ->where('published_at', '<=', now())
             ->select(['id', 'slug', 'updated_at'])
             ->orderBy('id')
-            ->chunkById(500, function ($pages) use (&$entries) {
+            ->chunkById(500, function ($pages) use (&$entries, &$seen) {
                 foreach ($pages as $lp) {
-                    $entries[] = [
-                        'loc' => route('landing.show', $lp->slug),
+                    $this->pushSitemapEntry($entries, $seen, route('landing.show', $lp->slug), [
                         'lastmod' => $lp->updated_at?->format('Y-m-d'),
                         'changefreq' => 'monthly',
                         'priority' => '0.6',
-                    ];
+                    ]);
                 }
             });
 
-        // Vehicle detail URLs (published inventory only)
         Vehicle::query()
             ->where('list_status_id', VehicleListStatus::PUBLISHED)
             ->whereNotNull('slug')
             ->select(['id', 'slug', 'updated_at'])
             ->orderBy('id')
-            ->chunkById(500, function ($vehicles) use ($baseUrl, &$entries) {
+            ->chunkById(500, function ($vehicles) use (&$entries, &$seen) {
                 foreach ($vehicles as $vehicle) {
-                    $entries[] = [
-                        'loc' => route('vehicle.detail', $vehicle),
+                    $this->pushSitemapEntry($entries, $seen, route('vehicle.detail', $vehicle), [
                         'lastmod' => $vehicle->updated_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
                         'changefreq' => 'weekly',
                         'priority' => '0.8',
-                    ];
+                    ]);
                 }
             });
 
-        // Dealer URLs
         Dealer::query()
             ->whereNotNull('slug')
-            ->select(['id', 'slug', 'updated_at'])
+            ->whereNotNull('user_id')
+            ->select(['id', 'slug', 'user_id', 'updated_at'])
             ->orderBy('id')
-            ->chunkById(500, function ($dealers) use ($baseUrl, &$entries) {
+            ->chunkById(500, function ($dealers) use (&$entries, &$seen) {
                 foreach ($dealers as $dealer) {
-                    $entries[] = [
-                        'loc' => $baseUrl . '/dealer-' . $dealer->slug,
+                    if (! Dealer::isPublicProfileSlug($dealer->slug)) {
+                        continue;
+                    }
+                    $this->pushSitemapEntry($entries, $seen, route('dealer.show', $dealer->slug), [
                         'lastmod' => $dealer->updated_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
                         'changefreq' => 'weekly',
                         'priority' => '0.6',
-                    ];
+                    ]);
                 }
             });
 
-        // City SEO hubs (indexable inventory only)
-        $citiesIndexUrl = $baseUrl.'/byer';
-        if (! in_array($citiesIndexUrl, $addedUrls, true)) {
-            $entries[] = [
-                'loc' => $citiesIndexUrl,
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'daily',
-                'priority' => '0.7',
-            ];
-        }
+        $this->pushSitemapEntry($entries, $seen, url('/byer'), [
+            'lastmod' => now()->format('Y-m-d'),
+            'changefreq' => 'daily',
+            'priority' => '0.7',
+        ]);
 
         foreach (\App\Models\MarketplaceCity::query()->where('is_active', true)->orderBy('name')->get() as $city) {
             if ($city->isCarsIndexable()) {
-                $entries[] = [
-                    'loc' => $baseUrl.'/biler-i/'.$city->slug,
+                $this->pushSitemapEntry($entries, $seen, url('/biler-i/'.$city->slug), [
                     'lastmod' => $city->last_computed_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
                     'changefreq' => 'daily',
                     'priority' => '0.7',
-                ];
+                ]);
             }
             if ($city->isDealersIndexable()) {
-                $entries[] = [
-                    'loc' => $baseUrl.'/forhandlere-i/'.$city->slug,
+                $this->pushSitemapEntry($entries, $seen, url('/forhandlere-i/'.$city->slug), [
                     'lastmod' => $city->last_computed_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
                     'changefreq' => 'weekly',
                     'priority' => '0.65',
-                ];
+                ]);
             }
         }
 
@@ -849,7 +860,6 @@ class SeoService
             return trim($custom);
         }
 
-        $baseUrl = rtrim(config('app.url'), '/');
         $lines = [
             'User-agent: *',
             'Allow: /',
@@ -866,7 +876,7 @@ class SeoService
             'Disallow: /seller-dashboard',
             'Disallow: /test/',
             '',
-            'Sitemap: ' . $baseUrl . '/sitemap.xml',
+            'Sitemap: '.$this->canonicalPublicUrl('/sitemap.xml'),
         ];
         return implode("\n", $lines);
     }

@@ -595,6 +595,7 @@ class HomeController extends Controller
         $selectedType = $selectedTypeId ? Type::select(['id', 'name'])->find($selectedTypeId) : null;
 
         $constants = $this->lookupService->getPublicConstants();
+        unset($constants['equipments']);
         $seo = $this->seoService->getForPage('listing', 'vehicles') ?? [];
         // Always consolidate filter/sort query variants onto the clean listing URL.
         $seo['canonical_url'] = route('vehicles');
