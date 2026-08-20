@@ -6,7 +6,9 @@
                     <img src="/images/logo_white.png" alt="{{ __('messages.common.site_name') }}" class="h-7 md:h-8 w-auto">
                 </a>
                 <nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
+                    @if(!empty($publicAiEnabled))
                     <a href="{{ route('find-perfect-car') }}" class="site-nav-link {{ request()->is('find-din-bil') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.find_perfect_car') }}</a>
+                    @endif
                     <a href="{{ route('vehicles') }}" class="site-nav-link {{ request()->is('biler') || request()->is('biler/*') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.vehicles') }}</a>
                     <a href="{{ route('about') }}" class="site-nav-link {{ request()->is('om-os') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.about_us') }}</a>
                     <a href="{{ route('contact') }}" class="site-nav-link {{ request()->is('kontakt') ? 'site-nav-link--active' : '' }}">{{ __('messages.navigation.contact') }}</a>
@@ -29,7 +31,9 @@
         </div>
         <nav id="mobile-menu" class="hidden border-t border-primary-foreground/15 py-4 md:hidden" aria-label="Mobile navigation">
             <div class="flex flex-col gap-1">
+                @if(!empty($publicAiEnabled))
                 <a href="{{ route('find-perfect-car') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.find_perfect_car') }}</a>
+                @endif
                 <a href="{{ route('vehicles') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.vehicles') }}</a>
                 <a href="{{ route('about') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.about_us') }}</a>
                 <a href="{{ route('contact') }}" class="site-header-mobile-link rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">{{ __('messages.navigation.contact') }}</a>

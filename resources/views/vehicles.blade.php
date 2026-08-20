@@ -2552,64 +2552,6 @@
             });
         }
         
-        // Sticky search bar on scroll
-        const searchBarContainer = document.getElementById('search-bar-container');
-        let lastScrollY = window.scrollY;
-        let originalOffsetTop = null;
-        let isSticky = false;
-        
-        function handleStickySearchBar() {
-            if (!searchBarContainer) return;
-            
-            const currentScrollY = window.scrollY;
-            const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
-            
-            // Get original position on first load (before any sticky behavior)
-            if (originalOffsetTop === null) {
-                originalOffsetTop = searchBarContainer.offsetTop;
-            }
-            
-            const rect = searchBarContainer.getBoundingClientRect();
-            const isAtTop = rect.top <= 0;
-            
-            // When scrolling down and search bar reaches top - make it sticky
-            if (scrollDirection === 'down' && isAtTop && !isSticky) {
-                searchBarContainer.classList.add('sticky', 'top-0', 'z-30');
-                isSticky = true;
-            }
-            // When scrolling back up past original position - remove sticky
-            else if (scrollDirection === 'up' && currentScrollY < originalOffsetTop && isSticky) {
-                searchBarContainer.classList.remove('sticky', 'top-0', 'z-30');
-                isSticky = false;
-            }
-            // When scrolling up while sticky and element naturally comes back into view
-            else if (scrollDirection === 'up' && isSticky && rect.top > 0) {
-                searchBarContainer.classList.remove('sticky', 'top-0', 'z-30');
-                isSticky = false;
-            }
-            
-            lastScrollY = currentScrollY;
-        }
-        
-        // Throttle scroll events for better performance
-        let scrollTimeout;
-        window.addEventListener('scroll', () => {
-            if (scrollTimeout) {
-                cancelAnimationFrame(scrollTimeout);
-            }
-            scrollTimeout = requestAnimationFrame(handleStickySearchBar);
-        });
-        
-        // Initialize on load
-        handleStickySearchBar();
-        
-        // Recalculate original position on resize (only if not sticky)
-        window.addEventListener('resize', () => {
-            if (!isSticky && originalOffsetTop !== null) {
-                originalOffsetTop = searchBarContainer.offsetTop;
-            }
-        });
-        
         // Mobile sidebar toggle
         if (mobileFilterToggle && filterSidebar) {
             const filterIcon = document.getElementById('mobile-filter-icon');

@@ -157,7 +157,9 @@ class HomeController extends Controller
             'currentYear' => $currentYear,
             'filterPriceMax' => VehicleSearchFilters::PRICE_MAX,
             'filterKmMax' => VehicleSearchFilters::KM_MAX,
-            'lifestyleChips' => app(SuggestionService::class)->lifestyleChips($locale, $sessionSeed, 2),
+            'lifestyleChips' => $this->aiService->isGloballyEnabled()
+                ? app(SuggestionService::class)->lifestyleChips($locale, $sessionSeed, 2)
+                : [],
         ]);
     }
 
@@ -436,6 +438,10 @@ class HomeController extends Controller
      */
     public function showFindPerfectCar()
     {
+        if (! $this->aiService->isGloballyEnabled()) {
+            abort(404);
+        }
+
         $locale = app()->getLocale();
         $sessionSeed = null;
         try {

@@ -928,16 +928,16 @@
                 <p class="home-filter-search-hint">{{ __('messages.pages.home.search_hint_ai') }}</p>
                 @endif
 
-                    <div class="home-filter-suggestion-row">
                     @if(!empty($publicAiEnabled))
+                    <div class="home-filter-suggestion-row">
                     <div id="home-ai-examples" class="ai-search-examples" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
-                    @endif
                     @foreach($lifestyleChips ?? [] as $chip)
                     <a href="{{ $chip['href'] }}" class="ai-search-example-chip lifestyle">
                         ✦ {{ $chip['label'] }}
                     </a>
                     @endforeach
-                </div>
+                    </div>
+                    @endif
 
                 @if(!empty($publicAiEnabled))
                 <div id="home-ai-understood" class="ai-understood-banner home-filter-ai-understood hidden" aria-live="polite"></div>
