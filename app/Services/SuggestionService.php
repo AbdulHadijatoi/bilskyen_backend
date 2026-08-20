@@ -403,11 +403,11 @@ class SuggestionService
                 );
 
                 $lifestyle[] = $this->item(
-                    'Familiabil, weekendture',
+                    'Familiebil, weekendture',
                     'lifestyle',
                     70,
                     [],
-                    'Familiabil, weekendture',
+                    'Familiebil, weekendture',
                     "Familie på 4, max {$this->formatPriceDa($budgetP50)}, plads til weekendture."
                 );
                 $lifestyle[] = $this->item(
@@ -476,7 +476,7 @@ class SuggestionService
                 $this->item('Første bil under 80.000 kr, pålidelig og billig i drift, mest korte ture.', 'template', 85),
             ];
             $lifestyle = [
-                $this->item('Familiabil, weekendture', 'lifestyle', 100, [], 'Familiabil, weekendture', 'Familie på 4, plads til weekendture, pålidelig og praktisk.'),
+                $this->item('Familiebil, weekendture', 'lifestyle', 100, [], 'Familiebil, weekendture', 'Familie på 4, plads til weekendture, pålidelig og praktisk.'),
                 $this->item('Første bil, lav forsikring', 'lifestyle', 95, [], 'Første bil, lav forsikring', 'Første bil, pålidelig og billig i forsikring, mest korte ture.'),
             ];
         }
