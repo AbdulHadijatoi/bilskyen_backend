@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\CrawlerRequest;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,24 @@ class PublicHtmlCache
 
         $response->headers->set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
 
+        if (CrawlerRequest::isCrawler($request)) {
+            $this->stripSetCookie($response);
+        }
+
         return $response;
+    }
+
+    private function stripSetCookie(Response $response): void
+    {
+        foreach ($response->headers->getCookies() as $cookie) {
+            $response->headers->removeCookie(
+                $cookie->getName(),
+                $cookie->getPath() ?? '/',
+                $cookie->getDomain()
+            );
+        }
+
+        $response->headers->remove('Set-Cookie');
     }
 
     private function shouldCache(Request $request, Response $response): bool

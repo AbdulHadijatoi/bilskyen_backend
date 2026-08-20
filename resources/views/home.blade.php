@@ -859,7 +859,14 @@
     $vehicleCountFormatted = number_format($publishedVehicleCount ?? 0, 0, ',', '.');
     $homeYearMin = 1975;
     $homeYearMax = ($currentYear ?? (int) date('Y')) + 1;
+    $homeHeroTitle = $homePageContent['search_title'] ?? __('messages.pages.home.title');
+    if (preg_match('/perfekte køretøj|perfect vehicle/iu', (string) $homeHeroTitle)) {
+        $homeHeroTitle = __('messages.pages.home.title');
+    }
     $searchDescription = $homePageContent['search_description'] ?? __('messages.pages.home.description');
+    if (preg_match('/perfekte match|perfect match/iu', (string) $searchDescription)) {
+        $searchDescription = __('messages.pages.home.description');
+    }
     $filterPriceMax = $filterPriceMax ?? 1_000_000;
     $filterKmMax = $filterKmMax ?? 500_000;
 @endphp
@@ -870,7 +877,7 @@
             <div class="home-filter-card">
                 <div class="home-filter-intro">
                     <h1>
-                        {{ $homePageContent['search_title'] ?? __('messages.pages.home.title') }}
+                        {{ $homeHeroTitle }}
                     </h1>
                     @if(filled($searchDescription))
                         <p class="home-filter-intro-sub">
@@ -1492,22 +1499,22 @@
 
                 $testimonials = [
                     [
-                        'name' => $homePageContent['testimonial_1_name'] ?? __('messages.pages.home.testimonial_1_name'),
-                        'location' => $homePageContent['testimonial_1_location'] ?? __('messages.pages.home.testimonial_1_location'),
+                        'name' => \App\Support\TestimonialAttribution::name($homePageContent['testimonial_1_name'] ?? __('messages.pages.home.testimonial_1_name')),
+                        'location' => \App\Support\TestimonialAttribution::location($homePageContent['testimonial_1_location'] ?? __('messages.pages.home.testimonial_1_location')),
                         'quote' => $cleanTestimonialQuote($homePageContent['testimonial_1_quote'] ?? __('messages.pages.home.testimonial_1_quote')),
                         'rating' => (int)($homePageContent['testimonial_1_rating'] ?? 5),
                         'date' => $homePageContent['testimonial_1_date'] ?? null,
                     ],
                     [
-                        'name' => $homePageContent['testimonial_2_name'] ?? __('messages.pages.home.testimonial_2_name'),
-                        'location' => $homePageContent['testimonial_2_location'] ?? __('messages.pages.home.testimonial_2_location'),
+                        'name' => \App\Support\TestimonialAttribution::name($homePageContent['testimonial_2_name'] ?? __('messages.pages.home.testimonial_2_name')),
+                        'location' => \App\Support\TestimonialAttribution::location($homePageContent['testimonial_2_location'] ?? __('messages.pages.home.testimonial_2_location')),
                         'quote' => $cleanTestimonialQuote($homePageContent['testimonial_2_quote'] ?? __('messages.pages.home.testimonial_2_quote')),
                         'rating' => (int)($homePageContent['testimonial_2_rating'] ?? 5),
                         'date' => $homePageContent['testimonial_2_date'] ?? null,
                     ],
                     [
-                        'name' => $homePageContent['testimonial_3_name'] ?? __('messages.pages.home.testimonial_3_name'),
-                        'location' => $homePageContent['testimonial_3_location'] ?? __('messages.pages.home.testimonial_3_location'),
+                        'name' => \App\Support\TestimonialAttribution::name($homePageContent['testimonial_3_name'] ?? __('messages.pages.home.testimonial_3_name')),
+                        'location' => \App\Support\TestimonialAttribution::location($homePageContent['testimonial_3_location'] ?? __('messages.pages.home.testimonial_3_location')),
                         'quote' => $cleanTestimonialQuote($homePageContent['testimonial_3_quote'] ?? __('messages.pages.home.testimonial_3_quote')),
                         'rating' => (int)($homePageContent['testimonial_3_rating'] ?? 4),
                         'date' => $homePageContent['testimonial_3_date'] ?? null,

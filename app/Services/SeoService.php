@@ -103,7 +103,7 @@ class SeoService
             ? $vehicle->images->first()
             : $vehicle->images()->orderBy('sort_order')->first();
         if ($firstImage) {
-            $ogImage = $firstImage->image_url ?? $firstImage->thumbnail_url ?? null;
+            $ogImage = $this->publicListingImage($firstImage->image_url ?? $firstImage->thumbnail_url ?? null);
         }
 
         $canonical = route('vehicle.detail', $vehicle);
@@ -169,10 +169,10 @@ class SeoService
             'breadcrumbs_json' => $breadcrumbs,
         ];
 
-        return $this->applyNonEmptyOverrides(
+        return $this->omitPlaceholderImages($this->applyNonEmptyOverrides(
             $defaults,
             $this->getForPage('vehicle', (string) $vehicle->slug) ?? []
-        );
+        ));
     }
 
     /**
@@ -1108,5 +1108,37 @@ class SeoService
         ];
 
         return implode("\n", $lines)."\n";
+    }
+
+    private function publicListingImage(?string $url): ?string
+    {
+        $url = trim((string) $url);
+        if ($url === '' || str_contains($url, 'placeholder-vehicle')) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    /**
+     * @param  array<string, mixed>  $seo
+     * @return array<string, mixed>
+     */
+    private function omitPlaceholderImages(array $seo): array
+    {
+        $seo['og_image'] = $this->publicListingImage(is_string($seo['og_image'] ?? null) ? $seo['og_image'] : null);
+        $seo['twitter_image'] = $this->publicListingImage(is_string($seo['twitter_image'] ?? null) ? $seo['twitter_image'] : null);
+
+        if (isset($seo['schema_json']) && is_array($seo['schema_json'])) {
+            $schemaImage = $seo['schema_json']['image'] ?? null;
+            $clean = $this->publicListingImage(is_string($schemaImage) ? $schemaImage : null);
+            if ($clean === null) {
+                unset($seo['schema_json']['image']);
+            } else {
+                $seo['schema_json']['image'] = $clean;
+            }
+        }
+
+        return $seo;
     }
 }

@@ -325,7 +325,7 @@ return [
     // Pages
     'pages' => [
         'home' => [
-            'title' => 'Find Your Perfect Vehicle at Bilskyen',
+            'title' => 'Used cars for sale in Denmark',
             'search_headline' => 'Which car are you looking for?',
             'tagline' => 'Find your car',
             'search_placeholder' => 'Search by brand, model, or keyword…',
@@ -344,7 +344,7 @@ return [
             'show_filters' => 'Show filters',
             'all_cars' => 'All cars',
             'before_year' => 'Before :year',
-            'description' => 'Search our inventory to find the perfect match for your needs.',
+            'description' => 'Find used cars from dealers and private sellers across Denmark. Compare prices and contact the seller on Bilskyen.',
             'ai_understood' => 'We understood',
             'ai_parsing' => 'Understanding your search…',
             'ai_examples_label' => 'Try:',
@@ -382,15 +382,17 @@ return [
             "feature_3_title" => "Service Department",
             "feature_3_description" => "Professional maintenance and repair services to keep your vehicle in top condition.",
             "learn_more" => "Learn more",
-            "testimonial_1_quote" => "The team at Bilskyen made buying a car so easy. They were transparent about pricing and helped me find the perfect vehicle for my family.",
-            "testimonial_2_quote" => "I was impressed with their knowledge and no-pressure approach. I got a great deal on my new car and would definitely recommend them.",
-            "testimonial_3_quote" => "The financing options they provided were better than I expected. The entire process was smooth and I drove away very happy.",
-            "testimonial_1_name" => "John Davis",
-            "testimonial_1_location" => "Copenhagen, Denmark",
-            "testimonial_2_name" => "Priya Sharma",
-            "testimonial_2_location" => "Aarhus, Denmark",
-            "testimonial_3_name" => "Ahmed Khan",
-            "testimonial_3_location" => "Odense, Denmark",
+            "testimonial_1_quote" => "Prices were clear, and it was easy to compare cars and contact the seller.",
+            "testimonial_2_quote" => "I found a used car that fit my budget without feeling pressured.",
+            "testimonial_3_quote" => "The listings were easy to browse, and I could reach the dealer quickly.",
+            "testimonial_1_name" => "Buyer",
+            "testimonial_1_location" => "Denmark",
+            "testimonial_2_name" => "Buyer",
+            "testimonial_2_location" => "Denmark",
+            "testimonial_3_name" => "Buyer",
+            "testimonial_3_location" => "Denmark",
+            "testimonial_buyer" => "Buyer",
+            "testimonial_region" => "Denmark",
         ],
         'contact' => [
             'page_title' => 'Contact | Bilskyen',
@@ -1632,7 +1634,7 @@ return [
     // CMS (R5)
     'cms' => [
         'blog_title' => 'News & insights',
-        'blog_description' => 'Latest updates from Bilskyen.',
+        'blog_description' => 'Guides and news on used cars in Denmark: buying, selling, prices, and EVs. Read Bilskyen advice before you buy or sell.',
         'no_posts' => 'No posts published yet.',
         'read_more' => 'Read more',
         'back_to_blog' => 'Back to blog',

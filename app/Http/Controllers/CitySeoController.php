@@ -104,7 +104,7 @@ class CitySeoController extends Controller
 
         $faqs = $this->carsFaqs($marketplaceCity);
         $seo['faq_json'] = $faqs;
-        $seo['schema_json'] = $this->buildCarsSchemas($marketplaceCity, $vehicles, $faqs, $seo);
+        $seo['schema_json'] = $this->buildCarsSchemas($marketplaceCity, $vehicles, $seo);
 
         return view('city-cars', [
             'city' => $marketplaceCity,
@@ -154,7 +154,7 @@ class CitySeoController extends Controller
 
         $faqs = $this->dealersFaqs($marketplaceCity);
         $seo['faq_json'] = $faqs;
-        $seo['schema_json'] = $this->buildDealersSchemas($marketplaceCity, $dealers, $faqs, $seo);
+        $seo['schema_json'] = $this->buildDealersSchemas($marketplaceCity, $dealers, $seo);
 
         return view('city-dealers', [
             'city' => $marketplaceCity,
@@ -222,11 +222,10 @@ class CitySeoController extends Controller
 
     /**
      * @param  \Illuminate\Support\Collection<int, \App\Models\Vehicle>  $vehicles
-     * @param  list<array{question: string, answer: string}>  $faqs
      * @param  array<string, mixed>  $seo
      * @return array<string, mixed>
      */
-    private function buildCarsSchemas(MarketplaceCity $city, $vehicles, array $faqs, array $seo): array
+    private function buildCarsSchemas(MarketplaceCity $city, $vehicles, array $seo): array
     {
         $itemListElement = [];
         $position = 1;
@@ -246,7 +245,6 @@ class CitySeoController extends Controller
                 'numberOfItems' => $city->published_vehicle_count,
                 'itemListElement' => $itemListElement,
             ],
-            $this->schemaBuilder->build('FAQPage', ['faqs' => $faqs]),
             $this->schemaBuilder->build('BreadcrumbList', [
                 'items' => $seo['breadcrumbs_json'] ?? [],
             ]),
@@ -264,11 +262,10 @@ class CitySeoController extends Controller
 
     /**
      * @param  \Illuminate\Support\Collection<int, \App\Models\Dealer>  $dealers
-     * @param  list<array{question: string, answer: string}>  $faqs
      * @param  array<string, mixed>  $seo
      * @return array<string, mixed>
      */
-    private function buildDealersSchemas(MarketplaceCity $city, $dealers, array $faqs, array $seo): array
+    private function buildDealersSchemas(MarketplaceCity $city, $dealers, array $seo): array
     {
         $itemListElement = [];
         $position = 1;
@@ -289,7 +286,6 @@ class CitySeoController extends Controller
                 'numberOfItems' => $city->dealer_count,
                 'itemListElement' => $itemListElement,
             ],
-            $this->schemaBuilder->build('FAQPage', ['faqs' => $faqs]),
             $this->schemaBuilder->build('BreadcrumbList', [
                 'items' => $seo['breadcrumbs_json'] ?? [],
             ]),

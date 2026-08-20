@@ -3,12 +3,18 @@
 namespace Tests\Unit;
 
 use App\Models\Condition;
+use App\Models\Dealer;
+use App\Models\Location;
+use App\Models\MarketplaceCity;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Services\PlatformSettingService;
 use App\Services\Syndication\MetaCatalogFeedUrlService;
 use App\Services\Syndication\MetaVehicleCatalogMapper;
+use App\Support\CompanyProfile;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Mockery;
 use Tests\TestCase;
 
@@ -102,6 +108,138 @@ class MetaVehicleCatalogMapperTest extends TestCase
         $this->assertSame('https://bilskyen.dk/api/v1/feeds/platform/abcToken/vehicles.csv', $url);
     }
 
+    public function test_dealer_row_gets_region_from_marketplace_city(): void
+    {
+        $city = new MarketplaceCity(['name' => 'Aarhus', 'slug' => 'aarhus', 'region' => 'Midtjylland']);
+        $dealer = new Dealer([
+            'slug' => 'aarhus-biler',
+            'address' => 'Søndergade 12',
+            'city' => 'Aarhus',
+            'postcode' => '8000',
+            'country_code' => 'DK',
+        ]);
+        $dealer->id = 88;
+        $dealer->setRelation('marketplaceCity', $city);
+
+        $vehicle = $this->makeVehicle();
+        $vehicle->setRelation('dealer', $dealer);
+
+        $row = (new MetaVehicleCatalogMapper)->toRow($vehicle);
+
+        $this->assertSame('Søndergade 12', $row['address.addr1']);
+        $this->assertSame('Aarhus', $row['address.city']);
+        $this->assertSame('Midtjylland', $row['address.region']);
+        $this->assertSame('8000', $row['address.postal_code']);
+        $this->assertNotSame('', $row['address.region']);
+    }
+
+    public function test_private_listing_uses_vehicle_address_and_location_region(): void
+    {
+        $this->ensureLocationsTable();
+        Location::query()->create([
+            'city' => 'Odense',
+            'postcode' => '5000',
+            'region' => 'Syddanmark',
+            'country_code' => 'DK',
+        ]);
+
+        $vehicle = $this->makeVehicle([
+            'address' => 'Vestergade 4',
+            'postcode' => '5000',
+        ]);
+        $vehicle->setRelation('dealer', null);
+
+        $row = (new MetaVehicleCatalogMapper)->toRow($vehicle);
+
+        $this->assertSame('Vestergade 4', $row['address.addr1']);
+        $this->assertSame('Odense', $row['address.city']);
+        $this->assertSame('Syddanmark', $row['address.region']);
+        $this->assertSame('5000', $row['address.postal_code']);
+    }
+
+    public function test_empty_description_is_synthesized_from_title(): void
+    {
+        $vehicle = $this->makeVehicle(['description' => '']);
+        $row = (new MetaVehicleCatalogMapper)->toRow($vehicle);
+
+        $this->assertStringContainsString('Mercedes GLE', $row['description']);
+        $this->assertStringContainsString('2022', $row['description']);
+        $this->assertStringContainsString('Bilskyen', $row['description']);
+    }
+
+    public function test_year_falls_back_to_first_registration_date(): void
+    {
+        $vehicle = $this->makeVehicle([
+            'model_year' => null,
+            'first_registration_year' => null,
+            'first_registration_date' => '2019-06-15',
+        ]);
+        $row = (new MetaVehicleCatalogMapper)->toRow($vehicle);
+
+        $this->assertSame('2019', $row['year']);
+    }
+
+    public function test_csv_omits_placeholder_and_missing_images(): void
+    {
+        $placeholder = new VehicleImage(['image_path' => 'placeholder-vehicle.jpg', 'sort_order' => 0]);
+        $missing = $this->makeVehicle(['slug' => 'no-photo']);
+        $missing->id = 2001;
+        $missing->setRelation('images', collect([$placeholder]));
+
+        $empty = $this->makeVehicle(['slug' => 'empty-photos']);
+        $empty->id = 2002;
+        $empty->setRelation('images', collect());
+
+        $okImage = new VehicleImage(['image_path' => 'vehicles/1554/a.jpg', 'sort_order' => 0]);
+        $ok = $this->makeVehicle();
+        $ok->setRelation('images', collect([$okImage]));
+
+        $rowMissing = (new MetaVehicleCatalogMapper)->toRow($missing);
+        $this->assertSame('', $rowMissing['image[0].url']);
+
+        $csv = (new MetaVehicleCatalogMapper)->toCsv(new Collection([$missing, $empty, $ok]));
+
+        $this->assertStringContainsString('"1554"', $csv);
+        $this->assertStringNotContainsString('"2001"', $csv);
+        $this->assertStringNotContainsString('"2002"', $csv);
+        $this->assertStringNotContainsString('placeholder-vehicle', $csv);
+    }
+
+    public function test_company_office_street_is_not_used_as_listing_address(): void
+    {
+        $vehicle = $this->makeVehicle(['address' => '', 'postcode' => '']);
+        $row = (new MetaVehicleCatalogMapper)->toRow($vehicle);
+
+        $this->assertSame('', $row['address.addr1']);
+        $this->assertStringNotContainsString('Smedeland 7', $row['address.addr1']);
+        $this->assertSame('Smedeland 7', CompanyProfile::street());
+    }
+
+    public function test_preview_ready_requires_city_street_and_region(): void
+    {
+        $city = new MarketplaceCity(['name' => 'Aarhus', 'slug' => 'aarhus', 'region' => 'Midtjylland']);
+        $dealer = new Dealer([
+            'slug' => 'aarhus-biler',
+            'address' => 'Søndergade 12',
+            'city' => 'Aarhus',
+            'postcode' => '8000',
+        ]);
+        $dealer->setRelation('marketplaceCity', $city);
+
+        $image = new VehicleImage(['image_path' => 'vehicles/1554/a.jpg', 'sort_order' => 0]);
+        $brand = (object) ['name' => 'Mercedes'];
+        $model = (object) ['name' => 'GLE'];
+        $vehicle = $this->makeVehicle();
+        $vehicle->setRelation('dealer', $dealer);
+        $vehicle->setRelation('images', collect([$image]));
+        $vehicle->setRelation('brand', $brand);
+        $vehicle->setRelation('model', $model);
+
+        $preview = (new MetaVehicleCatalogMapper)->preview($vehicle);
+        $this->assertTrue($preview['ready']);
+        $this->assertTrue(collect($preview['readiness'])->firstWhere('key', 'region')['ok']);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      */
@@ -128,5 +266,22 @@ class MetaVehicleCatalogMapperTest extends TestCase
         $vehicle->setRelation('dealer', null);
 
         return $vehicle;
+    }
+
+    private function ensureLocationsTable(): void
+    {
+        if (Schema::hasTable('locations')) {
+            return;
+        }
+
+        Schema::create('locations', function (Blueprint $table) {
+            $table->id();
+            $table->string('city');
+            $table->string('postcode');
+            $table->string('region');
+            $table->string('country_code')->nullable();
+            $table->float('latitude')->nullable();
+            $table->float('longitude')->nullable();
+        });
     }
 }

@@ -14,6 +14,10 @@
             <img
                 src="{{ $imgUrl }}"
                 alt="{{ $imgAlt }}"
+                width="800"
+                height="600"
+                loading="lazy"
+                decoding="async"
                 class="h-full w-full object-cover rounded-md vehicle-listing-thumb"
             />
             <div class="absolute top-4 left-4 z-10 flex max-w-[75%] flex-row flex-wrap items-center gap-1">

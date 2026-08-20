@@ -325,7 +325,7 @@ return [
     // Pages
     'pages' => [
         'home' => [
-            'title' => 'Find dit perfekte køretøj hos Bilskyen',
+            'title' => 'Brugte biler til salg i Danmark',
             'search_headline' => 'Hvilken bil leder du efter?',
             'tagline' => 'Find din bil',
             'search_placeholder' => 'Søg på mærke, model eller nøgleord…',
@@ -344,7 +344,7 @@ return [
             'show_filters' => 'Vis filtre',
             'all_cars' => 'Alle biler',
             'before_year' => 'før :year',
-            'description' => 'Søg i vores lager for at finde det perfekte match til dine behov.',
+            'description' => 'Find brugte biler hos forhandlere og private i hele Danmark. Sammenlign priser og kontakt sælger på Bilskyen.',
             'ai_understood' => 'Vi forstod',
             'ai_parsing' => 'Forstår din søgning…',
             'ai_examples_label' => 'Prøv:',
@@ -382,15 +382,17 @@ return [
             "feature_3_title" => "Servicedepartement",
             "feature_3_description" => "Professionel vedligeholdelse og reparation for at holde dit køretøj i topform.",
             "learn_more" => "Læs mere",
-            "testimonial_1_quote" => "Holdet hos Bilskyen gjorde bilkøb så nemt. De var gennemsigtige med priser og hjalp mig med at finde det perfekte køretøj til min familie.",
-            "testimonial_2_quote" => "Jeg var imponeret over deres viden og ikke-pressende tilgang. Jeg fik et godt tilbud på min nye bil og vil bestemt anbefale dem.",
-            "testimonial_3_quote" => "Finansieringsmulighederne de tilbød var bedre end forventet. Hele processen var gnidningsfri og jeg kørte meget tilfreds væk.",
-            "testimonial_1_name" => "John Davis",
-            "testimonial_1_location" => "København, Danmark",
-            "testimonial_2_name" => "Priya Sharma",
-            "testimonial_2_location" => "Aarhus, Danmark",
-            "testimonial_3_name" => "Ahmed Khan",
-            "testimonial_3_location" => "Odense, Danmark",
+            "testimonial_1_quote" => "Priserne var tydelige, og det var nemt at sammenligne biler og kontakte sælger.",
+            "testimonial_2_quote" => "Jeg fandt en brugt bil, der passede til mit budget, uden at blive presset.",
+            "testimonial_3_quote" => "Annoncerne var overskuelige, og jeg kunne hurtigt komme i dialog med forhandleren.",
+            "testimonial_1_name" => "Køber",
+            "testimonial_1_location" => "Danmark",
+            "testimonial_2_name" => "Køber",
+            "testimonial_2_location" => "Danmark",
+            "testimonial_3_name" => "Køber",
+            "testimonial_3_location" => "Danmark",
+            "testimonial_buyer" => "Køber",
+            "testimonial_region" => "Danmark",
         ],
         'contact' => [
             'page_title' => 'Kontakt | Bilskyen',
@@ -1632,7 +1634,7 @@ return [
     // CMS (R5)
     'cms' => [
         'blog_title' => 'Nyheder og indsigt',
-        'blog_description' => 'Seneste opdateringer fra Bilskyen.',
+        'blog_description' => 'Guides og nyheder om brugte biler i Danmark: køb, salg, priser og elbil. Læs råd fra Bilskyen, før du handler.',
         'no_posts' => 'Ingen indlæg publiceret endnu.',
         'read_more' => 'Læs mere',
         'back_to_blog' => 'Tilbage til blog',

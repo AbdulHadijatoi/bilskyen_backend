@@ -2,13 +2,18 @@
 
 namespace App\Services\Syndication;
 
+use App\Models\Dealer;
+use App\Models\Location;
 use App\Models\Vehicle;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class MetaVehicleCatalogMapper
 {
     public const MAX_IMAGES = 20;
+
+    /** @var array<string, Location|null> */
+    private array $locationsByPostcode = [];
 
     /**
      * Stable CSV column order for Meta automotive catalogs.
@@ -60,18 +65,19 @@ class MetaVehicleCatalogMapper
     {
         $images = $this->imageUrls($vehicle);
         $dealer = $vehicle->relationLoaded('dealer') ? $vehicle->dealer : $vehicle->dealer()->first();
-        $year = $vehicle->model_year ?? $vehicle->first_registration_year;
+        $year = $this->catalogYear($vehicle);
         $mileage = (int) round((float) ($vehicle->km_driven ?? 0));
         $state = $mileage <= 50 ? 'New' : 'Used';
+        $address = $this->resolveAddress($vehicle, $dealer);
 
         $row = [
             'vehicle_id' => (string) $vehicle->id,
             'title' => (string) ($vehicle->title ?? ''),
-            'description' => $this->plainDescription($vehicle),
+            'description' => $this->plainDescription($vehicle, $year, $mileage),
             'url' => self::forceHttps(route('vehicle.detail', $vehicle)),
             'make' => (string) ($vehicle->brand?->name ?? ''),
             'model' => (string) ($vehicle->model?->name ?? ''),
-            'year' => $year ? (string) $year : '',
+            'year' => $year,
             'mileage.value' => (string) $mileage,
             'mileage.unit' => 'KM',
             'price' => number_format((float) ($vehicle->price ?? 0), 2, '.', '').' DKK',
@@ -84,11 +90,11 @@ class MetaVehicleCatalogMapper
             'fuel_type' => $this->mapFuelType($vehicle->fuelType?->name),
             'transmission' => $this->mapTransmission($vehicle->gearType?->name),
             'vehicle_type' => 'CAR_TRUCK',
-            'address.addr1' => (string) ($dealer?->address ?? ''),
-            'address.city' => (string) ($dealer?->city ?? ''),
-            'address.region' => '',
-            'address.postal_code' => (string) ($dealer?->postcode ?? ''),
-            'address.country' => strtoupper((string) ($dealer?->country_code ?: 'DK')),
+            'address.addr1' => $address['street'],
+            'address.city' => $address['city'],
+            'address.region' => $address['region'],
+            'address.postal_code' => $address['postcode'],
+            'address.country' => $address['country'],
             'dealer_id' => $dealer ? (string) $dealer->id : '',
             'dealer_name' => (string) ($dealer?->slug ?? ''),
         ];
@@ -110,6 +116,9 @@ class MetaVehicleCatalogMapper
 
         foreach ($vehicles as $vehicle) {
             $row = $this->toRow($vehicle);
+            if (! $this->isCatalogEligible($row)) {
+                continue;
+            }
             $lines[] = implode(',', array_map(
                 fn ($key) => $this->csvEscape($row[$key] ?? ''),
                 $headers
@@ -117,6 +126,14 @@ class MetaVehicleCatalogMapper
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * @param  array<string, string>  $row
+     */
+    public function isCatalogEligible(array $row): bool
+    {
+        return ($row['year'] ?? '') !== '' && ($row['image[0].url'] ?? '') !== '';
     }
 
     /**
@@ -142,11 +159,14 @@ class MetaVehicleCatalogMapper
             ['key' => 'body_style', 'ok' => $row['body_style'] !== '' && $row['body_style'] !== 'OTHER', 'label' => 'body_style'],
             ['key' => 'exterior_color', 'ok' => $row['exterior_color'] !== '' && $row['exterior_color'] !== 'Other', 'label' => 'exterior_color'],
             ['key' => 'mileage', 'ok' => true, 'label' => 'mileage'],
-            ['key' => 'address', 'ok' => $row['address.city'] !== '' || $row['address.addr1'] !== '', 'label' => 'address'],
+            ['key' => 'city', 'ok' => $row['address.city'] !== '', 'label' => 'city'],
+            ['key' => 'street_address', 'ok' => $row['address.addr1'] !== '', 'label' => 'street_address'],
+            ['key' => 'region', 'ok' => $row['address.region'] !== '', 'label' => 'region'],
+            ['key' => 'address', 'ok' => $row['address.city'] !== '' && $row['address.addr1'] !== '' && $row['address.region'] !== '', 'label' => 'address'],
             ['key' => 'marketplace_images', 'ok' => ($row['image[1].url'] ?? '') !== '', 'label' => 'marketplace_images'],
         ];
 
-        $requiredKeys = ['title', 'make', 'model', 'year', 'price', 'image', 'url'];
+        $requiredKeys = ['title', 'make', 'model', 'year', 'price', 'image', 'url', 'city', 'street_address', 'region'];
         $ready = collect($checks)
             ->filter(fn ($c) => in_array($c['key'], $requiredKeys, true))
             ->every(fn ($c) => $c['ok']);
@@ -165,7 +185,7 @@ class MetaVehicleCatalogMapper
      */
     public function eagerLoads(): array
     {
-        return ['images', 'brand', 'model', 'fuelType', 'gearType', 'bodyType', 'colour', 'condition', 'dealer'];
+        return ['images', 'brand', 'model', 'fuelType', 'gearType', 'bodyType', 'colour', 'condition', 'dealer.marketplaceCity'];
     }
 
     public static function forceHttps(string $url): string
@@ -289,6 +309,86 @@ class MetaVehicleCatalogMapper
     }
 
     /**
+     * @return array{street: string, city: string, postcode: string, region: string, country: string}
+     */
+    private function resolveAddress(Vehicle $vehicle, ?Dealer $dealer): array
+    {
+        $street = trim((string) ($dealer?->address ?: $vehicle->address ?: ''));
+        $postcode = trim((string) ($dealer?->postcode ?: $vehicle->postcode ?: ''));
+        $city = trim((string) ($dealer?->city ?: ''));
+        $location = $postcode !== '' ? $this->locationForPostcode($postcode) : null;
+
+        if ($city === '') {
+            $city = trim((string) ($location?->city ?? ''));
+        }
+
+        $region = trim((string) ($dealer?->marketplaceCity?->region ?? ''));
+        if ($region === '') {
+            $region = trim((string) ($location?->region ?? ''));
+        }
+        if ($region === '' && $city !== '') {
+            $region = $city;
+        }
+
+        $country = strtoupper((string) ($dealer?->country_code ?: $location?->country_code ?: 'DK'));
+        if ($country === '') {
+            $country = 'DK';
+        }
+
+        return [
+            'street' => $street,
+            'city' => $city,
+            'postcode' => $postcode,
+            'region' => $region,
+            'country' => $country,
+        ];
+    }
+
+    private function locationForPostcode(string $postcode): ?Location
+    {
+        $key = preg_replace('/\s+/', '', $postcode) ?? $postcode;
+        if ($key === '') {
+            return null;
+        }
+
+        if (array_key_exists($key, $this->locationsByPostcode)) {
+            return $this->locationsByPostcode[$key];
+        }
+
+        $location = null;
+        try {
+            if (Schema::hasTable('locations')) {
+                $location = Location::query()
+                    ->where(function ($query) use ($postcode, $key) {
+                        $query->where('postcode', $postcode)->orWhere('postcode', $key);
+                    })
+                    ->first();
+            }
+        } catch (\Throwable) {
+            $location = null;
+        }
+
+        $this->locationsByPostcode[$key] = $location;
+
+        return $location;
+    }
+
+    private function catalogYear(Vehicle $vehicle): string
+    {
+        $year = $vehicle->model_year ?? $vehicle->first_registration_year;
+        if ($year) {
+            return (string) (int) $year;
+        }
+
+        $date = $vehicle->first_registration_date;
+        if ($date) {
+            return (string) $date->year;
+        }
+
+        return '';
+    }
+
+    /**
      * @return list<string>
      */
     private function imageUrls(Vehicle $vehicle): array
@@ -299,18 +399,55 @@ class MetaVehicleCatalogMapper
 
         return $vehicle->images
             ->sortBy('sort_order')
+            ->map(fn ($img) => $this->publicImageUrl($img))
+            ->filter()
             ->take(self::MAX_IMAGES)
-            ->map(fn ($img) => self::forceHttps(url(Storage::disk('public')->url($img->image_path))))
             ->values()
             ->all();
     }
 
-    private function plainDescription(Vehicle $vehicle): string
+    private function publicImageUrl(mixed $img): ?string
+    {
+        $url = trim((string) ($img->image_url ?? ''));
+        if ($url === '') {
+            $path = trim((string) ($img->image_path ?? ''));
+            if ($path === '' || str_contains($path, 'placeholder-vehicle')) {
+                return null;
+            }
+            $url = asset('storage/'.$path);
+        }
+
+        $url = self::forceHttps($url);
+        if ($url === '' || str_contains($url, 'placeholder-vehicle')) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    private function plainDescription(Vehicle $vehicle, string $year, int $mileage): string
     {
         $text = strip_tags((string) ($vehicle->description ?? ''));
         $text = preg_replace('/\s+/', ' ', $text) ?? $text;
+        $text = trim($text);
+        if ($text !== '') {
+            return mb_substr($text, 0, 5000);
+        }
 
-        return mb_substr(trim($text), 0, 5000);
+        $parts = array_values(array_filter([
+            trim((string) ($vehicle->title ?? '')),
+            $year !== '' ? $year : null,
+            $mileage > 0 ? number_format($mileage, 0, ',', '.').' km' : null,
+            (float) ($vehicle->price ?? 0) > 0
+                ? number_format((float) $vehicle->price, 0, ',', '.').' kr'
+                : null,
+        ]));
+
+        if ($parts === []) {
+            return '';
+        }
+
+        return mb_substr(implode(', ', $parts).'. Brugt bil til salg på Bilskyen.', 0, 5000);
     }
 
     private function csvEscape(string $value): string

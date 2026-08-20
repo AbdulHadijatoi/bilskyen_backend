@@ -114,11 +114,13 @@ class DealerController extends Controller
         $seo = $this->seoService->getForPage('dealer', $dealer->slug) ?? [];
         if (empty($seo['schema_json'])) {
             $dealerUrl = route('dealer.show', $dealer->slug);
+            $dealerPhone = $dealer->owner?->phone;
             $seo['schema_json'] = $this->schemaBuilder->build('AutoDealer', [
                 'id' => $dealerUrl.'#dealer',
                 'name' => $dealer->owner?->name ?? $dealer->slug,
                 'url' => $dealerUrl,
                 'image' => $dealer->logo_url,
+                'telephone' => \App\Support\CompanyProfile::isPublicPhone($dealerPhone) ? trim((string) $dealerPhone) : null,
                 'address' => trim(implode(', ', array_filter([(string) $dealer->address, (string) $dealer->postcode, (string) $dealer->city]))),
             ]);
         }
