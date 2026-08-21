@@ -18,9 +18,8 @@ class SeoController extends Controller
      */
     public function sitemap(): Response
     {
-        $env = app()->environment();
         $ttl = $this->seoService->isIndexingEnabled() ? 86400 : 60;
-        $xml = Cache::remember("sitemap_xml_{$env}", $ttl, fn () => $this->seoService->getSitemapXml());
+        $xml = Cache::remember(SeoService::sitemapCacheKey(), $ttl, fn () => $this->seoService->getSitemapXml());
 
         $headers = [
             'Content-Type' => 'application/xml',
@@ -39,9 +38,8 @@ class SeoController extends Controller
      */
     public function robots(): Response
     {
-        $env = app()->environment();
         $ttl = $this->seoService->isIndexingEnabled() ? 86400 : 60;
-        $txt = Cache::remember("robots_txt_{$env}", $ttl, fn () => $this->seoService->getRobotsTxt());
+        $txt = Cache::remember(SeoService::robotsCacheKey(), $ttl, fn () => $this->seoService->getRobotsTxt());
 
         $headers = [
             'Content-Type' => 'text/plain',

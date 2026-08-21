@@ -8,7 +8,6 @@ use App\Services\Seo\SeoAuditService;
 use App\Services\SeoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class AdminSeoToolsController extends Controller
 {
@@ -40,7 +39,7 @@ class AdminSeoToolsController extends Controller
             'robots_custom_body' => $data['custom_body'] ?? '',
         ]);
 
-        Cache::forget('robots_txt');
+        SeoService::forgetPublicCaches();
 
         return $this->success(['preview' => $this->seoService->getRobotsTxt()]);
     }

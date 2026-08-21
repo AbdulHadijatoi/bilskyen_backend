@@ -15,11 +15,14 @@ use App\Services\Seo\SchemaBuilderService;
 use App\Support\CompanyProfile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class SeoService
 {
     private const CACHE_TTL = 86400; // 24 hours
+
+    public const SITEMAP_CACHE_VERSION = 'v2';
 
     /**
      * Get SEO data for a page from cache or DB.
@@ -805,6 +808,31 @@ class SeoService
         return app()->environment('production');
     }
 
+    public static function sitemapCacheKey(?string $env = null): string
+    {
+        return 'sitemap_xml_'.($env ?? app()->environment()).'_'.self::SITEMAP_CACHE_VERSION;
+    }
+
+    public static function robotsCacheKey(?string $env = null): string
+    {
+        return 'robots_txt_'.($env ?? app()->environment());
+    }
+
+    /**
+     * Drop sitemap/robots cache for every env key this app has used.
+     */
+    public static function forgetPublicCaches(): void
+    {
+        $envs = array_unique(['local', 'staging', 'production', 'testing', (string) app()->environment()]);
+        foreach ($envs as $env) {
+            Cache::forget(self::sitemapCacheKey($env));
+            Cache::forget('sitemap_xml_'.$env);
+            Cache::forget(self::robotsCacheKey($env));
+        }
+        Cache::forget('sitemap_xml');
+        Cache::forget('robots_txt');
+    }
+
     /**
      * Absolute HTTPS URL for sitemap/robots locs (strips default ports and trailing slash except "/").
      */
@@ -860,16 +888,31 @@ class SeoService
                 .'</urlset>';
         }
 
+        try {
+            return $this->buildProductionSitemapXml();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return '<?xml version="1.0" encoding="UTF-8"?>'."\n"
+                .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"
+                .'</urlset>';
+        }
+    }
+
+    private function buildProductionSitemapXml(): string
+    {
         $entries = [];
         $seen = [];
 
-        foreach (SeoSitemap::all() as $row) {
-            $this->pushSitemapEntry($entries, $seen, $row->url, [
-                'lastmod' => $row->lastmod?->format('Y-m-d'),
-                'changefreq' => $row->changefreq ?? 'weekly',
-                'priority' => $row->priority ?? '0.5',
-            ]);
-        }
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            foreach (SeoSitemap::all() as $row) {
+                $this->pushSitemapEntry($entries, $seen, (string) ($row->url ?? ''), [
+                    'lastmod' => $this->sitemapLastmod($row->lastmod),
+                    'changefreq' => $row->changefreq ?? 'weekly',
+                    'priority' => $row->priority ?? '0.5',
+                ]);
+            }
+        });
 
         $staticPageKeyToRoute = [
             'home' => 'home',
@@ -882,102 +925,115 @@ class SeoService
             'sell-your-car' => 'sell-your-car',
         ];
 
-        foreach (SeoPage::whereIn('page_type', ['home', 'listing', 'static'])->get() as $seo) {
-            $routeName = $staticPageKeyToRoute[$seo->page_key] ?? null;
-            if ($routeName) {
-                $this->pushSitemapEntry($entries, $seen, route($routeName), [
-                    'lastmod' => $seo->updated_at?->format('Y-m-d'),
-                    'changefreq' => $seo->page_key === 'home' ? 'daily' : 'weekly',
-                    'priority' => $seo->page_key === 'home' ? '1.0' : ($seo->page_key === 'vehicles' ? '0.9' : '0.7'),
-                ]);
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen, $staticPageKeyToRoute): void {
+            foreach (SeoPage::whereIn('page_type', ['home', 'listing', 'static'])->get() as $seo) {
+                $routeName = $staticPageKeyToRoute[$seo->page_key] ?? null;
+                if ($routeName) {
+                    $this->pushNamedSitemapRoute($entries, $seen, $routeName, [], [
+                        'lastmod' => $this->sitemapLastmod($seo->updated_at),
+                        'changefreq' => $seo->page_key === 'home' ? 'daily' : 'weekly',
+                        'priority' => $seo->page_key === 'home' ? '1.0' : ($seo->page_key === 'vehicles' ? '0.9' : '0.7'),
+                    ]);
+                }
             }
-        }
+        });
 
         $this->pushSitemapEntry($entries, $seen, url('/'), [
             'lastmod' => now()->format('Y-m-d'),
             'changefreq' => 'daily',
             'priority' => '1.0',
         ]);
-        $this->pushSitemapEntry($entries, $seen, route('vehicles'), [
+        $this->pushNamedSitemapRoute($entries, $seen, 'vehicles', [], [
             'lastmod' => now()->format('Y-m-d'),
             'changefreq' => 'daily',
             'priority' => '0.9',
         ]);
-        $this->pushSitemapEntry($entries, $seen, route('blog.index'), [
+        $this->pushNamedSitemapRoute($entries, $seen, 'blog.index', [], [
             'lastmod' => now()->format('Y-m-d'),
             'changefreq' => 'weekly',
             'priority' => '0.7',
         ]);
-        $this->pushSitemapEntry($entries, $seen, route('sell-your-car'), [
+        $this->pushNamedSitemapRoute($entries, $seen, 'sell-your-car', [], [
             'lastmod' => now()->format('Y-m-d'),
             'changefreq' => 'weekly',
             'priority' => '0.8',
         ]);
 
-        CmsPost::query()
-            ->where('status', CmsPostStatus::PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
-            ->select(['id', 'slug', 'updated_at'])
-            ->orderBy('id')
-            ->chunkById(500, function ($posts) use (&$entries, &$seen) {
-                foreach ($posts as $post) {
-                    $this->pushSitemapEntry($entries, $seen, route('blog.show', $post->slug), [
-                        'lastmod' => $post->updated_at?->format('Y-m-d'),
-                        'changefreq' => 'weekly',
-                        'priority' => '0.7',
-                    ]);
-                }
-            });
-
-        LandingPage::query()
-            ->where('status', CmsPostStatus::PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
-            ->select(['id', 'slug', 'updated_at'])
-            ->orderBy('id')
-            ->chunkById(500, function ($pages) use (&$entries, &$seen) {
-                foreach ($pages as $lp) {
-                    $this->pushSitemapEntry($entries, $seen, route('landing.show', $lp->slug), [
-                        'lastmod' => $lp->updated_at?->format('Y-m-d'),
-                        'changefreq' => 'monthly',
-                        'priority' => '0.6',
-                    ]);
-                }
-            });
-
-        Vehicle::query()
-            ->where('list_status_id', VehicleListStatus::PUBLISHED)
-            ->whereNotNull('slug')
-            ->select(['id', 'slug', 'updated_at'])
-            ->orderBy('id')
-            ->chunkById(500, function ($vehicles) use (&$entries, &$seen) {
-                foreach ($vehicles as $vehicle) {
-                    $this->pushSitemapEntry($entries, $seen, route('vehicle.detail', $vehicle), [
-                        'lastmod' => $vehicle->updated_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
-                        'changefreq' => 'weekly',
-                        'priority' => '0.8',
-                    ]);
-                }
-            });
-
-        Dealer::query()
-            ->whereNotNull('slug')
-            ->whereNotNull('user_id')
-            ->select(['id', 'slug', 'user_id', 'updated_at'])
-            ->orderBy('id')
-            ->chunkById(500, function ($dealers) use (&$entries, &$seen) {
-                foreach ($dealers as $dealer) {
-                    if (! Dealer::isPublicProfileSlug($dealer->slug)) {
-                        continue;
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            CmsPost::query()
+                ->where('status', CmsPostStatus::PUBLISHED)
+                ->whereNotNull('published_at')
+                ->where('published_at', '<=', now())
+                ->select(['id', 'slug', 'updated_at'])
+                ->orderBy('id')
+                ->chunkById(500, function ($posts) use (&$entries, &$seen) {
+                    foreach ($posts as $post) {
+                        $this->pushNamedSitemapRoute($entries, $seen, 'blog.show', ['slug' => $post->slug], [
+                            'lastmod' => $this->sitemapLastmod($post->updated_at),
+                            'changefreq' => 'weekly',
+                            'priority' => '0.7',
+                        ]);
                     }
-                    $this->pushSitemapEntry($entries, $seen, route('dealer.show', $dealer->slug), [
-                        'lastmod' => $dealer->updated_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
-                        'changefreq' => 'weekly',
-                        'priority' => '0.6',
-                    ]);
-                }
-            });
+                });
+        });
+
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            LandingPage::query()
+                ->where('status', CmsPostStatus::PUBLISHED)
+                ->whereNotNull('published_at')
+                ->where('published_at', '<=', now())
+                ->select(['id', 'slug', 'updated_at'])
+                ->orderBy('id')
+                ->chunkById(500, function ($pages) use (&$entries, &$seen) {
+                    foreach ($pages as $lp) {
+                        $this->pushNamedSitemapRoute($entries, $seen, 'landing.show', ['slug' => $lp->slug], [
+                            'lastmod' => $this->sitemapLastmod($lp->updated_at),
+                            'changefreq' => 'monthly',
+                            'priority' => '0.6',
+                        ]);
+                    }
+                });
+        });
+
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            Vehicle::query()
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
+                ->whereNotNull('slug')
+                ->select(['id', 'slug', 'updated_at'])
+                ->orderBy('id')
+                ->chunkById(500, function ($vehicles) use (&$entries, &$seen) {
+                    foreach ($vehicles as $vehicle) {
+                        $this->pushNamedSitemapRoute($entries, $seen, 'vehicle.detail', ['vehicle' => $vehicle], [
+                            'lastmod' => $this->sitemapLastmod($vehicle->updated_at) ?? now()->format('Y-m-d'),
+                            'changefreq' => 'weekly',
+                            'priority' => '0.8',
+                        ]);
+                    }
+                });
+        });
+
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            Dealer::query()
+                ->whereNotNull('slug')
+                ->whereNotNull('user_id')
+                ->whereHas('vehicles', function ($query) {
+                    $query->where('list_status_id', VehicleListStatus::PUBLISHED);
+                })
+                ->select(['id', 'slug', 'user_id', 'updated_at'])
+                ->orderBy('id')
+                ->chunkById(500, function ($dealers) use (&$entries, &$seen) {
+                    foreach ($dealers as $dealer) {
+                        if (! Dealer::isSitemapEligible($dealer->slug, true)) {
+                            continue;
+                        }
+                        $this->pushNamedSitemapRoute($entries, $seen, 'dealer.show', ['slug' => $dealer->slug], [
+                            'lastmod' => $this->sitemapLastmod($dealer->updated_at) ?? now()->format('Y-m-d'),
+                            'changefreq' => 'weekly',
+                            'priority' => '0.6',
+                        ]);
+                    }
+                });
+        });
 
         $this->pushSitemapEntry($entries, $seen, url('/byer'), [
             'lastmod' => now()->format('Y-m-d'),
@@ -985,44 +1041,48 @@ class SeoService
             'priority' => '0.7',
         ]);
 
-        foreach (\App\Models\MarketplaceCity::query()->where('is_active', true)->orderBy('name')->get() as $city) {
-            if ($city->isCarsIndexable()) {
-                $this->pushSitemapEntry($entries, $seen, url('/biler-i/'.$city->slug), [
-                    'lastmod' => $city->last_computed_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
-                    'changefreq' => 'daily',
-                    'priority' => '0.7',
-                ]);
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            foreach (\App\Models\MarketplaceCity::query()->where('is_active', true)->orderBy('name')->get() as $city) {
+                if ($city->isCarsIndexable()) {
+                    $this->pushSitemapEntry($entries, $seen, url('/biler-i/'.$city->slug), [
+                        'lastmod' => $this->sitemapLastmod($city->last_computed_at) ?? now()->format('Y-m-d'),
+                        'changefreq' => 'daily',
+                        'priority' => '0.7',
+                    ]);
+                }
+                if ($city->isDealersIndexable()) {
+                    $this->pushSitemapEntry($entries, $seen, url('/forhandlere-i/'.$city->slug), [
+                        'lastmod' => $this->sitemapLastmod($city->last_computed_at) ?? now()->format('Y-m-d'),
+                        'changefreq' => 'weekly',
+                        'priority' => '0.65',
+                    ]);
+                }
             }
-            if ($city->isDealersIndexable()) {
-                $this->pushSitemapEntry($entries, $seen, url('/forhandlere-i/'.$city->slug), [
-                    'lastmod' => $city->last_computed_at?->format('Y-m-d') ?? now()->format('Y-m-d'),
-                    'changefreq' => 'weekly',
-                    'priority' => '0.65',
-                ]);
-            }
-        }
+        });
 
-        $this->pushSitemapEntry($entries, $seen, route('market-snapshot'), [
+        $this->pushNamedSitemapRoute($entries, $seen, 'market-snapshot', [], [
             'lastmod' => now()->format('Y-m-d'),
             'changefreq' => 'weekly',
             'priority' => '0.6',
         ]);
 
-        $hubs = app(InventoryHubService::class);
-        if ($hubs->isElectricIndexable()) {
-            $this->pushSitemapEntry($entries, $seen, route('hubs.electric'), [
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ]);
-        }
-        if ($hubs->isBrandIndexable(InventoryHubService::VOLKSWAGEN_SLUG)) {
-            $this->pushSitemapEntry($entries, $seen, route('hubs.brand', ['brand' => InventoryHubService::VOLKSWAGEN_SLUG]), [
-                'lastmod' => now()->format('Y-m-d'),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ]);
-        }
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen): void {
+            $hubs = app(InventoryHubService::class);
+            if ($hubs->isElectricIndexable()) {
+                $this->pushNamedSitemapRoute($entries, $seen, 'hubs.electric', [], [
+                    'lastmod' => now()->format('Y-m-d'),
+                    'changefreq' => 'weekly',
+                    'priority' => '0.7',
+                ]);
+            }
+            if ($hubs->isBrandIndexable(InventoryHubService::VOLKSWAGEN_SLUG)) {
+                $this->pushNamedSitemapRoute($entries, $seen, 'hubs.brand', ['brand' => InventoryHubService::VOLKSWAGEN_SLUG], [
+                    'lastmod' => now()->format('Y-m-d'),
+                    'changefreq' => 'weekly',
+                    'priority' => '0.7',
+                ]);
+            }
+        });
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
@@ -1059,7 +1119,7 @@ class SeoService
         $custom = (string) $settings->get('seo', 'robots_custom_body', '');
 
         if ($mode === 'custom' && trim($custom) !== '') {
-            return trim($custom);
+            return $this->ensureHttpsSitemapDirective(trim($custom));
         }
 
         $lines = [
@@ -1081,6 +1141,50 @@ class SeoService
             'Sitemap: '.$this->canonicalPublicUrl('/sitemap.xml'),
         ];
         return implode("\n", $lines);
+    }
+
+    /**
+     * @param  array<string, true>  $seen
+     * @param  array{lastmod?: string|null, changefreq?: string, priority?: float|string}  $meta
+     * @param  list<array{loc: string, lastmod?: string|null, changefreq?: string, priority?: float|string}>  $entries
+     * @param  array<string, mixed>  $params
+     */
+    private function pushNamedSitemapRoute(array &$entries, array &$seen, string $name, array $params, array $meta): void
+    {
+        $this->safelyCollectSitemap(function () use (&$entries, &$seen, $name, $params, $meta): void {
+            if (! Route::has($name)) {
+                return;
+            }
+            $this->pushSitemapEntry($entries, $seen, route($name, $params), $meta);
+        });
+    }
+
+    private function safelyCollectSitemap(callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function sitemapLastmod(mixed $value): ?string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value) && trim($value) !== '') {
+            return substr(trim($value), 0, 10);
+        }
+
+        return null;
+    }
+
+    private function ensureHttpsSitemapDirective(string $body): string
+    {
+        $rewritten = preg_replace('/^(Sitemap:\s*)http:\/\//im', '$1https://', $body);
+
+        return is_string($rewritten) ? $rewritten : $body;
     }
 
     /**

@@ -859,14 +859,8 @@
     $vehicleCountFormatted = number_format($publishedVehicleCount ?? 0, 0, ',', '.');
     $homeYearMin = 1975;
     $homeYearMax = ($currentYear ?? (int) date('Y')) + 1;
-    $homeHeroTitle = $homePageContent['search_title'] ?? __('messages.pages.home.title');
-    if (preg_match('/perfekte køretøj|perfect vehicle/iu', (string) $homeHeroTitle)) {
-        $homeHeroTitle = __('messages.pages.home.title');
-    }
-    $searchDescription = $homePageContent['search_description'] ?? __('messages.pages.home.description');
-    if (preg_match('/perfekte match|perfect match/iu', (string) $searchDescription)) {
-        $searchDescription = __('messages.pages.home.description');
-    }
+    $homeHeroTitle = \App\Support\HomeHeroCopy::title($homePageContent['search_title'] ?? null);
+    $searchDescription = \App\Support\HomeHeroCopy::description($homePageContent['search_description'] ?? null);
     $filterPriceMax = $filterPriceMax ?? 1_000_000;
     $filterKmMax = $filterKmMax ?? 500_000;
 @endphp

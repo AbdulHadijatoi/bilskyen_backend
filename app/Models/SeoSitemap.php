@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\SeoService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 
 class SeoSitemap extends Model
 {
@@ -28,15 +28,15 @@ class SeoSitemap extends Model
         parent::boot();
 
         static::created(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
 
         static::updated(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
 
         static::deleted(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
     }
 }

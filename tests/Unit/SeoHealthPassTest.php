@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\SeoService;
 use App\Support\CrawlerRequest;
+use App\Support\HomeHeroCopy;
 use App\Support\TestimonialAttribution;
 use Illuminate\Http\Request;
 use Mockery;
@@ -36,6 +37,80 @@ class SeoHealthPassTest extends TestCase
         app()->setLocale('en');
         $this->assertSame('Used cars for sale in Denmark', __('messages.pages.home.title'));
         $this->assertStringNotContainsString('Perfect Vehicle', __('messages.pages.home.title'));
+    }
+
+    public function test_home_hero_copy_replaces_emotional_cms_title(): void
+    {
+        app()->setLocale('da');
+        $this->assertSame(
+            'Brugte biler til salg i Danmark',
+            HomeHeroCopy::title('Find din drømmebil på Bilskyen.dk')
+        );
+        $this->assertSame(
+            'Brugte biler til salg i Danmark',
+            HomeHeroCopy::title('Find dit perfekte køretøj')
+        );
+        $this->assertSame(
+            'Brugte biler til salg i Danmark',
+            HomeHeroCopy::title('  ')
+        );
+        $this->assertSame(
+            'Brugte biler til salg i Danmark',
+            HomeHeroCopy::title(null)
+        );
+        $this->assertSame(
+            'Biler til salg i Jylland',
+            HomeHeroCopy::title('Biler til salg i Jylland')
+        );
+
+        app()->setLocale('en');
+        $this->assertSame(
+            'Used cars for sale in Denmark',
+            HomeHeroCopy::title('Find your dream car at Bilskyen')
+        );
+        $this->assertSame(
+            'Used cars for sale in Denmark',
+            HomeHeroCopy::title('Find Your Perfect Vehicle at Bilskyen')
+        );
+        $this->assertSame(
+            'Used cars for sale in Jutland',
+            HomeHeroCopy::title('Used cars for sale in Jutland')
+        );
+    }
+
+    public function test_homepage_view_uses_hero_copy_sanitizer(): void
+    {
+        $source = file_get_contents(resource_path('views/home.blade.php'));
+        $this->assertStringContainsString('HomeHeroCopy::title', $source);
+        $this->assertStringContainsString('HomeHeroCopy::description', $source);
+        $this->assertStringNotContainsString('perfekte køretøj|perfect vehicle', $source);
+    }
+
+    public function test_home_hero_copy_replaces_emotional_cms_description(): void
+    {
+        app()->setLocale('da');
+        $this->assertSame(
+            __('messages.pages.home.description'),
+            HomeHeroCopy::description('Søg efter det perfekte match.')
+        );
+        $this->assertSame(
+            __('messages.pages.home.description'),
+            HomeHeroCopy::description('Find din drømmebil i dag.')
+        );
+        $this->assertSame(
+            'Søg blandt brugte biler i Danmark.',
+            HomeHeroCopy::description('Søg blandt brugte biler i Danmark.')
+        );
+
+        app()->setLocale('en');
+        $this->assertSame(
+            __('messages.pages.home.description'),
+            HomeHeroCopy::description('Search our inventory to find the perfect match for your needs.')
+        );
+        $this->assertSame(
+            __('messages.pages.home.description'),
+            HomeHeroCopy::description('Find your dream car today.')
+        );
     }
 
     public function test_testimonial_fallbacks_are_unattributed(): void

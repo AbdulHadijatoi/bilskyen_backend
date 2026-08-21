@@ -40,10 +40,20 @@ class FormatHelper
 
     /**
      * Whether a CVR is safe to show on public pages (not placeholder/test data).
+     *
+     * @param  int|float|string|null  $cvr
      */
-    public static function isValidPublicCvr(?string $cvr): bool
+    public static function isValidPublicCvr(mixed $cvr): bool
     {
-        if ($cvr === null) {
+        if ($cvr === null || $cvr === '') {
+            return false;
+        }
+
+        if (is_int($cvr) || is_float($cvr)) {
+            $cvr = (string) $cvr;
+        }
+
+        if (! is_string($cvr)) {
             return false;
         }
 

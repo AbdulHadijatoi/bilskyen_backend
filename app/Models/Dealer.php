@@ -87,6 +87,14 @@ class Dealer extends Model
     }
 
     /**
+     * Whether a dealer profile should appear in the public sitemap.
+     */
+    public static function isSitemapEligible(?string $slug, bool $hasPublishedInventory): bool
+    {
+        return $hasPublishedInventory && self::isPublicProfileSlug($slug);
+    }
+
+    /**
      * Whether this dealer has at least one published vehicle (no eager-load of inventory).
      */
     public function hasPublishedVehicles(): bool

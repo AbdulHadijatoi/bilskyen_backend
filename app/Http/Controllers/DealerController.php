@@ -56,80 +56,110 @@ class DealerController extends Controller
 
         $dealer->load('owner');
 
-        // Define basic filter keys
         $basicFilterKeys = [
-            'search', 'category_id', 'brand_id', 'model_id', 'model_year_id', 
-            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort'
+            'search', 'category_id', 'brand_id', 'model_id', 'model_year_id',
+            'fuel_type_id', 'km_driven', 'price_from', 'price_to', 'listing_type_id', 'sort',
         ];
-        
+
         $filters = $request->only($basicFilterKeys);
-        
-        // Get dealer vehicles with filters
-        $vehicles = $this->vehicleService->getPublicDealerVehicles(
-            $dealer->id,
-            $filters,
-            $request->input('limit', 15),
-            $request->input('page', 1)
-        );
+        $perPage = min(max((int) $request->input('limit', 15), 1), 48);
+        $page = max((int) $request->input('page', 1), 1);
 
-        // Brand / model filters must use DMR IDs (vehicles.brand_id → dmr_brands, model_id → dmr_models).
-        // Use the query builder (not {@see Vehicle}) so we avoid the model's default ORDER BY scope,
-        // which makes `SELECT DISTINCT … ORDER BY vehicles.id` invalid on MySQL (ONLY_FULL_GROUP_BY).
-        $publishedBrandIds = DB::table('vehicles')
-            ->where('dealer_id', $dealer->id)
-            ->where('list_status_id', VehicleListStatus::PUBLISHED)
-            ->whereNotNull('brand_id')
-            ->whereNull('deleted_at')
-            ->distinct()
-            ->pluck('brand_id');
-
-        $publishedModelIds = DB::table('vehicles')
-            ->where('dealer_id', $dealer->id)
-            ->where('list_status_id', VehicleListStatus::PUBLISHED)
-            ->whereNotNull('model_id')
-            ->whereNull('deleted_at')
-            ->distinct()
-            ->pluck('model_id');
+        try {
+            $vehicles = $this->vehicleService->getPublicDealerVehicles(
+                $dealer->id,
+                $filters,
+                $perPage,
+                $page
+            );
+        } catch (\Throwable $e) {
+            report($e);
+            $vehicles = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage, $page);
+        }
 
         $filterOptions = [
-            'brands' => $publishedBrandIds->isNotEmpty()
-                ? DmrBrand::whereIn('id', $publishedBrandIds)->orderBy('name')->get()
-                : collect(),
+            'brands' => collect(),
             'models' => collect(),
         ];
 
-        $selectedBrandId = $request->input('brand_id');
-        if ($selectedBrandId) {
-            $filterOptions['models'] = DmrModel::query()
-                ->where('brand_id', $selectedBrandId)
-                ->whereIn('id', $publishedModelIds)
-                ->orderBy('name')
-                ->get();
-        } else {
-            $filterOptions['models'] = $publishedModelIds->isNotEmpty()
-                ? DmrModel::whereIn('id', $publishedModelIds)->orderBy('name')->get()
+        try {
+            $publishedBrandIds = DB::table('vehicles')
+                ->where('dealer_id', $dealer->id)
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
+                ->whereNotNull('brand_id')
+                ->whereNull('deleted_at')
+                ->distinct()
+                ->pluck('brand_id');
+
+            $publishedModelIds = DB::table('vehicles')
+                ->where('dealer_id', $dealer->id)
+                ->where('list_status_id', VehicleListStatus::PUBLISHED)
+                ->whereNotNull('model_id')
+                ->whereNull('deleted_at')
+                ->distinct()
+                ->pluck('model_id');
+
+            $filterOptions['brands'] = $publishedBrandIds->isNotEmpty()
+                ? DmrBrand::whereIn('id', $publishedBrandIds)->orderBy('name')->get()
                 : collect();
+
+            $selectedBrandId = $request->input('brand_id');
+            if ($selectedBrandId) {
+                $filterOptions['models'] = DmrModel::query()
+                    ->where('brand_id', $selectedBrandId)
+                    ->whereIn('id', $publishedModelIds)
+                    ->orderBy('name')
+                    ->get();
+            } else {
+                $filterOptions['models'] = $publishedModelIds->isNotEmpty()
+                    ? DmrModel::whereIn('id', $publishedModelIds)->orderBy('name')->get()
+                    : collect();
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
 
-        $seo = $this->seoService->getForPage('dealer', $dealer->slug) ?? [];
+        $seo = [];
+        try {
+            $seo = $this->seoService->getForPage('dealer', $dealer->slug) ?? [];
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         if (empty($seo['schema_json'])) {
-            $dealerUrl = route('dealer.show', $dealer->slug);
-            $dealerPhone = $dealer->owner?->phone;
-            $seo['schema_json'] = $this->schemaBuilder->build('AutoDealer', [
-                'id' => $dealerUrl.'#dealer',
-                'name' => $dealer->owner?->name ?? $dealer->slug,
-                'url' => $dealerUrl,
-                'image' => $dealer->logo_url,
-                'telephone' => \App\Support\CompanyProfile::isPublicPhone($dealerPhone) ? trim((string) $dealerPhone) : null,
-                'address' => trim(implode(', ', array_filter([(string) $dealer->address, (string) $dealer->postcode, (string) $dealer->city]))),
-            ]);
+            try {
+                $dealerUrl = route('dealer.show', $dealer->slug);
+                $dealerPhone = $dealer->owner?->phone;
+                $seo['schema_json'] = $this->schemaBuilder->build('AutoDealer', [
+                    'id' => $dealerUrl.'#dealer',
+                    'name' => $dealer->owner?->name ?? $dealer->slug,
+                    'url' => $dealerUrl,
+                    'image' => $dealer->logo_url,
+                    'telephone' => \App\Support\CompanyProfile::isPublicPhone($dealerPhone) ? trim((string) $dealerPhone) : null,
+                    'address' => trim(implode(', ', array_filter([(string) $dealer->address, (string) $dealer->postcode, (string) $dealer->city]))),
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
-        $reviewSummary = $this->googleReviewService->dealerReviewSummary($dealer);
 
-        // Whether the dealer has any published inventory at all (independent of
-        // the current filters). Used to hide/disable filter controls and show
-        // an informative empty-state message when there is nothing to filter.
-        $hasVehicles = $dealer->hasPublishedVehicles();
+        try {
+            $reviewSummary = $this->googleReviewService->dealerReviewSummary($dealer);
+        } catch (\Throwable $e) {
+            report($e);
+            $reviewSummary = [
+                'review_url' => $dealer->google_review_url,
+                'rating' => null,
+                'review_count' => null,
+            ];
+        }
+
+        try {
+            $hasVehicles = $dealer->hasPublishedVehicles();
+        } catch (\Throwable $e) {
+            report($e);
+            $hasVehicles = $vehicles->total() > 0;
+        }
 
         return view('dealer-page', [
             'dealer' => $dealer,

@@ -4,7 +4,7 @@ namespace App\Observers;
 
 use App\Models\Vehicle;
 use App\Services\CityIndexService;
-use Illuminate\Support\Facades\Cache;
+use App\Services\SeoService;
 
 class VehicleCityObserver
 {
@@ -26,7 +26,7 @@ class VehicleCityObserver
             $this->cityIndexService->refreshForCity($city);
         }
 
-        Cache::forget('sitemap_xml');
+        SeoService::forgetPublicCaches();
     }
 
     public function deleted(Vehicle $vehicle): void
@@ -35,6 +35,6 @@ class VehicleCityObserver
         if ($city) {
             $this->cityIndexService->refreshForCity($city);
         }
-        Cache::forget('sitemap_xml');
+        SeoService::forgetPublicCaches();
     }
 }

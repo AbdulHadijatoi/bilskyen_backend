@@ -227,5 +227,7 @@ class Phase3SeoTest extends TestCase
         $this->assertStringContainsString('isElectricIndexable', $source);
         $this->assertStringContainsString('isBrandIndexable', $source);
         $this->assertStringContainsString("'changefreq' => 'weekly'", $source);
+        $this->assertStringContainsString('isSitemapEligible', $source);
+        $this->assertStringContainsString("whereHas('vehicles'", $source);
     }
 }

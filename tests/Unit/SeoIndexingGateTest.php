@@ -129,4 +129,56 @@ class SeoIndexingGateTest extends TestCase
 
         $this->assertFalse($response->headers->has('X-Robots-Tag'));
     }
+
+    public function test_custom_robots_rewrites_http_sitemap_to_https(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.url' => 'http://bilskyen.dk']);
+
+        $settings = Mockery::mock(PlatformSettingService::class);
+        $settings->shouldReceive('get')->with('seo', 'robots_mode', 'default')->andReturn('custom');
+        $settings->shouldReceive('get')->with('seo', 'robots_custom_body', '')->andReturn(
+            "User-agent: *\nAllow: /\n\nSitemap: http://bilskyen.dk/sitemap.xml"
+        );
+        $this->app->instance(PlatformSettingService::class, $settings);
+
+        $robots = $this->seo->getRobotsTxt();
+        $this->assertStringContainsString('Sitemap: https://bilskyen.dk/sitemap.xml', $robots);
+        $this->assertStringNotContainsString('Sitemap: http://', $robots);
+    }
+
+    public function test_forget_public_caches_clears_env_suffixed_and_legacy_keys(): void
+    {
+        $env = app()->environment();
+        $sitemapKey = SeoService::sitemapCacheKey($env);
+        $robotsKey = SeoService::robotsCacheKey($env);
+
+        Cache::put($sitemapKey, '<xml/>', 60);
+        Cache::put($robotsKey, 'robots', 60);
+        Cache::put('sitemap_xml', 'legacy', 60);
+        Cache::put('robots_txt', 'legacy-robots', 60);
+        Cache::put('sitemap_xml_'.$env, 'old-env', 60);
+
+        $this->assertStringContainsString('_v2', $sitemapKey);
+
+        SeoService::forgetPublicCaches();
+
+        $this->assertNull(Cache::get($sitemapKey));
+        $this->assertNull(Cache::get($robotsKey));
+        $this->assertNull(Cache::get('sitemap_xml'));
+        $this->assertNull(Cache::get('robots_txt'));
+        $this->assertNull(Cache::get('sitemap_xml_'.$env));
+    }
+
+    public function test_sitemap_controller_uses_versioned_cache_key(): void
+    {
+        $this->app['env'] = 'staging';
+        Cache::flush();
+
+        $response = app(SeoController::class)->sitemap();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotNull(Cache::get(SeoService::sitemapCacheKey('staging')));
+        $this->assertNull(Cache::get('sitemap_xml_staging'));
+    }
 }

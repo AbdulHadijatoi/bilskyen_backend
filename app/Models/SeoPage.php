@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\SeoService;
 use Illuminate\Support\Facades\Cache;
 
 class SeoPage extends Model
@@ -70,7 +71,6 @@ class SeoPage extends Model
 
     public static function clearSitemapAndRobotsCache(): void
     {
-        Cache::forget('sitemap_xml');
-        Cache::forget('robots_txt');
+        SeoService::forgetPublicCaches();
     }
 }

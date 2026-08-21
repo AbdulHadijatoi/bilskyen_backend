@@ -4,7 +4,7 @@ namespace App\Observers;
 
 use App\Models\Dealer;
 use App\Services\CityIndexService;
-use Illuminate\Support\Facades\Cache;
+use App\Services\SeoService;
 
 class DealerCityObserver
 {
@@ -29,7 +29,7 @@ class DealerCityObserver
             $this->cityIndexService->refreshForCity((int) $previousCityId);
         }
 
-        Cache::forget('sitemap_xml');
+        SeoService::forgetPublicCaches();
     }
 
     public function deleted(Dealer $dealer): void
@@ -37,6 +37,6 @@ class DealerCityObserver
         if ($dealer->marketplace_city_id) {
             $this->cityIndexService->refreshForCity((int) $dealer->marketplace_city_id);
         }
-        Cache::forget('sitemap_xml');
+        SeoService::forgetPublicCaches();
     }
 }

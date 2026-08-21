@@ -290,7 +290,7 @@ class CityIndexService
         $city->is_active = $city->published_vehicle_count > 0 || $city->dealer_count > 0;
         $city->save();
 
-        Cache::forget('sitemap_xml');
+        SeoService::forgetPublicCaches();
         Cache::forget('marketplace_cities:top');
         Cache::forget('marketplace_cities:indexable');
 

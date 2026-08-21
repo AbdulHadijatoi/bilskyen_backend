@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\SeoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -514,7 +515,7 @@ class Vehicle extends Model
     {
         static::addGlobalScope('defaultOrder', function (Builder $query) {
             if (empty($query->getQuery()->orders)) {
-                $query->orderBy('id', 'desc');
+                $query->orderBy($query->getModel()->qualifyColumn('id'), 'desc');
             }
         });
 
@@ -531,19 +532,19 @@ class Vehicle extends Model
         });
 
         static::created(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
         static::updated(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
         static::deleted(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
         static::restored(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
         static::forceDeleted(function () {
-            Cache::forget('sitemap_xml');
+            SeoService::forgetPublicCaches();
         });
     }
 
