@@ -86,7 +86,8 @@
         </svg>
             </button>
 
-    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+    {{-- Keep a real H1 for crawlers and screen readers; hide it visually so the listing UI is not duplicated. --}}
+    <h1 class="sr-only">
         {{ $seo['meta_title'] ?? __('messages.pages.vehicles.listing_h1') }}
     </h1>
 
@@ -1222,65 +1223,6 @@
             results: @json(__('messages.forms.results')),
         };
         const CHIP_COLLAPSE_LIMIT = 5;
-        const EQUIPMENT_CONSTANTS_URL = @json(url('/api/v1/constants'));
-        const EQUIPMENT_OTHER_LABEL = @json(__('messages.pages.sell_your_car.equipment_other'));
-        let equipmentFiltersLoaded = false;
-
-        async function loadEquipmentFilters() {
-            const body = document.getElementById('equipment-filter-body');
-            if (!body || equipmentFiltersLoaded) return;
-            equipmentFiltersLoaded = true;
-            try {
-                const res = await fetch(EQUIPMENT_CONSTANTS_URL, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
-                const json = await res.json();
-                const data = json.data || json;
-                const types = data.equipment_types || [];
-                const list = data.equipments || [];
-                const selected = new Set((JSON.parse(body.getAttribute('data-selected') || '[]') || []).map(Number));
-                const byType = {};
-                list.forEach((eq) => {
-                    const typeId = eq.equipment_type_id ?? '';
-                    if (!byType[typeId]) byType[typeId] = [];
-                    byType[typeId].push(eq);
-                });
-                const groups = [];
-                types.forEach((et) => {
-                    const items = byType[et.id] || [];
-                    if (items.length) groups.push({ name: et.name, items });
-                });
-                const other = [...(byType[''] || []), ...(byType[null] || [])];
-                if (other.length) groups.push({ name: EQUIPMENT_OTHER_LABEL, items: other });
-                body.innerHTML = groups.map((g) => {
-                    const itemsHtml = g.items.map((eq) => {
-                        const checked = selected.has(Number(eq.id)) ? ' checked' : '';
-                        return `<label class="equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary"><input type="checkbox" name="equipment_ids[]" value="${eq.id}" class="sr-only peer"${checked}><span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span><span></span></label>`;
-                    }).join('');
-                    return `<div class="equipment-type-group border-b border-border pb-2 last:border-0"><button type="button" class="equipment-type-toggle w-full flex items-center justify-between gap-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"><span></span><svg class="equipment-type-icon w-3.5 h-3.5 flex-shrink-0 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg></button><div class="equipment-type-content hidden flex flex-wrap gap-1.5 mt-1.5 pl-4">${itemsHtml}</div></div>`;
-                }).join('');
-                groups.forEach((g, i) => {
-                    const groupEl = body.children[i];
-                    if (!groupEl) return;
-                    const titleSpan = groupEl.querySelector('.equipment-type-toggle > span');
-                    if (titleSpan) titleSpan.textContent = g.name;
-                    g.items.forEach((eq, j) => {
-                        const labelSpan = groupEl.querySelectorAll('.equipment-btn > span:last-child')[j];
-                        if (labelSpan) labelSpan.textContent = eq.name;
-                    });
-                });
-                setupEquipmentCollapsible();
-            } catch (e) {
-                equipmentFiltersLoaded = false;
-                body.innerHTML = '<p class="text-xs text-muted-foreground py-1"></p>';
-            }
-        }
-
-        const equipmentDetails = document.getElementById('equipment-filter-details');
-        if (equipmentDetails) {
-            equipmentDetails.addEventListener('toggle', () => {
-                if (equipmentDetails.open) loadEquipmentFilters();
-            });
-            if (equipmentDetails.open) loadEquipmentFilters();
-        }
         
         let searchDebounceTimer = null;
         let isLoading = false;
@@ -2772,6 +2714,14 @@
             } catch (e) {
                 equipmentFiltersLoaded = false;
             }
+        }
+
+        const equipmentDetails = document.getElementById('equipment-filter-details');
+        if (equipmentDetails) {
+            equipmentDetails.addEventListener('toggle', () => {
+                if (equipmentDetails.open) loadEquipmentFilters();
+            });
+            if (equipmentDetails.open) loadEquipmentFilters();
         }
 
         function setupEquipmentCollapsible() {

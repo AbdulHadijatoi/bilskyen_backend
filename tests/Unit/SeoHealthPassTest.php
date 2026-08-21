@@ -135,6 +135,15 @@ class SeoHealthPassTest extends TestCase
         $this->assertNull($resolved['twitter_image']);
     }
 
+    public function test_vehicles_listing_h1_is_present_but_visually_hidden(): void
+    {
+        $source = file_get_contents(resource_path('views/vehicles.blade.php'));
+
+        $this->assertMatchesRegularExpression('/<h1\s+class="sr-only">/', $source);
+        $this->assertStringContainsString("messages.pages.vehicles.listing_h1", $source);
+        $this->assertStringContainsString("\$seo['meta_title']", $source);
+    }
+
     public function test_listing_component_lazy_loads_images(): void
     {
         $source = file_get_contents(resource_path('views/components/vehicle-listing-item.blade.php'));
