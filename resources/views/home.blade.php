@@ -1193,13 +1193,13 @@
                         <div class="flex gap-3">
                             @foreach($featuredVehicles as $vehicle)
                         <div class="featured-vehicle-card flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
-                            <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="block flex-1">
+                            <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="flex flex-1 flex-col min-w-0">
                                 <!-- Vehicle Image -->
-                                <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                                <div class="relative aspect-[2/1.5] overflow-hidden">
                                     <img
                                         src="{{ $vehicle['image'] }}"
                                         alt="{{ $vehicle['title'] }}"
-                                        class="h-full w-full object-cover rounded-md"
+                                        class="block h-full w-full object-cover"
                                     />
                                     <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                                     @if(isset($vehicle['dealer_id']) && $vehicle['dealer_id'])
@@ -1228,22 +1228,31 @@
                                 </div>
                                 
                                 <!-- Vehicle Details -->
-                                <div class="p-3 space-y-1">
-                                    <div class="flex flex-col gap-1">
-                                        <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2">
+                                @php
+                                    $homeListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
+                                        $vehicle['seller_address'] ?? null,
+                                        $vehicle['seller_postcode'] ?? null,
+                                        $vehicle['seller_city'] ?? ($vehicle['city'] ?? null)
+                                    );
+                                @endphp
+                                <div class="flex flex-1 flex-col px-3 pt-3 min-h-0">
+                                    <div class="flex shrink-0 flex-col gap-1 text-left">
+                                        <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
                                             {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle['title'] ?? '') }}
                                         </h3>
                                         @if(!empty($vehicle['variant_name']))
-                                        <p class="text-muted-foreground -mt-1.5 text-xs font-normal line-clamp-1">
+                                        <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
                                             {{ $vehicle['variant_name'] }}
                                         </p>
+                                        @else
+                                        <p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>
                                         @endif
-                                        <p class="text-lg font-bold">
+                                        <p class="vehicle-listing-price text-lg font-bold">
                                             {{ \App\Helpers\FormatHelper::formatCurrency($vehicle['price'] ?? null) }}
                                         </p>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-1 text-xs font-light">
+                                    <div class="flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
                                         @if($vehicle['km_driven'])
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, '.', ',') }} km</span>
                                         @endif
@@ -1260,46 +1269,35 @@
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle['gear_type_name'] }}</span>
                                         @endif
                                     </div>
-
                                 </div>
                             </a>
                             
                             <!-- Card Footer -->
-                            <div class="mt-auto" onclick="event.stopPropagation()">
-                                @php
-                                    $homeListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
-                                        $vehicle['seller_address'] ?? null,
-                                        $vehicle['seller_postcode'] ?? null,
-                                        $vehicle['seller_city'] ?? ($vehicle['city'] ?? null)
-                                    );
-                                @endphp
-                                @if($homeListingLocation !== '')
-                                <div class="px-3 pt-3 pb-2">
-                                    <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                            <div class="mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
+                                <div class="min-h-[1.25rem]">
+                                    @if($homeListingLocation !== '')
+                                    <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                             <circle cx="12" cy="10" r="3"></circle>
                                         </svg>
-                                        <span class="truncate text-right" title="{{ $homeListingLocation }}">{{ $homeListingLocation }}</span>
+                                        <span class="truncate text-left" title="{{ $homeListingLocation }}">{{ $homeListingLocation }}</span>
                                     </div>
+                                    @endif
                                 </div>
-                                @endif
-                                <!-- Vehicle Actions -->
-                                <div class="p-3 pt-0">
-                                    <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                        <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="flex-1" onclick="event.stopPropagation()">
-                                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                                {{ __('messages.pages.vehicles.view_details') }}
-                                            </button>
-                                        </a>
-                                        <button 
-                                            type="button"
-                                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle['slug'] ?? $vehicle['id'] }}')"
-                                            class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                                        >
-                                            {{ __('messages.pages.vehicles.enquire') }}
+                                <div class="flex w-full flex-row items-center gap-2">
+                                    <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
+                                        <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                            {{ __('messages.pages.vehicles.view_details') }}
                                         </button>
-                                    </div>
+                                    </a>
+                                    <button 
+                                        type="button"
+                                        onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle['slug'] ?? $vehicle['id'] }}')"
+                                        class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                                    >
+                                        {{ __('messages.pages.vehicles.enquire') }}
+                                    </button>
                                 </div>
                             </div>
                         </div>

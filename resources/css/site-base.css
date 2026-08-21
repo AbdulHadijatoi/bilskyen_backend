@@ -226,7 +226,7 @@ body {
 }
 
 .vehicle-listing-thumb {
-  border-radius: var(--radius-lg);
+  border-radius: 0;
 }
 
 .vehicle-listing-price {

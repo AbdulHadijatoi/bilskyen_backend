@@ -254,13 +254,13 @@
         <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-view="card">
                 @forelse($vehicles as $vehicle)
                 <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full shadow-sm">
-                    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="block flex-1">
+                    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex flex-1 flex-col min-w-0">
                         <!-- Vehicle Image -->
-                        <div class="relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
                             <img
                                 src="{{ $vehicle->images->first()?->thumbnail_url ?? $vehicle->images->first()?->image_url ?? '/placeholder-vehicle.jpg' }}"
                                 alt="{{ trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? '')) }}"
-                                class="h-full w-full object-cover rounded-md"
+                                class="block h-full w-full object-cover"
                             />
                             <!-- Badges - Top Left -->
                             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
@@ -282,22 +282,32 @@
                         </div>
                         
                         <!-- Vehicle Details -->
-                        <div class="p-3 space-y-4">
-                            <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2">
+                        @php
+                            $dealerListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
+                                $vehicle->address ?? null,
+                                $vehicle->postcode ?? null,
+                                $vehicle->city ?? null
+                            );
+                            $dealerVariant = $vehicle->variant_name ?? $vehicle->version ?? null;
+                        @endphp
+                        <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
+                            <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
+                                <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
                                     {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
                                 </h3>
-                                @if($vehicle->version)
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
-                                    {{ $vehicle->version }}
+                                @if($dealerVariant)
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
+                                    {{ $dealerVariant }}
                                 </p>
+                                @else
+                                <p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>
                                 @endif
-                                <p class="text-lg font-bold">
+                                <p class="vehicle-listing-price text-lg font-bold">
                                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
                                 </p>
                             </div>
 
-                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
+                            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
                                 @if($vehicle->km_driven !== null)
                                 <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format((int) $vehicle->km_driven) }} km</span>
                                 @endif
@@ -318,36 +328,27 @@
                     </a>
                     
                     <!-- Card Footer -->
-                    <div class="mt-auto" onclick="event.stopPropagation()">
-                        @php
-                            $dealerListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
-                                $vehicle->address ?? null,
-                                $vehicle->postcode ?? null,
-                                $vehicle->city ?? null
-                            );
-                        @endphp
-                        @if($dealerListingLocation !== '')
-                        <div class="px-3 pt-3 pb-2">
-                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                    <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
+                        <div class="vehicle-listing-location min-h-[1.25rem]">
+                            @if($dealerListingLocation !== '')
+                            <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate text-right" title="{{ $dealerListingLocation }}">{{ $dealerListingLocation }}</span>
+                                <span class="truncate text-left" title="{{ $dealerListingLocation }}">{{ $dealerListingLocation }}</span>
                             </div>
+                            @endif
                         </div>
-                        @endif
-                        <div class="p-3 pt-0">
-                            <div class="flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex-1">
-                                    <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md">
-                                        {{ __('messages.pages.vehicles.view_details') }}
-                                    </button>
-                                </a>
-                                <button class="inline-flex h-9 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}');">
-                                    {{ __('messages.pages.vehicles.enquire') }}
+                        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
+                            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="min-w-0 flex-[2]">
+                                <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md">
+                                    {{ __('messages.pages.vehicles.view_details') }}
                                 </button>
-                            </div>
+                            </a>
+                            <button class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}');">
+                                {{ __('messages.pages.vehicles.enquire') }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -955,8 +956,19 @@ document.addEventListener('DOMContentLoaded', function() {
         display: flex;
         flex-direction: column;
         padding: 1rem;
-        gap: 1rem;
+        gap: 0;
         position: relative;
+        min-height: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-listing-header {
+        flex-shrink: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-listing-badges {
+        flex: 1;
+        align-items: center;
+        align-content: center;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
@@ -964,17 +976,11 @@ document.addEventListener('DOMContentLoaded', function() {
         font-weight: 700;
         line-height: 1.3;
         margin: 0;
+        min-height: 0;
         color: hsl(var(--foreground));
     }
     
-    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-muted-foreground {
-        font-size: 0.75rem;
-        color: hsl(var(--muted-foreground));
-        margin-top: -0.375rem;
-        font-weight: 400;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-primary {
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
         font-size: 1.125rem;
         font-weight: 700;
         margin: 0;
@@ -982,10 +988,15 @@ document.addEventListener('DOMContentLoaded', function() {
         color: hsl(var(--primary));
     }
     
-    #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
+    #vehicle-container[data-view="list"] .vehicle-item-footer {
         margin-top: auto;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.5rem;
         padding: 1rem;
-        padding-top: 0.5rem;
+        min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section {
@@ -1060,13 +1071,12 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 1rem;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-item .mt-auto {
-            padding: 1rem;
-            padding-top: 0.5rem;
+        #vehicle-container[data-view="list"] .vehicle-item-footer {
+            padding: 0 1rem 1rem;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section {
-            flex-direction: column;
+            flex-direction: row;
             width: 100%;
         }
         
@@ -1191,13 +1201,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `
             <div class="vehicle-item relative bg-card rounded-lg overflow-hidden">
-                <a href="${vehicleDetailUrl(vehicle.slug)}" class="block flex-1">
+                <a href="${vehicleDetailUrl(vehicle.slug)}" class="flex flex-1 flex-col min-w-0">
                     <!-- Vehicle Image -->
-                    <div class="vehicle-image-container relative">
+                    <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
                         <img
                             src="${imageUrl}"
                             alt="${titleText}"
-                            class="h-full w-full object-cover"
+                            class="block h-full w-full object-cover"
                         />
                         
                         <!-- Heart Icon - Top Right -->
@@ -1209,57 +1219,50 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <!-- Vehicle Content -->
-                    <div class="vehicle-content-wrapper">
-                        <!-- Header Section -->
-                        <div class="flex flex-col gap-4">
-                            <span class="flex items-center gap-2 text-sm font-semibold">
+                    <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
+                        <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
+                            <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
                                 ${titleText}
-                            </span>
-                            
-                            ${badges.length > 0 ? `
-                            <div class="-mt-2 flex flex-wrap gap-1 text-xs font-light">
-                                ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
-                            </div>
-                            ` : ''}
-
-                            <p class="text-sm font-semibold">
+                            </h3>
+                            ${vehicle.variant_name || vehicle.version ? `
+                            <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">${vehicle.variant_name || vehicle.version}</p>
+                            ` : `<p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>`}
+                            <p class="vehicle-listing-price text-lg font-bold">
                                 ${formatCurrency(vehicle.price)}
                             </p>
-
-                            ${vehicle.version ? `<p class="text-muted-foreground -mt-1.5 text-xs font-normal"><span>Version:</span> <strong>${vehicle.version}</strong></p>` : ''}
+                        </div>
+                        <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
+                            ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
                         </div>
                     </div>
                 </a>
                 
                 <!-- Card Footer -->
-                <div class="mt-auto" onclick="event.stopPropagation()">
-                    <!-- Vehicle Actions -->
-                    <div class="vehicle-actions-section">
-                        <div class="flex w-full items-center gap-4 flex-col sm:flex-row">
-                            ${locationText ? `
-                            <div class="flex items-center gap-2 text-xs text-muted-foreground flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <span class="truncate" title="${locationText}">${locationText}</span>
-                            </div>
-                            ` : ''}
-                            <div class="flex w-full sm:w-auto flex-col gap-2 sm:flex-row flex-1 sm:flex-initial">
-                                <a href="${vehicleDetailUrl(vehicle.slug)}" class="flex-1 sm:flex-initial" onclick="event.stopPropagation()">
-                                    <button class="inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        {{ __('messages.pages.vehicles.view_details') }}
-                                    </button>
-                                </a>
-                                <button 
-                                    type="button"
-                                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}')"
-                                    class="flex-1 sm:flex-initial inline-flex h-9 w-full sm:w-auto items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                                >
-                                    {{ __('messages.pages.vehicles.enquire') }}
-                                </button>
-                            </div>
+                <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
+                    <div class="vehicle-listing-location min-h-[1.25rem]">
+                        ${locationText ? `
+                        <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
+                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span class="truncate text-left" title="${locationText}">${locationText}</span>
                         </div>
+                        ` : ''}
+                    </div>
+                    <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
+                        <a href="${vehicleDetailUrl(vehicle.slug)}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
+                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                {{ __('messages.pages.vehicles.view_details') }}
+                            </button>
+                        </a>
+                        <button 
+                            type="button"
+                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}')"
+                            class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                        >
+                            {{ __('messages.pages.vehicles.enquire') }}
+                        </button>
                     </div>
                 </div>
             </div>

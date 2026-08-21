@@ -9,8 +9,8 @@
     'isBoosted' => false,
 ])
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
-    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-item-main-link block flex-1 min-w-0">
-        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
+        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
             <img
                 src="{{ $imgUrl }}"
                 alt="{{ $imgAlt }}"
@@ -18,7 +18,7 @@
                 height="600"
                 loading="lazy"
                 decoding="async"
-                class="h-full w-full object-cover rounded-md vehicle-listing-thumb"
+                class="block h-full w-full object-cover"
             />
             <div class="absolute top-4 left-4 z-10 flex max-w-[75%] flex-row flex-wrap items-center gap-1">
                 @if($vehicle->dealer_id)
@@ -63,24 +63,31 @@
             </button>
         </div>
 
-        <div class="vehicle-content-wrapper flex flex-1 flex-col p-3 space-y-1 min-h-[7.5rem]">
-            <div class="flex flex-col gap-1">
-                <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2 min-h-[2rem]">
+        @php
+            $listingLocation = \App\Helpers\FormatHelper::formatListingLocation(
+                $vehicle->seller_address ?? null,
+                $vehicle->seller_postcode ?? null,
+                $vehicle->seller_city ?? ($vehicle->city ?? null)
+            );
+        @endphp
+        <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
+            <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
+                <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
                     {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
                 </h3>
                 @if($vehicle->variant_name)
-                    <p class="text-muted-foreground text-xs font-normal line-clamp-1">
+                    <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
                         {{ $vehicle->variant_name }}
                     </p>
                 @else
-                    <p class="text-xs font-normal invisible select-none" aria-hidden="true">&nbsp;</p>
+                    <p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>
                 @endif
                 <p class="vehicle-listing-price text-lg font-bold">
                     {{ \App\Helpers\FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
             </div>
 
-            <div class="vehicle-listing-badges mt-auto flex min-h-[2rem] flex-wrap content-start gap-1 text-xs font-light">
+            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
                 @if($vehicle->mileage || $vehicle->km_driven)
                     <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
                 @endif
@@ -100,40 +107,31 @@
         </div>
     </a>
 
-    <div class="vehicle-item-footer mt-auto" onclick="event.stopPropagation()">
-        @php
-            $listingLocation = \App\Helpers\FormatHelper::formatListingLocation(
-                $vehicle->seller_address ?? null,
-                $vehicle->seller_postcode ?? null,
-                $vehicle->seller_city ?? ($vehicle->city ?? null)
-            );
-        @endphp
-        <div class="px-3 pt-3 pb-2 min-h-[2.25rem]">
+    <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
+        <div class="vehicle-listing-location min-h-[1.25rem]">
             @if($listingLocation !== '')
-                <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0" aria-hidden="true">
                         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                         <circle cx="12" cy="10" r="3"></circle>
                     </svg>
-                    <span class="truncate text-right" title="{{ $listingLocation }}">{{ $listingLocation }}</span>
+                    <span class="truncate text-left" title="{{ $listingLocation }}">{{ $listingLocation }}</span>
                 </div>
             @endif
         </div>
-        <div class="p-3 pt-0">
-            <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
-                <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex-1" onclick="event.stopPropagation()">
-                    <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                        {{ __('messages.pages.vehicles.view_details') }}
-                    </button>
-                </a>
-                <button
-                    type="button"
-                    onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                    class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98] dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                >
-                    {{ __('messages.pages.vehicles.enquire') }}
+        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
+            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
+                <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                    {{ __('messages.pages.vehicles.view_details') }}
                 </button>
-            </div>
+            </a>
+            <button
+                type="button"
+                onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
+                class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98] dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+            >
+                {{ __('messages.pages.vehicles.enquire') }}
+            </button>
         </div>
     </div>
 </div>

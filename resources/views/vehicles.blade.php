@@ -321,7 +321,7 @@
         </style>
 
         <!-- Sort, view toggle and results (DOM-first so listing links precede the filter tree) -->
-        <div class="flex-1 flex flex-col gap-4 w-full lg:order-2">
+        <div class="flex-1 flex flex-col gap-2 w-full lg:order-2">
             <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
             <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
                 <p class="js-results-count lg:hidden text-xs text-muted-foreground whitespace-nowrap">
@@ -1200,7 +1200,7 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        border-radius: 0.375rem;
+        border-radius: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item > a {
@@ -1215,8 +1215,19 @@
         display: flex;
         flex-direction: column;
         padding: 1rem;
-        gap: 1rem;
+        gap: 0;
         position: relative;
+        min-height: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-listing-header {
+        flex-shrink: 0;
+    }
+    
+    #vehicle-container[data-view="list"] .vehicle-listing-badges {
+        flex: 1;
+        align-items: center;
+        align-content: center;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
@@ -1224,14 +1235,8 @@
         font-weight: 700;
         line-height: 1.3;
         margin: 0;
+        min-height: 0;
         color: hsl(var(--foreground));
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-content-wrapper .text-muted-foreground {
-        font-size: 0.75rem;
-        color: hsl(var(--muted-foreground));
-        margin-top: -0.375rem;
-        font-weight: 400;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
@@ -1247,9 +1252,9 @@
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
         padding: 1rem;
-        padding-top: 0.5rem;
         min-width: 0;
     }
     
@@ -1326,12 +1331,11 @@
         }
         
         #vehicle-container[data-view="list"] .vehicle-item-footer {
-            padding: 1rem;
-            padding-top: 0.5rem;
+            padding: 0 1rem 1rem;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section {
-            flex-direction: column;
+            flex-direction: row;
             width: 100%;
         }
         
@@ -1649,12 +1653,12 @@
 
             return `
                 <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
-                    <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link block flex-1 min-w-0">
-                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden p-3 pb-0">
+                    <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
+                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
                             <img
                                 src="${imageUrl}"
                                 alt="${titleText}"
-                                class="h-full w-full object-cover rounded-md vehicle-listing-thumb"
+                                class="block h-full w-full object-cover"
                             />
                             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                             ${vehicle.dealer_id ? `
@@ -1698,62 +1702,60 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="vehicle-content-wrapper flex flex-1 flex-col p-3 space-y-1 min-h-[7.5rem]">
-                            <div class="flex flex-col gap-1">
-                                <h3 class="flex items-center gap-2 text-xs font-semibold leading-snug line-clamp-2 min-h-[2rem]">
+                        <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
+                            <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
+                                <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
                                     ${titleText}
                                 </h3>
                                 ${vehicle.variant_name ? `
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
                                     ${vehicle.variant_name}
                                 </p>
-                                ` : `<p class="text-xs font-normal invisible select-none" aria-hidden="true">&nbsp;</p>`}
+                                ` : `<p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>`}
                                 <p class="vehicle-listing-price text-lg font-bold">
                                     ${formatCurrency(vehicle.price)}
                                 </p>
                             </div>
-                            <div class="vehicle-listing-badges mt-auto flex min-h-[2rem] flex-wrap content-start gap-1 text-xs font-light">
+                            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
                                 ${vehicle.mileage || vehicle.km_driven ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
                                 ` : ''}
                                 ${vehicle.engine_power_hp ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
                                 ` : ''}
                                 ${vehicle.first_registration_date ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${formatMonthYear(vehicle.first_registration_date)}</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${formatMonthYear(vehicle.first_registration_date)}</span>
                                 ` : ''}
                                 ${vehicle.fuel_type_name ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
                                 ` : ''}
                                 ${vehicle.gear_type_name ? `
-                                <span class="inline-flex items-center rounded-lg border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
+                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
                                 ` : ''}
                             </div>
                         </div>
                     </a>
-                    <div class="vehicle-item-footer mt-auto" onclick="event.stopPropagation()">
-                        <div class="px-3 pt-3 pb-2 min-h-[2.25rem]">
+                    <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
+                        <div class="vehicle-listing-location min-h-[1.25rem]">
                             ${locationText ? `
-                            <div class="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                            <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate text-right" title="${locationText}">${locationText}</span>
+                                <span class="truncate text-left" title="${locationText}">${locationText}</span>
                             </div>
                             ` : ''}
                         </div>
-                        <div class="p-3 pt-0">
-                            <div class="vehicle-actions-section flex w-full flex-col gap-2 sm:flex-row">
-                                <a href="${VEHICLE_DETAIL_URL(slug)}" class="flex-1" onclick="event.stopPropagation()">
-                                    <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                        {{ __('messages.pages.vehicles.view_details') }}
-                                    </button>
-                                </a>
-                                <button type="button" class="flex-1 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
-                                    {{ __('messages.pages.vehicles.enquire') }}
+                        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
+                            <a href="${VEHICLE_DETAIL_URL(slug)}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
+                                <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
+                                    {{ __('messages.pages.vehicles.view_details') }}
                                 </button>
-                            </div>
+                            </a>
+                            <button type="button" class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
+                                {{ __('messages.pages.vehicles.enquire') }}
+                            </button>
                         </div>
                     </div>
                 </div>
