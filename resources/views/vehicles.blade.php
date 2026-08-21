@@ -65,22 +65,252 @@
             #filter-sidebar details > summary::marker { display: none; }
             #filter-sidebar details[open] .filter-chevron { transform: rotate(180deg); }
             #filter-sidebar .filter-chevron { transition: transform 0.2s ease; }
-            #filter-sidebar details > summary {
-                background: transparent;
-                font-weight: 700;
-                border-bottom: 1px solid var(--border, #e2e8f0);
-            }
-            #filter-sidebar details[open] > summary span {
-                color: var(--foreground);
-            }
             #filter-sidebar .filter-card,
             #filter-sidebar details {
                 background: #fff;
                 background-color: var(--card, #ffffff);
                 border: 1px solid var(--border, #e2e8f0);
-                border-radius: 1rem;
-                box-shadow: var(--shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06));
+                border-radius: 0.75rem;
+                box-shadow: none;
                 overflow: hidden;
+            }
+            #filter-sidebar details > summary {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.875rem 1rem;
+                background: transparent;
+                border-bottom: 1px solid var(--border, #e2e8f0);
+                cursor: pointer;
+                user-select: none;
+            }
+            #filter-sidebar details:not([open]) > summary {
+                border-bottom: 0;
+            }
+            #filter-sidebar details > summary:hover {
+                background: color-mix(in oklch, var(--muted, #f1f5f9) 55%, transparent);
+            }
+            #filter-sidebar details > summary .filter-summary-title {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.6875rem;
+                font-weight: 600;
+                color: var(--muted-foreground, #64748b);
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+            #filter-sidebar details > summary .filter-summary-icon {
+                width: 1rem;
+                height: 1rem;
+                color: var(--muted-foreground, #64748b);
+                flex-shrink: 0;
+            }
+            #filter-sidebar .filter-section {
+                padding: 0.875rem 1rem;
+                border-bottom: 1px solid var(--border, #e2e8f0);
+            }
+            #filter-sidebar .filter-section:last-child {
+                border-bottom: 0;
+            }
+            #filter-sidebar .filter-section-title {
+                margin: 0 0 0.5rem;
+                font-size: 0.6875rem;
+                font-weight: 600;
+                color: var(--muted-foreground, #64748b);
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+            #filter-sidebar .filter-field-label {
+                display: block;
+                margin-bottom: 0.35rem;
+                font-size: 0.6875rem;
+                font-weight: 500;
+                color: var(--muted-foreground, #64748b);
+            }
+            #filter-sidebar .filter-pill-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            #filter-sidebar .filter-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.4rem 0.75rem;
+                border-radius: 0.5rem;
+                border: 1px solid var(--border, #e2e8f0);
+                background: #fff;
+                color: var(--foreground, #0f172a);
+                font-size: 0.75rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+            }
+            #filter-sidebar .filter-pill:hover {
+                border-color: color-mix(in oklch, var(--primary, #03418b) 35%, var(--border, #e2e8f0));
+            }
+            #filter-sidebar .filter-pill.is-selected {
+                background: var(--primary-light, #e8f0fa);
+                border-color: var(--primary, #03418b);
+                color: var(--primary, #03418b);
+                font-weight: 600;
+            }
+            #filter-sidebar .filter-pill.is-selected .facet-count {
+                color: inherit;
+                opacity: 0.85;
+            }
+            #filter-sidebar .filter-pill.facet-zero:not(.is-selected) {
+                opacity: 0.45;
+                pointer-events: none;
+                cursor: not-allowed;
+            }
+            #filter-sidebar .filter-control {
+                width: 100%;
+                height: 2.25rem;
+                border-radius: 0.5rem;
+                border: 1px solid var(--border, #e2e8f0);
+                background: #fff;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+                color: var(--foreground, #0f172a);
+            }
+            #filter-sidebar button.filter-control {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+            }
+            #filter-sidebar select.filter-control {
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.65rem center;
+                background-size: 1rem;
+                padding-right: 2rem;
+            }
+            #filter-sidebar .filter-control:focus,
+            #filter-sidebar .filter-control:focus-visible {
+                outline: none;
+                box-shadow: none;
+                border-color: var(--border, #e2e8f0);
+            }
+            #filter-sidebar .filter-card-body {
+                padding: 0.875rem 1rem 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            #filter-sidebar .sidebar-filter-summary {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.15rem 0.15rem 0.25rem;
+            }
+            #filter-sidebar .sidebar-filter-summary__header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+            #filter-sidebar .sidebar-filter-summary__title-row {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                min-width: 0;
+            }
+            #filter-sidebar .sidebar-filter-summary__title {
+                margin: 0;
+                font-size: 1.125rem;
+                font-weight: 700;
+                line-height: 1.2;
+                color: var(--foreground, #0f172a);
+            }
+            #filter-sidebar .sidebar-filter-summary__badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.15rem 0.55rem;
+                border-radius: 999px;
+                background: color-mix(in oklch, var(--primary, #03418b) 10%, #e8eef5);
+                color: color-mix(in oklch, var(--primary, #03418b) 55%, #64748b);
+                font-size: 0.6875rem;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            #filter-sidebar .sidebar-filter-summary__badge.hidden {
+                display: none;
+            }
+            #filter-sidebar .sidebar-filter-summary__clear {
+                flex-shrink: 0;
+                border: 0;
+                background: transparent;
+                padding: 0;
+                font-size: 0.8125rem;
+                font-weight: 500;
+                color: var(--muted-foreground, #64748b);
+                cursor: pointer;
+            }
+            #filter-sidebar .sidebar-filter-summary__clear:hover {
+                color: var(--foreground, #0f172a);
+                text-decoration: underline;
+            }
+            #filter-sidebar .sidebar-filter-summary__clear.hidden {
+                display: none;
+            }
+            #filter-sidebar .sidebar-filter-summary__match {
+                margin: 0;
+                font-size: 0.8125rem;
+                line-height: 1.35;
+                color: var(--muted-foreground, #64748b);
+                font-weight: 400;
+            }
+            #filter-sidebar .sidebar-filter-summary__chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                width: 100%;
+                min-width: 0;
+            }
+            #filter-sidebar .sidebar-filter-summary__chips:empty {
+                display: none;
+            }
+            #filter-sidebar .sidebar-filter-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                max-width: 100%;
+                padding: 0.35rem 0.55rem 0.35rem 0.7rem;
+                border-radius: 999px;
+                background: color-mix(in oklch, var(--primary, #03418b) 8%, #eef2f7);
+                color: var(--foreground, #0f172a);
+                font-size: 0.75rem;
+                font-weight: 500;
+                line-height: 1.2;
+            }
+            #filter-sidebar .sidebar-filter-chip span {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            #filter-sidebar .sidebar-filter-chip .filter-chip-remove {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 1rem;
+                height: 1rem;
+                flex-shrink: 0;
+                border: 0;
+                border-radius: 999px;
+                background: transparent;
+                color: var(--muted-foreground, #64748b);
+                padding: 0;
+                cursor: pointer;
+            }
+            #filter-sidebar .sidebar-filter-chip .filter-chip-remove:hover {
+                color: var(--foreground, #0f172a);
+                background: color-mix(in oklch, var(--foreground, #0f172a) 8%, transparent);
             }
             #search-input:focus,
             #search-input:focus-visible {
@@ -92,38 +322,15 @@
 
         <!-- Sort, view toggle and results (DOM-first so listing links precede the filter tree) -->
         <div class="flex-1 flex flex-col gap-4 w-full lg:order-2">
-            <!-- Results count, filter chips, and reset button -->
-            <div class="flex flex-col gap-3">
-                <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <div class="flex items-center gap-3 flex-wrap w-full">
-                        <!-- Applied Filters Chips -->
-                        <div id="applied-filters-container" class="flex flex-wrap gap-2 w-full min-w-0">
-                            <!-- Filter chips will be rendered here via JavaScript -->
-                    <!-- Reset Button (only visible when filters are applied) -->
-                    <button
-                        id="filter-reset-button-main"
-                        type="button"
-                        class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
-                        {{ __('messages.pages.vehicles.reset_filters') }}
-                    </button>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
             <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
             <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <p id="results-count" class="text-xs text-foreground whitespace-nowrap">
-                        @if(!empty($showNoResultsMessage))
-                            <strong>0</strong> {{ __('messages.pages.vehicles.matching_results') }}
-                        @else
-                            <strong>{{ number_format($vehicles->total()) }}</strong>
-                            {{ __('messages.forms.results') }}
-                        @endif
-                    </p>
-                </div>
+                <p class="js-results-count lg:hidden text-xs text-muted-foreground whitespace-nowrap">
+                    @if(!empty($showNoResultsMessage))
+                        {{ str_replace(':count', '0', __('messages.pages.vehicles.vehicles_match_filters')) }}
+                    @else
+                        {{ str_replace(':count', number_format($vehicles->total()), __('messages.pages.vehicles.vehicles_match_filters')) }}
+                    @endif
+                </p>
                 <!-- Sort Dropdown Container -->
                 <div class="relative text-xs font-medium">
                     <select
@@ -299,7 +506,7 @@
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
-            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-muted lg:bg-transparent shadow-none w-full lg:w-72 xl:w-80 shrink-0 border-0 p-3 lg:p-0 gap-4"
+            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-muted lg:bg-transparent shadow-none w-full lg:w-72 xl:w-80 shrink-0 border-0 lg:p-0 gap-4"
         >
             @php
                 $cf = $currentFilters ?? [];
@@ -318,30 +525,45 @@
                 };
             @endphp
 
-            <!-- Sidebar title (sticky only inside the mobile overlay) -->
-            <!-- Mobile overlay chrome only — desktop shows just the filter cards -->
+            <!-- Mobile overlay chrome only — pull bar; Filters header lives in summary below -->
             <div class="lg:hidden sticky top-0 z-10 bg-muted flex flex-col shrink-0">
-                <!-- Pull bar (mobile): drag down or tap to close -->
                 <div id="sidebar-pullbar" class="lg:hidden flex justify-center items-center py-3 touch-none cursor-grab active:cursor-grabbing select-none min-h-[44px]" aria-label="{{ __('messages.pages.vehicles.close_filters') }}">
                     <span class="w-10 h-1 rounded-full bg-muted-foreground/50"></span>
                 </div>
-                <div class="flex items-center justify-between px-4 py-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-foreground">{{ __('messages.forms.filters') }}</span>
-                </div>
-                <button id="sidebar-reset-btn" type="button" class="hidden text-xs text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none">
-                    {{ __('messages.pages.vehicles.reset_filters') }}
-                </button>
             </div>
+
+            <!-- Filters header: title, active badge, clear all, match summary, chips -->
+            <div id="sidebar-filter-summary" class="sidebar-filter-summary shrink-0">
+                <div class="sidebar-filter-summary__header">
+                    <div class="sidebar-filter-summary__title-row">
+                        <h2 class="sidebar-filter-summary__title">{{ __('messages.forms.filters') }}</h2>
+                        <span id="active-filters-badge" class="sidebar-filter-summary__badge hidden" aria-live="polite"></span>
+                    </div>
+                    <button
+                        id="filter-reset-button-main"
+                        type="button"
+                        class="sidebar-filter-summary__clear hidden"
+                    >
+                        {{ __('messages.pages.vehicles.clear_all_filters') }}
+                    </button>
+                </div>
+                <p id="results-count" class="js-results-count sidebar-filter-summary__match">
+                    @if(!empty($showNoResultsMessage))
+                        {{ str_replace(':count', '0', __('messages.pages.vehicles.vehicles_match_filters')) }}
+                    @else
+                        {{ str_replace(':count', number_format($vehicles->total()), __('messages.pages.vehicles.vehicles_match_filters')) }}
+                    @endif
+                </p>
+                <div id="applied-filters-container" class="sidebar-filter-summary__chips"></div>
             </div>
 
             <!-- Condition + Listing Type + Sales Type (always visible) -->
-            <div class="filter-card bg-white px-4 py-3 space-y-3 shrink-0">
+            <div class="filter-card bg-white shrink-0">
                 <!-- Condition -->
-                <div class="space-y-2">
-                    <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.condition') }}</p>
-                    <div class="inline-flex items-center gap-0.5 p-1 rounded-full bg-muted border border-input flex-wrap">
-                        <label class="condition-radio-label filter-pill inline-flex items-center px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
+                <div class="filter-section">
+                    <p class="filter-section-title">{{ __('messages.forms.condition') }}</p>
+                    <div class="filter-pill-row">
+                        <label class="condition-radio-label filter-pill @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') is-selected @endif">
                             <input type="radio" name="condition_id" value="" class="sr-only peer condition-radio" @if(!isset($currentFilters['condition_id']) || $currentFilters['condition_id'] == '') checked @endif>
                             <span>{{ __('messages.common.all') }}</span>
                         </label>
@@ -351,7 +573,7 @@
                                 $conditionCount = $facetCountValue('condition_id', $conditionId);
                                 $isConditionActive = isset($currentFilters['condition_id']) && (string) ($currentFilters['condition_id']) === (string) $conditionId;
                             @endphp
-                            <label data-facet="condition_id" data-facet-id="{{ $conditionId }}" class="condition-radio-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isConditionActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif @if($conditionCount === 0 && ! $isConditionActive) facet-zero @endif">
+                            <label data-facet="condition_id" data-facet-id="{{ $conditionId }}" class="condition-radio-label filter-pill @if($isConditionActive) is-selected @endif @if($conditionCount === 0 && ! $isConditionActive) facet-zero @endif">
                                 <input type="radio" name="condition_id" value="{{ $conditionId }}" class="sr-only peer condition-radio" @if($isConditionActive) checked @endif @if($conditionCount === 0 && ! $isConditionActive) disabled @endif>
                                 <span>{{ $condition['name'] }}</span>
                                 <span class="facet-count" data-facet-count>{{ $facetCountLabel($conditionCount) }}</span>
@@ -368,9 +590,9 @@
                     $selectedListingTypes = isset($currentFilters['listing_type_id']) ? (is_array($currentFilters['listing_type_id']) ? $currentFilters['listing_type_id'] : [$currentFilters['listing_type_id']]) : [];
                     $selectedListingTypeStrings = collect($selectedListingTypes)->map(fn ($v) => (string) $v)->all();
                 @endphp
-                <div class="space-y-2">
-                    <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.listing_type') }}</p>
-                    <div class="flex flex-wrap items-center gap-2">
+                <div class="filter-section">
+                    <p class="filter-section-title">{{ __('messages.forms.listing_type') }}</p>
+                    <div class="filter-pill-row">
                         @foreach($listingTypesList as $lt)
                             @php
                                 $ltId = $lt['id'] ?? null;
@@ -379,9 +601,8 @@
                             @endphp
                             @if($ltId !== null)
                                 @php $ltCount = $facetCountValue('listing_type_id', $ltId); @endphp
-                                <label data-facet="listing_type_id" data-facet-id="{{ $ltId }}" class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border @if($isListingTypeActive) border-transparent bg-primary text-primary-foreground font-semibold shadow-sm @else border-border bg-muted/40 text-foreground/90 hover:bg-muted/70 hover:border-muted-foreground/30 @endif @if($ltCount === 0 && ! $isListingTypeActive) facet-zero @endif">
+                                <label data-facet="listing_type_id" data-facet-id="{{ $ltId }}" class="listing-type-checkbox-label filter-pill @if($isListingTypeActive) is-selected @endif @if($ltCount === 0 && ! $isListingTypeActive) facet-zero @endif">
                                     <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif @if($ltCount === 0 && ! $isListingTypeActive) disabled @endif>
-                                    <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                     <span>{{ $ltName }}</span>
                                     <span class="facet-count" data-facet-count>{{ $facetCountLabel($ltCount) }}</span>
                                 </label>
@@ -390,9 +611,9 @@
                     </div>
                 </div>
                 <!-- Sales Type -->
-                <div class="space-y-2">
-                    <label class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.sales_type') }}</label>
-                    <select name="sales_type_id" data-facet="sales_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <div class="filter-section">
+                    <label class="filter-section-title" for="sales-type-select">{{ __('messages.forms.sales_type') }}</label>
+                    <select id="sales-type-select" name="sales_type_id" data-facet="sales_type_id" class="filter-control">
                         <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                         @foreach($constants['sales_types'] ?? [] as $st)
                         @php
@@ -422,14 +643,16 @@
                         : implode(', ', array_slice($selectedBrandNames, 0, 3)) . (count($selectedBrandNames) > 3 ? '…' : ''));
             @endphp
             <details open class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.type_brand_model') }}</span>
+                <summary>
+                    <span class="filter-summary-title">
+                        {{ __('messages.forms.type_brand_model') }}
+                    </span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-2">
+                <div class="filter-card-body">
                     <div class="relative" data-multiselect-dropdown>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.brand') }}</label>
-                        <button type="button" id="brand-dropdown-trigger" class="brand-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="brand-dropdown-label">
+                        <label class="filter-field-label" for="brand-dropdown-trigger">{{ __('messages.forms.brand') }}</label>
+                        <button type="button" id="brand-dropdown-trigger" class="brand-dropdown-trigger filter-control text-left flex items-center justify-between gap-2" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="brand-dropdown-label">
                             <span id="brand-dropdown-label" class="truncate" title="{{ $brandDropdownSummary }}">
                                 {{ $brandDropdownSummary }}
                             </span>
@@ -441,7 +664,7 @@
                                     type="text"
                                     id="brand-search-input"
                                     placeholder="{{ __('messages.forms.filter_brand_list') }}"
-                                    class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    class="filter-control"
                                     autocomplete="off"
                                 >
                             </div>
@@ -462,8 +685,8 @@
                         </div>
                     </div>
                     <div class="relative" data-multiselect-dropdown>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.model') }}</label>
-                        <button type="button" id="model-dropdown-trigger" class="model-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-dropdown-label" @if(count($selectedBrandIds) === 0) disabled @endif>
+                        <label class="filter-field-label" for="model-dropdown-trigger">{{ __('messages.forms.model') }}</label>
+                        <button type="button" id="model-dropdown-trigger" class="model-dropdown-trigger filter-control text-left flex items-center justify-between gap-2 disabled:opacity-50 disabled:cursor-not-allowed" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-dropdown-label" @if(count($selectedBrandIds) === 0) disabled @endif>
                             <span id="model-dropdown-label" class="truncate">
                                 @if(count($selectedModelNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedModelNames) === 1){{ $selectedModelNames[0] }}@else{{ count($selectedModelNames) }} {{ __('messages.forms.selected') }}@endif
                             </span>
@@ -475,7 +698,7 @@
                                     type="text"
                                     id="model-search-input"
                                     placeholder="{{ __('messages.forms.filter_model_list') }}"
-                                    class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    class="filter-control"
                                     autocomplete="off"
                                 >
                             </div>
@@ -497,8 +720,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
-                        <select name="gear_type_id" data-facet="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <label class="filter-field-label" for="gear-type-select">{{ __('messages.forms.gear_type') }}</label>
+                        <select id="gear-type-select" name="gear_type_id" data-facet="gear_type_id" class="filter-control">
                             <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                             @foreach($constants['gear_types'] ?? [] as $gt)
                             @php
@@ -511,13 +734,13 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.model_year') }}</label>
+                    <div>
+                        <label class="filter-field-label">{{ __('messages.forms.model_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="year-from" name="model_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['model_year_from'] ?? $cf['year_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="year-to" name="model_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['model_year_to'] ?? $cf['year_to'] ?? '' }}" class="filter-control">
                         </div>
-                        <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
+                        <div class="relative h-6 mt-2"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
                             <div id="year-range-track" class="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary transition-opacity"></div>
                             <input type="range" id="year-slider-min" min="1950" max="2027" step="1" value="1950" class="absolute left-0 right-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-0 cursor-pointer z-10">
@@ -532,16 +755,16 @@
 
             <!-- Price & KM (open by default) -->
             <details open class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }} / {{ __('messages.forms.km_driven') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.price_range') }} / {{ __('messages.forms.km_driven') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-3">
+                <div class="filter-card-body">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.price_range') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.price_range') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.minimum') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="price-from" name="price_from" placeholder="{{ __('messages.forms.minimum') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="price-to" name="price_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterPriceMax }}" value="{{ $cf['price_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -554,10 +777,10 @@
                         <p id="price-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.km_driven') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.km_driven') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="mileage-from" name="km_driven_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="mileage-to" name="km_driven_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="{{ $filterKmMax }}" value="{{ $cf['km_driven_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -577,13 +800,13 @@
                 $selectedFuelTypeIds = isset($cf['fuel_type_id']) ? (is_array($cf['fuel_type_id']) ? $cf['fuel_type_id'] : [$cf['fuel_type_id']]) : [];
             @endphp
             <details open class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-3">
+                <div class="filter-card-body">
                     <div class="space-y-1">
-                        <p class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_type') }}</p>
+                        <p class="filter-field-label">{{ __('messages.forms.fuel_type') }}</p>
                         <div id="fuel-type-checkbox-list" class="space-y-0.5 max-h-56 overflow-y-auto">
                             @foreach($constants['fuel_types'] ?? [] as $ft)
                             @php
@@ -601,8 +824,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
-                        <select name="body_type_id" data-facet="body_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <label class="filter-field-label">{{ __('messages.forms.body_type') }}</label>
+                        <select name="body_type_id" data-facet="body_type_id" class="filter-control">
                             <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                             @foreach($constants['body_types'] ?? [] as $bt)
                             @php
@@ -623,15 +846,15 @@
                 $moreDetailsOpen = isset($cf['color_id']) || isset($cf['price_type_id']) || isset($cf['emission_norm_id']) || isset($cf['use_id']);
             @endphp
             <details @if($moreDetailsOpen) open @endif class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.color') }} / {{ __('messages.forms.type') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.color') }} / {{ __('messages.forms.type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3">
+                <div class="filter-card-body">
                     <div class="grid grid-cols-2 gap-x-2 gap-y-2">
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.color') }}</label>
-                            <select name="color_id" data-facet="color_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.color') }}</label>
+                            <select name="color_id" data-facet="color_id" class="filter-control">
                                 <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['colors'] ?? [] as $cl)
                                 @php
@@ -645,8 +868,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.price_type') }}</label>
-                            <select name="price_type_id" data-facet="price_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.price_type') }}</label>
+                            <select name="price_type_id" data-facet="price_type_id" class="filter-control">
                                 <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['price_types'] ?? [] as $pt)
                                 @php
@@ -660,8 +883,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.euro_norm') }}</label>
-                            <select name="emission_norm_id" data-facet="emission_norm_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.euro_norm') }}</label>
+                            <select name="emission_norm_id" data-facet="emission_norm_id" class="filter-control">
                                 <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['euronorms'] ?? [] as $en)
                                 @php
@@ -675,8 +898,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.use') }}</label>
-                            <select name="use_id" data-facet="use_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.use') }}</label>
+                            <select name="use_id" data-facet="use_id" class="filter-control">
                                 <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['vehicle_uses'] ?? [] as $uu)
                                 @php
@@ -698,16 +921,16 @@
                 $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_kw_from']) || isset($cf['engine_power_kw_to']) || isset($cf['electrical_consumption_from']) || isset($cf['electrical_consumption_to']) || isset($cf['km_per_liter_from']) || isset($cf['km_per_liter_to']);
             @endphp
             <details @if($yearSpecsOpen) open @endif class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.first_registration_year') }} / {{ __('messages.forms.horsepower_hp') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.first_registration_year') }} / {{ __('messages.forms.horsepower_hp') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-3">
+                <div class="filter-card-body">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.first_registration_year') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.first_registration_year') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="first-reg-year-from" name="first_registration_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="first-reg-year-to" name="first_registration_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="first-reg-year-from" name="first_registration_year_from" placeholder="{{ __('messages.forms.from') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="first-reg-year-to" name="first_registration_year_to" placeholder="{{ __('messages.forms.to') }}" min="1950" max="2027" value="{{ $cf['first_registration_year_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -720,10 +943,10 @@
                         <p id="first-reg-year-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.owner_tax') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.owner_tax') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="owner-tax-from" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="20000" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="owner-tax-to" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="20000" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="owner-tax-from" name="ownership_tax_from" placeholder="{{ __('messages.forms.min') }}" min="0" max="20000" value="{{ $cf['ownership_tax_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="owner-tax-to" name="ownership_tax_to" placeholder="{{ __('messages.forms.max') }}" min="0" max="20000" value="{{ $cf['ownership_tax_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -736,10 +959,10 @@
                         <p id="owner-tax-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.horsepower_hp') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.horsepower_hp') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="horsepower-min" name="engine_power_kw_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_kw_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="horsepower-max" name="engine_power_kw_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_kw_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="horsepower-min" name="engine_power_kw_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['engine_power_kw_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="horsepower-max" name="engine_power_kw_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['engine_power_kw_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -752,10 +975,10 @@
                         <p id="horsepower-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.battery_capacity_kwh') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.battery_capacity_kwh') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="battery-capacity-min" name="electrical_consumption_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['electrical_consumption_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="battery-capacity-max" name="electrical_consumption_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['electrical_consumption_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="battery-capacity-min" name="electrical_consumption_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['electrical_consumption_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="battery-capacity-max" name="electrical_consumption_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['electrical_consumption_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -768,10 +991,10 @@
                         <p id="battery-capacity-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_efficiency') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.fuel_efficiency') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="fuel-efficiency-from" name="km_per_liter_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_per_liter_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="fuel-efficiency-to" name="km_per_liter_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_per_liter_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="fuel-efficiency-from" name="km_per_liter_from" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['km_per_liter_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="fuel-efficiency-to" name="km_per_liter_to" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['km_per_liter_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -791,16 +1014,16 @@
                 $physicalOpen = isset($cf['max_speed_from']) || isset($cf['max_speed_to']) || isset($cf['maximum_weight_kg_from']) || isset($cf['maximum_weight_kg_to']) || isset($cf['door_count']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['axle_count']) || isset($cf['specifications_airbags']) || isset($cf['towing_weight']);
             @endphp
             <details @if($physicalOpen) open @endif class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.physical_details') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.physical_details') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-3">
+                <div class="filter-card-body">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.top_speed') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.top_speed') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="top-speed-from" name="max_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['max_speed_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="top-speed-to" name="max_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['max_speed_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="top-speed-from" name="max_speed_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['max_speed_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="top-speed-to" name="max_speed_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['max_speed_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -813,10 +1036,10 @@
                         <p id="top-speed-slider-label" class="text-[10px] text-muted-foreground text-center tabular-nums"></p>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.weight') }}</label>
+                        <label class="filter-field-label">{{ __('messages.forms.weight') }}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="weight-from" name="maximum_weight_kg_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['maximum_weight_kg_from'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
-                            <input type="number" id="weight-to" name="maximum_weight_kg_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['maximum_weight_kg_to'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <input type="number" id="weight-from" name="maximum_weight_kg_from" placeholder="{{ __('messages.forms.from') }}" min="0" value="{{ $cf['maximum_weight_kg_from'] ?? '' }}" class="filter-control">
+                            <input type="number" id="weight-to" name="maximum_weight_kg_to" placeholder="{{ __('messages.forms.to') }}" min="0" value="{{ $cf['maximum_weight_kg_to'] ?? '' }}" class="filter-control">
                         </div>
                         <div class="relative h-6"><div class="slider-track-area relative h-full mx-3">
                             <div class="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted"></div>
@@ -830,29 +1053,29 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.doors') }}</label>
-                            <input type="number" name="door_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.doors') }}</label>
+                            <input type="number" name="door_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['door_count'] ?? '' }}" class="filter-control">
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.seats_min') }}</label>
-                            <input type="number" name="seats_min" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.seats_min') }}</label>
+                            <input type="number" name="seats_min" placeholder="{{ __('messages.forms.min') }}" min="0" value="{{ $cf['seats_min'] ?? '' }}" class="filter-control">
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.seats_max') }}</label>
-                            <input type="number" name="seats_max" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.seats_max') }}</label>
+                            <input type="number" name="seats_max" placeholder="{{ __('messages.forms.max') }}" min="0" value="{{ $cf['seats_max'] ?? '' }}" class="filter-control">
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.axles') }}</label>
-                            <input type="number" name="axle_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.axles') }}</label>
+                            <input type="number" name="axle_count" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['axle_count'] ?? '' }}" class="filter-control">
                         </div>
                         <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.airbags') }}</label>
-                            <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                            <label class="filter-field-label">{{ __('messages.forms.airbags') }}</label>
+                            <input type="number" name="specifications_airbags" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['specifications_airbags'] ?? '' }}" class="filter-control">
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.towing_weight_min') }}</label>
-                        <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <label class="filter-field-label">{{ __('messages.forms.towing_weight_min') }}</label>
+                        <input type="number" name="towing_weight" placeholder="{{ __('messages.forms.minimum') }}" min="0" value="{{ $cf['towing_weight'] ?? '' }}" class="filter-control">
                     </div>
                 </div>
             </details>
@@ -862,29 +1085,29 @@
                 $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_test']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
             @endphp
             <details @if($extrasOpen) open @endif class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.charging_type') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.charging_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-2">
-                    <select name="charging_type" class="w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <div class="filter-card-body">
+                    <select name="charging_type" class="filter-control">
                         <option value="">{{ __('messages.common.all') }}</option>
                         <option value="AC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC') selected @endif>{{ __('messages.forms.charging_ac') }}</option>
                         <option value="DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'DC') selected @endif>{{ __('messages.forms.charging_dc') }}</option>
                         <option value="AC/DC" @if(isset($cf['charging_type']) && $cf['charging_type'] == 'AC/DC') selected @endif>{{ __('messages.forms.charging_ac_dc') }}</option>
                     </select>
                     <div class="flex flex-wrap gap-1.5 pt-1">
-                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
+                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium cursor-pointer transition-all">
                             <input type="checkbox" name="ncap_test" value="1" class="sr-only peer" @if(isset($cf['ncap_test']) && $cf['ncap_test']) checked @endif>
                             <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                             <span>{{ __('messages.forms.ncap_test') }}</span>
                         </label>
-                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
+                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium cursor-pointer transition-all">
                             <input type="checkbox" name="is_import" value="1" class="sr-only peer" @if(isset($cf['is_import']) && $cf['is_import']) checked @endif>
                             <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                             <span>{{ __('messages.forms.is_import') }}</span>
                         </label>
-                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary">
+                        <label class="filter-pill-checkbox inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium cursor-pointer transition-all">
                             <input type="checkbox" name="is_factory_new" value="1" class="sr-only peer" @if(isset($cf['is_factory_new']) && $cf['is_factory_new']) checked @endif>
                             <span class="hidden peer-checked:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                             <span>{{ __('messages.forms.is_factory_new') }}</span>
@@ -896,11 +1119,11 @@
             <!-- Equipment (loaded on first open — full catalog is too large to SSR) -->
             @php $equipmentActive = !empty($cf['equipment_ids']); @endphp
             <details id="equipment-filter-details" @if($equipmentActive) open @endif class="filter-card bg-white">
-                <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.equipment') }}</span>
+                <summary>
+                    <span class="filter-summary-title">{{ __('messages.forms.equipment') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div id="equipment-filter-body" class="px-4 pb-3 space-y-1" data-selected='@json(array_values(array_map("intval", $cf["equipment_ids"] ?? [])))'>
+                <div id="equipment-filter-body" class="filter-card-body" data-selected='@json(array_values(array_map("intval", $cf["equipment_ids"] ?? [])))'>
                     <p class="text-xs text-muted-foreground py-1">{{ __('messages.pages.vehicles.equipment_loading') }}</p>
                 </div>
             </details>
@@ -1125,45 +1348,54 @@
         transition: background-color 0.15s, color 0.15s;
     }
     
-    .condition-radio-label.bg-primary,
-    .listing-type-checkbox-label.bg-primary,
+    /* View toggle keeps solid primary; filter pills use soft .is-selected */
     .view-toggle-label.bg-primary {
         background-color: var(--primary) !important;
         color: var(--primary-foreground) !important;
         font-weight: 600 !important;
     }
     
-    .condition-radio-label.bg-card,
-    .listing-type-checkbox-label.bg-card,
     .view-toggle-label.bg-card {
         background-color: var(--card) !important;
-        color: hsl(var(--muted-foreground)) !important;
+        color: var(--muted-foreground) !important;
     }
     
-    .condition-radio-label.bg-card:hover,
-    .listing-type-checkbox-label.bg-card:hover,
     .view-toggle-label.bg-card:hover {
-        color: hsl(var(--foreground)) !important;
+        color: var(--foreground) !important;
     }
 
     .facet-count {
         font-variant-numeric: tabular-nums;
         font-size: 0.7rem;
-        color: hsl(var(--muted-foreground));
+        color: var(--muted-foreground);
         flex-shrink: 0;
     }
     .filter-pill .facet-count {
         margin-left: 0.15rem;
         opacity: 0.85;
     }
-    .filter-pill.bg-primary .facet-count {
+    .filter-pill.is-selected .facet-count {
         color: inherit;
-        opacity: 0.8;
+        opacity: 0.85;
     }
     .facet-zero {
         opacity: 0.45;
         pointer-events: none;
         cursor: not-allowed;
+    }
+    #filter-sidebar .filter-pill-checkbox,
+    #filter-sidebar .equipment-btn {
+        border-radius: 0.5rem;
+        border: 1px solid var(--border, #e2e8f0);
+        background: #fff;
+        color: var(--foreground, #0f172a);
+    }
+    #filter-sidebar .filter-pill-checkbox:has(:checked),
+    #filter-sidebar .equipment-btn:has(:checked) {
+        background: var(--primary-light, #e8f0fa) !important;
+        border-color: var(--primary, #03418b) !important;
+        color: var(--primary, #03418b) !important;
+        font-weight: 600;
     }
     
     /* Condition filter responsive styles */
@@ -1281,6 +1513,9 @@
             chipsMore: @json(__('messages.forms.chips_more')),
             chipsShowLess: @json(__('messages.forms.chips_show_less')),
             resetFilters: @json(__('messages.pages.vehicles.reset_filters')),
+            clearAllFilters: @json(__('messages.pages.vehicles.clear_all_filters')),
+            activeFiltersBadge: @json(__('messages.pages.vehicles.active_filters_badge')),
+            vehiclesMatchFilters: @json(__('messages.pages.vehicles.vehicles_match_filters')),
             noMatchingFilters: @json(__('messages.pages.vehicles.no_matching_filters')),
             tryAdjustingFilters: @json(__('messages.forms.try_adjusting_filters')),
             matchingResults: @json(__('messages.pages.vehicles.matching_results')),
@@ -2253,11 +2488,11 @@
                 : chips;
             const hiddenCount = chips.length - visibleChips.length;
             const chipsHTML = visibleChips.map(chip => `
-                <div class="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground">
+                <div class="sidebar-filter-chip">
                     <span>${chip.label}</span>
                     <button 
                         type="button"
-                        class="filter-chip-remove ml-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors border border-foreground"
+                        class="filter-chip-remove"
                         data-filter-key="${chip.key}"
                         data-filter-value="${typeof chip.value === 'object' ? JSON.stringify(chip.value) : chip.value}"
                         data-is-array="${chip.isArray || false}"
@@ -2274,8 +2509,8 @@
                 : (chipsExpanded && chips.length > CHIP_COLLAPSE_LIMIT
                     ? `<button type="button" id="filter-chips-less" class="inline-flex items-center rounded-full border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted">${I18N_BMV.chipsShowLess}</button>`
                     : '');
-            const resetBtnHtml = `<button id="filter-reset-button-main" type="button" class="hidden inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">{{ __('messages.pages.vehicles.reset_filters') }}</button>`;
-            container.innerHTML = chipsHTML + moreBtnHtml + resetBtnHtml;
+            container.innerHTML = chipsHTML + moreBtnHtml;
+            updateActiveFiltersSummary(chips.length);
             updateResetButtonVisibility();
             container.querySelector('#filter-chips-more')?.addEventListener('click', () => {
                 container.dataset.chipsExpanded = '1';
@@ -2388,6 +2623,19 @@
         }
         
         // Update reset button visibility based on active filters
+        function updateActiveFiltersSummary(activeCount) {
+            const badge = document.getElementById('active-filters-badge');
+            if (!badge) return;
+            const count = Number(activeCount) || 0;
+            if (count > 0) {
+                badge.textContent = I18N_BMV.activeFiltersBadge.replace(':count', String(count));
+                badge.classList.remove('hidden');
+            } else {
+                badge.textContent = '';
+                badge.classList.add('hidden');
+            }
+        }
+
         function updateResetButtonVisibility() {
             const resetButton = document.getElementById('filter-reset-button-main');
             if (!resetButton) return;
@@ -2490,14 +2738,12 @@
                 } else {
                     renderPagination({ current_page: page, last_page: totalPages, total: filteredTotal });
                 }
-                const resultsCount = document.getElementById('results-count');
-                if (resultsCount) {
-                    if (showingFilteredEmptyWithFallback) {
-                        resultsCount.innerHTML = `<strong>0</strong> ${I18N_BMV.matchingResults}`;
-                    } else {
-                        resultsCount.innerHTML = `<strong>${new Intl.NumberFormat('da-DK').format(filteredTotal)}</strong> ${I18N_BMV.results}`;
-                    }
-                }
+                const matchCount = showingFilteredEmptyWithFallback ? 0 : filteredTotal;
+                const formattedCount = new Intl.NumberFormat(listingLocale === 'da' ? 'da-DK' : 'en-US').format(matchCount);
+                const resultsHtml = I18N_BMV.vehiclesMatchFilters.replace(':count', formattedCount);
+                document.querySelectorAll('.js-results-count').forEach((el) => {
+                    el.textContent = resultsHtml;
+                });
                 renderFilterChips();
                 applyFacetCounts(data.facets);
                 updateResetButtonVisibility();
@@ -2622,13 +2868,7 @@
             listingTypeCheckboxes.forEach(checkbox => {
                 const label = checkbox.closest('.listing-type-checkbox-label');
                 if (label) {
-                    if (checkbox.checked) {
-                        label.classList.add('bg-primary', 'text-primary-foreground', 'font-semibold');
-                        label.classList.remove('bg-card', 'text-muted-foreground', 'border-input');
-                    } else {
-                        label.classList.remove('bg-primary', 'text-primary-foreground', 'font-semibold');
-                        label.classList.add('bg-card', 'text-muted-foreground', 'border-input');
-                    }
+                    label.classList.toggle('is-selected', checkbox.checked);
                 }
             });
         }
@@ -2704,13 +2944,7 @@
             conditionRadios.forEach(radio => {
                 const label = radio.closest('.condition-radio-label');
                 if (label) {
-                    if (radio.checked) {
-                        label.classList.add('bg-primary', 'text-primary-foreground', 'font-semibold');
-                        label.classList.remove('bg-card', 'text-muted-foreground', 'border-input');
-                    } else {
-                        label.classList.remove('bg-primary', 'text-primary-foreground', 'font-semibold');
-                        label.classList.add('bg-card', 'text-muted-foreground', 'border-input');
-                    }
+                    label.classList.toggle('is-selected', radio.checked);
                 }
             });
         }
@@ -2756,7 +2990,7 @@
                     (byType[typeId] ||= []).push(eq);
                 });
                 const checkSvg = '<span class="equipment-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>';
-                const labelClass = 'equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border border-input bg-card text-muted-foreground hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary';
+                const labelClass = 'equipment-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium cursor-pointer transition-all';
                 let html = '';
                 types.forEach((et) => {
                     const items = byType[et.id] || [];
