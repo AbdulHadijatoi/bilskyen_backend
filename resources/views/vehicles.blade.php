@@ -6,59 +6,24 @@
 <div class="container mx-auto flex flex-col gap-6 py-8 px-4 sm:px-6">
     <!-- Search Bar -->
     <div id="search-bar-container" class="rounded-lg bg-card p-2 sm:p-3 shadow-sm w-full">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-none  focus:bg-none">
-            <!-- Search Input -->
-            <form class="flex w-full sm:flex-1 focus:bg-none bg-none min-w-0" id="search-form">
-                <div class="relative w-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.3-4.3"></path>
-                    </svg>
-                    <input
-                        type="text"
-                        name="search"
-                        id="search-input"
-                        value="{{ $currentFilters['search'] ?? request('q', '') }}"
-                        placeholder="{{ !empty($publicAiEnabled) ? __('messages.pages.home.search_placeholder_ai') : __('messages.forms.search_placeholder') }}"
-                        class="flex h-10 w-full rounded-md pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
-                        autocomplete="off"
-                        @if(!empty($publicAiEnabled))
-                        aria-autocomplete="list"
-                        aria-controls="vehicles-ai-suggest"
-                        @endif
-                    />
-                    @if(!empty($publicAiEnabled))
-                    <div id="vehicles-ai-suggest" class="ai-suggest-dropdown hidden" role="listbox"></div>
-                    @endif
-                </div>
-            </form>
-        </div>
-        @if(!empty($publicAiEnabled))
-        <div id="vehicles-ai-examples" class="ai-search-examples px-1 pb-1" aria-label="{{ __('messages.pages.home.ai_examples_label') }}"></div>
-        @endif
-    </div>
-
-    @if(!empty($publicAiEnabled) && (request()->boolean('ai_search') || filled(request('q'))))
-    <div id="ai-understood-banner" class="ai-understood-banner" aria-live="polite">
-        <div class="ai-understood-inner flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <span class="ai-understood-title">{{ __('messages.pages.vehicles.ai_understood_heading') }}
-                    @if(filled(request('q')))
-                        “{{ request('q') }}”
-                    @endif
-                </span>
-                <p class="text-xs text-muted-foreground mt-0.5">{{ __('messages.pages.vehicles.ai_understood_intro') }}</p>
-                <div id="ai-understood-chips" class="ai-understood-chips mt-2"></div>
+        <form class="flex w-full min-w-0" id="search-form">
+            <div class="relative w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input
+                    type="text"
+                    name="search"
+                    id="search-input"
+                    value="{{ $currentFilters['search'] ?? request('q', '') }}"
+                    placeholder="{{ __('messages.forms.search_placeholder') }}"
+                    class="flex h-10 w-full rounded-md bg-transparent pl-9 pr-2.5 py-1.5 text-sm placeholder:text-muted-foreground border-0 outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:border-0 focus-visible:outline-none focus-visible:ring-0"
+                    autocomplete="off"
+                />
             </div>
-            <button type="button" id="save-ai-search-btn" class="inline-flex shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted">
-                {{ __('messages.pages.vehicles.save_search') }}
-            </button>
-        </div>
-        <p id="save-ai-search-msg" class="mt-2 text-xs text-muted-foreground hidden" role="status"></p>
+        </form>
     </div>
-    @elseif(!empty($publicAiEnabled))
-    <div id="ai-understood-banner" class="ai-understood-banner hidden" aria-live="polite"></div>
-    @endif
 
     <!-- Mobile Filter Toggle Button -->
             <button 
@@ -100,18 +65,28 @@
             #filter-sidebar details > summary::marker { display: none; }
             #filter-sidebar details[open] .filter-chevron { transform: rotate(180deg); }
             #filter-sidebar .filter-chevron { transition: transform 0.2s ease; }
-            /* Expanded section: make heading stand out so content below is clearly tied to it */
-            #filter-sidebar details[open] > summary {
-                background: hsl(var(--muted) / 0.5);
-                border-left: 3px solid hsl(var(--primary));
+            #filter-sidebar details > summary {
+                background: transparent;
                 font-weight: 700;
+                border-bottom: 1px solid var(--border, #e2e8f0);
             }
             #filter-sidebar details[open] > summary span {
-                color: hsl(var(--foreground));
-                font-weight: 700;
+                color: var(--foreground);
             }
-            #filter-sidebar details[open] > summary .filter-chevron {
-                color: hsl(var(--foreground) / 0.8);
+            #filter-sidebar .filter-card,
+            #filter-sidebar details {
+                background: #fff;
+                background-color: var(--card, #ffffff);
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: 1rem;
+                box-shadow: var(--shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06));
+                overflow: hidden;
+            }
+            #search-input:focus,
+            #search-input:focus-visible {
+                outline: none;
+                box-shadow: none;
+                border-color: transparent;
             }
         </style>
 
@@ -324,12 +299,28 @@
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
-            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto lg:sticky lg:top-4 z-40 lg:z-auto overflow-y-auto bg-background lg:bg-card shadow-lg lg:shadow-sm lg:rounded-lg w-full lg:w-72 xl:w-80 shrink-0 border-t border-border lg:border-t-0 lg:max-h-[calc(100vh-5rem)]"
+            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-muted lg:bg-transparent shadow-none w-full lg:w-72 xl:w-80 shrink-0 border-0 p-3 lg:p-0 gap-4"
         >
-            @php $cf = $currentFilters ?? []; @endphp
+            @php
+                $cf = $currentFilters ?? [];
+                $listingFacets = $listingFacets ?? [];
+                $facetCountValue = function (string $dimension, $id) use ($listingFacets): int {
+                    $map = $listingFacets[$dimension] ?? [];
+                    $key = (string) $id;
+                    if (array_key_exists($key, $map)) {
+                        return (int) $map[$key];
+                    }
 
-            <!-- Sticky Header -->
-            <div class="sticky top-0 z-10 bg-card flex flex-col shrink-0 border-b border-border">
+                    return 0;
+                };
+                $facetCountLabel = function (int $count): string {
+                    return number_format($count, 0, ',', '.');
+                };
+            @endphp
+
+            <!-- Sidebar title (sticky only inside the mobile overlay) -->
+            <!-- Mobile overlay chrome only — desktop shows just the filter cards -->
+            <div class="lg:hidden sticky top-0 z-10 bg-muted flex flex-col shrink-0">
                 <!-- Pull bar (mobile): drag down or tap to close -->
                 <div id="sidebar-pullbar" class="lg:hidden flex justify-center items-center py-3 touch-none cursor-grab active:cursor-grabbing select-none min-h-[44px]" aria-label="{{ __('messages.pages.vehicles.close_filters') }}">
                     <span class="w-10 h-1 rounded-full bg-muted-foreground/50"></span>
@@ -342,9 +333,10 @@
                     {{ __('messages.pages.vehicles.reset_filters') }}
                 </button>
             </div>
+            </div>
 
             <!-- Condition + Listing Type + Sales Type (always visible) -->
-            <div class="px-4 py-3 space-y-3 border-b border-border shrink-0">
+            <div class="filter-card bg-white px-4 py-3 space-y-3 shrink-0">
                 <!-- Condition -->
                 <div class="space-y-2">
                     <p class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.condition') }}</p>
@@ -354,9 +346,15 @@
                             <span>{{ __('messages.common.all') }}</span>
                         </label>
                         @foreach($constants['conditions'] as $condition)
-                            <label class="condition-radio-label filter-pill inline-flex items-center px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if(isset($currentFilters['condition_id']) && (string)($currentFilters['condition_id']) === (string)($condition['id'] ?? '')) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif">
-                                <input type="radio" name="condition_id" value="{{ $condition['id'] }}" class="sr-only peer condition-radio" @if(isset($currentFilters['condition_id']) && $currentFilters['condition_id'] == $condition['id']) checked @endif>
+                            @php
+                                $conditionId = $condition['id'] ?? '';
+                                $conditionCount = $facetCountValue('condition_id', $conditionId);
+                                $isConditionActive = isset($currentFilters['condition_id']) && (string) ($currentFilters['condition_id']) === (string) $conditionId;
+                            @endphp
+                            <label data-facet="condition_id" data-facet-id="{{ $conditionId }}" class="condition-radio-label filter-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all border border-transparent @if($isConditionActive) bg-primary text-primary-foreground font-semibold @else bg-card text-muted-foreground hover:text-foreground border-input @endif @if($conditionCount === 0 && ! $isConditionActive) facet-zero @endif">
+                                <input type="radio" name="condition_id" value="{{ $conditionId }}" class="sr-only peer condition-radio" @if($isConditionActive) checked @endif @if($conditionCount === 0 && ! $isConditionActive) disabled @endif>
                                 <span>{{ $condition['name'] }}</span>
+                                <span class="facet-count" data-facet-count>{{ $facetCountLabel($conditionCount) }}</span>
                             </label>
                         @endforeach
                     </div>
@@ -380,10 +378,12 @@
                                 $isListingTypeActive = $ltId !== null && in_array((string) $ltId, $selectedListingTypeStrings, true);
                             @endphp
                             @if($ltId !== null)
-                                <label class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border @if($isListingTypeActive) border-transparent bg-primary text-primary-foreground font-semibold shadow-sm @else border-border bg-muted/40 text-foreground/90 hover:bg-muted/70 hover:border-muted-foreground/30 @endif">
-                                    <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif>
+                                @php $ltCount = $facetCountValue('listing_type_id', $ltId); @endphp
+                                <label data-facet="listing_type_id" data-facet-id="{{ $ltId }}" class="listing-type-checkbox-label filter-pill inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors border @if($isListingTypeActive) border-transparent bg-primary text-primary-foreground font-semibold shadow-sm @else border-border bg-muted/40 text-foreground/90 hover:bg-muted/70 hover:border-muted-foreground/30 @endif @if($ltCount === 0 && ! $isListingTypeActive) facet-zero @endif">
+                                    <input type="checkbox" name="listing_type_id[]" value="{{ $ltId }}" class="sr-only peer listing-type-checkbox" @if($isListingTypeActive) checked @endif @if($ltCount === 0 && ! $isListingTypeActive) disabled @endif>
                                     <span class="listing-type-check-icon hidden peer-checked:inline-flex flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
                                     <span>{{ $ltName }}</span>
+                                    <span class="facet-count" data-facet-count>{{ $facetCountLabel($ltCount) }}</span>
                                 </label>
                             @endif
                         @endforeach
@@ -392,10 +392,16 @@
                 <!-- Sales Type -->
                 <div class="space-y-2">
                     <label class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.sales_type') }}</label>
-                    <select name="sales_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                        <option value="">{{ __('messages.common.all') }}</option>
+                    <select name="sales_type_id" data-facet="sales_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                         @foreach($constants['sales_types'] ?? [] as $st)
-                        <option value="{{ is_array($st) ? $st['id'] : $st->id }}" @if(isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array(is_array($st) ? $st['id'] : $st->id, $cf['sales_type_id']) : (is_array($st) ? $st['id'] : $st->id) == $cf['sales_type_id'])) selected @endif>{{ is_array($st) ? $st['name'] : $st->name }}</option>
+                        @php
+                            $stId = is_array($st) ? $st['id'] : $st->id;
+                            $stName = is_array($st) ? $st['name'] : $st->name;
+                            $stCount = $facetCountValue('sales_type_id', $stId);
+                            $stSelected = isset($cf['sales_type_id']) && (is_array($cf['sales_type_id']) ? in_array($stId, $cf['sales_type_id']) : $stId == $cf['sales_type_id']);
+                        @endphp
+                        <option value="{{ $stId }}" data-facet-label="{{ $stName }}" @if($stSelected) selected @endif @if($stCount === 0 && ! $stSelected) disabled @endif>{{ $stName }} ({{ $facetCountLabel($stCount) }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -415,7 +421,7 @@
                         ? $selectedBrandNames[0]
                         : implode(', ', array_slice($selectedBrandNames, 0, 3)) . (count($selectedBrandNames) > 3 ? '…' : ''));
             @endphp
-            <details open class="border-b border-border">
+            <details open class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.type_brand_model') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -441,10 +447,15 @@
                             </div>
                             <div id="brand-checkbox-list" class="p-2 space-y-0.5">
                                 @foreach($selectedBrands ?? [] as $b)
-                                    @php $bid = is_array($b) ? $b['id'] : $b->id; $bname = is_array($b) ? $b['name'] : $b->name; @endphp
-                                    <label class="brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
+                                    @php
+                                        $bid = is_array($b) ? $b['id'] : $b->id;
+                                        $bname = is_array($b) ? $b['name'] : $b->name;
+                                        $bCount = $facetCountValue('brand_id', $bid);
+                                    @endphp
+                                    <label class="brand-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm @if($bCount === 0) facet-zero @endif" data-facet="brand_id" data-facet-id="{{ $bid }}">
                                         <input type="checkbox" name="brand_id[]" value="{{ $bid }}" class="brand-checkbox rounded border-input" checked>
-                                        <span>{{ $bname }}</span>
+                                        <span class="brand-checkbox-name flex-1 min-w-0 truncate">{{ $bname }}</span>
+                                        <span class="facet-count" data-facet-count>{{ $facetCountLabel($bCount) }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -470,10 +481,16 @@
                             </div>
                             <div id="model-checkbox-list" class="p-2 space-y-0.5">
                                 @foreach($selectedModels ?? [] as $m)
-                                    @php $mid = is_array($m) ? $m['id'] : $m->id; $mname = is_array($m) ? $m['name'] : $m->name; $mBrandId = is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id; @endphp
-                                    <label class="model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm" data-brand-id="{{ $mBrandId }}">
+                                    @php
+                                        $mid = is_array($m) ? $m['id'] : $m->id;
+                                        $mname = is_array($m) ? $m['name'] : $m->name;
+                                        $mBrandId = is_array($m) ? ($m['brand_id'] ?? '') : $m->brand_id;
+                                        $mCount = $facetCountValue('model_id', $mid);
+                                    @endphp
+                                    <label class="model-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm @if($mCount === 0) facet-zero @endif" data-brand-id="{{ $mBrandId }}" data-facet="model_id" data-facet-id="{{ $mid }}">
                                         <input type="checkbox" name="model_id[]" value="{{ $mid }}" class="model-checkbox rounded border-input" checked>
-                                        <span class="model-checkbox-name">{{ $mname }}</span>
+                                        <span class="model-checkbox-name flex-1 min-w-0 truncate">{{ $mname }}</span>
+                                        <span class="facet-count" data-facet-count>{{ $facetCountLabel($mCount) }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -481,10 +498,16 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.gear_type') }}</label>
-                        <select name="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                            <option value="">{{ __('messages.common.all') }}</option>
+                        <select name="gear_type_id" data-facet="gear_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                             @foreach($constants['gear_types'] ?? [] as $gt)
-                            <option value="{{ is_array($gt) ? $gt['id'] : $gt->id }}" @if(isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array(is_array($gt) ? $gt['id'] : $gt->id, $cf['gear_type_id']) : (is_array($gt) ? $gt['id'] : $gt->id) == $cf['gear_type_id'])) selected @endif>{{ is_array($gt) ? $gt['name'] : $gt->name }}</option>
+                            @php
+                                $gtId = is_array($gt) ? $gt['id'] : $gt->id;
+                                $gtName = is_array($gt) ? $gt['name'] : $gt->name;
+                                $gtCount = $facetCountValue('gear_type_id', $gtId);
+                                $gtSelected = isset($cf['gear_type_id']) && (is_array($cf['gear_type_id']) ? in_array($gtId, $cf['gear_type_id']) : $gtId == $cf['gear_type_id']);
+                            @endphp
+                            <option value="{{ $gtId }}" data-facet-label="{{ $gtName }}" @if($gtSelected) selected @endif @if($gtCount === 0 && ! $gtSelected) disabled @endif>{{ $gtName }} ({{ $facetCountLabel($gtCount) }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -508,7 +531,7 @@
             </details>
 
             <!-- Price & KM (open by default) -->
-            <details open class="border-b border-border">
+            <details open class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.price_range') }} / {{ __('messages.forms.km_driven') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -549,48 +572,48 @@
                 </div>
             </details>
 
-            <!-- Fuel & Body (collapsed by default) -->
+            <!-- Fuel & Body (open by default) -->
             @php
                 $selectedFuelTypeIds = isset($cf['fuel_type_id']) ? (is_array($cf['fuel_type_id']) ? $cf['fuel_type_id'] : [$cf['fuel_type_id']]) : [];
-                $fuelTypesList = $constants['fuel_types'] ?? [];
-                $selectedFuelTypeNames = collect($fuelTypesList)->filter(fn($ft) => in_array(is_array($ft) ? $ft['id'] : $ft->id, $selectedFuelTypeIds))->map(fn($ft) => is_array($ft) ? $ft['name'] : $ft->name)->values()->all();
             @endphp
-            <details @if(isset($cf['fuel_type_id']) || isset($cf['body_type_id'])) open @endif class="border-b border-border">
+            <details open class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                 </summary>
-                <div class="px-4 pb-3 space-y-2">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="relative" data-multiselect-dropdown>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.fuel_type') }}</label>
-                            <button type="button" id="fuel-type-dropdown-trigger" class="fuel-type-dropdown-trigger w-full h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="fuel-type-dropdown-label">
-                                <span id="fuel-type-dropdown-label" class="truncate">
-                                    @if(count($selectedFuelTypeNames) === 0){{ __('messages.common.all') }}@elseif(count($selectedFuelTypeNames) === 1){{ $selectedFuelTypeNames[0] }}@else{{ count($selectedFuelTypeNames) }} {{ __('messages.forms.selected') }}@endif
-                                </span>
-                                <svg class="flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform dropdown-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
-                            </button>
-                            <div id="fuel-type-dropdown-panel" class="fuel-type-dropdown-panel absolute left-0 right-0 top-full mt-1 z-50 hidden rounded-md border border-input bg-background shadow-lg max-h-56 overflow-y-auto">
-                                <div id="fuel-type-checkbox-list" class="p-2 space-y-0.5">
-                                    @foreach($constants['fuel_types'] ?? [] as $ft)
-                                    @php $ftid = is_array($ft) ? $ft['id'] : $ft->id; $ftname = is_array($ft) ? $ft['name'] : $ft->name; @endphp
-                                    <label class="fuel-type-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm">
-                                        <input type="checkbox" name="fuel_type_id[]" value="{{ $ftid }}" class="fuel-type-checkbox rounded border-input" @if(in_array($ftid, $selectedFuelTypeIds)) checked @endif>
-                                        <span class="fuel-type-checkbox-name">{{ $ftname }}</span>
-                                    </label>
-                                    @endforeach
-                                </div>
-                            </div>
+                <div class="px-4 pb-3 space-y-3">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-medium text-muted-foreground">{{ __('messages.forms.fuel_type') }}</p>
+                        <div id="fuel-type-checkbox-list" class="space-y-0.5 max-h-56 overflow-y-auto">
+                            @foreach($constants['fuel_types'] ?? [] as $ft)
+                            @php
+                                $ftid = is_array($ft) ? $ft['id'] : $ft->id;
+                                $ftname = is_array($ft) ? $ft['name'] : $ft->name;
+                                $ftSelected = in_array($ftid, $selectedFuelTypeIds);
+                                $ftCount = $facetCountValue('fuel_type_id', $ftid);
+                            @endphp
+                            <label class="fuel-type-checkbox-label flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm @if($ftCount === 0 && ! $ftSelected) facet-zero @endif" data-facet="fuel_type_id" data-facet-id="{{ $ftid }}">
+                                <input type="checkbox" name="fuel_type_id[]" value="{{ $ftid }}" class="fuel-type-checkbox rounded border-input" @if($ftSelected) checked @endif @if($ftCount === 0 && ! $ftSelected) disabled @endif>
+                                <span class="fuel-type-checkbox-name flex-1 min-w-0 truncate">{{ $ftname }}</span>
+                                <span class="facet-count" data-facet-count>{{ $facetCountLabel($ftCount) }}</span>
+                            </label>
+                            @endforeach
                         </div>
-                        <div>
-                            <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
-                            <select name="body_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
-                                @foreach($constants['body_types'] ?? [] as $bt)
-                                <option value="{{ is_array($bt) ? $bt['id'] : $bt->id }}" @if(isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array(is_array($bt) ? $bt['id'] : $bt->id, $cf['body_type_id']) : (is_array($bt) ? $bt['id'] : $bt->id) == $cf['body_type_id'])) selected @endif>{{ is_array($bt) ? $bt['name'] : $bt->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.body_type') }}</label>
+                        <select name="body_type_id" data-facet="body_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
+                            @foreach($constants['body_types'] ?? [] as $bt)
+                            @php
+                                $btId = is_array($bt) ? $bt['id'] : $bt->id;
+                                $btName = is_array($bt) ? $bt['name'] : $bt->name;
+                                $btCount = $facetCountValue('body_type_id', $btId);
+                                $btSelected = isset($cf['body_type_id']) && (is_array($cf['body_type_id']) ? in_array($btId, $cf['body_type_id']) : $btId == $cf['body_type_id']);
+                            @endphp
+                            <option value="{{ $btId }}" data-facet-label="{{ $btName }}" @if($btSelected) selected @endif @if($btCount === 0 && ! $btSelected) disabled @endif>{{ $btName }} ({{ $facetCountLabel($btCount) }})</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </details>
@@ -599,7 +622,7 @@
             @php
                 $moreDetailsOpen = isset($cf['color_id']) || isset($cf['price_type_id']) || isset($cf['emission_norm_id']) || isset($cf['use_id']);
             @endphp
-            <details @if($moreDetailsOpen) open @endif class="border-b border-border">
+            <details @if($moreDetailsOpen) open @endif class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.color') }} / {{ __('messages.forms.type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -608,37 +631,61 @@
                     <div class="grid grid-cols-2 gap-x-2 gap-y-2">
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.color') }}</label>
-                            <select name="color_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
+                            <select name="color_id" data-facet="color_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['colors'] ?? [] as $cl)
-                                <option value="{{ is_array($cl) ? $cl['id'] : $cl->id }}" @if(isset($cf['color_id']) && (is_array($cl) ? $cl['id'] : $cl->id) == $cf['color_id']) selected @endif>{{ is_array($cl) ? $cl['name'] : $cl->name }}</option>
+                                @php
+                                    $clId = is_array($cl) ? $cl['id'] : $cl->id;
+                                    $clName = is_array($cl) ? $cl['name'] : $cl->name;
+                                    $clCount = $facetCountValue('color_id', $clId);
+                                    $clSelected = isset($cf['color_id']) && $clId == $cf['color_id'];
+                                @endphp
+                                <option value="{{ $clId }}" data-facet-label="{{ $clName }}" @if($clSelected) selected @endif @if($clCount === 0 && ! $clSelected) disabled @endif>{{ $clName }} ({{ $facetCountLabel($clCount) }})</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.price_type') }}</label>
-                            <select name="price_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
+                            <select name="price_type_id" data-facet="price_type_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['price_types'] ?? [] as $pt)
-                                <option value="{{ is_array($pt) ? $pt['id'] : $pt->id }}" @if(isset($cf['price_type_id']) && (is_array($cf['price_type_id']) ? in_array(is_array($pt) ? $pt['id'] : $pt->id, $cf['price_type_id']) : (is_array($pt) ? $pt['id'] : $pt->id) == $cf['price_type_id'])) selected @endif>{{ is_array($pt) ? $pt['name'] : $pt->name }}</option>
+                                @php
+                                    $ptId = is_array($pt) ? $pt['id'] : $pt->id;
+                                    $ptName = is_array($pt) ? $pt['name'] : $pt->name;
+                                    $ptCount = $facetCountValue('price_type_id', $ptId);
+                                    $ptSelected = isset($cf['price_type_id']) && (is_array($cf['price_type_id']) ? in_array($ptId, $cf['price_type_id']) : $ptId == $cf['price_type_id']);
+                                @endphp
+                                <option value="{{ $ptId }}" data-facet-label="{{ $ptName }}" @if($ptSelected) selected @endif @if($ptCount === 0 && ! $ptSelected) disabled @endif>{{ $ptName }} ({{ $facetCountLabel($ptCount) }})</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.euro_norm') }}</label>
-                            <select name="emission_norm_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
+                            <select name="emission_norm_id" data-facet="emission_norm_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['euronorms'] ?? [] as $en)
-                                <option value="{{ is_array($en) ? $en['id'] : $en->id }}" @if(isset($cf['emission_norm_id']) && (is_array($en) ? $en['id'] : $en->id) == $cf['emission_norm_id']) selected @endif>{{ is_array($en) ? $en['name'] : $en->name }}</option>
+                                @php
+                                    $enId = is_array($en) ? $en['id'] : $en->id;
+                                    $enName = is_array($en) ? $en['name'] : $en->name;
+                                    $enCount = $facetCountValue('emission_norm_id', $enId);
+                                    $enSelected = isset($cf['emission_norm_id']) && $enId == $cf['emission_norm_id'];
+                                @endphp
+                                <option value="{{ $enId }}" data-facet-label="{{ $enName }}" @if($enSelected) selected @endif @if($enCount === 0 && ! $enSelected) disabled @endif>{{ $enName }} ({{ $facetCountLabel($enCount) }})</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="text-[10px] font-medium text-muted-foreground block mb-1">{{ __('messages.forms.use') }}</label>
-                            <select name="use_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                                <option value="">{{ __('messages.common.all') }}</option>
+                            <select name="use_id" data-facet="use_id" class="w-full h-9 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <option value="" data-facet-label="{{ __('messages.common.all') }}">{{ __('messages.common.all') }}</option>
                                 @foreach($constants['vehicle_uses'] ?? [] as $uu)
-                                <option value="{{ is_array($uu) ? $uu['id'] : $uu->id }}" @if(isset($cf['use_id']) && (is_array($uu) ? $uu['id'] : $uu->id) == $cf['use_id']) selected @endif>{{ is_array($uu) ? $uu['name'] : $uu->name }}</option>
+                                @php
+                                    $uuId = is_array($uu) ? $uu['id'] : $uu->id;
+                                    $uuName = is_array($uu) ? $uu['name'] : $uu->name;
+                                    $uuCount = $facetCountValue('use_id', $uuId);
+                                    $uuSelected = isset($cf['use_id']) && $uuId == $cf['use_id'];
+                                @endphp
+                                <option value="{{ $uuId }}" data-facet-label="{{ $uuName }}" @if($uuSelected) selected @endif @if($uuCount === 0 && ! $uuSelected) disabled @endif>{{ $uuName }} ({{ $facetCountLabel($uuCount) }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -650,7 +697,7 @@
             @php
                 $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_kw_from']) || isset($cf['engine_power_kw_to']) || isset($cf['electrical_consumption_from']) || isset($cf['electrical_consumption_to']) || isset($cf['km_per_liter_from']) || isset($cf['km_per_liter_to']);
             @endphp
-            <details @if($yearSpecsOpen) open @endif class="border-b border-border">
+            <details @if($yearSpecsOpen) open @endif class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.first_registration_year') }} / {{ __('messages.forms.horsepower_hp') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -743,7 +790,7 @@
             @php
                 $physicalOpen = isset($cf['max_speed_from']) || isset($cf['max_speed_to']) || isset($cf['maximum_weight_kg_from']) || isset($cf['maximum_weight_kg_to']) || isset($cf['door_count']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['axle_count']) || isset($cf['specifications_airbags']) || isset($cf['towing_weight']);
             @endphp
-            <details @if($physicalOpen) open @endif class="border-b border-border">
+            <details @if($physicalOpen) open @endif class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.physical_details') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -814,7 +861,7 @@
             @php
                 $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_test']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
             @endphp
-            <details @if($extrasOpen) open @endif class="border-b border-border">
+            <details @if($extrasOpen) open @endif class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.charging_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -848,7 +895,7 @@
 
             <!-- Equipment (loaded on first open — full catalog is too large to SSR) -->
             @php $equipmentActive = !empty($cf['equipment_ids']); @endphp
-            <details id="equipment-filter-details" @if($equipmentActive) open @endif class="last:border-0">
+            <details id="equipment-filter-details" @if($equipmentActive) open @endif class="filter-card bg-white">
                 <summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors select-none">
                     <span class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{{ __('messages.forms.equipment') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -1098,6 +1145,26 @@
     .view-toggle-label.bg-card:hover {
         color: hsl(var(--foreground)) !important;
     }
+
+    .facet-count {
+        font-variant-numeric: tabular-nums;
+        font-size: 0.7rem;
+        color: hsl(var(--muted-foreground));
+        flex-shrink: 0;
+    }
+    .filter-pill .facet-count {
+        margin-left: 0.15rem;
+        opacity: 0.85;
+    }
+    .filter-pill.bg-primary .facet-count {
+        color: inherit;
+        opacity: 0.8;
+    }
+    .facet-zero {
+        opacity: 0.45;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
     
     /* Condition filter responsive styles */
     @media (max-width: 768px) {
@@ -1226,6 +1293,75 @@
         
         let searchDebounceTimer = null;
         let isLoading = false;
+        let latestListingFacets = Object.assign({}, @json($listingFacets ?? []));
+
+        function formatFacetCount(n) {
+            return new Intl.NumberFormat('da-DK').format(Number(n) || 0);
+        }
+
+        function facetCountFor(dimension, id) {
+            const map = latestListingFacets[dimension] || {};
+            const key = String(id);
+            if (map[key] != null) return Number(map[key]);
+            return 0;
+        }
+
+        function applyFacetZeroState(el, input, count) {
+            const selected = !!(input && (input.checked || input.selected));
+            const isZero = count === 0;
+            el.classList.toggle('facet-zero', isZero && !selected);
+            if (input && input.type !== 'hidden') {
+                input.disabled = isZero && !selected;
+            }
+        }
+
+        function applyFacetCounts(facets) {
+            if (facets && typeof facets === 'object' && !Array.isArray(facets)) {
+                latestListingFacets = facets;
+            }
+
+            document.querySelectorAll('[data-facet][data-facet-id]').forEach(el => {
+                const dim = el.getAttribute('data-facet');
+                const id = el.getAttribute('data-facet-id');
+                if (!dim || id === null || id === '') return;
+                const count = facetCountFor(dim, id);
+                const countEl = el.querySelector('[data-facet-count]');
+                if (countEl) countEl.textContent = formatFacetCount(count);
+                const input = el.querySelector('input');
+                applyFacetZeroState(el, input, count);
+            });
+
+            document.querySelectorAll('select[data-facet]').forEach(select => {
+                const dim = select.getAttribute('data-facet');
+                Array.from(select.options).forEach(opt => {
+                    const rawLabel = opt.getAttribute('data-facet-label') || opt.textContent.replace(/\s*\([\d.\s]+\)\s*$/, '');
+                    opt.setAttribute('data-facet-label', rawLabel);
+                    if (opt.value === '') {
+                        opt.textContent = rawLabel;
+                        opt.disabled = false;
+                        return;
+                    }
+                    const count = facetCountFor(dim, opt.value);
+                    opt.textContent = `${rawLabel} (${formatFacetCount(count)})`;
+                    opt.disabled = count === 0 && !opt.selected;
+                });
+            });
+        }
+
+        function appendFacetCountRow(label, { nameClass, name, dimension, id }) {
+            label.setAttribute('data-facet', dimension);
+            label.setAttribute('data-facet-id', String(id));
+            const nameSpan = document.createElement('span');
+            nameSpan.className = `${nameClass} flex-1 min-w-0 truncate`;
+            nameSpan.textContent = name;
+            const countSpan = document.createElement('span');
+            countSpan.className = 'facet-count';
+            countSpan.setAttribute('data-facet-count', '');
+            countSpan.textContent = formatFacetCount(facetCountFor(dimension, id));
+            label.appendChild(nameSpan);
+            label.appendChild(countSpan);
+            applyFacetZeroState(label, label.querySelector('input'), facetCountFor(dimension, id));
+        }
         
         // Format currency helper (matches PHP FormatHelper)
         function formatCurrency(amount) {
@@ -1744,19 +1880,20 @@
                 }
                 if (!select) return null;
                 const option = Array.from(select.options).find(opt => opt.value == value);
-                const text = option ? option.textContent.trim() : null;
+                if (!option) return null;
+                const text = (option.getAttribute('data-facet-label') || option.textContent.replace(/\s*\([\d.\s]+\)\s*$/, '')).trim();
                 return isResolvableChipLabel(text, value) ? text : null;
             }
             
             // Helper to get label text for checkbox/radio
-            // Skips icon spans (those containing SVG) and returns the first text-only span
+            // Skips icon spans (those containing SVG) and facet counts
             function getLabelText(name, value) {
                 const input = document.querySelector(`[name="${name}"][value="${value}"]`);
                 if (!input) return null;
                 const label = input.closest('label');
                 if (!label) return null;
                 const spans = Array.from(label.querySelectorAll('span'));
-                const textSpan = spans.find(s => s.textContent.trim() && !s.querySelector('svg'));
+                const textSpan = spans.find(s => s.textContent.trim() && !s.querySelector('svg') && !s.hasAttribute('data-facet-count'));
                 const text = textSpan ? textSpan.textContent.trim() : label.textContent.trim();
                 return isResolvableChipLabel(text, value) ? text : null;
             }
@@ -2362,6 +2499,7 @@
                     }
                 }
                 renderFilterChips();
+                applyFacetCounts(data.facets);
                 updateResetButtonVisibility();
                 syncFiltersToUrl({ ...payload, page });
                 if (typeof window.bilskyenTrackMetaSearch === 'function') {
@@ -2381,9 +2519,7 @@
             }
         }
         
-        const publicAiEnabled = @json(!empty($publicAiEnabled));
-
-        // Search form handler with debounce (keyword) + Enter triggers AI parse when AI is active
+        // Search form: keyword filter only (AI search lives on the home page)
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchDebounceTimer);
@@ -2393,28 +2529,12 @@
                 }, 300);
             });
             
-            searchInput.addEventListener('keydown', async (e) => {
+            searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     clearTimeout(searchDebounceTimer);
                     const searchValue = e.target.value.trim();
-                    if (publicAiEnabled && searchValue && window.BilskyenAiSearch) {
-                        searchInput.disabled = true;
-                        try {
-                            const result = await window.BilskyenAiSearch.parseQuery(searchValue, 'vehicles');
-                            window.location.href = window.BilskyenAiSearch.buildVehiclesUrl(result.filters || {}, {
-                                ai_search: '1',
-                                q: result.query || searchValue,
-                            });
-                            return;
-                        } catch (err) {
-                            fetchVehicles({ search: searchValue || null, page: 1 });
-                        } finally {
-                            searchInput.disabled = false;
-                        }
-                    } else {
-                        fetchVehicles({ search: searchValue || null, page: 1 });
-                    }
+                    fetchVehicles({ search: searchValue || null, page: 1 });
                 }
             });
         }
@@ -2423,68 +2543,9 @@
             searchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 clearTimeout(searchDebounceTimer);
-                searchInput?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                const searchValue = searchInput?.value.trim() || '';
+                fetchVehicles({ search: searchValue || null, page: 1 });
             });
-        }
-
-        if (publicAiEnabled && window.BilskyenAiSearch) {
-            window.BilskyenAiSearch.renderExampleChips(document.getElementById('vehicles-ai-examples'));
-            window.BilskyenAiSearch.bindAutocomplete(
-                searchInput,
-                document.getElementById('vehicles-ai-suggest'),
-                {
-                    onExample: function (label) { if (searchInput) searchInput.value = label; },
-                    onBrand: function (item) { if (searchInput) searchInput.value = item.name || ''; },
-                    onModel: function (item) { if (searchInput) searchInput.value = item.name || ''; },
-                }
-            );
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const chipsHost = document.getElementById('ai-understood-chips');
-            if (chipsHost && (urlParams.get('ai_search') === '1' || urlParams.get('q'))) {
-                [
-                    ['price_to', 'Max ', ' kr'],
-                    ['price_from', 'Fra ', ' kr'],
-                    ['km_driven_to', 'Under ', ' km'],
-                    ['km_driven_from', 'Fra ', ' km'],
-                    ['model_year_from', 'Fra ', ''],
-                    ['model_year_to', 'Til ', ''],
-                    ['city_slug', '', ''],
-                    ['search', '', ''],
-                ].forEach(function (pair) {
-                    const val = urlParams.get(pair[0]);
-                    if (!val) return;
-                    const span = document.createElement('span');
-                    span.className = 'ai-understood-chip';
-                    span.textContent = pair[1] + val + pair[2];
-                    chipsHost.appendChild(span);
-                });
-            }
-
-            const saveBtn = document.getElementById('save-ai-search-btn');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', async function () {
-                    const filters = {};
-                    new URLSearchParams(window.location.search).forEach(function (value, key) {
-                        if (['ai_search', 'q', 'page', 'view'].includes(key)) return;
-                        const base = key.replace(/\[\]$/, '');
-                        if (filters[base] === undefined) {
-                            filters[base] = value;
-                        } else if (Array.isArray(filters[base])) {
-                            filters[base].push(value);
-                        } else {
-                            filters[base] = [filters[base], value];
-                        }
-                    });
-                    const name = urlParams.get('q') || @json(__('messages.pages.vehicles.save_search'));
-                    const result = await window.BilskyenAiSearch.saveCurrentSearch(name, filters);
-                    const msg = document.getElementById('save-ai-search-msg');
-                    if (msg) {
-                        msg.textContent = result.message;
-                        msg.classList.remove('hidden');
-                    }
-                });
-            }
         }
         
         // Sort select functionality
@@ -3315,7 +3376,7 @@ if (config) {
             const input = document.getElementById('brand-search-input');
             const q = (input && input.value || '').trim().toLowerCase();
             document.querySelectorAll('#brand-checkbox-list .brand-checkbox-label').forEach(label => {
-                const span = label.querySelector('span');
+                const span = label.querySelector('.brand-checkbox-name');
                 const t = (span && span.textContent || '').toLowerCase();
                 label.style.display = !q || t.includes(q) ? '' : 'none';
             });
@@ -3335,7 +3396,7 @@ if (config) {
             const meta = {};
             Array.from(document.querySelectorAll('input[name="brand_id[]"]:checked')).forEach(cb => {
                 const label = cb.closest('label');
-                const span = label ? (label.querySelector('span:last-child') || label.querySelector('span')) : null;
+                const span = label ? (label.querySelector('.brand-checkbox-name') || label.querySelector('span')) : null;
                 meta[String(cb.value)] = span ? span.textContent.trim() : String(cb.value);
             });
             return meta;
@@ -3392,11 +3453,8 @@ if (config) {
                     input.className = 'brand-checkbox rounded border-input';
                     input.checked = selectedIds.has(id);
 
-                    const span = document.createElement('span');
-                    span.textContent = item.name;
-
                     label.appendChild(input);
-                    label.appendChild(span);
+                    appendFacetCountRow(label, { nameClass: 'brand-checkbox-name', name: item.name, dimension: 'brand_id', id });
                     list.appendChild(label);
                 });
 
@@ -3412,11 +3470,8 @@ if (config) {
                     input.className = 'brand-checkbox rounded border-input';
                     input.checked = true;
 
-                    const span = document.createElement('span');
-                    span.textContent = selectedMeta[id];
-
                     label.appendChild(input);
-                    label.appendChild(span);
+                    appendFacetCountRow(label, { nameClass: 'brand-checkbox-name', name: selectedMeta[id], dimension: 'brand_id', id });
                     list.appendChild(label);
                 });
 
@@ -3458,11 +3513,8 @@ if (config) {
                     input.value = id;
                     input.className = 'model-checkbox rounded border-input';
                     input.checked = true;
-                    const span = document.createElement('span');
-                    span.className = 'model-checkbox-name';
-                    span.textContent = meta.text;
                     label.appendChild(input);
-                    label.appendChild(span);
+                    appendFacetCountRow(label, { nameClass: 'model-checkbox-name', name: meta.text, dimension: 'model_id', id });
                     list.appendChild(label);
                 });
                 updateModelDropdownLabel();
@@ -3501,12 +3553,8 @@ if (config) {
                     input.className = 'model-checkbox rounded border-input';
                     input.checked = selectedIds.has(id);
 
-                    const span = document.createElement('span');
-                    span.className = 'model-checkbox-name';
-                    span.textContent = item.name;
-
                     label.appendChild(input);
-                    label.appendChild(span);
+                    appendFacetCountRow(label, { nameClass: 'model-checkbox-name', name: item.name, dimension: 'model_id', id });
                     list.appendChild(label);
                 });
 
@@ -3525,12 +3573,8 @@ if (config) {
                     input.className = 'model-checkbox rounded border-input';
                     input.checked = true;
 
-                    const span = document.createElement('span');
-                    span.className = 'model-checkbox-name';
-                    span.textContent = meta.text;
-
                     label.appendChild(input);
-                    label.appendChild(span);
+                    appendFacetCountRow(label, { nameClass: 'model-checkbox-name', name: meta.text, dimension: 'model_id', id });
                     list.appendChild(label);
                 });
 
@@ -3620,7 +3664,7 @@ if (config) {
             const labelEl = document.getElementById('brand-dropdown-label');
             if (!labelEl) return;
             const checked = Array.from(document.getElementsByName('brand_id[]')).filter(cb => cb.checked);
-            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('span:last-child')) ? cb.closest('label').querySelector('span:last-child').textContent.trim() : '').filter(Boolean);
+            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.brand-checkbox-name')) ? cb.closest('label').querySelector('.brand-checkbox-name').textContent.trim() : '').filter(Boolean);
             const summary = formatMultiSelectSummary(names);
             labelEl.textContent = summary;
             labelEl.title = names.join(', ');
@@ -3661,33 +3705,22 @@ if (config) {
             else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
         }
 
-        // Update fuel type dropdown trigger label from checked checkboxes
-        function updateFuelTypeDropdownLabel() {
-            const labelEl = document.getElementById('fuel-type-dropdown-label');
-            if (!labelEl) return;
-            const checked = Array.from(document.getElementsByName('fuel_type_id[]')).filter(cb => cb.checked);
-            const names = checked.map(cb => (cb.closest('label') && cb.closest('label').querySelector('.fuel-type-checkbox-name')) ? cb.closest('label').querySelector('.fuel-type-checkbox-name').textContent.trim() : '').filter(Boolean);
-            if (names.length === 0) labelEl.textContent = '{{ __("messages.common.all") }}';
-            else if (names.length === 1) labelEl.textContent = names[0];
-            else labelEl.textContent = names.length + ' {{ __("messages.forms.selected") }}';
-        }
+        // Kept for chip-remove callers; fuel is now a visible list, not a dropdown.
+        function updateFuelTypeDropdownLabel() {}
 
-        // Initialize dropdown toggle and outside-click close for brand/model/fuel-type multiselects
+        // Initialize dropdown toggle and outside-click close for brand/model multiselects
         function initBrandModelDropdowns() {
             const brandTrigger = document.getElementById('brand-dropdown-trigger');
             const brandPanel = document.getElementById('brand-dropdown-panel');
             const modelTrigger = document.getElementById('model-dropdown-trigger');
             const modelPanel = document.getElementById('model-dropdown-panel');
-            const fuelTypeTrigger = document.getElementById('fuel-type-dropdown-trigger');
-            const fuelTypePanel = document.getElementById('fuel-type-dropdown-panel');
             const brandSearchInput = document.getElementById('brand-search-input');
             const modelSearchInput = document.getElementById('model-search-input');
 
             function closeAll() {
                 if (brandPanel) { brandPanel.classList.add('hidden'); if (brandTrigger) brandTrigger.setAttribute('aria-expanded', 'false'); }
                 if (modelPanel) { modelPanel.classList.add('hidden'); if (modelTrigger) modelTrigger.setAttribute('aria-expanded', 'false'); }
-                if (fuelTypePanel) { fuelTypePanel.classList.add('hidden'); if (fuelTypeTrigger) fuelTypeTrigger.setAttribute('aria-expanded', 'false'); }
-                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron, .fuel-type-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
+                document.querySelectorAll('.brand-dropdown-trigger .dropdown-chevron, .model-dropdown-trigger .dropdown-chevron').forEach(el => { el.style.transform = ''; });
             }
 
             if (brandTrigger && brandPanel) {
@@ -3718,22 +3751,9 @@ if (config) {
                     }
                 });
             }
-            if (fuelTypeTrigger && fuelTypePanel) {
-                fuelTypeTrigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = !fuelTypePanel.classList.contains('hidden');
-                    closeAll();
-                    if (!isOpen) {
-                        fuelTypePanel.classList.remove('hidden');
-                        fuelTypeTrigger.setAttribute('aria-expanded', 'true');
-                        const chev = fuelTypeTrigger.querySelector('.dropdown-chevron');
-                        if (chev) chev.style.transform = 'rotate(180deg)';
-                    }
-                });
-            }
             document.addEventListener('click', () => closeAll());
 
-            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel, .fuel-type-dropdown-panel').forEach(panel => {
+            document.querySelectorAll('.brand-dropdown-panel, .model-dropdown-panel').forEach(panel => {
                 panel.addEventListener('click', (e) => e.stopPropagation());
             });
 
@@ -3757,9 +3777,6 @@ if (config) {
                     });
                 }
             }
-            document.querySelectorAll('.fuel-type-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateFuelTypeDropdownLabel);
-            });
 
             // Brand/model: client-side filter only (full lists loaded from API).
             if (brandSearchInput) {
@@ -3914,6 +3931,7 @@ if (config) {
         // Initialize filter chips and reset button visibility on page load
         renderFilterChips();
         updateResetButtonVisibility();
+        applyFacetCounts(latestListingFacets);
         updateBrandDropdownLabel();
         setModelDropdownEnabled(document.querySelectorAll('input[name="brand_id[]"]:checked').length > 0);
 

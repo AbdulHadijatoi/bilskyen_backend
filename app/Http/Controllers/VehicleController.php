@@ -206,14 +206,17 @@ class VehicleController extends Controller
 
     /**
      * Build JSON response for vehicle list from normalized input (shared by index and searchVehicles).
+     *
+     * @param  array<string, mixed>  $query
      */
-    private function getVehiclesListResponse(array $input, string $path = '', array $query = []): JsonResponse
+    private function getVehiclesListResponse(array $input, string $path = '', array $query = [], bool $includeFacets = false): JsonResponse
     {
         $maxLimit = (int) config('security.max_public_page_size', 48);
         $limit = max(1, min((int) ($input['limit'] ?? 15), $maxLimit));
         $page = max(1, (int) ($input['page'] ?? 1));
 
         $vehicles = $this->vehicleService->getPublicVehiclesWithAdvancedFilters([], $input, $limit, $page);
+        $facets = $includeFacets ? $this->vehicleService->getPublicListingFacets($input) : null;
 
         $formattedVehicles = collect($vehicles->items())->map(
             fn ($vehicle) => $this->vehicleListingPresentationService->formatForApiListing($vehicle)
@@ -264,6 +267,9 @@ class VehicleController extends Controller
                 'fallback_page' => 1,
                 'fallback_totalPages' => $fallbackVehicles->lastPage(),
             ];
+            if ($facets !== null) {
+                $paginationData['facets'] = $facets;
+            }
             return response()->json([
                 'success' => true,
                 'failed' => false,
@@ -273,7 +279,15 @@ class VehicleController extends Controller
             ], 200);
         }
 
-        return $this->paginated($formattedPaginator);
+        $response = $this->paginated($formattedPaginator);
+        if ($facets === null) {
+            return $response;
+        }
+
+        $payload = $response->getData(true);
+        $payload['data']['facets'] = $facets;
+
+        return response()->json($payload, $response->status(), [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -292,7 +306,7 @@ class VehicleController extends Controller
     {
         $input = array_intersect_key($request->all(), array_flip(self::FILTER_KEYS));
         $input = $this->normalizeVehicleSearchInput($input);
-        return $this->getVehiclesListResponse($input);
+        return $this->getVehiclesListResponse($input, includeFacets: true);
     }
 
     /**

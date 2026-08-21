@@ -565,7 +565,7 @@
         const favoritesCheckUrl = (id) => @json(rtrim(route('favorites.check', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const favoritesDestroyUrl = (id) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const favoritesStoreUrl = @json(route('favorites.store'));
-        const vehiclePathPrefix = @json(parse_url(route('vehicles'), PHP_URL_PATH) + '/');
+        const vehiclePathPrefix = @json(rtrim((string) parse_url(route('vehicles'), PHP_URL_PATH), '/') . '/');
 document.addEventListener('DOMContentLoaded', function() {
     // Dealer Enquiry Dialog Functions
     window.openDealerEnquiryDialog = function() {

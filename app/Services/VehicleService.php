@@ -865,6 +865,91 @@ class VehicleService
     }
 
     /**
+     * Per-option facet counts for the public listing sidebar.
+     *
+     * Each dimension is aggregated with that dimension's own filter excluded
+     * (disjunctive facets), so selecting Diesel still shows Benzin counts.
+     *
+     * Fuel counts use {@see Vehicle::$fuel_type_id} only (not DMR drivmiddel lines).
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, array<string, int>>
+     */
+    public function getPublicListingFacets(array $filters = []): array
+    {
+        unset($filters['page'], $filters['limit'], $filters['sort'], $filters['view']);
+
+        $dimensions = [
+            'condition_id' => ['column' => 'condition_id', 'exclude' => ['condition_id']],
+            'listing_type_id' => ['column' => 'listing_type_id', 'exclude' => ['listing_type_id']],
+            'sales_type_id' => ['column' => 'sales_type_id', 'exclude' => ['sales_type_id']],
+            'brand_id' => ['column' => 'brand_id', 'exclude' => ['brand_id']],
+            'model_id' => ['column' => 'model_id', 'exclude' => ['model_id']],
+            'gear_type_id' => ['column' => 'gear_type_id', 'exclude' => ['gear_type_id', 'transmission_id']],
+            'fuel_type_id' => ['column' => 'fuel_type_id', 'exclude' => ['fuel_type_id']],
+            'body_type_id' => ['column' => 'body_type_id', 'exclude' => ['body_type_id']],
+            'colour_id' => ['column' => 'colour_id', 'exclude' => ['colour_id', 'color_id']],
+            'price_type_id' => ['column' => 'price_type_id', 'exclude' => ['price_type_id']],
+            'emission_norm_id' => ['column' => 'emission_norm_id', 'exclude' => ['emission_norm_id']],
+            'vehicle_use_id' => ['column' => 'vehicle_use_id', 'exclude' => ['vehicle_use_id', 'use_id']],
+        ];
+
+        $out = [];
+        foreach ($dimensions as $key => $config) {
+            $out[$key] = $this->countPublishedFacet($config['column'], $filters, $config['exclude']);
+        }
+
+        $out['color_id'] = $out['colour_id'];
+        $out['use_id'] = $out['vehicle_use_id'];
+
+        return $out;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>  $excludeKeys
+     * @return array<string, int>
+     */
+    private function countPublishedFacet(string $column, array $filters, array $excludeKeys): array
+    {
+        $table = (new Vehicle)->getTable();
+        if (! Schema::hasColumn($table, $column)) {
+            return [];
+        }
+
+        $facetFilters = $filters;
+        foreach ($excludeKeys as $excludeKey) {
+            unset($facetFilters[$excludeKey]);
+        }
+
+        $query = Vehicle::query()
+            ->where('list_status_id', VehicleListStatus::PUBLISHED)
+            ->withoutGlobalScope('defaultOrder')
+            ->withoutEagerLoads()
+            ->reorder();
+
+        $this->applyPublicListingFilters($query, $facetFilters);
+
+        $qualified = $query->getModel()->qualifyColumn($column);
+
+        $rows = $query
+            ->selectRaw("{$qualified} as facet_id, COUNT(*) as aggregate")
+            ->whereNotNull($qualified)
+            ->groupBy($qualified)
+            ->pluck('aggregate', 'facet_id');
+
+        $counts = [];
+        foreach ($rows as $id => $count) {
+            if ($id === null || $id === '') {
+                continue;
+            }
+            $counts[(string) $id] = (int) $count;
+        }
+
+        return $counts;
+    }
+
+    /**
      * Apply listing filters using {@see Vehicle}, DMR relations, {@see Vehicle::equipment()} (vehicle_equipment),
      * and {@see Vehicle::specifications()} for airbags (see {@see self::applyPublicAirbagsFilter()}).
      *

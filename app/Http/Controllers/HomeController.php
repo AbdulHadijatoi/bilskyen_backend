@@ -612,6 +612,7 @@ class HomeController extends Controller
         $currentListingSort = VehicleService::normalizePublicListingSort($rawSortQuery);
         $filterPriceMax = VehicleSearchFilters::PRICE_MAX;
         $filterKmMax = VehicleSearchFilters::KM_MAX;
+        $listingFacets = $this->vehicleService->getPublicListingFacets($input);
 
         return view('vehicles', compact(
             'vehicles',
@@ -628,6 +629,7 @@ class HomeController extends Controller
             'rawSortQuery',
             'filterPriceMax',
             'filterKmMax',
+            'listingFacets',
         ));
     }
 

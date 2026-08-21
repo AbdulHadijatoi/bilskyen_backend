@@ -35,12 +35,15 @@ class PublicAiUiTest extends TestCase
         $this->assertStringNotContainsString('handleStickySearchBar', $source);
     }
 
-    public function test_vehicles_page_renders_ai_example_chips_without_duplicate_lets(): void
+    public function test_vehicles_listing_uses_keyword_search_not_ai_field(): void
     {
         $source = file_get_contents(resource_path('views/vehicles.blade.php'));
 
         $this->assertSame(1, substr_count($source, 'let equipmentFiltersLoaded'));
-        $this->assertStringContainsString("id=\"vehicles-ai-examples\"", $source);
-        $this->assertStringContainsString("renderExampleChips(document.getElementById('vehicles-ai-examples'))", $source);
+        $this->assertStringContainsString("id=\"search-input\"", $source);
+        $this->assertStringContainsString("__('messages.forms.search_placeholder')", $source);
+        $this->assertStringNotContainsString('id="vehicles-ai-examples"', $source);
+        $this->assertStringNotContainsString('renderExampleChips', $source);
+        $this->assertStringNotContainsString('lg:sticky', $source);
     }
 }
