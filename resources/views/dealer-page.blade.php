@@ -296,11 +296,9 @@
                                     {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
                                 </h3>
                                 @if($dealerVariant)
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
                                     {{ $dealerVariant }}
                                 </p>
-                                @else
-                                <p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>
                                 @endif
                                 <p class="vehicle-listing-price text-lg font-bold">
                                     {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
@@ -1225,8 +1223,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${titleText}
                             </h3>
                             ${vehicle.variant_name || vehicle.version ? `
-                            <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">${vehicle.variant_name || vehicle.version}</p>
-                            ` : `<p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>`}
+                            <p class="text-muted-foreground text-xs font-normal line-clamp-1">${vehicle.variant_name || vehicle.version}</p>
+                            ` : ''}
                             <p class="vehicle-listing-price text-lg font-bold">
                                 ${formatCurrency(vehicle.price)}
                             </p>

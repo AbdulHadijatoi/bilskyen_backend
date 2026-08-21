@@ -1713,10 +1713,10 @@
                                     ${titleText}
                                 </h3>
                                 ${vehicle.variant_name ? `
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1 min-h-[1rem]">
+                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
                                     ${vehicle.variant_name}
                                 </p>
-                                ` : `<p class="text-xs font-normal invisible select-none min-h-[1rem]" aria-hidden="true">&nbsp;</p>`}
+                                ` : ''}
                                 <p class="vehicle-listing-price text-lg font-bold">
                                     ${formatCurrency(vehicle.price)}
                                 </p>
