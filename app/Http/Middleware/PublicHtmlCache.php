@@ -18,30 +18,17 @@ class PublicHtmlCache
     {
         $response = $next($request);
 
+        if (CrawlerRequest::isCrawler($request) && in_array($request->method(), ['GET', 'HEAD'], true)) {
+            CrawlerRequest::stripSetCookie($response);
+        }
+
         if (! $this->shouldCache($request, $response)) {
             return $response;
         }
 
         $response->headers->set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
 
-        if (CrawlerRequest::isCrawler($request)) {
-            $this->stripSetCookie($response);
-        }
-
         return $response;
-    }
-
-    private function stripSetCookie(Response $response): void
-    {
-        foreach ($response->headers->getCookies() as $cookie) {
-            $response->headers->removeCookie(
-                $cookie->getName(),
-                $cookie->getPath() ?? '/',
-                $cookie->getDomain()
-            );
-        }
-
-        $response->headers->remove('Set-Cookie');
     }
 
     private function shouldCache(Request $request, Response $response): bool

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label')) . ' | Bilskyen')
+@section('title', ($dealer->owner?->name ?? __('messages.pages.dealer_page.dealer_label')).' – '.__('messages.pages.dealer_page.meta_title_cars'))
 
 @php
     use App\Helpers\FormatHelper;
@@ -257,11 +257,26 @@
                     <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex flex-1 flex-col min-w-0">
                         <!-- Vehicle Image -->
                         <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
+                            @php
+                                $dealerCardImage = $vehicle->images->first();
+                                $dealerCardSrc = $dealerCardImage?->thumbnail_url ?? $dealerCardImage?->image_url;
+                                if (is_string($dealerCardSrc) && str_contains($dealerCardSrc, 'placeholder-vehicle')) {
+                                    $dealerCardSrc = null;
+                                }
+                            @endphp
+                            @if($dealerCardSrc)
                             <img
-                                src="{{ $vehicle->images->first()?->thumbnail_url ?? $vehicle->images->first()?->image_url ?? '/placeholder-vehicle.jpg' }}"
+                                src="{{ $dealerCardSrc }}"
                                 alt="{{ trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? '')) }}"
+                                width="800"
+                                height="600"
+                                loading="lazy"
+                                decoding="async"
                                 class="block h-full w-full object-cover"
                             />
+                            @else
+                            <div class="h-full w-full bg-muted" aria-hidden="true"></div>
+                            @endif
                             <!-- Badges - Top Left -->
                             <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
                                 <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
@@ -1174,7 +1189,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Render single vehicle list item
     function renderVehicleListItem(vehicle) {
-        const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
+        const rawImage = vehicle.thumbnail_url || vehicle.image_url || '';
+        const imageUrl = rawImage.includes('placeholder-vehicle') ? '' : rawImage;
         const titleText = formatListingTitle(vehicle.title || '');
         const locationText = formatListingLocation(vehicle);
         
@@ -1202,11 +1218,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <a href="${vehicleDetailUrl(vehicle.slug)}" class="flex flex-1 flex-col min-w-0">
                     <!-- Vehicle Image -->
                     <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
-                        <img
-                            src="${imageUrl}"
-                            alt="${titleText}"
-                            class="block h-full w-full object-cover"
-                        />
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${titleText}" width="800" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover" />` : `<div class="h-full w-full bg-muted" aria-hidden="true"></div>`}
                         
                         <!-- Heart Icon - Top Right -->
                         <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
@@ -1333,7 +1345,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: titleEl ? titleEl.textContent.trim() : '',
                 version: versionEl ? versionEl.textContent.trim() : '',
                 price: price,
-                thumbnail_url: img ? img.src : '/placeholder-vehicle.jpg',
+                thumbnail_url: img && img.src && !img.src.includes('placeholder-vehicle') ? img.src : '',
                 mileage: mileage,
                 km_driven: km_driven,
                 engine_power_hp: engine_power_hp,

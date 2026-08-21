@@ -36,6 +36,7 @@ use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
 use App\Services\Marketing\MetaConversionsApiService;
 use App\Services\AiService;
+use App\Support\HomeHeroCopy;
 use App\Services\FaqContentService;
 use App\Services\PlatformSettingService;
 use App\Services\SearchQueryLogService;
@@ -138,7 +139,12 @@ class HomeController extends Controller
 
         // Get home page content from cache
         $homePageContent = $this->pageContentService->getHomePageContent('home');
-        $seo = $this->seoService->getForPage('home', 'home');
+        $seo = $this->seoService->getForPage('home', 'home') ?? [];
+        $homeTitle = HomeHeroCopy::title($homePageContent['search_title'] ?? null);
+        $seo['meta_title'] = $homeTitle.' | Bilskyen';
+        if (empty($seo['og_title'])) {
+            $seo['og_title'] = $seo['meta_title'];
+        }
         $locale = app()->getLocale();
         $sessionSeed = null;
         try {

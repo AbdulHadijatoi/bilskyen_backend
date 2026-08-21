@@ -947,6 +947,8 @@ return [
             'dealer_enquiry_description' => 'Send din henvendelse om :dealer. Vi vender tilbage til dig hurtigst muligt.',
             'dealer_information' => 'Forhandler information',
             'dealer_label' => 'Forhandler',
+            'meta_title' => ':name – brugte biler | Bilskyen',
+            'meta_title_cars' => 'brugte biler | Bilskyen',
             'verified_dealer' => 'Verificeret forhandler',
             'your_details' => 'Dine detaljer',
             'full_name' => 'Fulde navn',

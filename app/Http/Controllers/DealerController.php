@@ -161,6 +161,16 @@ class DealerController extends Controller
             $hasVehicles = $vehicles->total() > 0;
         }
 
+        $dealerName = trim((string) ($dealer->owner?->name ?? ''))
+            ?: __('messages.pages.dealer_page.dealer_label');
+        $seo['meta_title'] = __('messages.pages.dealer_page.meta_title', ['name' => $dealerName]);
+        if (empty($seo['og_title'])) {
+            $seo['og_title'] = $seo['meta_title'];
+        }
+        if (empty($seo['canonical_url'])) {
+            $seo['canonical_url'] = route('dealer.show', $dealer->slug);
+        }
+
         return view('dealer-page', [
             'dealer' => $dealer,
             'vehicles' => $vehicles,

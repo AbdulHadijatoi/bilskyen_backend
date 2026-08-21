@@ -162,12 +162,17 @@
         if ($imageAlt === '') {
             $imageAlt = trim((string) ($vehicle->title ?: __('messages.pages.vehicles.detail.page_title')));
         }
+        $publicImages = collect($vehicle->images ?? [])->filter(function ($image) {
+            $url = (string) ($image->image_url ?? $image->thumbnail_url ?? '');
+
+            return $url !== '' && ! str_contains($url, 'placeholder-vehicle');
+        })->values();
     @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
         <div class="space-y-4 lg:col-span-2">
             <!-- Images Carousel Section -->
-            @if($vehicle->images && $vehicle->images->count() > 0)
+            @if($publicImages->isNotEmpty())
             <div class="relative">
                 <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-white/70 px-2 py-2 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground h-4 w-4">
@@ -176,20 +181,21 @@
                         <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
                     </svg>
                     <h2 class="text-foreground text-xs font-medium">
-                        {{ __('messages.pages.vehicles.detail.photos') }} ({{ $vehicle->images->count() }})
+                        {{ __('messages.pages.vehicles.detail.photos') }} ({{ $publicImages->count() }})
                     </h2>
                 </div>
 
                 <div class="relative">
                     <div class="embla overflow-hidden" id="vehicle-images-carousel">
                         <div class="embla__container flex">
-                            @foreach($vehicle->images as $index => $image)
+                            @foreach($publicImages as $index => $image)
                             <div class="embla__slide flex-shrink-0 basis-full md:basis-1/2 lg:basis-1/2">
                                 <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery">
                                     <div class="border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
                                         <img
                                             src="{{ $image->image_url }}"
                                             alt="{{ $imageAlt }}"
+                                            @if($index === 0) fetchpriority="high" @else loading="lazy" decoding="async" @endif
                                             class="h-full w-full object-cover"
                                         />
                                     </div>
@@ -198,7 +204,7 @@
                             @endforeach
                         </div>
                     </div>
-                    @if($vehicle->images->count() > 2)
+                    @if($publicImages->count() > 2)
                     <button class="embla__prev absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="{{ __('messages.pages.vehicles.detail.previous_slide') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="m15 18-6-6 6-6"></path>
@@ -214,13 +220,7 @@
             </div>
             @else
             <div class="relative">
-                <div class="border-border bg-muted/50 relative aspect-[4/3] overflow-hidden rounded-lg border">
-                    <img
-                        src="/placeholder-vehicle.jpg"
-                        alt="{{ $imageAlt }}"
-                        class="h-full w-full object-cover"
-                    />
-                </div>
+                <div class="border-border bg-muted/50 relative aspect-[4/3] overflow-hidden rounded-lg border" role="img" aria-label="{{ $imageAlt }}"></div>
             </div>
             @endif
 

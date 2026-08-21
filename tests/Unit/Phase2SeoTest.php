@@ -116,4 +116,15 @@ class Phase2SeoTest extends TestCase
         $this->assertStringNotContainsString('Dealership Lane', CompanyProfile::publicAddress('123 Dealership Lane, Copenhagen, Denmark'));
         $this->assertStringContainsString('Smedeland 7', CompanyProfile::addressLine());
     }
+
+    public function test_production_http_app_url_is_forced_to_https(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.url' => 'http://bilskyen.dk']);
+
+        \App\Providers\AppServiceProvider::forcePublicHttpsIfProduction();
+
+        $this->assertSame('https://bilskyen.dk', config('app.url'));
+        $this->assertStringStartsWith('https://', url('/biler'));
+    }
 }

@@ -17,6 +17,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
         Vehicle::observe(VehicleCityObserver::class);
         Vehicle::observe(VehicleIndexNowObserver::class);
         Dealer::observe(DealerCityObserver::class);
+
+        self::forcePublicHttpsIfProduction();
 
         // Vehicle route model binding: resolve by id when numeric (API), by slug when not (web)
         Route::bind('vehicle', function (string $value) {
@@ -99,5 +102,22 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth.register', function (Request $request) {
             return Limit::perMinute(6)->by($request->ip());
         });
+    }
+
+    /**
+     * Production public URLs must be HTTPS even when APP_URL was stored as http://.
+     */
+    public static function forcePublicHttpsIfProduction(): void
+    {
+        if (! app()->environment('production')) {
+            return;
+        }
+
+        URL::forceScheme('https');
+
+        $url = (string) config('app.url');
+        if (str_starts_with($url, 'http://')) {
+            config(['app.url' => 'https://'.substr($url, strlen('http://'))]);
+        }
     }
 }

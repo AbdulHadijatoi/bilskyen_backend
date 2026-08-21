@@ -947,6 +947,8 @@ return [
             'dealer_enquiry_description' => 'Submit your enquiry about :dealer. We\'ll get back to you as soon as possible.',
             'dealer_information' => 'Dealer Information',
             'dealer_label' => 'Dealer',
+            'meta_title' => ':name – used cars | Bilskyen',
+            'meta_title_cars' => 'used cars | Bilskyen',
             'verified_dealer' => 'Verified Dealer',
             'your_details' => 'Your Details',
             'full_name' => 'Full Name',

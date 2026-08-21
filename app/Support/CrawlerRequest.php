@@ -17,4 +17,17 @@ class CrawlerRequest
 
         return preg_match('/'.self::PATTERN.'/i', $ua) === 1;
     }
+
+    public static function stripSetCookie(\Symfony\Component\HttpFoundation\Response $response): void
+    {
+        foreach ($response->headers->getCookies() as $cookie) {
+            $response->headers->removeCookie(
+                $cookie->getName(),
+                $cookie->getPath() ?? '/',
+                $cookie->getDomain()
+            );
+        }
+
+        $response->headers->remove('Set-Cookie');
+    }
 }

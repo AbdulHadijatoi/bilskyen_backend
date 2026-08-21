@@ -270,4 +270,63 @@ class SeoHealthPassTest extends TestCase
         $this->assertStringContainsString('public', (string) $guestResponse->headers->get('Cache-Control'));
         $this->assertNotEmpty($guestResponse->headers->getCookies());
     }
+
+    public function test_googlebot_sitemap_response_strips_cookies(): void
+    {
+        $middleware = new PublicHtmlCache;
+        $bot = Request::create('/sitemap.xml', 'GET', [], [], [], [
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+        ]);
+
+        $response = $middleware->handle($bot, function () {
+            return response('<urlset></urlset>', 200, ['Content-Type' => 'application/xml'])
+                ->cookie('laravel_session', 'bot-session', 120);
+        });
+
+        $this->assertSame([], $response->headers->getCookies());
+        $this->assertNull($response->headers->get('Set-Cookie'));
+    }
+
+    public function test_dealer_page_lazy_loads_listing_images(): void
+    {
+        $source = file_get_contents(resource_path('views/dealer-page.blade.php'));
+        $this->assertStringContainsString('loading="lazy"', $source);
+        $this->assertStringContainsString('decoding="async"', $source);
+        $this->assertStringContainsString('width="800"', $source);
+        $this->assertStringContainsString('dealer_page.meta_title_cars', $source);
+        $controller = file_get_contents(app_path('Http/Controllers/DealerController.php'));
+        $this->assertStringContainsString('dealer_page.meta_title', $controller);
+    }
+
+    public function test_vehicle_detail_does_not_emit_placeholder_image(): void
+    {
+        $source = file_get_contents(resource_path('views/vehicle-detail.blade.php'));
+        $this->assertStringNotContainsString('src="/placeholder-vehicle.jpg"', $source);
+        $this->assertStringContainsString('$publicImages', $source);
+    }
+
+    public function test_dealer_meta_title_uses_dealer_name(): void
+    {
+        app()->setLocale('da');
+        $this->assertSame(
+            'Carhouse – brugte biler | Bilskyen',
+            __('messages.pages.dealer_page.meta_title', ['name' => 'Carhouse'])
+        );
+        app()->setLocale('en');
+        $this->assertSame(
+            'Carhouse – used cars | Bilskyen',
+            __('messages.pages.dealer_page.meta_title', ['name' => 'Carhouse'])
+        );
+    }
+
+    public function test_homepage_document_title_matches_h1(): void
+    {
+        app()->setLocale('da');
+        $h1 = HomeHeroCopy::title('Find din drømmebil på Bilskyen.dk');
+        $this->assertSame('Brugte biler til salg i Danmark', $h1);
+
+        $source = file_get_contents(app_path('Http/Controllers/HomeController.php'));
+        $this->assertStringContainsString('HomeHeroCopy::title', $source);
+        $this->assertStringContainsString("\$homeTitle.' | Bilskyen'", $source);
+    }
 }
