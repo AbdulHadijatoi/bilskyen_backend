@@ -54,6 +54,8 @@ class ListingUxTest extends TestCase
             $source
         );
         $this->assertStringContainsString('flex: 0 0 auto', $source);
+        $this->assertStringContainsString('white-space: normal', $source);
+        $this->assertStringContainsString('-webkit-line-clamp: unset', $source);
     }
 
     public function test_listing_copy_exists_in_danish_and_english(): void

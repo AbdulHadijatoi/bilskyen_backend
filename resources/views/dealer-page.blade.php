@@ -991,6 +991,13 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 0;
         min-height: 0;
         color: hsl(var(--foreground));
+        display: block;
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        -webkit-box-orient: unset;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {

@@ -1394,13 +1394,21 @@
         align-content: center;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
+    #vehicle-container[data-view="list"] .vehicle-content-wrapper h3,
+    #vehicle-fallback-section[data-view="list"] .vehicle-content-wrapper h3 {
         font-size: 1.125rem;
         font-weight: 700;
         line-height: 1.3;
         margin: 0;
         min-height: 0;
         color: hsl(var(--foreground));
+        display: block;
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        -webkit-box-orient: unset;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
