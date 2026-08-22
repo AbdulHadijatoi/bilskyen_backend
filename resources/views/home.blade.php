@@ -155,22 +155,23 @@
         isolation: isolate;
         background-color: var(--background, #f8fafc);
         background-image:
-            radial-gradient(ellipse at 12% 0%, color-mix(in oklch, var(--primary-light, #e8f0fa) 85%, transparent) 0%, transparent 52%),
-            radial-gradient(ellipse at 88% 100%, color-mix(in oklch, var(--primary-light, #e8f0fa) 55%, transparent) 0%, transparent 46%),
-            linear-gradient(color-mix(in oklch, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px),
-            linear-gradient(90deg, color-mix(in oklch, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px);
-        background-size: auto, auto, 28px 28px, 28px 28px;
+            radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--primary, #03418b) 18%, transparent) 0%, transparent 52%),
+            linear-gradient(color-mix(in srgb, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px);
+        background-size: auto, 28px 28px, 28px 28px;
     }
 
     .home-search-section--has-image {
         background-image:
+            radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--primary, #03418b) 22%, transparent) 0%, transparent 55%),
             linear-gradient(
-                color-mix(in oklch, var(--background, #f8fafc) 78%, transparent),
-                color-mix(in oklch, var(--background, #f8fafc) 86%, transparent)
+                color-mix(in srgb, var(--background, #f8fafc) 78%, transparent),
+                color-mix(in srgb, var(--background, #f8fafc) 86%, transparent)
             ),
             var(--home-hero-image);
-        background-size: cover;
-        background-position: center;
+        background-size: auto, cover, cover;
+        background-position: 0 0, center, center;
+        background-repeat: no-repeat;
     }
 
     .home-filter-card {
