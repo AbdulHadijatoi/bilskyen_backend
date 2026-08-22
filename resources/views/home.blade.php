@@ -10,8 +10,6 @@
         scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
         scroll-behavior: smooth;
         scroll-snap-type: x mandatory;
-        scroll-padding-left: 1rem; /* Account for container left padding in snap */
-        scroll-padding-right: 1rem; /* Account for container right padding in snap */
         -webkit-overflow-scrolling: touch;
     }
     
@@ -114,71 +112,40 @@
     
     .featured-vehicles-scroll-container > div {
         display: flex;
+        align-items: stretch;
+        width: 100%;
+        box-sizing: border-box;
     }
-    
+
     .featured-vehicle-card {
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+        height: auto;
         scroll-snap-align: start;
         scroll-snap-stop: always;
-        /* Mobile: 1 item per row, smaller size but still one at a time */
-        /* Use 85% of viewport width minus padding for a more compact look */
-        flex: 0 0 calc(85vw - 2rem);
-        min-width: calc(85vw - 2rem);
-        max-width: calc(85vw - 2rem);
+        box-sizing: border-box;
+        /* Mobile: one primary card with the next card peeking */
+        flex: 0 0 85%;
+        min-width: 85%;
+        max-width: 85%;
     }
-    
+
     @media (min-width: 640px) {
         .featured-vehicle-card {
-            /* Tablet: 2 items per row, account for container padding (1rem each) and gap (1.5rem total, 0.75rem per item) */
-            flex: 0 0 calc(50vw - 1rem - 0.75rem);
-            min-width: calc(50vw - 1rem - 0.75rem);
-            max-width: calc(50vw - 1rem - 0.75rem);
+            /* Tablet: two full cards (one gap of 0.75rem) */
+            flex: 0 0 calc((100% - 0.75rem) / 2);
+            min-width: calc((100% - 0.75rem) / 2);
+            max-width: calc((100% - 0.75rem) / 2);
         }
     }
-    
+
     @media (min-width: 768px) {
-        .featured-vehicles-scroll-container > div {
-            /* Set flex container width to match scroll container's inner width */
-            /* Scroll container extends with -mx-4 px-4, so inner width = viewport width */
-            /* But we need to account for scroll container padding (px-4 = 1rem each side) */
-            width: calc(100vw - 2rem);
-        }
-        
         .featured-vehicle-card {
-            /* Desktop: 3 items per row - exactly fit 3 items */
-            /* Flex container width = 100vw - 2rem (scroll padding) */
-            /* Flex container has gap-6 (1.5rem) between items, so 2 gaps = 3rem total */
-            /* Formula: (flex container width - 3rem gaps) / 3 items */
-            /* = ((100vw - 2rem) - 3rem) / 3 = (100vw - 5rem) / 3 */
-            flex: 0 0 calc((100vw - 5rem) / 3);
-            min-width: calc((100vw - 5rem) / 3);
-            max-width: calc((100vw - 5rem) / 3);
-        }
-    }
-    
-    @media (min-width: 1024px) {
-        .featured-vehicles-scroll-container > div {
-            width: calc(100vw - 2rem);
-        }
-        
-        .featured-vehicle-card {
-            flex: 0 0 calc((100vw - 5rem) / 3);
-            min-width: calc((100vw - 5rem) / 3);
-            max-width: calc((100vw - 5rem) / 3);
-        }
-    }
-    
-    @media (min-width: 1280px) {
-        .featured-vehicles-scroll-container > div {
-            /* On large screens, limit to container max-width (1280px) + parent padding (2rem each = 4rem) */
-            /* Scroll container extends, so: min(100vw, 1280px + 4rem) - 2rem scroll padding */
-            width: calc(min(100vw, 1316px) - 2rem);
-        }
-        
-        .featured-vehicle-card {
-            /* Available width: (min(100vw, 1316px) - 2rem) - 3rem gaps */
-            flex: 0 0 calc((min(100vw, 1316px) - 5rem) / 3);
-            min-width: calc((min(100vw, 1316px) - 5rem) / 3);
-            max-width: calc((min(100vw, 1316px) - 5rem) / 3);
+            /* Desktop: three full cards (two gaps of 0.75rem) */
+            flex: 0 0 calc((100% - 1.5rem) / 3);
+            min-width: calc((100% - 1.5rem) / 3);
+            max-width: calc((100% - 1.5rem) / 3);
         }
     }
 
@@ -1239,11 +1206,11 @@
                         </svg>
                     </button>
                     
-                    <div class="featured-vehicles-scroll-container overflow-x-auto pb-4 -mx-4 scroll-smooth snap-x snap-mandatory" id="featured-vehicles-scroll">
-                        <div class="flex gap-3">
+                    <div class="featured-vehicles-scroll-container overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory" id="featured-vehicles-scroll">
+                        <div class="flex items-stretch gap-3">
                             @foreach($featuredVehicles as $vehicle)
-                        <div class="featured-vehicle-card flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full flex-shrink-0">
-                            <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="flex flex-1 flex-col min-w-0">
+                        <div class="featured-vehicle-card flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer flex-shrink-0">
+                            <a href="{{ route('vehicle.detail', $vehicle['slug'] ?? $vehicle['id']) }}" class="flex min-h-0 min-w-0 flex-1 flex-col">
                                 <!-- Vehicle Image -->
                                 <div class="relative aspect-[2/1.5] overflow-hidden">
                                     <img
@@ -1285,16 +1252,14 @@
                                         $vehicle['seller_city'] ?? ($vehicle['city'] ?? null)
                                     );
                                 @endphp
-                                <div class="flex flex-1 flex-col px-3 pt-3 min-h-0">
+                                <div class="flex min-h-0 flex-1 flex-col px-3 pt-3">
                                     <div class="flex shrink-0 flex-col gap-1 text-left">
-                                        <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
+                                        <h3 class="min-h-[2.5rem] text-sm font-semibold leading-snug line-clamp-2">
                                             {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle['title'] ?? '') }}
                                         </h3>
-                                        @if(!empty($vehicle['variant_name']))
-                                        <p class="text-muted-foreground text-xs font-normal line-clamp-1">
-                                            {{ $vehicle['variant_name'] }}
+                                        <p class="min-h-[1rem] text-muted-foreground text-xs font-normal line-clamp-1">
+                                            {{ !empty($vehicle['variant_name']) ? $vehicle['variant_name'] : "\u{00a0}" }}
                                         </p>
-                                        @endif
                                         <p class="vehicle-listing-price text-lg font-bold">
                                             {{ \App\Helpers\FormatHelper::formatCurrency($vehicle['price'] ?? null) }}
                                         </p>
@@ -2841,7 +2806,8 @@
                 const firstCard = scrollContainer.querySelector('.featured-vehicle-card');
                 if (!firstCard) return scrollContainer.clientWidth;
                 const cardWidth = firstCard.offsetWidth;
-                const gap = 24; // gap-6 = 1.5rem = 24px
+                const track = firstCard.parentElement;
+                const gap = track ? (parseFloat(getComputedStyle(track).columnGap) || 12) : 12;
                 return cardWidth + gap;
             };
             
