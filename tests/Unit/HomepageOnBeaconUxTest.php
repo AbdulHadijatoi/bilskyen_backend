@@ -12,6 +12,14 @@ class HomepageOnBeaconUxTest extends TestCase
 
         $this->assertStringContainsString('home-search-section', $home);
         $this->assertStringContainsString('home-search-section--has-image', $home);
+        $this->assertStringContainsString('featured-vehicles-section', $home);
+        $this->assertStringContainsString('featured-vehicles-carousel', $home);
+        $this->assertStringContainsString('width: max-content', $home);
+        $this->assertStringContainsString('container-type: inline-size', $home);
+        $this->assertMatchesRegularExpression(
+            '/\.featured-vehicles-section\s*\{\s*overflow-x:\s*clip;/',
+            $home
+        );
         $this->assertStringContainsString("id=\"home-filters-panel\" class=\"mt-0 is-collapsed\"", $home);
         $this->assertStringContainsString('home-filter-core-grid', $home);
         $this->assertLessThan(

@@ -11,6 +11,12 @@
         scroll-behavior: smooth;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        container-type: inline-size;
     }
     
     .featured-vehicles-scroll-container::-webkit-scrollbar {
@@ -110,10 +116,16 @@
         }
     }
     
+    .featured-vehicles-carousel {
+        min-width: 0;
+        max-width: 100%;
+    }
+
     .featured-vehicles-scroll-container > div {
         display: flex;
         align-items: stretch;
-        width: 100%;
+        width: max-content;
+        max-width: none;
         box-sizing: border-box;
     }
 
@@ -126,26 +138,35 @@
         scroll-snap-stop: always;
         box-sizing: border-box;
         /* Mobile: one primary card with the next card peeking */
-        flex: 0 0 85%;
-        min-width: 85%;
-        max-width: 85%;
+        flex: 0 0 85cqi;
+        width: 85cqi;
+        min-width: 85cqi;
+        max-width: 85cqi;
     }
 
     @media (min-width: 640px) {
         .featured-vehicle-card {
             /* Tablet: two full cards (one gap of 0.75rem) */
-            flex: 0 0 calc((100% - 0.75rem) / 2);
-            min-width: calc((100% - 0.75rem) / 2);
-            max-width: calc((100% - 0.75rem) / 2);
+            flex-basis: calc((100cqi - 0.75rem) / 2);
+            width: calc((100cqi - 0.75rem) / 2);
+            min-width: calc((100cqi - 0.75rem) / 2);
+            max-width: calc((100cqi - 0.75rem) / 2);
         }
     }
 
     @media (min-width: 768px) {
         .featured-vehicle-card {
             /* Desktop: three full cards (two gaps of 0.75rem) */
-            flex: 0 0 calc((100% - 1.5rem) / 3);
-            min-width: calc((100% - 1.5rem) / 3);
-            max-width: calc((100% - 1.5rem) / 3);
+            flex-basis: calc((100cqi - 1.5rem) / 3);
+            width: calc((100cqi - 1.5rem) / 3);
+            min-width: calc((100cqi - 1.5rem) / 3);
+            max-width: calc((100cqi - 1.5rem) / 3);
+        }
+    }
+
+    @media (max-width: 767px) {
+        .featured-vehicles-section {
+            overflow-x: clip;
         }
     }
 
@@ -1172,9 +1193,9 @@
     </section>
 
     <!-- Featured Vehicles Section -->
-    <section class="py-16 bg-muted">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="flex flex-col gap-8">
+    <section class="featured-vehicles-section py-16 bg-muted">
+        <div class="container mx-auto min-w-0 px-4 md:px-6">
+            <div class="flex min-w-0 flex-col gap-8">
                 <div class="space-y-2">
                     <h2 class="text-3xl font-bold tracking-tight">
                         {{ $homePageContent['featured_vehicles_title'] ?? __('messages.pages.home.featured_vehicles_title') }}
@@ -1185,7 +1206,7 @@
                 </div>
                 
                 <!-- Featured Vehicles Horizontal Scroll -->
-                <div class="relative">
+                <div class="featured-vehicles-carousel relative">
                     @if(isset($featuredVehicles) && $featuredVehicles->count() > 0)
                     <!-- Navigation Arrows (Desktop Only) -->
                     <button 
