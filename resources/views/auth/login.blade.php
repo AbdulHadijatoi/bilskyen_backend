@@ -32,7 +32,7 @@
         @include('components.bot-protection')
         <div class="grid gap-2">
             <label for="email" class="text-sm font-medium">{{ __('messages.forms.email') }}</label>
-            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.placeholders.email') }}" autocomplete="email" tabindex="1" required class="site-input">
+            <input id="email" name="email" type="email" placeholder="{{ __('messages.forms.enter_email') }}" autocomplete="email" tabindex="1" required class="site-input">
         </div>
 
         <div class="grid gap-2">
