@@ -46,6 +46,31 @@
         line-height: 1.375;
         color: var(--muted-foreground, #64748b);
     }
+    .vehicle-listing-new-badge {
+        display: inline-flex;
+        align-items: center;
+        max-width: calc(100% - 3.75rem);
+        border-radius: 0.375rem;
+        background: #16a34a;
+        color: #fff;
+        padding: 0.125rem 0.5rem;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.25;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    }
+    .vehicle-listing-photo-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 0.375rem;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        padding: 0.125rem 0.375rem;
+        font-size: 10px;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
 </style>
 @endonce
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>

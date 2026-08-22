@@ -20,6 +20,34 @@
         transition: none !important;
         animation: none !important;
     }
+    #vehicle-images-carousel {
+        --slide-spacing: 1rem;
+    }
+    #vehicle-images-carousel .embla__container {
+        display: flex;
+        gap: var(--slide-spacing);
+    }
+    #vehicle-images-carousel .embla__slide {
+        box-sizing: border-box;
+        flex: 0 0 100%;
+        min-width: 0;
+    }
+    @media (min-width: 768px) {
+        #vehicle-images-carousel .embla__slide {
+            flex: 0 0 calc(50% - (var(--slide-spacing) / 2));
+        }
+    }
+    #vehicle-images-carousel .embla__slide > a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    #vehicle-images-carousel .embla__slide .vehicle-gallery-frame {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+
     .detail-section {
         /* border: 1px solid var(--border); */
         border-radius: 0.5rem;
@@ -187,16 +215,16 @@
 
                 <div class="relative">
                     <div class="embla overflow-hidden" id="vehicle-images-carousel">
-                        <div class="embla__container flex">
+                        <div class="embla__container">
                             @foreach($publicImages as $index => $image)
-                            <div class="embla__slide flex-shrink-0 basis-full md:basis-1/2 lg:basis-1/2">
+                            <div class="embla__slide">
                                 <a href="{{ $image->image_url }}" class="glightbox" data-gallery="vehicle-gallery">
-                                    <div class="border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md mr-4">
+                                    <div class="vehicle-gallery-frame border-border bg-muted/50 relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg border transition-all hover:shadow-md">
                                         <img
                                             src="{{ $image->image_url }}"
                                             alt="{{ $imageAlt }}"
                                             @if($index === 0) fetchpriority="high" @else loading="lazy" decoding="async" @endif
-                                            class="h-full w-full object-cover"
+                                            class="absolute inset-0 h-full w-full object-cover"
                                         />
                                     </div>
                                 </a>
