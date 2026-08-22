@@ -290,10 +290,12 @@ class SeoHealthPassTest extends TestCase
     public function test_dealer_page_lazy_loads_listing_images(): void
     {
         $source = file_get_contents(resource_path('views/dealer-page.blade.php'));
-        $this->assertStringContainsString('loading="lazy"', $source);
-        $this->assertStringContainsString('decoding="async"', $source);
-        $this->assertStringContainsString('width="800"', $source);
+        $this->assertStringContainsString('<x-vehicle-listing-item', $source);
         $this->assertStringContainsString('dealer_page.meta_title_cars', $source);
+        $card = file_get_contents(resource_path('views/components/vehicle-listing-item.blade.php'));
+        $this->assertStringContainsString('loading="lazy"', $card);
+        $this->assertStringContainsString('decoding="async"', $card);
+        $this->assertStringContainsString('width="800"', $card);
         $controller = file_get_contents(app_path('Http/Controllers/DealerController.php'));
         $this->assertStringContainsString('dealer_page.meta_title', $controller);
     }

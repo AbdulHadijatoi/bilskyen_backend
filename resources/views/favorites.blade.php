@@ -2,10 +2,6 @@
 
 @section('title', __('messages.pages.favorites.title') . ' | Bilskyen')
 
-@php
-    use App\Helpers\FormatHelper;
-@endphp
-
 @section('content')
 <div class="container mx-auto flex flex-col gap-6 py-8">
     <!-- Page Header -->
@@ -22,114 +18,22 @@
             $vehicle = $favorite->vehicle;
         @endphp
         @if($vehicle)
-        <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full">
-            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex flex-1 flex-col min-w-0">
-                <!-- Vehicle Image -->
-                <div class="relative aspect-[2/1.5] overflow-hidden">
-                    <img
-                        src="{{ $vehicle->images->first()?->thumbnail_url ?? '/placeholder-vehicle.jpg' }}"
-                        alt="{{ $vehicle->brand_name }} {{ $vehicle->model_name }}"
-                        class="block h-full w-full object-cover"
-                    />
-                    <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
-                    @if($vehicle->dealer_id)
-                    <!-- Dealer Label - Top Left -->
-                    <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ __('messages.pages.vehicles.dealer') }}
-                    </span>
-                    @else
-                    <!-- Private Label - Top Left -->
-                    <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ __('messages.pages.vehicles.private') }}
-                    </span>
-                    @endif
-                    @if($vehicle->details && ($vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name))
-                    <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        {{ $vehicle->details->sales_type_name ?? $vehicle->details->salesType?->name }}
-                    </span>
-                    @endif
-                    </div>
-                    <!-- Heart Icon - Top Right (Filled) -->
-                    <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.remove_from_favorites') }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-red-500 heart-icon filled" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Vehicle Details -->
-                @php
-                    $favListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
-                        $vehicle->seller_address ?? null,
-                        $vehicle->seller_postcode ?? null,
-                        $vehicle->seller_city ?? ($vehicle->city ?? null)
-                    );
-                    $favVariant = $vehicle->variant_name ?? $vehicle->version ?? null;
-                @endphp
-                <div class="flex flex-1 flex-col px-3 pt-3 min-h-0">
-                    <div class="flex shrink-0 flex-col gap-1 text-left">
-                        <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
-                            {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
-                        </h3>
-                        @if($favVariant)
-                        <p class="text-muted-foreground text-xs font-normal line-clamp-1">
-                            {{ $favVariant }}
-                        </p>
-                        @endif
-                        <p class="vehicle-listing-price text-lg font-bold">
-                            {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
-                        </p>
-                    </div>
-
-                    <div class="flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
-                        @if($vehicle->mileage || $vehicle->km_driven)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->mileage ?? $vehicle->km_driven ?? 0) }} km</span>
-                        @endif
-                        @if($vehicle->engine_power_hp)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
-                        @endif
-                        @if($vehicle->first_registration_date)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ \App\Helpers\FormatHelper::formatMonthYear($vehicle->first_registration_date) }}</span>
-                        @endif
-                        @if($vehicle->fuel_type_name)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->fuel_type_name }}</span>
-                        @endif
-                        @if($vehicle->gear_type_name)
-                        <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ $vehicle->gear_type_name }}</span>
-                        @endif
-                    </div>
-                </div>
-            </a>
-            
-            <!-- Card Footer -->
-            <div class="mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
-                <div class="min-h-[1.25rem]">
-                    @if($favListingLocation !== '')
-                    <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span class="truncate text-left" title="{{ $favListingLocation }}">{{ $favListingLocation }}</span>
-                    </div>
-                    @endif
-                </div>
-                <div class="flex w-full flex-row items-center gap-2">
-                    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
-                        <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                            {{ __('messages.pages.vehicles.view_details') }}
-                        </button>
-                    </a>
-                    <button 
-                        type="button"
-                        onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                        class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                    >
-                        {{ __('messages.pages.vehicles.enquire') }}
-                    </button>
-                </div>
-            </div>
-        </div>
+            @php
+                $firstImage = $vehicle->images->first();
+                $imgUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+                $badges = $listingPresentation->badgeFields($vehicle);
+            @endphp
+            <x-vehicle-listing-item
+                :vehicle="$vehicle"
+                :img-url="$imgUrl"
+                :img-alt="$vehicle->title"
+                :sales-type-name="$vehicle->salesType?->name"
+                :trust-badge="$badges['trust_badge'] ?? false"
+                :price-dropped-recently="$badges['price_dropped_recently'] ?? false"
+                :premium-dealer-badge="$badges['premium_dealer_badge'] ?? false"
+                :is-boosted="$badges['is_boosted'] ?? false"
+                :is-favorited="true"
+            />
         @endif
         @endforeach
     </div>

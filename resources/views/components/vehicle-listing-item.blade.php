@@ -7,6 +7,7 @@
     'priceDroppedRecently' => false,
     'premiumDealerBadge' => false,
     'isBoosted' => false,
+    'isFavorited' => false,
 ])
 @php
     $listingLocation = \App\Helpers\FormatHelper::formatListingLocation(
@@ -24,6 +25,29 @@
     $mileageValue = $vehicle->mileage ?? $vehicle->km_driven ?? null;
     $chipClass = 'inline-flex items-center rounded-md border border-border px-2 py-1 text-xs';
 @endphp
+@once
+<style>
+    .vehicle-listing-price {
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: var(--foreground, #0f172a);
+        font-variant-numeric: tabular-nums;
+    }
+    .vehicle-listing-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.375;
+        color: var(--muted-foreground, #64748b);
+    }
+</style>
+@endonce
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
         <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
@@ -91,8 +115,8 @@
                         {{ $newListingBadge }}
                     </span>
                 @endif
-                <button type="button" class="vehicle-listing-favorite pointer-events-auto ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring dark:bg-card/90" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}" title="{{ __('messages.forms.add_to_favorites') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $vehicle->dealer_id ? 'text-primary' : 'text-foreground' }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
+                <button type="button" class="vehicle-listing-favorite pointer-events-auto ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring dark:bg-card/90" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ $isFavorited ? __('messages.forms.remove_from_favorites') : __('messages.forms.add_to_favorites') }}" title="{{ $isFavorited ? __('messages.forms.remove_from_favorites') : __('messages.forms.add_to_favorites') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="{{ $isFavorited ? 'currentColor' : 'none' }}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 {{ $isFavorited ? 'text-red-500 filled' : ($vehicle->dealer_id ? 'text-primary' : 'text-foreground') }} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}" data-dealer-id="{{ $vehicle->dealer_id ?? '' }}">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                     </svg>
                 </button>

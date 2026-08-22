@@ -44,6 +44,13 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('object-cover', $card);
         $this->assertStringContainsString('vehicle-listing-price', $card);
         $this->assertStringContainsString('text-2xl font-extrabold', $card);
+        $this->assertStringContainsString('font-weight: 800', $card);
+        $this->assertStringContainsString('font-size: 1.5rem', $card);
+
+        $css = file_get_contents(resource_path('css/site-base.css'));
+        $this->assertStringContainsString('.vehicle-listing-price', $css);
+        $this->assertStringContainsString('font-weight: 800', $css);
+        $this->assertStringContainsString('font-size: 1.5rem', $css);
     }
 
     public function test_list_view_keeps_enquire_button_at_content_width(): void

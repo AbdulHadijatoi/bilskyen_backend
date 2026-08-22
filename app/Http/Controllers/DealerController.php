@@ -15,6 +15,7 @@ use App\Services\VehicleService;
 use App\Services\AuditLogService;
 use App\Services\SeoService;
 use App\Services\Seo\SchemaBuilderService;
+use App\Services\VehicleListingPresentationService;
 use App\Services\Reputation\GoogleReviewService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
@@ -33,6 +34,7 @@ class DealerController extends Controller
         private SeoService $seoService,
         private GoogleReviewService $googleReviewService,
         private SchemaBuilderService $schemaBuilder,
+        private VehicleListingPresentationService $listingPresentation,
     ) {}
 
     /**
@@ -179,6 +181,7 @@ class DealerController extends Controller
             'seo' => $seo,
             'reviewSummary' => $reviewSummary,
             'hasVehicles' => $hasVehicles,
+            'listingPresentation' => $this->listingPresentation,
         ]);
     }
 

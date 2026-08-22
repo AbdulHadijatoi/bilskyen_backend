@@ -253,118 +253,21 @@
         <!-- Vehicle Grid/List -->
         <div id="vehicle-container" class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-view="card">
                 @forelse($vehicles as $vehicle)
-                <div class="flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full shadow-sm">
-                    <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="flex flex-1 flex-col min-w-0">
-                        <!-- Vehicle Image -->
-                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
-                            @php
-                                $dealerCardImage = $vehicle->images->first();
-                                $dealerCardSrc = $dealerCardImage?->thumbnail_url ?? $dealerCardImage?->image_url;
-                                if (is_string($dealerCardSrc) && str_contains($dealerCardSrc, 'placeholder-vehicle')) {
-                                    $dealerCardSrc = null;
-                                }
-                            @endphp
-                            @if($dealerCardSrc)
-                            <img
-                                src="{{ $dealerCardSrc }}"
-                                alt="{{ trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? '')) }}"
-                                width="800"
-                                height="600"
-                                loading="lazy"
-                                decoding="async"
-                                class="block h-full w-full object-cover"
-                            />
-                            @else
-                            <div class="h-full w-full bg-muted" aria-hidden="true"></div>
-                            @endif
-                            <!-- Badges - Top Left -->
-                            <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
-                                <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                    {{ __('messages.pages.vehicles.dealer') }}
-                                </span>
-                                @if($vehicle->salesType)
-                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                    {{ $vehicle->salesType->name }}
-                                </span>
-                                @endif
-                            </div>
-                            <!-- Heart Icon - Top Right -->
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ $vehicle->id }}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="{{ $vehicle->id }}">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <!-- Vehicle Details -->
-                        @php
-                            $dealerListingLocation = \App\Helpers\FormatHelper::formatListingLocation(
-                                $vehicle->address ?? null,
-                                $vehicle->postcode ?? null,
-                                $vehicle->city ?? null
-                            );
-                            $dealerVariant = $vehicle->variant_name ?? $vehicle->version ?? null;
-                        @endphp
-                        <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
-                            <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
-                                <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
-                                    {{ \App\Helpers\FormatHelper::formatListingTitle($vehicle->title) }}
-                                </h3>
-                                @if($dealerVariant)
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
-                                    {{ $dealerVariant }}
-                                </p>
-                                @endif
-                                <p class="vehicle-listing-price text-lg font-bold">
-                                    {{ FormatHelper::formatCurrency($vehicle->price ?? null) }}
-                                </p>
-                            </div>
-
-                            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
-                                @if($vehicle->km_driven !== null)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format((int) $vehicle->km_driven) }} km</span>
-                                @endif
-                                @if($vehicle->engine_power_hp)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ number_format($vehicle->engine_power_hp, 0) }} HP</span>
-                                @endif
-                                @if($vehicle->first_registration_date)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ \App\Helpers\FormatHelper::formatMonthYear($vehicle->first_registration_date) }}</span>
-                                @endif
-                                @if($vehicle->fuel_type_name)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ $vehicle->fuel_type_name }}</span>
-                                @endif
-                                @if($vehicle->gear_type_name)
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors">{{ $vehicle->gear_type_name }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <!-- Card Footer -->
-                    <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
-                        <div class="vehicle-listing-location min-h-[1.25rem]">
-                            @if($dealerListingLocation !== '')
-                            <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <span class="truncate text-left" title="{{ $dealerListingLocation }}">{{ $dealerListingLocation }}</span>
-                            </div>
-                            @endif
-                        </div>
-                        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
-                            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="min-w-0 flex-[2]">
-                                <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md">
-                                    {{ __('messages.pages.vehicles.view_details') }}
-                                </button>
-                            </a>
-                            <button class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}');">
-                                {{ __('messages.pages.vehicles.enquire') }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    @php
+                        $firstImage = $vehicle->images->first();
+                        $imgUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+                        $badges = $listingPresentation->badgeFields($vehicle);
+                    @endphp
+                    <x-vehicle-listing-item
+                        :vehicle="$vehicle"
+                        :img-url="$imgUrl"
+                        :img-alt="$vehicle->title"
+                        :sales-type-name="$vehicle->salesType?->name"
+                        :trust-badge="$badges['trust_badge'] ?? false"
+                        :price-dropped-recently="$badges['price_dropped_recently'] ?? false"
+                        :premium-dealer-badge="$badges['premium_dealer_badge'] ?? false"
+                        :is-boosted="$badges['is_boosted'] ?? false"
+                    />
                 @empty
                 <div class="col-span-full flex items-center justify-center py-12">
                     <div class="flex flex-col items-center justify-center text-center">
@@ -412,6 +315,8 @@
         </div>
     </div>
 </div>
+
+<x-enquiry-dialog type="enquiry" :shared="true" />
 
 <!-- Dealer Enquiry Dialog -->
 <div id="dealer-enquiry-dialog" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="dealer-enquiry-dialog-title">
@@ -575,7 +480,6 @@
 
 <script>
 
-        const vehicleDetailUrl = (slug) => @json(rtrim(route('vehicle.detail', ['vehicle' => '__SLUG__']), '/')).replace('__SLUG__', encodeURIComponent(slug));
         const favoritesCheckUrl = (id) => @json(rtrim(route('favorites.check', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const favoritesDestroyUrl = (id) => @json(rtrim(route('favorites.destroy', ['vehicleId' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
         const favoritesStoreUrl = @json(route('favorites.store'));
@@ -913,12 +817,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @push('styles')
 <style>
-    /* List view styles - Compact design matching card view styles */
+    /* List view styles - CSS-only; markup stays the shared listing card */
     #vehicle-container[data-view="list"] {
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        grid-template-columns: 1fr;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item {
@@ -926,19 +832,13 @@ document.addEventListener('DOMContentLoaded', function() {
         grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) auto;
         align-items: stretch;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         border: 1px solid hsl(var(--border));
         overflow: hidden;
         transition: all 0.2s ease;
         cursor: pointer;
-    }
-    
-    #vehicle-container[data-view="list"] .vehicle-dealer-label {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 20;
-        width: fit-content;
-        pointer-events: none;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container {
@@ -950,33 +850,36 @@ document.addEventListener('DOMContentLoaded', function() {
         height: auto;
         min-height: 150px;
         align-self: stretch;
+        padding: 0;
         overflow: hidden;
         background-color: hsl(var(--muted) / 0.3);
         display: block;
         position: relative;
+        aspect-ratio: auto;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+        border-radius: 0;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-item-main-link,
-    #vehicle-container[data-view="list"] .vehicle-item > a {
-        display: grid;
-        grid-template-columns: subgrid;
-        grid-template-rows: subgrid;
-        grid-column: 1 / -1;
-        grid-row: 1 / -1;
+    #vehicle-container[data-view="list"] .vehicle-item-main-link {
+        display: flex;
+        flex-direction: column;
+        grid-column: 2;
+        grid-row: 1;
         min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper {
         grid-column: 2;
         grid-row: 1;
-        flex: 1;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         padding: 1rem 1rem 0.5rem;
@@ -997,27 +900,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper h3 {
-        font-size: 1.125rem;
-        font-weight: 700;
-        line-height: 1.3;
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1.35;
         margin: 0;
         min-height: 0;
-        color: hsl(var(--foreground));
-        display: block;
-        overflow: visible;
-        text-overflow: unset;
+        color: var(--muted-foreground, #64748b);
+        display: -webkit-box;
+        overflow: hidden;
         white-space: normal;
-        -webkit-line-clamp: unset;
-        line-clamp: unset;
-        -webkit-box-orient: unset;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
-        font-size: 1.125rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 800;
         margin: 0;
-        line-height: 1.2;
-        color: hsl(var(--primary));
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: hsl(var(--foreground));
+        font-variant-numeric: tabular-nums;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item-footer {
@@ -1047,26 +951,24 @@ document.addEventListener('DOMContentLoaded', function() {
         display: flex;
         flex-wrap: nowrap;
         gap: 0.5rem;
-        align-items: stretch;
+        align-items: center;
+        justify-content: flex-end;
         width: max-content;
         max-width: none;
+        min-width: 0;
     }
 
-    #vehicle-container[data-view="list"] .vehicle-actions-section > a,
-    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+    #vehicle-container[data-view="list"] .vehicle-actions-section > a {
         flex: 0 0 auto;
         width: auto;
         min-width: auto;
         max-width: none;
+        padding: 0 1rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
-    #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+    #vehicle-container[data-view="list"] .vehicle-actions-section a {
         height: 2.25rem;
-        width: auto;
-        min-width: auto;
-        max-width: none;
-        padding: 0 1rem;
         font-size: 0.875rem;
         font-weight: 500;
         border-radius: 0.375rem;
@@ -1077,19 +979,39 @@ document.addEventListener('DOMContentLoaded', function() {
         overflow: visible;
         box-sizing: border-box;
     }
-    
-    #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 10;
+
+    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+        flex: 0 0 2.25rem;
+        align-self: center;
+        width: 2.25rem;
+        min-width: 2.25rem;
+        max-width: 2.25rem;
+        height: 2.25rem;
+        min-height: 2.25rem;
+        max-height: 2.25rem;
+        padding: 0;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        box-sizing: border-box;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-image-container .absolute.top-2.left-2 {
-        top: 0.5rem;
-        left: 0.5rem;
+    #vehicle-container[data-view="list"] .vehicle-listing-overlays {
+        padding: 0.75rem 1rem;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-favorite,
+    #vehicle-container[data-view="list"] .vehicle-listing-new-badge {
+        position: static;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-favorite {
+        margin-left: auto;
     }
     
-    /* Tablet and up */
     @media (min-width: 768px) {
         #vehicle-container[data-view="list"] .vehicle-item {
             grid-template-columns: 240px minmax(0, 1fr);
@@ -1100,7 +1022,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    /* Large screens */
     @media (min-width: 1024px) {
         #vehicle-container[data-view="list"] .vehicle-item {
             grid-template-columns: 280px minmax(0, 1fr);
@@ -1111,7 +1032,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    /* Mobile optimizations */
     @media (max-width: 640px) {
         #vehicle-container[data-view="list"] {
             gap: 0.75rem;
@@ -1122,8 +1042,7 @@ document.addEventListener('DOMContentLoaded', function() {
             flex-direction: column;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-item-main-link,
-        #vehicle-container[data-view="list"] .vehicle-item > a {
+        #vehicle-container[data-view="list"] .vehicle-item-main-link {
             display: flex;
             flex-direction: column;
         }
@@ -1155,21 +1074,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         #vehicle-container[data-view="list"] .vehicle-actions-section {
             flex-direction: row;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             width: 100%;
             max-width: 100%;
         }
 
-        #vehicle-container[data-view="list"] .vehicle-actions-section > a,
-        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-            flex: 1 1 calc(50% - 0.25rem);
+        #vehicle-container[data-view="list"] .vehicle-actions-section > a {
+            flex: 1 1 auto;
             min-width: 0;
             max-width: 100%;
-        }
-        
-        #vehicle-container[data-view="list"] .vehicle-actions-section button,
-        #vehicle-container[data-view="list"] .vehicle-actions-section a button {
             width: 100%;
+        }
+
+        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+            flex: 0 0 2.25rem;
+            width: 2.25rem;
+            min-width: 2.25rem;
+            max-width: 2.25rem;
+            padding: 0;
         }
     }
     
@@ -1220,262 +1142,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('dealerVehicleView', 'card');
     }
     
-    // Format currency helper
-    function formatCurrency(amount) {
-        if (amount === null || amount === undefined) {
-            return 'N/A';
-        }
-        return new Intl.NumberFormat('da-DK', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(amount) + ' kr.';
-    }
-
-    const listingLocale = document.documentElement.lang || '{{ app()->getLocale() }}' || 'da';
-
-    function formatListingTitle(title) {
-        if (!title) return '';
-        return String(title).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-    }
-
-    function formatMonthYear(dateStr) {
-        if (!dateStr) return '';
-        if (typeof dateStr === 'string' && dateStr.match(/^[A-Z][a-z]{2} \d{4}$/)) {
-            return dateStr;
-        }
-        try {
-            return new Date(dateStr).toLocaleDateString(listingLocale, { month: 'short', year: 'numeric' });
-        } catch (e) {
-            return dateStr;
-        }
-    }
-
-    function formatListingLocation(vehicle) {
-        const parts = [];
-        const pc = vehicle.postcode || vehicle.seller_postcode;
-        const city = vehicle.city || vehicle.seller_city;
-        const addr = vehicle.address || vehicle.seller_address;
-        if (pc) parts.push(String(pc).trim());
-        if (city) parts.push(String(city).trim());
-        else if (addr) parts.push(String(addr).trim());
-        return parts.filter(Boolean).join(' ');
-    }
-    
-    // Render single vehicle list item
-    function renderVehicleListItem(vehicle) {
-        const rawImage = vehicle.thumbnail_url || vehicle.image_url || '';
-        const imageUrl = rawImage.includes('placeholder-vehicle') ? '' : rawImage;
-        const titleText = formatListingTitle(vehicle.title || '');
-        const locationText = formatListingLocation(vehicle);
-        
-        // Build badges
-        const badges = [];
-        const km = vehicle.km_driven != null && vehicle.km_driven !== '' ? vehicle.km_driven : (vehicle.mileage != null && vehicle.mileage !== '' ? vehicle.mileage : null);
-        if (km != null) {
-            badges.push(`${new Intl.NumberFormat('da-DK').format(Number(km))} km`);
-        }
-        if (vehicle.engine_power_hp) {
-            badges.push(`${Math.round(vehicle.engine_power_hp)} HP`);
-        }
-        if (vehicle.first_registration_date) {
-            badges.push(formatMonthYear(vehicle.first_registration_date));
-        }
-        if (vehicle.fuel_type_name) {
-            badges.push(vehicle.fuel_type_name);
-        }
-        if (vehicle.gear_type_name) {
-            badges.push(vehicle.gear_type_name);
-        }
-        
-        return `
-            <div class="vehicle-item relative bg-card rounded-lg overflow-hidden">
-                <a href="${vehicleDetailUrl(vehicle.slug)}" class="flex flex-1 flex-col min-w-0">
-                    <!-- Vehicle Image -->
-                    <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
-                        ${imageUrl ? `<img src="${imageUrl}" alt="${titleText}" width="800" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover" />` : `<div class="h-full w-full bg-muted" aria-hidden="true"></div>`}
-                        
-                        <!-- Heart Icon - Top Right -->
-                        <button type="button" class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-blue-600 hover:text-red-500 transition-colors heart-icon" data-vehicle-id="${vehicle.id}">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <!-- Vehicle Content -->
-                    <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
-                        <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
-                            <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
-                                ${titleText}
-                            </h3>
-                            ${vehicle.variant_name || vehicle.version ? `
-                            <p class="text-muted-foreground text-xs font-normal line-clamp-1">${vehicle.variant_name || vehicle.version}</p>
-                            ` : ''}
-                            <p class="vehicle-listing-price text-lg font-bold">
-                                ${formatCurrency(vehicle.price)}
-                            </p>
-                        </div>
-                        <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
-                            ${badges.map(badge => `<span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${badge}</span>`).join('')}
-                        </div>
-                    </div>
-                </a>
-                
-                <!-- Card Footer -->
-                <div class="vehicle-item-footer mt-auto flex shrink-0 flex-col gap-2 px-3 pb-3" onclick="event.stopPropagation()">
-                    <div class="vehicle-listing-location min-h-[1.25rem]">
-                        ${locationText ? `
-                        <div class="flex items-center justify-start gap-2 text-xs text-muted-foreground">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 flex-shrink-0">
-                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span class="truncate text-left" title="${locationText}">${locationText}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
-                        <a href="${vehicleDetailUrl(vehicle.slug)}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
-                            <button class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                {{ __('messages.pages.vehicles.view_details') }}
-                            </button>
-                        </a>
-                        <button 
-                            type="button"
-                            onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${vehicle.slug}')"
-                            class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                        >
-                            {{ __('messages.pages.vehicles.enquire') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Store original card HTML for restoration
-    const originalCardHTML = new Map();
-    
-    // Convert existing cards to list view
-    function convertCardsToList() {
-        if (!vehicleContainer || currentView !== 'list') return;
-        
-        const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
-        cards.forEach(card => {
-            // Check if already converted
-            if (card.classList.contains('vehicle-item')) return;
-            
-            // Store original HTML before conversion (use slug as key; link now contains slug)
-            const link = card.querySelector('a[href*="/biler/"]');
-            const vehicleSlug = link?.getAttribute('href')?.match(/\/biler\/([^/]+)/)?.[1] || '';
-            const vehicleId = card.querySelector('[data-vehicle-id]')?.getAttribute('data-vehicle-id') || '';
-            if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
-                originalCardHTML.set(vehicleSlug, card.outerHTML);
-            }
-            
-            // Extract vehicle data from the card
-            const img = card.querySelector('img');
-            const titleEl = card.querySelector('h3');
-            const versionEl = card.querySelector('.text-muted-foreground.text-xs.font-normal');
-            const priceEl = card.querySelector('.text-lg.font-bold');
-            const badgeElements = Array.from(card.querySelectorAll('.inline-flex.items-center.rounded-md.border'));
-            
-            if (!vehicleSlug) return;
-            
-            // Parse price
-            let price = null;
-            if (priceEl) {
-                const priceText = priceEl.textContent.trim();
-                price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-            }
-            
-            // Parse badges
-            let mileage = null, km_driven = null, engine_power_hp = null, first_registration_date = null, fuel_type_name = null, gear_type_name = null;
-            
-            badgeElements.forEach(badge => {
-                const badgeText = badge.textContent.trim();
-                if (badgeText.includes('km')) {
-                    const kmValue = parseFloat(badgeText.replace(/[^0-9.]/g, ''));
-                    mileage = kmValue;
-                    km_driven = kmValue;
-                } else if (badgeText.includes('HP')) {
-                    engine_power_hp = parseFloat(badgeText.replace(/[^0-9.]/g, ''));
-                } else if (badgeText.match(/^[A-Z][a-z]{2} \d{4}$/)) {
-                    first_registration_date = badgeText;
-                } else if (!badgeText.includes('km') && !badgeText.includes('HP') && !badgeText.match(/^[A-Z][a-z]{2} \d{4}$/)) {
-                    // Could be fuel type or gear type
-                    if (!fuel_type_name) {
-                        fuel_type_name = badgeText;
-                    } else if (!gear_type_name) {
-                        gear_type_name = badgeText;
-                    }
-                }
-            });
-            
-            // Create vehicle object
-            const vehicle = {
-                id: vehicleId,
-                slug: vehicleSlug,
-                title: titleEl ? titleEl.textContent.trim() : '',
-                version: versionEl ? versionEl.textContent.trim() : '',
-                price: price,
-                thumbnail_url: img && img.src && !img.src.includes('placeholder-vehicle') ? img.src : '',
-                mileage: mileage,
-                km_driven: km_driven,
-                engine_power_hp: engine_power_hp,
-                first_registration_date: first_registration_date,
-                fuel_type_name: fuel_type_name,
-                gear_type_name: gear_type_name
-            };
-            
-            // Replace card with list item
-            const listItem = document.createElement('div');
-            listItem.innerHTML = renderVehicleListItem(vehicle);
-            const newElement = listItem.firstElementChild;
-            if (newElement) {
-                card.replaceWith(newElement);
-            }
-        });
-    }
-    
-    // Convert list items back to cards
-    function convertListToCards() {
-        if (!vehicleContainer || currentView !== 'card') return;
-        
-        const listItems = vehicleContainer.querySelectorAll('.vehicle-item');
-        listItems.forEach(listItem => {
-            // Extract vehicle slug from list item (link now contains slug)
-            const link = listItem.querySelector('a[href*="/biler/"]');
-            const vehicleSlug = link ? link.getAttribute('href').match(/\/biler\/([^/]+)/)?.[1] : '';
-            
-            if (!vehicleSlug) return;
-            
-            // Restore original card HTML if available
-            if (originalCardHTML.has(vehicleSlug)) {
-                const originalHTML = originalCardHTML.get(vehicleSlug);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = originalHTML;
-                const restoredCard = tempDiv.firstElementChild;
-                if (restoredCard) {
-                    listItem.replaceWith(restoredCard);
-                }
-            } else {
-                // If original HTML not available, extract data and render card
-                const img = listItem.querySelector('img');
-                const titleEl = listItem.querySelector('.vehicle-content-wrapper h3, .vehicle-content-wrapper span');
-                const priceEl = listItem.querySelector('.text-sm.font-semibold');
-                const versionEl = listItem.querySelector('.text-muted-foreground');
-                const badgeElements = Array.from(listItem.querySelectorAll('.inline-flex.items-center.rounded-md.border'));
-                
-                // This is a fallback - ideally we should always have original HTML
-                // For now, just remove list-specific classes and restore card structure
-                listItem.classList.remove('vehicle-item', 'relative', 'bg-card', 'rounded-lg', 'overflow-hidden');
-                listItem.classList.add('flex', 'flex-col', 'rounded-2xl', 'bg-card', 'overflow-hidden', 'p-0', 'cursor-pointer', 'h-full', 'shadow-sm');
-            }
-        });
-    }
-    
-    // Update view toggle button styles
     function updateViewToggleStyles() {
         viewToggleRadios.forEach(radio => {
             const label = radio.closest('.view-toggle-label');
@@ -1503,42 +1169,19 @@ document.addEventListener('DOMContentLoaded', function() {
         currentView = view;
         localStorage.setItem('dealerVehicleView', view);
         
-        // Update radio button selection
         viewToggleRadios.forEach(radio => {
             radio.checked = radio.value === view;
         });
         
-        // Hide container during conversion to prevent visual transition
-        vehicleContainer.style.opacity = '0';
-        vehicleContainer.style.transition = 'opacity 0.1s';
+        vehicleContainer.setAttribute('data-view', view);
+        if (view === 'list') {
+            vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
+            vehicleContainer.classList.add('flex', 'flex-col');
+        } else {
+            vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
+            vehicleContainer.classList.remove('flex', 'flex-col');
+        }
         
-        // Use requestAnimationFrame to ensure the hide happens before conversion
-        requestAnimationFrame(() => {
-            // Update container data attribute and classes
-            vehicleContainer.setAttribute('data-view', view);
-            if (view === 'list') {
-                vehicleContainer.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
-                vehicleContainer.classList.add('flex', 'flex-col');
-                // Convert cards to list view synchronously
-                convertCardsToList();
-            } else {
-                vehicleContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-4');
-                vehicleContainer.classList.remove('flex', 'flex-col');
-                // Convert list items back to cards synchronously
-                convertListToCards();
-            }
-            
-            // Show container after conversion is complete
-            requestAnimationFrame(() => {
-                vehicleContainer.style.opacity = '1';
-                // Remove transition after showing to prevent it from affecting future changes
-                setTimeout(() => {
-                    vehicleContainer.style.transition = '';
-                }, 100);
-            });
-        });
-        
-        // Update view toggle button styles
         updateViewToggleStyles();
     }
     
@@ -1572,34 +1215,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 250);
     });
     
-    // Store original card HTML on page load
-    function storeOriginalCards() {
-        if (!vehicleContainer) return;
-        const cards = vehicleContainer.querySelectorAll('.flex.flex-col.rounded-2xl');
-        cards.forEach(card => {
-            const link = card.querySelector('a[href*="/biler/"]');
-            const vehicleSlug = link ? link.getAttribute('href').match(/\/biler\/([^/]+)/)?.[1] : '';
-            if (vehicleSlug && !originalCardHTML.has(vehicleSlug)) {
-                originalCardHTML.set(vehicleSlug, card.outerHTML);
-            }
-        });
+    if (isMobile()) {
+        currentView = 'card';
+        localStorage.setItem('dealerVehicleView', 'card');
     }
-    
-    // Initialize view on page load
-    if (currentView) {
-        // Store original cards first
-        storeOriginalCards();
-        
-        // Force card view on mobile
-        if (isMobile()) {
-            currentView = 'card';
-            localStorage.setItem('dealerVehicleView', 'card');
-        }
-        setView(currentView);
-    } else {
-        // Store original cards even if no view preference
-        storeOriginalCards();
-    }
+    setView(currentView);
     
     // Initialize view toggle styles
     updateViewToggleStyles();

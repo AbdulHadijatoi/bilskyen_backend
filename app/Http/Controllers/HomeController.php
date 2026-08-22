@@ -97,45 +97,18 @@ class HomeController extends Controller
         // Fetch featured vehicles
         $featuredVehicles = FeaturedListing::with([
             'vehicle.images',
+            'vehicle.salesType',
+            'vehicle.fuelType',
+            'vehicle.gearType',
+            'vehicle.dealer',
             'vehicle.variant',
             'vehicle.dmrFactVehicle.variant',
         ])
             ->orderBy('sort_order')
             ->get()
-            ->map(function ($featuredListing) {
-                $vehicle = $featuredListing->vehicle;
-                if (!$vehicle) {
-                    return null;
-                }
-
-                // Get first image
-                $firstImage = $vehicle->images->first();
-                $imageUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
-
-                // Build title
-                $title = $vehicle->title ?? trim(($vehicle->brand_name ?? '') . ' ' . ($vehicle->model_name ?? ''));
-                
-                return [
-                    'id' => $vehicle->id,
-                    'slug' => $vehicle->slug,
-                    'title' => $title,
-                    'variant_name' => $vehicle->variant_name,
-                    'price' => $vehicle->price ?? 0,
-                    'image' => $imageUrl,
-                    'km_driven' => $vehicle->km_driven ?? 0,
-                    'engine_power_hp' => $vehicle->engine_power_hp,
-                    'model_year_name' => $vehicle->model_year_name,
-                    'fuel_type_name' => $vehicle->fuel_type_name,
-                    'gear_type_name' => $vehicle->gear_type_name,
-                    'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
-                    'dealer_id' => $vehicle->dealer_id,
-                    'seller_address' => $vehicle->seller_address,
-                    'seller_postcode' => $vehicle->seller_postcode,
-                    'sales_type_name' => null,
-                ];
-            })
-            ->filter() // Remove null entries
-            ->values(); // Re-index array
+            ->map(fn ($featuredListing) => $featuredListing->vehicle)
+            ->filter()
+            ->values();
 
         // Get home page content from cache
         $homePageContent = $this->pageContentService->getHomePageContent('home');
@@ -168,6 +141,7 @@ class HomeController extends Controller
             'lifestyleChips' => $this->aiService->isGloballyEnabled()
                 ? app(SuggestionService::class)->lifestyleChips($locale, $sessionSeed, 2)
                 : [],
+            'listingPresentation' => $this->vehicleListingPresentationService,
         ]);
     }
 
@@ -768,6 +742,10 @@ class HomeController extends Controller
         $favorites = \App\Models\Favorite::where('user_id', $user->id)
             ->with([
                 'vehicle.images',
+                'vehicle.salesType',
+                'vehicle.fuelType',
+                'vehicle.gearType',
+                'vehicle.dealer',
                 'vehicle.dmrFactVehicle.variant.model.brand',
             ])
             ->orderBy('created_at', 'desc')
@@ -775,6 +753,7 @@ class HomeController extends Controller
 
         return view('favorites', [
             'favorites' => $favorites,
+            'listingPresentation' => $this->vehicleListingPresentationService,
         ]);
     }
 }

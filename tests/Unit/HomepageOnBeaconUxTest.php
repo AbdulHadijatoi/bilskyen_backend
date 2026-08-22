@@ -32,8 +32,8 @@ class HomepageOnBeaconUxTest extends TestCase
         $this->assertStringContainsString('home-filter-advanced-link', $home);
         $this->assertStringContainsString('filter_help_brand', $home);
         $this->assertStringContainsString('home-trust-heading', $home);
-        $this->assertStringContainsString('vehicle-card-enquire-btn', $home);
-        $this->assertStringContainsString('vehicle-listing-specs', $home);
+        $this->assertStringContainsString('<x-vehicle-listing-item', $home);
+        $this->assertStringContainsString('featured-vehicle-card', $home);
         $this->assertStringContainsString("aria-expanded=\"false\"", $home);
 
         $this->assertDoesNotMatchRegularExpression(
