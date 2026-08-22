@@ -66,7 +66,7 @@ class DealerStaffController extends Controller
      * Create new staff member
      * 
      * Request body:
-     * { "name": "John Doe", "email": "john@example.com" (optional), "phone": "123456789" (optional), "password": "password123" }
+     * { "name": "Staff Member", "email": "staff@example.com" (optional), "phone": "123456789" (optional), "password": "password123" }
      */
     public function store(Request $request): JsonResponse
     {
