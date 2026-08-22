@@ -182,9 +182,11 @@ class RelatedVehiclesService
 
         $year = $vehicle->model_year ?? $vehicle->first_registration_year;
         if ($year !== null) {
-            $parts[] = 'CASE WHEN COALESCE(vehicles.model_year, vehicles.first_registration_year) IS NOT NULL'
-                .' AND ABS(COALESCE(vehicles.model_year, vehicles.first_registration_year) - ?) <= 2 THEN 10 ELSE 0 END';
-            $bindings[] = (int) $year;
+            $yearInt = (int) $year;
+            $parts[] = 'CASE WHEN COALESCE(vehicles.model_year, vehicles.first_registration_year)'
+                .' BETWEEN ? AND ? THEN 10 ELSE 0 END';
+            $bindings[] = $yearInt - 2;
+            $bindings[] = $yearInt + 2;
         }
 
         if ($vehicle->fuel_type_id) {
