@@ -1003,24 +1003,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     #vehicle-container[data-view="list"] .vehicle-item-footer {
         margin-top: auto;
-        flex-shrink: 0;
+        flex: 0 0 auto;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
         gap: 0.5rem;
         padding: 1rem;
-        min-width: 0;
+        min-width: min-content;
+        width: auto;
+        max-width: none;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section {
         display: flex;
+        flex-wrap: nowrap;
         gap: 0.5rem;
-        align-items: center;
+        align-items: stretch;
+        width: max-content;
+        max-width: none;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: auto;
+        max-width: none;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
     #vehicle-container[data-view="list"] .vehicle-actions-section a button {
         height: 2.25rem;
+        width: auto;
+        min-width: auto;
+        max-width: none;
         padding: 0 1rem;
         font-size: 0.875rem;
         font-weight: 500;
@@ -1029,6 +1045,8 @@ document.addEventListener('DOMContentLoaded', function() {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        overflow: visible;
+        box-sizing: border-box;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
@@ -1086,11 +1104,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         #vehicle-container[data-view="list"] .vehicle-item-footer {
             padding: 0 1rem 1rem;
+            min-width: 0;
+            width: 100%;
+            flex: 1 1 auto;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section {
             flex-direction: row;
+            flex-wrap: wrap;
             width: 100%;
+            max-width: 100%;
+        }
+
+        #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+            flex: 1 1 calc(50% - 0.25rem);
+            min-width: 0;
+            max-width: 100%;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section button,

@@ -10,7 +10,7 @@
 ])
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
-        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
+        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
             <img
                 src="{{ $imgUrl }}"
                 alt="{{ $imgAlt }}"
@@ -80,7 +80,7 @@
                         {{ $vehicle->variant_name }}
                     </p>
                 @endif
-                <p class="vehicle-listing-price text-lg font-bold">
+                <p class="vehicle-listing-price text-2xl font-extrabold tabular-nums tracking-tight">
                     {{ \App\Helpers\FormatHelper::formatCurrency($vehicle->price ?? null) }}
                 </p>
             </div>
@@ -126,7 +126,7 @@
             <button
                 type="button"
                 onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98] dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                class="vehicle-card-enquire-btn flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98] dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
             >
                 {{ __('messages.pages.vehicles.enquire') }}
             </button>

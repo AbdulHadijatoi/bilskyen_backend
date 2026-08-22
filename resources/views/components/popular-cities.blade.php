@@ -1,11 +1,31 @@
 @props([
     'cities' => null,
     'limit' => 8,
+    'variant' => 'strip',
 ])
 @php
     $cities = $cities ?? app(\App\Services\CityIndexService::class)->topCities((int) $limit);
+    $isSidebar = $variant === 'sidebar';
 @endphp
 @if($cities->isNotEmpty())
+@if($isSidebar)
+<div {{ $attributes->merge(['class' => 'filter-card bg-white shrink-0 listing-popular-cities']) }}>
+    <div class="filter-section">
+        <p class="filter-section-title">{{ __('messages.pages.cities.popular_cities') }}</p>
+        <div class="filter-pill-row">
+            @foreach($cities as $city)
+                <a href="/biler-i/{{ $city->slug }}" class="filter-pill">
+                    {{ $city->name }}
+                    @if($city->published_vehicle_count > 0)
+                        <span class="facet-count">{{ $city->published_vehicle_count }}</span>
+                    @endif
+                </a>
+            @endforeach
+        </div>
+        <a href="/byer" class="mt-2 inline-block text-xs font-medium text-primary hover:underline">{{ __('messages.pages.footer.all_cities') }}</a>
+    </div>
+</div>
+@else
 <section {{ $attributes->merge(['class' => 'popular-cities-strip']) }}>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
         <h2 class="text-lg font-semibold text-foreground">{{ __('messages.pages.cities.popular_cities') }}</h2>
@@ -22,4 +42,5 @@
         @endforeach
     </div>
 </section>
+@endif
 @endif

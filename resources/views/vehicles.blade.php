@@ -57,7 +57,7 @@
     </h1>
 
     <!-- Filters + Sort/View/Layout -->
-    <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start w-full">
+    <div class="flex min-w-0 w-full flex-col items-start gap-4 lg:flex-row lg:gap-6">
 
         <style>
             #filter-sidebar details > summary { list-style: none; }
@@ -95,11 +95,11 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 0.5rem;
-                font-size: 0.6875rem;
-                font-weight: 600;
-                color: var(--muted-foreground, #64748b);
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
+                font-size: 0.8125rem;
+                font-weight: 700;
+                color: var(--foreground, #0f172a);
+                letter-spacing: 0.01em;
+                text-transform: none;
             }
             #filter-sidebar details > summary .filter-summary-icon {
                 width: 1rem;
@@ -115,12 +115,12 @@
                 border-bottom: 0;
             }
             #filter-sidebar .filter-section-title {
-                margin: 0 0 0.5rem;
-                font-size: 0.6875rem;
-                font-weight: 600;
-                color: var(--muted-foreground, #64748b);
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
+                margin: 0 0 0.65rem;
+                font-size: 0.8125rem;
+                font-weight: 700;
+                color: var(--foreground, #0f172a);
+                letter-spacing: 0.02em;
+                text-transform: none;
             }
             #filter-sidebar .filter-field-label {
                 display: block;
@@ -318,10 +318,142 @@
                 box-shadow: none;
                 border-color: transparent;
             }
+            #filter-sidebar {
+                gap: 1.5rem;
+            }
+            #listing-advanced-filters {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            #listing-advanced-filters[hidden] {
+                display: none;
+            }
+            .listing-more-filters-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                width: 100%;
+                min-height: 2.75rem;
+                padding: 0.65rem 1rem;
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: 0.75rem;
+                background: #fff;
+                color: var(--foreground, #0f172a);
+                font-size: 0.8125rem;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .listing-more-filters-toggle:hover {
+                border-color: color-mix(in oklch, var(--primary, #03418b) 35%, var(--border, #e2e8f0));
+                background: color-mix(in oklch, var(--muted, #f1f5f9) 55%, transparent);
+            }
+            .listing-more-filters-toggle:focus-visible {
+                outline: 2px solid var(--primary, #03418b);
+                outline-offset: 2px;
+            }
+            .listing-results-bar {
+                position: sticky;
+                top: 0;
+                z-index: 15;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem 0.75rem;
+                margin: 0 0 0.75rem;
+                padding: 0.65rem 0.85rem;
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: 0.75rem;
+                background: color-mix(in oklch, var(--background, #fff) 88%, transparent);
+                backdrop-filter: blur(8px);
+            }
+            .listing-results-bar__count {
+                margin: 0;
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: var(--foreground, #0f172a);
+            }
+            .listing-results-bar__filters {
+                font-size: 0.75rem;
+                color: var(--muted-foreground, #64748b);
+            }
+            .vehicle-listing-price {
+                font-size: 1.5rem;
+                font-weight: 800;
+                line-height: 1.15;
+                letter-spacing: -0.02em;
+                color: var(--foreground, #0f172a);
+                font-variant-numeric: tabular-nums;
+            }
+            .vehicle-image-container {
+                background: var(--muted, #f1f5f9);
+            }
+            .vehicle-card-enquire-btn {
+                border-width: 1px;
+                background: #fff;
+            }
+            .listing-skeleton-card {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: 1rem;
+                background: var(--card, #fff);
+            }
+            .listing-skeleton-image,
+            .listing-skeleton-line {
+                background: linear-gradient(90deg, var(--muted, #f1f5f9) 0%, #e8eef5 50%, var(--muted, #f1f5f9) 100%);
+                background-size: 200% 100%;
+                animation: listing-skeleton-shimmer 1.2s ease-in-out infinite;
+            }
+            .listing-skeleton-image {
+                aspect-ratio: 2 / 1.5;
+                width: 100%;
+            }
+            .listing-skeleton-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.85rem;
+            }
+            .listing-skeleton-line {
+                height: 0.75rem;
+                border-radius: 999px;
+            }
+            .listing-skeleton-line.is-title { width: 70%; height: 1rem; }
+            .listing-skeleton-line.is-price { width: 45%; height: 1.35rem; }
+            .listing-skeleton-line.is-meta { width: 88%; }
+            @keyframes listing-skeleton-shimmer {
+                0% { background-position: 100% 0; }
+                100% { background-position: -100% 0; }
+            }
+            #pagination-wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.75rem;
+                margin-top: 2rem;
+                width: 100%;
+            }
+            .pagination-btn {
+                min-height: 2.75rem;
+                min-width: 2.75rem;
+            }
+            .pagination-page-current {
+                background: var(--primary, #03418b);
+                border-color: var(--primary, #03418b);
+                color: #fff;
+                font-weight: 700;
+            }
+            .pagination-page-current:hover {
+                background: var(--primary, #03418b);
+                color: #fff;
+            }
         </style>
 
         <!-- Sort, view toggle and results (DOM-first so listing links precede the filter tree) -->
-        <div class="flex-1 flex flex-col gap-2 w-full lg:order-2">
+        <div class="flex min-w-0 w-full flex-1 flex-col gap-2 lg:order-2">
             <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
             <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
                 <p class="js-results-count lg:hidden text-xs text-muted-foreground whitespace-nowrap">
@@ -391,9 +523,16 @@
             </div>
         </div>
     </div>
-    
-    <div class="mb-6">
-        <x-popular-cities class="rounded-xl border border-border bg-card p-4" />
+
+    <div id="listing-results-bar" class="listing-results-bar">
+        <p class="js-results-count listing-results-bar__count">
+            @if(!empty($showNoResultsMessage))
+                {{ str_replace(':count', '0', __('messages.pages.vehicles.vehicles_match_filters')) }}
+            @else
+                {{ str_replace(':count', number_format($vehicles->total()), __('messages.pages.vehicles.vehicles_match_filters')) }}
+            @endif
+        </p>
+        <span id="listing-filters-applied" class="listing-results-bar__filters hidden">{{ __('messages.pages.vehicles.filters_applied') }}</span>
     </div>
 
     <!-- No filter matches (shown above results when filters return zero) -->
@@ -484,29 +623,31 @@
     <x-login-dialog />
 
     <!-- Pagination -->
-    <div id="pagination-container" class="mt-8 flex w-full min-w-0 max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2">
-        <button class="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-input bg-background px-2.5 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled aria-label="{{ __('messages.common.previous') }}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 sm:mr-2">
-                <path d="m15 18-6-6 6-6"></path>
-            </svg>
-            <span class="hidden sm:inline">{{ __('messages.common.previous') }}</span>
-        </button>
-        <button class="inline-flex h-10 min-w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background px-2.5 sm:min-w-10 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            1
-        </button>
-        <button class="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-input bg-background px-2.5 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="{{ __('messages.common.next') }}">
-            <span class="hidden sm:inline">{{ __('messages.common.next') }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 sm:ml-2">
-                <path d="m9 18 6-6-6-6"></path>
-            </svg>
-        </button>
+    <div id="pagination-wrap">
+        <div id="pagination-container" class="flex w-full min-w-0 max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2">
+            <button class="pagination-btn inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled aria-label="{{ __('messages.common.previous') }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 sm:mr-2">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                <span class="hidden sm:inline">{{ __('messages.common.previous') }}</span>
+            </button>
+            <button class="pagination-btn pagination-page-current inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-input px-3 sm:min-w-12 sm:px-4 py-2 text-sm font-medium shadow-sm" aria-current="page">
+                1
+            </button>
+            <button class="pagination-btn inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" aria-label="{{ __('messages.common.next') }}">
+                <span class="hidden sm:inline">{{ __('messages.common.next') }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 sm:ml-2">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 </div>
 
         <!-- Filter Sidebar -->
         <aside
             id="filter-sidebar"
-            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-muted lg:bg-transparent shadow-none w-full lg:w-72 xl:w-80 shrink-0 border-0 lg:p-0 gap-4"
+            class="hidden lg:flex lg:flex-col lg:order-1 fixed lg:relative inset-0 lg:inset-auto z-40 lg:z-auto overflow-y-auto lg:overflow-visible bg-muted lg:bg-transparent shadow-none w-full lg:w-72 xl:w-80 shrink-0 border-0 lg:p-0 gap-6"
         >
             @php
                 $cf = $currentFilters ?? [];
@@ -547,15 +688,10 @@
                         {{ __('messages.pages.vehicles.clear_all_filters') }}
                     </button>
                 </div>
-                <p id="results-count" class="js-results-count sidebar-filter-summary__match">
-                    @if(!empty($showNoResultsMessage))
-                        {{ str_replace(':count', '0', __('messages.pages.vehicles.vehicles_match_filters')) }}
-                    @else
-                        {{ str_replace(':count', number_format($vehicles->total()), __('messages.pages.vehicles.vehicles_match_filters')) }}
-                    @endif
-                </p>
                 <div id="applied-filters-container" class="sidebar-filter-summary__chips"></div>
             </div>
+
+            <x-popular-cities variant="sidebar" />
 
             <!-- Condition + Listing Type + Sales Type (always visible) -->
             <div class="filter-card bg-white shrink-0">
@@ -795,11 +931,30 @@
                 </div>
             </details>
 
-            <!-- Fuel & Body (open by default) -->
             @php
                 $selectedFuelTypeIds = isset($cf['fuel_type_id']) ? (is_array($cf['fuel_type_id']) ? $cf['fuel_type_id'] : [$cf['fuel_type_id']]) : [];
+                $fuelBodyActive = count($selectedFuelTypeIds) || isset($cf['body_type_id']);
+                $moreDetailsOpen = isset($cf['color_id']) || isset($cf['price_type_id']) || isset($cf['emission_norm_id']) || isset($cf['use_id']);
+                $yearSpecsOpen = isset($cf['first_registration_year_from']) || isset($cf['first_registration_year_to']) || isset($cf['ownership_tax_from']) || isset($cf['ownership_tax_to']) || isset($cf['engine_power_kw_from']) || isset($cf['engine_power_kw_to']) || isset($cf['electrical_consumption_from']) || isset($cf['electrical_consumption_to']) || isset($cf['km_per_liter_from']) || isset($cf['km_per_liter_to']);
+                $physicalOpen = isset($cf['max_speed_from']) || isset($cf['max_speed_to']) || isset($cf['maximum_weight_kg_from']) || isset($cf['maximum_weight_kg_to']) || isset($cf['door_count']) || isset($cf['seats_min']) || isset($cf['seats_max']) || isset($cf['axle_count']) || isset($cf['specifications_airbags']) || isset($cf['towing_weight']);
+                $extrasOpen = isset($cf['charging_type']) || !empty($cf['ncap_test']) || !empty($cf['is_import']) || !empty($cf['is_factory_new']);
+                $equipmentActive = !empty($cf['equipment_ids']);
+                $advancedFiltersOpen = $fuelBodyActive || $moreDetailsOpen || $yearSpecsOpen || $physicalOpen || $extrasOpen || $equipmentActive;
             @endphp
-            <details open class="filter-card bg-white">
+
+            <button
+                type="button"
+                id="listing-more-filters-toggle"
+                class="listing-more-filters-toggle shrink-0"
+                aria-expanded="{{ $advancedFiltersOpen ? 'true' : 'false' }}"
+                aria-controls="listing-advanced-filters"
+            >
+                <span data-more-filters-label>{{ $advancedFiltersOpen ? __('messages.pages.vehicles.fewer_filters') : __('messages.pages.vehicles.more_filters') }}</span>
+            </button>
+            <div id="listing-advanced-filters" @if(!$advancedFiltersOpen) hidden @endif>
+
+            <!-- Fuel & Body -->
+            <details @if($fuelBodyActive) open @endif class="filter-card bg-white">
                 <summary>
                     <span class="filter-summary-title">{{ __('messages.forms.fuel_type') }} / {{ __('messages.forms.body_type') }}</span>
                     <svg class="filter-chevron w-4 h-4 text-muted-foreground flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
@@ -1127,6 +1282,7 @@
                     <p class="text-xs text-muted-foreground py-1">{{ __('messages.pages.vehicles.equipment_loading') }}</p>
                 </div>
             </details>
+            </div>
         </aside>
     </div>
 
@@ -1137,13 +1293,17 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        grid-template-columns: 1fr;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-item {
         display: flex;
         flex-direction: row;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         border: 1px solid hsl(var(--border));
         overflow: hidden;
         transition: all 0.2s ease;
@@ -1165,6 +1325,8 @@
         display: flex;
         flex-direction: row;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         border: 1px solid hsl(var(--border));
         overflow: hidden;
         transition: all 0.2s ease;
@@ -1183,9 +1345,10 @@
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container {
-        flex-shrink: 0;
+        flex: 0 1 200px;
         width: 200px;
-        min-width: 200px;
+        min-width: 8rem;
+        max-width: 40%;
         height: 150px;
         padding: 0;
         overflow: hidden;
@@ -1211,12 +1374,13 @@
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper {
-        flex: 1;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         padding: 1rem;
         gap: 0;
         position: relative;
+        min-width: 0;
         min-height: 0;
     }
     
@@ -1240,33 +1404,60 @@
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
-        font-size: 1.125rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 800;
         margin: 0;
-        line-height: 1.2;
-        color: hsl(var(--primary));
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: hsl(var(--foreground));
+        font-variant-numeric: tabular-nums;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-item-footer {
+    #vehicle-container[data-view="list"] .vehicle-item-footer,
+    #vehicle-fallback-section[data-view="list"] .vehicle-item-footer {
         margin-top: auto;
-        flex-shrink: 0;
+        flex: 0 0 auto;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
+        align-items: stretch;
         gap: 0.5rem;
         padding: 1rem;
-        min-width: 0;
+        min-width: min-content;
+        width: auto;
+        max-width: none;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-actions-section {
+    #vehicle-container[data-view="list"] .vehicle-actions-section,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section {
         display: flex;
+        flex-wrap: nowrap;
         gap: 0.5rem;
-        align-items: center;
+        align-items: stretch;
+        justify-content: flex-end;
+        width: max-content;
+        max-width: none;
+        min-width: 0;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: auto;
+        max-width: none;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
-    #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+    #vehicle-container[data-view="list"] .vehicle-actions-section a button,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section button,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section a button {
         height: 2.25rem;
+        width: auto;
+        min-width: auto;
+        max-width: none;
         padding: 0 1rem;
         font-size: 0.875rem;
         font-weight: 500;
@@ -1275,6 +1466,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        overflow: visible;
+        box-sizing: border-box;
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
@@ -1291,8 +1484,8 @@
     /* Tablet and up */
     @media (min-width: 768px) {
         #vehicle-container[data-view="list"] .vehicle-image-container {
+            flex-basis: 240px;
             width: 240px;
-            min-width: 240px;
             height: 180px;
         }
     }
@@ -1300,8 +1493,8 @@
     /* Large screens */
     @media (min-width: 1024px) {
         #vehicle-container[data-view="list"] .vehicle-image-container {
+            flex-basis: 280px;
             width: 280px;
-            min-width: 280px;
             height: 200px;
         }
     }
@@ -1330,17 +1523,35 @@
             padding: 1rem;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-item-footer {
+        #vehicle-container[data-view="list"] .vehicle-item-footer,
+        #vehicle-fallback-section[data-view="list"] .vehicle-item-footer {
             padding: 0 1rem 1rem;
+            min-width: 0;
+            width: 100%;
+            flex: 1 1 auto;
         }
         
-        #vehicle-container[data-view="list"] .vehicle-actions-section {
+        #vehicle-container[data-view="list"] .vehicle-actions-section,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section {
             flex-direction: row;
+            flex-wrap: wrap;
             width: 100%;
+            max-width: 100%;
+        }
+
+        #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+            flex: 1 1 calc(50% - 0.25rem);
+            min-width: 0;
+            max-width: 100%;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section button,
-        #vehicle-container[data-view="list"] .vehicle-actions-section a button {
+        #vehicle-container[data-view="list"] .vehicle-actions-section a button,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section button,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section a button {
             width: 100%;
         }
     }
@@ -1532,11 +1743,16 @@
             suggestedVehiclesIntro: @json(__('messages.pages.vehicles.suggested_vehicles_intro')),
             noVehiclesFound: @json(__('messages.forms.no_vehicles_found')),
             results: @json(__('messages.forms.results')),
+            moreFilters: @json(__('messages.pages.vehicles.more_filters')),
+            fewerFilters: @json(__('messages.pages.vehicles.fewer_filters')),
+            filtersApplied: @json(__('messages.pages.vehicles.filters_applied')),
+            loadingResults: @json(__('messages.pages.vehicles.loading_results')),
         };
         const CHIP_COLLAPSE_LIMIT = 5;
         
         let searchDebounceTimer = null;
         let isLoading = false;
+        let listingHasHydrated = false;
         let latestListingFacets = Object.assign({}, @json($listingFacets ?? []));
 
         function formatFacetCount(n) {
@@ -1655,11 +1871,12 @@
             const salesTypeLabel = (details.sales_type_name || details.salesTypeName || vehicle.sales_type_name || vehicle.salesTypeName || '').trim();
             const titleText = formatListingTitle(vehicle.title || '');
             const locationText = formatListingLocation(vehicle);
+            const priceLabel = formatCurrency(vehicle.price);
 
             return `
                 <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
                     <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
-                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden">
+                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
                             <img
                                 src="${imageUrl}"
                                 alt="${titleText}"
@@ -1717,8 +1934,8 @@
                                     ${vehicle.variant_name}
                                 </p>
                                 ` : ''}
-                                <p class="vehicle-listing-price text-lg font-bold">
-                                    ${formatCurrency(vehicle.price)}
+                                <p class="vehicle-listing-price text-2xl font-extrabold tabular-nums tracking-tight">
+                                    ${priceLabel}
                                 </p>
                             </div>
                             <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
@@ -1758,7 +1975,7 @@
                                     {{ __('messages.pages.vehicles.view_details') }}
                                 </button>
                             </a>
-                            <button type="button" class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
+                            <button type="button" class="vehicle-card-enquire-btn flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
                                 {{ __('messages.pages.vehicles.enquire') }}
                             </button>
                         </div>
@@ -1789,7 +2006,7 @@
                 <p class="text-muted-foreground mt-1">
                     ${I18N_BMV.tryAdjustingFilters}
                 </p>
-                <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <button type="button" class="empty-state-reset-btn mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                     ${I18N_BMV.resetFilters}
                 </button>
             </div>
@@ -1954,10 +2171,10 @@
             
             console.log('Rendering pagination HTML');
             
-            paginationContainer.className = 'mt-8 flex w-full min-w-0 max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2';
+            paginationContainer.className = 'flex w-full min-w-0 max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2';
 
-            const pageBtnClass = 'pagination-btn inline-flex h-10 min-w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background px-2.5 sm:min-w-10 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
-            const navBtnClass = 'pagination-btn inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-input bg-background px-2.5 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
+            const pageBtnClass = 'pagination-btn inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 sm:min-w-12 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+            const navBtnClass = 'pagination-btn inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
 
             let paginationHTML = '';
             
@@ -1997,10 +2214,12 @@
             }
             
             for (let i = startPage; i <= endPage; i++) {
+                const isCurrent = i === currentPageNum;
                 paginationHTML += `
                     <button 
                         data-page="${i}"
-                        class="${pageBtnClass} ${i === currentPageNum ? 'bg-accent' : ''}"
+                        class="${pageBtnClass} ${isCurrent ? 'pagination-page-current' : ''}"
+                        ${isCurrent ? 'aria-current="page"' : ''}
                     >
                         ${i}
                     </button>
@@ -2051,29 +2270,47 @@
         function showLoading() {
             if (!vehicleGrid) return;
             isLoading = true;
-            vehicleGrid.classList.add('relative', 'opacity-60', 'pointer-events-none');
-            let overlay = document.getElementById('vehicle-loading-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'vehicle-loading-overlay';
-                overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-background/40';
-                overlay.innerHTML = `
-                    <div class="flex flex-col items-center justify-center text-center rounded-lg bg-card/90 px-6 py-4 shadow-sm">
-                        <svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12 h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <p class="text-sm text-muted-foreground">{{ __('messages.forms.loading_vehicles') }}</p>
-                    </div>
-                `;
-                vehicleGrid.appendChild(overlay);
+            vehicleGrid.setAttribute('aria-busy', 'true');
+            const keepSsrCards = !listingHasHydrated && vehicleGrid.querySelector('.vehicle-item');
+            if (keepSsrCards) {
+                vehicleGrid.classList.add('relative', 'opacity-60', 'pointer-events-none');
+                let overlay = document.getElementById('vehicle-loading-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'vehicle-loading-overlay';
+                    overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-background/40';
+                    overlay.innerHTML = `
+                        <div class="flex flex-col items-center justify-center text-center rounded-lg bg-card/90 px-6 py-4 shadow-sm">
+                            <svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12 h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-sm text-muted-foreground">${I18N_BMV.loadingResults}</p>
+                        </div>
+                    `;
+                    vehicleGrid.appendChild(overlay);
+                }
+                overlay.classList.remove('hidden');
+                return;
             }
-            overlay.classList.remove('hidden');
+            const skeleton = `
+                <div class="listing-skeleton-card" aria-hidden="true">
+                    <div class="listing-skeleton-image"></div>
+                    <div class="listing-skeleton-body">
+                        <div class="listing-skeleton-line is-title"></div>
+                        <div class="listing-skeleton-line is-price"></div>
+                        <div class="listing-skeleton-line is-meta"></div>
+                    </div>
+                </div>
+            `;
+            vehicleGrid.innerHTML = Array.from({ length: 6 }, () => skeleton).join('');
         }
 
         function hideLoading() {
+            listingHasHydrated = true;
             if (!vehicleGrid) return;
             vehicleGrid.classList.remove('opacity-60', 'pointer-events-none');
+            vehicleGrid.removeAttribute('aria-busy');
             const overlay = document.getElementById('vehicle-loading-overlay');
             if (overlay) overlay.classList.add('hidden');
         }
@@ -2666,6 +2903,10 @@
                 resetButton.classList.remove('hidden');
             } else {
                 resetButton.classList.add('hidden');
+            }
+            const applied = document.getElementById('listing-filters-applied');
+            if (applied) {
+                applied.classList.toggle('hidden', !hasFilters);
             }
         }
         
@@ -4176,6 +4417,26 @@ if (config) {
             setView(currentView);
         }
         
+        function initListingUx() {
+            const moreBtn = document.getElementById('listing-more-filters-toggle');
+            const morePanel = document.getElementById('listing-advanced-filters');
+            if (moreBtn && morePanel) {
+                moreBtn.addEventListener('click', () => {
+                    const collapsed = morePanel.hasAttribute('hidden');
+                    const label = moreBtn.querySelector('[data-more-filters-label]');
+                    if (collapsed) {
+                        morePanel.removeAttribute('hidden');
+                        moreBtn.setAttribute('aria-expanded', 'true');
+                        if (label) label.textContent = I18N_BMV.fewerFilters;
+                    } else {
+                        morePanel.setAttribute('hidden', '');
+                        moreBtn.setAttribute('aria-expanded', 'false');
+                        if (label) label.textContent = I18N_BMV.moreFilters;
+                    }
+                });
+            }
+        }
+
         // Initialize filter chips and reset button visibility on page load
         renderFilterChips();
         updateResetButtonVisibility();
@@ -4203,6 +4464,7 @@ if (config) {
         
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();
+        initListingUx();
         
         // Initialize brand/model dropdown toggles and label updates
         initBrandModelDropdowns();
