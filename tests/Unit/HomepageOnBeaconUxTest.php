@@ -30,6 +30,9 @@ class HomepageOnBeaconUxTest extends TestCase
             'Fuel type should be visible with brand and model, not inside the collapsed panel'
         );
         $this->assertStringContainsString('home-filter-advanced-link', $home);
+        $this->assertStringContainsString('grid-template-columns: auto minmax(0, 1fr)', $home);
+        $this->assertStringContainsString('.home-filter-footer .home-filter-submit-cta', $home);
+        $this->assertStringNotContainsString('home-filter-footer-actions', $home);
         $this->assertStringContainsString('filter_help_brand', $home);
         $this->assertStringContainsString('home-trust-heading', $home);
         $this->assertStringContainsString('<x-vehicle-listing-item', $home);

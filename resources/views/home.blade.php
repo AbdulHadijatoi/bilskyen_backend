@@ -828,17 +828,21 @@
     }
 
     .home-filter-footer {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-        gap: 0.625rem 1rem;
+        column-gap: 1rem;
+        row-gap: 0.75rem;
         margin-top: 1.125rem;
         padding-top: 1rem;
         border-top: 1px solid var(--hf-line);
     }
 
     .home-filter-footer-reset {
+        display: inline-flex;
+        align-items: center;
+        justify-self: start;
+        min-height: 2.75rem;
         font-size: 0.8125rem;
         color: var(--hf-slate);
         text-decoration: underline;
@@ -852,18 +856,15 @@
         color: var(--hf-ink);
     }
 
-    .home-filter-footer-actions {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1rem;
-        margin-left: auto;
-    }
-
     .home-filter-advanced-link {
+        display: inline-flex;
+        align-items: center;
+        justify-self: end;
+        min-height: 2.75rem;
         font-size: 0.8125rem;
         font-weight: 500;
         color: var(--hf-slate);
+        text-align: end;
         text-decoration: none;
         background: transparent;
         border: 0;
@@ -873,6 +874,36 @@
     .home-filter-advanced-link:hover {
         color: var(--hf-ink);
         text-decoration: underline;
+    }
+
+    .home-filter-footer .home-filter-submit-cta {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    @media (min-width: 640px) {
+        .home-filter-footer {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.75rem 1rem;
+        }
+
+        .home-filter-footer-reset {
+            min-height: 0;
+            margin-inline-end: auto;
+        }
+
+        .home-filter-advanced-link {
+            justify-self: unset;
+            min-height: 0;
+        }
+
+        .home-filter-footer .home-filter-submit-cta {
+            grid-column: auto;
+            width: auto;
+        }
     }
 
     .vehicle-card-enquire-btn {
@@ -1192,15 +1223,12 @@
                         <button type="button" id="reset-filters-button" class="home-filter-footer-reset">
                             {{ __('messages.pages.vehicles.reset_filters') }}
                         </button>
-                        <div class="home-filter-footer-actions">
-                            <a href="{{ route('vehicles') }}" class="home-filter-advanced-link">
-                                {{ __('messages.pages.vehicles.advanced_filters') }}
-                            </a>
-
-                            <button type="submit" id="home-show-results-btn" class="home-filter-cta home-filter-submit-cta">
-                                {{ __('messages.pages.home.see_results', ['count' => $vehicleCountFormatted]) }}
-                            </button>
-                        </div>
+                        <a href="{{ route('vehicles') }}" class="home-filter-advanced-link">
+                            {{ __('messages.pages.vehicles.advanced_filters') }}
+                        </a>
+                        <button type="submit" id="home-show-results-btn" class="home-filter-cta home-filter-submit-cta">
+                            {{ __('messages.pages.home.see_results', ['count' => $vehicleCountFormatted]) }}
+                        </button>
                     </div>
                 </form>
             </div>
