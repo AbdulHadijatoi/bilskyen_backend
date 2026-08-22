@@ -826,7 +826,7 @@ class VehicleService
                 $query->orderBy('sort_order');
             },
             'dmrFactVehicle.variant.model.brand',
-            'dealer',
+            'dealer.marketplaceCity',
             'salesType',
             'fuelType',
             'gearType',

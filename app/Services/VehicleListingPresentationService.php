@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\FormatHelper;
 use App\Models\Vehicle;
 
 /**
@@ -26,6 +27,8 @@ class VehicleListingPresentationService
             'price_dropped_recently' => $this->trustReportService->hasRecentPriceDrop($vehicle),
             'premium_dealer_badge' => $this->dealerBadgeService->hasPremiumBadge($vehicle->dealer),
             'is_boosted' => (bool) app(ListingBoostService::class)->activeBoostForVehicle($vehicle->id),
+            'is_new_listing' => FormatHelper::isNewListing($vehicle->created_at),
+            'new_listing_badge' => FormatHelper::newListingBadgeLabel($vehicle->created_at),
         ];
     }
 
@@ -37,6 +40,12 @@ class VehicleListingPresentationService
         $firstImage = $vehicle->images->first();
         $isDealer = $vehicle->dealer && ! str_starts_with($vehicle->dealer->cvr ?? '', 'INDIVIDUAL-');
         $sellerType = $isDealer ? 'Dealer' : 'Private';
+        $listingLocation = FormatHelper::formatListingLocation(
+            $vehicle->address ?? $vehicle->seller_address ?? null
+        );
+        $imagesCount = $vehicle->relationLoaded('images')
+            ? $vehicle->images->count()
+            : (int) ($vehicle->images_count ?? 0);
 
         return array_merge([
             'id' => $vehicle->id,
@@ -51,6 +60,7 @@ class VehicleListingPresentationService
             'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),
             'gear_type_name' => $vehicle->gear_type_name,
             'fuel_type_name' => $vehicle->fuel_type_name,
+            'fuel_type_short' => FormatHelper::formatFuelTypeShort($vehicle->fuel_type_name),
             'model_year_name' => $vehicle->model_year_name,
             'brand_name' => $vehicle->brand_name,
             'model_name' => $vehicle->model_name,
@@ -59,6 +69,11 @@ class VehicleListingPresentationService
             'is_private' => ! $isDealer,
             'seller_address' => $vehicle->seller_address,
             'seller_postcode' => $vehicle->seller_postcode,
+            'address' => $vehicle->address,
+            'listing_location' => $listingLocation,
+            'images_count' => $imagesCount,
+            'published_at' => $vehicle->published_at?->toIso8601String(),
+            'created_at' => $vehicle->created_at?->toIso8601String(),
             'user_id' => $vehicle->user_id,
             'sales_type_name' => $vehicle->salesType?->name,
         ], $this->badgeFields($vehicle));

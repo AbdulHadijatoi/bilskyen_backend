@@ -50,7 +50,7 @@ class CitySeoController extends Controller
         $vehicles = $this->cityIndexService->vehiclesQueryForCity($marketplaceCity)
             ->with([
                 'images' => fn ($q) => $q->orderBy('sort_order'),
-                'dealer',
+                'dealer.marketplaceCity',
                 'salesType',
                 'brand',
                 'model',
@@ -132,7 +132,10 @@ class CitySeoController extends Controller
             ->get();
 
         $vehiclesPreview = $this->cityIndexService->vehiclesQueryForCity($marketplaceCity)
-            ->with(['images' => fn ($q) => $q->orderBy('sort_order')])
+            ->with([
+                'images' => fn ($q) => $q->orderBy('sort_order'),
+                'dealer.marketplaceCity',
+            ])
             ->orderByDesc('published_at')
             ->limit(6)
             ->get();

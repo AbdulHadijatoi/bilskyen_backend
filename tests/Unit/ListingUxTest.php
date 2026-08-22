@@ -32,6 +32,12 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString("messages.pages.vehicles.view_details", $card);
         $this->assertStringContainsString('vehicle-card-enquire-btn', $card);
         $this->assertStringContainsString("messages.pages.vehicles.enquire", $card);
+        $this->assertStringContainsString('newListingBadgeLabel', $card);
+        $this->assertStringContainsString('vehicle-listing-badges', $card);
+        $this->assertStringContainsString('vehicle-listing-photo-count', $card);
+        $this->assertStringContainsString('vehicle-listing-overlays', $card);
+        $this->assertStringContainsString('vehicle-listing-favorite', $card);
+        $this->assertStringContainsString('line-clamp-2', $card);
         $this->assertStringNotContainsString('Se alle fordele', $card);
         $this->assertStringNotContainsString('data-compare-toggle', $card);
         $this->assertStringContainsString('bg-muted', $card);
@@ -48,16 +54,19 @@ class ListingUxTest extends TestCase
             '#vehicle-container[data-view="list"] .vehicle-item-footer',
             $source
         );
-        $this->assertStringContainsString('min-width: min-content', $source);
         $this->assertStringContainsString(
             '.vehicle-actions-section > .vehicle-card-enquire-btn',
             $source
         );
         $this->assertStringContainsString('flex: 0 0 auto', $source);
+        $this->assertStringContainsString('aspect-ratio: 1 / 1', $source);
         $this->assertStringContainsString('white-space: normal', $source);
-        $this->assertStringContainsString('-webkit-line-clamp: unset', $source);
-        $this->assertStringContainsString('grid-template-columns: subgrid', $source);
+        $this->assertStringContainsString('-webkit-line-clamp: 2', $source);
+        $this->assertStringContainsString('vehicle-listing-overlays', $source);
+        $this->assertStringContainsString('grid-column: 2', $source);
         $this->assertStringContainsString('grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr)', $source);
+        $this->assertStringContainsString('vehicle-listing-photo-count', $source);
+        $this->assertStringContainsString('newListingBadgeLabel', $source);
     }
 
     public function test_listing_copy_exists_in_danish_and_english(): void
@@ -65,7 +74,7 @@ class ListingUxTest extends TestCase
         $en = include resource_path('lang/en/messages.php');
         $da = include resource_path('lang/da/messages.php');
 
-        foreach (['more_filters', 'fewer_filters', 'filters_applied'] as $key) {
+        foreach (['more_filters', 'fewer_filters', 'filters_applied', 'new_listing_today', 'new_listing_days_ago', 'photo_count_label'] as $key) {
             $this->assertNotEmpty($en['pages']['vehicles'][$key] ?? null, "Missing EN {$key}");
             $this->assertNotEmpty($da['pages']['vehicles'][$key] ?? null, "Missing DA {$key}");
         }

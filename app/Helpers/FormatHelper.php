@@ -2,10 +2,16 @@
 
 namespace App\Helpers;
 
+use App\Models\Location;
 use Carbon\Carbon;
 
 class FormatHelper
 {
+    public const NEW_LISTING_MAX_DAYS = 7;
+
+    /** @var array<string, string|null> */
+    private static array $cityByPostcode = [];
+
     /**
      * Format currency value
      *
@@ -177,26 +183,199 @@ class FormatHelper
     }
 
     /**
-     * Format a short location line for vehicle cards (postcode + city/address).
+     * Title shown on listing cards: listing title plus variant when it adds trim/package info.
+     */
+    public static function formatListingCardTitle(?string $title, ?string $variant = null): string
+    {
+        $formatted = self::formatListingTitle($title);
+        $variant = self::formatListingTitle($variant);
+        if ($variant === '') {
+            return $formatted;
+        }
+
+        if ($formatted !== '' && mb_stripos($formatted, $variant) !== false) {
+            return $formatted;
+        }
+
+        return trim($formatted.' '.$variant);
+    }
+
+    /**
+     * True when a city label is a real place name, not a form/field placeholder.
+     */
+    public static function isUsableCityName(mixed $city): bool
+    {
+        $city = trim((string) $city);
+        if ($city === '') {
+            return false;
+        }
+
+        if (preg_match('/^\d+$/', $city) === 1) {
+            return false;
+        }
+
+        $placeholders = [
+            'city',
+            'address',
+            'postcode',
+            'postal code',
+            'n/a',
+            'na',
+            'test',
+            'unknown',
+            'null',
+            'undefined',
+            'street',
+        ];
+
+        return ! in_array(mb_strtolower($city), $placeholders, true);
+    }
+
+    /**
+     * City name for a Danish postcode, cached per request.
+     */
+    public static function cityForPostcode(?string $postcode): ?string
+    {
+        $postcode = trim((string) $postcode);
+        if ($postcode === '') {
+            return null;
+        }
+
+        if (array_key_exists($postcode, self::$cityByPostcode)) {
+            return self::$cityByPostcode[$postcode];
+        }
+
+        try {
+            $city = Location::query()->where('postcode', $postcode)->value('city');
+            $city = is_string($city) ? trim($city) : '';
+            self::$cityByPostcode[$postcode] = self::isUsableCityName($city) ? $city : null;
+        } catch (\Throwable) {
+            self::$cityByPostcode[$postcode] = null;
+        }
+
+        return self::$cityByPostcode[$postcode];
+    }
+
+    /**
+     * Best-effort city from a free-text address line (never the street).
+     */
+    public static function cityFromAddress(?string $address): ?string
+    {
+        $address = trim((string) $address);
+        if ($address === '') {
+            return null;
+        }
+
+        if (! str_contains($address, ',')) {
+            if (preg_match('/\d/', $address) === 1) {
+                return null;
+            }
+
+            return self::isUsableCityName($address) ? $address : null;
+        }
+
+        $parts = preg_split('/,/', $address) ?: [];
+        $last = trim((string) array_pop($parts));
+        $last = preg_replace('/^\d{4,5}\s+/', '', $last) ?? $last;
+        $last = trim($last);
+
+        if (preg_match('/\d/', $last) === 1) {
+            return null;
+        }
+
+        return self::isUsableCityName($last) ? $last : null;
+    }
+
+    /**
+     * Location line for vehicle cards: the stored address, unchanged.
+     *
+     * @param  string|null  $postcode  Unused; kept so existing call sites keep compiling.
+     * @param  string|null  $city  Unused; kept so existing call sites keep compiling.
      */
     public static function formatListingLocation(?string $address = null, ?string $postcode = null, ?string $city = null): string
     {
-        $parts = [];
-        $postcode = trim((string) $postcode);
-        $city = trim((string) $city);
-        $address = trim((string) $address);
+        return trim((string) $address);
+    }
 
-        if ($postcode !== '') {
-            $parts[] = $postcode;
-        }
-        if ($city !== '') {
-            $parts[] = $city;
-        } elseif ($address !== '') {
-            // Prefer city when available; otherwise show address without duplicating postcode
-            $parts[] = $address;
+    /**
+     * Compact fuel label for the listing spec row (avoids wrap on "Hybrid (Diesel + El)").
+     */
+    public static function formatFuelTypeShort(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return '';
         }
 
-        return implode(' ', $parts);
+        $paren = mb_strpos($name, '(');
+        if ($paren !== false) {
+            $name = trim(mb_substr($name, 0, $paren));
+        }
+
+        if (mb_strlen($name) <= 18) {
+            return $name;
+        }
+
+        $words = preg_split('/\s+/u', $name) ?: [];
+
+        return trim(implode(' ', array_slice($words, 0, 2)));
+    }
+
+    /**
+     * Calendar days since created_at in the app timezone, or null when older than the new-listing window.
+     */
+    public static function newListingAgeDays(mixed $createdAt = null, int $days = self::NEW_LISTING_MAX_DAYS): ?int
+    {
+        if ($createdAt === null || $createdAt === '') {
+            return null;
+        }
+
+        try {
+            $date = $createdAt instanceof Carbon ? $createdAt->copy() : Carbon::parse((string) $createdAt);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $tz = (string) config('app.timezone', 'Europe/Copenhagen');
+        $createdStart = $date->timezone($tz)->startOfDay();
+        $nowStart = now($tz)->startOfDay();
+
+        if ($createdStart->greaterThan($nowStart)) {
+            return 0;
+        }
+
+        $age = (int) $createdStart->diffInDays($nowStart);
+
+        if ($age < 0 || $age > $days) {
+            return null;
+        }
+
+        return $age;
+    }
+
+    /**
+     * True when the listing row was created within the last N calendar days.
+     */
+    public static function isNewListing(mixed $createdAt = null, int $days = self::NEW_LISTING_MAX_DAYS): bool
+    {
+        return self::newListingAgeDays($createdAt, $days) !== null;
+    }
+
+    /**
+     * Badge copy: "New today" on the listing date, otherwise "N days ago" through the 7-day window.
+     */
+    public static function newListingBadgeLabel(mixed $createdAt = null, int $days = self::NEW_LISTING_MAX_DAYS): ?string
+    {
+        $age = self::newListingAgeDays($createdAt, $days);
+        if ($age === null) {
+            return null;
+        }
+
+        if ($age === 0) {
+            return __('messages.pages.vehicles.new_listing_today');
+        }
+
+        return trans_choice('messages.pages.vehicles.new_listing_days_ago', $age, ['days' => $age]);
     }
 
     /**

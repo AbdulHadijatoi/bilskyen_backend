@@ -387,11 +387,68 @@
                 font-variant-numeric: tabular-nums;
             }
             .vehicle-image-container {
+                position: relative;
+                overflow: hidden;
                 background: var(--muted, #f1f5f9);
             }
+            .vehicle-image-container img {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .vehicle-listing-overlays {
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 0.75rem 1rem;
+                box-sizing: border-box;
+                pointer-events: none;
+            }
+            .vehicle-listing-overlays-top,
+            .vehicle-listing-overlays-bottom {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 0.5rem;
+            }
+            .vehicle-listing-overlays-bottom {
+                align-items: flex-end;
+            }
+            .vehicle-listing-new-badge {
+                position: static;
+                background: #16a34a;
+                color: #fff;
+            }
+            .vehicle-listing-favorite {
+                position: static;
+                pointer-events: auto;
+                margin-left: auto;
+                width: 2rem;
+                height: 2rem;
+                padding: 0;
+                border: 0;
+            }
+            .vehicle-listing-title {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
             .vehicle-card-enquire-btn {
+                width: 2.25rem;
+                min-width: 2.25rem;
+                height: 2.25rem;
+                padding: 0;
                 border-width: 1px;
                 background: #fff;
+                aspect-ratio: 1 / 1;
+                box-sizing: border-box;
             }
             .listing-skeleton-card {
                 display: flex;
@@ -1353,7 +1410,10 @@
         aspect-ratio: auto;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-image-container img {
+    #vehicle-container[data-view="list"] .vehicle-image-container img,
+    #vehicle-fallback-section[data-view="list"] .vehicle-image-container img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -1363,11 +1423,10 @@
     
     #vehicle-container[data-view="list"] .vehicle-item-main-link,
     #vehicle-fallback-section[data-view="list"] .vehicle-item-main-link {
-        display: grid;
-        grid-template-columns: subgrid;
-        grid-template-rows: subgrid;
-        grid-column: 1 / -1;
-        grid-row: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        grid-column: 2;
+        grid-row: 1;
         min-width: 0;
     }
     
@@ -1389,7 +1448,8 @@
         flex-shrink: 0;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-listing-badges {
+    #vehicle-container[data-view="list"] .vehicle-listing-badges,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-badges {
         flex: 1;
         align-items: center;
         align-content: center;
@@ -1397,19 +1457,18 @@
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper h3,
     #vehicle-fallback-section[data-view="list"] .vehicle-content-wrapper h3 {
-        font-size: 1.125rem;
-        font-weight: 700;
-        line-height: 1.3;
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1.35;
         margin: 0;
         min-height: 0;
-        color: hsl(var(--foreground));
-        display: block;
-        overflow: visible;
-        text-overflow: unset;
+        color: var(--muted-foreground, #64748b);
+        display: -webkit-box;
+        overflow: hidden;
         white-space: normal;
-        -webkit-line-clamp: unset;
-        line-clamp: unset;
-        -webkit-box-orient: unset;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper .vehicle-listing-price {
@@ -1452,7 +1511,7 @@
         display: flex;
         flex-wrap: nowrap;
         gap: 0.5rem;
-        align-items: stretch;
+        align-items: center;
         justify-content: flex-end;
         width: max-content;
         max-width: none;
@@ -1460,9 +1519,7 @@
     }
 
     #vehicle-container[data-view="list"] .vehicle-actions-section > a,
-    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
-    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a,
-    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
         flex: 0 0 auto;
         width: auto;
         min-width: auto;
@@ -1470,14 +1527,10 @@
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
-    #vehicle-container[data-view="list"] .vehicle-actions-section a button,
+    #vehicle-container[data-view="list"] .vehicle-actions-section a,
     #vehicle-fallback-section[data-view="list"] .vehicle-actions-section button,
-    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section a button {
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section a {
         height: 2.25rem;
-        width: auto;
-        min-width: auto;
-        max-width: none;
-        padding: 0 1rem;
         font-size: 0.875rem;
         font-weight: 500;
         border-radius: 0.375rem;
@@ -1488,16 +1541,52 @@
         overflow: visible;
         box-sizing: border-box;
     }
-    
-    #vehicle-container[data-view="list"] .vehicle-image-container .absolute {
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 10;
+
+    #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
+        width: auto;
+        min-width: auto;
+        padding: 0 1rem;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+        flex: 0 0 2.25rem;
+        align-self: center;
+        width: 2.25rem;
+        min-width: 2.25rem;
+        max-width: 2.25rem;
+        height: 2.25rem;
+        min-height: 2.25rem;
+        max-height: 2.25rem;
+        padding: 0;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        box-sizing: border-box;
     }
     
-    #vehicle-container[data-view="list"] .vehicle-image-container .absolute.top-2.left-2 {
-        top: 0.5rem;
-        left: 0.5rem;
+    #vehicle-container[data-view="list"] .vehicle-listing-overlays,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-overlays {
+        padding: 0.75rem 1rem;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-favorite,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-favorite {
+        position: static;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        margin-left: auto;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-new-badge,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-new-badge {
+        position: static;
+        top: auto;
+        left: auto;
+        bottom: auto;
+        right: auto;
     }
     
     /* Tablet and up */
@@ -1575,24 +1664,29 @@
         #vehicle-container[data-view="list"] .vehicle-actions-section,
         #vehicle-fallback-section[data-view="list"] .vehicle-actions-section {
             flex-direction: row;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             width: 100%;
             max-width: 100%;
         }
 
         #vehicle-container[data-view="list"] .vehicle-actions-section > a,
-        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
-        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a,
-        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-            flex: 1 1 calc(50% - 0.25rem);
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
+            flex: 1 1 auto;
             min-width: 0;
             max-width: 100%;
         }
+
+        #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
+            flex: 0 0 2.25rem;
+            width: 2.25rem;
+            min-width: 2.25rem;
+            max-width: 2.25rem;
+            padding: 0;
+        }
         
-        #vehicle-container[data-view="list"] .vehicle-actions-section button,
-        #vehicle-container[data-view="list"] .vehicle-actions-section a button,
-        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section button,
-        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section a button {
+        #vehicle-container[data-view="list"] .vehicle-actions-section > a,
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
             width: 100%;
         }
     }
@@ -1891,109 +1985,166 @@
             }
         }
 
-        function formatListingLocation(vehicle) {
-            const parts = [];
-            if (vehicle.seller_postcode) parts.push(String(vehicle.seller_postcode).trim());
-            if (vehicle.seller_city) {
-                parts.push(String(vehicle.seller_city).trim());
-            } else if (vehicle.city) {
-                parts.push(String(vehicle.city).trim());
-            } else if (vehicle.seller_address) {
-                parts.push(String(vehicle.seller_address).trim());
-            }
-            return parts.filter(Boolean).join(' ');
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
-        
+
+        function formatListingCardTitle(title, variant) {
+            const formatted = formatListingTitle(title || '');
+            const extra = String(variant || '').trim();
+            if (!extra) return formatted;
+            if (formatted && formatted.toLowerCase().includes(extra.toLowerCase())) return formatted;
+            return `${formatted} ${extra}`.trim();
+        }
+
+        function formatFuelTypeShort(name) {
+            if (!name) return '';
+            let shortName = String(name).split('(')[0].trim();
+            if (shortName.length <= 18) return shortName;
+            return shortName.split(/\s+/).slice(0, 2).join(' ');
+        }
+
+        function formatListingLocation(vehicle) {
+            return String(vehicle.address || vehicle.seller_address || vehicle.listing_location || '').trim();
+        }
+
+        const newListingTodayLabel = @json(__('messages.pages.vehicles.new_listing_today'));
+        const newListingDayAgoLabel = @json(trans_choice('messages.pages.vehicles.new_listing_days_ago', 1, ['days' => ':days']));
+        const newListingDaysAgoLabel = @json(trans_choice('messages.pages.vehicles.new_listing_days_ago', 2, ['days' => ':days']));
+
+        function newListingBadgeLabel(vehicle) {
+            if (vehicle.new_listing_badge) return String(vehicle.new_listing_badge);
+            const raw = vehicle.created_at;
+            if (!raw) return '';
+            const listed = new Date(raw);
+            if (Number.isNaN(listed.getTime())) return '';
+            const now = new Date();
+            const startListed = new Date(listed.getFullYear(), listed.getMonth(), listed.getDate()).getTime();
+            const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const days = Math.round((startNow - startListed) / 86400000);
+            if (days < 0 || days > {{ \App\Helpers\FormatHelper::NEW_LISTING_MAX_DAYS }}) return '';
+            if (days === 0) return newListingTodayLabel;
+            const template = days === 1 ? newListingDayAgoLabel : newListingDaysAgoLabel;
+            return template.replace(':days', String(days));
+        }
+
+        const specChipClass = 'inline-flex items-center rounded-md border border-border px-2 py-1 text-xs';
+
         // Single listing tile (card + list layouts differ only via #vehicle-container[data-view] CSS)
         function renderVehicleItem(vehicle) {
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
             const details = vehicle.details || {};
             const slug = vehicle.slug || vehicle.id;
             const salesTypeLabel = (details.sales_type_name || details.salesTypeName || vehicle.sales_type_name || vehicle.salesTypeName || '').trim();
-            const titleText = formatListingTitle(vehicle.title || '');
+            const titleText = formatListingCardTitle(vehicle.title || '', vehicle.variant_name || '');
             const locationText = formatListingLocation(vehicle);
             const priceLabel = formatCurrency(vehicle.price);
+            const fuelShort = vehicle.fuel_type_short || formatFuelTypeShort(vehicle.fuel_type_name || '');
+            const imagesCount = Number(vehicle.images_count || (Array.isArray(vehicle.images) ? vehicle.images.length : 0) || 0);
+            const mileage = vehicle.mileage || vehicle.km_driven;
+            const newListingLabel = newListingBadgeLabel(vehicle);
 
             return `
-                <div class="vehicle-item flex flex-col rounded-2xl bg-card overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
-                    <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
-                        <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
+                <div class="vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
+                    <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
+                        <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
                             <img
-                                src="${imageUrl}"
-                                alt="${titleText}"
-                                class="block h-full w-full object-cover"
+                                src="${escapeHtml(imageUrl)}"
+                                alt="${escapeHtml(titleText)}"
+                                class="absolute inset-0 block h-full w-full object-cover"
                             />
-                            <div class="absolute top-4 left-4 z-10 flex flex-row flex-wrap items-center gap-1.5">
-                            ${vehicle.dealer_id ? `
-                            <span class="inline-flex items-center rounded-md bg-blue-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                {{ __('messages.pages.vehicles.dealer') }}
-                            </span>
-                            ` : `
-                            <span class="inline-flex items-center rounded-md bg-orange-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                {{ __('messages.pages.vehicles.private') }}
-                            </span>
-                            `}
-                            ${salesTypeLabel ? `
-                            <span class="inline-flex items-center rounded-md bg-green-600/60 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                                ${salesTypeLabel}
-                            </span>
-                            ` : ''}
-                            ${vehicle.premium_dealer_badge ? `
-                            <span class="inline-flex items-center rounded-md bg-violet-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                                {{ __('messages.pages.vehicles.premium_badge') }}
-                            </span>
-                            ` : ''}
-                            ${vehicle.is_boosted ? `
-                            <span class="inline-flex items-center rounded-md bg-amber-500/90 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                                {{ __('messages.pages.vehicles.boosted_badge') }}
-                            </span>
-                            ` : ''}
-                            ${vehicle.trust_badge ? `
-                            <span class="inline-flex items-center rounded-md bg-emerald-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                                {{ __('messages.pages.vehicles.detail.trust_verified_badge') }}
-                            </span>
-                            ` : ''}
-                            ${vehicle.price_dropped_recently ? `
-                            <span class="inline-flex items-center rounded-md bg-rose-600/80 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                                {{ __('messages.pages.vehicles.detail.price_dropped_badge') }}
-                            </span>
-                            ` : ''}
+                        </a>
+                        <div class="vehicle-listing-overlays pointer-events-none absolute inset-0 z-10 flex flex-col justify-between px-4 py-3">
+                            <div class="vehicle-listing-overlays-top flex items-start justify-between gap-2">
+                                <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
+                                ${vehicle.dealer_id ? `
+                                <span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
+                                    {{ __('messages.pages.vehicles.dealer') }}
+                                </span>
+                                ` : `
+                                <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+                                    {{ __('messages.pages.vehicles.private') }}
+                                </span>
+                                `}
+                                ${salesTypeLabel ? `
+                                <span class="inline-flex items-center rounded-md bg-green-600/60 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
+                                    ${escapeHtml(salesTypeLabel)}
+                                </span>
+                                ` : ''}
+                                ${vehicle.premium_dealer_badge ? `
+                                <span class="inline-flex items-center rounded-md bg-violet-600/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                    {{ __('messages.pages.vehicles.premium_badge') }}
+                                </span>
+                                ` : ''}
+                                ${vehicle.is_boosted ? `
+                                <span class="inline-flex items-center rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                    {{ __('messages.pages.vehicles.boosted_badge') }}
+                                </span>
+                                ` : ''}
+                                ${vehicle.trust_badge ? `
+                                <span class="inline-flex items-center rounded-md bg-emerald-600/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                    {{ __('messages.pages.vehicles.detail.trust_verified_badge') }}
+                                </span>
+                                ` : ''}
+                                ${vehicle.price_dropped_recently ? `
+                                <span class="inline-flex items-center rounded-md bg-rose-600/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                    {{ __('messages.pages.vehicles.detail.price_dropped_badge') }}
+                                </span>
+                                ` : ''}
+                                </div>
+                                ${imagesCount > 0 ? `
+                                <span class="vehicle-listing-photo-count inline-flex shrink-0 items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true">
+                                        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                                        <circle cx="12" cy="13" r="3"/>
+                                    </svg>
+                                    1/${imagesCount}
+                                </span>
+                                ` : ''}
                             </div>
-                            <button type="button" class="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring dark:bg-card/90" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                </svg>
-                            </button>
+                            <div class="vehicle-listing-overlays-bottom flex items-end justify-between gap-2">
+                                ${newListingLabel ? `
+                                <span class="vehicle-listing-new-badge inline-flex max-w-[calc(100%-3.75rem)] items-center rounded-md bg-[#16a34a] px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                    ${escapeHtml(newListingLabel)}
+                                </span>
+                                ` : ''}
+                                <button type="button" class="vehicle-listing-favorite pointer-events-auto ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring dark:bg-card/90" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${vehicle.id}, event); return false;" aria-label="{{ __('messages.forms.add_to_favorites') }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 ${vehicle.dealer_id ? 'text-primary' : 'text-foreground'} hover:opacity-80 transition-colors heart-icon" data-vehicle-id="${vehicle.id}" data-dealer-id="${vehicle.dealer_id || ''}">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                    <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-item-main-link flex flex-1 flex-col min-w-0">
                         <div class="vehicle-content-wrapper flex flex-1 flex-col px-3 pt-3 min-h-0">
                             <div class="vehicle-listing-header flex shrink-0 flex-col gap-1 text-left">
-                                <h3 class="text-sm font-semibold leading-snug truncate line-clamp-1">
-                                    ${titleText}
-                                </h3>
-                                ${vehicle.variant_name ? `
-                                <p class="text-muted-foreground text-xs font-normal line-clamp-1">
-                                    ${vehicle.variant_name}
-                                </p>
-                                ` : ''}
                                 <p class="vehicle-listing-price text-2xl font-extrabold tabular-nums tracking-tight">
-                                    ${priceLabel}
+                                    ${escapeHtml(priceLabel)}
                                 </p>
+                                <h3 class="vehicle-listing-title text-sm font-medium leading-snug text-muted-foreground line-clamp-2">
+                                    ${escapeHtml(titleText)}
+                                </h3>
                             </div>
                             <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
-                                ${vehicle.mileage || vehicle.km_driven ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${new Intl.NumberFormat('da-DK').format(vehicle.mileage || vehicle.km_driven || 0)} km</span>
+                                ${mileage ? `
+                                <span class="${specChipClass}">${new Intl.NumberFormat('da-DK').format(mileage)} km</span>
                                 ` : ''}
                                 ${vehicle.engine_power_hp ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${Math.round(vehicle.engine_power_hp)} HP</span>
+                                <span class="${specChipClass}">${Math.round(vehicle.engine_power_hp)} HP</span>
                                 ` : ''}
                                 ${vehicle.first_registration_date ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${formatMonthYear(vehicle.first_registration_date)}</span>
+                                <span class="${specChipClass}">${escapeHtml(formatMonthYear(vehicle.first_registration_date))}</span>
                                 ` : ''}
-                                ${vehicle.fuel_type_name ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.fuel_type_name}</span>
+                                ${fuelShort ? `
+                                <span class="${specChipClass}" title="${escapeHtml(vehicle.fuel_type_name || fuelShort)}">${escapeHtml(fuelShort)}</span>
                                 ` : ''}
                                 ${vehicle.gear_type_name ? `
-                                <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">${vehicle.gear_type_name}</span>
+                                <span class="${specChipClass}">${escapeHtml(vehicle.gear_type_name)}</span>
                                 ` : ''}
                             </div>
                         </div>
@@ -2006,18 +2157,18 @@
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span class="truncate text-left" title="${locationText}">${locationText}</span>
+                                <span class="truncate text-left" title="${escapeHtml(locationText)}">${escapeHtml(locationText)}</span>
                             </div>
                             ` : ''}
                         </div>
                         <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
-                            <a href="${VEHICLE_DETAIL_URL(slug)}" class="min-w-0 flex-[2]" onclick="event.stopPropagation()">
-                                <button type="button" class="inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border">
-                                    {{ __('messages.pages.vehicles.view_details') }}
-                                </button>
+                            <a href="${VEHICLE_DETAIL_URL(slug)}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+                                {{ __('messages.pages.vehicles.view_details') }}
                             </a>
-                            <button type="button" class="vehicle-card-enquire-btn flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${slug}');">
-                                {{ __('messages.pages.vehicles.enquire') }}
+                            <button type="button" class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${escapeHtml(slug)}');" aria-label="{{ __('messages.pages.vehicles.enquire') }}" title="{{ __('messages.pages.vehicles.enquire') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                                    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                                </svg>
                             </button>
                         </div>
                     </div>
