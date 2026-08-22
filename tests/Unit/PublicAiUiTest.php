@@ -26,6 +26,25 @@ class PublicAiUiTest extends TestCase
         $this->assertSame(2, substr_count($navbar, "route('find-perfect-car')"));
     }
 
+    public function test_navbar_favorites_icon_sits_beside_notifications_not_in_profile_menu(): void
+    {
+        $navbar = file_get_contents(resource_path('views/components/navbar.blade.php'));
+        $authStatus = file_get_contents(resource_path('views/components/user-auth-status.blade.php'));
+        $favorites = file_get_contents(resource_path('views/components/navbar-favorites.blade.php'));
+
+        $this->assertStringContainsString("components.navbar-favorites", $navbar);
+        $this->assertLessThan(
+            strpos($navbar, "components.marketplace-notifications"),
+            strpos($navbar, "components.navbar-favorites")
+        );
+        $this->assertStringContainsString("route('favorites')", $favorites);
+        $this->assertStringContainsString('rounded-full bg-primary-foreground/10', $favorites);
+        $this->assertStringContainsString("\$showFavorites ? 'inline-flex' : 'hidden'", $favorites);
+        $this->assertStringContainsString('flex items-center gap-2 md:gap-3" data-navbar-auth', $navbar);
+        $this->assertStringNotContainsString("route('favorites')", $authStatus);
+        $this->assertStringNotContainsString('my_favorites', $authStatus);
+    }
+
     public function test_vehicles_search_bar_is_not_made_sticky_on_scroll(): void
     {
         $source = file_get_contents(resource_path('views/vehicles.blade.php'));

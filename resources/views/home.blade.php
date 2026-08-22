@@ -184,7 +184,26 @@
 
     /* Home filter form — redesign (compact, site fonts) */
     .home-search-section {
-        background: #f3f4f6;
+        position: relative;
+        isolation: isolate;
+        background-color: var(--background, #f8fafc);
+        background-image:
+            radial-gradient(ellipse at 12% 0%, color-mix(in oklch, var(--primary-light, #e8f0fa) 85%, transparent) 0%, transparent 52%),
+            radial-gradient(ellipse at 88% 100%, color-mix(in oklch, var(--primary-light, #e8f0fa) 55%, transparent) 0%, transparent 46%),
+            linear-gradient(color-mix(in oklch, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in oklch, var(--border, #e2e8f0) 55%, transparent) 1px, transparent 1px);
+        background-size: auto, auto, 28px 28px, 28px 28px;
+    }
+
+    .home-search-section--has-image {
+        background-image:
+            linear-gradient(
+                color-mix(in oklch, var(--background, #f8fafc) 78%, transparent),
+                color-mix(in oklch, var(--background, #f8fafc) 86%, transparent)
+            ),
+            var(--home-hero-image);
+        background-size: cover;
+        background-position: center;
     }
 
     .home-filter-card {
@@ -575,6 +594,7 @@
         border-color: var(--hf-route);
     }
 
+    .home-filter-core-grid,
     .home-filter-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -583,6 +603,7 @@
     }
 
     @media (min-width: 768px) {
+        .home-filter-core-grid,
         .home-filter-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
@@ -632,7 +653,7 @@
         margin-bottom: 0.4rem;
         font-size: 0.6875rem;
         font-weight: 600;
-        letter-spacing: 0.06em;
+        letter-spacing: var(--letter-spacing-label, 0.04em);
         text-transform: uppercase;
         color: var(--hf-slate);
     }
@@ -814,13 +835,22 @@
 
     .home-filter-advanced-link {
         font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--hf-route);
+        font-weight: 500;
+        color: var(--hf-slate);
         text-decoration: none;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .home-filter-advanced-link:hover {
+        color: var(--hf-ink);
         text-decoration: underline;
+    }
+
+    .vehicle-card-enquire-btn {
+        border-color: color-mix(in oklch, var(--foreground) 28%, var(--border));
+        color: var(--foreground);
     }
 
     #home-filters-panel.is-collapsed {
@@ -839,6 +869,7 @@
     .testimonial-quote {
         position: relative;
         padding-left: 1.25rem;
+        font-weight: 400;
     }
 
     .testimonial-quote::before {
@@ -849,7 +880,17 @@
         font-size: 1.5rem;
         line-height: 1;
         color: hsl(var(--primary));
-        font-weight: 700;
+        font-weight: 400;
+    }
+
+    .testimonial-card {
+        border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    @media (min-width: 768px) {
+        .testimonial-card {
+            border-bottom: 0;
+        }
     }
 </style>
 @endpush
@@ -863,10 +904,15 @@
     $searchDescription = \App\Support\HomeHeroCopy::description($homePageContent['search_description'] ?? null);
     $filterPriceMax = $filterPriceMax ?? 1_000_000;
     $filterKmMax = $filterKmMax ?? 500_000;
+    $homePageImages = $homePageImages ?? [];
+    $heroBackgroundImage = $homePageImages['hero_background'][0]['image_url'] ?? null;
 @endphp
 <div class="flex min-h-screen flex-col pt-0">
     <!-- Search Section -->
-    <section class="home-search-section relative py-6 md:py-8">
+    <section
+        class="home-search-section relative py-6 md:py-8{{ $heroBackgroundImage ? ' home-search-section--has-image' : '' }}"
+        @if($heroBackgroundImage) style="--home-hero-image: url('{{ $heroBackgroundImage }}')" @endif
+    >
         <div class="container mx-auto px-4 md:px-6">
             <div class="home-filter-card">
                 <div class="home-filter-intro">
@@ -959,85 +1005,89 @@
                             class="home-filter-hide-btn"
                             data-hide-label="{{ __('messages.pages.home.hide_filters') }}"
                             data-show-label="{{ __('messages.pages.home.show_filters') }}"
+                            aria-expanded="false"
+                            aria-controls="home-filters-panel"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
-                            <span class="home-filter-hide-btn-label">{{ __('messages.pages.home.hide_filters') }}</span>
+                            <span class="home-filter-hide-btn-label">{{ __('messages.pages.home.show_filters') }}</span>
                         </button>
                     </div>
                 </div>
                 <div id="home-listing-type-inputs" data-name="listing_type_id[]"></div>
 
-                <div id="home-filters-panel" class="mt-0">
-                    <div id="home-filter-chips" class="home-filter-chips" aria-live="polite"></div>
+                <div id="home-filter-chips" class="home-filter-chips" aria-live="polite"></div>
 
+                <div class="home-filter-core-grid">
+                    <div class="home-filter-field">
+                        <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_brand') }}">{{ __('messages.forms.brand') }}</label>
+                        <div class="relative" data-dropdown="brand" data-multiselect="true">
+                            <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                <span class="dropdown-selected truncate">{{ __('messages.forms.all_brands') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                <div class="p-2 border-b border-border">
+                                    <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                </div>
+                                <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
+                                </div>
+                            </div>
+                            <div class="dropdown-values-container" data-name="brand_id[]"></div>
+                        </div>
+                    </div>
+
+                    <div class="home-filter-field">
+                        <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_model') }}">{{ __('messages.forms.model') }}</label>
+                        <div class="relative" data-dropdown="model" data-multiselect="true">
+                            <button type="button" id="model-dropdown-button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                <span class="dropdown-selected truncate">{{ __('messages.forms.all_models') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                <div class="p-2 border-b border-border">
+                                    <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                </div>
+                                <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
+                                </div>
+                            </div>
+                            <div class="dropdown-values-container" data-name="model_id[]"></div>
+                        </div>
+                    </div>
+
+                    <div class="home-filter-field">
+                        <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_fuel') }}">{{ __('messages.forms.fuel_type') }}</label>
+                        <div class="relative" data-dropdown="fuel_type" data-multiselect="true">
+                            <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
+                                <span class="dropdown-selected truncate">{{ __('messages.forms.all_fuel_types') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
+                                <div class="p-2 border-b border-border">
+                                    <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
+                                </div>
+                                <div class="dropdown-options overflow-y-auto max-h-[250px]">
+                                    <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_fuel_types') }}</button>
+                                </div>
+                            </div>
+                            <div class="dropdown-values-container" data-name="fuel_type_id[]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="home-filters-panel" class="mt-0 is-collapsed">
                     <div class="home-filter-grid">
-                        <div class="home-filter-field">
-                            <label class="home-filter-field-label">{{ __('messages.forms.brand') }}</label>
-                            <div class="relative" data-dropdown="brand" data-multiselect="true">
-                                <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
-                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_brands') }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
-                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
-                                    <div class="p-2 border-b border-border">
-                                        <input type="text" placeholder="{{ __('messages.forms.search_brand') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                                    </div>
-                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_brands') }}</button>
-                                    </div>
-                                </div>
-                                <div class="dropdown-values-container" data-name="brand_id[]"></div>
-                            </div>
-                        </div>
-
-                        <div class="home-filter-field">
-                            <label class="home-filter-field-label">{{ __('messages.forms.model') }}</label>
-                            <div class="relative" data-dropdown="model" data-multiselect="true">
-                                <button type="button" id="model-dropdown-button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
-                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_models') }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
-                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
-                                    <div class="p-2 border-b border-border">
-                                        <input type="text" placeholder="{{ __('messages.forms.search_model') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                                    </div>
-                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_models') }}</button>
-                                    </div>
-                                </div>
-                                <div class="dropdown-values-container" data-name="model_id[]"></div>
-                            </div>
-                        </div>
-
-                        <div class="home-filter-field">
-                            <label class="home-filter-field-label">{{ __('messages.forms.fuel_type') }}</label>
-                            <div class="relative" data-dropdown="fuel_type" data-multiselect="true">
-                                <button type="button" class="home-filter-pill-btn" data-dropdown-trigger aria-expanded="false" aria-haspopup="listbox">
-                                    <span class="dropdown-selected truncate">{{ __('messages.forms.all_fuel_types') }}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 flex-shrink-0 opacity-50">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
-                                <div class="dropdown-menu home-filter-dropdown-menu" role="listbox">
-                                    <div class="p-2 border-b border-border">
-                                        <input type="text" placeholder="{{ __('messages.forms.search_fuel_type') }}" class="dropdown-search w-full h-8 rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" autocomplete="off">
-                                    </div>
-                                    <div class="dropdown-options overflow-y-auto max-h-[250px]">
-                                        <button type="button" class="dropdown-option w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2" data-value="" data-text="">{{ __('messages.forms.all_fuel_types') }}</button>
-                                    </div>
-                                </div>
-                                <div class="dropdown-values-container" data-name="fuel_type_id[]"></div>
-                            </div>
-                        </div>
-
                         <div class="home-filter-field" data-filter-range="price">
-                            <label class="home-filter-field-label">
+                            <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_price') }}">
                                 <span class="home-filter-field-label-text">{{ __('messages.forms.price') }}</span>
                                 <span class="home-filter-range-value" id="price-range-label"></span>
                             </label>
@@ -1061,7 +1111,7 @@
                         </div>
 
                         <div class="home-filter-field" data-filter-range="km_driven">
-                            <label class="home-filter-field-label">
+                            <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_km') }}">
                                 <span class="home-filter-field-label-text">{{ __('messages.forms.km_driven') }}</span>
                                 <span class="home-filter-range-value" id="km-driven-range-label"></span>
                             </label>
@@ -1085,7 +1135,7 @@
                         </div>
 
                         <div class="home-filter-field" data-filter-range="model_year">
-                            <label class="home-filter-field-label">
+                            <label class="home-filter-field-label" title="{{ __('messages.pages.home.filter_help_year') }}">
                                 <span class="home-filter-field-label-text">{{ __('messages.forms.model_year') }}</span>
                                 <span class="home-filter-range-value" id="model-year-range-label"></span>
                             </label>
@@ -1108,6 +1158,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
                     <div class="home-filter-footer">
                         <button type="button" id="reset-filters-button" class="home-filter-footer-reset">
@@ -1123,14 +1174,13 @@
                             </button>
                         </div>
                     </div>
-                </div>
                 </form>
             </div>
         </div>
     </section>
 
     <!-- Hero Section -->
-    <section class="relative bg-card py-16 md:py-20">
+    <section class="relative bg-background py-16 md:py-20">
         <div class="container mx-auto px-4 md:px-6">
             <div class="max-w-4xl space-y-8">
                 <p class="text-xl text-muted-foreground">
@@ -1250,7 +1300,7 @@
                                         </p>
                                     </div>
 
-                                    <div class="flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
+                                    <div class="flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light vehicle-listing-specs">
                                         @if($vehicle['km_driven'])
                                         <span class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">{{ number_format($vehicle['km_driven'], 0, '.', ',') }} km</span>
                                         @endif
@@ -1292,7 +1342,7 @@
                                     <button 
                                         type="button"
                                         onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle['slug'] ?? $vehicle['id'] }}')"
-                                        class="flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                                        class="vehicle-card-enquire-btn flex-1 inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                                     >
                                         {{ __('messages.pages.vehicles.enquire') }}
                                     </button>
@@ -1335,11 +1385,11 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="py-10 md:py-12">
+    <!-- Why choose + services -->
+    <section class="py-10 md:py-12 bg-muted" aria-labelledby="home-trust-heading">
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-8 text-center">
-                <h2 class="mb-2 text-3xl font-bold tracking-tight">
+                <h2 id="home-trust-heading" class="mb-2 text-3xl font-bold tracking-tight">
                     {{ $homePageContent['stats_title'] ?? __('messages.pages.home.why_choose_title') }}
                 </h2>
                 <p class="mx-auto max-w-2xl text-muted-foreground">
@@ -1347,7 +1397,7 @@
                 </p>
             </div>
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                <div class="rounded-lg border border-border bg-card">
                     <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
@@ -1362,7 +1412,7 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_1_description'] ?? __('messages.pages.home.stat_1_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                <div class="rounded-lg border border-border bg-card">
                     <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
@@ -1377,7 +1427,7 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_2_description'] ?? __('messages.pages.home.stat_2_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                <div class="rounded-lg border border-border bg-card">
                     <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
@@ -1392,7 +1442,7 @@
                         <p class="text-sm text-muted-foreground">{{ $homePageContent['stat_3_description'] ?? __('messages.pages.home.stat_3_description') }}</p>
                     </div>
                 </div>
-                <div class="rounded-lg border border-border bg-card bg-muted/40">
+                <div class="rounded-lg border border-border bg-card">
                     <div class="flex flex-col items-center p-5 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary">
@@ -1406,12 +1456,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Features Section -->
-    <section class="py-10 md:py-12 bg-muted">
-        <div class="container mx-auto px-4 md:px-6">
+            <div class="mt-12">
             <div class="mb-8 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
                     {{ $homePageContent['features_title'] ?? __('messages.pages.home.our_services_title') }}
@@ -1467,11 +1513,12 @@
                     <span class="mt-4 text-sm font-medium text-primary">{{ __('messages.pages.home.learn_more') }} &rarr;</span>
                 </a>
             </div>
+            </div>
         </div>
     </section>
 
     <!-- Testimonials Section -->
-    <section class="py-10 md:py-12">
+    <section class="py-10 md:py-12 bg-background">
         <div class="container mx-auto px-4 md:px-6">
             <div class="mb-8 text-center">
                 <h2 class="mb-2 text-3xl font-bold tracking-tight">
@@ -1512,10 +1559,10 @@
                 ];
             @endphp
             <div class="relative">
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="testimonials-grid">
+                <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" id="testimonials-grid">
                 @foreach($testimonials as $index => $testimonial)
                 <div class="testimonial-card overflow-hidden rounded-lg border border-border bg-card {{ $index > 0 ? 'hidden md:block' : '' }}" data-testimonial-index="{{ $index }}">
-                    <div class="p-5">
+                    <div class="p-6">
                         <div class="flex flex-col gap-4">
                             <div class="flex gap-1">
                                 @for($i = 0; $i < 5; $i++)
@@ -1869,6 +1916,7 @@
                     ? toggleButton.getAttribute('data-show-label')
                     : toggleButton.getAttribute('data-hide-label');
             }
+            toggleButton.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
         });
     }
 

@@ -17,10 +17,15 @@
                     @endif
                 </nav>
             </div>
-            <div class="flex items-center gap-2 md:gap-3">
-                @include('components.language-switcher', ['variant' => 'dark'])
-                @include('components.marketplace-notifications')
-                @include('components.user-auth-status')
+            <div class="flex items-center gap-3">
+                <div class="site-header-utils flex items-center gap-2 md:gap-3" data-navbar-utils>
+                    @include('components.language-switcher', ['variant' => 'dark'])
+                    @include('components.navbar-favorites')
+                    @include('components.marketplace-notifications')
+                    <div class="flex items-center gap-2 md:gap-3" data-navbar-auth>
+                        @include('components.user-auth-status')
+                    </div>
+                </div>
                 <button id="mobile-menu-toggle" type="button" class="site-header-menu-toggle inline-flex h-9 w-9 items-center justify-center rounded-lg border shadow-sm transition-colors md:hidden" aria-label="{{ __('messages.common.toggle_menu') }}" aria-expanded="false" aria-controls="mobile-menu">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -105,7 +110,7 @@
                 return;
             }
 
-            const authContainer = navbar.querySelector('.flex.items-center.gap-2, .flex.items-center.gap-3');
+            const authContainer = navbar.querySelector('[data-navbar-auth]');
             if (!authContainer) {
                 window.location.reload();
                 return;
@@ -155,17 +160,19 @@
 
             const sellYourCarUrl = @json(route('sell-your-car'));
             const profileUrl = @json(route('profile'));
-            const favoritesUrl = @json(route('favorites'));
+
+            document.getElementById('navbar-favorites')?.classList.remove('hidden');
+            if (typeof window.refreshMarketplaceNotifications === 'function') {
+                window.refreshMarketplaceNotifications();
+            }
 
             authContainer.innerHTML = `
-                <div class="flex items-center gap-2 md:gap-3">
-                    <a href="${sellYourCarUrl}">
-                        <button type="button" class="panel-btn panel-btn--outline panel-btn--sm h-9 md:h-10">
-                            <span class="hidden sm:inline">{{ __('messages.navigation.sell_your_car') }}</span>
-                            <span class="sm:hidden">{{ __('messages.navigation.sell') }}</span>
-                        </button>
-                    </a>
-                </div>
+                <a href="${sellYourCarUrl}">
+                    <button type="button" class="panel-btn panel-btn--outline panel-btn--sm h-9">
+                        <span class="hidden sm:inline">{{ __('messages.navigation.sell_your_car') }}</span>
+                        <span class="sm:hidden">{{ __('messages.navigation.sell') }}</span>
+                    </button>
+                </a>
                 <div class="relative">
                     <button id="user-menu-toggle" type="button" class="nav-user-avatar-btn" aria-label="{{ __('messages.common.user_menu') }}" aria-haspopup="true" aria-expanded="false">
                         <span class="nav-user-avatar">${initials}</span>
@@ -178,9 +185,6 @@
                         <div class="my-1 h-px bg-border"></div>
                         <a href="${profileUrl}" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
                             {{ __('messages.navigation.profile') }}
-                        </a>
-                        <a href="${favoritesUrl}" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
-                            {{ __('messages.navigation.my_favorites') }}
                         </a>
                         ${showPanelButton ? `
                         <a href="${panelUrl}" target="_blank" rel="noopener noreferrer" class="flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">

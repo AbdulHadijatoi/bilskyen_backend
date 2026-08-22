@@ -38,9 +38,12 @@
         --input: #e2e8f0;
         --ring: #03418b;
 
+        --heading: var(--foreground);
+        --letter-spacing-label: 0.04em;
+
         --footer: var(--primary);
         --footer-foreground: var(--primary-foreground);
-        --footer-muted: rgba(255, 255, 255, 0.72);
+        --footer-muted: rgba(255, 255, 255, 0.88);
 
         --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
         --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);

@@ -29,8 +29,13 @@ body {
   color: var(--foreground);
   font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  color: var(--heading, var(--foreground));
 }
 
 .container {
@@ -84,6 +89,7 @@ body {
 
 .site-nav-link {
   position: relative;
+  font-family: inherit;
   font-size: 0.875rem;
   font-weight: 500;
   color: color-mix(in oklch, var(--foreground) 78%, transparent);
@@ -162,6 +168,28 @@ body {
   border-color: color-mix(in oklch, var(--primary-foreground) 92%, var(--primary));
 }
 
+.site-header-utils,
+.site-header [data-navbar-auth] {
+  display: flex;
+  align-items: center;
+}
+
+.site-header .language-switcher {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.site-header--primary .panel-btn {
+  height: 2.25rem;
+  box-sizing: border-box;
+}
+
+.site-header--primary .nav-user-avatar-btn {
+  height: 2.25rem;
+  width: 2.25rem;
+}
+
 .site-header--primary .nav-user-avatar {
   background: var(--primary-foreground);
   color: var(--primary);
@@ -176,16 +204,39 @@ body {
 
 .site-footer {
   background: var(--primary);
-  color: var(--primary-foreground);
+  color: var(--footer-muted);
 }
 
-.site-footer a:not(.site-footer__cta-primary) {
+.site-footer h1,
+.site-footer h2,
+.site-footer h3 {
+  color: var(--footer-foreground);
+}
+
+.site-footer a:not(.site-footer__cta-primary):not(.site-footer__cta-secondary) {
   color: var(--footer-muted);
   transition: color var(--transition-fast);
 }
 
-.site-footer a:not(.site-footer__cta-primary):hover {
-  color: var(--primary-foreground);
+.site-footer a:not(.site-footer__cta-primary):not(.site-footer__cta-secondary):hover {
+  color: var(--footer-foreground);
+}
+
+.site-footer__nav,
+.site-footer__nav a {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.site-footer__meta,
+.site-footer__meta a {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.site-footer__cta-primary,
+.site-footer__cta-secondary {
+  font-size: 0.875rem;
 }
 
 .site-footer__cta-primary {
@@ -196,6 +247,10 @@ body {
 .site-footer__cta-primary:hover {
   background: color-mix(in oklch, #ffffff 92%, var(--primary-light));
   color: var(--primary) !important;
+}
+
+.site-footer__cta-secondary {
+  color: var(--footer-foreground);
 }
 
 /* ── Cards & surfaces ── */
@@ -227,6 +282,11 @@ body {
 
 .vehicle-listing-thumb {
   border-radius: 0;
+}
+
+.vehicle-listing-price,
+.vehicle-listing-specs {
+  font-variant-numeric: tabular-nums;
 }
 
 .vehicle-listing-price {

@@ -236,6 +236,8 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::prefix('home-page-content')->group(function () {
         Route::get('/', [AdminHomePageController::class, 'index']);
         Route::post('/bulk-update', [AdminHomePageController::class, 'updateBulk']);
+        Route::post('/images/upload', [AdminHomePageController::class, 'uploadImage']);
+        Route::delete('/images/{imageId}', [AdminHomePageController::class, 'deleteImage']);
         Route::post('/{sectionKey}', [AdminHomePageController::class, 'update']);
     });
     

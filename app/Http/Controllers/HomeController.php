@@ -139,6 +139,7 @@ class HomeController extends Controller
 
         // Get home page content from cache
         $homePageContent = $this->pageContentService->getHomePageContent('home');
+        $homePageImages = $this->pageContentService->getPageImages('home');
         $seo = $this->seoService->getForPage('home', 'home') ?? [];
         $homeTitle = HomeHeroCopy::title($homePageContent['search_title'] ?? null);
         $seo['meta_title'] = $homeTitle.' | Bilskyen';
@@ -157,6 +158,7 @@ class HomeController extends Controller
             'filterOptions' => $filterOptions,
             'featuredVehicles' => $featuredVehicles,
             'homePageContent' => $homePageContent,
+            'homePageImages' => $homePageImages,
             'seo' => $seo,
             'publishedVehicleCount' => $publishedVehicleCount,
             'listingTypes' => $listingTypes,

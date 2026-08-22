@@ -8,8 +8,8 @@
     $currentLocaleLabel = $localeLabels[$currentLocale] ?? 'DA';
     $variant = $variant ?? 'light';
     $buttonClass = $variant === 'dark'
-        ? 'inline-flex h-8 items-center gap-1.5 rounded-md border border-primary-foreground/25 bg-primary-foreground/10 px-2 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary-foreground/20 transition-colors'
-        : 'inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground shadow-sm hover:bg-muted transition-colors';
+        ? 'inline-flex h-9 items-center gap-1.5 rounded-md border border-primary-foreground/25 bg-primary-foreground/10 px-2 font-[inherit] text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary-foreground/20 transition-colors'
+        : 'inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-2 font-[inherit] text-xs font-medium text-foreground shadow-sm hover:bg-muted transition-colors';
 @endphp
 <details class="relative language-switcher {{ $variant === 'dark' ? 'language-switcher--dark' : 'language-switcher--light' }}" data-language-switcher>
     <summary
@@ -52,6 +52,9 @@
     </div>
 </details>
 <style>
+    .language-switcher {
+        font-family: inherit;
+    }
     .language-switcher > summary:focus {
         outline: none;
     }
