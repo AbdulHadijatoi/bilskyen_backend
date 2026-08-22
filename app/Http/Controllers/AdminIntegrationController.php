@@ -51,6 +51,9 @@ class AdminIntegrationController extends Controller
                     $settings[$boolKey] = filter_var($settings[$boolKey], FILTER_VALIDATE_BOOLEAN);
                 }
             }
+            if (array_key_exists('monthly_token_budget', $settings) && ($settings['monthly_token_budget'] === '' || $settings['monthly_token_budget'] === null)) {
+                $settings['monthly_token_budget'] = 0;
+            }
             $request->merge(['settings' => $settings]);
 
             $request->validate([

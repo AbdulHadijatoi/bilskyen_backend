@@ -20,6 +20,8 @@ class HomepageOnBeaconUxTest extends TestCase
             '/\.featured-vehicles-section\s*\{\s*overflow-x:\s*clip;/',
             $home
         );
+        $this->assertStringContainsString('home-filter-search-wrap', $home);
+        $this->assertStringContainsString('min-height: 3.25rem', $home);
         $this->assertStringContainsString("id=\"home-filters-panel\" class=\"mt-0 is-collapsed\"", $home);
         $this->assertStringContainsString('home-filter-core-grid', $home);
         $this->assertLessThan(

@@ -287,8 +287,10 @@
         background: var(--hf-paper);
         border: 1px solid var(--hf-line);
         border-radius: 0.625rem;
-        padding: 0 0.875rem;
-        height: 2.75rem;
+        padding: 0 1rem;
+        height: 3.25rem;
+        min-height: 3.25rem;
+        box-sizing: border-box;
         transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
@@ -312,8 +314,8 @@
 
     .home-filter-search-wrap > svg {
         flex-shrink: 0;
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
         color: var(--hf-slate);
     }
 
@@ -326,10 +328,10 @@
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        height: 1.375rem;
-        padding: 0 0.45rem;
+        height: 1.5rem;
+        padding: 0 0.5rem;
         border-radius: 9999px;
-        font-size: 0.625rem;
+        font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -340,14 +342,25 @@
 
     .home-filter-search-input {
         height: 100%;
+        min-height: 0;
         width: 100%;
         border: 0;
         border-radius: 0;
         background: transparent;
         padding: 0;
-        font-size: 0.875rem;
+        font-size: 1rem;
+        line-height: 1.4;
         color: var(--hf-ink);
         outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .home-filter-search-input::-webkit-search-decoration,
+    .home-filter-search-input::-webkit-search-cancel-button,
+    .home-filter-search-input::-webkit-search-results-button,
+    .home-filter-search-input::-webkit-search-results-decoration {
+        -webkit-appearance: none;
     }
 
     .home-filter-search-input::placeholder {
@@ -361,7 +374,8 @@
 
     .home-filter-cta {
         display: inline-flex;
-        height: 2.75rem;
+        height: 3.25rem;
+        min-height: 3.25rem;
         width: 100%;
         align-items: center;
         justify-content: center;
@@ -369,7 +383,7 @@
         border: 0;
         background-color: var(--hf-route);
         padding: 0 1.25rem;
-        font-size: 0.875rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #fff;
         white-space: nowrap;
@@ -379,8 +393,32 @@
     }
 
     @media (min-width: 640px) {
+        .home-filter-search-wrap {
+            height: 2.75rem;
+            min-height: 2.75rem;
+            padding: 0 0.875rem;
+        }
+
+        .home-filter-search-wrap > svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .home-filter-ai-badge {
+            height: 1.375rem;
+            padding: 0 0.45rem;
+            font-size: 0.625rem;
+        }
+
+        .home-filter-search-input {
+            font-size: 0.875rem;
+        }
+
         .home-filter-cta {
+            height: 2.75rem;
+            min-height: 2.75rem;
             width: auto;
+            font-size: 0.875rem;
         }
     }
 
