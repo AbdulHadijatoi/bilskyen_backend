@@ -1632,6 +1632,48 @@
     </div>
 </div>
 
+@if(($relatedVehicles ?? collect())->isNotEmpty())
+    @php
+        $relatedBrandModel = trim(($vehicle->brand_name ?? '').' '.($vehicle->model_name ?? ''));
+    @endphp
+    <div class="container py-6">
+        <section class="space-y-4" aria-labelledby="related-vehicles-heading">
+            <div>
+                <h2 id="related-vehicles-heading" class="text-xl font-semibold text-foreground">
+                    {{ __('messages.pages.vehicles.detail.related_title') }}
+                </h2>
+                @if($relatedBrandModel !== '')
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ __('messages.pages.vehicles.detail.related_subtitle', [
+                            'brand' => $vehicle->brand_name ?? '',
+                            'model' => $vehicle->model_name ?? '',
+                        ]) }}
+                    </p>
+                @endif
+            </div>
+            <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach($relatedVehicles as $relatedVehicle)
+                    @php
+                        $firstImage = $relatedVehicle->images->first();
+                        $imgUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+                        $badges = $listingPresentation->badgeFields($relatedVehicle);
+                    @endphp
+                    <x-vehicle-listing-item
+                        :vehicle="$relatedVehicle"
+                        :img-url="$imgUrl"
+                        :img-alt="$relatedVehicle->title"
+                        :sales-type-name="$relatedVehicle->salesType?->name"
+                        :trust-badge="$badges['trust_badge'] ?? false"
+                        :price-dropped-recently="$badges['price_dropped_recently'] ?? false"
+                        :premium-dealer-badge="$badges['premium_dealer_badge'] ?? false"
+                        :is-boosted="$badges['is_boosted'] ?? false"
+                    />
+                @endforeach
+            </div>
+        </section>
+    </div>
+@endif
+
 <!-- Enquiry Dialogs -->
 <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
 <x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />

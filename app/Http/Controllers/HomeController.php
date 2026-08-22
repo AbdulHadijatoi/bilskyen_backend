@@ -34,6 +34,7 @@ use App\Services\Finance\FinanceCalculatorService;
 use App\Services\VehicleTrustReportService;
 use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
+use App\Services\RelatedVehiclesService;
 use App\Services\Marketing\MetaConversionsApiService;
 use App\Services\AiService;
 use App\Support\HomeHeroCopy;
@@ -61,6 +62,7 @@ class HomeController extends Controller
         private VehicleTrustReportService $trustReportService,
         private MarketPricingService $marketPricingService,
         private VehicleListingPresentationService $vehicleListingPresentationService,
+        private RelatedVehiclesService $relatedVehiclesService,
         private MetaConversionsApiService $metaConversionsApiService,
         private FaqContentService $faqContentService,
         private PlatformSettingService $platformSettingService,
@@ -721,6 +723,8 @@ class HomeController extends Controller
             'financePartnerUrl' => $financePartnerUrl,
             'metaViewContentEventId' => $metaViewContentEventId,
             'metaPixelEnabled' => $metaPixelEnabled,
+            'relatedVehicles' => $this->relatedVehiclesService->forVehicle($vehicle),
+            'listingPresentation' => $this->vehicleListingPresentationService,
         ]);
     }
 

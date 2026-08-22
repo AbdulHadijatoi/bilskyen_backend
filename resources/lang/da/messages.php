@@ -646,6 +646,8 @@ return [
                 'next_slide' => 'Næste slide',
                 'previous_vehicles' => 'Forrige køretøjer',
                 'next_vehicles' => 'Næste køretøjer',
+                'related_title' => 'Lignende biler',
+                'related_subtitle' => 'Andre annoncer som denne :brand :model',
                 'send_enquiry' => 'Send Henvendelse',
                 'contact_via_whatsapp' => 'Kontakt via WhatsApp',
                 'exchange_request' => 'Anmod om bytte',

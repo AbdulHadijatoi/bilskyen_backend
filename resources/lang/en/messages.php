@@ -647,6 +647,8 @@ return [
                 'next_slide' => 'Next slide',
                 'previous_vehicles' => 'Previous vehicles',
                 'next_vehicles' => 'Next vehicles',
+                'related_title' => 'Similar cars',
+                'related_subtitle' => 'Other listings like this :brand :model',
                 'send_enquiry' => 'Send Enquiry',
                 'contact_via_whatsapp' => 'Contact via WhatsApp',
                 'exchange_request' => 'Request Exchange',
