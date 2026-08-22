@@ -56,6 +56,8 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('flex: 0 0 auto', $source);
         $this->assertStringContainsString('white-space: normal', $source);
         $this->assertStringContainsString('-webkit-line-clamp: unset', $source);
+        $this->assertStringContainsString('grid-template-columns: subgrid', $source);
+        $this->assertStringContainsString('grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr)', $source);
     }
 
     public function test_listing_copy_exists_in_danish_and_english(): void

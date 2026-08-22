@@ -922,8 +922,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     #vehicle-container[data-view="list"] .vehicle-item {
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        align-items: stretch;
         border: 1px solid hsl(var(--border));
         overflow: hidden;
         transition: all 0.2s ease;
@@ -940,10 +942,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     #vehicle-container[data-view="list"] .vehicle-image-container {
-        flex-shrink: 0;
-        width: 200px;
-        min-width: 200px;
-        height: 150px;
+        grid-column: 1;
+        grid-row: 1 / -1;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: auto;
+        min-height: 150px;
+        align-self: stretch;
         overflow: hidden;
         background-color: hsl(var(--muted) / 0.3);
         display: block;
@@ -957,20 +963,26 @@ document.addEventListener('DOMContentLoaded', function() {
         display: block;
     }
     
+    #vehicle-container[data-view="list"] .vehicle-item-main-link,
     #vehicle-container[data-view="list"] .vehicle-item > a {
-        display: flex;
-        flex-direction: row;
-        flex: 1;
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-template-rows: subgrid;
+        grid-column: 1 / -1;
+        grid-row: 1 / -1;
         min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+        grid-column: 2;
+        grid-row: 1;
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 1rem;
+        padding: 1rem 1rem 0.5rem;
         gap: 0;
         position: relative;
+        min-width: 0;
         min-height: 0;
     }
     
@@ -1009,16 +1021,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     #vehicle-container[data-view="list"] .vehicle-item-footer {
-        margin-top: auto;
-        flex: 0 0 auto;
+        grid-column: 2;
+        grid-row: 2;
+        margin-top: 0;
+        flex: none;
         display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        padding: 1rem;
-        min-width: min-content;
-        width: auto;
-        max-width: none;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0 1rem 1rem;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        z-index: 2;
+        position: relative;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-location {
+        flex: 1 1 auto;
+        min-width: 0;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section {
@@ -1069,19 +1091,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /* Tablet and up */
     @media (min-width: 768px) {
+        #vehicle-container[data-view="list"] .vehicle-item {
+            grid-template-columns: 240px minmax(0, 1fr);
+        }
+
         #vehicle-container[data-view="list"] .vehicle-image-container {
-            width: 240px;
-            min-width: 240px;
-            height: 180px;
+            min-height: 180px;
         }
     }
     
     /* Large screens */
     @media (min-width: 1024px) {
+        #vehicle-container[data-view="list"] .vehicle-item {
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
+
         #vehicle-container[data-view="list"] .vehicle-image-container {
-            width: 280px;
-            min-width: 280px;
-            height: 200px;
+            min-height: 200px;
         }
     }
     
@@ -1092,28 +1118,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         #vehicle-container[data-view="list"] .vehicle-item {
+            display: flex;
             flex-direction: column;
         }
         
+        #vehicle-container[data-view="list"] .vehicle-item-main-link,
         #vehicle-container[data-view="list"] .vehicle-item > a {
+            display: flex;
             flex-direction: column;
         }
         
         #vehicle-container[data-view="list"] .vehicle-image-container {
+            grid-column: auto;
+            grid-row: auto;
             width: 100%;
             min-width: 100%;
             height: 200px;
+            min-height: 200px;
         }
         
         #vehicle-container[data-view="list"] .vehicle-content-wrapper {
+            grid-column: auto;
+            grid-row: auto;
             padding: 1rem;
         }
         
         #vehicle-container[data-view="list"] .vehicle-item-footer {
+            grid-column: auto;
+            grid-row: auto;
             padding: 0 1rem 1rem;
             min-width: 0;
             width: 100%;
-            flex: 1 1 auto;
+            flex-direction: column;
+            align-items: stretch;
         }
         
         #vehicle-container[data-view="list"] .vehicle-actions-section {
