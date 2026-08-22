@@ -19,13 +19,15 @@
     );
     $fuelShort = \App\Helpers\FormatHelper::formatFuelTypeShort($vehicle->fuel_type_name);
     $newListingBadge = \App\Helpers\FormatHelper::newListingBadgeLabel($vehicle->created_at ?? null);
+    $newListingBadgeTone = \App\Helpers\FormatHelper::newListingBadgeTone($vehicle->created_at ?? null);
     $imagesCount = $vehicle->relationLoaded('images')
         ? $vehicle->images->count()
         : (int) ($vehicle->images_count ?? 0);
     $mileageValue = $vehicle->mileage ?? $vehicle->km_driven ?? null;
-    $chipClass = 'inline-flex items-center rounded-md border border-border px-2 py-1 text-xs';
+    $chipClass = 'vehicle-listing-chip';
 @endphp
 @once
+@push('styles')
 <style>
     .vehicle-listing-price {
         font-size: 1.5rem;
@@ -57,7 +59,17 @@
         font-size: 10px;
         font-weight: 600;
         line-height: 1.25;
+        white-space: nowrap;
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    }
+    .vehicle-listing-new-badge.is-today {
+        background: #16a34a;
+    }
+    .vehicle-listing-new-badge.is-recent {
+        background: #2563eb;
+    }
+    .vehicle-listing-new-badge.is-older {
+        background: #64748b;
     }
     .vehicle-listing-photo-count {
         display: inline-flex;
@@ -71,7 +83,36 @@
         font-weight: 500;
         backdrop-filter: blur(4px);
     }
+    .vehicle-listing-chip {
+        display: inline-flex;
+        align-items: center;
+        border: 0;
+        border-radius: 0.5rem;
+        background: #f3f4f6;
+        color: #475569;
+        padding: 0.35rem 0.55rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .vehicle-card-enquire-btn {
+        width: 2.25rem;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        box-shadow: none;
+    }
+    .vehicle-card-enquire-btn:hover {
+        background: #f3f4f6;
+        color: #0f172a;
+    }
 </style>
+@endpush
 @endonce
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
@@ -136,7 +177,7 @@
             </div>
             <div class="vehicle-listing-overlays-bottom flex items-end justify-between gap-2">
                 @if($newListingBadge)
-                    <span class="vehicle-listing-new-badge inline-flex max-w-[calc(100%-3.75rem)] items-center rounded-md bg-[#16a34a] px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                    <span class="vehicle-listing-new-badge is-{{ $newListingBadgeTone }} inline-flex max-w-[calc(100%-3.75rem)] items-center rounded-md px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
                         {{ $newListingBadge }}
                     </span>
                 @endif
@@ -161,7 +202,7 @@
             </div>
 
             @if($mileageValue || $vehicle->engine_power_hp || $vehicle->first_registration_date || $fuelShort !== '' || $vehicle->gear_type_name)
-            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
+            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1.5 py-2">
                 @if($mileageValue)
                     <span class="{{ $chipClass }}">{{ number_format((float) $mileageValue) }} km</span>
                 @endif
@@ -201,12 +242,14 @@
             <button
                 type="button"
                 onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98] dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
+                class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-white transition-all hover:bg-muted active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
                 aria-label="{{ __('messages.pages.vehicles.enquire') }}"
                 title="{{ __('messages.pages.vehicles.enquire') }}"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-                    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <path d="M13 8H7"/>
+                    <path d="M17 12H7"/>
                 </svg>
             </button>
         </div>

@@ -33,6 +33,8 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('vehicle-card-enquire-btn', $card);
         $this->assertStringContainsString("messages.pages.vehicles.enquire", $card);
         $this->assertStringContainsString('newListingBadgeLabel', $card);
+        $this->assertStringContainsString('newListingBadgeTone', $card);
+        $this->assertStringContainsString('is-{{ $newListingBadgeTone }}', $card);
         $this->assertStringContainsString('vehicle-listing-badges', $card);
         $this->assertStringContainsString('vehicle-listing-photo-count', $card);
         $this->assertStringContainsString('vehicle-listing-overlays', $card);
@@ -47,12 +49,21 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('font-weight: 800', $card);
         $this->assertStringContainsString('font-size: 1.5rem', $card);
 
+        $this->assertStringContainsString('vehicle-listing-chip', $card);
+        $this->assertStringContainsString('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', $card);
+
         $css = file_get_contents(resource_path('css/site-base.css'));
         $this->assertStringContainsString('.vehicle-listing-price', $css);
         $this->assertStringContainsString('font-weight: 800', $css);
         $this->assertStringContainsString('font-size: 1.5rem', $css);
         $this->assertStringContainsString('.vehicle-listing-new-badge', $css);
         $this->assertStringContainsString('background: #16a34a', $css);
+        $this->assertStringContainsString('.vehicle-listing-new-badge.is-recent', $css);
+        $this->assertStringContainsString('.vehicle-listing-new-badge.is-older', $css);
+        $this->assertStringContainsString('background: #2563eb', $css);
+        $this->assertStringContainsString('background: #64748b', $css);
+        $this->assertStringContainsString('.vehicle-listing-chip', $css);
+        $this->assertStringContainsString('background: #f3f4f6', $css);
     }
 
     public function test_list_view_keeps_enquire_button_at_content_width(): void
@@ -76,6 +87,10 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr)', $source);
         $this->assertStringContainsString('vehicle-listing-photo-count', $source);
         $this->assertStringContainsString('newListingBadgeLabel', $source);
+        $this->assertStringContainsString('newListingBadgeTone', $source);
+        $this->assertStringContainsString('is-${newListingTone}', $source);
+        $this->assertStringContainsString('#vehicle-container .vehicle-listing-chip', $source);
+        $this->assertStringContainsString('background: #f3f4f6', $source);
     }
 
     public function test_listing_copy_exists_in_danish_and_english(): void

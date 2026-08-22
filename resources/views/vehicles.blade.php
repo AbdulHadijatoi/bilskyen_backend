@@ -421,8 +421,16 @@
             }
             .vehicle-listing-new-badge {
                 position: static;
-                background: #16a34a;
                 color: #fff;
+            }
+            .vehicle-listing-new-badge.is-today {
+                background: #16a34a;
+            }
+            .vehicle-listing-new-badge.is-recent {
+                background: #2563eb;
+            }
+            .vehicle-listing-new-badge.is-older {
+                background: #64748b;
             }
             .vehicle-listing-favorite {
                 position: static;
@@ -440,15 +448,32 @@
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
+            #vehicle-container .vehicle-listing-chip,
+            #vehicle-fallback-section .vehicle-listing-chip {
+                display: inline-flex;
+                align-items: center;
+                border: 0;
+                border-radius: 0.5rem;
+                background: #f3f4f6;
+                color: #475569;
+                padding: 0.35rem 0.55rem;
+                font-size: 0.75rem;
+                font-weight: 500;
+                line-height: 1.2;
+                white-space: nowrap;
+            }
             .vehicle-card-enquire-btn {
                 width: 2.25rem;
                 min-width: 2.25rem;
                 height: 2.25rem;
                 padding: 0;
                 border-width: 1px;
+                border-radius: 0.5rem;
                 background: #fff;
+                color: #475569;
                 aspect-ratio: 1 / 1;
                 box-sizing: border-box;
+                box-shadow: none;
             }
             .listing-skeleton-card {
                 display: flex;
@@ -2015,24 +2040,41 @@
         const newListingTodayLabel = @json(__('messages.pages.vehicles.new_listing_today'));
         const newListingDayAgoLabel = @json(trans_choice('messages.pages.vehicles.new_listing_days_ago', 1, ['days' => ':days']));
         const newListingDaysAgoLabel = @json(trans_choice('messages.pages.vehicles.new_listing_days_ago', 2, ['days' => ':days']));
+        const newListingRecentMaxDays = {{ \App\Helpers\FormatHelper::NEW_LISTING_MAX_DAYS }};
 
-        function newListingBadgeLabel(vehicle) {
-            if (vehicle.new_listing_badge) return String(vehicle.new_listing_badge);
+        function listingAgeDays(vehicle) {
             const raw = vehicle.created_at;
-            if (!raw) return '';
+            if (!raw) return null;
             const listed = new Date(raw);
-            if (Number.isNaN(listed.getTime())) return '';
+            if (Number.isNaN(listed.getTime())) return null;
             const now = new Date();
             const startListed = new Date(listed.getFullYear(), listed.getMonth(), listed.getDate()).getTime();
             const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const days = Math.round((startNow - startListed) / 86400000);
-            if (days < 0 || days > {{ \App\Helpers\FormatHelper::NEW_LISTING_MAX_DAYS }}) return '';
+            if (days < 0) return null;
+            return days;
+        }
+
+        function newListingBadgeLabel(vehicle) {
+            if (vehicle.new_listing_badge) return String(vehicle.new_listing_badge);
+            const days = listingAgeDays(vehicle);
+            if (days === null) return '';
             if (days === 0) return newListingTodayLabel;
             const template = days === 1 ? newListingDayAgoLabel : newListingDaysAgoLabel;
             return template.replace(':days', String(days));
         }
 
-        const specChipClass = 'inline-flex items-center rounded-md border border-border px-2 py-1 text-xs';
+        function newListingBadgeTone(vehicle) {
+            const tone = String(vehicle.new_listing_badge_tone || '');
+            if (tone === 'today' || tone === 'recent' || tone === 'older') return tone;
+            const days = listingAgeDays(vehicle);
+            if (days === null) return '';
+            if (days === 0) return 'today';
+            if (days <= newListingRecentMaxDays) return 'recent';
+            return 'older';
+        }
+
+        const specChipClass = 'vehicle-listing-chip';
 
         // Single listing tile (card + list layouts differ only via #vehicle-container[data-view] CSS)
         function renderVehicleItem(vehicle) {
@@ -2047,6 +2089,7 @@
             const imagesCount = Number(vehicle.images_count || (Array.isArray(vehicle.images) ? vehicle.images.length : 0) || 0);
             const mileage = vehicle.mileage || vehicle.km_driven;
             const newListingLabel = newListingBadgeLabel(vehicle);
+            const newListingTone = newListingBadgeTone(vehicle);
 
             return `
                 <div class="vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
@@ -2108,7 +2151,7 @@
                             </div>
                             <div class="vehicle-listing-overlays-bottom flex items-end justify-between gap-2">
                                 ${newListingLabel ? `
-                                <span class="vehicle-listing-new-badge inline-flex max-w-[calc(100%-3.75rem)] items-center rounded-md bg-[#16a34a] px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                                <span class="vehicle-listing-new-badge is-${newListingTone} inline-flex max-w-[calc(100%-3.75rem)] items-center rounded-md px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
                                     ${escapeHtml(newListingLabel)}
                                 </span>
                                 ` : ''}
@@ -2130,7 +2173,7 @@
                                     ${escapeHtml(titleText)}
                                 </h3>
                             </div>
-                            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1 py-2 text-xs font-light">
+                            <div class="vehicle-listing-badges flex flex-1 flex-wrap content-center items-center min-h-[2rem] gap-1.5 py-2">
                                 ${mileage ? `
                                 <span class="${specChipClass}">${new Intl.NumberFormat('da-DK').format(mileage)} km</span>
                                 ` : ''}
@@ -2165,9 +2208,11 @@
                             <a href="${VEHICLE_DETAIL_URL(slug)}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
                                 {{ __('messages.pages.vehicles.view_details') }}
                             </a>
-                            <button type="button" class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${escapeHtml(slug)}');" aria-label="{{ __('messages.pages.vehicles.enquire') }}" title="{{ __('messages.pages.vehicles.enquire') }}">
+                            <button type="button" class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-white transition-all hover:bg-muted disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${escapeHtml(slug)}');" aria-label="{{ __('messages.pages.vehicles.enquire') }}" title="{{ __('messages.pages.vehicles.enquire') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-                                    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    <path d="M13 8H7"/>
+                                    <path d="M17 12H7"/>
                                 </svg>
                             </button>
                         </div>

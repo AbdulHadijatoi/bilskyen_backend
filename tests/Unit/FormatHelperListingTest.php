@@ -51,21 +51,30 @@ class FormatHelperListingTest extends TestCase
         $this->assertSame(1, FormatHelper::newListingAgeDays(now()->subDay()));
         $this->assertSame(2, FormatHelper::newListingAgeDays(now()->subDays(2)));
         $this->assertSame(7, FormatHelper::newListingAgeDays(now()->subDays(7)));
-        $this->assertNull(FormatHelper::newListingAgeDays(now()->subDays(8)));
+        $this->assertSame(8, FormatHelper::newListingAgeDays(now()->subDays(8)));
+        $this->assertSame(30, FormatHelper::newListingAgeDays(now()->subDays(30)));
+        $this->assertNull(FormatHelper::newListingAgeDays(now()->subDays(8), FormatHelper::NEW_LISTING_MAX_DAYS));
         $this->assertTrue(FormatHelper::isNewListing(now()->subDays(7)));
         $this->assertFalse(FormatHelper::isNewListing(now()->subDays(8)));
         $this->assertFalse(FormatHelper::isNewListing(null));
+
+        $this->assertSame('today', FormatHelper::newListingBadgeTone(now()));
+        $this->assertSame('recent', FormatHelper::newListingBadgeTone(now()->subDay()));
+        $this->assertSame('recent', FormatHelper::newListingBadgeTone(now()->subDays(7)));
+        $this->assertSame('older', FormatHelper::newListingBadgeTone(now()->subDays(8)));
+        $this->assertNull(FormatHelper::newListingBadgeTone(null));
 
         app()->setLocale('en');
         $this->assertSame('New today', FormatHelper::newListingBadgeLabel(now()));
         $this->assertSame('1 day ago', FormatHelper::newListingBadgeLabel(now()->subDay()));
         $this->assertSame('2 days ago', FormatHelper::newListingBadgeLabel(now()->subDays(2)));
-        $this->assertNull(FormatHelper::newListingBadgeLabel(now()->subDays(8)));
+        $this->assertSame('8 days ago', FormatHelper::newListingBadgeLabel(now()->subDays(8)));
 
         app()->setLocale('da');
         $this->assertSame('Ny i dag', FormatHelper::newListingBadgeLabel(now()));
         $this->assertSame('1 dag siden', FormatHelper::newListingBadgeLabel(now()->subDay()));
         $this->assertSame('2 dage siden', FormatHelper::newListingBadgeLabel(now()->subDays(2)));
+        $this->assertSame('8 dage siden', FormatHelper::newListingBadgeLabel(now()->subDays(8)));
 
         Carbon::setTestNow();
     }

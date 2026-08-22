@@ -320,7 +320,20 @@ h1, h2, h3 {
   font-size: 10px;
   font-weight: 600;
   line-height: 1.25;
+  white-space: nowrap;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.vehicle-listing-new-badge.is-today {
+  background: #16a34a;
+}
+
+.vehicle-listing-new-badge.is-recent {
+  background: #2563eb;
+}
+
+.vehicle-listing-new-badge.is-older {
+  background: #64748b;
 }
 
 .vehicle-listing-photo-count {
@@ -334,6 +347,37 @@ h1, h2, h3 {
   font-size: 10px;
   font-weight: 500;
   backdrop-filter: blur(4px);
+}
+
+.vehicle-listing-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #f3f4f6;
+  color: #475569;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.vehicle-card-enquire-btn {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border, #e2e8f0);
+  background: #fff;
+  color: #475569;
+  box-shadow: none;
+}
+
+.vehicle-card-enquire-btn:hover {
+  background: #f3f4f6;
+  color: var(--foreground, #0f172a);
 }
 
 /* ── Auth shell ── */

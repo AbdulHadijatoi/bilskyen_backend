@@ -29,6 +29,7 @@ class VehicleListingPresentationService
             'is_boosted' => (bool) app(ListingBoostService::class)->activeBoostForVehicle($vehicle->id),
             'is_new_listing' => FormatHelper::isNewListing($vehicle->created_at),
             'new_listing_badge' => FormatHelper::newListingBadgeLabel($vehicle->created_at),
+            'new_listing_badge_tone' => FormatHelper::newListingBadgeTone($vehicle->created_at),
         ];
     }
 

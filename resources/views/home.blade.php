@@ -876,8 +876,9 @@
     }
 
     .vehicle-card-enquire-btn {
-        border-color: color-mix(in oklch, var(--foreground) 28%, var(--border));
-        color: var(--foreground);
+        border-color: #e2e8f0;
+        color: #475569;
+        box-shadow: none;
     }
 
     #home-filters-panel.is-collapsed {

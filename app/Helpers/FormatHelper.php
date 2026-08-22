@@ -322,9 +322,10 @@ class FormatHelper
     }
 
     /**
-     * Calendar days since created_at in the app timezone, or null when older than the new-listing window.
+     * Calendar days since created_at in the app timezone.
+     * Pass $maxDays to cap the window (used by isNewListing); omit it for the always-on age badge.
      */
-    public static function newListingAgeDays(mixed $createdAt = null, int $days = self::NEW_LISTING_MAX_DAYS): ?int
+    public static function newListingAgeDays(mixed $createdAt = null, ?int $maxDays = null): ?int
     {
         if ($createdAt === null || $createdAt === '') {
             return null;
@@ -346,7 +347,11 @@ class FormatHelper
 
         $age = (int) $createdStart->diffInDays($nowStart);
 
-        if ($age < 0 || $age > $days) {
+        if ($age < 0) {
+            return null;
+        }
+
+        if ($maxDays !== null && $age > $maxDays) {
             return null;
         }
 
@@ -362,11 +367,11 @@ class FormatHelper
     }
 
     /**
-     * Badge copy: "New today" on the listing date, otherwise "N days ago" through the 7-day window.
+     * Badge copy: "New today" on the listing date, otherwise "N days ago" for any age.
      */
-    public static function newListingBadgeLabel(mixed $createdAt = null, int $days = self::NEW_LISTING_MAX_DAYS): ?string
+    public static function newListingBadgeLabel(mixed $createdAt = null): ?string
     {
-        $age = self::newListingAgeDays($createdAt, $days);
+        $age = self::newListingAgeDays($createdAt);
         if ($age === null) {
             return null;
         }
@@ -376,6 +381,29 @@ class FormatHelper
         }
 
         return trans_choice('messages.pages.vehicles.new_listing_days_ago', $age, ['days' => $age]);
+    }
+
+    /**
+     * Color band for the listing-age badge: today, 1–7 days, or older than a week.
+     *
+     * @return 'today'|'recent'|'older'|null
+     */
+    public static function newListingBadgeTone(mixed $createdAt = null): ?string
+    {
+        $age = self::newListingAgeDays($createdAt);
+        if ($age === null) {
+            return null;
+        }
+
+        if ($age === 0) {
+            return 'today';
+        }
+
+        if ($age <= self::NEW_LISTING_MAX_DAYS) {
+            return 'recent';
+        }
+
+        return 'older';
     }
 
     /**
