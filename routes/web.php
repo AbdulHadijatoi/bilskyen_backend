@@ -128,9 +128,13 @@ Route::middleware('auth.web')->group(function () {
     Route::delete('/favoritter/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'destroyWeb'])->name('favorites.destroy');
     Route::get('/favoritter/check/{vehicleId}', [\App\Http\Controllers\FavoriteController::class, 'checkWeb'])->name('favorites.check');
     Route::post('/favoritter/check-batch', [\App\Http\Controllers\FavoriteController::class, 'checkBatchWeb'])->name('favorites.check.batch');
+    Route::get('/gemte-soegninger', [HomeController::class, 'showSavedSearches'])->name('saved-searches.index');
     Route::post('/saved-searches', [\App\Http\Controllers\AiSearchController::class, 'saveSearchWeb'])
         ->middleware('throttle:public.writes')
         ->name('saved-searches.store');
+    Route::delete('/gemte-soegninger/{id}', [\App\Http\Controllers\AiSearchController::class, 'destroyWeb'])
+        ->middleware('throttle:public.writes')
+        ->name('saved-searches.destroy');
     
     // Sell Your Car (form POST / lookup / success stay behind auth)
     Route::get('/saelg-din-bil/lookup-context/{dmrFactVehicleId}', [\App\Http\Controllers\SellYourCarController::class, 'lookupContext'])
@@ -208,6 +212,7 @@ Route::get('/markedsdata', [\App\Http\Controllers\MarketSnapshotController::clas
 // Stock-gated brand/fuel hubs (must be registered before /biler/{vehicle})
 Route::get('/biler/el', [\App\Http\Controllers\InventoryHubController::class, 'electric'])->name('hubs.electric');
 Route::get('/biler/maerke/{brand}', [\App\Http\Controllers\InventoryHubController::class, 'brand'])->name('hubs.brand');
+Route::get('/biler/sammenlign', [HomeController::class, 'showCompare'])->name('vehicles.compare');
 
 // Vehicles Page (DMR-linked Vehicle records)
 Route::get('/biler', [HomeController::class, 'showVehicles'])->name('vehicles');

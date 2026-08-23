@@ -12,6 +12,9 @@ class FormatHelper
     /** @var array<string, string|null> */
     private static array $cityByPostcode = [];
 
+    /** @var array<string, array{latitude: float, longitude: float}|null> */
+    private static array $coordsByPostcode = [];
+
     /**
      * Format currency value
      *
@@ -254,6 +257,34 @@ class FormatHelper
         }
 
         return self::$cityByPostcode[$postcode];
+    }
+
+    /**
+     * WGS84 point for a Danish postcode centroid, cached per request.
+     *
+     * @return array{latitude: float, longitude: float}|null
+     */
+    public static function coordsForPostcode(?string $postcode): ?array
+    {
+        $postcode = trim((string) $postcode);
+        if ($postcode === '') {
+            return null;
+        }
+        if (array_key_exists($postcode, self::$coordsByPostcode)) {
+            return self::$coordsByPostcode[$postcode];
+        }
+        try {
+            $row = Location::query()->where('postcode', $postcode)->first(['latitude', 'longitude']);
+            $lat = $row?->latitude;
+            $lng = $row?->longitude;
+            self::$coordsByPostcode[$postcode] = (is_numeric($lat) && is_numeric($lng))
+                ? ['latitude' => (float) $lat, 'longitude' => (float) $lng]
+                : null;
+        } catch (\Throwable) {
+            self::$coordsByPostcode[$postcode] = null;
+        }
+
+        return self::$coordsByPostcode[$postcode];
     }
 
     /**

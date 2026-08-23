@@ -158,7 +158,7 @@ class SeoService
             'meta_description' => $description !== '' ? $description : null,
             'meta_keywords' => $keywords !== '' ? $keywords : null,
             'canonical_url' => $canonical,
-            'robots' => $vehicle->isSold() ? 'noindex, follow' : 'index, follow',
+            'robots' => $vehicle->isPublished() ? 'index, follow' : 'noindex, follow',
             'og_title' => $pageTitle,
             'og_description' => $description !== '' ? $description : null,
             'og_image' => $ogImage,

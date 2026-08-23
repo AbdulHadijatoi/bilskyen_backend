@@ -212,6 +212,10 @@ Vehicle listings with searchable attributes.
 | towing_weight | INT (NULL) | Towing weight capacity |
 | ownership_tax | INT (NULL) | Ownership tax amount |
 | first_registration_date | DATE (NULL) | First registration date |
+| address | VARCHAR (NULL) | Seller/dealer street address |
+| postcode | VARCHAR(20) (NULL) | Seller/dealer postcode |
+| latitude | DECIMAL(10,7) (NULL) | Street-level WGS84 latitude (DAWA) |
+| longitude | DECIMAL(10,7) (NULL) | Street-level WGS84 longitude (DAWA) |
 | version | VARCHAR(100) (NULL) | Vehicle version (moved from vehicle_details) |
 | gear_type_id | INT (FK, NULL) | Foreign key to `gear_types.id` (moved from vehicle_details) |
 | fuel_efficiency | DECIMAL(8,2) (NULL) | Fuel efficiency (km/l) (moved from vehicle_details) |
@@ -233,6 +237,7 @@ Vehicle listings with searchable attributes.
 - `model_year_id` - For model year filtering
 - `model_year` - For calendar year range filters and sorts
 - `km_driven` - For mileage range filters and sorts
+- `(latitude, longitude)` - For street-level radius filter and map pins
 - `listing_type_id` - For listing type filtering
 - `gear_type_id` - For gear type filtering
 

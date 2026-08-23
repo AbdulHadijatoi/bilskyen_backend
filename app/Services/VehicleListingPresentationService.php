@@ -47,6 +47,9 @@ class VehicleListingPresentationService
         $imagesCount = $vehicle->relationLoaded('images')
             ? $vehicle->images->count()
             : (int) ($vehicle->images_count ?? 0);
+        $mapPoint = (is_numeric($vehicle->latitude) && is_numeric($vehicle->longitude))
+            ? ['latitude' => (float) $vehicle->latitude, 'longitude' => (float) $vehicle->longitude]
+            : FormatHelper::coordsForPostcode($vehicle->postcode);
 
         return array_merge([
             'id' => $vehicle->id,
@@ -71,6 +74,10 @@ class VehicleListingPresentationService
             'seller_address' => $vehicle->seller_address,
             'seller_postcode' => $vehicle->seller_postcode,
             'address' => $vehicle->address,
+            'latitude' => $vehicle->latitude,
+            'longitude' => $vehicle->longitude,
+            'map_latitude' => $mapPoint['latitude'] ?? null,
+            'map_longitude' => $mapPoint['longitude'] ?? null,
             'listing_location' => $listingLocation,
             'images_count' => $imagesCount,
             'published_at' => $vehicle->published_at?->toIso8601String(),

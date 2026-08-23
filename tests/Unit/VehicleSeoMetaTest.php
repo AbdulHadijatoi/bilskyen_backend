@@ -116,6 +116,7 @@ class VehicleSeoMetaTest extends TestCase
             'price' => 439799,
             'km_driven' => 100,
             'model_year' => 2026,
+            'list_status_id' => VehicleListStatus::PUBLISHED,
         ]);
         $vehicle->setRelation('dealer', $dealer);
         $vehicle->setRelation('images', collect());
@@ -152,6 +153,19 @@ class VehicleSeoMetaTest extends TestCase
     {
         $vehicle = $this->stubVehicleForSeo();
         $vehicle->list_status_id = VehicleListStatus::SOLD;
+
+        $seo = Mockery::mock(SeoService::class)->makePartial();
+        $seo->shouldReceive('getForPage')->andReturn(null);
+
+        $resolved = $seo->resolveForVehicle($vehicle);
+
+        $this->assertSame('noindex, follow', $resolved['robots']);
+    }
+
+    public function test_unpublished_draft_vehicle_is_noindex_follow(): void
+    {
+        $vehicle = $this->stubVehicleForSeo();
+        $vehicle->list_status_id = VehicleListStatus::DRAFT;
 
         $seo = Mockery::mock(SeoService::class)->makePartial();
         $seo->shouldReceive('getForPage')->andReturn(null);

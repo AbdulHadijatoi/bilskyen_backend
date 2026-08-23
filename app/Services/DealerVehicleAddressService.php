@@ -7,6 +7,10 @@ use App\Models\Dealer;
 
 class DealerVehicleAddressService
 {
+    public function __construct(
+        private DawaGeocodeService $dawaGeocodeService,
+    ) {}
+
     /**
      * Force a dealer vehicle to use the address stored on the dealer profile.
      *
@@ -20,6 +24,6 @@ class DealerVehicleAddressService
         $payload['address'] = DealerDisplayHelper::formatDealerAddressLine($dealer);
         $payload['postcode'] = $postcode !== '' ? $postcode : null;
 
-        return $payload;
+        return $this->dawaGeocodeService->applyToPayload($payload);
     }
 }

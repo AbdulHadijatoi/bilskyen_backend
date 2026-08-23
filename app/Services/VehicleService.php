@@ -1274,13 +1274,31 @@ class VehicleService
             return;
         }
 
-        if (! $this->ensureSellerLocationJoin($query, $table)) {
+        $joined = $this->ensureSellerLocationJoin($query, $table);
+        $hasStreet = Schema::hasColumn($table, 'latitude') && Schema::hasColumn($table, 'longitude');
+        if (! $joined && ! $hasStreet) {
             return;
         }
 
-        $kmSql = $this->sellerDistanceKmSql();
-        $query->whereNotNull('loc_sort.lat')
-            ->whereNotNull('loc_sort.lng')
+        if ($joined) {
+            $kmSql = $this->sellerDistanceKmSql($this->sellerPointLatSql($table), $this->sellerPointLngSql($table));
+            $query->where(function (Builder $outer) use ($table, $hasStreet): void {
+                if ($hasStreet) {
+                    $outer->where(function (Builder $street) use ($table): void {
+                        $street->whereNotNull($table.'.latitude')->whereNotNull($table.'.longitude');
+                    });
+                }
+                $outer->orWhere(function (Builder $postcode): void {
+                    $postcode->whereNotNull('loc_sort.lat')->whereNotNull('loc_sort.lng');
+                });
+            })->whereRaw($kmSql.' <= ?', [$lat, $lng, $lat, $radius]);
+
+            return;
+        }
+
+        $kmSql = $this->sellerDistanceKmSql($table.'.latitude', $table.'.longitude');
+        $query->whereNotNull($table.'.latitude')
+            ->whereNotNull($table.'.longitude')
             ->whereRaw($kmSql.' <= ?', [$lat, $lng, $lat, $radius]);
     }
 
@@ -1614,7 +1632,7 @@ class VehicleService
         $lat = isset($filters['viewer_latitude']) ? (float) $filters['viewer_latitude'] : null;
         $lng = isset($filters['viewer_longitude']) ? (float) $filters['viewer_longitude'] : null;
 
-        if ($lat === null || $lng === null || ! Schema::hasTable('locations')) {
+        if ($lat === null || $lng === null) {
             $query->orderByDesc($table.'.id');
 
             return;
@@ -1623,10 +1641,12 @@ class VehicleService
         $dir = $sort === 'distance_asc' ? 'asc' : 'desc';
         $this->ensureSellerLocationJoin($query, $table);
 
-        $kmExpr = $this->sellerDistanceKmSql();
+        $latExpr = $this->sellerPointLatSql($table);
+        $lngExpr = $this->sellerPointLngSql($table);
+        $kmExpr = $this->sellerDistanceKmSql($latExpr, $lngExpr);
 
         $query->orderByRaw(
-            'CASE WHEN loc_sort.lat IS NULL OR loc_sort.lng IS NULL THEN 999999 ELSE '.$kmExpr.' END '.$dir,
+            'CASE WHEN '.$latExpr.' IS NULL OR '.$lngExpr.' IS NULL THEN 999999 ELSE '.$kmExpr.' END '.$dir,
             [$lat, $lng, $lat]
         )->orderByDesc($table.'.id');
     }
@@ -1662,11 +1682,21 @@ class VehicleService
         return true;
     }
 
-    private function sellerDistanceKmSql(): string
+    private function sellerPointLatSql(string $table): string
+    {
+        return "COALESCE({$table}.latitude, loc_sort.lat)";
+    }
+
+    private function sellerPointLngSql(string $table): string
+    {
+        return "COALESCE({$table}.longitude, loc_sort.lng)";
+    }
+
+    private function sellerDistanceKmSql(string $latExpr = 'loc_sort.lat', string $lngExpr = 'loc_sort.lng'): string
     {
         return '(6371 * ACOS(LEAST(1, GREATEST(-1,
-            COS(RADIANS(?)) * COS(RADIANS(loc_sort.lat)) * COS(RADIANS(loc_sort.lng) - RADIANS(?)) +
-            SIN(RADIANS(?)) * SIN(RADIANS(loc_sort.lat))
+            COS(RADIANS(?)) * COS(RADIANS('.$latExpr.')) * COS(RADIANS('.$lngExpr.') - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS('.$latExpr.'))
         ))))';
     }
 

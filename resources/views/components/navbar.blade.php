@@ -21,6 +21,7 @@
                 <div class="site-header-utils flex items-center gap-2 md:gap-3" data-navbar-utils>
                     @include('components.language-switcher', ['variant' => 'dark'])
                     @include('components.navbar-favorites')
+                    @include('components.navbar-saved-searches')
                     @include('components.marketplace-notifications')
                     <div class="flex items-center gap-2 md:gap-3" data-navbar-auth>
                         @include('components.user-auth-status')
@@ -162,6 +163,7 @@
             const profileUrl = @json(route('profile'));
 
             document.getElementById('navbar-favorites')?.classList.remove('hidden');
+            document.getElementById('navbar-saved-searches')?.classList.remove('hidden');
             if (typeof window.refreshMarketplaceNotifications === 'function') {
                 window.refreshMarketplaceNotifications();
             }

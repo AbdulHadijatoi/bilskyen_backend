@@ -131,6 +131,28 @@ class AiSearchController extends Controller
     }
 
     /**
+     * DELETE /gemte-soegninger/{id} — cookie-auth marketplace users (web).
+     */
+    public function destroyWeb(int $id, Request $request): JsonResponse
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+        if (! $user) {
+            return $this->error(__('messages.api.unauthorized_access'), [], 401);
+        }
+
+        $deleted = SavedSearch::query()
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->delete();
+
+        if ($deleted === 0) {
+            return $this->notFound();
+        }
+
+        return $this->success(null, message: __('messages.pages.saved_searches.deleted'));
+    }
+
+    /**
      * POST /api/v1/saved-searches — Bearer token marketplace users.
      */
     public function saveSearch(Request $request): JsonResponse

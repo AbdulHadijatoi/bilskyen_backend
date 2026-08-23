@@ -88,6 +88,8 @@ class Vehicle extends Model
         'expires_at',
         'address',
         'postcode',
+        'latitude',
+        'longitude',
         'description',
         'highlights',
         'meta_title',
@@ -120,6 +122,8 @@ class Vehicle extends Model
 
     protected $casts = [
         'km_per_liter' => 'float',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'co2_emission' => 'float',
         'electrical_consumption' => 'float',
         'engine_power_kw' => 'float',
@@ -497,6 +501,8 @@ class Vehicle extends Model
             'published_at',
             'address',
             'postcode',
+            'latitude',
+            'longitude',
             'description',
             'condition_id',
             'servicebog',

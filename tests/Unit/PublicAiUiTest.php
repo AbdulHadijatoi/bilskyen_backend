@@ -33,6 +33,7 @@ class PublicAiUiTest extends TestCase
         $favorites = file_get_contents(resource_path('views/components/navbar-favorites.blade.php'));
 
         $this->assertStringContainsString("components.navbar-favorites", $navbar);
+        $this->assertStringContainsString("components.navbar-saved-searches", $navbar);
         $this->assertLessThan(
             strpos($navbar, "components.marketplace-notifications"),
             strpos($navbar, "components.navbar-favorites")

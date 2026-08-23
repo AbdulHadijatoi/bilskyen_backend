@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SavedSearch;
 use App\Models\Vehicle;
 use App\Constants\VehicleListStatus;
 use App\Constants\VehicleSearchFilters;
@@ -42,6 +43,8 @@ use App\Services\FaqContentService;
 use App\Services\PlatformSettingService;
 use App\Services\SearchQueryLogService;
 use App\Services\SuggestionService;
+use App\Services\DealerContextService;
+use App\Support\VehicleListingAccess;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +70,7 @@ class HomeController extends Controller
         private FaqContentService $faqContentService,
         private PlatformSettingService $platformSettingService,
         private AiService $aiService,
+        private DealerContextService $dealerContextService,
     ) {}
 
     /**
@@ -682,9 +686,13 @@ class HomeController extends Controller
      */
     public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
-        if (! $vehicle->isPubliclyViewable()) {
+        $user = $this->authService->getAuthenticatedUser($request);
+
+        if (! VehicleListingAccess::canViewWebPdp($user, $vehicle, $this->dealerContextService)) {
             abort(404);
         }
+
+        $listingIsDraftPreview = ! $vehicle->isPubliclyViewable();
 
         $vehicle->load(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
             'images' => function ($q) {
@@ -694,20 +702,15 @@ class HomeController extends Controller
             'dealer.owner',
         ]));
 
-        // Get authenticated user (if any)
-        $user = $this->authService->getAuthenticatedUser($request);
-        
-        // Get IP address and user agent
-        $ipAddress = $request->ip();
-        $userAgent = $request->userAgent();
+        if (! $listingIsDraftPreview) {
+            $this->vehicleViewService->recordView(
+                $vehicle,
+                $user?->id,
+                $request->ip(),
+                $request->userAgent()
+            );
+        }
 
-        $this->vehicleViewService->recordView(
-            $vehicle,
-            $user?->id,
-            $request->ip(),
-            $request->userAgent()
-        );
-        
         $seo = $this->seoService->resolveForVehicle($vehicle);
         $showFinanceCalculator = $this->financeCalculatorService->shouldShowCalculatorForVehicle($vehicle);
         $financeSettings = $showFinanceCalculator ? $this->financeCalculatorService->settingsForLocale() : [];
@@ -720,7 +723,7 @@ class HomeController extends Controller
 
         $metaViewContentEventId = null;
         $metaPixelEnabled = $this->metaConversionsApiService->isBrowserEnabled();
-        if ($metaPixelEnabled) {
+        if ($metaPixelEnabled && ! $listingIsDraftPreview) {
             $metaViewContentEventId = $this->metaConversionsApiService->newEventId();
             $this->metaConversionsApiService->trackViewContent(
                 $vehicle,
@@ -748,6 +751,7 @@ class HomeController extends Controller
                 ? $this->vehicleViewService->recentForUser((int) $user->id, VehicleViewService::RAIL_LIMIT, (int) $vehicle->id)
                 : collect(),
             'listingPresentation' => $this->vehicleListingPresentationService,
+            'listingIsDraftPreview' => $listingIsDraftPreview,
         ]);
     }
 
@@ -781,6 +785,60 @@ class HomeController extends Controller
         return view('favorites', [
             'favorites' => $favorites,
             'listingPresentation' => $this->vehicleListingPresentationService,
+        ]);
+    }
+
+    /**
+     * Show saved marketplace searches for the signed-in buyer.
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function showSavedSearches(Request $request)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+
+        if (! $user) {
+            return redirect()->route('login')->with('return_url', '/gemte-soegninger');
+        }
+
+        $searches = SavedSearch::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(12);
+
+        return view('saved-searches', [
+            'searches' => $searches,
+        ]);
+    }
+
+    /**
+     * Side-by-side compare of up to 3 published listings.
+     */
+    public function showCompare(Request $request)
+    {
+        $raw = (string) $request->query('ids', '');
+        $ids = [];
+        foreach (preg_split('/[,\s]+/', $raw) ?: [] as $part) {
+            $n = (int) $part;
+            if ($n > 0 && ! in_array($n, $ids, true)) {
+                $ids[] = $n;
+            }
+            if (count($ids) >= 3) {
+                break;
+            }
+        }
+
+        $vehicles = $this->vehicleViewService->recentByIds($ids, 3);
+
+        return view('vehicle-compare', [
+            'vehicles' => $vehicles,
+            'listingPresentation' => $this->vehicleListingPresentationService,
+            'seo' => [
+                'title' => __('messages.pages.vehicles.compare_page_title'),
+                'meta_title' => __('messages.pages.vehicles.compare_page_title').' | Bilskyen',
+                'robots' => 'noindex, follow',
+            ],
         ]);
     }
 }

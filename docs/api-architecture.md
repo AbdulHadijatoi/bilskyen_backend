@@ -939,7 +939,7 @@ GET /api/v1/vehicles?category_id=1&brand_id=2&model_id=5&model_year_id=3&fuel_ty
 - `km_driven` - Filter by kilometers driven
 - `price_from` / `price_to` - Price range filter
 - `listing_type_id` - Filter by listing type (Purchase/Leasing)
-- `radius_km` - Optional distance cap (`25`, `50`, `100`, or `200`) from `viewer_latitude` / `viewer_longitude` using seller postcode coordinates. Ignored when coordinates are missing.
+- `radius_km` - Optional distance cap (`25`, `50`, `100`, or `200`) from `viewer_latitude` / `viewer_longitude`. Uses `vehicles.latitude`/`longitude` when present, otherwise seller postcode coordinates from `locations`. Ignored when coordinates are missing.
 - `viewer_latitude` / `viewer_longitude` - Viewer coordinates for `radius_km` and `distance_*` sort
 
 **Recently viewed:**

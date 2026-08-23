@@ -552,8 +552,8 @@
         </style>
 
         <!-- Sort, view toggle and results (DOM-first so listing links precede the filter tree) -->
-        <div class="flex min-w-0 w-full flex-1 flex-col gap-2 lg:order-2">
-            <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full">
+        <div id="listing-main-column" class="flex min-w-0 w-full flex-1 flex-col gap-2 lg:order-2">
+            <div id="sort-and-condition-controls" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full min-w-0">
             <div class="text-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0 w-full sm:w-auto">
                 <p class="js-results-count lg:hidden text-xs text-muted-foreground whitespace-nowrap">
                     @if(!empty($showNoResultsMessage))
@@ -563,11 +563,11 @@
                     @endif
                 </p>
                 <!-- Sort Dropdown Container -->
-                <div class="relative text-xs font-medium">
+                <div class="relative shrink-0 text-xs font-medium">
                     <select
                         id="sort-select"
                         name="sort"
-                        class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
+                        class="appearance-none bg-transparent border border-input rounded-md text-xs text-foreground font-medium pl-3 py-1.5 pr-10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-auto min-w-[13.5rem] sm:min-w-[16.5rem]"
                     >
                         @foreach($vehicleSortLabels as $value => $label)
                             <option value="{{ $value }}" @if(\App\Services\VehicleService::listingSortOptionIsSelected($value, $rawSortQuery ?? null)) selected @endif>{{ $label }}</option>
@@ -727,7 +727,7 @@
     <x-login-dialog />
 
     <!-- Pagination -->
-    <div id="pagination-wrap">
+    <div id="pagination-wrap" class="w-full min-w-0">
         <div id="pagination-container" class="flex w-full min-w-0 max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2">
             <button class="pagination-btn inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-input bg-background px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled aria-label="{{ __('messages.common.previous') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 sm:mr-2">
@@ -747,7 +747,7 @@
         </div>
     </div>
 
-    <x-recently-viewed-rail class="mt-10" :vehicles="$recentlyViewedVehicles ?? collect()" />
+    <x-recently-viewed-rail class="mt-10" :lg-cols="3" :vehicles="$recentlyViewedVehicles ?? collect()" />
 </div>
 
         <!-- Filter Sidebar -->
@@ -4756,9 +4756,9 @@ if (config) {
                         filters
                     );
                     window.showSnackbar?.(
-                        result?.message || (result?.ok
-                            ? '{{ __('messages.pages.vehicles.save_search_ok') }}'
-                            : '{{ __('messages.pages.vehicles.save_search_fail') }}'),
+                        result?.ok
+                            ? `{{ __('messages.pages.vehicles.save_search_ok') }} <a href="{{ route('saved-searches.index') }}" class="underline font-semibold">{{ __('messages.pages.vehicles.save_search_view') }}</a>`
+                            : (result?.message || '{{ __('messages.pages.vehicles.save_search_fail') }}'),
                         result?.ok ? 'success' : 'error'
                     );
                     if (!result?.ok && result?.message === helper.I18N?.loginToSave) {

@@ -28,13 +28,14 @@ class ViewServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Share authenticated user data to user-auth-status component
-        View::composer(['components.marketplace-notifications', 'components.navbar-favorites'], function ($view) {
+        View::composer(['components.marketplace-notifications', 'components.navbar-favorites', 'components.navbar-saved-searches'], function ($view) {
             $authService = app(AuthService::class);
             $user = $authService->getAuthenticatedUser(request());
 
             $view->with([
                 'showNotifications' => $user !== null,
                 'showFavorites' => $user !== null,
+                'showSavedSearches' => $user !== null,
             ]);
         });
 

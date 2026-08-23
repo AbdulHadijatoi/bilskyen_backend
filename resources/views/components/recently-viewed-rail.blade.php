@@ -2,6 +2,7 @@
     'vehicles' => null,
     'excludeId' => null,
     'listingPresentation' => null,
+    'lgCols' => 4,
 ])
 @php
     $items = $vehicles ?? collect();
@@ -23,7 +24,7 @@
     </h2>
     <div
         id="recently-viewed-grid"
-        class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 {{ (int) $lgCols === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4' }}"
         data-recently-viewed-grid
     >
         @foreach($items as $recentVehicle)

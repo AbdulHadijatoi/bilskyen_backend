@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Dealer;
+use App\Services\DawaGeocodeService;
 use App\Services\DealerVehicleAddressService;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +17,7 @@ class DealerVehicleAddressServiceTest extends TestCase
             'city' => 'Copenhagen',
         ]);
 
-        $payload = (new DealerVehicleAddressService)->applyToPayload([
+        $payload = $this->service()->applyToPayload([
             'address' => 'Spreadsheet Address 99',
             'postcode' => '9999',
         ], $dealer);
@@ -29,12 +30,20 @@ class DealerVehicleAddressServiceTest extends TestCase
     {
         $dealer = new Dealer;
 
-        $payload = (new DealerVehicleAddressService)->applyToPayload([
+        $payload = $this->service()->applyToPayload([
             'address' => 'Submitted Address',
             'postcode' => '1234',
         ], $dealer);
 
         $this->assertNull($payload['address']);
         $this->assertNull($payload['postcode']);
+    }
+
+    private function service(): DealerVehicleAddressService
+    {
+        $geocoder = $this->createStub(DawaGeocodeService::class);
+        $geocoder->method('applyToPayload')->willReturnCallback(fn (array $payload) => $payload);
+
+        return new DealerVehicleAddressService($geocoder);
     }
 }

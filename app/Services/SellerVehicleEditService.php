@@ -26,6 +26,7 @@ class SellerVehicleEditService
         private VehicleService $vehicleService,
         private AuditLogService $auditLogService,
         private VehicleImageUploadService $vehicleImageUploadService,
+        private DawaGeocodeService $dawaGeocodeService,
     ) {}
 
     /**
@@ -212,6 +213,12 @@ class SellerVehicleEditService
             }
             if ($request->has('seller_postcode')) {
                 $vehicleData['postcode'] = trim((string) $request->input('seller_postcode', ''));
+            }
+            if ($request->has('seller_address') || $request->has('seller_postcode')) {
+                $vehicleData = $this->dawaGeocodeService->applyToPayload([
+                    'address' => $vehicleData['address'] ?? $vehicle->address,
+                    'postcode' => $vehicleData['postcode'] ?? $vehicle->postcode,
+                ] + $vehicleData);
             }
 
             if ($request->has('description')) {

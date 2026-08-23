@@ -111,6 +111,8 @@
     $vd = $vehicleDetail ?? [];
     $showLeasingDetails = ! empty($vd['sales_type_name']) && \App\Models\SalesType::isLeasingName((string) $vd['sales_type_name']);
     $listingIsSold = $vehicle->isSold();
+    $listingIsDraftPreview = $listingIsDraftPreview ?? false;
+    $listingContactBlocked = $listingIsSold || $listingIsDraftPreview;
 @endphp
 
 @section('content')
@@ -118,7 +120,7 @@
     <!-- Header Section -->
     <div class="space-y-4">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div class="space-y-2">
+            <div class="min-w-0 flex-1 space-y-2">
                     <h1 class="text-foreground text-3xl font-bold tracking-tight">
                     {{ $vehicle->title }}
                     </h1>
@@ -126,6 +128,11 @@
                 <div class="rounded-lg border border-border bg-muted/50 px-4 py-3" role="status">
                     <p class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.sold_banner') }}</p>
                     <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.detail.sold_banner_hint') }}</p>
+                </div>
+                @elseif($listingIsDraftPreview)
+                <div class="rounded-lg border border-border bg-muted/50 px-4 py-3" role="status">
+                    <p class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.draft_preview_banner') }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.detail.draft_preview_banner_hint') }}</p>
                 </div>
                 @endif
                 @php
@@ -141,6 +148,9 @@
                 {{-- <p class="text-muted-foreground text-xl">
                     Registration: <span class="text-foreground font-mono">{{ $vehicle->registration }}</span>
                 </p> --}}
+            </div>
+            <div class="shrink-0">
+                <x-vehicle-share-dialog :url="url()->current()" :title="$vehicle->title" />
             </div>
             <!-- <div class="flex flex-col items-start lg:items-end">
                 <p class="text-3xl font-bold text-primary">
@@ -202,6 +212,25 @@
 
             return $url !== '' && ! str_contains($url, 'placeholder-vehicle');
         })->values();
+
+        $vehicleMapAddress = trim(implode(', ', array_filter([
+            $dealerDisplayAddress,
+            $dealerDisplayPostcode && $dealerDisplayAddress && ! str_contains($dealerDisplayAddress, (string) $dealerDisplayPostcode)
+                ? $dealerDisplayPostcode
+                : null,
+            $dealerDisplayCity && FormatHelper::isUsableCityName($dealerDisplayCity) && $dealerDisplayAddress && ! str_contains(mb_strtolower($dealerDisplayAddress), mb_strtolower((string) $dealerDisplayCity))
+                ? $dealerDisplayCity
+                : null,
+        ], static fn ($part) => $part !== null && trim((string) $part) !== '')));
+        $vehicleMapPostcode = $vehicle->postcode ?: $dealerDisplayPostcode;
+        $mapPoint = app(\App\Services\VehicleMapLocationService::class)->pointFor(
+            $vehicle,
+            $vehicleMapAddress !== '' ? $vehicleMapAddress : $dealerDisplayAddress,
+            $vehicleMapPostcode,
+        );
+        $vehicleMapLat = isset($mapPoint['latitude']) ? (float) $mapPoint['latitude'] : null;
+        $vehicleMapLng = isset($mapPoint['longitude']) ? (float) $mapPoint['longitude'] : null;
+        $vehicleHasMap = $vehicleMapLat !== null && $vehicleMapLng !== null;
     @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
@@ -256,6 +285,28 @@
             @else
             <div class="relative">
                 <div class="border-border bg-muted/50 relative aspect-[4/3] overflow-hidden rounded-lg border" role="img" aria-label="{{ $imageAlt }}"></div>
+            </div>
+            @endif
+
+            @if($vehicleHasMap)
+            <div class="overflow-hidden rounded-xl border border-border" data-vehicle-map-wrap hidden>
+                <div class="border-b border-border bg-card px-3 py-2">
+                    <h2 class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.location_map_title') }}</h2>
+                    @if($vehicleMapAddress !== '')
+                    <p class="mt-0.5 text-xs text-muted-foreground">{{ $vehicleMapAddress }}</p>
+                    @endif
+                </div>
+                <div
+                    id="vehicle-detail-map"
+                    class="w-full"
+                    data-vehicle-map
+                    data-lat="{{ $vehicleMapLat }}"
+                    data-lng="{{ $vehicleMapLng }}"
+                    data-address="{{ $vehicleMapAddress }}"
+                    data-postcode="{{ $vehicleMapPostcode }}"
+                    data-title="{{ $vehicle->title }}"
+                    style="height: 16rem;"
+                ></div>
             </div>
             @endif
 
@@ -365,7 +416,7 @@
             @endif
 
                 <!-- Contact Actions -->
-                @if($contactUser && ! $listingIsSold)
+                @if($contactUser && ! $listingContactBlocked)
                 <div class="rounded-lg bg-gray-50 p-6 border border-border">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -501,7 +552,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($dealerPhone && ! $listingIsSold)
+                        @if($dealerPhone && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -524,7 +575,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->dealer && ! $listingIsSold)
+                        @if($contactEmail && $vehicle->dealer && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1107,7 +1158,7 @@
             @endif
 
             <!-- Contact Actions -->
-            @if($contactUser && ! $listingIsSold)
+            @if($contactUser && ! $listingContactBlocked)
             <div class="hidden rounded-lg bg-gray-50 p-6 border border-border lg:block">
                 <div class="mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -1250,7 +1301,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($dealerPhone && ! $listingIsSold)
+                        @if($dealerPhone && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -1273,7 +1324,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->dealer && ! $listingIsSold)
+                        @if($contactEmail && $vehicle->dealer && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1413,7 +1464,7 @@
                         @php
                             $sellerPhone = $vehicle->user && $vehicle->user->phone ? $vehicle->user->phone : null;
                         @endphp
-                        @if($sellerPhone && ! $listingIsSold)
+                        @if($sellerPhone && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -1436,7 +1487,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->user && !$vehicle->dealer && ! $listingIsSold)
+                        @if($contactEmail && $vehicle->user && !$vehicle->dealer && ! $listingContactBlocked)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1621,7 +1672,7 @@
 
             <!-- Public Contact Information - Only for non-authenticated users -->
             @guest
-                @if(! $listingIsSold)
+                @if(! $listingContactBlocked)
                 <div class="rounded-lg bg-gray-50 p-6">
                     <h2 class="text-foreground mb-4 text-xl font-semibold">
                         {{ __('messages.pages.vehicles.detail.interested') }}
@@ -1728,7 +1779,7 @@
 </div>
 
 <!-- Enquiry Dialogs -->
-@if(! $listingIsSold)
+@if(! $listingContactBlocked)
 <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
 <x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />
 <x-enquiry-dialog type="price-negotiation" :vehicle="$vehicle" />
@@ -1741,6 +1792,9 @@
 <script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 <x-recently-viewed-helpers />
+@if(!empty($vehicleHasMap))
+<x-vehicle-map-helpers />
+@endif
 <script>
 
         const vehicleEnquireUrl = (id) => @json(rtrim(route('vehicles.enquire', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));

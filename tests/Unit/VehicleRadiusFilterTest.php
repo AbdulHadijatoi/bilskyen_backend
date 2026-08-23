@@ -68,6 +68,49 @@ class VehicleRadiusFilterTest extends TestCase
         $this->assertEqualsCanonicalizing([$a, $b], $ids);
     }
 
+    public function test_street_coordinates_beat_postcode_centroid(): void
+    {
+        $id = $this->insertVehicle([
+            'postcode' => '9000',
+            'latitude' => 55.6761,
+            'longitude' => 12.5683,
+        ]);
+        DB::table('locations')->insert([
+            ['postcode' => '9000', 'latitude' => 57.048, 'longitude' => 9.919],
+        ]);
+
+        $ids = $this->filteredIds([
+            'radius_km' => 25,
+            'viewer_latitude' => 55.6761,
+            'viewer_longitude' => 12.5683,
+        ]);
+
+        $this->assertSame([$id], $ids);
+    }
+
+    public function test_null_street_coordinates_still_use_postcode_locations(): void
+    {
+        $nearId = $this->insertVehicle([
+            'postcode' => '2100',
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+        $farId = $this->insertVehicle(['postcode' => '9000']);
+        DB::table('locations')->insert([
+            ['postcode' => '2100', 'latitude' => 55.6761, 'longitude' => 12.5683],
+            ['postcode' => '9000', 'latitude' => 57.048, 'longitude' => 9.919],
+        ]);
+
+        $ids = $this->filteredIds([
+            'radius_km' => 25,
+            'viewer_latitude' => 55.6761,
+            'viewer_longitude' => 12.5683,
+        ]);
+
+        $this->assertSame([$nearId], $ids);
+        $this->assertNotContains($farId, $ids);
+    }
+
     /**
      * @param  array<string, mixed>  $filters
      * @return list<int>
@@ -108,6 +151,8 @@ class VehicleRadiusFilterTest extends TestCase
             $table->string('title')->nullable();
             $table->unsignedBigInteger('list_status_id');
             $table->string('postcode')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
             $table->decimal('price', 12, 2)->nullable();
             $table->timestamps();
             $table->softDeletes();

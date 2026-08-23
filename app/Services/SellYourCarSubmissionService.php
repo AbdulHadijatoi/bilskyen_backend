@@ -37,6 +37,7 @@ class SellYourCarSubmissionService
         private FileService $fileService,
         private DmrLookupAssociationService $dmrLookupAssociationService,
         private VehicleImageUploadService $vehicleImageUploadService,
+        private DawaGeocodeService $dawaGeocodeService,
     ) {}
 
     /**
@@ -322,6 +323,7 @@ class SellYourCarSubmissionService
                 'address' => trim((string) $request->input('seller_address', '')),
                 'postcode' => trim((string) $request->input('seller_postcode', '')),
             ];
+            $attributes = $this->dawaGeocodeService->applyToPayload($attributes);
 
             $attributes['brand_id'] = (int) $request->input('brand_id');
             $attributes['model_id'] = (int) $request->input('model_id');
