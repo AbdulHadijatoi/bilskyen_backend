@@ -51,6 +51,10 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('vehicle-listing-badges', $card);
         $this->assertStringContainsString('vehicle-listing-photo-count', $card);
         $this->assertStringContainsString('data-listing-gallery', $card);
+        $this->assertStringContainsString('data-listing-gallery-prev', $card);
+        $this->assertStringContainsString('data-listing-gallery-next', $card);
+        $this->assertStringContainsString('vehicle-listing-gallery-btn', $card);
+        $this->assertStringContainsString('.vehicle-image-container:hover .vehicle-listing-gallery-btn', $card);
         $this->assertStringContainsString('data-listing-photo-current', $card);
         $this->assertStringContainsString('vehicle-listing-gallery', $card);
         $this->assertStringContainsString('scroll-snap-type: x mandatory', $card);
@@ -81,6 +85,8 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('background: #64748b', $css);
         $this->assertStringContainsString('.vehicle-listing-chip', $css);
         $this->assertStringContainsString('background: #f3f4f6', $css);
+        $this->assertStringContainsString('.vehicle-listing-gallery-btn', $css);
+        $this->assertStringContainsString('.vehicle-image-container:hover .vehicle-listing-gallery-btn', $css);
     }
 
     public function test_list_view_keeps_enquire_button_at_content_width(): void
@@ -104,6 +110,8 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr)', $source);
         $this->assertStringContainsString('vehicle-listing-photo-count', $source);
         $this->assertStringContainsString('data-listing-gallery', $source);
+        $this->assertStringContainsString('data-listing-gallery-prev', $source);
+        $this->assertStringContainsString('data-listing-gallery-next', $source);
         $this->assertStringContainsString('listingGalleryHtml', $source);
         $this->assertStringContainsString('initListingGalleries', $source);
         $this->assertStringContainsString('newListingBadgeLabel', $source);

@@ -120,6 +120,58 @@
         pointer-events: none;
         -webkit-user-drag: none;
     }
+    .vehicle-listing-gallery-btn {
+        position: absolute;
+        top: 50%;
+        z-index: 12;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        border: 0;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #0f172a;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-50%);
+        transition: opacity 0.15s ease, background-color 0.15s ease;
+        cursor: pointer;
+    }
+    .vehicle-listing-gallery-btn.is-prev {
+        left: 0.375rem;
+    }
+    .vehicle-listing-gallery-btn.is-next {
+        right: 0.375rem;
+    }
+    .vehicle-listing-gallery-btn:hover {
+        background: #fff;
+    }
+    .vehicle-listing-gallery-btn:focus-visible {
+        opacity: 1;
+        pointer-events: auto;
+        outline: 2px solid var(--ring, #2563eb);
+        outline-offset: 2px;
+    }
+    .vehicle-image-container:hover .vehicle-listing-gallery-btn,
+    .vehicle-image-container:focus-within .vehicle-listing-gallery-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    @media (hover: none) {
+        .vehicle-image-container:has([data-listing-gallery]) .vehicle-listing-gallery-btn {
+            opacity: 0.92;
+            pointer-events: auto;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .vehicle-listing-gallery-btn {
+            transition: none;
+        }
+    }
     .vehicle-listing-chip {
         display: inline-flex;
         align-items: center;
@@ -187,6 +239,26 @@
                     </a>
                 @endforeach
             </div>
+            <button
+                type="button"
+                class="vehicle-listing-gallery-btn is-prev"
+                data-listing-gallery-prev
+                aria-label="{{ __('messages.pages.vehicles.detail.previous_slide') }}"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+            </button>
+            <button
+                type="button"
+                class="vehicle-listing-gallery-btn is-next"
+                data-listing-gallery-next
+                aria-label="{{ __('messages.pages.vehicles.detail.next_slide') }}"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </button>
         @else
             <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
                 <img
