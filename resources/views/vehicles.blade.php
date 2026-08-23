@@ -746,6 +746,8 @@
             </button>
         </div>
     </div>
+
+    <x-recently-viewed-rail class="mt-10" :vehicles="$recentlyViewedVehicles ?? collect()" />
 </div>
 
         <!-- Filter Sidebar -->
@@ -796,6 +798,23 @@
             </div>
 
             <x-popular-cities variant="sidebar" />
+
+            <div class="filter-card bg-white shrink-0">
+                <div class="filter-section">
+                    <label class="filter-section-title" for="listing-radius-km">{{ __('messages.forms.seller_distance_km') }}</label>
+                    <select
+                        id="listing-radius-km"
+                        name="radius_km"
+                        class="filter-control mt-2"
+                        data-listing-radius
+                    >
+                        <option value="">{{ __('messages.common.all') }}</option>
+                        @foreach([25, 50, 100, 200] as $radiusKm)
+                            <option value="{{ $radiusKm }}" @if(($cf['radius_km'] ?? '') == $radiusKm) selected @endif>{{ $radiusKm }} km</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
 
             <!-- Condition + Listing Type + Sales Type (always visible) -->
             <div class="filter-card bg-white shrink-0">
@@ -1870,6 +1889,7 @@
 @endpush
 
 @push('scripts')
+<x-recently-viewed-helpers />
 <script>
 
         const VEHICLE_DETAIL_URL = (slug) => @json(rtrim(route('vehicle.detail', ['vehicle' => '__SLUG__']), '/')).replace('__SLUG__', encodeURIComponent(slug));
@@ -2956,6 +2976,14 @@
                         value: filters.condition_id
                     });
                 }
+            }
+
+            if (filters.radius_km) {
+                chips.push({
+                    key: 'radius_km',
+                    label: `{{ __('messages.forms.seller_distance_km') }}: ${filters.radius_km} km`,
+                    value: filters.radius_km
+                });
             }
             
             // Single-value selects (body_type, gear_type, color, type, sales_type, price_type, euronom, use, transmission)
@@ -4102,6 +4130,10 @@ if (config) {
                 filters.viewer_latitude = window.__viewerGeo.latitude;
                 filters.viewer_longitude = window.__viewerGeo.longitude;
             }
+            const radiusKm = v('radius_km');
+            if (radiusKm && ['25', '50', '100', '200'].includes(radiusKm)) {
+                filters.radius_km = parseInt(radiusKm, 10);
+            }
             filters.limit = 15;
             return filters;
         }
@@ -4111,7 +4143,14 @@ if (config) {
         
         function autoApplyFilters() {
             clearTimeout(filterDebounceTimer);
-            filterDebounceTimer = setTimeout(() => fetchVehicles({ page: 1 }), 500);
+            filterDebounceTimer = setTimeout(() => {
+                const radiusSelect = document.querySelector('[name="radius_km"]');
+                if (radiusSelect && radiusSelect.value && !window.__viewerGeo && typeof requestViewerGeo === 'function') {
+                    requestViewerGeo(() => fetchVehicles({ page: 1 }));
+                    return;
+                }
+                fetchVehicles({ page: 1 });
+            }, 500);
         }
 
         // Types dropdown still uses paged search; brands/models load full lists (or scoped lists) from API.
@@ -4706,6 +4745,7 @@ if (config) {
                     delete filters.limit;
                     delete filters.viewer_latitude;
                     delete filters.viewer_longitude;
+                    delete filters.radius_km;
                     const helper = window.BilskyenAiSearch;
                     if (!helper || typeof helper.saveCurrentSearch !== 'function') {
                         window.showSnackbar?.('{{ __('messages.pages.vehicles.save_search_fail') }}', 'error');
@@ -4738,12 +4778,32 @@ if (config) {
         // Keep URL query params so filtered links are shareable; sidebar already seeds from GET.
         window.__viewerGeo = window.__viewerGeo || null;
         const initialPage = Math.max(1, parseInt(new URLSearchParams(window.location.search).get('page') || '1', 10) || 1);
+        function requestViewerGeo(onDone) {
+            const done = typeof onDone === 'function' ? onDone : function () {};
+            if (window.__viewerGeo) {
+                done();
+                return;
+            }
+            if (!navigator.geolocation) {
+                done();
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    window.__viewerGeo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                    done();
+                },
+                function () { done(); },
+                { maximumAge: 600000, timeout: 8000 }
+            );
+        }
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     window.__viewerGeo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
                     const ss = document.getElementById('sort-select');
-                    if (ss && (ss.value === 'distance_asc' || ss.value === 'distance_desc')) {
+                    const radiusSelect = document.querySelector('[name="radius_km"]');
+                    if ((ss && (ss.value === 'distance_asc' || ss.value === 'distance_desc')) || (radiusSelect && radiusSelect.value)) {
                         fetchVehicles({ page: initialPage });
                     }
                 },
@@ -4756,6 +4816,11 @@ if (config) {
         // Initialize auto-apply filters for sidebar
         setupAutoApplyFilters();
         initListingUx();
+        if (typeof window.BilskyenRecentlyViewed?.hydrate === 'function') {
+            window.BilskyenRecentlyViewed.hydrate({
+                renderItem: typeof renderVehicleItem === 'function' ? renderVehicleItem : undefined,
+            });
+        }
         
         // Initialize brand/model dropdown toggles and label updates
         initBrandModelDropdowns();

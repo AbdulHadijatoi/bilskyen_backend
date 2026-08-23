@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: 7c02af0412c3a701625e53f55d5466a57604dc38e0775569f741d4cc537a6bd3
+API Architecture Checksum: 7a1227d7c277cd12124863ee542dca98b5ab5d95354c70a4315b1b3925f12ca6
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -375,6 +375,7 @@ Proxy endpoints are available for Flutter/Vue.js clients:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/vehicles` | List published vehicles |
+| GET | `/api/v1/vehicles/recently-viewed` | Recently viewed published listings (`ids` query and/or signed-in view log) |
 | GET | `/api/v1/vehicles/{id}` | Get vehicle details |
 
 #### Lead Tracking
@@ -938,6 +939,19 @@ GET /api/v1/vehicles?category_id=1&brand_id=2&model_id=5&model_year_id=3&fuel_ty
 - `km_driven` - Filter by kilometers driven
 - `price_from` / `price_to` - Price range filter
 - `listing_type_id` - Filter by listing type (Purchase/Leasing)
+- `radius_km` - Optional distance cap (`25`, `50`, `100`, or `200`) from `viewer_latitude` / `viewer_longitude` using seller postcode coordinates. Ignored when coordinates are missing.
+- `viewer_latitude` / `viewer_longitude` - Viewer coordinates for `radius_km` and `distance_*` sort
+
+**Recently viewed:**
+
+```
+GET /api/v1/vehicles/recently-viewed?ids=12,15,9&exclude=12
+```
+
+- `ids` — comma-separated vehicle ids (max 8), typically from `localStorage`
+- `exclude` — optional vehicle id to omit (current PDP)
+- Signed-in requests with empty `ids` use `listing_views_log` for that user
+- Response `data.docs` uses the public listing card payload; unpublished ids are dropped
 
 **Advanced Filters (vehicle_details table - requires joins, use when needed):**
 - `make` - Filter by brand name (text search)

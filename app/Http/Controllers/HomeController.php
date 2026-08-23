@@ -466,7 +466,7 @@ class HomeController extends Controller
         'engine_cylinders', 'doors', 'door_count', 'seats_min', 'seats_max', 'wheels', 'axles', 'axle_count',
         'drive_axle_count', 'specifications_airbags', 'charging_type', 'emission_norm_id',
         'ncap_five', 'ncap_test', 'is_import', 'is_factory_new', 'search', 'sort',
-        'city_slug', 'city', 'postcode',
+        'city_slug', 'city', 'postcode', 'radius_km',
     ];
 
     /**
@@ -488,6 +488,19 @@ class HomeController extends Controller
             }
         }
         return $currentFilters;
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Vehicle>
+     */
+    private function recentVehiclesForRequest(Request $request)
+    {
+        $user = $this->authService->getAuthenticatedUser($request);
+        if (! $user) {
+            return collect();
+        }
+
+        return $this->vehicleViewService->recentForUser((int) $user->id);
     }
 
     /**
@@ -597,6 +610,7 @@ class HomeController extends Controller
         $filterPriceMax = VehicleSearchFilters::PRICE_MAX;
         $filterKmMax = VehicleSearchFilters::KM_MAX;
         $listingFacets = $this->vehicleService->getPublicListingFacets($input);
+        $recentlyViewedVehicles = $this->recentVehiclesForRequest($request);
 
         return view('vehicles', compact(
             'vehicles',
@@ -614,6 +628,7 @@ class HomeController extends Controller
             'filterPriceMax',
             'filterKmMax',
             'listingFacets',
+            'recentlyViewedVehicles',
         ));
     }
 
@@ -729,6 +744,9 @@ class HomeController extends Controller
             'metaPixelEnabled' => $metaPixelEnabled,
             'relatedVehicles' => $this->relatedVehiclesService->forVehicle($vehicle),
             'dealerOtherVehicles' => $this->relatedVehiclesService->forSameDealer($vehicle),
+            'recentlyViewedVehicles' => $user
+                ? $this->vehicleViewService->recentForUser((int) $user->id, VehicleViewService::RAIL_LIMIT, (int) $vehicle->id)
+                : collect(),
             'listingPresentation' => $this->vehicleListingPresentationService,
         ]);
     }

@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: a88c234e89a582229edbd0404897f2e2a386f95f0e4121219cbc1fd4a69117d6
+Schema Checksum: b18e0ba9260d813b9a4d50aab3c45042aba351464b282faa390f2ca634683537
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -231,6 +231,8 @@ Vehicle listings with searchable attributes.
 - `brand_id` - For brand filtering
 - `model_id` - For model filtering
 - `model_year_id` - For model year filtering
+- `model_year` - For calendar year range filters and sorts
+- `km_driven` - For mileage range filters and sorts
 - `listing_type_id` - For listing type filtering
 - `gear_type_id` - For gear type filtering
 
@@ -1193,6 +1195,7 @@ Vehicle listing view tracking.
 
 **Indexes:**
 - `(vehicle_id, viewed_at)`
+- `(user_id, viewed_at)` — recently viewed rail for signed-in users
 
 **Foreign Keys:**
 - `vehicle_id` references `vehicles.id` (cascadeOnDelete)

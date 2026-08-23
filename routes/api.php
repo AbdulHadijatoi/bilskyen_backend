@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
     // Public vehicle listings (uses database data)
     Route::middleware(['throttle:public.listings', 'abuse.detect'])->group(function () {
         Route::get('/vehicles/count', [VehicleController::class, 'count'])->name('vehicles.count');
+        Route::get('/vehicles/recently-viewed', [VehicleController::class, 'recentlyViewed'])->name('vehicles.recently-viewed');
         Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
         Route::post('/search-vehicles', [VehicleController::class, 'searchVehicles'])->name('vehicles.search');
         Route::get('/featured-vehicles', [VehicleController::class, 'getFeaturedVehicles'])->name('vehicles.featured');

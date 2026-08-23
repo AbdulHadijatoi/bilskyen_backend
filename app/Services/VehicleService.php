@@ -21,6 +21,9 @@ class VehicleService
      */
     public const DEFAULT_PUBLIC_LISTING_SORT = 'created_at_desc';
 
+    /** @var list<int> */
+    public const ALLOWED_RADIUS_KM = [25, 50, 100, 200];
+
     /**
      * Maps legacy / human sort keys to `{column}_{asc|desc}` using only {@see Vehicle} table columns.
      *
@@ -932,8 +935,13 @@ class VehicleService
 
         $qualified = $query->getModel()->qualifyColumn($column);
 
+        // Joins (radius / boost) pin vehicles.* onto the builder; replace that
+        // select so ONLY_FULL_GROUP_BY facet aggregates stay legal.
         $rows = $query
-            ->selectRaw("{$qualified} as facet_id, COUNT(*) as aggregate")
+            ->select([
+                DB::raw("{$qualified} as facet_id"),
+                DB::raw('COUNT(*) as aggregate'),
+            ])
             ->whereNotNull($qualified)
             ->groupBy($qualified)
             ->pluck('aggregate', 'facet_id');
@@ -1245,6 +1253,45 @@ class VehicleService
         if (! empty($f['postcode'])) {
             $query->where("{$table}.postcode", (string) $f['postcode']);
         }
+
+        $this->applyPublicRadiusFilter($query, $f, $table);
+    }
+
+    /**
+     * Restrict to listings whose postcode location is within radius_km of the viewer.
+     * No-op when coordinates or an allowed radius are missing (does not empty the result set).
+     *
+     * @param  Builder<\App\Models\Vehicle>  $query
+     * @param  array<string, mixed>  $filters
+     */
+    private function applyPublicRadiusFilter(Builder $query, array $filters, string $table): void
+    {
+        $radius = $this->normalizeRadiusKm($filters['radius_km'] ?? null);
+        $lat = isset($filters['viewer_latitude']) ? (float) $filters['viewer_latitude'] : null;
+        $lng = isset($filters['viewer_longitude']) ? (float) $filters['viewer_longitude'] : null;
+
+        if ($radius === null || $lat === null || $lng === null) {
+            return;
+        }
+
+        if (! $this->ensureSellerLocationJoin($query, $table)) {
+            return;
+        }
+
+        $kmSql = $this->sellerDistanceKmSql();
+        $query->whereNotNull('loc_sort.lat')
+            ->whereNotNull('loc_sort.lng')
+            ->whereRaw($kmSql.' <= ?', [$lat, $lng, $lat, $radius]);
+    }
+
+    private function normalizeRadiusKm(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $radius = (int) $value;
+
+        return in_array($radius, self::ALLOWED_RADIUS_KM, true) ? $radius : null;
     }
 
     /**
@@ -1574,24 +1621,75 @@ class VehicleService
         }
 
         $dir = $sort === 'distance_asc' ? 'asc' : 'desc';
+        $this->ensureSellerLocationJoin($query, $table);
 
-        $locSub = DB::table('locations')
-            ->select('postcode', DB::raw('MAX(latitude) as lat'), DB::raw('MAX(longitude) as lng'))
-            ->groupBy('postcode');
-
-        $query->select($table.'.*');
-        $query->leftJoinSub($locSub, 'loc_sort', function ($join) use ($table): void {
-            $join->on('loc_sort.postcode', '=', $table.'.postcode');
-        });
-
-        $kmExpr = '(6371 * ACOS(LEAST(1, GREATEST(-1,
-            COS(RADIANS(?)) * COS(RADIANS(loc_sort.lat)) * COS(RADIANS(loc_sort.lng) - RADIANS(?)) +
-            SIN(RADIANS(?)) * SIN(RADIANS(loc_sort.lat))
-        ))))';
+        $kmExpr = $this->sellerDistanceKmSql();
 
         $query->orderByRaw(
             'CASE WHEN loc_sort.lat IS NULL OR loc_sort.lng IS NULL THEN 999999 ELSE '.$kmExpr.' END '.$dir,
             [$lat, $lng, $lat]
         )->orderByDesc($table.'.id');
+    }
+
+    /**
+     * Join aggregated {@see Location} coords on vehicle postcode (alias loc_sort). Idempotent.
+     *
+     * @param  Builder<\App\Models\Vehicle>  $query
+     */
+    private function ensureSellerLocationJoin(Builder $query, string $table): bool
+    {
+        if (! Schema::hasTable('locations')) {
+            return false;
+        }
+
+        if ($this->queryHasJoinAlias($query, 'loc_sort')) {
+            return true;
+        }
+
+        $locSub = DB::table('locations')
+            ->select('postcode', DB::raw('MAX(latitude) as lat'), DB::raw('MAX(longitude) as lng'))
+            ->groupBy('postcode');
+
+        $baseQuery = $query->getQuery();
+        if ($baseQuery->columns === null || $baseQuery->columns === ['*']) {
+            $query->select($table.'.*');
+        }
+
+        $query->leftJoinSub($locSub, 'loc_sort', function ($join) use ($table): void {
+            $join->on('loc_sort.postcode', '=', $table.'.postcode');
+        });
+
+        return true;
+    }
+
+    private function sellerDistanceKmSql(): string
+    {
+        return '(6371 * ACOS(LEAST(1, GREATEST(-1,
+            COS(RADIANS(?)) * COS(RADIANS(loc_sort.lat)) * COS(RADIANS(loc_sort.lng) - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS(loc_sort.lat))
+        ))))';
+    }
+
+    /**
+     * @param  Builder<\App\Models\Vehicle>  $query
+     */
+    private function queryHasJoinAlias(Builder $query, string $alias): bool
+    {
+        foreach ($query->getQuery()->joins ?? [] as $join) {
+            $table = $join->table ?? '';
+            if ($table instanceof \Illuminate\Contracts\Database\Query\Expression) {
+                $table = $table->getValue($query->getGrammar());
+            }
+            $table = (string) $table;
+            if ($table === $alias
+                || str_ends_with($table, ' '.$alias)
+                || str_ends_with($table, '`'.$alias.'`')
+                || str_contains($table, ' as '.$alias)
+                || str_contains($table, ' as `'.$alias.'`')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

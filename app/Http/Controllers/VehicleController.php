@@ -26,6 +26,8 @@ use App\Services\ListingHealthEventService;
 use App\Services\ListingHealthService;
 use App\Services\MarketPricingService;
 use App\Services\VehicleListingPresentationService;
+use App\Services\VehicleViewService;
+use App\Services\AuthService;
 use App\Constants\VehicleListStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -62,6 +64,8 @@ class VehicleController extends Controller
         private MarketPricingService $marketPricingService,
         private ListingBoostService $listingBoostService,
         private VehicleListingPresentationService $vehicleListingPresentationService,
+        private VehicleViewService $vehicleViewService,
+        private AuthService $authService,
     ) {
         $this->fileService = $fileService;
     }
@@ -118,7 +122,7 @@ class VehicleController extends Controller
     /** @var array<int, string> Flat allowlist for public vehicle search inputs */
     private const FILTER_KEYS = [
         'search', 'sort', 'page', 'limit',
-        'viewer_latitude', 'viewer_longitude',
+        'viewer_latitude', 'viewer_longitude', 'radius_km',
         'brand_id', 'model_id',
         'listing_type_id', 'list_status_id',
         'category_id', 'sales_type_id', 'price_type_id', 'condition_id',
@@ -307,6 +311,56 @@ class VehicleController extends Controller
         $input = array_intersect_key($request->all(), array_flip(self::FILTER_KEYS));
         $input = $this->normalizeVehicleSearchInput($input);
         return $this->getVehiclesListResponse($input, includeFacets: true);
+    }
+
+    /**
+     * Recently viewed published listings for the public rails (guest ids or signed-in log).
+     */
+    public function recentlyViewed(Request $request): JsonResponse
+    {
+        $ids = $this->parseRecentlyViewedIds($request->query('ids'));
+        $excludeId = $request->filled('exclude') ? $request->integer('exclude') : null;
+        $user = $this->authService->getAuthenticatedUser($request);
+
+        $vehicles = $ids !== []
+            ? $this->vehicleViewService->recentByIds($ids, VehicleViewService::RAIL_LIMIT, $excludeId)
+            : ($user
+                ? $this->vehicleViewService->recentForUser((int) $user->id, VehicleViewService::RAIL_LIMIT, $excludeId)
+                : collect());
+
+        $docs = $vehicles
+            ->map(fn ($vehicle) => $this->vehicleListingPresentationService->formatForApiListing($vehicle))
+            ->values()
+            ->all();
+
+        return $this->success(['docs' => $docs]);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function parseRecentlyViewedIds(mixed $raw): array
+    {
+        if (is_array($raw)) {
+            $parts = $raw;
+        } elseif (is_string($raw) && $raw !== '') {
+            $parts = preg_split('/[,\s]+/', $raw) ?: [];
+        } else {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($parts as $part) {
+            $n = (int) $part;
+            if ($n > 0 && ! in_array($n, $ids, true)) {
+                $ids[] = $n;
+            }
+            if (count($ids) >= VehicleViewService::STORAGE_LIMIT) {
+                break;
+            }
+        }
+
+        return $ids;
     }
 
     /**

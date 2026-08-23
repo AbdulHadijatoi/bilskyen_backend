@@ -1719,6 +1719,14 @@
     </div>
 @endif
 
+<div class="container py-6">
+    <x-recently-viewed-rail
+        :vehicles="$recentlyViewedVehicles ?? collect()"
+        :exclude-id="$vehicle->id"
+        :listing-presentation="$listingPresentation"
+    />
+</div>
+
 <!-- Enquiry Dialogs -->
 @if(! $listingIsSold)
 <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
@@ -1732,6 +1740,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<x-recently-viewed-helpers />
 <script>
 
         const vehicleEnquireUrl = (id) => @json(rtrim(route('vehicles.enquire', ['vehicle' => '__ID__']), '/')).replace('__ID__', encodeURIComponent(id));
@@ -1743,6 +1752,8 @@
             value: @json((float) ($vehicle->price ?? 0))
         };
 document.addEventListener('DOMContentLoaded', function() {
+    window.BilskyenRecentlyViewed?.remember(@json((int) $vehicle->id));
+    window.BilskyenRecentlyViewed?.hydrate({ excludeId: @json((int) $vehicle->id) });
     // Initialize Embla Carousel
     const emblaNode = document.querySelector('#vehicle-images-carousel');
     if (emblaNode) {

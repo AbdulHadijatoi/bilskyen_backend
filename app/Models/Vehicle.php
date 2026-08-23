@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Constants\VehicleListStatus;
+use App\Constants\VehicleListStatus as VehicleListStatusId;
 use App\Services\SeoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -556,17 +556,17 @@ class Vehicle extends Model
 
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where($this->qualifyColumn('list_status_id'), VehicleListStatus::PUBLISHED);
+        return $query->where($this->qualifyColumn('list_status_id'), VehicleListStatusId::PUBLISHED);
     }
 
     public function isPublished(): bool
     {
-        return (int) $this->list_status_id === VehicleListStatus::PUBLISHED;
+        return (int) $this->list_status_id === VehicleListStatusId::PUBLISHED;
     }
 
     public function isSold(): bool
     {
-        return (int) $this->list_status_id === VehicleListStatus::SOLD;
+        return (int) $this->list_status_id === VehicleListStatusId::SOLD;
     }
 
     public function isPubliclyViewable(): bool

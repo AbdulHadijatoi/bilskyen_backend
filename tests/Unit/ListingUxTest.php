@@ -15,6 +15,9 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString("messages.pages.vehicles.more_filters", $source);
         $this->assertStringContainsString('data-listing-save-search', $source);
         $this->assertStringContainsString('saveCurrentSearch', $source);
+        $this->assertStringContainsString('<x-recently-viewed-rail', $source);
+        $this->assertStringContainsString('name="radius_km"', $source);
+        $this->assertStringContainsString("messages.forms.seller_distance_km", $source);
         $this->assertStringNotContainsString('<x-listing-compare-tray', $source);
         $this->assertStringContainsString('id="listing-results-bar"', $source);
         $this->assertStringContainsString('id="listing-filters-applied"', $source);
@@ -99,10 +102,14 @@ class ListingUxTest extends TestCase
         $en = include resource_path('lang/en/messages.php');
         $da = include resource_path('lang/da/messages.php');
 
-        foreach (['more_filters', 'fewer_filters', 'filters_applied', 'new_listing_today', 'new_listing_days_ago', 'photo_count_label', 'save_search', 'save_search_ok', 'save_search_fail'] as $key) {
+        foreach (['more_filters', 'fewer_filters', 'filters_applied', 'new_listing_today', 'new_listing_days_ago', 'photo_count_label', 'save_search', 'save_search_ok', 'save_search_fail', 'recently_viewed_title'] as $key) {
             $this->assertNotEmpty($en['pages']['vehicles'][$key] ?? null, "Missing EN {$key}");
             $this->assertNotEmpty($da['pages']['vehicles'][$key] ?? null, "Missing DA {$key}");
         }
+        $this->assertArrayNotHasKey('compare_tray_title', $en['pages']['vehicles']);
+        $this->assertArrayNotHasKey('compare_tray_title', $da['pages']['vehicles']);
+        $this->assertNotEmpty($en['forms']['seller_distance_km'] ?? null);
+        $this->assertNotEmpty($da['forms']['seller_distance_km'] ?? null);
     }
 
     public function test_popular_cities_sidebar_variant_is_compact(): void
