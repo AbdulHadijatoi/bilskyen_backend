@@ -117,17 +117,41 @@ function bindListingGallery(scroller) {
     function go(delta) {
         const count = realSlides().length;
         if (count < 2) return;
+
+        function afterMove(fn) {
+            let finished = false;
+            const finish = function () {
+                if (finished) return;
+                finished = true;
+                scroller.removeEventListener('scrollend', finish);
+                fn();
+            };
+            scroller.addEventListener('scrollend', finish, { once: true });
+            window.setTimeout(finish, prefersReducedMotion ? 40 : 380);
+        }
+
         const next = currentReal + delta;
         if (loop && next >= count) {
             scrollToSlide(scroller.querySelector('[data-clone="first"]'), true);
+            updateCount(0);
+            afterMove(function () {
+                jumpToSlide(slideForReal(0));
+                updateCount(0);
+            });
             return;
         }
         if (loop && next < 0) {
             scrollToSlide(scroller.querySelector('[data-clone="last"]'), true);
+            updateCount(count - 1);
+            afterMove(function () {
+                jumpToSlide(slideForReal(count - 1));
+                updateCount(count - 1);
+            });
             return;
         }
         const clamped = Math.max(0, Math.min(count - 1, next));
         scrollToSlide(slideForReal(clamped), true);
+        updateCount(clamped);
     }
 
     ensureClones();
@@ -176,6 +200,24 @@ function bindListingGallery(scroller) {
         event.stopPropagation();
         dragged = false;
     });
+
+    const imageBox = scroller.closest('.vehicle-image-container') || card;
+    const prevBtn = imageBox ? imageBox.querySelector('[data-listing-gallery-prev]') : null;
+    const nextBtn = imageBox ? imageBox.querySelector('[data-listing-gallery-next]') : null;
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            go(-1);
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            go(1);
+        });
+    }
 
     scroller.addEventListener('keydown', (event) => {
         if (event.key === 'ArrowRight') {
