@@ -110,6 +110,7 @@
     /** @var array<string, mixed> $vehicleDetail */
     $vd = $vehicleDetail ?? [];
     $showLeasingDetails = ! empty($vd['sales_type_name']) && \App\Models\SalesType::isLeasingName((string) $vd['sales_type_name']);
+    $listingIsSold = $vehicle->isSold();
 @endphp
 
 @section('content')
@@ -121,6 +122,12 @@
                     <h1 class="text-foreground text-3xl font-bold tracking-tight">
                     {{ $vehicle->title }}
                     </h1>
+                @if($listingIsSold)
+                <div class="rounded-lg border border-border bg-muted/50 px-4 py-3" role="status">
+                    <p class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.sold_banner') }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">{{ __('messages.pages.vehicles.detail.sold_banner_hint') }}</p>
+                </div>
+                @endif
                 @php
                     $vehicleCity = app(\App\Services\CityIndexService::class)->resolveCityForVehicle($vehicle);
                 @endphp
@@ -358,7 +365,7 @@
             @endif
 
                 <!-- Contact Actions -->
-                @if($contactUser)
+                @if($contactUser && ! $listingIsSold)
                 <div class="rounded-lg bg-gray-50 p-6 border border-border">
                     <div class="mb-4 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -494,7 +501,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($dealerPhone)
+                        @if($dealerPhone && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -517,7 +524,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->dealer)
+                        @if($contactEmail && $vehicle->dealer && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1100,7 +1107,7 @@
             @endif
 
             <!-- Contact Actions -->
-            @if($contactUser)
+            @if($contactUser && ! $listingIsSold)
             <div class="hidden rounded-lg bg-gray-50 p-6 border border-border lg:block">
                 <div class="mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
@@ -1243,7 +1250,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($dealerPhone)
+                        @if($dealerPhone && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -1266,7 +1273,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->dealer)
+                        @if($contactEmail && $vehicle->dealer && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1406,7 +1413,7 @@
                         @php
                             $sellerPhone = $vehicle->user && $vehicle->user->phone ? $vehicle->user->phone : null;
                         @endphp
-                        @if($sellerPhone)
+                        @if($sellerPhone && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -1429,7 +1436,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if($contactEmail && $vehicle->user && !$vehicle->dealer)
+                        @if($contactEmail && $vehicle->user && !$vehicle->dealer && ! $listingIsSold)
                             <div class="flex items-start gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground">
                                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
@@ -1614,6 +1621,7 @@
 
             <!-- Public Contact Information - Only for non-authenticated users -->
             @guest
+                @if(! $listingIsSold)
                 <div class="rounded-lg bg-gray-50 p-6">
                     <h2 class="text-foreground mb-4 text-xl font-semibold">
                         {{ __('messages.pages.vehicles.detail.interested') }}
@@ -1627,6 +1635,7 @@
                         <p>• {{ __('messages.pages.vehicles.detail.arrange_test_drive') }}</p>
                     </div>
                 </div>
+                @endif
             @endguest
         </div>
     </div>
@@ -1674,11 +1683,49 @@
     </div>
 @endif
 
+@if(($dealerOtherVehicles ?? collect())->isNotEmpty())
+    <div class="container py-6">
+        <section class="space-y-4" aria-labelledby="dealer-other-vehicles-heading">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="dealer-other-vehicles-heading" class="text-xl font-semibold text-foreground">
+                    {{ __('messages.pages.vehicles.detail.more_from_dealer_title') }}
+                </h2>
+                @if($vehicle->dealer && $vehicle->dealer->slug)
+                    <a href="/dealer-{{ $vehicle->dealer->slug }}" class="text-sm font-medium text-primary hover:underline">
+                        {{ __('messages.pages.vehicles.detail.see_all_vehicles') }}
+                    </a>
+                @endif
+            </div>
+            <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach($dealerOtherVehicles as $dealerVehicle)
+                    @php
+                        $firstImage = $dealerVehicle->images->first();
+                        $imgUrl = $firstImage?->thumbnail_url ?? $firstImage?->image_url ?? '/placeholder-vehicle.jpg';
+                        $badges = $listingPresentation->badgeFields($dealerVehicle);
+                    @endphp
+                    <x-vehicle-listing-item
+                        :vehicle="$dealerVehicle"
+                        :img-url="$imgUrl"
+                        :img-alt="$dealerVehicle->title"
+                        :sales-type-name="$dealerVehicle->salesType?->name"
+                        :trust-badge="$badges['trust_badge'] ?? false"
+                        :price-dropped-recently="$badges['price_dropped_recently'] ?? false"
+                        :premium-dealer-badge="$badges['premium_dealer_badge'] ?? false"
+                        :is-boosted="$badges['is_boosted'] ?? false"
+                    />
+                @endforeach
+            </div>
+        </section>
+    </div>
+@endif
+
 <!-- Enquiry Dialogs -->
+@if(! $listingIsSold)
 <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
 <x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />
 <x-enquiry-dialog type="price-negotiation" :vehicle="$vehicle" />
 <x-enquiry-dialog type="exchange" :vehicle="$vehicle" />
+@endif
 
 <!-- Login Dialog -->
 <x-login-dialog />

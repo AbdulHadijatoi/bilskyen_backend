@@ -667,6 +667,10 @@ class HomeController extends Controller
      */
     public function showVehicleDetail(Request $request, Vehicle $vehicle)
     {
+        if (! $vehicle->isPubliclyViewable()) {
+            abort(404);
+        }
+
         $vehicle->load(array_merge($this->vehicleDetailPresentationService->detailEagerLoads(), [
             'images' => function ($q) {
                 $q->orderBy('sort_order');
@@ -724,6 +728,7 @@ class HomeController extends Controller
             'metaViewContentEventId' => $metaViewContentEventId,
             'metaPixelEnabled' => $metaPixelEnabled,
             'relatedVehicles' => $this->relatedVehiclesService->forVehicle($vehicle),
+            'dealerOtherVehicles' => $this->relatedVehiclesService->forSameDealer($vehicle),
             'listingPresentation' => $this->vehicleListingPresentationService,
         ]);
     }

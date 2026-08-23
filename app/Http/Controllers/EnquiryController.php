@@ -35,6 +35,26 @@ class EnquiryController extends Controller
         private MetaConversionsApiService $metaConversionsApiService,
     ) {}
 
+    private function abortUnlessPublishedForEnquiry(Vehicle $vehicle): void
+    {
+        if (! $vehicle->isPublished()) {
+            abort(404);
+        }
+    }
+
+    private function enquiryBlockedResponse(Vehicle $vehicle): ?JsonResponse
+    {
+        if ($vehicle->isPublished()) {
+            return null;
+        }
+
+        if ($vehicle->isSold()) {
+            return $this->error(__('messages.pages.vehicles.detail.sold_no_enquire'), [], 422);
+        }
+
+        abort(404);
+    }
+
     private function resolveVehicleOwnerEmail(Vehicle $vehicle): ?string
     {
         $dealerOwnerEmail = $vehicle->dealer?->owner?->email;
@@ -160,6 +180,10 @@ class EnquiryController extends Controller
      */
     public function enquire(Request $request, Vehicle $vehicle): JsonResponse
     {
+        if ($blocked = $this->enquiryBlockedResponse($vehicle)) {
+            return $blocked;
+        }
+
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
@@ -279,6 +303,8 @@ class EnquiryController extends Controller
      */
     public function showEnquiryForm(Vehicle $vehicle): View
     {
+        $this->abortUnlessPublishedForEnquiry($vehicle);
+
         $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
 
         return view('vehicle-enquiry-form', [
@@ -292,6 +318,10 @@ class EnquiryController extends Controller
      */
     public function submitEnquiryForm(Request $request, Vehicle $vehicle): JsonResponse
     {
+        if ($blocked = $this->enquiryBlockedResponse($vehicle)) {
+            return $blocked;
+        }
+
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
@@ -422,6 +452,8 @@ class EnquiryController extends Controller
      */
     public function showTestDriveForm(Vehicle $vehicle): View
     {
+        $this->abortUnlessPublishedForEnquiry($vehicle);
+
         $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-test-drive-form', [
@@ -436,6 +468,10 @@ class EnquiryController extends Controller
      */
     public function submitTestDriveForm(Request $request, Vehicle $vehicle): JsonResponse
     {
+        if ($blocked = $this->enquiryBlockedResponse($vehicle)) {
+            return $blocked;
+        }
+
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
@@ -570,6 +606,8 @@ class EnquiryController extends Controller
      */
     public function showPriceNegotiationForm(Vehicle $vehicle): View
     {
+        $this->abortUnlessPublishedForEnquiry($vehicle);
+
         $vehicle->load(['dealer.owner', 'user', 'images', 'dmrFactVehicle.variant.model.brand']);
         $user = $this->authService->getAuthenticatedUser(request());
         return view('vehicle-price-negotiation-form', [
@@ -584,6 +622,10 @@ class EnquiryController extends Controller
      */
     public function submitPriceNegotiationForm(Request $request, Vehicle $vehicle): JsonResponse
     {
+        if ($blocked = $this->enquiryBlockedResponse($vehicle)) {
+            return $blocked;
+        }
+
         // Get authenticated user (can be null for guest users)
         $user = $this->authService->getAuthenticatedUser($request);
 
@@ -715,6 +757,10 @@ class EnquiryController extends Controller
      */
     public function submitExchangeForm(Request $request, Vehicle $vehicle): JsonResponse
     {
+        if ($blocked = $this->enquiryBlockedResponse($vehicle)) {
+            return $blocked;
+        }
+
         $user = $this->authService->getAuthenticatedUser($request);
 
         $validated = $request->validate([

@@ -13,7 +13,8 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('id="listing-advanced-filters"', $source);
         $this->assertStringContainsString('id="listing-more-filters-toggle"', $source);
         $this->assertStringContainsString("messages.pages.vehicles.more_filters", $source);
-        $this->assertStringNotContainsString('data-listing-save-search', $source);
+        $this->assertStringContainsString('data-listing-save-search', $source);
+        $this->assertStringContainsString('saveCurrentSearch', $source);
         $this->assertStringNotContainsString('<x-listing-compare-tray', $source);
         $this->assertStringContainsString('id="listing-results-bar"', $source);
         $this->assertStringContainsString('id="listing-filters-applied"', $source);
@@ -98,7 +99,7 @@ class ListingUxTest extends TestCase
         $en = include resource_path('lang/en/messages.php');
         $da = include resource_path('lang/da/messages.php');
 
-        foreach (['more_filters', 'fewer_filters', 'filters_applied', 'new_listing_today', 'new_listing_days_ago', 'photo_count_label'] as $key) {
+        foreach (['more_filters', 'fewer_filters', 'filters_applied', 'new_listing_today', 'new_listing_days_ago', 'photo_count_label', 'save_search', 'save_search_ok', 'save_search_fail'] as $key) {
             $this->assertNotEmpty($en['pages']['vehicles'][$key] ?? null, "Missing EN {$key}");
             $this->assertNotEmpty($da['pages']['vehicles'][$key] ?? null, "Missing DA {$key}");
         }

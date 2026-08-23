@@ -192,6 +192,44 @@ class RelatedVehiclesServiceTest extends TestCase
         $this->assertCount(8, $related);
     }
 
+    public function test_same_dealer_excludes_current_and_unpublished(): void
+    {
+        $openId = $this->insertVehicle([
+            'dealer_id' => 9,
+            'brand_id' => 1,
+            'model_id' => 10,
+        ]);
+        $otherId = $this->insertVehicle([
+            'dealer_id' => 9,
+            'brand_id' => 2,
+            'model_id' => 20,
+        ]);
+        $this->insertVehicle([
+            'dealer_id' => 9,
+            'brand_id' => 2,
+            'model_id' => 20,
+            'list_status_id' => VehicleListStatus::SOLD,
+        ]);
+        $this->insertVehicle([
+            'dealer_id' => 8,
+            'brand_id' => 1,
+            'model_id' => 10,
+        ]);
+
+        $sameDealer = $this->service()->forSameDealer(Vehicle::findOrFail($openId));
+
+        $this->assertSame([$otherId], $sameDealer->pluck('id')->all());
+    }
+
+    public function test_cache_generation_bump_changes_key_namespace(): void
+    {
+        $before = (int) Cache::get(RelatedVehiclesService::CACHE_GENERATION_KEY, 1);
+        RelatedVehiclesService::bumpCacheGeneration();
+        $after = (int) Cache::get(RelatedVehiclesService::CACHE_GENERATION_KEY, 1);
+
+        $this->assertSame($before + 1, $after);
+    }
+
     private function service(): RelatedVehiclesService
     {
         return $this->app->make(RelatedVehiclesService::class);

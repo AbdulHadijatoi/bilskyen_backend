@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Constants\VehicleListStatus;
 use App\Services\SeoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -551,6 +552,26 @@ class Vehicle extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where($this->qualifyColumn('list_status_id'), VehicleListStatus::PUBLISHED);
+    }
+
+    public function isPublished(): bool
+    {
+        return (int) $this->list_status_id === VehicleListStatus::PUBLISHED;
+    }
+
+    public function isSold(): bool
+    {
+        return (int) $this->list_status_id === VehicleListStatus::SOLD;
+    }
+
+    public function isPubliclyViewable(): bool
+    {
+        return $this->isPublished() || $this->isSold();
     }
 
     public function generateUniqueSlug(): string

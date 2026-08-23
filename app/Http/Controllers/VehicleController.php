@@ -394,6 +394,10 @@ class VehicleController extends Controller
             },
         ]))->findOrFail($id);
 
+        if (! $vehicle->isPubliclyViewable()) {
+            abort(404);
+        }
+
         $user = $request->user();
         $dealerViewer = $user ? $this->dealerContextService->getCurrentDealer($user) : null;
         if ($dealerViewer) {
@@ -408,6 +412,8 @@ class VehicleController extends Controller
         $response = array_merge($payload, [
             'dealer_id' => $vehicle->dealer_id,
             'user_id' => $vehicle->user_id,
+            'list_status_id' => (int) $vehicle->list_status_id,
+            'is_sold' => $vehicle->isSold(),
             'published_at' => $vehicle->published_at?->format('Y-m-d H:i:s'),
             'created_at' => $vehicle->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $vehicle->updated_at->format('Y-m-d H:i:s'),
@@ -433,16 +439,11 @@ class VehicleController extends Controller
                 'owner' => $vehicle->dealer->owner ? [
                     'id' => $vehicle->dealer->owner->id,
                     'name' => $vehicle->dealer->owner->name,
-                    'email' => $vehicle->dealer->owner->email,
-                    'phone' => $vehicle->dealer->owner->phone,
-                    'whatsapp_number' => $vehicle->dealer->owner->whatsapp_number,
                 ] : null,
             ] : null,
             'user' => $vehicle->user ? [
                 'id' => $vehicle->user->id,
                 'name' => $vehicle->user->name,
-                'email' => $vehicle->user->email,
-                'phone' => $vehicle->user->phone,
             ] : null,
             'seller_type' => $sellerType,
         ]);

@@ -19,6 +19,10 @@ class RelatedVehiclesService
 {
     public const DEFAULT_LIMIT = 8;
 
+    public const DEALER_LIMIT = 4;
+
+    public const CACHE_GENERATION_KEY = 'related_vehicles:generation';
+
     private const CACHE_MINUTES = 10;
 
     private const CANDIDATE_POOL = 24;
@@ -39,6 +43,32 @@ class RelatedVehiclesService
             now()->addMinutes(self::CACHE_MINUTES),
             fn () => $this->resolve($vehicle, $limit)
         );
+    }
+
+    public static function bumpCacheGeneration(): void
+    {
+        $current = (int) Cache::get(self::CACHE_GENERATION_KEY, 1);
+        Cache::forever(self::CACHE_GENERATION_KEY, $current + 1);
+    }
+
+    /**
+     * @return Collection<int, Vehicle>
+     */
+    public function forSameDealer(Vehicle $vehicle, int $limit = self::DEALER_LIMIT): Collection
+    {
+        if (! $vehicle->dealer_id) {
+            return collect();
+        }
+
+        return Vehicle::query()
+            ->withoutGlobalScope('defaultOrder')
+            ->published()
+            ->where('dealer_id', $vehicle->dealer_id)
+            ->where('vehicles.id', '!=', $vehicle->id)
+            ->with($this->cardEagerLoads())
+            ->orderByDesc('vehicles.id')
+            ->limit(max(1, $limit))
+            ->get();
     }
 
     /**
@@ -233,6 +263,8 @@ class RelatedVehiclesService
 
     private function cacheKey(Vehicle $vehicle, int $limit): string
     {
-        return sprintf('related_vehicles:%d:%d', (int) $vehicle->id, $limit);
+        $generation = (int) Cache::get(self::CACHE_GENERATION_KEY, 1);
+
+        return sprintf('related_vehicles:v%d:%d:%d', $generation, (int) $vehicle->id, $limit);
     }
 }

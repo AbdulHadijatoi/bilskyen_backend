@@ -378,6 +378,23 @@
                 font-size: 0.75rem;
                 color: var(--muted-foreground, #64748b);
             }
+            .listing-results-bar__save {
+                margin-left: auto;
+                display: inline-flex;
+                align-items: center;
+                height: 2rem;
+                padding: 0 0.75rem;
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: 0.5rem;
+                background: transparent;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--foreground, #0f172a);
+                cursor: pointer;
+            }
+            .listing-results-bar__save:hover {
+                background: var(--muted, #f1f5f9);
+            }
             .vehicle-listing-price {
                 font-size: 1.5rem;
                 font-weight: 800;
@@ -615,6 +632,11 @@
             @endif
         </p>
         <span id="listing-filters-applied" class="listing-results-bar__filters hidden">{{ __('messages.pages.vehicles.filters_applied') }}</span>
+        <button
+            type="button"
+            data-listing-save-search
+            class="listing-results-bar__save"
+        >{{ __('messages.pages.vehicles.save_search') }}</button>
     </div>
 
     <!-- No filter matches (shown above results when filters return zero) -->
@@ -4669,6 +4691,38 @@ if (config) {
                         morePanel.setAttribute('hidden', '');
                         moreBtn.setAttribute('aria-expanded', 'false');
                         if (label) label.textContent = I18N_BMV.moreFilters;
+                    }
+                });
+            }
+
+            const saveSearchBtn = document.querySelector('[data-listing-save-search]');
+            if (saveSearchBtn) {
+                saveSearchBtn.addEventListener('click', async () => {
+                    if (typeof isUserAuthenticated === 'function' && !isUserAuthenticated()) {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname + window.location.search);
+                        return;
+                    }
+                    const filters = { ...collectFilters() };
+                    delete filters.limit;
+                    delete filters.viewer_latitude;
+                    delete filters.viewer_longitude;
+                    const helper = window.BilskyenAiSearch;
+                    if (!helper || typeof helper.saveCurrentSearch !== 'function') {
+                        window.showSnackbar?.('{{ __('messages.pages.vehicles.save_search_fail') }}', 'error');
+                        return;
+                    }
+                    const result = await helper.saveCurrentSearch(
+                        '{{ __('messages.pages.vehicles.save_search_default_name') }}',
+                        filters
+                    );
+                    window.showSnackbar?.(
+                        result?.message || (result?.ok
+                            ? '{{ __('messages.pages.vehicles.save_search_ok') }}'
+                            : '{{ __('messages.pages.vehicles.save_search_fail') }}'),
+                        result?.ok ? 'success' : 'error'
+                    );
+                    if (!result?.ok && result?.message === helper.I18N?.loginToSave) {
+                        window.location.href = '/auth/login?return_url=' + encodeURIComponent(window.location.pathname + window.location.search);
                     }
                 });
             }

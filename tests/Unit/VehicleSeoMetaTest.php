@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Constants\VehicleListStatus;
 use App\Models\Dealer;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -145,5 +146,61 @@ class VehicleSeoMetaTest extends TestCase
         $this->assertIsArray($resolved['schema_json']);
         $this->assertSame('Vehicle', $resolved['schema_json']['@type']);
         $this->assertSame(439799.0, $resolved['schema_json']['offers']['price']);
+    }
+
+    public function test_sold_vehicle_is_noindex_follow(): void
+    {
+        $vehicle = $this->stubVehicleForSeo();
+        $vehicle->list_status_id = VehicleListStatus::SOLD;
+
+        $seo = Mockery::mock(SeoService::class)->makePartial();
+        $seo->shouldReceive('getForPage')->andReturn(null);
+
+        $resolved = $seo->resolveForVehicle($vehicle);
+
+        $this->assertSame('noindex, follow', $resolved['robots']);
+    }
+
+    public function test_published_vehicle_is_index_follow(): void
+    {
+        $vehicle = $this->stubVehicleForSeo();
+        $vehicle->list_status_id = VehicleListStatus::PUBLISHED;
+
+        $seo = Mockery::mock(SeoService::class)->makePartial();
+        $seo->shouldReceive('getForPage')->andReturn(null);
+
+        $resolved = $seo->resolveForVehicle($vehicle);
+
+        $this->assertSame('index, follow', $resolved['robots']);
+    }
+
+    private function stubVehicleForSeo(): Vehicle
+    {
+        $owner = new User(['name' => 'Au2Vest']);
+        $dealer = new Dealer(['city' => 'Hvidovre', 'slug' => 'au2vest']);
+        $dealer->setRelation('owner', $owner);
+
+        $vehicle = new Vehicle([
+            'slug' => 'vw-id7-style-tourer-5d',
+            'title' => 'Should not win as title',
+            'price' => 439799,
+            'km_driven' => 100,
+            'model_year' => 2026,
+            'list_status_id' => VehicleListStatus::PUBLISHED,
+        ]);
+        $vehicle->setRelation('dealer', $dealer);
+        $vehicle->setRelation('images', collect());
+
+        $brand = Mockery::mock();
+        $brand->name = 'VW';
+        $model = Mockery::mock();
+        $model->name = 'ID.7 Tourer Pro Style';
+        $variant = Mockery::mock();
+        $variant->name = '';
+        $vehicle->setRelation('brand', $brand);
+        $vehicle->setRelation('model', $model);
+        $vehicle->setRelation('variant', $variant);
+
+        return $vehicle;
     }
 }
