@@ -14,6 +14,19 @@ class VehicleDetailUxTest extends TestCase
         $this->assertStringContainsString('data-vehicle-map', $source);
         $this->assertStringContainsString('data-address="{{ $vehicleMapAddress }}"', $source);
         $this->assertStringContainsString('<x-vehicle-map-helpers', $source);
+        $this->assertLessThan(
+            strpos($source, '<!-- Right Sidebar -->'),
+            strpos($source, 'data-vehicle-map-wrap'),
+            'Location map should sit in the left column with the other listing details'
+        );
+        $this->assertLessThan(
+            strpos($source, 'related-vehicles-heading'),
+            strpos($source, 'data-vehicle-map-wrap')
+        );
+
+        $helpers = file_get_contents(resource_path('views/components/vehicle-map-helpers.blade.php'));
+        $this->assertStringContainsString('isolation: isolate', $helpers);
+        $this->assertStringContainsString('z-index: 0', $helpers);
         $this->assertStringNotContainsString('<x-listing-compare-tray', $source);
         $this->assertStringNotContainsString('<x-compare-helpers', $source);
 

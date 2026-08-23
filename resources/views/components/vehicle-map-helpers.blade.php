@@ -1,8 +1,16 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
-    #vehicle-detail-map[data-vehicle-map] {
-        height: 16rem;
+    [data-vehicle-map-wrap] {
+        position: relative;
+        z-index: 0;
+        isolation: isolate;
+        overflow: hidden;
+    }
+    #vehicle-detail-map[data-vehicle-map],
+    #vehicle-detail-map[data-vehicle-map].leaflet-container {
+        height: 18rem;
         width: 100%;
+        z-index: 0;
     }
 </style>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

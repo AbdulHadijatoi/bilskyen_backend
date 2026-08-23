@@ -288,28 +288,6 @@
             </div>
             @endif
 
-            @if($vehicleHasMap)
-            <div class="overflow-hidden rounded-xl border border-border" data-vehicle-map-wrap hidden>
-                <div class="border-b border-border bg-card px-3 py-2">
-                    <h2 class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.location_map_title') }}</h2>
-                    @if($vehicleMapAddress !== '')
-                    <p class="mt-0.5 text-xs text-muted-foreground">{{ $vehicleMapAddress }}</p>
-                    @endif
-                </div>
-                <div
-                    id="vehicle-detail-map"
-                    class="w-full"
-                    data-vehicle-map
-                    data-lat="{{ $vehicleMapLat }}"
-                    data-lng="{{ $vehicleMapLng }}"
-                    data-address="{{ $vehicleMapAddress }}"
-                    data-postcode="{{ $vehicleMapPostcode }}"
-                    data-title="{{ $vehicle->title }}"
-                    style="height: 16rem;"
-                ></div>
-            </div>
-            @endif
-
             @if($showTrustReport ?? true)
             @php
                 $trustReportRaw = $vehicleDetail['trust_report'] ?? [];
@@ -1131,6 +1109,28 @@
             </div>
         </div>
         @endif
+
+            @if($vehicleHasMap)
+            <div class="overflow-hidden rounded-xl border border-border" data-vehicle-map-wrap hidden>
+                <div class="border-b border-border bg-card px-3 py-2">
+                    <h2 class="text-sm font-semibold text-foreground">{{ __('messages.pages.vehicles.detail.location_map_title') }}</h2>
+                    @if($vehicleMapAddress !== '')
+                    <p class="mt-0.5 text-xs text-muted-foreground">{{ $vehicleMapAddress }}</p>
+                    @endif
+                </div>
+                <div
+                    id="vehicle-detail-map"
+                    class="w-full"
+                    data-vehicle-map
+                    data-lat="{{ $vehicleMapLat }}"
+                    data-lng="{{ $vehicleMapLng }}"
+                    data-address="{{ $vehicleMapAddress }}"
+                    data-postcode="{{ $vehicleMapPostcode }}"
+                    data-title="{{ $vehicle->title }}"
+                    style="height: 18rem;"
+                ></div>
+            </div>
+            @endif
 
         </div>
 
