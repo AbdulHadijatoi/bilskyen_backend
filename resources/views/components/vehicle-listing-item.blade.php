@@ -20,9 +20,11 @@
     $fuelShort = \App\Helpers\FormatHelper::formatFuelTypeShort($vehicle->fuel_type_name);
     $newListingBadge = \App\Helpers\FormatHelper::newListingBadgeLabel($vehicle->created_at ?? null);
     $newListingBadgeTone = \App\Helpers\FormatHelper::newListingBadgeTone($vehicle->created_at ?? null);
-    $imagesCount = $vehicle->relationLoaded('images')
-        ? $vehicle->images->count()
-        : (int) ($vehicle->images_count ?? 0);
+    $galleryUrls = \App\Services\VehicleListingPresentationService::galleryUrlsFor($vehicle);
+    if ($galleryUrls === [] && is_string($imgUrl) && $imgUrl !== '' && ! str_contains($imgUrl, 'placeholder-vehicle')) {
+        $galleryUrls = [$imgUrl];
+    }
+    $galleryCount = count($galleryUrls);
     $mileageValue = $vehicle->mileage ?? $vehicle->km_driven ?? null;
     $chipClass = 'vehicle-listing-chip';
 @endphp
@@ -83,6 +85,41 @@
         font-weight: 500;
         backdrop-filter: blur(4px);
     }
+    .vehicle-listing-gallery {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+        user-select: none;
+    }
+    .vehicle-listing-gallery::-webkit-scrollbar {
+        display: none;
+    }
+    .vehicle-listing-gallery-slide {
+        position: relative;
+        flex: 0 0 100%;
+        width: 100%;
+        height: 100%;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+    .vehicle-listing-gallery-slide img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        -webkit-user-drag: none;
+    }
     .vehicle-listing-chip {
         display: inline-flex;
         align-items: center;
@@ -113,20 +150,56 @@
     }
 </style>
 @endpush
+@push('scripts')
+    <x-listing-gallery-helpers />
+@endpush
 @endonce
 <div {{ $attributes->merge(['class' => 'vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0']) }}>
     <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
-        <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
-            <img
-                src="{{ $imgUrl }}"
-                alt="{{ $imgAlt }}"
-                width="800"
-                height="600"
-                loading="lazy"
-                decoding="async"
-                class="absolute inset-0 block h-full w-full object-cover"
-            />
-        </a>
+        @if($galleryCount > 1)
+            <div
+                class="vehicle-listing-gallery"
+                data-listing-gallery
+                data-loop="1"
+                tabindex="0"
+                role="region"
+                aria-roledescription="carousel"
+                aria-label="{{ $imgAlt }}"
+            >
+                @foreach($galleryUrls as $i => $url)
+                    <a
+                        href="{{ route('vehicle.detail', $vehicle->slug) }}"
+                        class="vehicle-listing-gallery-slide"
+                        data-listing-gallery-slide
+                        data-real-index="{{ $i }}"
+                        tabindex="-1"
+                    >
+                        <img
+                            src="{{ $url }}"
+                            alt="{{ $i === 0 ? $imgAlt : '' }}"
+                            width="800"
+                            height="600"
+                            loading="lazy"
+                            decoding="async"
+                            @if($i > 0) fetchpriority="low" @endif
+                            class="absolute inset-0 block h-full w-full object-cover"
+                        />
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
+                <img
+                    src="{{ $galleryUrls[0] ?? $imgUrl }}"
+                    alt="{{ $imgAlt }}"
+                    width="800"
+                    height="600"
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 block h-full w-full object-cover"
+                />
+            </a>
+        @endif
         <div class="vehicle-listing-overlays pointer-events-none absolute inset-0 z-10 flex flex-col justify-between px-4 py-3">
             <div class="vehicle-listing-overlays-top flex items-start justify-between gap-2">
                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
@@ -165,13 +238,13 @@
                         </span>
                     @endif
                 </div>
-                @if($imagesCount > 0)
-                    <span class="vehicle-listing-photo-count inline-flex shrink-0 items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm" title="{{ __('messages.pages.vehicles.photo_count_label', ['count' => $imagesCount]) }}">
+                @if($galleryCount > 0)
+                    <span class="vehicle-listing-photo-count inline-flex shrink-0 items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm" title="{{ __('messages.pages.vehicles.photo_count_label', ['count' => $galleryCount]) }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true">
                             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                             <circle cx="12" cy="13" r="3"/>
                         </svg>
-                        1/{{ $imagesCount }}
+                        <span data-listing-photo-current>1</span>/{{ $galleryCount }}
                     </span>
                 @endif
             </div>

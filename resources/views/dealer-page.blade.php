@@ -867,6 +867,18 @@ document.addEventListener('DOMContentLoaded', function() {
         display: block;
         border-radius: 0;
     }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-gallery {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-gallery-slide {
+        flex: 0 0 100%;
+        height: 100%;
+    }
     
     #vehicle-container[data-view="list"] .vehicle-item-main-link {
         display: flex;

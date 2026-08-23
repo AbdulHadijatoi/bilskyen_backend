@@ -10,10 +10,38 @@ use App\Models\Vehicle;
  */
 class VehicleListingPresentationService
 {
+    public const GALLERY_MAX_SLIDES = 12;
+
     public function __construct(
         private VehicleTrustReportService $trustReportService,
         private DealerBadgeService $dealerBadgeService,
     ) {}
+
+    /**
+     * Thumbnail URLs for listing-card swipe, excluding placeholders.
+     *
+     * @return list<string>
+     */
+    public static function galleryUrlsFor(?Vehicle $vehicle, int $max = self::GALLERY_MAX_SLIDES): array
+    {
+        if (! $vehicle || ! $vehicle->relationLoaded('images')) {
+            return [];
+        }
+
+        $urls = [];
+        foreach ($vehicle->images as $image) {
+            $url = (string) ($image->thumbnail_url ?? $image->image_url ?? '');
+            if ($url === '' || str_contains($url, 'placeholder-vehicle')) {
+                continue;
+            }
+            $urls[] = $url;
+            if (count($urls) >= $max) {
+                break;
+            }
+        }
+
+        return array_values(array_unique($urls));
+    }
 
     /**
      * @return array<string, mixed>
@@ -44,6 +72,7 @@ class VehicleListingPresentationService
         $listingLocation = FormatHelper::formatListingLocation(
             $vehicle->address ?? $vehicle->seller_address ?? null
         );
+        $galleryUrls = self::galleryUrlsFor($vehicle);
         $imagesCount = $vehicle->relationLoaded('images')
             ? $vehicle->images->count()
             : (int) ($vehicle->images_count ?? 0);
@@ -58,7 +87,8 @@ class VehicleListingPresentationService
             'title' => $vehicle->title,
             'variant_name' => $vehicle->variant_name,
             'price' => $vehicle->price,
-            'thumbnail_url' => $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
+            'thumbnail_url' => $galleryUrls[0] ?? $firstImage?->thumbnail_url ?? '/placeholder-vehicle.jpg',
+            'gallery_urls' => $galleryUrls,
             'km_driven' => $vehicle->km_driven,
             'engine_power_hp' => $vehicle->engine_power_hp,
             'first_registration_date' => $vehicle->first_registration_date?->format('Y-m-d'),

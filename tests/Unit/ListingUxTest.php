@@ -50,6 +50,10 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('is-{{ $newListingBadgeTone }}', $card);
         $this->assertStringContainsString('vehicle-listing-badges', $card);
         $this->assertStringContainsString('vehicle-listing-photo-count', $card);
+        $this->assertStringContainsString('data-listing-gallery', $card);
+        $this->assertStringContainsString('data-listing-photo-current', $card);
+        $this->assertStringContainsString('vehicle-listing-gallery', $card);
+        $this->assertStringContainsString('scroll-snap-type: x mandatory', $card);
         $this->assertStringContainsString('vehicle-listing-overlays', $card);
         $this->assertStringContainsString('vehicle-listing-favorite', $card);
         $this->assertStringContainsString('line-clamp-2', $card);
@@ -99,6 +103,9 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('grid-column: 2', $source);
         $this->assertStringContainsString('grid-template-columns: minmax(8rem, 200px) minmax(0, 1fr)', $source);
         $this->assertStringContainsString('vehicle-listing-photo-count', $source);
+        $this->assertStringContainsString('data-listing-gallery', $source);
+        $this->assertStringContainsString('listingGalleryHtml', $source);
+        $this->assertStringContainsString('initListingGalleries', $source);
         $this->assertStringContainsString('newListingBadgeLabel', $source);
         $this->assertStringContainsString('newListingBadgeTone', $source);
         $this->assertStringContainsString('is-${newListingTone}', $source);

@@ -465,6 +465,41 @@
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
+            .vehicle-listing-gallery {
+                position: absolute;
+                inset: 0;
+                z-index: 0;
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                scroll-snap-type: x mandatory;
+                scroll-behavior: auto;
+                overscroll-behavior-x: contain;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                -webkit-overflow-scrolling: touch;
+                user-select: none;
+            }
+            .vehicle-listing-gallery::-webkit-scrollbar {
+                display: none;
+            }
+            .vehicle-listing-gallery-slide {
+                position: relative;
+                flex: 0 0 100%;
+                width: 100%;
+                height: 100%;
+                scroll-snap-align: start;
+                scroll-snap-stop: always;
+            }
+            .vehicle-listing-gallery-slide img {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                pointer-events: none;
+                -webkit-user-drag: none;
+            }
             #vehicle-container .vehicle-listing-chip,
             #vehicle-fallback-section .vehicle-listing-chip {
                 display: inline-flex;
@@ -1486,6 +1521,20 @@
         display: block;
         border-radius: 0;
     }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-gallery,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-gallery {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #vehicle-container[data-view="list"] .vehicle-listing-gallery-slide,
+    #vehicle-fallback-section[data-view="list"] .vehicle-listing-gallery-slide {
+        flex: 0 0 100%;
+        height: 100%;
+    }
     
     #vehicle-container[data-view="list"] .vehicle-item-main-link,
     #vehicle-fallback-section[data-view="list"] .vehicle-item-main-link {
@@ -1890,6 +1939,7 @@
 
 @push('scripts')
 <x-recently-viewed-helpers />
+<x-listing-gallery-helpers />
 <script>
 
         const VEHICLE_DETAIL_URL = (slug) => @json(rtrim(route('vehicle.detail', ['vehicle' => '__SLUG__']), '/')).replace('__SLUG__', encodeURIComponent(slug));
@@ -2118,6 +2168,65 @@
 
         const specChipClass = 'vehicle-listing-chip';
 
+        function listingGalleryUrls(vehicle, fallback) {
+            const fromApi = Array.isArray(vehicle.gallery_urls) ? vehicle.gallery_urls : [];
+            const fromImages = Array.isArray(vehicle.images)
+                ? vehicle.images.map((image) => image.thumbnail_url || image.image_url || '').filter(Boolean)
+                : [];
+            const urls = (fromApi.length ? fromApi : fromImages)
+                .map((url) => String(url))
+                .filter((url) => url !== '' && !url.includes('placeholder-vehicle'));
+            if (urls.length) return urls.slice(0, 12);
+            if (fallback && !String(fallback).includes('placeholder-vehicle')) return [fallback];
+            return fallback ? [fallback] : [];
+        }
+
+        function listingGalleryHtml(urls, detailHref, alt) {
+            if (urls.length <= 1) {
+                const src = escapeHtml(urls[0] || '/placeholder-vehicle.jpg');
+                return `
+                    <a href="${detailHref}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
+                        <img
+                            src="${src}"
+                            alt="${escapeHtml(alt)}"
+                            width="800"
+                            height="600"
+                            loading="lazy"
+                            decoding="async"
+                            class="absolute inset-0 block h-full w-full object-cover"
+                        />
+                    </a>
+                `;
+            }
+
+            const slides = urls.map((url, i) => `
+                <a href="${detailHref}" class="vehicle-listing-gallery-slide" data-listing-gallery-slide data-real-index="${i}" tabindex="-1">
+                    <img
+                        src="${escapeHtml(url)}"
+                        alt="${i === 0 ? escapeHtml(alt) : ''}"
+                        width="800"
+                        height="600"
+                        loading="lazy"
+                        decoding="async"
+                        ${i > 0 ? 'fetchpriority="low"' : ''}
+                        class="absolute inset-0 block h-full w-full object-cover"
+                    />
+                </a>
+            `).join('');
+
+            return `
+                <div class="vehicle-listing-gallery" data-listing-gallery data-loop="1" tabindex="0" role="region" aria-roledescription="carousel" aria-label="${escapeHtml(alt)}">
+                    ${slides}
+                </div>
+            `;
+        }
+
+        function bindRenderedListingGalleries(root) {
+            if (typeof window.initListingGalleries === 'function') {
+                window.initListingGalleries(root);
+            }
+        }
+
         // Single listing tile (card + list layouts differ only via #vehicle-container[data-view] CSS)
         function renderVehicleItem(vehicle) {
             const imageUrl = vehicle.thumbnail_url || vehicle.image_url || '/placeholder-vehicle.jpg';
@@ -2128,21 +2237,17 @@
             const locationText = formatListingLocation(vehicle);
             const priceLabel = formatCurrency(vehicle.price);
             const fuelShort = vehicle.fuel_type_short || formatFuelTypeShort(vehicle.fuel_type_name || '');
-            const imagesCount = Number(vehicle.images_count || (Array.isArray(vehicle.images) ? vehicle.images.length : 0) || 0);
+            const galleryUrls = listingGalleryUrls(vehicle, imageUrl);
+            const imagesCount = galleryUrls.filter((url) => !String(url).includes('placeholder-vehicle')).length;
             const mileage = vehicle.mileage || vehicle.km_driven;
             const newListingLabel = newListingBadgeLabel(vehicle);
             const newListingTone = newListingBadgeTone(vehicle);
+            const detailHref = VEHICLE_DETAIL_URL(slug);
 
             return `
                 <div class="vehicle-item site-card flex flex-col overflow-hidden p-0 cursor-pointer h-full w-full min-w-0">
                     <div class="vehicle-image-container relative aspect-[2/1.5] overflow-hidden bg-muted">
-                        <a href="${VEHICLE_DETAIL_URL(slug)}" class="vehicle-listing-image-link absolute inset-0 z-0 block" tabindex="-1" aria-hidden="true">
-                            <img
-                                src="${escapeHtml(imageUrl)}"
-                                alt="${escapeHtml(titleText)}"
-                                class="absolute inset-0 block h-full w-full object-cover"
-                            />
-                        </a>
+                        ${listingGalleryHtml(galleryUrls, detailHref, titleText)}
                         <div class="vehicle-listing-overlays pointer-events-none absolute inset-0 z-10 flex flex-col justify-between px-4 py-3">
                             <div class="vehicle-listing-overlays-top flex items-start justify-between gap-2">
                                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
@@ -2187,7 +2292,7 @@
                                         <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                                         <circle cx="12" cy="13" r="3"/>
                                     </svg>
-                                    1/${imagesCount}
+                                    <span data-listing-photo-current>1</span>/${imagesCount}
                                 </span>
                                 ` : ''}
                             </div>
@@ -2296,6 +2401,7 @@
             }
 
             vehicleContainer.innerHTML = vehicles.map(vehicle => renderVehicleItem(vehicle)).join('');
+            bindRenderedListingGalleries(vehicleContainer);
         }
 
         function renderNoResultsBanner(show) {
@@ -2335,6 +2441,7 @@
 
             vehicleFallbackSection.classList.remove('hidden');
             vehicleFallbackGrid.innerHTML = vehicles.map(vehicle => renderVehicleItem(vehicle)).join('');
+            bindRenderedListingGalleries(vehicleFallbackGrid);
             if (currentView) {
                 vehicleFallbackSection.setAttribute('data-view', currentView);
             }
