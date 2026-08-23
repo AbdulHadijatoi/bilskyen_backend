@@ -148,6 +148,14 @@ class PlatformSettingService
         );
     }
 
+    public function isVehicleDetailMapEnabled(): bool
+    {
+        return filter_var(
+            $this->get('marketplace', 'vehicle_detail_map_enabled', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    }
+
     private function decodeValue(PlatformSetting $setting, bool $decrypt): mixed
     {
         $raw = $setting->value;

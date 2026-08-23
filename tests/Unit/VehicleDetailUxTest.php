@@ -11,6 +11,7 @@ class VehicleDetailUxTest extends TestCase
         $source = file_get_contents(resource_path('views/vehicle-detail.blade.php'));
 
         $this->assertStringContainsString('<x-vehicle-share-dialog', $source);
+        $this->assertStringContainsString('isVehicleDetailMapEnabled', $source);
         $this->assertStringContainsString('data-vehicle-map', $source);
         $this->assertStringContainsString('data-address="{{ $vehicleMapAddress }}"', $source);
         $this->assertStringContainsString('<x-vehicle-map-helpers', $source);

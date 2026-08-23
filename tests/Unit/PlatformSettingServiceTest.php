@@ -82,6 +82,19 @@ class PlatformSettingServiceTest extends TestCase
         $this->assertTrue($service->isFaqChatbotEnabled());
     }
 
+    public function test_vehicle_detail_map_toggle_default_and_parse(): void
+    {
+        $service = app(PlatformSettingService::class);
+        Cache::flush();
+
+        $this->assertTrue($service->isVehicleDetailMapEnabled());
+
+        $service->set('marketplace', 'vehicle_detail_map_enabled', 'false');
+        Cache::flush();
+
+        $this->assertFalse($service->isVehicleDetailMapEnabled());
+    }
+
     public function test_boolean_false_round_trips_as_false_not_null(): void
     {
         $service = app(PlatformSettingService::class);

@@ -44,6 +44,21 @@ class AdminIntegrationController extends Controller
             ]);
         }
 
+        if ($data['group'] === 'marketplace') {
+            $settings = $request->input('settings', []);
+            foreach (['trust_report_enabled', 'vehicle_detail_map_enabled'] as $boolKey) {
+                if (array_key_exists($boolKey, $settings)) {
+                    $settings[$boolKey] = filter_var($settings[$boolKey], FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+            $request->merge(['settings' => $settings]);
+
+            $request->validate([
+                'settings.trust_report_enabled' => 'sometimes|boolean',
+                'settings.vehicle_detail_map_enabled' => 'sometimes|boolean',
+            ]);
+        }
+
         if ($data['group'] === 'ai') {
             $settings = $request->input('settings', []);
             foreach (['openai_enabled', 'anthropic_enabled', 'gemini_enabled', 'deepseek_enabled', 'openrouter_enabled', 'opencodezen_enabled', 'ollama_enabled'] as $boolKey) {

@@ -213,6 +213,7 @@
             return $url !== '' && ! str_contains($url, 'placeholder-vehicle');
         })->values();
 
+        $vehicleDetailMapEnabled = app(\App\Services\PlatformSettingService::class)->isVehicleDetailMapEnabled();
         $vehicleMapAddress = trim(implode(', ', array_filter([
             $dealerDisplayAddress,
             $dealerDisplayPostcode && $dealerDisplayAddress && ! str_contains($dealerDisplayAddress, (string) $dealerDisplayPostcode)
@@ -223,14 +224,18 @@
                 : null,
         ], static fn ($part) => $part !== null && trim((string) $part) !== '')));
         $vehicleMapPostcode = $vehicle->postcode ?: $dealerDisplayPostcode;
-        $mapPoint = app(\App\Services\VehicleMapLocationService::class)->pointFor(
-            $vehicle,
-            $vehicleMapAddress !== '' ? $vehicleMapAddress : $dealerDisplayAddress,
-            $vehicleMapPostcode,
-        );
-        $vehicleMapLat = isset($mapPoint['latitude']) ? (float) $mapPoint['latitude'] : null;
-        $vehicleMapLng = isset($mapPoint['longitude']) ? (float) $mapPoint['longitude'] : null;
-        $vehicleHasMap = $vehicleMapLat !== null && $vehicleMapLng !== null;
+        $vehicleMapLat = null;
+        $vehicleMapLng = null;
+        if ($vehicleDetailMapEnabled) {
+            $mapPoint = app(\App\Services\VehicleMapLocationService::class)->pointFor(
+                $vehicle,
+                $vehicleMapAddress !== '' ? $vehicleMapAddress : $dealerDisplayAddress,
+                $vehicleMapPostcode,
+            );
+            $vehicleMapLat = isset($mapPoint['latitude']) ? (float) $mapPoint['latitude'] : null;
+            $vehicleMapLng = isset($mapPoint['longitude']) ? (float) $mapPoint['longitude'] : null;
+        }
+        $vehicleHasMap = $vehicleDetailMapEnabled && $vehicleMapLat !== null && $vehicleMapLng !== null;
     @endphp
     <div class="grid gap-8 lg:grid-cols-3">
         <!-- Vehicle Details - Left Column -->
