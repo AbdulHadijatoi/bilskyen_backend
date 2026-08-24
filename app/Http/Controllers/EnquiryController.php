@@ -17,6 +17,8 @@ use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
 use App\Services\Marketing\MetaConversionsApiService;
+use App\Services\Marketing\ListingFunnelService;
+use App\Services\Marketing\TrafficAttributionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -33,6 +35,8 @@ class EnquiryController extends Controller
         private MailService $mailService,
         private MarketplaceNotifier $marketplaceNotifier,
         private MetaConversionsApiService $metaConversionsApiService,
+        private TrafficAttributionService $trafficAttributionService,
+        private ListingFunnelService $listingFunnelService,
     ) {}
 
     private function abortUnlessPublishedForEnquiry(Vehicle $vehicle): void
@@ -154,6 +158,25 @@ class EnquiryController extends Controller
         return __($translationKey, ['vehicle' => $this->vehicleLabel($vehicle)]);
     }
 
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function withAttribution(array $payload, Request $request): array
+    {
+        return array_merge($payload, $this->trafficAttributionService->leadAttributes($request));
+    }
+
+    private function recordFunnelConvert(Request $request, Vehicle $vehicle, string $kind): void
+    {
+        $this->listingFunnelService->record(
+            $request,
+            (int) $vehicle->id,
+            ListingFunnelService::CONVERT,
+            ['kind' => $kind]
+        );
+    }
+
     private function dispatchMetaLead(Request $request, Vehicle $vehicle, ?Enquiry $enquiry = null): ?string
     {
         if (! $this->metaConversionsApiService->isBrowserEnabled()) {
@@ -234,7 +257,7 @@ class EnquiryController extends Controller
         $leadIntentId = $this->getLeadIntentId($categoryName);
 
         // Create lead record (buyer_user_id can be null for guest users)
-        $lead = Lead::create([
+        $lead = Lead::create($this->withAttribution([
             'vehicle_id' => $vehicle->id,
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
@@ -244,7 +267,8 @@ class EnquiryController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $request));
+        $this->recordFunnelConvert($request, $vehicle, 'phone');
 
         // Log audit trail (handles both authenticated and guest users)
         try {
@@ -360,7 +384,7 @@ class EnquiryController extends Controller
         }
 
         // Create lead record (buyer_user_id can be null for guest users)
-        $lead = Lead::create([
+        $lead = Lead::create($this->withAttribution([
             'vehicle_id' => $vehicle->id,
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
@@ -370,7 +394,8 @@ class EnquiryController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $request));
+        $this->recordFunnelConvert($request, $vehicle, 'enquiry');
 
         // Create enquiry record with the message details (user_id can be null for guest users)
         $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.enquiry_about', $vehicle);
@@ -514,7 +539,7 @@ class EnquiryController extends Controller
         }
 
         // Create lead record (buyer_user_id can be null for guest users)
-        $lead = Lead::create([
+        $lead = Lead::create($this->withAttribution([
             'vehicle_id' => $vehicle->id,
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
@@ -524,7 +549,8 @@ class EnquiryController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $request));
+        $this->recordFunnelConvert($request, $vehicle, 'test-drive');
 
         // Create enquiry record with type "Test Drive" (user_id can be null for guest users)
         $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.test_drive_for', $vehicle);
@@ -664,7 +690,7 @@ class EnquiryController extends Controller
         }
 
         // Create lead record (buyer_user_id can be null for guest users)
-        $lead = Lead::create([
+        $lead = Lead::create($this->withAttribution([
             'vehicle_id' => $vehicle->id,
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
@@ -674,7 +700,8 @@ class EnquiryController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $request));
+        $this->recordFunnelConvert($request, $vehicle, 'price');
 
         // Create enquiry record with type "Price Enquiry" (user_id can be null for guest users)
         $enquirySubject = $this->enquirySubject('messages.enquiries.subjects.price_negotiation_for', $vehicle);
@@ -791,7 +818,7 @@ class EnquiryController extends Controller
             $user->save();
         }
 
-        $lead = Lead::create([
+        $lead = Lead::create($this->withAttribution([
             'vehicle_id' => $vehicle->id,
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealerId,
@@ -801,7 +828,8 @@ class EnquiryController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $request));
+        $this->recordFunnelConvert($request, $vehicle, 'exchange');
 
         $enquiryMessage = "Licence plate: {$validated['licence_plate']}\n";
         $enquiryMessage .= "Kilometres: {$validated['kilometers']}\n";

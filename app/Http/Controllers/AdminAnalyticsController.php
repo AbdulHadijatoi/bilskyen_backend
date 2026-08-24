@@ -578,6 +578,16 @@ class AdminAnalyticsController extends Controller
         );
     }
 
+    public function adsFunnel(Request $request): JsonResponse
+    {
+        [$startDate, $endDate] = AnalyticsDateRange::resolve($request->get('date_range', '30d'));
+        $source = (string) $request->get('source', 'meta');
+
+        return $this->success(
+            $this->reportingService->adsFunnel($startDate, $endDate, $source)
+        );
+    }
+
     public function cohort(): JsonResponse
     {
         return $this->success($this->reportingService->cohortAnalysis());

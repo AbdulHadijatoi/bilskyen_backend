@@ -65,6 +65,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/unsubscribe', [\App\Http\Controllers\PublicMarketingController::class, 'unsubscribe']);
         // Fired while typing in forms — rate-limit + honeypot only.
         Route::post('/abandoned/track', [\App\Http\Controllers\PublicMarketingController::class, 'trackAbandoned']);
+        Route::post('/funnel/track', [\App\Http\Controllers\PublicMarketingController::class, 'trackFunnel'])
+            ->middleware([
+                \Illuminate\Cookie\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
+            ]);
     });
 
     Route::post('/gdpr/export-request', [\App\Http\Controllers\PublicGdprController::class, 'requestExport'])

@@ -1,5 +1,5 @@
 <!--
-API Architecture Checksum: 7a1227d7c277cd12124863ee542dca98b5ab5d95354c70a4315b1b3925f12ca6
+API Architecture Checksum: 56bd0bf5ad899a0aa1397c9f1badde23d80a84b3250233b122b094d355afd0e0
 Source: backend/docs/api-architecture.md
 Algorithm: SHA-256
 
@@ -390,6 +390,15 @@ Lead tracking endpoints are **public** (guests and authenticated users can submi
 | POST | `/api/v1/vehicles/{id}/price-negotiation` | Submit price negotiation request (creates lead + enquiry) |
 | POST | `/api/v1/vehicles/{id}/exchange` | Submit exchange/trade-in request (creates lead + enquiry) |
 
+#### Public marketing
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/marketing/funnel/track` | Beacon car-page funnel events (`sendBeacon`). Session + cookie. Honeypot + throttle. No PII. |
+| POST | `/api/v1/marketing/abandoned/track` | Abandoned enquiry progress (honeypot + throttle) |
+
+**Funnel track body:** `{ "event_name": "engaged\|gallery\|cta_click\|form_open\|form_start\|form_error\|form_close", "vehicle_id": 1, "meta": { "cta": "enquiry" }, "website": "" }`
+
 **Lead Tracking Request Bodies:**
 
 - `POST /api/v1/vehicles/{id}/leads`:
@@ -710,9 +719,9 @@ All admin endpoints require `auth:api` and `role:admin` middleware and are prefi
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/admin/analytics/vehicles` | Vehicle analytics |
-| GET | `/api/v1/admin/analytics/leads` | Lead analytics |
-| GET | `/api/v1/admin/analytics/subscriptions` | Subscription analytics |
+| GET | `/api/v1/admin/analytics/funnel` | Platform conversion funnel |
+| GET | `/api/v1/admin/analytics/ads-funnel` | Meta ads car-page funnel (`source=meta\|other\|all`, `date_range`) |
+| GET | `/api/v1/admin/analytics/cohort` | Dealer cohort retention |
 | GET | `/api/v1/admin/audit-logs` | Get audit logs |
 
 ## Middleware

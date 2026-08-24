@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Marketing\AbandonedEnquiryService;
+use App\Services\Marketing\ListingFunnelService;
 use App\Services\Marketing\MarketingAutomationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ class PublicMarketingController extends Controller
     public function __construct(
         private MarketingAutomationService $marketingAutomationService,
         private AbandonedEnquiryService $abandonedEnquiryService,
+        private ListingFunnelService $listingFunnelService,
     ) {}
 
     public function logConsent(Request $request): JsonResponse
@@ -58,6 +60,26 @@ class PublicMarketingController extends Controller
         ]);
 
         $this->abandonedEnquiryService->trackProgress($request, $data);
+
+        return $this->success(['tracked' => true]);
+    }
+
+    public function trackFunnel(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'vehicle_id' => 'nullable|integer|exists:vehicles,id',
+            'event_name' => 'required|string|in:'.implode(',', ListingFunnelService::CLIENT_EVENTS),
+            'meta' => 'nullable|array',
+            'meta.cta' => 'nullable|string|max:40',
+            'meta.form' => 'nullable|string|max:40',
+        ]);
+
+        $this->listingFunnelService->record(
+            $request,
+            isset($data['vehicle_id']) ? (int) $data['vehicle_id'] : null,
+            $data['event_name'],
+            $data['meta'] ?? []
+        );
 
         return $this->success(['tracked' => true]);
     }

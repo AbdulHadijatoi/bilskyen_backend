@@ -93,6 +93,7 @@ class VehicleViewServiceTest extends TestCase
 
     private function createSchema(): void
     {
+        Schema::dropIfExists('listing_funnel_events');
         Schema::dropIfExists('listing_views_log');
         Schema::dropIfExists('vehicle_images');
         Schema::dropIfExists('vehicles');
@@ -116,6 +117,7 @@ class VehicleViewServiceTest extends TestCase
             $table->unsignedBigInteger('model_id')->nullable();
             $table->unsignedBigInteger('variant_id')->nullable();
             $table->decimal('price', 12, 2)->nullable();
+            $table->unsignedInteger('views_count')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -133,7 +135,21 @@ class VehicleViewServiceTest extends TestCase
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
+            $table->string('session_id', 64)->nullable();
+            $table->string('traffic_source', 32)->nullable();
+            $table->string('utm_source', 191)->nullable();
+            $table->string('utm_campaign', 191)->nullable();
             $table->timestamp('viewed_at');
+        });
+
+        Schema::create('listing_funnel_events', function (Blueprint $table) {
+            $table->id();
+            $table->string('session_id', 64);
+            $table->unsignedBigInteger('vehicle_id')->nullable();
+            $table->string('traffic_source', 32)->nullable();
+            $table->string('event_name', 32);
+            $table->json('meta')->nullable();
+            $table->timestamp('created_at')->useCurrent();
         });
 
         Schema::create('sales_types', function (Blueprint $table) {

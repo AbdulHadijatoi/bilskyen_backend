@@ -371,6 +371,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::get('/leads', [AdminAnalyticsController::class, 'leads']);
         Route::get('/activity', [AdminAnalyticsController::class, 'activity']);
         Route::get('/funnel', [AdminAnalyticsController::class, 'funnel']);
+        Route::get('/ads-funnel', [AdminAnalyticsController::class, 'adsFunnel']);
         Route::get('/cohort', [AdminAnalyticsController::class, 'cohort']);
         Route::get('/integrations', [AdminAnalyticsController::class, 'integrations']);
         Route::get('/trends', [AdminAnalyticsController::class, 'trends']);

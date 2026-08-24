@@ -1839,6 +1839,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (emblaApi) {
             emblaApi.on('select', togglePrevNextBtns);
             emblaApi.on('init', togglePrevNextBtns);
+            emblaApi.on('select', function () {
+                if (typeof window.bilskyenTrackFunnel === 'function') {
+                    window.bilskyenTrackFunnel('gallery');
+                }
+            });
             if (prevBtn) prevBtn.addEventListener('click', emblaApi.scrollPrev);
             if (nextBtn) nextBtn.addEventListener('click', emblaApi.scrollNext);
         }
@@ -1861,7 +1866,12 @@ document.addEventListener('DOMContentLoaded', function() {
             moreLength: 60,
             closeOnOutsideClick: true,
             preload: false,
-            description: false
+            description: false,
+            onOpen: function () {
+                if (typeof window.bilskyenTrackFunnel === 'function') {
+                    window.bilskyenTrackFunnel('gallery');
+                }
+            }
         });
         
     }
@@ -1905,6 +1915,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const button = event?.target?.closest('button') || event?.target;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        if (typeof window.bilskyenTrackFunnel === 'function') {
+            window.bilskyenTrackFunnel('cta_click', { cta: 'phone' });
+        }
+        if (typeof window.bilskyenTrackMetaCustom === 'function') {
+            window.bilskyenTrackMetaCustom('CtaClick', { cta: 'phone' });
+        }
 
         try {
             const guest = await window.bilskyenCollectGuestContact?.() || {};
@@ -2142,6 +2158,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
+        if (typeof window.bilskyenTrackFunnel === 'function') {
+            window.bilskyenTrackFunnel('cta_click', { cta: 'whatsapp' });
+        }
+        if (typeof window.bilskyenTrackMetaCustom === 'function') {
+            window.bilskyenTrackMetaCustom('CtaClick', { cta: 'whatsapp' });
+        }
+
         // Create lead first
         const leadResult = await createLead(vehicleId, '{{ __('messages.forms.whatsapp_clicked') }}', event);
         
@@ -2176,6 +2199,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.showSnackbar('{{ __('messages.forms.email_not_available') }}', 'error');
             }
             return false;
+        }
+
+        if (typeof window.bilskyenTrackFunnel === 'function') {
+            window.bilskyenTrackFunnel('cta_click', { cta: 'email' });
+        }
+        if (typeof window.bilskyenTrackMetaCustom === 'function') {
+            window.bilskyenTrackMetaCustom('CtaClick', { cta: 'email' });
         }
 
         // Create lead first (works for guests and authenticated users)
@@ -2262,3 +2292,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 @endpush
 @endif
+@include('layouts.partials.listing-funnel')

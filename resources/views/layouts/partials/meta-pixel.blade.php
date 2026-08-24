@@ -20,6 +20,13 @@
         }
         window.__bilskyenMetaQueue.push(['lead', eventId, vehicleId, extra]);
     };
+    window.bilskyenTrackMetaCustom = function (eventName, extra) {
+        if (typeof fbq === 'function') {
+            fbq('trackCustom', eventName, extra || {});
+            return;
+        }
+        window.__bilskyenMetaQueue.push(['custom', eventName, extra]);
+    };
     window.bilskyenTrackMetaSearch = function (searchString) {
         if (typeof fbq === 'function') {
             fbq('track', 'Search', {
@@ -51,6 +58,8 @@
                     window.bilskyenTrackMetaLead(item[1], item[2], item[3]);
                 } else if (item[0] === 'search') {
                     window.bilskyenTrackMetaSearch(item[1]);
+                } else if (item[0] === 'custom') {
+                    window.bilskyenTrackMetaCustom(item[1], item[2]);
                 }
             });
             window.__bilskyenMetaQueue = [];

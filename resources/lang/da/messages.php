@@ -1703,6 +1703,7 @@ return [
         'min_read' => ':count min. læsning',
         'browse_vehicles' => 'Se køretøjer',
         'cookie_accept' => 'Accepter',
+        'cookie_clarity_note' => 'Vi bruger også Microsoft Clarity til at forstå, hvordan besøgende bruger bilsider (sessionoptagelser med maskerede formularfelter).',
         'related_posts' => 'Relaterede artikler',
         'author_default_bio' => 'Skribent hos Bilskyen.',
         'landing_meta' => [

@@ -15,11 +15,14 @@ use App\Models\DealerSubscription;
 use App\Models\Enquiry;
 use App\Models\Lead;
 use App\Models\ListingBillingPeriod;
+use App\Models\ListingFunnelEvent;
 use App\Models\ListingViewsLog;
 use App\Models\Payment;
 use App\Models\PriceHistory;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Marketing\ListingFunnelService;
+use App\Services\Marketing\TrafficAttributionService;
 use App\Support\AnalyticsDateRange;
 use App\Support\AnalyticsLeadMetrics;
 use Carbon\Carbon;
@@ -77,6 +80,147 @@ class AnalyticsReportingService
         $won = AnalyticsLeadMetrics::countWonInPeriod($dealerId, $startDate, $endDate);
 
         return compact('views', 'enquiries', 'leads', 'won');
+    }
+
+    /**
+     * Car-page funnel for Meta ads (and optional other/all traffic).
+     *
+     * @return array<string, mixed>
+     */
+    public function adsFunnel(?Carbon $startDate, ?Carbon $endDate, string $source = 'meta'): array
+    {
+        $source = in_array($source, ['meta', 'other', 'all'], true) ? $source : 'meta';
+
+        $landed = $this->countListingViews($startDate, $endDate, $source);
+        $steps = [
+            'landed' => $landed,
+            'engaged' => $this->countFunnelEvent(ListingFunnelService::ENGAGED, $startDate, $endDate, $source),
+            'cta' => $this->countFunnelEvent(ListingFunnelService::CTA_CLICK, $startDate, $endDate, $source),
+            'form_open' => $this->countFunnelEvent(ListingFunnelService::FORM_OPEN, $startDate, $endDate, $source),
+            'converted' => $this->countFunnelEvent(ListingFunnelService::CONVERT, $startDate, $endDate, $source),
+        ];
+
+        $pct = fn (int $num, int $den) => $den > 0 ? round(($num / $den) * 100, 2) : 0.0;
+
+        $metaLanded = $this->countListingViews($startDate, $endDate, 'meta');
+        $otherLanded = $this->countListingViews($startDate, $endDate, 'other');
+        $metaConverted = $this->countFunnelEvent(ListingFunnelService::CONVERT, $startDate, $endDate, 'meta');
+        $otherConverted = $this->countFunnelEvent(ListingFunnelService::CONVERT, $startDate, $endDate, 'other');
+
+        return [
+            'source' => $source,
+            'steps' => $steps,
+            'rates' => [
+                'landed_to_engaged' => $pct($steps['engaged'], $steps['landed']),
+                'engaged_to_cta' => $pct($steps['cta'], $steps['engaged']),
+                'cta_to_form' => $pct($steps['form_open'], $steps['cta']),
+                'form_to_converted' => $pct($steps['converted'], $steps['form_open']),
+                'landed_to_converted' => $pct($steps['converted'], $steps['landed']),
+            ],
+            'form_errors' => $this->countFunnelEvent(ListingFunnelService::FORM_ERROR, $startDate, $endDate, $source),
+            'form_closes' => $this->countFunnelEvent(ListingFunnelService::FORM_CLOSE, $startDate, $endDate, $source),
+            'compare' => [
+                'meta_conversion_rate' => $pct($metaConverted, $metaLanded),
+                'other_conversion_rate' => $pct($otherConverted, $otherLanded),
+                'meta_landed' => $metaLanded,
+                'other_landed' => $otherLanded,
+                'meta_converted' => $metaConverted,
+                'other_converted' => $otherConverted,
+            ],
+            'vehicles' => $this->adsFunnelVehicles($startDate, $endDate, $source),
+        ];
+    }
+
+    private function applyTrafficSource($query, string $source, string $column = 'traffic_source')
+    {
+        if ($source === 'meta') {
+            $query->where($column, TrafficAttributionService::SOURCE_META);
+        } elseif ($source === 'other') {
+            $query->where(function ($inner) use ($column) {
+                $inner->where($column, '!=', TrafficAttributionService::SOURCE_META)
+                    ->orWhereNull($column);
+            });
+        }
+
+        return $query;
+    }
+
+    private function countListingViews(?Carbon $startDate, ?Carbon $endDate, string $source): int
+    {
+        $query = ListingViewsLog::query();
+        $this->applyTrafficSource($query, $source);
+        AnalyticsDateRange::apply($query, $startDate, $endDate, 'viewed_at');
+
+        return (int) $query->count();
+    }
+
+    private function countFunnelEvent(string $eventName, ?Carbon $startDate, ?Carbon $endDate, string $source): int
+    {
+        $query = ListingFunnelEvent::query()->where('event_name', $eventName);
+        $this->applyTrafficSource($query, $source);
+        AnalyticsDateRange::apply($query, $startDate, $endDate, 'created_at');
+
+        return (int) $query->count();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function adsFunnelVehicles(?Carbon $startDate, ?Carbon $endDate, string $source): array
+    {
+        $viewsQuery = ListingViewsLog::query()
+            ->select('vehicle_id', DB::raw('COUNT(*) as landed'))
+            ->whereNotNull('vehicle_id')
+            ->groupBy('vehicle_id');
+        $this->applyTrafficSource($viewsQuery, $source);
+        AnalyticsDateRange::apply($viewsQuery, $startDate, $endDate, 'viewed_at');
+
+        $landedByVehicle = $viewsQuery->pluck('landed', 'vehicle_id');
+        if ($landedByVehicle->isEmpty()) {
+            return [];
+        }
+
+        $eventQuery = ListingFunnelEvent::query()
+            ->select('vehicle_id', 'event_name', DB::raw('COUNT(*) as total'))
+            ->whereIn('vehicle_id', $landedByVehicle->keys())
+            ->whereIn('event_name', [
+                ListingFunnelService::ENGAGED,
+                ListingFunnelService::CTA_CLICK,
+                ListingFunnelService::FORM_OPEN,
+                ListingFunnelService::CONVERT,
+            ])
+            ->groupBy('vehicle_id', 'event_name');
+        $this->applyTrafficSource($eventQuery, $source);
+        AnalyticsDateRange::apply($eventQuery, $startDate, $endDate, 'created_at');
+
+        $events = [];
+        foreach ($eventQuery->get() as $row) {
+            $events[(int) $row->vehicle_id][$row->event_name] = (int) $row->total;
+        }
+
+        $vehicles = Vehicle::query()
+            ->whereIn('id', $landedByVehicle->keys())
+            ->get(['id', 'title', 'slug']);
+
+        $pct = fn (int $num, int $den) => $den > 0 ? round(($num / $den) * 100, 2) : 0.0;
+
+        return $vehicles->map(function (Vehicle $vehicle) use ($landedByVehicle, $events, $pct) {
+            $landed = (int) $landedByVehicle->get($vehicle->id, 0);
+            $rowEvents = $events[$vehicle->id] ?? [];
+            $converted = (int) ($rowEvents[ListingFunnelService::CONVERT] ?? 0);
+
+            return [
+                'vehicle_id' => $vehicle->id,
+                'title' => $vehicle->title,
+                'slug' => $vehicle->slug,
+                'landed' => $landed,
+                'engaged' => (int) ($rowEvents[ListingFunnelService::ENGAGED] ?? 0),
+                'cta' => (int) ($rowEvents[ListingFunnelService::CTA_CLICK] ?? 0),
+                'form_open' => (int) ($rowEvents[ListingFunnelService::FORM_OPEN] ?? 0),
+                'converted' => $converted,
+                'conversion_rate' => $pct($converted, $landed),
+            ];
+        })->sortByDesc('landed')->values()->take(25)->all();
     }
 
     /**

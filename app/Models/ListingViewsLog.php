@@ -19,6 +19,10 @@ class ListingViewsLog extends Model
         'user_id',
         'ip_address',
         'user_agent',
+        'session_id',
+        'traffic_source',
+        'utm_source',
+        'utm_campaign',
         'viewed_at',
     ];
 

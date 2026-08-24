@@ -10,6 +10,7 @@ use App\Models\LeadCategory;
 use App\Models\Enquiry;
 use App\Services\VehicleService;
 use App\Services\AuditLogService;
+use App\Services\Marketing\TrafficAttributionService;
 use App\Constants\VehicleListStatus;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
@@ -28,7 +29,8 @@ class DealerProfileApiController extends Controller
 {
     public function __construct(
         private VehicleService $vehicleService,
-        private AuditLogService $auditLogService
+        private AuditLogService $auditLogService,
+        private TrafficAttributionService $trafficAttributionService,
     ) {}
 
     /**
@@ -171,7 +173,7 @@ class DealerProfileApiController extends Controller
         $leadIntentId = $this->getLeadIntentId('Enquiry Form Submission');
 
         // Create lead record (vehicle_id is null for general dealer enquiry)
-        $lead = Lead::create([
+        $lead = Lead::create(array_merge([
             'vehicle_id' => null,
             'buyer_user_id' => $user->id,
             'dealer_id' => $dealer->id,
@@ -181,7 +183,7 @@ class DealerProfileApiController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $this->trafficAttributionService->leadAttributes($request)));
 
         // Create enquiry record
         $dealerName = $dealer->owner?->name ?? 'Dealer';
