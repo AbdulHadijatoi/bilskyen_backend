@@ -317,6 +317,15 @@
     const successMessage = document.getElementById('{{ $type }}-success-{{ $slug }}');
     const endpoint = form.dataset.endpoint || '{{ $config['endpoint'] }}';
     const errorMsg = '{{ $config['errorMessage'] }}';
+    let funnelStarted = false;
+
+    form.addEventListener('input', function () {
+        if (funnelStarted) return;
+        funnelStarted = true;
+        if (typeof window.bilskyenTrackFunnel === 'function') {
+            window.bilskyenTrackFunnel('form_start', { form: '{{ $type }}' });
+        }
+    }, { once: true });
     
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -366,6 +375,9 @@
             const result = await response.json();
 
             if (!response.ok) {
+                if (typeof window.bilskyenTrackFunnel === 'function') {
+                    window.bilskyenTrackFunnel('form_error', { form: '{{ $type }}', status: String(response.status) });
+                }
                 if (response.status === 401) {
                     // Redirect to login
                     if (window.showSnackbar) {
@@ -427,11 +439,18 @@
                     });
                 }
 
+                if (window.__bilskyenFormOpen) {
+                    window.__bilskyenFormOpen.converted = true;
+                }
+
                 // Close dialog immediately after submit
                 closeEnquiryDialog('{{ $type }}', '{{ $slug }}');
             }
         } catch (error) {
             console.error('Error submitting form:', error);
+            if (typeof window.bilskyenTrackFunnel === 'function') {
+                window.bilskyenTrackFunnel('form_error', { form: '{{ $type }}', status: 'network' });
+            }
             const errorMsgText = '{{ __('messages.dialogs.error_occurred') }}';
             if (window.showSnackbar) {
                 window.showSnackbar(errorMsgText, 'error');

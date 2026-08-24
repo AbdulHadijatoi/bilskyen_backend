@@ -1,5 +1,5 @@
 <!--
-Schema Checksum: b18e0ba9260d813b9a4d50aab3c45042aba351464b282faa390f2ca634683537
+Schema Checksum: 0ba668042237191baf91d5d97c822f2e490d4c85c5ff83c05a99d0992de33cea
 Source: database-architecture.md
 Algorithm: SHA-256
 
@@ -687,6 +687,10 @@ Lead management for vehicle inquiries.
 | source_id | INT (FK) | Foreign key to `sources.id` |
 | lead_category_id | INT (FK, NULL) | Foreign key to `lead_categories.id` |
 | last_activity_at | DATETIME (NULL) | Last activity timestamp |
+| utm_source | VARCHAR (NULL) | Last-touch UTM source (stamped on create) |
+| utm_medium | VARCHAR (NULL) | Last-touch UTM medium |
+| utm_campaign | VARCHAR (NULL) | Last-touch UTM campaign |
+| referrer_url | VARCHAR (NULL) | Referrer URL at lead create |
 | created_at | DATETIME | Creation timestamp |
 
 **Indexes:**
@@ -1196,11 +1200,17 @@ Vehicle listing view tracking.
 | user_id | BIGINT (FK, NULL) | Foreign key to `users.id` (if logged in) |
 | ip_address | VARCHAR(45) | Visitor IP address |
 | user_agent | TEXT | Browser user agent |
+| session_id | VARCHAR(64, NULL) | Funnel/session identifier for first-party attribution |
+| traffic_source | VARCHAR(32, NULL) | `meta` or `other` (first-touch / last-touch classification) |
+| utm_source | VARCHAR(191, NULL) | Captured `utm_source` |
+| utm_campaign | VARCHAR(191, NULL) | Captured `utm_campaign` |
 | viewed_at | DATETIME | View timestamp |
 
 **Indexes:**
 - `(vehicle_id, viewed_at)`
 - `(user_id, viewed_at)` — recently viewed rail for signed-in users
+- `(traffic_source, viewed_at)`
+- `(session_id)`
 
 **Foreign Keys:**
 - `vehicle_id` references `vehicles.id` (cascadeOnDelete)
@@ -1210,6 +1220,32 @@ Vehicle listing view tracking.
 
 **Relationships:**
 - `belongsTo` Vehicle, User (if logged in, nullable)
+
+#### `listing_funnel_events`
+First-party car-page funnel events (land, engaged, gallery, cta_click, form_open, form_start, form_error, form_close, convert). No personal data.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT (PK) | Primary key |
+| session_id | VARCHAR(64) | Visitor funnel session id |
+| vehicle_id | BIGINT (FK, NULL) | Foreign key to `vehicles.id` |
+| traffic_source | VARCHAR(32, NULL) | `meta` or `other` at event time |
+| event_name | VARCHAR(32) | Funnel step name |
+| meta | JSON (NULL) | Small non-PII props (`cta`, `form`, `status`) |
+| created_at | DATETIME | Event timestamp |
+
+**Indexes:**
+- `(session_id, vehicle_id, event_name)`
+- `(traffic_source, event_name, created_at)`
+- `(vehicle_id, created_at)`
+
+**Foreign Keys:**
+- `vehicle_id` references `vehicles.id` (nullOnDelete)
+
+**Note:** No `updated_at`. Deduped one event type per session+vehicle except `form_error`.
+
+**Relationships:**
+- `belongsTo` Vehicle (nullable)
 
 #### `price_history`
 Vehicle price change audit trail.

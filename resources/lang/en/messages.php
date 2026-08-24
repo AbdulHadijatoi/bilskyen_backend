@@ -1703,6 +1703,7 @@ return [
         'min_read' => ':count min read',
         'browse_vehicles' => 'Browse vehicles',
         'cookie_accept' => 'Accept',
+        'cookie_clarity_note' => 'We also use Microsoft Clarity to understand how visitors use car pages (session recordings with form fields masked).',
         'related_posts' => 'Related articles',
         'author_default_bio' => 'Contributor at Bilskyen.',
         'landing_meta' => [

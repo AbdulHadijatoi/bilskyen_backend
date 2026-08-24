@@ -20,6 +20,7 @@ use App\Services\Reputation\GoogleReviewService;
 use App\Constants\LeadStage;
 use App\Constants\LeadIntent;
 use App\Constants\Enquiries;
+use App\Services\Marketing\TrafficAttributionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,7 @@ class DealerController extends Controller
         private GoogleReviewService $googleReviewService,
         private SchemaBuilderService $schemaBuilder,
         private VehicleListingPresentationService $listingPresentation,
+        private TrafficAttributionService $trafficAttributionService,
     ) {}
 
     /**
@@ -316,7 +318,7 @@ class DealerController extends Controller
         }
 
         // Create lead record (buyer_user_id can be null for guest users, vehicle_id is null for dealer enquiry)
-        $lead = Lead::create([
+        $lead = Lead::create(array_merge([
             'vehicle_id' => null, // General dealer enquiry, not vehicle-specific
             'buyer_user_id' => $user?->id,
             'dealer_id' => $dealer->id,
@@ -326,7 +328,7 @@ class DealerController extends Controller
             'lead_category_id' => $leadCategory?->id,
             'created_at' => now(),
             'last_activity_at' => now(),
-        ]);
+        ], $this->trafficAttributionService->leadAttributes($request)));
 
         // Create enquiry record with the message details (user_id can be null for guest users, vehicle_id is null)
         $dealerName = $dealer->owner?->name ?? 'Dealer';

@@ -98,9 +98,17 @@ class ViewServiceProvider extends ServiceProvider
             $view->with([
                 'cookieConsent' => [
                     'enabled' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
-                    'text' => $settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''),
+                    'text' => $this->cookieConsentText($settings, $locale),
                 ],
                 'publicAiEnabled' => app(AiService::class)->isGloballyEnabled(),
+                'microsoftClarity' => [
+                    'enabled' => filter_var($settings->get('marketing', 'microsoft_clarity_enabled', false), FILTER_VALIDATE_BOOLEAN)
+                        && app()->environment('production'),
+                    'projectId' => trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')),
+                    'requireConsent' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
+                ],
+                'trafficAttribution' => app(\App\Services\Marketing\TrafficAttributionService::class)->lastTouch(request()),
+                'listingFunnelTrackUrl' => url('/api/v1/marketing/funnel/track'),
             ]);
         });
 
@@ -108,6 +116,21 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['home', 'vehicles', 'faq', 'sell-your-car'], function ($view) {
             $view->with('publicAiEnabled', app(AiService::class)->isGloballyEnabled());
         });
+    }
+
+    private function cookieConsentText(\App\Services\PlatformSettingService $settings, string $locale): string
+    {
+        $text = (string) ($settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''));
+        $clarityOn = filter_var($settings->get('marketing', 'microsoft_clarity_enabled', false), FILTER_VALIDATE_BOOLEAN)
+            && trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')) !== '';
+        if ($clarityOn) {
+            $note = (string) __('messages.cms.cookie_clarity_note');
+            if ($note !== '' && ! str_contains($text, $note)) {
+                $text = trim($text.' '.$note);
+            }
+        }
+
+        return $text;
     }
 }
 

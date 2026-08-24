@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\ListingViewsLog;
 use App\Models\Vehicle;
+use App\Services\Marketing\ListingFunnelService;
+use App\Services\Marketing\TrafficAttributionService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -13,19 +15,33 @@ class VehicleViewService
 
     public const STORAGE_LIMIT = 8;
 
+    public function __construct(
+        private TrafficAttributionService $trafficAttributionService,
+        private ListingFunnelService $listingFunnelService,
+    ) {}
+
     public function recordView(Vehicle $vehicle, ?int $userId, ?string $ipAddress, ?string $userAgent): void
     {
-        DB::transaction(function () use ($vehicle, $userId, $ipAddress, $userAgent) {
+        $request = request();
+        $attribution = $this->trafficAttributionService->viewAttributes($request);
+
+        DB::transaction(function () use ($vehicle, $userId, $ipAddress, $userAgent, $attribution) {
             ListingViewsLog::create([
                 'vehicle_id' => $vehicle->id,
                 'user_id' => $userId,
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
+                'session_id' => $attribution['session_id'],
+                'traffic_source' => $attribution['traffic_source'],
+                'utm_source' => $attribution['utm_source'],
+                'utm_campaign' => $attribution['utm_campaign'],
                 'viewed_at' => now(),
             ]);
 
             $vehicle->increment('views_count');
         });
+
+        $this->listingFunnelService->record($request, (int) $vehicle->id, ListingFunnelService::LAND);
     }
 
     /**

@@ -79,6 +79,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.partials.bot-protection-scripts')
     @include('layouts.partials.meta-pixel')
+    @include('layouts.partials.microsoft-clarity')
     @include('layouts.partials.google-ads')
     @include('layouts.partials.design-tokens')
     @include('layouts.partials.site-styles')
@@ -144,6 +145,15 @@
                 dialog.classList.remove('hidden');
                 dialog.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
+                window.__bilskyenFormOpen = { type: type, converted: false };
+                if (typeof window.bilskyenTrackFunnel === 'function') {
+                    window.bilskyenTrackFunnel('cta_click', { cta: type });
+                    window.bilskyenTrackFunnel('form_open', { form: type });
+                }
+                if (typeof window.bilskyenTrackMetaCustom === 'function') {
+                    window.bilskyenTrackMetaCustom('CtaClick', { cta: type });
+                    window.bilskyenTrackMetaCustom('FormOpen', { form: type });
+                }
                 const firstInput = dialog.querySelector('input[type="text"]');
                 if (firstInput) {
                     setTimeout(() => firstInput.focus(), 100);
@@ -158,6 +168,10 @@
                 dialog.classList.add('hidden');
                 dialog.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
+                if (window.__bilskyenFormOpen && !window.__bilskyenFormOpen.converted && typeof window.bilskyenTrackFunnel === 'function') {
+                    window.bilskyenTrackFunnel('form_close', { form: type });
+                }
+                window.__bilskyenFormOpen = null;
             }
         };
 
