@@ -1,7 +1,10 @@
 @php
-    $clarity = $microsoftClarity ?? ['enabled' => false, 'projectId' => '', 'requireConsent' => false];
+    $clarity = $microsoftClarity ?? ['enabled' => true, 'projectId' => 'y8l8s0praw', 'requireConsent' => false];
     $clarityId = is_array($clarity) ? trim((string) ($clarity['projectId'] ?? '')) : '';
-    $clarityEnabled = is_array($clarity) && ! empty($clarity['enabled']) && $clarityId !== '';
+    if ($clarityId === '') {
+        $clarityId = 'y8l8s0praw';
+    }
+    $clarityEnabled = $clarityId !== '';
     $clarityNeedsConsent = is_array($clarity) && ! empty($clarity['requireConsent']);
     $touch = $trafficAttribution ?? [];
 @endphp

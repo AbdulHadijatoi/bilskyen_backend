@@ -102,9 +102,8 @@ class ViewServiceProvider extends ServiceProvider
                 ],
                 'publicAiEnabled' => app(AiService::class)->isGloballyEnabled(),
                 'microsoftClarity' => [
-                    'enabled' => filter_var($settings->get('marketing', 'microsoft_clarity_enabled', false), FILTER_VALIDATE_BOOLEAN)
-                        && app()->environment('production'),
-                    'projectId' => trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')),
+                    'enabled' => true,
+                    'projectId' => trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')) ?: 'y8l8s0praw',
                     'requireConsent' => filter_var($settings->get('seo', 'cookie_consent_enabled', false), FILTER_VALIDATE_BOOLEAN),
                 ],
                 'trafficAttribution' => app(\App\Services\Marketing\TrafficAttributionService::class)->lastTouch(request()),
@@ -121,8 +120,7 @@ class ViewServiceProvider extends ServiceProvider
     private function cookieConsentText(\App\Services\PlatformSettingService $settings, string $locale): string
     {
         $text = (string) ($settings->get('seo', 'cookie_consent_text_'.$locale, '') ?: $settings->get('seo', 'cookie_consent_text_en', ''));
-        $clarityOn = filter_var($settings->get('marketing', 'microsoft_clarity_enabled', false), FILTER_VALIDATE_BOOLEAN)
-            && trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')) !== '';
+        $clarityOn = (trim((string) $settings->get('marketing', 'microsoft_clarity_project_id', '')) ?: 'y8l8s0praw') !== '';
         if ($clarityOn) {
             $note = (string) __('messages.cms.cookie_clarity_note');
             if ($note !== '' && ! str_contains($text, $note)) {
