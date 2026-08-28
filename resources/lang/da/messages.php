@@ -662,6 +662,7 @@ return [
                 'more_from_dealer_title' => 'Flere biler fra denne forhandler',
                 'send_enquiry' => 'Send Henvendelse',
                 'call_dealer' => 'Ring til forhandler',
+                'call_seller' => 'Ring til sælger',
                 'contact_via_whatsapp' => 'Kontakt via WhatsApp',
                 'sticky_price' => ':price',
                 'browse_similar_cars' => 'Se lignende biler',

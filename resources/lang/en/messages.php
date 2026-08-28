@@ -663,6 +663,7 @@ return [
                 'more_from_dealer_title' => 'More from this dealer',
                 'send_enquiry' => 'Send Enquiry',
                 'call_dealer' => 'Call dealer',
+                'call_seller' => 'Call seller',
                 'contact_via_whatsapp' => 'Contact via WhatsApp',
                 'sticky_price' => ':price',
                 'browse_similar_cars' => 'Browse similar cars',

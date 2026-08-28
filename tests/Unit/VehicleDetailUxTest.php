@@ -43,7 +43,7 @@ class VehicleDetailUxTest extends TestCase
 
         $en = include resource_path('lang/en/messages.php');
         $da = include resource_path('lang/da/messages.php');
-        foreach (['share', 'share_title', 'share_copy', 'share_copied', 'location_map_title', 'call_dealer'] as $key) {
+        foreach (['share', 'share_title', 'share_copy', 'share_copied', 'location_map_title', 'call_dealer', 'call_seller'] as $key) {
             $this->assertNotEmpty($en['pages']['vehicles']['detail'][$key] ?? null, "Missing EN {$key}");
             $this->assertNotEmpty($da['pages']['vehicles']['detail'][$key] ?? null, "Missing DA {$key}");
         }
