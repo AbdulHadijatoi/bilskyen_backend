@@ -22,6 +22,11 @@ class HomepageOnBeaconUxTest extends TestCase
         );
         $this->assertStringContainsString('home-filter-search-wrap', $home);
         $this->assertStringContainsString('min-height: 3.25rem', $home);
+        $this->assertMatchesRegularExpression(
+            '/\.home-filter-search-row\s*\{\s*display:\s*none;/',
+            $home
+        );
+        $this->assertStringContainsString('@media (min-width: 768px)', $home);
         $this->assertStringContainsString("id=\"home-filters-panel\" class=\"mt-0 is-collapsed\"", $home);
         $this->assertStringContainsString('home-filter-core-grid', $home);
         $this->assertLessThan(

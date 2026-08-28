@@ -262,18 +262,16 @@
     }
 
     .home-filter-search-row {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
-        width: 100%;
+        display: none;
     }
 
-    @media (min-width: 640px) {
+    @media (min-width: 768px) {
         .home-filter-search-row {
+            display: flex;
             flex-direction: row;
             align-items: center;
             gap: 0.5rem;
+            width: 100%;
         }
     }
 
@@ -435,10 +433,17 @@
     }
 
     .home-filter-search-hint {
+        display: none;
         margin: 0.5rem 0 0;
         padding-left: 0.125rem;
         font-size: 0.75rem;
         color: var(--hf-slate);
+    }
+
+    @media (min-width: 768px) {
+        .home-filter-search-hint {
+            display: block;
+        }
     }
 
     .home-filter-suggestion-row {
