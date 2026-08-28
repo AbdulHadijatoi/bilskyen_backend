@@ -354,8 +354,12 @@ class EnquiryController extends Controller
             'name' => 'required|string|max:150',
             'email' => 'required|email|max:150',
             'phone' => 'nullable|string|max:30',
-            'message' => 'required|string|max:5000',
+            'message' => 'nullable|string|max:5000',
         ]);
+
+        if (empty(trim((string) ($validated['message'] ?? '')))) {
+            $validated['message'] = __('messages.dialogs.enquiry_default_message');
+        }
 
         $vehicle->load(['dealer.owner', 'user', 'dmrFactVehicle.variant.model.brand']);
 

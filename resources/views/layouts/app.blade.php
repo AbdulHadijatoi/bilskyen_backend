@@ -129,6 +129,19 @@
 
         window.openEnquiryDialog = function(type, vehicleId) {
             let dialog = document.getElementById(`${type}-dialog-${vehicleId}`);
+            let resolvedType = type;
+
+            if (!dialog) {
+                const unified = document.getElementById(`enquiry-dialog-${vehicleId}`);
+                if (unified && unified.dataset.unified === '1') {
+                    dialog = unified;
+                    resolvedType = type;
+                    if (typeof window.setUnifiedEnquiryType === 'function') {
+                        window.setUnifiedEnquiryType(type);
+                    }
+                }
+            }
+
             if (!dialog) {
                 dialog = document.getElementById(`${type}-dialog-shared`);
                 if (dialog) {
@@ -141,20 +154,22 @@
                     if (hidden) hidden.value = vehicleId;
                 }
             }
+
             if (dialog) {
                 dialog.classList.remove('hidden');
                 dialog.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
-                window.__bilskyenFormOpen = { type: type, converted: false };
+                window.__bilskyenFormOpen = { type: resolvedType, converted: false };
+                dialog.dispatchEvent(new CustomEvent('unified-enquiry-open'));
                 if (typeof window.bilskyenTrackFunnel === 'function') {
-                    window.bilskyenTrackFunnel('cta_click', { cta: type });
-                    window.bilskyenTrackFunnel('form_open', { form: type });
+                    window.bilskyenTrackFunnel('cta_click', { cta: resolvedType });
+                    window.bilskyenTrackFunnel('form_open', { form: resolvedType });
                 }
                 if (typeof window.bilskyenTrackMetaCustom === 'function') {
-                    window.bilskyenTrackMetaCustom('CtaClick', { cta: type });
-                    window.bilskyenTrackMetaCustom('FormOpen', { form: type });
+                    window.bilskyenTrackMetaCustom('CtaClick', { cta: resolvedType });
+                    window.bilskyenTrackMetaCustom('FormOpen', { form: resolvedType });
                 }
-                const firstInput = dialog.querySelector('input[type="text"]');
+                const firstInput = dialog.querySelector('input[type="text"], input[type="email"]');
                 if (firstInput) {
                     setTimeout(() => firstInput.focus(), 100);
                 }
@@ -162,14 +177,17 @@
         };
 
         window.closeEnquiryDialog = function(type, vehicleId) {
-            const dialogId = `${type}-dialog-${vehicleId}`;
-            const dialog = document.getElementById(dialogId);
+            let dialog = document.getElementById(`${type}-dialog-${vehicleId}`);
+            if (!dialog) {
+                dialog = document.getElementById(`enquiry-dialog-${vehicleId}`);
+            }
             if (dialog) {
+                const closingType = window.__bilskyenFormOpen?.type || type;
                 dialog.classList.add('hidden');
                 dialog.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
                 if (window.__bilskyenFormOpen && !window.__bilskyenFormOpen.converted && typeof window.bilskyenTrackFunnel === 'function') {
-                    window.bilskyenTrackFunnel('form_close', { form: type });
+                    window.bilskyenTrackFunnel('form_close', { form: closingType });
                 }
                 window.__bilskyenFormOpen = null;
             }
@@ -180,10 +198,15 @@
                 const openDialogs = document.querySelectorAll('[role="dialog"]:not(.hidden)');
                 openDialogs.forEach(dialog => {
                     const dialogId = dialog.id;
-                    const match = dialogId.match(/^(.+)-dialog-(\d+)$/);
+                    const unifiedMatch = dialogId.match(/^enquiry-dialog-(.+)$/);
+                    if (unifiedMatch && dialog.dataset.unified === '1') {
+                        closeEnquiryDialog('enquiry', unifiedMatch[1]);
+                        return;
+                    }
+                    const match = dialogId.match(/^(.+)-dialog-(.+)$/);
                     if (match) {
-                        const [, type, vehicleId] = match;
-                        closeEnquiryDialog(type, parseInt(vehicleId));
+                        const [, dialogType, vehicleId] = match;
+                        closeEnquiryDialog(dialogType, vehicleId);
                     }
                 });
             }

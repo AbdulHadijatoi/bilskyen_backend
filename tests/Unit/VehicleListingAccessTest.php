@@ -95,7 +95,7 @@ class VehicleListingAccessTest extends TestCase
         $this->assertStringContainsString('listingIsDraftPreview', $controller);
         $this->assertStringContainsString('listingContactBlocked', $blade);
         $this->assertStringContainsString('draft_preview_banner', $blade);
-        $this->assertStringContainsString('<x-enquiry-dialog type="enquiry"', $blade);
+        $this->assertStringContainsString('<x-unified-enquiry-dialog', $blade);
         $this->assertStringContainsString('@if(! $listingContactBlocked)', $blade);
         $this->assertStringContainsString('isPubliclyViewable()', $api);
         $this->assertStringContainsString('isPublished()', $enquiry);

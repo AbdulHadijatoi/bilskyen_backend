@@ -65,5 +65,62 @@ class VehicleDetailUxTest extends TestCase
             '/showDealerPhoneAndCreateLead[\s\S]*?bilskyenTrackFunnel\(\'cta_click\', \{ cta: \'phone\' \}\)/',
             $source
         );
+        $this->assertStringNotContainsString('vehicle-detail-mobile-cta__price', $source);
+        $this->assertStringContainsString('vehicle-whatsapp-fab', $source);
+        $this->assertStringContainsString('<x-vehicle-whatsapp-fab', $source);
+    }
+
+    public function test_detail_page_lead_conversion_contact_actions_and_unified_dialog(): void
+    {
+        $detail = file_get_contents(resource_path('views/vehicle-detail.blade.php'));
+        $contactActions = file_get_contents(resource_path('views/components/vehicle-contact-actions.blade.php'));
+        $unifiedDialog = file_get_contents(resource_path('views/components/unified-enquiry-dialog.blade.php'));
+        $enquiryController = file_get_contents(app_path('Http/Controllers/EnquiryController.php'));
+
+        $this->assertStringContainsString('<x-vehicle-contact-actions', $detail);
+        $this->assertStringContainsString('vehicle-contact-cta__btn--call', $contactActions);
+        $this->assertStringContainsString('vehicle-contact-cta__btn--inquiry', $contactActions);
+        $this->assertStringNotContainsString("openEnquiryDialog('exchange'", $detail);
+        $this->assertStringNotContainsString("openEnquiryDialog('test-drive'", $detail);
+        $this->assertStringNotContainsString("openEnquiryDialog('price-negotiation'", $detail);
+        $this->assertStringNotContainsString('<x-enquiry-dialog', $detail);
+
+        $mobileContactPos = strpos($detail, '<x-vehicle-contact-actions');
+        $financeCalcPos = strpos($detail, 'id="finance-calculator-mobile"');
+        $this->assertNotFalse($mobileContactPos);
+        $this->assertNotFalse($financeCalcPos);
+        $this->assertLessThan($financeCalcPos, $mobileContactPos, 'Contact actions should appear before mobile finance calculator');
+
+        $this->assertStringNotContainsString('bg-background border-input', $contactActions);
+        $this->assertStringNotContainsString('vehicle-contact-cta__btn--whatsapp', $contactActions);
+        $this->assertStringContainsString('vehicle-whatsapp-fab', $detail);
+        $this->assertStringContainsString('vehicle-contact-cta__btn--call', $detail);
+
+        $this->assertStringContainsString('<x-unified-enquiry-dialog', $detail);
+        $this->assertStringContainsString('name="enquiry_type"', $unifiedDialog);
+        $this->assertStringContainsString('value="enquiry"', $unifiedDialog);
+        $this->assertStringContainsString("@checked(\$typeKey === 'enquiry')", $unifiedDialog);
+        $this->assertStringContainsString('data-unified="1"', $unifiedDialog);
+
+        $this->assertStringContainsString('$listingIsSold', $detail);
+        $this->assertStringContainsString('browse_similar_cars', $detail);
+        $this->assertStringContainsString('#related-vehicles-heading', $detail);
+
+        $this->assertStringContainsString('rel="preconnect" href="https://cdn.jsdelivr.net"', $detail);
+        $this->assertStringContainsString('embla-carousel.umd.js" defer', $detail);
+        $this->assertStringContainsString('glightbox.min.js" defer', $detail);
+        $this->assertStringContainsString('vehicleGalleryLightbox', $detail);
+
+        $this->assertStringContainsString("'message' => 'nullable|string|max:5000'", $enquiryController);
+        $this->assertStringContainsString("messages.dialogs.enquiry_default_message", $enquiryController);
+
+        $en = include resource_path('lang/en/messages.php');
+        $da = include resource_path('lang/da/messages.php');
+        foreach (['browse_similar_cars', 'enquiry_type_label'] as $key) {
+            $this->assertNotEmpty($en['pages']['vehicles']['detail'][$key] ?? null, "Missing EN {$key}");
+            $this->assertNotEmpty($da['pages']['vehicles']['detail'][$key] ?? null, "Missing DA {$key}");
+        }
+        $this->assertNotEmpty($en['dialogs']['enquiry_default_message'] ?? null);
+        $this->assertNotEmpty($da['dialogs']['enquiry_default_message'] ?? null);
     }
 }

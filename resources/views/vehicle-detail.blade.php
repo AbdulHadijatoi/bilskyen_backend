@@ -3,6 +3,7 @@
 @section('title', trim((string) ($vehicle->title ?: __('messages.pages.vehicles.detail.page_title'))))
 
 @push('styles')
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/css/embla.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
 <style>
@@ -163,6 +164,94 @@
     .vehicle-detail-mobile-cta__actions--single .vehicle-detail-mobile-cta__btn--inquiry {
         flex: 1 1 100%;
     }
+
+    .vehicle-contact-cta__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .vehicle-contact-cta__grid--inquiry-only {
+        grid-template-columns: 1fr;
+    }
+
+    .vehicle-contact-cta__btn {
+        display: inline-flex;
+        min-height: 3rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.2;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .vehicle-contact-cta__btn--call {
+        border: 2px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+        background: var(--card);
+        color: var(--foreground);
+    }
+
+    .vehicle-contact-cta__btn--call:hover {
+        border-color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 8%, var(--card));
+    }
+
+    .vehicle-contact-cta__btn--inquiry {
+        border: 0;
+        background: var(--primary);
+        color: var(--primary-foreground);
+    }
+
+    .vehicle-contact-cta__btn--inquiry:hover {
+        background: var(--primary-hover, color-mix(in srgb, var(--primary) 90%, #000));
+    }
+
+    .vehicle-whatsapp-fab {
+        position: fixed;
+        right: 1rem;
+        bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+        z-index: 61;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 3.5rem;
+        border: 0;
+        border-radius: 9999px;
+        background: #25d366;
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .vehicle-whatsapp-fab:hover {
+        background: #1ebe57;
+        transform: scale(1.05);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+    }
+
+    @media (min-width: 1024px) {
+        .vehicle-whatsapp-fab {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        }
+    }
+
+    .vehicle-detail-mobile-cta__btn--call {
+        border: 2px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+        background: var(--card);
+        color: var(--foreground);
+    }
+
+    .unified-enquiry-dialog--compact .unified-enquiry-vehicle-card,
+    .unified-enquiry-dialog--compact [data-message-field] {
+        display: none;
+    }
 </style>
 @endpush
 
@@ -264,6 +353,7 @@
 
         $sellerPhone = (! $vehicle->dealer && $vehicle->user && $vehicle->user->phone) ? $vehicle->user->phone : null;
         $contactPhoneAvailable = filled($dealerPhone) || filled($sellerPhone);
+        $contactWhatsAppAvailable = filled($contactWhatsApp);
 
         $imageAlt = trim(implode(' ', array_filter([
             $vehicle->brand_name ?? null,
@@ -458,78 +548,21 @@
                     </div>
                 </div>
 
+                @if($contactUser && ! $listingContactBlocked)
+                <div class="rounded-lg bg-gray-50 p-6 border border-border">
+                    <x-vehicle-contact-actions
+                        :vehicle="$vehicle"
+                        :contact-phone-available="$contactPhoneAvailable"
+                        variant="mobile"
+                    />
+                </div>
+                @endif
+
             @if(!empty($showFinanceCalculator))
             <div class="rounded-lg border border-border bg-card p-6 lg:hidden" id="finance-calculator-mobile">
                 @include('partials.finance-calculator', ['calculatorId' => 'finance-calculator-mobile'])
             </div>
             @endif
-
-                <!-- Contact Actions -->
-                @if($contactUser && ! $listingContactBlocked)
-                <div class="rounded-lg bg-gray-50 p-6 border border-border">
-                    <div class="mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                        </svg>
-                        <h2 class="text-xl font-semibold text-foreground">
-                            {{ __('messages.pages.vehicles.detail.contact_actions') }}
-                        </h2>
-                    </div>
-                    <div class="flex flex-col gap-3">
-                        <button
-                            type="button"
-                            onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                            <span>{{ __('messages.pages.vehicles.detail.send_enquiry') }}</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onclick="openEnquiryDialog('exchange', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                                <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"></path>
-                            </svg>
-                            <span>{{ __('messages.pages.vehicles.detail.exchange_request') }}</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                                <rect x="3" y="11" width="18" height="6" rx="2" />
-                                <path d="M5 17l1.5 2h11L19 17" />
-                                <circle cx="7.5" cy="16" r="1" />
-                                <circle cx="16.5" cy="16" r="1" />
-                                <path d="M7 11V7a3 3 0 0 1 6 0v4" />
-                                <path d="M9 11V7a1 1 0 1 1 2 0v4" />
-                                <path d="M4 11V8" />
-                                <path d="M20 11V8" />
-                            </svg>
-                            <span>{{ __('messages.pages.vehicles.detail.request_test_drive') }}</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
-                            class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                                <line x1="12" y1="2" x2="12" y2="22"></line>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                            </svg>
-                            <span>{{ __('messages.pages.vehicles.detail.price_negotiation') }}</span>
-                        </button>
-                    </div>
-                </div>
-                @endif
             </div>
 
             <!-- Dealer Information (mobile only - below photos) -->
@@ -1222,80 +1255,19 @@
                 </div>
             </div>
 
-            @if(!empty($showFinanceCalculator))
-            <div class="hidden rounded-lg border border-border bg-card p-6 lg:block" id="finance-calculator-desktop">
-                @include('partials.finance-calculator', ['calculatorId' => 'finance-calculator-desktop'])
+            @if($contactUser && ! $listingContactBlocked)
+            <div class="hidden rounded-lg bg-gray-50 p-6 border border-border lg:block">
+                <x-vehicle-contact-actions
+                    :vehicle="$vehicle"
+                    :contact-phone-available="$contactPhoneAvailable"
+                    variant="desktop"
+                />
             </div>
             @endif
 
-            <!-- Contact Actions -->
-            @if($contactUser && ! $listingContactBlocked)
-            <div class="hidden rounded-lg bg-gray-50 p-6 border border-border lg:block">
-                <div class="mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-foreground">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold text-foreground">
-                        {{ __('messages.pages.vehicles.detail.contact_actions') }}
-                    </h2>
-                </div>
-                <div class="flex flex-col gap-3">
-                    <!-- Enquiry Form Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span>{{ __('messages.pages.vehicles.detail.send_enquiry') }}</span>
-                    </button>
-
-                    <!-- Exchange Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('exchange', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                            <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"></path>
-                        </svg>
-                        <span>{{ __('messages.pages.vehicles.detail.exchange_request') }}</span>
-                    </button>
-
-                    <!-- Test Drive Request Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('test-drive', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                            <rect x="3" y="11" width="18" height="6" rx="2" />
-                            <path d="M5 17l1.5 2h11L19 17" />
-                            <circle cx="7.5" cy="16" r="1" />
-                            <circle cx="16.5" cy="16" r="1" />
-                            <path d="M7 11V7a3 3 0 0 1 6 0v4" />
-                            <path d="M9 11V7a1 1 0 1 1 2 0v4" />
-                            <path d="M4 11V8" />
-                            <path d="M20 11V8" />
-                        </svg>
-                        <span>{{ __('messages.pages.vehicles.detail.request_test_drive') }}</span>
-                    </button>
-
-                    <!-- Price Negotiation Button -->
-                    <button 
-                        type="button"
-                        onclick="openEnquiryDialog('price-negotiation', '{{ $vehicle->slug }}')"
-                        class="flex w-full items-center justify-center gap-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
-                            <line x1="12" y1="2" x2="12" y2="22"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        <span>{{ __('messages.pages.vehicles.detail.price_negotiation') }}</span>
-                    </button>
-                </div>
+            @if(!empty($showFinanceCalculator))
+            <div class="hidden rounded-lg border border-border bg-card p-6 lg:block" id="finance-calculator-desktop">
+                @include('partials.finance-calculator', ['calculatorId' => 'finance-calculator-desktop'])
             </div>
             @endif
 
@@ -1849,7 +1821,27 @@
     />
 </div>
 
-@if($contactUser && ! $listingContactBlocked)
+@if($listingIsSold)
+@php
+    $soldFallbackHref = ($relatedVehicles ?? collect())->isNotEmpty()
+        ? '#related-vehicles-heading'
+        : route('vehicles');
+@endphp
+<div
+    id="vehicle-detail-mobile-cta"
+    class="vehicle-detail-mobile-cta lg:hidden"
+    role="region"
+    aria-label="{{ __('messages.pages.vehicles.detail.browse_similar_cars') }}"
+>
+    <a
+        href="{{ $soldFallbackHref }}"
+        class="vehicle-contact-cta__btn vehicle-contact-cta__btn--inquiry vehicle-detail-mobile-cta__btn block w-full text-center"
+        data-funnel-cta="browse-similar"
+    >
+        {{ __('messages.pages.vehicles.detail.browse_similar_cars') }}
+    </a>
+</div>
+@elseif($contactUser && ! $listingContactBlocked)
 <div
     id="vehicle-detail-mobile-cta"
     class="vehicle-detail-mobile-cta lg:hidden"
@@ -1861,7 +1853,8 @@
             @if($vehicle->dealer)
             <button
                 type="button"
-                class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                class="vehicle-detail-mobile-cta__btn vehicle-contact-cta__btn vehicle-contact-cta__btn--call vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                data-funnel-cta="phone"
                 onclick="showDealerPhoneAndCreateLead('{{ $vehicle->slug }}', event)"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
@@ -1872,7 +1865,8 @@
             @else
             <button
                 type="button"
-                class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                class="vehicle-detail-mobile-cta__btn vehicle-contact-cta__btn vehicle-contact-cta__btn--call vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                data-funnel-cta="phone"
                 onclick="showPhoneAndCreateLead({{ $vehicle->id }}, event)"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
@@ -1884,7 +1878,8 @@
         @endif
         <button
             type="button"
-            class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--inquiry"
+            class="vehicle-detail-mobile-cta__btn vehicle-contact-cta__btn vehicle-contact-cta__btn--inquiry vehicle-detail-mobile-cta__btn--inquiry"
+            data-funnel-cta="enquiry"
             onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
         >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
@@ -1896,19 +1891,20 @@
 </div>
 @endif
 
-<!-- Enquiry Dialogs -->
+@if($contactWhatsAppAvailable && $contactUser && ! $listingContactBlocked)
+<x-vehicle-whatsapp-fab :vehicle="$vehicle" :contact-whatsapp="$contactWhatsApp" />
+@endif
+
+<!-- Enquiry Dialog -->
 @if(! $listingContactBlocked)
-<x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
-<x-enquiry-dialog type="test-drive" :vehicle="$vehicle" />
-<x-enquiry-dialog type="price-negotiation" :vehicle="$vehicle" />
-<x-enquiry-dialog type="exchange" :vehicle="$vehicle" />
+<x-unified-enquiry-dialog :vehicle="$vehicle" />
 @endif
 
 <!-- Login Dialog -->
 <x-login-dialog />
 
-<script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/embla-carousel@8.0.0/embla-carousel.umd.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js" defer></script>
 <x-recently-viewed-helpers />
 @if(!empty($vehicleHasMap))
 <x-vehicle-map-helpers />
@@ -1962,32 +1958,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initialize GLightbox for image viewer
-    if (typeof GLightbox !== 'undefined') {
-        const lightbox = GLightbox({
-            selector: '.glightbox',
-            touchNavigation: true,
-            loop: true,
-            autoplayVideos: false,
-            closeButton: true,
-            zoomable: true,
-            draggable: true,
-            openEffect: 'none',
-            closeEffect: 'none',
-            slideEffect: 'none',
-            moreText: '{{ __('messages.common.see_more') }}',
-            moreLength: 60,
-            closeOnOutsideClick: true,
-            preload: false,
-            description: false,
-            onOpen: function () {
-                if (typeof window.bilskyenTrackFunnel === 'function') {
-                    window.bilskyenTrackFunnel('gallery');
-                }
+    let vehicleGalleryLightbox = null;
+    const galleryLinks = Array.from(document.querySelectorAll('.glightbox'));
+    galleryLinks.forEach((link, index) => {
+        link.addEventListener('click', function (event) {
+            if (typeof GLightbox === 'undefined') {
+                return;
             }
+            event.preventDefault();
+            if (!vehicleGalleryLightbox) {
+                vehicleGalleryLightbox = GLightbox({
+                    elements: galleryLinks.map((el) => ({
+                        href: el.getAttribute('href'),
+                        type: 'image',
+                    })),
+                    touchNavigation: true,
+                    loop: true,
+                    autoplayVideos: false,
+                    closeButton: true,
+                    zoomable: true,
+                    draggable: true,
+                    openEffect: 'none',
+                    closeEffect: 'none',
+                    slideEffect: 'none',
+                    closeOnOutsideClick: true,
+                    preload: false,
+                    onOpen: function () {
+                        if (typeof window.bilskyenTrackFunnel === 'function') {
+                            window.bilskyenTrackFunnel('gallery');
+                        }
+                    }
+                });
+            }
+            vehicleGalleryLightbox.openAt(index);
         });
-        
-    }
+    });
 
     // Get access token from cookie helper
     function getCookie(name) {
