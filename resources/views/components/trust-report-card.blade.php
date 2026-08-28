@@ -1,4 +1,8 @@
-@props(['trustReport' => [], 'fairPrice' => null])
+@props([
+    'trustReport' => [],
+    'fairPrice' => null,
+    'variant' => 'desktop',
+])
 
 @php
     $tr = $trustReport ?? [];
@@ -6,10 +10,13 @@
     $hasRegistryCard = !empty($reg['brand_name']) || !empty($reg['model_name']) || !empty($reg['first_registration_date']) || !empty($reg['km_driven']);
     $hasInspectionCard = !empty($tr['inspection_date']);
     $hasContent = $hasRegistryCard || $hasInspectionCard;
+    $variantClass = $variant === 'mobile'
+        ? 'vehicle-trust-report--mobile'
+        : 'vehicle-trust-report--desktop';
 @endphp
 
 @if($hasContent)
-<div class="detail-section bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+<div {{ $attributes->merge(['class' => 'detail-section bg-gradient-to-br from-blue-50 to-white border border-blue-100 vehicle-trust-report ' . $variantClass]) }}>
     <div class="flex items-start gap-3 mb-4">
         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

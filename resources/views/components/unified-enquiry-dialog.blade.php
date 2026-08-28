@@ -137,26 +137,21 @@
                         @csrf
                         <input type="hidden" name="vehicle_id" value="{{ $slug }}">
 
-                        <fieldset class="space-y-2">
-                            <legend class="text-sm font-medium text-foreground">
+                        <div class="unified-enquiry-field">
+                            <label for="unified-enquiry-type-{{ $slug }}" class="unified-enquiry-label">
                                 {{ __('messages.pages.vehicles.detail.enquiry_type_label') }}
-                            </legend>
-                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            </label>
+                            <select
+                                id="unified-enquiry-type-{{ $slug }}"
+                                name="enquiry_type"
+                                class="unified-enquiry-select"
+                                data-unified-type-select
+                            >
                                 @foreach($typeOptions as $typeKey => $typeLabel)
-                                <label class="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                                    <input
-                                        type="radio"
-                                        name="enquiry_type"
-                                        value="{{ $typeKey }}"
-                                        class="h-4 w-4 border-border text-primary focus:ring-primary"
-                                        data-unified-type-radio
-                                        @checked($typeKey === 'enquiry')
-                                    >
-                                    <span>{{ $typeLabel }}</span>
-                                </label>
+                                <option value="{{ $typeKey }}" @selected($typeKey === 'enquiry')>{{ $typeLabel }}</option>
                                 @endforeach
-                            </div>
-                        </fieldset>
+                            </select>
+                        </div>
 
                         <div id="unified-enquiry-errors-{{ $slug }}" class="hidden w-full rounded-md border border-red-200 bg-red-50 p-3">
                             <ul id="unified-enquiry-error-list-{{ $slug }}" class="list-disc list-inside text-sm text-red-800"></ul>
@@ -166,10 +161,10 @@
                             <p class="text-sm text-green-800"></p>
                         </div>
 
-                        <h3 class="text-foreground text-sm font-semibold" data-unified-form-title>{{ $formConfig['enquiry']['formTitle'] }}</h3>
+                        <h3 class="text-foreground text-sm font-semibold mb-1" data-unified-form-title>{{ $formConfig['enquiry']['formTitle'] }}</h3>
 
-                        <div class="space-y-2">
-                            <label for="unified-enquiry-name-{{ $slug }}" class="text-sm font-medium leading-none">
+                        <div class="unified-enquiry-field">
+                            <label for="unified-enquiry-name-{{ $slug }}" class="unified-enquiry-label">
                                 {{ __('messages.forms.full_name') }} <span class="text-red-500">*</span>
                             </label>
                             <input
@@ -183,8 +178,8 @@
                             >
                         </div>
 
-                        <div class="space-y-2">
-                            <label for="unified-enquiry-email-{{ $slug }}" class="text-sm font-medium leading-none">
+                        <div class="unified-enquiry-field">
+                            <label for="unified-enquiry-email-{{ $slug }}" class="unified-enquiry-label">
                                 {{ __('messages.forms.email') }} <span class="text-red-500">*</span>
                             </label>
                             <input
@@ -198,8 +193,8 @@
                             >
                         </div>
 
-                        <div class="space-y-2">
-                            <label for="unified-enquiry-phone-{{ $slug }}" class="text-sm font-medium leading-none">
+                        <div class="unified-enquiry-field">
+                            <label for="unified-enquiry-phone-{{ $slug }}" class="unified-enquiry-label">
                                 {{ __('messages.forms.phone_number') }} <span class="text-red-500 unified-enquiry-phone-required hidden">*</span>
                             </label>
                             <input
@@ -213,8 +208,8 @@
                         </div>
 
                         <div class="unified-enquiry-exchange-fields hidden space-y-4" data-exchange-fields>
-                            <div class="space-y-2">
-                                <label for="unified-enquiry-licence_plate-{{ $slug }}" class="text-sm font-medium leading-none">
+                            <div class="unified-enquiry-field">
+                                <label for="unified-enquiry-licence_plate-{{ $slug }}" class="unified-enquiry-label">
                                     {{ __('messages.forms.licence_plate') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input
@@ -225,8 +220,8 @@
                                     placeholder="{{ __('messages.forms.enter_licence_plate') }}"
                                 >
                             </div>
-                            <div class="space-y-2">
-                                <label for="unified-enquiry-kilometers-{{ $slug }}" class="text-sm font-medium leading-none">
+                            <div class="unified-enquiry-field">
+                                <label for="unified-enquiry-kilometers-{{ $slug }}" class="unified-enquiry-label">
                                     {{ __('messages.forms.kilometres_used') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input
@@ -239,8 +234,8 @@
                                     placeholder="{{ __('messages.forms.enter_kilometres') }}"
                                 >
                             </div>
-                            <div class="space-y-2">
-                                <label for="unified-enquiry-expected_price-{{ $slug }}" class="text-sm font-medium leading-none">
+                            <div class="unified-enquiry-field">
+                                <label for="unified-enquiry-expected_price-{{ $slug }}" class="unified-enquiry-label">
                                     {{ __('messages.forms.expected_price') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input
@@ -253,8 +248,8 @@
                             </div>
                         </div>
 
-                        <div class="space-y-2 unified-enquiry-message-field" data-message-field>
-                            <label for="unified-enquiry-message-{{ $slug }}" class="text-sm font-medium leading-none">
+                        <div class="unified-enquiry-field unified-enquiry-message-field" data-message-field>
+                            <label for="unified-enquiry-message-{{ $slug }}" class="unified-enquiry-label">
                                 <span data-unified-message-label>{{ $formConfig['enquiry']['messageLabel'] }}</span> <span class="text-red-500" data-unified-message-required>*</span>
                             </label>
                             <textarea
@@ -313,7 +308,7 @@
     const exchangeFields = dialog.querySelector('[data-exchange-fields]');
     const phoneInput = document.getElementById('unified-enquiry-phone-' + slug);
     const phoneRequiredMarker = dialog.querySelector('.unified-enquiry-phone-required');
-    const typeRadios = dialog.querySelectorAll('[data-unified-type-radio]');
+    const typeSelect = dialog.querySelector('[data-unified-type-select]');
     const submitBtn = document.getElementById('unified-enquiry-submit-btn-' + slug);
     const submitSpinner = document.getElementById('unified-enquiry-submit-spinner-' + slug);
     const errorContainer = document.getElementById('unified-enquiry-errors-' + slug);
@@ -338,8 +333,7 @@
     }
 
     function getSelectedType() {
-        const checked = dialog.querySelector('[data-unified-type-radio]:checked');
-        return checked ? checked.value : 'enquiry';
+        return typeSelect?.value || 'enquiry';
     }
 
     function updateMessageField() {
@@ -381,19 +375,14 @@
     }
 
     window.setUnifiedEnquiryType = function (type) {
-        const radio = dialog.querySelector('[data-unified-type-radio][value="' + type + '"]')
-            || dialog.querySelector('[data-unified-type-radio][value="enquiry"]');
-        if (radio) {
-            radio.checked = true;
+        if (typeSelect) {
+            typeSelect.value = config[type] ? type : 'enquiry';
         }
-        applyType(type, false);
+        applyType(typeSelect?.value || 'enquiry', false);
     };
 
-    typeRadios.forEach((radio) => {
-        radio.addEventListener('change', function () {
-            if (!this.checked) return;
-            applyType(this.value, true);
-        });
+    typeSelect?.addEventListener('change', function () {
+        applyType(this.value, true);
     });
 
     form.addEventListener('input', function () {
@@ -488,8 +477,9 @@
                     window.__bilskyenFormOpen.converted = true;
                 }
                 form.reset();
-                const enquiryRadio = dialog.querySelector('[data-unified-type-radio][value="enquiry"]');
-                if (enquiryRadio) enquiryRadio.checked = true;
+                if (typeSelect) {
+                    typeSelect.value = 'enquiry';
+                }
                 applyType('enquiry', false);
                 closeEnquiryDialog('enquiry', slug);
             }

@@ -116,6 +116,11 @@
         padding: 0.75rem 1rem;
         padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
         pointer-events: none;
+        background: color-mix(in srgb, var(--muted) 88%, var(--card));
+        border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+        box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
     }
 
     .vehicle-detail-mobile-cta__actions {
@@ -248,9 +253,69 @@
         color: var(--foreground);
     }
 
+    .vehicle-registration-status--desktop {
+        display: none;
+    }
+
+    .vehicle-registration-status--mobile {
+        display: block;
+    }
+
+    .vehicle-trust-report--desktop {
+        display: none;
+    }
+
+    .vehicle-trust-report--mobile {
+        display: block;
+    }
+
+    @media (min-width: 1024px) {
+        .vehicle-registration-status--desktop {
+            display: block;
+        }
+
+        .vehicle-registration-status--mobile {
+            display: none;
+        }
+
+        .vehicle-trust-report--desktop {
+            display: block;
+        }
+
+        .vehicle-trust-report--mobile {
+            display: none;
+        }
+    }
+
     .unified-enquiry-dialog--compact .unified-enquiry-vehicle-card,
     .unified-enquiry-dialog--compact [data-message-field] {
         display: none;
+    }
+
+    .unified-enquiry-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .unified-enquiry-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.35;
+        color: var(--foreground);
+    }
+
+    .unified-enquiry-select {
+        display: flex;
+        height: 2.5rem;
+        width: 100%;
+        border-radius: 0.375rem;
+        border: 1px solid var(--input, var(--border));
+        background: var(--background);
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+        color: var(--foreground);
     }
 </style>
 @endpush
@@ -479,6 +544,7 @@
                 }
             @endphp
             <x-trust-report-card
+                variant="desktop"
                 :trust-report="$trustReportDisplay"
                 :fair-price="$vehicleDetail['fair_price'] ?? null"
             />
@@ -532,7 +598,7 @@
             </div>
             @endif
 
-            <!-- Mobile Pricing + Contact Actions (below photos) -->
+            <!-- Mobile Pricing (below photos) -->
             <div class="space-y-6 lg:hidden">
                 <!-- Pricing -->
                 <div class="rounded-lg bg-primary px-4 py-3">
@@ -547,16 +613,6 @@
                         @endif
                     </div>
                 </div>
-
-                @if($contactUser && ! $listingContactBlocked)
-                <div class="rounded-lg bg-gray-50 p-6 border border-border">
-                    <x-vehicle-contact-actions
-                        :vehicle="$vehicle"
-                        :contact-phone-available="$contactPhoneAvailable"
-                        variant="mobile"
-                    />
-                </div>
-                @endif
 
             @if(!empty($showFinanceCalculator))
             <div class="rounded-lg border border-border bg-card p-6 lg:hidden" id="finance-calculator-mobile">
@@ -1101,32 +1157,8 @@
             </div>
         </div>
 
-        <!-- Registration & Status Section -->
-        @if(!empty($vd['registration_status']) || !empty($vd['dmr']['registration_status_name']) || !empty($vd['last_registration_change']))
-        <div class="detail-section bg-gray-50">
-            <h2 class="text-foreground text-xl font-semibold mb-4">{{ __('messages.pages.vehicles.detail.registration_status') }}</h2>
-            <div class="detail-grid">
-                @if(!empty($vd['registration_status']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.registration_status_label') }}</span>
-                    <span class="detail-value">{{ $vd['registration_status'] }}</span>
-                </div>
-                @endif
-                @if(!empty($vd['dmr']['registration_status_name']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.registration_status_label') }} (DMR)</span>
-                    <span class="detail-value">{{ $vd['dmr']['registration_status_name'] }}</span>
-                </div>
-                @endif
-                @if(!empty($vd['last_registration_change']))
-                <div class="detail-item">
-                    <span class="detail-label">{{ __('messages.pages.vehicles.detail.registration_status_updated_date') }}</span>
-                    <span class="detail-value">{{ Carbon::parse($vd['last_registration_change'])->format('F j, Y') }}</span>
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
+        <!-- Registration & Status Section (desktop: before equipment) -->
+        <x-vehicle-registration-status :vd="$vd" variant="desktop" />
 
         <!-- Inspection Details Section -->
         @if(!empty($vd['last_inspection_date']))
@@ -1213,6 +1245,17 @@
             </div>
         </div>
         @endif
+
+        @if($showTrustReport ?? true)
+        <x-trust-report-card
+            variant="mobile"
+            :trust-report="$trustReportDisplay ?? []"
+            :fair-price="$vehicleDetail['fair_price'] ?? null"
+        />
+        @endif
+
+        <!-- Registration & Status Section (mobile: after equipment) -->
+        <x-vehicle-registration-status :vd="$vd" variant="mobile" />
 
             @if($vehicleHasMap)
             <div class="overflow-hidden rounded-xl border border-border" data-vehicle-map-wrap hidden>
