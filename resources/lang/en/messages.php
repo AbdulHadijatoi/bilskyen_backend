@@ -661,6 +661,7 @@ return [
                 'draft_preview_banner_hint' => 'Only you and your dealership can see this preview. Buyers cannot enquire until it is published.',
                 'more_from_dealer_title' => 'More from this dealer',
                 'send_enquiry' => 'Send Enquiry',
+                'call_dealer' => 'Call dealer',
                 'contact_via_whatsapp' => 'Contact via WhatsApp',
                 'exchange_request' => 'Request Exchange',
                 'request_test_drive' => 'Request Test Drive',

@@ -660,6 +660,7 @@ return [
                 'draft_preview_banner_hint' => 'Kun du og din forhandler kan se denne forhåndsvisning. Købere kan ikke henvende sig, før den er offentliggjort.',
                 'more_from_dealer_title' => 'Flere biler fra denne forhandler',
                 'send_enquiry' => 'Send Henvendelse',
+                'call_dealer' => 'Ring til forhandler',
                 'contact_via_whatsapp' => 'Kontakt via WhatsApp',
                 'exchange_request' => 'Anmod om bytte',
                 'request_test_drive' => 'Anmod om Prøvetur',

@@ -100,6 +100,69 @@
         width: 14px;
         height: 14px;
     }
+
+    @media (max-width: 1023px) {
+        body:has(#vehicle-detail-mobile-cta) {
+            padding-bottom: 5.5rem;
+        }
+    }
+
+    .vehicle-detail-mobile-cta {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 0.75rem 1rem;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        pointer-events: none;
+    }
+
+    .vehicle-detail-mobile-cta__actions {
+        display: flex;
+        gap: 0.5rem;
+        max-width: 100%;
+        pointer-events: auto;
+    }
+
+    .vehicle-detail-mobile-cta__btn {
+        display: inline-flex;
+        min-height: 3rem;
+        flex: 1 1 0;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.2;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .vehicle-detail-mobile-cta__btn--call {
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+    }
+
+    .vehicle-detail-mobile-cta__btn--call:hover {
+        background: var(--accent);
+        color: var(--accent-foreground);
+    }
+
+    .vehicle-detail-mobile-cta__btn--inquiry {
+        border: 0;
+        background: var(--primary);
+        color: var(--primary-foreground);
+    }
+
+    .vehicle-detail-mobile-cta__btn--inquiry:hover {
+        background: var(--primary-hover, color-mix(in srgb, var(--primary) 90%, #000));
+    }
+
+    .vehicle-detail-mobile-cta__actions--single .vehicle-detail-mobile-cta__btn--inquiry {
+        flex: 1 1 100%;
+    }
 </style>
 @endpush
 
@@ -198,6 +261,9 @@
             $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
             $contactEmail = $vehicle->user->email ?? null;
         }
+
+        $sellerPhone = (! $vehicle->dealer && $vehicle->user && $vehicle->user->phone) ? $vehicle->user->phone : null;
+        $contactPhoneAvailable = filled($dealerPhone) || filled($sellerPhone);
 
         $imageAlt = trim(implode(' ', array_filter([
             $vehicle->brand_name ?? null,
@@ -1783,6 +1849,53 @@
     />
 </div>
 
+@if($contactUser && ! $listingContactBlocked)
+<div
+    id="vehicle-detail-mobile-cta"
+    class="vehicle-detail-mobile-cta lg:hidden"
+    role="region"
+    aria-label="{{ __('messages.pages.vehicles.detail.contact_actions') }}"
+>
+    <div class="vehicle-detail-mobile-cta__actions{{ $contactPhoneAvailable ? '' : ' vehicle-detail-mobile-cta__actions--single' }}">
+        @if($contactPhoneAvailable)
+            @if($vehicle->dealer)
+            <button
+                type="button"
+                class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                onclick="showDealerPhoneAndCreateLead('{{ $vehicle->slug }}', event)"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>{{ __('messages.pages.vehicles.detail.call_dealer') }}</span>
+            </button>
+            @else
+            <button
+                type="button"
+                class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--call vehicle-detail-mobile-cta-call"
+                onclick="showPhoneAndCreateLead({{ $vehicle->id }}, event)"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>{{ __('messages.common.call') }}</span>
+            </button>
+            @endif
+        @endif
+        <button
+            type="button"
+            class="vehicle-detail-mobile-cta__btn vehicle-detail-mobile-cta__btn--inquiry"
+            onclick="openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>{{ __('messages.pages.vehicles.detail.send_enquiry') }}</span>
+        </button>
+    </div>
+</div>
+@endif
+
 <!-- Enquiry Dialogs -->
 @if(! $listingContactBlocked)
 <x-enquiry-dialog type="enquiry" :vehicle="$vehicle" />
@@ -1914,6 +2027,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const button = event?.target?.closest('button') || event?.target;
+        const isStickyCta = button?.classList?.contains('vehicle-detail-mobile-cta-call');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         if (typeof window.bilskyenTrackFunnel === 'function') {
             window.bilskyenTrackFunnel('cta_click', { cta: 'phone' });
@@ -1958,8 +2072,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 link.textContent = phone;
                 link.setAttribute('href', `tel:${phone}`);
             }
-            togglePhone();
-            if (button) button.style.display = 'none';
+            if (isStickyCta && phone && window.matchMedia('(max-width: 1023px)').matches) {
+                window.location.href = `tel:${phone.replace(/[\s\-\(\)]/g, '')}`;
+            } else {
+                togglePhone();
+                if (button) button.style.display = 'none';
+            }
         } catch (error) {
             if (error?.message !== 'cancelled') {
                 console.error('Error creating lead:', error);
@@ -2001,7 +2119,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const button = event?.target?.closest('button') || event?.target;
+        const isStickyCta = button?.classList?.contains('vehicle-detail-mobile-cta-call');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        if (typeof window.bilskyenTrackFunnel === 'function') {
+            window.bilskyenTrackFunnel('cta_click', { cta: 'phone' });
+        }
+        if (typeof window.bilskyenTrackMetaCustom === 'function') {
+            window.bilskyenTrackMetaCustom('CtaClick', { cta: 'phone' });
+        }
 
         try {
             const guest = await window.bilskyenCollectGuestContact?.() || {};
@@ -2045,8 +2170,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     link.setAttribute('href', `tel:${phone}`);
                 }
             });
-            toggleDealerPhone(button);
-            if (button) button.style.display = 'none';
+            if (isStickyCta && phone && window.matchMedia('(max-width: 1023px)').matches) {
+                window.location.href = `tel:${phone.replace(/[\s\-\(\)]/g, '')}`;
+            } else {
+                toggleDealerPhone(button);
+                if (button) button.style.display = 'none';
+            }
         } catch (error) {
             if (error?.message !== 'cancelled') {
                 console.error('Error creating lead:', error);

@@ -43,9 +43,27 @@ class VehicleDetailUxTest extends TestCase
 
         $en = include resource_path('lang/en/messages.php');
         $da = include resource_path('lang/da/messages.php');
-        foreach (['share', 'share_title', 'share_copy', 'share_copied', 'location_map_title'] as $key) {
+        foreach (['share', 'share_title', 'share_copy', 'share_copied', 'location_map_title', 'call_dealer'] as $key) {
             $this->assertNotEmpty($en['pages']['vehicles']['detail'][$key] ?? null, "Missing EN {$key}");
             $this->assertNotEmpty($da['pages']['vehicles']['detail'][$key] ?? null, "Missing DA {$key}");
         }
+    }
+
+    public function test_detail_page_has_mobile_sticky_cta_bar(): void
+    {
+        $source = file_get_contents(resource_path('views/vehicle-detail.blade.php'));
+
+        $this->assertStringContainsString('id="vehicle-detail-mobile-cta"', $source);
+        $this->assertStringContainsString('vehicle-detail-mobile-cta lg:hidden', $source);
+        $this->assertStringContainsString('vehicle-detail-mobile-cta__btn--inquiry', $source);
+        $this->assertStringContainsString('vehicle-detail-mobile-cta__actions--single', $source);
+        $this->assertStringContainsString('env(safe-area-inset-bottom', $source);
+        $this->assertStringContainsString('z-index: 60', $source);
+        $this->assertStringContainsString('$contactPhoneAvailable', $source);
+        $this->assertStringContainsString("window.bilskyenTrackFunnel('cta_click', { cta: 'phone' });", $source);
+        $this->assertMatchesRegularExpression(
+            '/showDealerPhoneAndCreateLead[\s\S]*?bilskyenTrackFunnel\(\'cta_click\', \{ cta: \'phone\' \}\)/',
+            $source
+        );
     }
 }
