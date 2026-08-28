@@ -85,11 +85,18 @@ class VehicleDetailUxTest extends TestCase
         $this->assertStringNotContainsString("openEnquiryDialog('price-negotiation'", $detail);
         $this->assertStringNotContainsString('<x-enquiry-dialog', $detail);
 
-        $mobileContactPos = strpos($detail, '<x-vehicle-contact-actions');
+        $this->assertStringContainsString('variant="desktop"', $detail);
+        $this->assertStringContainsString('id="vehicle-detail-mobile-cta"', $detail);
+
+        $pricingBlockPos = strpos($detail, '<!-- Mobile Pricing (below photos) -->');
         $financeCalcPos = strpos($detail, 'id="finance-calculator-mobile"');
-        $this->assertNotFalse($mobileContactPos);
+        $this->assertNotFalse($pricingBlockPos);
         $this->assertNotFalse($financeCalcPos);
-        $this->assertLessThan($financeCalcPos, $mobileContactPos, 'Contact actions should appear before mobile finance calculator');
+        $this->assertStringNotContainsString(
+            '<x-vehicle-contact-actions',
+            substr($detail, $pricingBlockPos, $financeCalcPos - $pricingBlockPos),
+            'Inline contact actions should not appear in the mobile block below photos'
+        );
 
         $this->assertStringNotContainsString('bg-background border-input', $contactActions);
         $this->assertStringNotContainsString('vehicle-contact-cta__btn--whatsapp', $contactActions);
@@ -97,10 +104,19 @@ class VehicleDetailUxTest extends TestCase
         $this->assertStringContainsString('vehicle-contact-cta__btn--call', $detail);
 
         $this->assertStringContainsString('<x-unified-enquiry-dialog', $detail);
-        $this->assertStringContainsString('name="enquiry_type"', $unifiedDialog);
-        $this->assertStringContainsString('value="enquiry"', $unifiedDialog);
-        $this->assertStringContainsString("@checked(\$typeKey === 'enquiry')", $unifiedDialog);
+        $this->assertStringContainsString('data-unified-type-select', $unifiedDialog);
+        $this->assertStringContainsString('unified-enquiry-select', $unifiedDialog);
+        $this->assertStringContainsString('unified-enquiry-label', $unifiedDialog);
+        $this->assertStringNotContainsString('data-unified-type-radio', $unifiedDialog);
+        $this->assertStringContainsString("@selected(\$typeKey === 'enquiry')", $unifiedDialog);
         $this->assertStringContainsString('data-unified="1"', $unifiedDialog);
+
+        $this->assertStringContainsString('vehicle-registration-status--desktop', $detail);
+        $this->assertStringContainsString('vehicle-registration-status--mobile', $detail);
+        $this->assertStringContainsString('variant="mobile"', $detail);
+        $this->assertStringContainsString('vehicle-trust-report--mobile', $detail);
+        $this->assertStringContainsString('vehicle-trust-report--desktop', $detail);
+        $this->assertStringContainsString('variant="desktop"', $detail);
 
         $this->assertStringContainsString('$listingIsSold', $detail);
         $this->assertStringContainsString('browse_similar_cars', $detail);
