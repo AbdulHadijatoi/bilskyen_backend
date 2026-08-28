@@ -667,7 +667,7 @@ return [
                 'browse_similar_cars' => 'Se lignende biler',
                 'enquiry_type_label' => 'Hvad vil du gerne?',
                 'exchange_request' => 'Anmod om bytte',
-                'request_test_drive' => 'Anmod om Prøvetur',
+                'request_test_drive' => 'Anmod om prøvetur',
                 'price_negotiation' => 'Prisforhandling',
                 'edit_vehicle' => 'Rediger køretøj',
                 'show_phone_number' => 'Vis telefonnummer',

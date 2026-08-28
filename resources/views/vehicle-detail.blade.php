@@ -216,37 +216,6 @@
         background: var(--primary-hover, color-mix(in srgb, var(--primary) 90%, #000));
     }
 
-    .vehicle-whatsapp-fab {
-        position: fixed;
-        right: 1rem;
-        bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-        z-index: 61;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 3.5rem;
-        height: 3.5rem;
-        border: 0;
-        border-radius: 9999px;
-        background: #25d366;
-        color: #fff;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-        cursor: pointer;
-        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .vehicle-whatsapp-fab:hover {
-        background: #1ebe57;
-        transform: scale(1.05);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-    }
-
-    @media (min-width: 1024px) {
-        .vehicle-whatsapp-fab {
-            bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-        }
-    }
-
     .vehicle-detail-mobile-cta__btn--call {
         border: 2px solid color-mix(in srgb, var(--primary) 25%, var(--border));
         background: var(--card);
@@ -384,7 +353,6 @@
     <!-- Main Content Grid -->
     @php
         $contactUser = null;
-        $contactWhatsApp = null;
         $contactEmail = null;
         $dealerOwner = null;
         $dealerPhone = null;
@@ -403,7 +371,6 @@
             if ($vehicle->dealer->owner) {
                 $dealerOwner = $vehicle->dealer->owner;
                 $contactUser = $dealerOwner;
-                $contactWhatsApp = $dealerOwner->whatsapp_number ?? $dealerOwner->phone ?? null;
                 $contactEmail = $dealerOwner->email ?? null;
                 if ($dealerOwner->phone) {
                     $dealerPhone = $dealerOwner->phone;
@@ -412,13 +379,11 @@
         } elseif ($vehicle->user) {
             $dealerDisplayAddress = $vehicle->address ? trim($vehicle->address) : null;
             $contactUser = $vehicle->user;
-            $contactWhatsApp = $vehicle->user->whatsapp_number ?? $vehicle->user->phone ?? null;
             $contactEmail = $vehicle->user->email ?? null;
         }
 
         $sellerPhone = (! $vehicle->dealer && $vehicle->user && $vehicle->user->phone) ? $vehicle->user->phone : null;
         $contactPhoneAvailable = filled($dealerPhone) || filled($sellerPhone);
-        $contactWhatsAppAvailable = filled($contactWhatsApp);
 
         $imageAlt = trim(implode(' ', array_filter([
             $vehicle->brand_name ?? null,
@@ -1934,10 +1899,6 @@
 </div>
 @endif
 
-@if($contactWhatsAppAvailable && $contactUser && ! $listingContactBlocked)
-<x-vehicle-whatsapp-fab :vehicle="$vehicle" :contact-whatsapp="$contactWhatsApp" />
-@endif
-
 <!-- Enquiry Dialog -->
 @if(! $listingContactBlocked)
 <x-unified-enquiry-dialog :vehicle="$vehicle" />
@@ -2322,42 +2283,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
-    // Handle WhatsApp click
-    window.handleWhatsAppClick = async function(vehicleId, event) {
-        const button = event?.target?.closest('button');
-        const whatsappNumber = button?.dataset?.whatsapp;
-        
-        if (!whatsappNumber) {
-            if (window.showSnackbar) {
-                window.showSnackbar('{{ __('messages.forms.whatsapp_not_available') }}', 'error');
-            }
-            return false;
-        }
-
-        if (typeof window.bilskyenTrackFunnel === 'function') {
-            window.bilskyenTrackFunnel('cta_click', { cta: 'whatsapp' });
-        }
-        if (typeof window.bilskyenTrackMetaCustom === 'function') {
-            window.bilskyenTrackMetaCustom('CtaClick', { cta: 'whatsapp' });
-        }
-
-        // Create lead first
-        const leadResult = await createLead(vehicleId, '{{ __('messages.forms.whatsapp_clicked') }}', event);
-        
-        if (leadResult) {
-            // Format phone number for WhatsApp (remove spaces, dashes, etc.)
-            const formattedNumber = whatsappNumber.replace(/[\s\-\(\)]/g, '');
-            // Open WhatsApp
-            window.open(`https://wa.me/${formattedNumber}`, '_blank');
-            
-            if (window.showSnackbar) {
-                window.showSnackbar('{{ __('messages.forms.opening_whatsapp') }}', 'success');
-            }
-        }
-        
-        return false;
-    };
 
     // Handle Email click (available to guests and authenticated users)
     window.handleEmailClick = async function(vehicleId, event) {

@@ -66,8 +66,6 @@ class VehicleDetailUxTest extends TestCase
             $source
         );
         $this->assertStringNotContainsString('vehicle-detail-mobile-cta__price', $source);
-        $this->assertStringContainsString('vehicle-whatsapp-fab', $source);
-        $this->assertStringContainsString('<x-vehicle-whatsapp-fab', $source);
     }
 
     public function test_detail_page_lead_conversion_contact_actions_and_unified_dialog(): void
@@ -100,7 +98,8 @@ class VehicleDetailUxTest extends TestCase
 
         $this->assertStringNotContainsString('bg-background border-input', $contactActions);
         $this->assertStringNotContainsString('vehicle-contact-cta__btn--whatsapp', $contactActions);
-        $this->assertStringContainsString('vehicle-whatsapp-fab', $detail);
+        $this->assertStringNotContainsString('vehicle-whatsapp-fab', $detail);
+        $this->assertStringNotContainsString('<x-vehicle-whatsapp-fab', $detail);
         $this->assertStringContainsString('vehicle-contact-cta__btn--call', $detail);
 
         $this->assertStringContainsString('<x-unified-enquiry-dialog', $detail);
