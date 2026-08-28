@@ -338,17 +338,11 @@
 
     function updateMessageField() {
         const typeConfig = config[activeType] || config.enquiry;
-        const compact = isMobileCompact();
-        const hideMessage = compact && (activeType === 'enquiry' || activeType === 'test-drive');
-        const messageField = dialog.querySelector('[data-message-field]');
-        if (messageField) {
-            messageField.classList.toggle('hidden', hideMessage);
-        }
         if (messageInput) {
-            messageInput.required = !hideMessage && !!typeConfig.messageRequired;
+            messageInput.required = !!typeConfig.messageRequired;
         }
         if (messageRequiredEl) {
-            messageRequiredEl.classList.toggle('hidden', hideMessage || !typeConfig.messageRequired);
+            messageRequiredEl.classList.toggle('hidden', !typeConfig.messageRequired);
         }
     }
 

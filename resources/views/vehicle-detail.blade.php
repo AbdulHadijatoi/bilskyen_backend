@@ -256,8 +256,7 @@
         }
     }
 
-    .unified-enquiry-dialog--compact .unified-enquiry-vehicle-card,
-    .unified-enquiry-dialog--compact [data-message-field] {
+    .unified-enquiry-dialog--compact .unified-enquiry-vehicle-card {
         display: none;
     }
 
