@@ -1746,6 +1746,10 @@ return [
         // AJAX / API response messages (controllers)
         'lead_created_successfully' => 'Lead created successfully',
         'phone_shown' => 'Phone number shown',
+        'whatsapp_click_subject' => 'WhatsApp click for :vehicle',
+        'whatsapp_click_message' => 'A buyer opened WhatsApp from the listing.',
+        'email_click_subject' => 'Email click for :vehicle',
+        'email_click_message' => 'A buyer opened email from the listing.',
         'test_drive_submitted_followup' => 'Your test drive request has been submitted successfully. We will get back to you soon to schedule your test drive.',
         'price_negotiation_submitted_followup' => 'Your price negotiation has been submitted successfully. We will get back to you soon.',
         'exchange_request_submitted_followup' => 'Your exchange request has been submitted successfully. We will get back to you soon.',

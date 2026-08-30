@@ -120,22 +120,87 @@ class EnquiryController extends Controller
 
     /**
      * Phone reveal is a CTA only — do not create a lead or email the dealer.
+     * Only WhatsApp / Email click actions may create a lead via enquire().
      */
-    private function isPhoneRevealCategory(mixed $category): bool
+    private function canonicalizeLeadActionCategory(mixed $category): string
     {
-        $value = trim((string) $category);
+        $value = mb_strtolower(trim((string) $category));
         if ($value === '') {
-            return false;
+            return '';
         }
 
-        $labels = array_unique(array_filter([
-            'Phone Number Revealed',
-            __('messages.forms.phone_number_revealed'),
-            trans('messages.forms.phone_number_revealed', [], 'en'),
-            trans('messages.forms.phone_number_revealed', [], 'da'),
-        ]));
+        $phoneLabels = array_map(
+            static fn (string $label): string => mb_strtolower(trim($label)),
+            array_unique(array_filter([
+                'Phone Number Revealed',
+                'phone',
+                'phone_reveal',
+                'phone-reveal',
+                'phone revealed',
+                __('messages.forms.phone_number_revealed'),
+                (string) trans('messages.forms.phone_number_revealed', [], 'en'),
+                (string) trans('messages.forms.phone_number_revealed', [], 'da'),
+            ]))
+        );
 
-        return in_array($value, $labels, true);
+        if (in_array($value, $phoneLabels, true)
+            || str_contains($value, 'phone number revealed')
+            || str_contains($value, 'telefonnummer vist')
+            || str_contains($value, 'phone reveal')
+        ) {
+            return 'Phone Number Revealed';
+        }
+
+        $whatsappLabels = array_map(
+            static fn (string $label): string => mb_strtolower(trim($label)),
+            array_unique(array_filter([
+                'WhatsApp Clicked',
+                __('messages.forms.whatsapp_clicked'),
+                (string) trans('messages.forms.whatsapp_clicked', [], 'en'),
+                (string) trans('messages.forms.whatsapp_clicked', [], 'da'),
+            ]))
+        );
+        if (in_array($value, $whatsappLabels, true) || str_contains($value, 'whatsapp')) {
+            return 'WhatsApp Clicked';
+        }
+
+        $emailLabels = array_map(
+            static fn (string $label): string => mb_strtolower(trim($label)),
+            array_unique(array_filter([
+                'Email Clicked',
+                __('messages.forms.email_clicked'),
+                (string) trans('messages.forms.email_clicked', [], 'en'),
+                (string) trans('messages.forms.email_clicked', [], 'da'),
+            ]))
+        );
+        if (in_array($value, $emailLabels, true) || str_contains($value, 'email clicked') || str_contains($value, 'e-mail klikket')) {
+            return 'Email Clicked';
+        }
+
+        return trim((string) $category);
+    }
+
+    private function isPhoneRevealCategory(mixed $category): bool
+    {
+        return $this->canonicalizeLeadActionCategory($category) === 'Phone Number Revealed';
+    }
+
+    private function isClickLeadAction(string $canonicalCategory): bool
+    {
+        return in_array($canonicalCategory, ['WhatsApp Clicked', 'Email Clicked'], true);
+    }
+
+    private function phoneRevealResponse(Vehicle $vehicle): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => __('messages.api.phone_shown'),
+            'data' => [
+                'lead_id' => null,
+                'phone_number' => $this->resolveContactPhone($vehicle),
+                'meta_lead_event_id' => null,
+            ],
+        ]);
     }
 
     private function resolveContactPhone(Vehicle $vehicle): ?string
@@ -155,7 +220,7 @@ class EnquiryController extends Controller
 
     private function getLeadIntentId(string $categoryName): ?int
     {
-        return match($categoryName) {
+        return match ($categoryName) {
             'Enquiry Form Submission' => LeadIntent::HIGH,
             'Phone Number Revealed' => LeadIntent::MEDIUM,
             'WhatsApp Clicked' => LeadIntent::HIGH,
@@ -251,16 +316,12 @@ class EnquiryController extends Controller
 
         $vehicle->load(['dealer.owner', 'user']);
 
-        if ($this->isPhoneRevealCategory($validated['category'] ?? $request->input('category'))) {
-            return response()->json([
-                'status' => 'success',
-                'message' => __('messages.api.phone_shown'),
-                'data' => [
-                    'lead_id' => null,
-                    'phone_number' => $this->resolveContactPhone($vehicle),
-                    'meta_lead_event_id' => null,
-                ],
-            ]);
+        $categoryRaw = $validated['category'] ?? $request->input('category');
+        $canonicalCategory = $this->canonicalizeLeadActionCategory($categoryRaw);
+
+        // Phone reveal (and any non WhatsApp/Email click) must never create a lead or notify dealers.
+        if (! $this->isClickLeadAction($canonicalCategory)) {
+            return $this->phoneRevealResponse($vehicle);
         }
 
         // Get dealer_id (can be null for private listings)
@@ -272,17 +333,10 @@ class EnquiryController extends Controller
         $sourceName = $this->getSourceName($request);
         $source = Source::firstOrCreate(['name' => $sourceName]);
 
-        // Get lead category from request (default to 'Enquire' if not specified)
-        $categoryName = $validated['category'] ?? $request->input('category', 'Enquire');
-        $leadCategory = LeadCategory::where('name', $categoryName)->first();
-        
-        // If category doesn't exist, default to 'Enquire'
-        if (!$leadCategory) {
-            $leadCategory = LeadCategory::where('name', 'Enquire')->first();
-        }
+        $leadCategory = LeadCategory::where('name', $canonicalCategory)->first()
+            ?? LeadCategory::where('name', 'Enquire')->first();
 
-        // Get lead intent based on category
-        $leadIntentId = $this->getLeadIntentId($categoryName);
+        $leadIntentId = $this->getLeadIntentId($canonicalCategory);
 
         // Create lead record (buyer_user_id can be null for guest users)
         $lead = Lead::create($this->withAttribution([
@@ -296,7 +350,11 @@ class EnquiryController extends Controller
             'created_at' => now(),
             'last_activity_at' => now(),
         ], $request));
-        $this->recordFunnelConvert($request, $vehicle, 'phone');
+        $this->recordFunnelConvert(
+            $request,
+            $vehicle,
+            $canonicalCategory === 'WhatsApp Clicked' ? 'whatsapp' : 'email'
+        );
 
         // Log audit trail (handles both authenticated and guest users)
         try {
@@ -319,7 +377,13 @@ class EnquiryController extends Controller
             ]);
         }
 
-        // Return response with lead data and phone number
+        $enquirySubjectKey = $canonicalCategory === 'WhatsApp Clicked'
+            ? 'messages.api.whatsapp_click_subject'
+            : 'messages.api.email_click_subject';
+        $enquiryMessageKey = $canonicalCategory === 'WhatsApp Clicked'
+            ? 'messages.api.whatsapp_click_message'
+            : 'messages.api.email_click_message';
+
         $enquiry = Enquiry::create([
             'lead_id' => $lead->id,
             'vehicle_id' => $vehicle->id,
@@ -327,8 +391,8 @@ class EnquiryController extends Controller
             'name' => $validated['name'] ?? $user?->name ?? 'Guest',
             'email' => $validated['email'] ?? $user?->email ?? 'noreply@example.com',
             'phone' => $validated['phone'] ?? $user?->phone,
-            'subject' => $this->enquirySubject('messages.api.phone_reveal_subject', $vehicle),
-            'message' => __('messages.api.phone_reveal_message'),
+            'subject' => $this->enquirySubject($enquirySubjectKey, $vehicle),
+            'message' => __($enquiryMessageKey),
             'type' => Enquiries::TYPES[0],
             'status' => Enquiries::STATUSES[0],
             'source' => $this->getSourceName($request),

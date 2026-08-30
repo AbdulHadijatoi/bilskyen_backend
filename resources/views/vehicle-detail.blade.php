@@ -2060,7 +2060,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
-                    category: '{{ __('messages.forms.phone_number_revealed') }}',
+                    category: 'Phone Number Revealed',
                     ...guest,
                     ...bot,
                 }),
@@ -2152,7 +2152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
-                    category: '{{ __('messages.forms.phone_number_revealed') }}',
+                    category: 'Phone Number Revealed',
                     ...guest,
                     ...bot,
                 }),

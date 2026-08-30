@@ -51,15 +51,16 @@ class EnquiryVisibilityGuardTest extends TestCase
 
     public function test_phone_reveal_category_matches_en_and_da_labels(): void
     {
-        $method = new ReflectionMethod(EnquiryController::class, 'isPhoneRevealCategory');
+        $method = new ReflectionMethod(EnquiryController::class, 'canonicalizeLeadActionCategory');
         $method->setAccessible(true);
         $controller = $this->controller();
 
-        $this->assertTrue($method->invoke($controller, 'Phone Number Revealed'));
-        $this->assertTrue($method->invoke($controller, trans('messages.forms.phone_number_revealed', [], 'da')));
-        $this->assertFalse($method->invoke($controller, 'WhatsApp Clicked'));
-        $this->assertFalse($method->invoke($controller, 'Enquire'));
-        $this->assertFalse($method->invoke($controller, null));
+        $this->assertSame('Phone Number Revealed', $method->invoke($controller, 'Phone Number Revealed'));
+        $this->assertSame('Phone Number Revealed', $method->invoke($controller, trans('messages.forms.phone_number_revealed', [], 'da')));
+        $this->assertSame('Phone Number Revealed', $method->invoke($controller, 'phone'));
+        $this->assertSame('WhatsApp Clicked', $method->invoke($controller, 'WhatsApp Clicked'));
+        $this->assertSame('Email Clicked', $method->invoke($controller, trans('messages.forms.email_clicked', [], 'da')));
+        $this->assertSame('', $method->invoke($controller, null));
     }
 
     public function test_phone_reveal_does_not_create_lead_or_notify_dealer(): void
@@ -71,19 +72,27 @@ class EnquiryVisibilityGuardTest extends TestCase
         $this->assertNotFalse($enquireEnd);
 
         $enquire = substr($source, $enquireStart, $enquireEnd - $enquireStart);
-        $earlyReturnStart = strpos($enquire, 'isPhoneRevealCategory');
-        $leadCreatePos = strpos($enquire, 'Lead::create');
-        $this->assertNotFalse($earlyReturnStart);
-        $this->assertNotFalse($leadCreatePos);
-        $this->assertLessThan($leadCreatePos, $earlyReturnStart);
+        $this->assertStringContainsString('isClickLeadAction', $enquire);
+        $this->assertStringContainsString('phoneRevealResponse', $enquire);
+        $this->assertLessThan(
+            strpos($enquire, 'Lead::create'),
+            strpos($enquire, 'phoneRevealResponse')
+        );
+        $this->assertStringNotContainsString('phone_reveal_message', $enquire);
+        $this->assertStringNotContainsString(", 'phone')", $enquire);
+    }
 
-        $earlyReturn = substr($enquire, $earlyReturnStart, $leadCreatePos - $earlyReturnStart);
-        $this->assertStringContainsString("'lead_id' => null", $earlyReturn);
-        $this->assertStringContainsString("'meta_lead_event_id' => null", $earlyReturn);
-        $this->assertStringContainsString('resolveContactPhone', $earlyReturn);
-        $this->assertStringNotContainsString('sendVehicleEnquiryEmail', $earlyReturn);
-        $this->assertStringNotContainsString('notifyEnquiryRecipients', $earlyReturn);
-        $this->assertStringNotContainsString('dispatchMetaLead', $earlyReturn);
+    public function test_only_whatsapp_and_email_clicks_create_leads_via_enquire(): void
+    {
+        $method = new ReflectionMethod(EnquiryController::class, 'isClickLeadAction');
+        $method->setAccessible(true);
+        $controller = $this->controller();
+
+        $this->assertTrue($method->invoke($controller, 'WhatsApp Clicked'));
+        $this->assertTrue($method->invoke($controller, 'Email Clicked'));
+        $this->assertFalse($method->invoke($controller, 'Phone Number Revealed'));
+        $this->assertFalse($method->invoke($controller, 'Enquire'));
+        $this->assertFalse($method->invoke($controller, ''));
     }
 
     public function test_resolve_contact_phone_prefers_dealer_owner(): void

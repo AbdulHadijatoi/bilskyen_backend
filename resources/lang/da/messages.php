@@ -1746,6 +1746,10 @@ return [
         // AJAX / API response messages (controllers)
         'lead_created_successfully' => 'Lead oprettet',
         'phone_shown' => 'Telefonnummer vist',
+        'whatsapp_click_subject' => 'WhatsApp-klik for :vehicle',
+        'whatsapp_click_message' => 'En køber har åbnet WhatsApp fra annoncen.',
+        'email_click_subject' => 'E-mail-klik for :vehicle',
+        'email_click_message' => 'En køber har åbnet e-mail fra annoncen.',
         'test_drive_submitted_followup' => 'Din anmodning om prøvetur er sendt. Vi vender tilbage til dig snart for at planlægge prøveturen.',
         'price_negotiation_submitted_followup' => 'Din prisforhandling er sendt. Vi vender tilbage til dig snart.',
         'exchange_request_submitted_followup' => 'Din bytteanmodning er sendt. Vi vender tilbage til dig snart.',
