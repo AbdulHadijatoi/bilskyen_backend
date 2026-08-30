@@ -1745,6 +1745,7 @@ return [
 
         // AJAX / API response messages (controllers)
         'lead_created_successfully' => 'Lead oprettet',
+        'phone_shown' => 'Telefonnummer vist',
         'test_drive_submitted_followup' => 'Din anmodning om prøvetur er sendt. Vi vender tilbage til dig snart for at planlægge prøveturen.',
         'price_negotiation_submitted_followup' => 'Din prisforhandling er sendt. Vi vender tilbage til dig snart.',
         'exchange_request_submitted_followup' => 'Din bytteanmodning er sendt. Vi vender tilbage til dig snart.',

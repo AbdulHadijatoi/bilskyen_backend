@@ -119,8 +119,40 @@ class EnquiryController extends Controller
     }
 
     /**
-     * Get lead intent ID based on category name
+     * Phone reveal is a CTA only — do not create a lead or email the dealer.
      */
+    private function isPhoneRevealCategory(mixed $category): bool
+    {
+        $value = trim((string) $category);
+        if ($value === '') {
+            return false;
+        }
+
+        $labels = array_unique(array_filter([
+            'Phone Number Revealed',
+            __('messages.forms.phone_number_revealed'),
+            trans('messages.forms.phone_number_revealed', [], 'en'),
+            trans('messages.forms.phone_number_revealed', [], 'da'),
+        ]));
+
+        return in_array($value, $labels, true);
+    }
+
+    private function resolveContactPhone(Vehicle $vehicle): ?string
+    {
+        $dealerPhone = $vehicle->dealer?->owner?->phone;
+        if (! empty($dealerPhone)) {
+            return $dealerPhone;
+        }
+
+        $sellerPhone = $vehicle->user?->phone;
+        if (! empty($sellerPhone)) {
+            return $sellerPhone;
+        }
+
+        return null;
+    }
+
     private function getLeadIntentId(string $categoryName): ?int
     {
         return match($categoryName) {
@@ -219,26 +251,22 @@ class EnquiryController extends Controller
 
         $vehicle->load(['dealer.owner', 'user']);
 
+        if ($this->isPhoneRevealCategory($validated['category'] ?? $request->input('category'))) {
+            return response()->json([
+                'status' => 'success',
+                'message' => __('messages.api.phone_shown'),
+                'data' => [
+                    'lead_id' => null,
+                    'phone_number' => $this->resolveContactPhone($vehicle),
+                    'meta_lead_event_id' => null,
+                ],
+            ]);
+        }
+
         // Get dealer_id (can be null for private listings)
         $dealerId = $vehicle->dealer_id;
 
-        // Get phone number with fallback logic
-        $phoneNumber = null;
-
-        // If vehicle has dealer: Get phone from dealer owner
-        if (empty($phoneNumber) && $vehicle->dealer) {
-            // Load owner relationship
-            $vehicle->dealer->load('owner');
-            if ($vehicle->dealer->owner && !empty($vehicle->dealer->owner->phone)) {
-                $phoneNumber = $vehicle->dealer->owner->phone;
-            }
-        }
-        // If empty and vehicle has user (seller/private listing): Get phone from vehicle user
-        elseif (empty($phoneNumber) && $vehicle->user) {
-            if (!empty($vehicle->user->phone)) {
-                $phoneNumber = $vehicle->user->phone;
-            }
-        }
+        $phoneNumber = $this->resolveContactPhone($vehicle);
 
         // Find or create source based on request type
         $sourceName = $this->getSourceName($request);

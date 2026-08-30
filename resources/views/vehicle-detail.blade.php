@@ -2030,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show phone number and create lead (available to guests and authenticated users)
+    // Show phone number without creating a lead or notifying the dealer
     window.showPhoneAndCreateLead = async function(vehicleId, event) {
         if (event) {
             event.preventDefault();
@@ -2074,7 +2074,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
 
-            if (typeof window.bilskyenTrackMetaLead === 'function') {
+            if (typeof window.bilskyenTrackMetaLead === 'function' && payload?.data?.meta_lead_event_id) {
                 window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, catalogVehicleId, catalogVehicleLeadExtra);
             }
 
@@ -2092,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             if (error?.message !== 'cancelled') {
-                console.error('Error creating lead:', error);
+                console.error('Error showing phone number:', error);
                 window.showSnackbar?.(error?.message || 'Request failed', 'error');
             }
         }
@@ -2122,7 +2122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show dealer phone number and create lead (available to guests and authenticated users)
+    // Show dealer phone number without creating a lead or notifying the dealer
     window.showDealerPhoneAndCreateLead = async function(vehicleId, event) {
         if (event) {
             event.preventDefault();
@@ -2166,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
 
-            if (typeof window.bilskyenTrackMetaLead === 'function') {
+            if (typeof window.bilskyenTrackMetaLead === 'function' && payload?.data?.meta_lead_event_id) {
                 window.bilskyenTrackMetaLead(payload?.data?.meta_lead_event_id, catalogVehicleId, catalogVehicleLeadExtra);
             }
 
@@ -2190,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             if (error?.message !== 'cancelled') {
-                console.error('Error creating lead:', error);
+                console.error('Error showing dealer phone number:', error);
                 window.showSnackbar?.(error?.message || 'Request failed', 'error');
             }
         }

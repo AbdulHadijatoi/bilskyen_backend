@@ -49,6 +49,55 @@ class EnquiryVisibilityGuardTest extends TestCase
         $this->abortUnlessPublished($vehicle);
     }
 
+    public function test_phone_reveal_category_matches_en_and_da_labels(): void
+    {
+        $method = new ReflectionMethod(EnquiryController::class, 'isPhoneRevealCategory');
+        $method->setAccessible(true);
+        $controller = $this->controller();
+
+        $this->assertTrue($method->invoke($controller, 'Phone Number Revealed'));
+        $this->assertTrue($method->invoke($controller, trans('messages.forms.phone_number_revealed', [], 'da')));
+        $this->assertFalse($method->invoke($controller, 'WhatsApp Clicked'));
+        $this->assertFalse($method->invoke($controller, 'Enquire'));
+        $this->assertFalse($method->invoke($controller, null));
+    }
+
+    public function test_phone_reveal_does_not_create_lead_or_notify_dealer(): void
+    {
+        $source = file_get_contents(app_path('Http/Controllers/EnquiryController.php'));
+        $enquireStart = strpos($source, 'public function enquire(');
+        $enquireEnd = strpos($source, 'public function showEnquiryForm');
+        $this->assertNotFalse($enquireStart);
+        $this->assertNotFalse($enquireEnd);
+
+        $enquire = substr($source, $enquireStart, $enquireEnd - $enquireStart);
+        $earlyReturnStart = strpos($enquire, 'isPhoneRevealCategory');
+        $leadCreatePos = strpos($enquire, 'Lead::create');
+        $this->assertNotFalse($earlyReturnStart);
+        $this->assertNotFalse($leadCreatePos);
+        $this->assertLessThan($leadCreatePos, $earlyReturnStart);
+
+        $earlyReturn = substr($enquire, $earlyReturnStart, $leadCreatePos - $earlyReturnStart);
+        $this->assertStringContainsString("'lead_id' => null", $earlyReturn);
+        $this->assertStringContainsString("'meta_lead_event_id' => null", $earlyReturn);
+        $this->assertStringContainsString('resolveContactPhone', $earlyReturn);
+        $this->assertStringNotContainsString('sendVehicleEnquiryEmail', $earlyReturn);
+        $this->assertStringNotContainsString('notifyEnquiryRecipients', $earlyReturn);
+        $this->assertStringNotContainsString('dispatchMetaLead', $earlyReturn);
+    }
+
+    public function test_resolve_contact_phone_prefers_dealer_owner(): void
+    {
+        $method = new ReflectionMethod(EnquiryController::class, 'resolveContactPhone');
+        $method->setAccessible(true);
+
+        $vehicle = new Vehicle();
+        $vehicle->setRelation('dealer', null);
+        $vehicle->setRelation('user', new \App\Models\User(['phone' => '11111111']));
+
+        $this->assertSame('11111111', $method->invoke($this->controller(), $vehicle));
+    }
+
     private function blockedResponse(Vehicle $vehicle): ?JsonResponse
     {
         $method = new ReflectionMethod(EnquiryController::class, 'enquiryBlockedResponse');

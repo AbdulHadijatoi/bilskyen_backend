@@ -61,6 +61,7 @@ class VehicleDetailUxTest extends TestCase
         $this->assertStringContainsString('z-index: 60', $source);
         $this->assertStringContainsString('$contactPhoneAvailable', $source);
         $this->assertStringContainsString("window.bilskyenTrackFunnel('cta_click', { cta: 'phone' });", $source);
+        $this->assertStringContainsString('payload?.data?.meta_lead_event_id', $source);
         $this->assertMatchesRegularExpression(
             '/showDealerPhoneAndCreateLead[\s\S]*?bilskyenTrackFunnel\(\'cta_click\', \{ cta: \'phone\' \}\)/',
             $source

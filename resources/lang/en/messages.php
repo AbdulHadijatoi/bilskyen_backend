@@ -1745,6 +1745,7 @@ return [
 
         // AJAX / API response messages (controllers)
         'lead_created_successfully' => 'Lead created successfully',
+        'phone_shown' => 'Phone number shown',
         'test_drive_submitted_followup' => 'Your test drive request has been submitted successfully. We will get back to you soon to schedule your test drive.',
         'price_negotiation_submitted_followup' => 'Your price negotiation has been submitted successfully. We will get back to you soon.',
         'exchange_request_submitted_followup' => 'Your exchange request has been submitted successfully. We will get back to you soon.',
