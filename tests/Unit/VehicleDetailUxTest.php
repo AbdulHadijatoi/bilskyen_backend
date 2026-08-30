@@ -108,7 +108,9 @@ class VehicleDetailUxTest extends TestCase
         $this->assertStringContainsString('unified-enquiry-label', $unifiedDialog);
         $this->assertStringNotContainsString('data-unified-type-radio', $unifiedDialog);
         $this->assertStringContainsString("@selected(\$typeKey === 'enquiry')", $unifiedDialog);
-        $this->assertStringContainsString('data-unified="1"', $unifiedDialog);
+        $this->assertStringContainsString('z-[70]', $unifiedDialog);
+        $this->assertStringContainsString('.unified-enquiry-dialog {', $detail);
+        $this->assertStringContainsString('z-index: 70', $detail);
 
         $this->assertStringContainsString('vehicle-registration-status--desktop', $detail);
         $this->assertStringContainsString('vehicle-registration-status--mobile', $detail);

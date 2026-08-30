@@ -260,6 +260,10 @@
         display: none;
     }
 
+    .unified-enquiry-dialog {
+        z-index: 70;
+    }
+
     .unified-enquiry-field {
         display: flex;
         flex-direction: column;

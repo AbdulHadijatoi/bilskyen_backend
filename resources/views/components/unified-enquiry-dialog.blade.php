@@ -66,7 +66,7 @@
 @endphp
 
 <div id="enquiry-dialog-{{ $slug }}"
-     class="fixed inset-0 z-50 hidden unified-enquiry-dialog"
+     class="fixed inset-0 z-[70] hidden unified-enquiry-dialog"
      role="dialog"
      aria-modal="true"
      aria-labelledby="unified-enquiry-dialog-title"
