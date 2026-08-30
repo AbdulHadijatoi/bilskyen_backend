@@ -11,6 +11,7 @@ use App\Services\AuditLogService;
 use App\Mail\LeadBuyerMessageMail;
 use App\Services\DealerContextService;
 use App\Services\MailService;
+use App\Services\Marketing\TrafficAttributionService;
 use App\Services\SubscriptionFeatureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -55,6 +56,13 @@ class LeadController extends Controller
 
         if ($request->has('vehicle_id')) {
             $query->where('vehicle_id', $request->input('vehicle_id'));
+        }
+
+        if ($request->filled('traffic_source')) {
+            $trafficSource = (string) $request->input('traffic_source');
+            if (in_array($trafficSource, [TrafficAttributionService::SOURCE_META, TrafficAttributionService::SOURCE_OTHER], true)) {
+                $query->effectiveTrafficSource($trafficSource);
+            }
         }
 
         // Apply sorting

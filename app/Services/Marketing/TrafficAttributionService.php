@@ -116,6 +116,11 @@ class TrafficAttributionService
             'utm_medium' => $this->limit($touch['utm_medium'] ?? null, 191),
             'utm_campaign' => $this->limit($touch['utm_campaign'] ?? null, 191),
             'referrer_url' => $this->limit($touch['referrer_url'] ?? null, 512),
+            'traffic_source' => $this->classify(
+                $touch['utm_source'] ?? null,
+                $touch['fbclid'] ?? null,
+                $touch['referrer_url'] ?? null
+            ),
         ];
     }
 

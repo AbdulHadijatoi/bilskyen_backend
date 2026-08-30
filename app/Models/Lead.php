@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Marketing\TrafficAttributionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,9 +28,14 @@ class Lead extends Model
         'utm_medium',
         'utm_campaign',
         'referrer_url',
+        'traffic_source',
         'last_activity_at',
         'first_contacted_at',
         'created_at',
+    ];
+
+    protected $appends = [
+        'effective_traffic_source',
     ];
 
     protected $casts = [
@@ -37,6 +43,50 @@ class Lead extends Model
         'first_contacted_at' => 'datetime',
         'created_at' => 'datetime',
     ];
+
+    public function getEffectiveTrafficSourceAttribute(): string
+    {
+        if (is_string($this->traffic_source) && $this->traffic_source !== '') {
+            return $this->traffic_source;
+        }
+
+        return app(TrafficAttributionService::class)->classify(
+            $this->utm_source,
+            null,
+            $this->referrer_url
+        );
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeEffectiveTrafficSource($query, string $source)
+    {
+        $metaQuery = function ($q): void {
+            $q->where('traffic_source', TrafficAttributionService::SOURCE_META)
+                ->orWhere(function ($legacy): void {
+                    $legacy->whereNull('traffic_source')
+                        ->where(function ($utm): void {
+                            foreach (['facebook', 'fb', 'ig', 'instagram', 'meta', 'an', 'fbads', 'facebookads'] as $src) {
+                                $utm->orWhereRaw('LOWER(utm_source) = ?', [$src]);
+                            }
+                            $utm->orWhere('referrer_url', 'like', '%facebook.%')
+                                ->orWhere('referrer_url', 'like', '%instagram.%')
+                                ->orWhere('referrer_url', 'like', '%fb.%')
+                                ->orWhere('referrer_url', 'like', '%l.facebook.com%')
+                                ->orWhere('referrer_url', 'like', '%lm.facebook.com%')
+                                ->orWhere('referrer_url', 'like', '%m.facebook.com%');
+                        });
+                });
+        };
+
+        if ($source === TrafficAttributionService::SOURCE_META) {
+            return $query->where($metaQuery);
+        }
+
+        return $query->whereNot($metaQuery);
+    }
 
     /**
      * Get vehicle for this lead

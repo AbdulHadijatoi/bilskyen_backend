@@ -62,6 +62,21 @@ class TrafficAttributionServiceTest extends TestCase
         $this->assertSame('facebook', $lead['utm_source']);
         $this->assertSame('cpc', $lead['utm_medium']);
         $this->assertSame('meta-apr', $lead['utm_campaign']);
+        $this->assertSame(TrafficAttributionService::SOURCE_META, $lead['traffic_source']);
         $this->assertNotEmpty($lead['referrer_url']);
+    }
+
+    public function test_lead_attributes_classify_meta_from_fbclid_in_session(): void
+    {
+        $service = new TrafficAttributionService();
+        $request = Request::create('https://example.test/biler/foo', 'GET', [
+            'fbclid' => 'IwAR123',
+        ]);
+        $request->setLaravelSession($this->app['session']->driver());
+
+        $service->capture($request);
+        $lead = $service->leadAttributes($request);
+
+        $this->assertSame(TrafficAttributionService::SOURCE_META, $lead['traffic_source']);
     }
 }

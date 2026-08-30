@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lead;
+use App\Services\Marketing\TrafficAttributionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,6 +37,13 @@ class AdminLeadController extends Controller
 
         if ($request->filled('category_id')) {
             $query->where('lead_category_id', $request->integer('category_id'));
+        }
+
+        if ($request->filled('traffic_source')) {
+            $trafficSource = (string) $request->input('traffic_source');
+            if (in_array($trafficSource, [TrafficAttributionService::SOURCE_META, TrafficAttributionService::SOURCE_OTHER], true)) {
+                $query->effectiveTrafficSource($trafficSource);
+            }
         }
 
         if ($request->filled('search')) {
