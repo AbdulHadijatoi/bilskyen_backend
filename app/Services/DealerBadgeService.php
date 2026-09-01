@@ -28,6 +28,16 @@ class DealerBadgeService
         return $this->subscriptionFeatureService->hasFeature($dealer, 'dealer_trust_badge');
     }
 
+    public function listingBadgeLabel(?Dealer $dealer): string
+    {
+        $custom = trim((string) ($dealer?->listing_badge_label ?? ''));
+        if ($custom !== '') {
+            return $custom;
+        }
+
+        return (string) __('messages.pages.vehicles.dealer');
+    }
+
     /**
      * @return array<string, bool>
      */

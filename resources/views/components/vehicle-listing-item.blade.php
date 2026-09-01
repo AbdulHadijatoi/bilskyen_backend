@@ -27,6 +27,9 @@
     $galleryCount = count($galleryUrls);
     $mileageValue = $vehicle->mileage ?? $vehicle->km_driven ?? null;
     $chipClass = 'vehicle-listing-chip';
+    $dealerBadgeLabel = $vehicle->dealer_id
+        ? app(\App\Services\DealerBadgeService::class)->listingBadgeLabel($vehicle->dealer)
+        : null;
 @endphp
 @once
 @push('styles')
@@ -186,14 +189,17 @@
         white-space: nowrap;
     }
     .vehicle-card-enquire-btn {
-        width: 2.25rem;
-        min-width: 2.25rem;
+        flex: 1 1 0;
+        min-width: 0;
         height: 2.25rem;
-        padding: 0;
+        padding: 0 0.75rem;
         border-radius: 0.5rem;
         border: 1px solid #e2e8f0;
         background: #fff;
         color: #475569;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25;
         box-shadow: none;
     }
     .vehicle-card-enquire-btn:hover {
@@ -277,7 +283,7 @@
                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
                     @if($vehicle->dealer_id)
                         <span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
-                            {{ __('messages.pages.vehicles.dealer') }}
+                            {{ $dealerBadgeLabel }}
                         </span>
                     @else
                         <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
@@ -380,22 +386,16 @@
                 </div>
             @endif
         </div>
-        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
-            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+        <div class="vehicle-actions-section flex w-full flex-row items-stretch gap-2">
+            <a href="{{ route('vehicle.detail', $vehicle->slug) }}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
                 {{ __('messages.pages.vehicles.view_details') }}
             </a>
             <button
                 type="button"
                 onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '{{ $vehicle->slug }}')"
-                class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-white transition-all hover:bg-muted active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
-                aria-label="{{ __('messages.pages.vehicles.enquire') }}"
-                title="{{ __('messages.pages.vehicles.enquire') }}"
+                class="vehicle-card-enquire-btn inline-flex items-center justify-center whitespace-nowrap transition-all hover:bg-muted active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    <path d="M13 8H7"/>
-                    <path d="M17 12H7"/>
-                </svg>
+                {{ __('messages.pages.vehicles.enquire') }}
             </button>
         </div>
     </div>

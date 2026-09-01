@@ -971,11 +971,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     #vehicle-container[data-view="list"] .vehicle-actions-section > a {
-        flex: 0 0 auto;
+        flex: 1 1 0;
         width: auto;
-        min-width: auto;
+        min-width: 0;
         max-width: none;
-        padding: 0 1rem;
+        padding: 0 0.75rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-actions-section button,
@@ -992,19 +992,13 @@ document.addEventListener('DOMContentLoaded', function() {
         box-sizing: border-box;
     }
 
+    #vehicle-container[data-view="list"] .vehicle-actions-section > a,
     #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-        flex: 0 0 2.25rem;
-        align-self: center;
-        width: 2.25rem;
-        min-width: 2.25rem;
-        max-width: 2.25rem;
-        height: 2.25rem;
-        min-height: 2.25rem;
-        max-height: 2.25rem;
-        padding: 0;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-        box-sizing: border-box;
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        padding: 0 0.75rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-listing-overlays {
@@ -1091,19 +1085,13 @@ document.addEventListener('DOMContentLoaded', function() {
             max-width: 100%;
         }
 
-        #vehicle-container[data-view="list"] .vehicle-actions-section > a {
-            flex: 1 1 auto;
-            min-width: 0;
-            max-width: 100%;
-            width: 100%;
-        }
-
+        #vehicle-container[data-view="list"] .vehicle-actions-section > a,
         #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-            flex: 0 0 2.25rem;
-            width: 2.25rem;
-            min-width: 2.25rem;
-            max-width: 2.25rem;
-            padding: 0;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: none;
+            width: auto;
+            padding: 0 0.75rem;
         }
     }
     

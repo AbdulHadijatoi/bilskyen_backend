@@ -71,7 +71,10 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('font-size: 1.5rem', $card);
 
         $this->assertStringContainsString('vehicle-listing-chip', $card);
-        $this->assertStringContainsString('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', $card);
+        $this->assertStringContainsString('DealerBadgeService', $card);
+        $this->assertStringContainsString('$dealerBadgeLabel', $card);
+        $this->assertStringContainsString('flex: 1 1 0', $card);
+        $this->assertStringNotContainsString('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', $card);
 
         $css = file_get_contents(resource_path('css/site-base.css'));
         $this->assertStringContainsString('.vehicle-listing-price', $css);
@@ -89,7 +92,7 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('.vehicle-image-container:hover .vehicle-listing-gallery-btn', $css);
     }
 
-    public function test_list_view_keeps_enquire_button_at_content_width(): void
+    public function test_list_view_uses_equal_width_action_buttons(): void
     {
         $source = file_get_contents(resource_path('views/vehicles.blade.php'));
 
@@ -101,8 +104,11 @@ class ListingUxTest extends TestCase
             '.vehicle-actions-section > .vehicle-card-enquire-btn',
             $source
         );
-        $this->assertStringContainsString('flex: 0 0 auto', $source);
-        $this->assertStringContainsString('aspect-ratio: 1 / 1', $source);
+        $this->assertStringContainsString('flex: 1 1 0', $source);
+        $this->assertStringContainsString('defaultDealerLabel', $source);
+        $this->assertStringContainsString('dealer_badge_label', $source);
+        $this->assertStringContainsString('enquireLabel', $source);
+        $this->assertStringNotContainsString('aspect-ratio: 1 / 1', $source);
         $this->assertStringContainsString('white-space: normal', $source);
         $this->assertStringContainsString('-webkit-line-clamp: 2', $source);
         $this->assertStringContainsString('vehicle-listing-overlays', $source);

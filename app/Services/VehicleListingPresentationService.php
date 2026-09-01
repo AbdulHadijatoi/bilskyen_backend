@@ -80,7 +80,7 @@ class VehicleListingPresentationService
             ? ['latitude' => (float) $vehicle->latitude, 'longitude' => (float) $vehicle->longitude]
             : FormatHelper::coordsForPostcode($vehicle->postcode);
 
-        return array_merge([
+        $payload = [
             'id' => $vehicle->id,
             'slug' => $vehicle->slug,
             'dealer_id' => $vehicle->dealer_id,
@@ -114,6 +114,12 @@ class VehicleListingPresentationService
             'created_at' => $vehicle->created_at?->toIso8601String(),
             'user_id' => $vehicle->user_id,
             'sales_type_name' => $vehicle->salesType?->name,
-        ], $this->badgeFields($vehicle));
+        ];
+
+        if ($isDealer) {
+            $payload['dealer_badge_label'] = $this->dealerBadgeService->listingBadgeLabel($vehicle->dealer);
+        }
+
+        return array_merge($payload, $this->badgeFields($vehicle));
     }
 }

@@ -550,15 +550,17 @@
                 white-space: nowrap;
             }
             .vehicle-card-enquire-btn {
-                width: 2.25rem;
-                min-width: 2.25rem;
+                flex: 1 1 0;
+                min-width: 0;
                 height: 2.25rem;
-                padding: 0;
+                padding: 0 0.75rem;
                 border-width: 1px;
                 border-radius: 0.5rem;
                 background: #fff;
                 color: #475569;
-                aspect-ratio: 1 / 1;
+                font-size: 0.875rem;
+                font-weight: 500;
+                line-height: 1.25;
                 box-sizing: border-box;
                 box-shadow: none;
             }
@@ -1693,26 +1695,14 @@
     }
 
     #vehicle-container[data-view="list"] .vehicle-actions-section > a,
-    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
-        width: auto;
-        min-width: auto;
-        padding: 0 1rem;
-    }
-
+    #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a,
     #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
     #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-        flex: 0 0 2.25rem;
-        align-self: center;
-        width: 2.25rem;
-        min-width: 2.25rem;
-        max-width: 2.25rem;
-        height: 2.25rem;
-        min-height: 2.25rem;
-        max-height: 2.25rem;
-        padding: 0;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-        box-sizing: border-box;
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        padding: 0 0.75rem;
     }
     
     #vehicle-container[data-view="list"] .vehicle-listing-overlays,
@@ -1827,17 +1817,14 @@
         }
 
         #vehicle-container[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
-        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn {
-            flex: 0 0 2.25rem;
-            width: 2.25rem;
-            min-width: 2.25rem;
-            max-width: 2.25rem;
-            padding: 0;
-        }
-        
+        #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > .vehicle-card-enquire-btn,
         #vehicle-container[data-view="list"] .vehicle-actions-section > a,
         #vehicle-fallback-section[data-view="list"] .vehicle-actions-section > a {
-            width: 100%;
+            flex: 1 1 0;
+            min-width: 0;
+            width: auto;
+            max-width: none;
+            padding: 0 0.75rem;
         }
     }
     
@@ -2034,6 +2021,9 @@
             fewerFilters: @json(__('messages.pages.vehicles.fewer_filters')),
             filtersApplied: @json(__('messages.pages.vehicles.filters_applied')),
             loadingResults: @json(__('messages.pages.vehicles.loading_results')),
+            defaultDealerLabel: @json(__('messages.pages.vehicles.dealer')),
+            enquireLabel: @json(__('messages.pages.vehicles.enquire')),
+            viewDetailsLabel: @json(__('messages.pages.vehicles.view_details')),
         };
         const CHIP_COLLAPSE_LIMIT = 5;
         
@@ -2298,7 +2288,7 @@
                                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
                                 ${vehicle.dealer_id ? `
                                 <span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
-                                    {{ __('messages.pages.vehicles.dealer') }}
+                                    ${escapeHtml(vehicle.dealer_badge_label || I18N_BMV.defaultDealerLabel)}
                                 </span>
                                 ` : `
                                 <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
@@ -2396,16 +2386,12 @@
                             </div>
                             ` : ''}
                         </div>
-                        <div class="vehicle-actions-section flex w-full flex-row items-center gap-2">
-                            <a href="${VEHICLE_DETAIL_URL(slug)}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
-                                {{ __('messages.pages.vehicles.view_details') }}
+                        <div class="vehicle-actions-section flex w-full flex-row items-stretch gap-2">
+                            <a href="${VEHICLE_DETAIL_URL(slug)}" class="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation()">
+                                ${escapeHtml(I18N_BMV.viewDetailsLabel)}
                             </a>
-                            <button type="button" class="vehicle-card-enquire-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-white transition-all hover:bg-muted disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${escapeHtml(slug)}');" aria-label="{{ __('messages.pages.vehicles.enquire') }}" title="{{ __('messages.pages.vehicles.enquire') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                                    <path d="M13 8H7"/>
-                                    <path d="M17 12H7"/>
-                                </svg>
+                            <button type="button" class="vehicle-card-enquire-btn inline-flex items-center justify-center whitespace-nowrap rounded-lg border border-border bg-white transition-all hover:bg-muted disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] box-border" onclick="event.stopPropagation(); openEnquiryDialog('enquiry', '${escapeHtml(slug)}');">
+                                ${escapeHtml(I18N_BMV.enquireLabel)}
                             </button>
                         </div>
                     </div>

@@ -101,6 +101,55 @@ class AdminDealerController extends Controller
     }
 
     /**
+     * Update dealer settings (admin-managed fields).
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $dealer = Dealer::findOrFail($id);
+        $before = $dealer->only(['listing_badge_label']);
+
+        $validated = $request->validate([
+            'listing_badge_label' => 'nullable|string|max:20',
+        ]);
+
+        $label = array_key_exists('listing_badge_label', $validated)
+            ? trim((string) ($validated['listing_badge_label'] ?? ''))
+            : null;
+
+        $dealer->listing_badge_label = ($label === null || $label === '') ? null : $label;
+        $dealer->save();
+
+        $after = $dealer->only(['listing_badge_label']);
+
+        if ($before !== $after) {
+            $this->auditLogService->log(
+                $request->user()->id,
+                AuditActorType::ADMIN,
+                'update',
+                'Dealer',
+                $dealer->id,
+                $before,
+                $after,
+                $request,
+                'Dealer',
+                $dealer->id,
+                'Admin updated dealer listing badge label',
+                ['dealer', 'listing_badge']
+            );
+        }
+
+        return $this->success($dealer->fresh([
+            'owner',
+            'staff.user.roles',
+            'subscriptions.plan',
+            'subscriptionChangeRequests' => fn ($q) => $q->pending()->latest('id')->limit(1),
+            'vehicles',
+        ])->loadCount([
+            'vehicles as published_vehicles_count' => fn ($q) => $q->where('list_status_id', VehicleListStatus::PUBLISHED),
+        ]));
+    }
+
+    /**
      * Log in as the dealer owner (impersonation). Does not overwrite the admin refresh cookie.
      */
     public function impersonate(Request $request, int $id): JsonResponse

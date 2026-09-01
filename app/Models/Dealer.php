@@ -30,6 +30,7 @@ class Dealer extends Model
         'google_place_id',
         'theme_primary_color',
         'theme_secondary_color',
+        'listing_badge_label',
         'onboarding_step',
         'onboarding_completed_at',
         'stripe_customer_id',
