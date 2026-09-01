@@ -203,4 +203,46 @@ class Lead extends Model
     {
         return $this->belongsTo(LeadLostReason::class, 'lost_reason_id');
     }
+
+    /**
+     * Human-readable buyer label for list views (dashboard, feeds).
+     * Uses linked user, enquiry contact fields, then lead category as fallback.
+     */
+    public function resolveBuyerDisplayName(): ?string
+    {
+        $buyerName = trim((string) ($this->buyerUser?->name ?? ''));
+        if ($buyerName !== '' && ! $this->isPlaceholderBuyerLabel($buyerName)) {
+            return $buyerName;
+        }
+
+        $enquiry = $this->enquiry;
+        if ($enquiry) {
+            $enquiryName = trim((string) ($enquiry->name ?? ''));
+            if ($enquiryName !== '' && ! $this->isPlaceholderBuyerLabel($enquiryName)) {
+                return $enquiryName;
+            }
+
+            $phone = trim((string) ($enquiry->phone ?? ''));
+            if ($phone !== '') {
+                return $phone;
+            }
+
+            $email = trim((string) ($enquiry->email ?? ''));
+            if ($email !== '') {
+                return $email;
+            }
+        }
+
+        $categoryName = trim((string) ($this->leadCategory?->name ?? ''));
+        if ($categoryName !== '') {
+            return $categoryName;
+        }
+
+        return null;
+    }
+
+    private function isPlaceholderBuyerLabel(string $value): bool
+    {
+        return in_array(strtolower($value), ['guest', 'n/a', 'na', 'unknown', 'ukendt'], true);
+    }
 }

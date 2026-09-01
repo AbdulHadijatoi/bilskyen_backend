@@ -136,7 +136,7 @@ class AdminDashboardController extends Controller
                 ];
             });
 
-        $recentLeads = Lead::with(['vehicle', 'dealer.owner', 'buyerUser'])
+        $recentLeads = Lead::with(['vehicle', 'dealer.owner', 'buyerUser', 'enquiry', 'leadCategory'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
@@ -144,9 +144,9 @@ class AdminDashboardController extends Controller
                 return [
                     'id' => $lead->id,
                     'vehicle_id' => $lead->vehicle_id,
-                    'vehicle_title' => $lead->vehicle->title ?? 'N/A',
+                    'vehicle_title' => $lead->vehicle->title ?? null,
                     'dealer_cvr' => $this->formatDealerLabel($lead->dealer),
-                    'buyer_name' => $lead->buyerUser->name ?? 'N/A',
+                    'buyer_name' => $lead->resolveBuyerDisplayName(),
                     'stage_id' => $lead->lead_stage_id,
                     'created_at' => $lead->created_at?->toISOString(),
                 ];
