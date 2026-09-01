@@ -106,20 +106,25 @@ class AdminDealerController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $dealer = Dealer::findOrFail($id);
-        $before = $dealer->only(['listing_badge_label']);
+        $before = $dealer->only(['listing_badge_label', 'show_listing_badge']);
 
         $validated = $request->validate([
             'listing_badge_label' => 'nullable|string|max:20',
+            'show_listing_badge' => 'sometimes|boolean',
         ]);
 
-        $label = array_key_exists('listing_badge_label', $validated)
-            ? trim((string) ($validated['listing_badge_label'] ?? ''))
-            : null;
+        if (array_key_exists('listing_badge_label', $validated)) {
+            $label = trim((string) ($validated['listing_badge_label'] ?? ''));
+            $dealer->listing_badge_label = $label === '' ? null : $label;
+        }
 
-        $dealer->listing_badge_label = ($label === null || $label === '') ? null : $label;
+        if (array_key_exists('show_listing_badge', $validated)) {
+            $dealer->show_listing_badge = (bool) $validated['show_listing_badge'];
+        }
+
         $dealer->save();
 
-        $after = $dealer->only(['listing_badge_label']);
+        $after = $dealer->only(['listing_badge_label', 'show_listing_badge']);
 
         if ($before !== $after) {
             $this->auditLogService->log(
@@ -133,7 +138,7 @@ class AdminDealerController extends Controller
                 $request,
                 'Dealer',
                 $dealer->id,
-                'Admin updated dealer listing badge label',
+                'Admin updated dealer listing badge settings',
                 ['dealer', 'listing_badge']
             );
         }

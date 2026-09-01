@@ -38,6 +38,15 @@ class DealerBadgeService
         return (string) __('messages.pages.vehicles.dealer');
     }
 
+    public function shouldShowListingBadge(?Dealer $dealer): bool
+    {
+        if (! $dealer) {
+            return true;
+        }
+
+        return (bool) ($dealer->show_listing_badge ?? true);
+    }
+
     /**
      * @return array<string, bool>
      */

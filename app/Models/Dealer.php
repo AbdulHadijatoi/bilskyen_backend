@@ -31,6 +31,7 @@ class Dealer extends Model
         'theme_primary_color',
         'theme_secondary_color',
         'listing_badge_label',
+        'show_listing_badge',
         'onboarding_step',
         'onboarding_completed_at',
         'stripe_customer_id',
@@ -41,6 +42,7 @@ class Dealer extends Model
         'updated_at' => 'datetime',
         'onboarding_completed_at' => 'datetime',
         'finance_calculator_enabled' => 'boolean',
+        'show_listing_badge' => 'boolean',
     ];
 
     protected $appends = ['logo_url'];

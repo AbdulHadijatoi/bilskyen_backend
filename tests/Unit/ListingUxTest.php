@@ -72,7 +72,7 @@ class ListingUxTest extends TestCase
 
         $this->assertStringContainsString('vehicle-listing-chip', $card);
         $this->assertStringContainsString('DealerBadgeService', $card);
-        $this->assertStringContainsString('$dealerBadgeLabel', $card);
+        $this->assertStringContainsString('$showDealerBadge', $card);
         $this->assertStringContainsString('flex: 1 1 0', $card);
         $this->assertStringNotContainsString('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', $card);
 
@@ -107,6 +107,7 @@ class ListingUxTest extends TestCase
         $this->assertStringContainsString('flex: 1 1 0', $source);
         $this->assertStringContainsString('defaultDealerLabel', $source);
         $this->assertStringContainsString('dealer_badge_label', $source);
+        $this->assertStringContainsString('show_dealer_badge', $source);
         $this->assertStringContainsString('enquireLabel', $source);
         $this->assertStringNotContainsString('aspect-ratio: 1 / 1', $source);
         $this->assertStringContainsString('white-space: normal', $source);

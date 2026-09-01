@@ -117,7 +117,10 @@ class VehicleListingPresentationService
         ];
 
         if ($isDealer) {
-            $payload['dealer_badge_label'] = $this->dealerBadgeService->listingBadgeLabel($vehicle->dealer);
+            $payload['show_dealer_badge'] = $this->dealerBadgeService->shouldShowListingBadge($vehicle->dealer);
+            if ($payload['show_dealer_badge']) {
+                $payload['dealer_badge_label'] = $this->dealerBadgeService->listingBadgeLabel($vehicle->dealer);
+            }
         }
 
         return array_merge($payload, $this->badgeFields($vehicle));

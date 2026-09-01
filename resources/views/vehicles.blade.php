@@ -2286,15 +2286,15 @@
                         <div class="vehicle-listing-overlays pointer-events-none absolute inset-0 z-10 flex flex-col justify-between px-4 py-3">
                             <div class="vehicle-listing-overlays-top flex items-start justify-between gap-2">
                                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
-                                ${vehicle.dealer_id ? `
+                                ${vehicle.dealer_id && vehicle.show_dealer_badge !== false ? `
                                 <span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
                                     ${escapeHtml(vehicle.dealer_badge_label || I18N_BMV.defaultDealerLabel)}
                                 </span>
-                                ` : `
+                                ` : !vehicle.dealer_id ? `
                                 <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
                                     {{ __('messages.pages.vehicles.private') }}
                                 </span>
-                                `}
+                                ` : ''}
                                 ${salesTypeLabel ? `
                                 <span class="inline-flex items-center rounded-md bg-green-600/60 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
                                     ${escapeHtml(salesTypeLabel)}

@@ -48,4 +48,20 @@ class DealerBadgeServiceTest extends TestCase
             $service->listingBadgeLabel($dealer)
         );
     }
+
+    public function test_should_show_listing_badge_defaults_to_true(): void
+    {
+        $service = new DealerBadgeService(Mockery::mock(SubscriptionFeatureService::class));
+
+        $this->assertTrue($service->shouldShowListingBadge(null));
+        $this->assertTrue($service->shouldShowListingBadge(new Dealer()));
+    }
+
+    public function test_should_show_listing_badge_respects_dealer_setting(): void
+    {
+        $service = new DealerBadgeService(Mockery::mock(SubscriptionFeatureService::class));
+
+        $this->assertFalse($service->shouldShowListingBadge(new Dealer(['show_listing_badge' => false])));
+        $this->assertTrue($service->shouldShowListingBadge(new Dealer(['show_listing_badge' => true])));
+    }
 }

@@ -30,6 +30,9 @@
     $dealerBadgeLabel = $vehicle->dealer_id
         ? app(\App\Services\DealerBadgeService::class)->listingBadgeLabel($vehicle->dealer)
         : null;
+    $showDealerBadge = $vehicle->dealer_id
+        ? app(\App\Services\DealerBadgeService::class)->shouldShowListingBadge($vehicle->dealer)
+        : false;
 @endphp
 @once
 @push('styles')
@@ -281,11 +284,11 @@
         <div class="vehicle-listing-overlays pointer-events-none absolute inset-0 z-10 flex flex-col justify-between px-4 py-3">
             <div class="vehicle-listing-overlays-top flex items-start justify-between gap-2">
                 <div class="vehicle-listing-overlay-badges flex max-w-[70%] flex-row flex-wrap items-center gap-1">
-                    @if($vehicle->dealer_id)
+                    @if($vehicle->dealer_id && $showDealerBadge)
                         <span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
                             {{ $dealerBadgeLabel }}
                         </span>
-                    @else
+                    @elseif(!$vehicle->dealer_id)
                         <span class="inline-flex items-center rounded-md bg-amber-600/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
                             {{ __('messages.pages.vehicles.private') }}
                         </span>
