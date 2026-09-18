@@ -53,6 +53,17 @@ class VehicleImportService
         return $this->importFromPath($path, $extension, $dealerId, $userId, $dealer, $dryRun, $onRowComplete);
     }
 
+    public function countRows(UploadedFile $file): int
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $path = $file->getRealPath() ?: $file->getPathname();
+        if ($path === '' || ! is_readable($path)) {
+            throw new \InvalidArgumentException(__('messages.api.vehicle_import_file_unreadable'));
+        }
+
+        return count($this->parser->parse($path, $extension));
+    }
+
     /**
      * @return array{summary: array<string, int>, rows: list<array<string, mixed>>}
      */

@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessVehicleImportBatchJob;
+use App\Models\Dealer;
+use App\Models\User;
 use App\Models\VehicleImportBatch;
 use App\Services\AuditLogService;
 use App\Services\DealerContextService;
 use App\Services\SubscriptionFeatureService;
+use App\Services\VehicleImport\VehicleImportBatchMaintenanceService;
+use App\Services\VehicleImport\VehicleImportBatchService;
 use App\Services\VehicleImport\VehicleImportColumnDefinitions;
 use App\Services\VehicleImport\VehicleImportService;
 use App\Services\VehicleImport\VehicleImportTemplateBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -22,6 +28,8 @@ class VehicleImportController extends Controller
         private SubscriptionFeatureService $subscriptionFeatureService,
         private DealerContextService $dealerContextService,
         private AuditLogService $auditLogService,
+        private VehicleImportBatchService $vehicleImportBatchService,
+        private VehicleImportBatchMaintenanceService $vehicleImportBatchMaintenanceService,
     ) {}
 
     public function downloadTemplate(): BinaryFileResponse
@@ -72,12 +80,30 @@ class VehicleImportController extends Controller
             return $this->error(__('messages.errors.dealer_not_found'), [], 403);
         }
 
-        return $this->runSyncImport(
-            $request,
-            $dealer,
-            $user,
-            $request->boolean('dry_run'),
-        );
+        if ($this->vehicleImportBatchMaintenanceService->hasBlockingImport((int) $dealer->id)) {
+            return $this->error(__('messages.api.vehicle_import_already_running'), [], 409);
+        }
+
+        $file = $request->file('file');
+        $dryRun = $request->boolean('dry_run');
+
+        try {
+            $rowCount = $this->vehicleImportService->countRows($file);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
+
+        if ($rowCount > VehicleImportColumnDefinitions::MAX_ROWS) {
+            return $this->error(__('messages.api.vehicle_import_too_many_rows', [
+                'max' => VehicleImportColumnDefinitions::MAX_ROWS,
+            ]), [], 422);
+        }
+
+        if ($dryRun || $rowCount <= VehicleImportColumnDefinitions::SYNC_ROW_LIMIT) {
+            return $this->runSyncImport($request, $dealer, $user, $dryRun);
+        }
+
+        return $this->runQueuedImport($file, $dealer, $user);
     }
 
     public function batches(Request $request): JsonResponse
@@ -173,5 +199,18 @@ class VehicleImportController extends Controller
         }
 
         return $this->success($result);
+    }
+
+    private function runQueuedImport(UploadedFile $file, Dealer $dealer, User $user): JsonResponse
+    {
+        $batch = $this->vehicleImportBatchService->queueImport($file, $dealer, $user, false);
+        ProcessVehicleImportBatchJob::dispatch($batch->id);
+
+        return $this->success([
+            'queued' => true,
+            'batch_id' => $batch->id,
+            'status' => $batch->status,
+            'message' => __('messages.api.vehicle_import_queued'),
+        ]);
     }
 }

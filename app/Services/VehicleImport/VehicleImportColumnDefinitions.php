@@ -308,4 +308,7 @@ class VehicleImportColumnDefinitions
     ];
 
     public const MAX_ROWS = 200;
+
+    /** Imports with this many data rows or fewer run in the HTTP request. */
+    public const SYNC_ROW_LIMIT = 5;
 }
